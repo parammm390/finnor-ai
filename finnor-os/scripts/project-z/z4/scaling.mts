@@ -6,7 +6,7 @@ import {spawn} from 'node:child_process';
 import {canonical,sha,LENGTHS,type ExactRequest} from '../../../packages/epistemic-runtime/src/project-z/z4-execution-proof/contracts';
 import {originalExecution} from '../../../packages/epistemic-runtime/src/project-z/z4-execution-proof/original';
 import {produceExecutionProof} from '../../../packages/epistemic-runtime/src/project-z/z4-execution-proof/engine';
-import {nativeIdentity} from '../../../packages/epistemic-runtime/src/project-z/z4-execution-proof/native';
+import {NativeFailure,nativeIdentity} from '../../../packages/epistemic-runtime/src/project-z/z4-execution-proof/native';
 const repository=resolve(dirname(fileURLToPath(import.meta.url)),'../../../..');
 const arg=(n:string)=>process.argv[process.argv.indexOf(n)+1];
 const evidence=arg('--evidence'),steps=Number(arg('--steps')),observation=Number(arg('--observation'));
@@ -21,6 +21,7 @@ const sum=request.inputs.reduce((a,row)=>a+BigInt(row[0]!),0n),expected=[sum.toS
 const report:Record<string,unknown>={schema:'finnor.z4.scaling-observation.v1',steps,observation,expected,
  order:observation%2?'PROOF_THEN_ORIGINAL':'ORIGINAL_THEN_PROOF',request,nativeOwner:false,eligibleReuseN:0,
  protectedAdmission:'NOT_RUN',money:null,humanSeconds:null,aggregateRSS:null,status:'RUNNING'};
+const nativeObservations:Array<Record<string,unknown>>=[];report.nativeObservations=nativeObservations;
 const save=()=>writeFile(resolve(evidence,'report.json'),JSON.stringify(report,null,2)+'\n',{mode:0o600});
 const full=()=>{
  const start=performance.now(),cpu=process.cpuUsage(),original=originalExecution(request);
@@ -32,7 +33,12 @@ try{
  report.identity=await nativeIdentity();await save();
  if(observation%2===0)report.fullOriginal=full();
  const start=performance.now(),checked=await produceExecutionProof(request,{deadlineAt:new Date(Date.now()+900000).toISOString(),
-  maxMemoryBytes:2*1024**3,cpuSeconds:(op:string)=>op==='prove'?600:op==='verify'?90:10});
+  maxMemoryBytes:2*1024**3,cpuSeconds:(op:string)=>op==='prove'?600:op==='verify'?90:10,
+  observed:async receipt=>{
+   nativeObservations.push({operation:receipt.operation,meters:receipt.meters,
+    ...('failure'in receipt?{failure:receipt.failure}:{binarySha256:receipt.binarySha256,sourceDigest:receipt.sourceDigest})});
+   await save();
+  }});
  report.fullProofLifecycleWallMs=performance.now()-start;
  if(canonical(checked.statement.finalState)!==canonical(expected))throw Error('Z4_SCALING_LITERAL_MISMATCH');
  if(observation%2===1)report.fullOriginal=full();
@@ -51,7 +57,13 @@ try{
   r.response.status!=='VERIFIED_COMPUTATION_ONLY'||r.response.statementDigest!==sha(checked.statement)))throw Error('Z4_WARM_VERIFIER_PUBLIC_BINDING');
  report.coldAndWarmVerifier=warm;report.checkedDigest=sha(checked);report.proofBytes=checked.artifact.proofHex.length/2;
  report.processes=checked.processes.map(p=>({operation:p.operation,meters:p.meters}));
- report.endToEndCheckingIsLinear=true;report.nativeComparison='NOT_RUN_NO_NATIVE_WORK_DEMAND';
+ report.endToEndCheckingIsLinear=true;report.verifierExecutesOriginalProgramme=false;
+ report.linearCheckingWork='ORIGINAL_INPUT_VALIDATION_COMMITMENT_AND_REQUEST_BINDING_NOT_VM_REPLAY';
+ report.nativeComparison='NOT_RUN_NO_NATIVE_WORK_DEMAND';
  report.status='PASSED_OFFLINE_MEASUREMENT_ONLY';await save();
  console.log(JSON.stringify({steps,observation,status:report.status,output:evidence}));
-}catch(error){report.status='FAILED';report.error=String((error as Error).message);await save();process.exitCode=1;}
+}catch(error){
+ report.status='FAILED';report.error=String((error as Error).message);
+ if(error instanceof NativeFailure){report.failureMeters=error.meters;report.failurePhysical=error.physical??null;}
+ await save();process.exitCode=1;
+}

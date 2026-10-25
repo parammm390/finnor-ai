@@ -5,7 +5,7 @@ import {ApplicationDemandSchema} from '../../application-semantics/native-contra
 import {digestSchema,integerSchema,programSchema,sha,validateProgram,exactInteger} from '../../../../epistemic-runtime/src/project-z/z4-execution-proof/contracts';
 export {sha,canonical,fail} from '../../../../epistemic-runtime/src/project-z/z4-execution-proof/contracts';
 
-export const VERSION='z4-execution-proof-v1' as const;
+export const VERSION='z4-execution-proof-v2-no-execution-replay' as const;
 export const PRODUCT_LOCK='61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf';
 export const JOB='prove_exact_execution_v1' as const;
 export const rootSchema=z.object({entityType:z.enum(PE_WORLD_ROOT_TYPES),entityId:z.string().uuid()}).strict();

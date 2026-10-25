@@ -98,6 +98,15 @@ dependencies. Its readback verifies every declared member. The owned-source
 archive is an overlay against the declared baseline, not a claim to contain
 that baseline or an independently authenticated installed runtime.
 
+For subsequent deliveries, `deliver.py --evidence-base /absolute/prior/delivery
+--evidence-base-sha256 <actual-prior-report-SHA256>` verifies the complete prior
+evidence archive and creates an exact-preimage evidence delta. It never
+deletes or relocates the base, old archives or failures. The delivery's
+`evidence-chain.json` names the complete base, every delta preimage and each
+separately required historical archive/bundle. Deliver all those referenced
+members with the new delta. Do not describe the delta alone as a full packet
+or inherit the base's qualification as current evidence.
+
 ## Qualification
 
 Offline proofs, source checks, builds, archive integrity and missing-authority
@@ -105,11 +114,19 @@ refusals are engineering evidence only. Source-native, installed-native,
 protected and financial qualification remain separate. A local package is not
 permission to publish it. Coordinator acceptance alone releases the slot.
 
-The checked verifier currently retains a full independent original-integer
-replay and input-commitment read. Do not call its whole lifecycle sublinear or
-infer a compact-cost speedup from fixed proof size or a warm verifier timer.
-The complete bounded scaling sweep retains failing 64/256-step observations;
-operational 100× is NOT_PASSED and financial qualification is NOT_RUN.
+The v2 audit/consumer checker independently derives the original constraint
+image and input commitment, then invokes the separate pinned proof verifier.
+It does not execute the programme. Full original execution remains a
+producer/reference diagnostic, not an audit shortcut. The no-replay E2E
+activates a throwing interpreter trap before checking a retained real proof.
+Input binding/currentness still read original inputs. Do not call the whole
+lifecycle sublinear or infer a value win from fixed proof size or a warm timer.
+The historical bounded scaling sweep and its 64/256 failures remain retained.
+A later bounded diagnostic identified a commitment operation hitting its
+unchanged CPU ceiling. Immutable Poseidon constants are now reused without
+changing the relation or parameters. New affected observations have separate
+receipts and do not rewrite the earlier sweep. Operational 100× is NOT_PASSED
+and financial qualification is NOT_RUN.
 Credential-free frontend builds also do not configure a real Auth project:
 the existing browser Auth module inlines its public project configuration at
 build time. An authorized native target needs matching configured builds and

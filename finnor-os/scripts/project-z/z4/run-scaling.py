@@ -16,6 +16,10 @@ def main():
     a=p.parse_args()
     if not all(x.is_absolute() for x in [a.repository,a.node,a.evidence]): raise ValueError("absolute paths required")
     a.evidence.mkdir(parents=True,exist_ok=False,mode=0o700)
+    os.sched_setaffinity(0, sorted(os.sched_getaffinity(0))[:2])
+    env={"PATH":str(a.node.parent)+":/usr/bin:/bin","HOME":str(a.evidence),"TMPDIR":str(a.evidence),
+         "NODE_OPTIONS":"--max-old-space-size=1024 --import="+str(a.repository/"finnor-os/scripts/project-z/z4/isolation-loader.mjs"),
+         "PYTHONDONTWRITEBYTECODE":"1","RAYON_NUM_THREADS":"2","TSX_DISABLE_CACHE":"1","CI":"1"}
     report={"schema":"finnor.z4.scaling-sweep.v1","eligibleReuseN":0,"nativeWork":False,"observations":[],
             "operational100x":"NOT_PASSED","financial100x":"NOT_RUN","status":"RUNNING"}
     completed=set()
@@ -50,7 +54,7 @@ def main():
             started=time.monotonic()
             with (a.evidence/(name+".log")).open("xb") as output:
                 result=subprocess.run(command,cwd=a.repository/"finnor-os",stdout=output,stderr=subprocess.STDOUT,
-                  env={**os.environ,"NODE_OPTIONS":"--max-old-space-size=1024"},timeout=2400)
+                  env=env,timeout=2400)
             row={"steps":steps,"observation":observation,"exit":result.returncode,"wallMsIncludingLockWait":round((time.monotonic()-started)*1000),
                  "command":command}
             if (a.evidence/name/"report.json").is_file():

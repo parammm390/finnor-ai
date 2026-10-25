@@ -7,11 +7,11 @@ use nova_snark::{
     frontend::{num::AllocatedNum, ConstraintSystem, LinearCombination, SynthesisError},
     nova::{CompressedSNARK, PublicParams, RecursiveSNARK, ProverKey, VerifierKey},
     provider::{PallasEngine, VestaEngine},
-    traits::{circuit::StepCircuit, snark::RelaxedR1CSSNARKTrait, Engine, ROCircuitTrait, ROTrait, ROMode},
+    traits::{circuit::StepCircuit, snark::RelaxedR1CSSNARKTrait, Engine, ROCircuitTrait, ROTrait, ROMode, RO2Constants},
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::{collections::BTreeMap, sync::Arc, time::Instant};
+use std::{collections::BTreeMap, sync::{Arc, OnceLock}, time::Instant};
 
 pub type E1 = PallasEngine;
 pub type E2 = VestaEngine;
@@ -51,8 +51,12 @@ fn from_hex(v: &str) -> Result<F, String> {
     repr.as_mut().copy_from_slice(&raw);
     Option::<F>::from(F::from_repr(repr)).ok_or("Z4_NONCANONICAL_SCALAR".into())
 }
+fn ro_constants() -> RO2Constants<E1> {
+    static CONSTANTS: OnceLock<RO2Constants<E1>> = OnceLock::new();
+    CONSTANTS.get_or_init(Default::default).clone()
+}
 fn hash_inputs(v: &[F]) -> F {
-    let mut ro = <E1 as Engine>::RO2::new_with_mode(Default::default(), ROMode::Wide);
+    let mut ro = <E1 as Engine>::RO2::new_with_mode(ro_constants(), ROMode::Wide);
     for x in v { ro.absorb(*x); }
     ro.squeeze(250, false)
 }
@@ -127,7 +131,7 @@ impl StepCircuit<F> for IntegerCircuit {
                     cs.enforce(|| format!("gate{index}"), |_| a, |_| b, |_| c);
                 }
                 Gate::Poseidon250 { inputs, output } => {
-                    let mut ro = <E1 as Engine>::RO2Circuit::new_with_mode(Default::default(), ROMode::Wide);
+                    let mut ro = <E1 as Engine>::RO2Circuit::new_with_mode(ro_constants(), ROMode::Wide);
                     for w in inputs { ro.absorb(&vars[w]); }
                     let bits = ro.squeeze(cs.namespace(|| format!("poseidon{index}")), 250, false)?;
                     let mut sum = LinearCombination::zero();

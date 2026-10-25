@@ -2,8 +2,8 @@
   "schema": "finnor.z4.native-build.v1",
   "profile": "Z4_I32_I64_PALLAS_VESTA_IPA_V1",
   "backend": "nova-01b1e2d662a847ed7029770ecbaf6687398899dd-0.76.0",
-  "binarySha256": "0994fa3cf2bc8b314bc2616affaeedc3b8e3d50134a522fea244b587bef39145",
-  "binaryBytes": 5168088,
+  "binarySha256": "a210df327c1c091580813ffa175a7ab3f2b1b26690d3028c19c1a615a480061f",
+  "binaryBytes": 5172328,
   "sourceFiles": [
     {
       "path": "Cargo.lock",
@@ -35,14 +35,14 @@
     },
     {
       "path": "src/proof.rs",
-      "sha256": "1082971266bf45c9af99fd334d4e649dd11266cbb36f31e1bc642c5b7fe49549"
+      "sha256": "158938b5edeb16bc601d1f1f5162ada25baecb104626b2521cada502fc19623c"
     },
     {
       "path": "supervise.py",
       "sha256": "8a871e2c15cef71b79dd47ee4bb964bfbc8e3c63aed9c880a8b59da0b8766394"
     }
   ],
-  "sourceDigest": "675894b667f25a894140076e49c5deb695ff2a5746f56c25b592f510c63911e5",
+  "sourceDigest": "80290396dcdf1480a731c6a26a1297f6264035d50a2329af1cf91078adf5527f",
   "cargoLockSha256": "012f22cb9ebdddbdc760c112f37cbb6de7610e808d7c70de853c76961ad766d4",
   "rustc": "rustc 1.92.0 (ded5c06cf 2025-12-08)",
   "target": "x86_64-unknown-linux-gnu",

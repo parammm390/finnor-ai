@@ -32,7 +32,8 @@ async function checkedCapsule(ctx:PeMutationContext,sessionId:string,capsuleDige
  if(row.payload.z4.status!=='CHECKED'||!row.payload.z4.capsuleDigest||
   capsuleDigest!==undefined&&row.payload.z4.capsuleDigest!==capsuleDigest)throw Error('Z4_CURRENT_CHECKED_CAPSULE_REQUIRED');
  const capsule=await artifact<Capsule>(ctx,'capsule',row.payload.z4.capsuleDigest);
- if(capsule.schema!=='finnor.z4.execution-proof-capsule.v1'||capsule.originalDigest!==row.payload.z4.originalDigest||
+ if(capsule.schema!=='finnor.z4.execution-proof-capsule.v2'||capsule.checked.schema!=='finnor.z4.checked-execution.v2'||
+  capsule.checked.originalExecutionReplayed!==false||capsule.originalDigest!==row.payload.z4.originalDigest||
   capsule.sessionId!==row.id||capsule.executionAuthorityGranted!==false||capsule.securityAdmission!=='NOT_RUN'||
   capsule.envelope.immutableArtifactDigest!==sha({originalDigest:capsule.originalDigest,checked:capsule.checked}))throw Error('Z4_IMMUTABLE_CAPSULE_CONTENT_BINDING');
  await current(ctx,o);
@@ -45,7 +46,7 @@ async function verifyFresh(ctx:PeMutationContext,o:Original,capsule:Capsule,extr
    return row.payload.z4.status==='CHECKED'&&Date.parse(o.request.deadlineAt)>Date.now()&&(!extra||await extra());
   }catch{return false;}
  };
- await charge(ctx,o,'ORIGINAL_INTEGER_AUDIT',1);
+ await charge(ctx,o,'ORIGINAL_INPUT_BINDING_AND_PROOF_AUDIT',1);
  const checked=await checkExecutionProof(o.exact,{statement:capsule.checked.statement,artifact:capsule.checked.artifact},nativeLimits(ctx,o,alive));
  await current(ctx,o);return checked;
 }
@@ -53,7 +54,8 @@ export async function auditProof(ctx:PeMutationContext,raw:unknown){
  developmentOnly();const {sessionId}=sessionSchema.parse(raw),{o,capsule,digest}=await checkedCapsule(ctx,sessionId);
  const checked=await verifyFresh(ctx,o,capsule);
  await event(ctx,sessionId,'INDEPENDENT_AUDIT_VERIFIED',{capsuleDigest:digest,verifier:checked.verifier,
-  correspondence:checked.correspondence,original:checked.original,executionAuthorityGranted:false});
+  correspondence:checked.correspondence,inputBinding:checked.inputBinding,
+  verificationMode:checked.verificationMode,originalExecutionReplayed:false,executionAuthorityGranted:false});
  return {sessionId,capsuleDigest:digest,status:'VERIFIED_COMPUTATION_ONLY',statementDigest:checked.verifier.data.statementDigest,
   sourceDigest:checked.verifier.sourceDigest,binarySha256:checked.verifier.binarySha256,executionAuthorityGranted:false,securityAdmission:'NOT_RUN'};
 }

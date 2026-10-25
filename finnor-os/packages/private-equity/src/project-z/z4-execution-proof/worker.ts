@@ -51,7 +51,8 @@ export async function runExecutionProofJob(payload:Record<string,unknown>,execut
   await current(ctx,o);
   if(initial.payload.z4.status==='CHECKED'){
    const saved=await artifact<Capsule>(ctx,'capsule',initial.payload.z4.capsuleDigest??'');
-   if(saved.originalDigest!==initial.payload.z4.originalDigest)throw Error('Z4_DUPLICATE_CAPSULE_BINDING');
+   if(saved.schema!=='finnor.z4.execution-proof-capsule.v2'||saved.checked.schema!=='finnor.z4.checked-execution.v2'||
+    saved.originalDigest!==initial.payload.z4.originalDigest)throw Error('Z4_DUPLICATE_CAPSULE_BINDING');
    await checkExecutionProof(o.exact,{statement:saved.checked.statement,artifact:saved.checked.artifact},limits);
    await event(ctx,o.sessionId,'DUPLICATE_CHECKED_REDELIVERY',{deliveryAttemptId:execution.deliveryAttemptId,claimFence:execution.claimFence,
     originalReservationRef:o.allocation.reservation.ref,originalDeadline:o.request.deadlineAt});return;
@@ -85,6 +86,9 @@ export async function runExecutionProofJob(payload:Record<string,unknown>,execut
    const plan=await runNative('plan',o.exact,limits);checkCorrespondence(o.exact.program,o.exact.binding,plan.data);
    const produced=await runNative<ProofProduction>('prove',o.exact,limits);
    production=produced.data;
+   if(canonical(full.finalState)!==canonical(production.statement.finalState))throw Error('Z4_ORIGINAL_STATEMENT_MISMATCH');
+   await event(ctx,o.sessionId,'PRODUCER_ORIGINAL_REFERENCE_MATCHED',{finalState:full.finalState,
+    statementDigest:sha(production.statement),notConsumerReplay:true});
    const checkpointDigest=await retain(ctx,'checkpoint',{schema:'finnor.z4.prover-checkpoint.v1',sessionId:o.sessionId,
     originalDigest:state.originalDigest,production,proverProcess:{meters:produced.meters,binarySha256:produced.binarySha256,sourceDigest:produced.sourceDigest}});
    await tx(ctx,async c=>{const row=await claim(ctx,initial,execution,c);await setState(ctx,row,{...row.payload.z4,checkpointDigest},c);});
@@ -94,9 +98,9 @@ export async function runExecutionProofJob(payload:Record<string,unknown>,execut
   await current(ctx,o);
   const checked=await checkExecutionProof(o.exact,production,limits),createdAt=new Date().toISOString(),source=await current(ctx,o);
   const unresolved=await obligations(ctx),contentDigest=sha({originalDigest:state.originalDigest,checked});
-  const capsule:Capsule={schema:'finnor.z4.execution-proof-capsule.v1',sessionId:o.sessionId,originalDigest:state.originalDigest,checked,createdAt,
+  const capsule:Capsule={schema:'finnor.z4.execution-proof-capsule.v2',sessionId:o.sessionId,originalDigest:state.originalDigest,checked,createdAt,
    executionAuthorityGranted:false,protectedAdmission:'NOT_RUN',securityAdmission:'NOT_RUN',envelope:{
-    schemaVersion:'finnor.z4.execution-proof-envelope.v1',phase:'Z4',principalOutputType:'ExecutionProofCapsule',
+    schemaVersion:'finnor.z4.execution-proof-envelope.v2',phase:'Z4',principalOutputType:'ExecutionProofCapsule',
     immutableArtifactDigest:contentDigest,artifactDigestBasis:'CONTENT_ORIGINAL_DIGEST_AND_CHECKED_EXECUTION_EXCLUDING_ENVELOPE',
     productLockDigest:PRODUCT_LOCK,sourceCommit:o.code.sourceCommit,sourceTree:o.code.sourceTree,producerBuildIdentity:o.code,
     originalTenant:o.tenantId,principal:o.principalId,Work:{id:o.request.workId,inputId:o.request.workInputId,inputDigest:o.workInputDigest,
@@ -113,7 +117,8 @@ export async function runExecutionProofJob(payload:Record<string,unknown>,execut
     unsupportedConditions:['ARBITRARY_TYPESCRIPT','FLOATS','UNBOUNDED_CODE','IMPLICIT_SCALE_CONVERSION','SECRET_INPUT_SECURITY','PROTECTED_OR_EFFECT_AUTHORITY'],
     claimAndEvidenceClasses:{exactIntegerExecution:'deterministic',proofSoundness:'assumption-conditional-not-admitted',costValue:'unknown'},
     checkerIdentityAndResultReferences:{sourceDigest:o.code.digest,native:checked.verifier.sourceDigest,binarySha256:checked.verifier.binarySha256,
-     correspondence:checked.correspondence,verifierStatementDigest:checked.verifier.data.statementDigest},
+     correspondence:checked.correspondence,verifierStatementDigest:checked.verifier.data.statementDigest,
+     verificationMode:checked.verificationMode,originalExecutionReplayed:false,inputBinding:checked.inputBinding},
     currentnessDependencies:{ownerSourceDigest:o.ownerSourceDigest,rightsFingerprint:o.rightsFingerprint,workInputDigest:o.workInputDigest,
      compilerAndVerifier:o.code.digest,planHash:checked.artifact.planHash,parameters:checked.artifact.parameterHash},
     securityAndConfidentialityProfile:{backend:checked.statement.backend,curveCycle:'Pallas/Vesta',commitment:'Pedersen/IPA both curves',

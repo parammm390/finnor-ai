@@ -66,7 +66,9 @@ export async function readProof(ctx:PeMutationContext,raw:unknown){
  try{await current(ctx,o,{historicalRead:true});}catch(e){currentness='STALE';reason=safePredicate(e);}
  const state=row.payload.z4;
  const c=currentness==='CURRENT'&&state.capsuleDigest?await artifact<Capsule>(ctx,'capsule',state.capsuleDigest):null;
- if(c&&(c.originalDigest!==state.originalDigest||c.sessionId!==sessionId))throw Error('Z4_CAPSULE_ORIGINAL_BINDING');
+ if(c&&(c.schema!=='finnor.z4.execution-proof-capsule.v2'||c.checked.schema!=='finnor.z4.checked-execution.v2'||
+  c.checked.originalExecutionReplayed!==false||c.originalDigest!==state.originalDigest||c.sessionId!==sessionId))
+  throw Error('Z4_CAPSULE_ORIGINAL_BINDING');
  return {sessionId,workId:o.request.workId,workInputId:o.request.workInputId,status:state.status,currentness,reason,
   originalDeadline:o.request.deadlineAt,remainingBudget:{allocationRef:o.allocation.certificate.ref,reservationRef:o.allocation.reservation.ref,
    cpuReservedSeconds:state.cpuReservedSeconds,cpuLimitSeconds:state.cpuLimitSeconds,retainedBytes:state.retainedBytes,retainedByteLimit:state.retainedByteLimit},
@@ -74,12 +76,14 @@ export async function readProof(ctx:PeMutationContext,raw:unknown){
   definitionDigest:row.payload.definitionDigest,privateOutputsWithheld:currentness!=='CURRENT',
   capsule:c?{digest:state.capsuleDigest,envelope:c.envelope,statement:c.checked.statement,artifact:{profile:c.checked.artifact.profile,
    parameterHash:c.checked.artifact.parameterHash,planHash:c.checked.artifact.planHash,proofBytes:c.checked.artifact.proofHex.length/2},
-   correspondence:c.checked.correspondence,verifier:{operation:c.checked.verifier.operation,binarySha256:c.checked.verifier.binarySha256,
+   correspondence:c.checked.correspondence,verification:{mode:c.checked.verificationMode,
+    originalExecutionReplayed:c.checked.originalExecutionReplayed,inputRows:c.checked.inputBinding.inputRows},
+   verifier:{operation:c.checked.verifier.operation,binarySha256:c.checked.verifier.binarySha256,
     sourceDigest:c.checked.verifier.sourceDigest,meters:c.checked.verifier.meters,data:c.checked.verifier.data}}:null,
   delivery:state.delivery??null,unresolvedOriginalObligations:o.obligations,currentObligations:await obligations(ctx),
   costs:await costs(ctx,o,row),failure:state.failure??null,qualifications:{
-   architecture:c?'IMPLEMENTED_NOT_INDEPENDENTLY_ADMITTED':'INCOMPLETE',internalSoftware:'IN_PROGRESS',installedDevelopment:'NOT_RUN',
-   mathematicalSecurity:'NOT_RUN',protectedAdmission:'NOT_RUN',equippedIncrement:'NOT_RUN',operational100x:'NOT_RUN',
+   architecture:'IN_PROGRESS',internalSoftware:'IN_PROGRESS',installedDevelopment:'NOT_RUN',
+   mathematicalSecurity:'UNKNOWN',protectedAdmission:'NOT_RUN',equippedIncrement:'NOT_RUN',operational100x:'NOT_RUN',
    financialHeadroom:'NOT_RUN',financial100x:'NOT_RUN',productionActivation:'NOT_RUN'},executionAuthorityGranted:false};
 }
 export async function listProofs(ctx:PeMutationContext,raw:unknown){

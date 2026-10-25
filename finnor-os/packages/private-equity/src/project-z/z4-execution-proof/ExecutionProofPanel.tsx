@@ -15,6 +15,8 @@ const viewSchema=z.object({
  capsule:z.object({digest,envelope:z.record(z.unknown()),statement:z.object({
   finalState:z.array(z.string()).max(8),steps:z.number(),program:z.object({registers:z.array(z.object({unit:z.string()})).max(8)}),
  }),artifact:z.object({proofBytes:z.number(),parameterHash:digest,planHash:digest}),
+ verification:z.object({mode:z.literal('ORIGINAL_RELATION_AND_INPUT_COMMITMENT_THEN_PINNED_PROOF'),
+  originalExecutionReplayed:z.literal(false),inputRows:z.number().int().min(1).max(256)}),
  verifier:z.object({binarySha256:digest,sourceDigest:digest})}).nullable(),
  delivery:z.object({state:z.string(),acks:z.array(z.string()),owner:z.string()}).nullable(),
  qualifications:z.record(z.string()),failure:z.string().nullable(),executionAuthorityGranted:z.literal(false),
@@ -142,9 +144,11 @@ export function ExecutionProofPanel({root,workId,workInputId,onChanged}:{
     <dl>{view.capsule.statement.finalState.map((value,i)=><div key={i}><dt>Register {i}</dt>
      <dd>{value} {view.capsule!.statement.program.registers[i]?.unit}</dd></div>)}</dl>
     <p>{view.capsule.statement.steps} actual steps, {view.capsule.artifact.proofBytes} proof bytes.</p>
+    <p>Audit and owner verification do not re-execute the programme.
+     Original input binding still checks {view.capsule.verification.inputRows} rows.</p>
     <details><summary>Current build and proof identities</summary><pre>{JSON.stringify({
      capsuleDigest:view.capsule.digest,planHash:view.capsule.artifact.planHash,parameterHash:view.capsule.artifact.parameterHash,
-     verifier:view.capsule.verifier},null,2)}</pre></details>
+     verification:view.capsule.verification,verifier:view.capsule.verifier},null,2)}</pre></details>
     <button type="button" disabled={busy} onClick={()=>void act('audit',{sessionId:view.sessionId})}>Run independent audit</button>
     <button type="button" disabled={busy||view.delivery?.state==='DELIVERING'} onClick={()=>void act('consume',{
      sessionId:view.sessionId,capsuleDigest:view.capsule!.digest,idempotencyKey:crypto.randomUUID()})}>Use exact native owner guard</button>

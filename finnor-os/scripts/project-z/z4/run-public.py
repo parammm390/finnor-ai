@@ -16,6 +16,10 @@ def main():
     a=p.parse_args()
     if not all(x.is_absolute() for x in [a.repository,a.node,a.evidence]): raise ValueError("absolute paths required")
     a.evidence.mkdir(mode=0o700,parents=True,exist_ok=False)
+    os.sched_setaffinity(0, sorted(os.sched_getaffinity(0))[:2])
+    env={"PATH":str(a.node.parent)+":/usr/bin:/bin","HOME":str(a.evidence),"TMPDIR":str(a.evidence),
+         "NODE_OPTIONS":"--max-old-space-size=1024 --import="+str(a.repository/"finnor-os/scripts/project-z/z4/isolation-loader.mjs"),
+         "PYTHONDONTWRITEBYTECODE":"1","RAYON_NUM_THREADS":"2","TSX_DISABLE_CACHE":"1","CI":"1"}
     raw=(a.repository/"scope-z/phase-evidence/z4/public-cases.pre-code.json").read_bytes()
     digest=hashlib.sha256(raw).hexdigest()
     if digest!="3992c3111ed0ba6fb700ae99095720780e713f7b55b1b9e938a6534004514d94": raise ValueError("frozen registration changed")
@@ -57,7 +61,7 @@ def main():
         started=time.monotonic()
         with (a.evidence/(family+".process.log")).open("xb") as log:
             result=subprocess.run(cmd,cwd=a.repository/"finnor-os",stdout=log,stderr=subprocess.STDOUT,
-                                  env={**os.environ,"NODE_OPTIONS":"--max-old-space-size=1024"},timeout=2400)
+                                  env=env,timeout=2400)
         entry={"family":family,"exit":result.returncode,"wallMs":round((time.monotonic()-started)*1000),"command":cmd}
         if (target/"report.json").is_file():
             body=json.loads((target/"report.json").read_text())

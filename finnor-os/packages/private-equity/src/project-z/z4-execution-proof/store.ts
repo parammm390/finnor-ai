@@ -39,7 +39,7 @@ export interface JobState {
 export interface JobRow {id:string;tenant_id:string;status:string;payload:{tenantId:string;principalId:string;sessionId:string;workId:string;
  workInputId:string;workRevisionRef:ExperimentRef;definitionDigest:string;z4:JobState};claim_token:string|null;claim_fence:number}
 export interface Capsule {
- schema:'finnor.z4.execution-proof-capsule.v1';originalDigest:string;sessionId:string;
+ schema:'finnor.z4.execution-proof-capsule.v2';originalDigest:string;sessionId:string;
  envelope:Record<string,unknown>;checked:CheckedExecution;createdAt:string;
  executionAuthorityGranted:false;protectedAdmission:'NOT_RUN';securityAdmission:'NOT_RUN';
 }

@@ -28,7 +28,8 @@ export async function executeExecutionProofQuery(tenantId:string,raw:unknown,opt
     d.owner==='S4'?'readEnterpriseControlBranchChoice':'readEnterpriseInterventionResponse'];
    if(!reader)throw Error('Z4_NATIVE_OWNER_READER_REQUIRED');
    const actual=await reader(ctx,saved.result.ref);
-   nativeOwnerConsumed=capsule.schema==='finnor.z4.execution-proof-capsule.v1'&&capsule.sessionId===id&&
+   nativeOwnerConsumed=capsule.schema==='finnor.z4.execution-proof-capsule.v2'&&
+    capsule.checked.schema==='finnor.z4.checked-execution.v2'&&capsule.checked.originalExecutionReplayed===false&&capsule.sessionId===id&&
     capsule.executionAuthorityGranted===false&&capsule.securityAdmission==='NOT_RUN'&&capsule.protectedAdmission==='NOT_RUN'&&
     capsule.envelope.immutableArtifactDigest===sha({originalDigest:capsule.originalDigest,checked:capsule.checked})&&
     saved.schema==='finnor.z4.native-owner-result.v1'&&saved.sessionId===id&&saved.originalDigest===row.payload.z4.originalDigest&&

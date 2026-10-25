@@ -1,0 +1,35 @@
+{
+  "schema": "finnor.z4.archive-relocation-inputs.v1",
+  "classification": "PUBLIC_BUILDER_AUTHORED_DIAGNOSTIC_NOT_PROTECTED",
+  "declarationStage": "NO_REPLAY_CORRECTION_BEFORE_CURRENT_ARCHIVE_EXECUTION",
+  "purpose": "Same public functions and literal outputs; wrong-output rejection now belongs to the actual proof verifier",
+  "registeredFixtureSha256": "3992c3111ed0ba6fb700ae99095720780e713f7b55b1b9e938a6534004514d94",
+  "registeredCaseId": "affine:positive-a",
+  "freshRuntimeDefinition": {
+    "program": {
+      "schema": "finnor.z4.integer-program.v1",
+      "inputCount": 1,
+      "inputUnits": ["1"],
+      "registers": [{"type": "i64", "unit": "1"}],
+      "rounding": "EXACT_NO_CONVERSION",
+      "instructions": [
+        {"op": "mul", "dst": 0, "a": {"reg": 0}, "b": {"const": "11"}},
+        {"op": "add", "dst": 0, "a": {"reg": 0}, "b": {"input": 0}}
+      ]
+    },
+    "initial": ["5"],
+    "inputs": [["1"], ["2"]],
+    "binding": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "freshExpectedFinal": ["618"],
+  "independentExpectedFormula": "5 * 11 * 11 + 1 * 11 + 2 = 618",
+  "requiredNegative": [
+    "wrong initial state in direct native verifier: Z4_CRYPTOGRAPHIC_VERIFIER_REJECTED",
+    "wrong output in non-replaying checker: Z4_PUBLIC_OUTPUT_OR_COMMITMENT_MISMATCH",
+    "original-checkout module import: Z4_EXTERNAL_MODULE_FALLBACK_REFUSED",
+    "missing replay authority: exit 78 before any DB/Auth/network action"
+  ],
+  "sourceAndInstalledAuthenticatedOwner": "NOT_RUN",
+  "protectedAdmission": "NOT_RUN",
+  "executionAuthorityGranted": false
+}
