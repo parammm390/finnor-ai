@@ -1,0 +1,321 @@
+{
+  "schema": "finnor.project-z.z0.attempt-six-bounded-checks.v1",
+  "sourceCommit": "5ad4e8d75c61b9cc1ee273cc14f8d8068d5ebd41",
+  "environmentNames": [
+    "FORCE_COLOR",
+    "HOME",
+    "LANG",
+    "NODE_OPTIONS",
+    "PATH"
+  ],
+  "heavyLock": "/home/factory-user/repos/finnor-z-shared-heavy.lock",
+  "nodeOptions": "--max-old-space-size=4096",
+  "steps": [
+    {
+      "name": "syntax-emit-converged-runtime.mjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/emit-converged-runtime.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.028953,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-emit-converged-runtime.mjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "syntax-installed-loader.mjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/installed-loader.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.027194,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-installed-loader.mjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "syntax-installed-source-custody.cjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/installed-source-custody.cjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.027404,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-installed-source-custody.cjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "syntax-native-currentness.mjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/native-currentness.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.030108,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-native-currentness.mjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "syntax-native-e2e-plan.mjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/native-e2e-plan.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.030429,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-native-e2e-plan.mjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "syntax-native-mounted-build.mjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/native-mounted-build.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.026493,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-native-mounted-build.mjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "syntax-native-mounted-work.mjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/native-mounted-work.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.02705,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-native-mounted-work.mjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "syntax-native-observation-child.mjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/native-observation-child.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.026643,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-native-observation-child.mjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "syntax-native-original-oracle.mjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/native-original-oracle.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.033159,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-native-original-oracle.mjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "syntax-native-recovery.mjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/native-recovery.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.026032,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-native-recovery.mjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "syntax-offline-runtime-doctor.mjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/offline-runtime-doctor.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.029832,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-offline-runtime-doctor.mjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "syntax-prepare-converged-source.mjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/prepare-converged-source.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.041713,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-prepare-converged-source.mjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "syntax-prepare-owner-use-integration.mjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/prepare-owner-use-integration.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.028397,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-prepare-owner-use-integration.mjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "syntax-reconcile-current-integration.mjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/reconcile-current-integration.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.031161,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-reconcile-current-integration.mjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "syntax-reconstruct-converged.mjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/reconstruct-converged.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.028535,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-reconstruct-converged.mjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "syntax-run-native-e2e.mjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/run-native-e2e.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.030487,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-run-native-e2e.mjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "syntax-verify-continuation-types.mjs",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "--check",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/verify-continuation-types.mjs"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.031669,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/syntax-verify-continuation-types.mjs.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    },
+    {
+      "name": "python-ast-freeze-source-archive.py",
+      "command": [
+        "ast.parse",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/freeze-source-archive.py"
+      ],
+      "exitCode": 0,
+      "sha256": "28dad7fb70eb4bbd1ccd620503ce19a05ed3413254e354da16899a972b9a335a",
+      "pycacheWritten": false
+    },
+    {
+      "name": "python-ast-verify-sql.py",
+      "command": [
+        "ast.parse",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/verify-sql.py"
+      ],
+      "exitCode": 0,
+      "sha256": "f66fb57963dbba92f5bf3e6b05bd18c65a73413a5533bf4593c2bcf9cee3ebe4",
+      "pycacheWritten": false
+    },
+    {
+      "name": "assembly",
+      "command": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z0/scope-z/prompts/assemble.py",
+        "check"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.548703,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/assembly.log",
+      "logSha256": "86cbd5131424357f4efca0a8e3a22bd8d13155e32915e8e3fe519b2913b3dfc2",
+      "logBytes": 1641
+    },
+    {
+      "name": "native-doctor",
+      "command": [
+        "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+        "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/run-native-e2e.mjs",
+        "--doctor"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.070692,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/native-doctor.log",
+      "logSha256": "2196e3e4280ac73fcc386bf46ea07323d901c39570863d6707f77497822a701c",
+      "logBytes": 10310
+    },
+    {
+      "name": "tracked-diff-check",
+      "command": [
+        "/usr/bin/git",
+        "-C",
+        "/home/factory-user/repos/finnor-z0",
+        "diff",
+        "--check"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z0",
+      "exitCode": 0,
+      "elapsedSeconds": 0.005682,
+      "log": "scope-z/phase-evidence/z0/execution-20261025/attempt-06/tracked-diff-check.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "logBytes": 0
+    }
+  ],
+  "newUnitTestsWritten": false,
+  "nativeRunExecuted": false,
+  "databaseActions": 0,
+  "state": "PASSED"
+}

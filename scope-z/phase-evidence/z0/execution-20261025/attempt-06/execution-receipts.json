@@ -1,0 +1,79 @@
+{
+  "schema": "finnor.project-z.z0.attempt-six-command-exits.v1",
+  "steps": [
+    {
+      "name": "initial-170-membership-observation",
+      "actualExit": 0,
+      "toolCallId": "call_oaaQsMfd74ErRrUPkcyAG6tk"
+    },
+    {
+      "name": "new-evidence-normalizer-syntax",
+      "actualExit": 0,
+      "toolCallId": "call_qGzijm2q8aFzCYKfxIrA5XGS"
+    },
+    {
+      "name": "normalization-first-schema-error",
+      "actualExit": 1,
+      "log": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/normalization-emit.log",
+        "bytes": 888,
+        "sha256": "8214b5ced0b56962f24eaaa3968a109237e547f429c54ad9707595c6246538bc"
+      },
+      "toolCallId": "call_S9BtadxvcNcg6RB5zPxMPfnF"
+    },
+    {
+      "name": "normalization-corrected-emission",
+      "actualExit": 0,
+      "log": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/normalization-emit-02.log",
+        "bytes": 1982,
+        "sha256": "aff63028e6aa7022b7c0e0b861181639536b366ccad550a869b28067260ca486"
+      },
+      "toolCallId": "call_qGzijm2q8aFzCYKfxIrA5XGS"
+    },
+    {
+      "name": "existing-bounded-source-checks",
+      "actualExit": 0,
+      "receipt": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/bounded-checks.json",
+        "bytes": 13267,
+        "sha256": "fa3153ff85904161f29b02e43fd07939c72f0c8b061cf74e425c483fb370c9cc"
+      },
+      "toolCallId": "call_S9BtadxvcNcg6RB5zPxMPfnF"
+    },
+    {
+      "name": "normalized-frozen-input-verification",
+      "actualExit": 0,
+      "log": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/normalization-verify.log",
+        "bytes": 1984,
+        "sha256": "0f83968840beb4797237e803f7cffdbc8550b583fbbb57a87564a967789fff69"
+      },
+      "toolCallId": "call_ASQ4aaRl3jJvdTPDcYnTyUSG"
+    },
+    {
+      "name": "historical-649-member-audit",
+      "actualExit": 0,
+      "receipt": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/historical-evidence-audit.json",
+        "bytes": 10426,
+        "sha256": "f23245efc3fe8ea1cd16fb4d56235fc7ce3adf746adcd3a91913a6d3cc1e0be0"
+      },
+      "toolCallId": "call_ASQ4aaRl3jJvdTPDcYnTyUSG"
+    },
+    {
+      "name": "nonexistent-npm-location",
+      "actualExit": 127,
+      "toolCallId": "call_y5jVFU3U71uutp450ybtsOQY"
+    },
+    {
+      "name": "actual-npm-with-pinned-node",
+      "actualExit": 0,
+      "version": "11.19.1",
+      "toolCallId": "call_UcDCT01mi9bbsgbazNlAEDUK"
+    }
+  ],
+  "newNativeRunOrHeavyBuild": false,
+  "currentMissingAuthorityRefusalNotRetried": true,
+  "postCodeUnitTestsWritten": false
+}

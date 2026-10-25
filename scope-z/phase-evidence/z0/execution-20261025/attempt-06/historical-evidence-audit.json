@@ -1,0 +1,200 @@
+{
+  "schema": "finnor.project-z.z0.explicit-historical-member-audit.v1",
+  "observedAt": "2026-10-25T01:24:48.800728+00:00",
+  "priorIndex": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/final-evidence-index-04.json",
+    "bytes": 116159,
+    "sha256": "dd8255482f6a58f916ea6691e03fa695fc5d26fdecddc275586facc51b66f19a"
+  },
+  "priorMembersVerified": 649,
+  "priorMemberBytes": 100720576,
+  "problems": [],
+  "retainedWitnesses": [
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/final-evidence-index-04.json",
+      "bytes": 116159,
+      "sha256": "dd8255482f6a58f916ea6691e03fa695fc5d26fdecddc275586facc51b66f19a"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/postcommit-binding-04.json",
+      "bytes": 6846,
+      "sha256": "8eecb62b715a905cf6252bed922d632f33e0181607fd883206cb1b268201a5a4"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/runtime-and-native-replay-04.md",
+      "bytes": 3899,
+      "sha256": "7298bae336d2c1d3d5a940df5968d5430c52cda66e8cfdcfe01b450345439436"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/qualification-final-04.json",
+      "bytes": 12094,
+      "sha256": "6361ecfd6c5090f750c315bf4763b0159f1cc74e59f1e4b696c5388d29914f6c"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/handoff-final-04.md",
+      "bytes": 5221,
+      "sha256": "c815cb5af79a3434a96b6ef62967d2b860c441fbc86ef2ab61fb9d42287f1e00"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/retained-failures-05.json",
+      "bytes": 7237,
+      "sha256": "7c16b5d67cd88c273dcb74bbdf20b47287d4189f1708628a1bfc7cd843019b59"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/z0-owned-source-06.patch",
+      "bytes": 424429,
+      "sha256": "0e1d6ab45e8536856043da421a4b8ce9180cd854d7a5dd4c1a908cd6d5e977c0"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/coordinator-tooling-update-06.patch",
+      "bytes": 13782,
+      "sha256": "b214fed262d91237c909c5e9512d9da78991318f83809cd6818faca7d4a3aac4"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/coordinator-tooling-update-request-06.json",
+      "bytes": 2164,
+      "sha256": "19a50662c055fb9f2defd010934751c91267b76fa81336f33d52168852afd94e"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/source-native-doctor-21.json",
+      "bytes": 922,
+      "sha256": "8078c6088e59c4b4d6f6c70768a258d22f76be22f6b5c89fabac4b6699fccbb1"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/source-native-doctor-21.log",
+      "bytes": 10310,
+      "sha256": "2196e3e4280ac73fcc386bf46ea07323d901c39570863d6707f77497822a701c"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/source-native-refusal-21.json",
+      "bytes": 920,
+      "sha256": "456a906fbb0df6f0394f7d61339a6ab33d4186107ca2803650e8255530a9e9e4"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/source-native-refusal-21.log",
+      "bytes": 242,
+      "sha256": "459a0eebdf75d3bf42c4797cbc60023c90e1ba4f9d6514b0dc191dc449ae290f"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-21/source-snapshot.json",
+      "bytes": 794955,
+      "sha256": "f9d1a2409f5fdd05fde0bf58c3973d1fcfd9b168247d6ed8b300df075e76f04f"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-21/source-archive.json",
+      "bytes": 407,
+      "sha256": "850c145ee5f08a90fa5bbc7c96971b84a118d3a1725e2dba18cf46111ab0c0ce"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-21/converged-source.tar.gz",
+      "bytes": 11395868,
+      "sha256": "6666aeaed71c53a407fafdfc05b2008fe42e2e2d67ba5d2f119168b6308347ae"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/reconstruction.json",
+      "bytes": 12047,
+      "sha256": "4efaa47e218385659a5e5b7e7434855fc3126373bab417f77eb1834beca2181f"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/offline-runtime-doctor.json",
+      "bytes": 33611,
+      "sha256": "c9b51bb91729da07ac55f8b31d191f6e4ec78bac29c29ada4f4c1559a86fab66"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/artifact-transports.json",
+      "bytes": 1281,
+      "sha256": "309b5b2b1e7c314147869db16364e134a159c4d647d69da15a12628d51fabea1"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/frontend-public-auth-build.json",
+      "bytes": 261,
+      "sha256": "bb83ee5572c7f9876e9e6c1a8c6f6fe2f9abf1f2e5d6ba35ad15912d2b3d6c6a"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/post21-coverage-probe/coverage-diff.json",
+      "bytes": 70688,
+      "sha256": "31627ac60f293763292962f4a7b3a6b3ee70afc8453e2ccbe807debb8ea7ed7f"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/post21-coverage-probe/probe-run.log",
+      "bytes": 901,
+      "sha256": "34de39920cbe305a13e7e85e6e52b74c0e79db37243384b97c190395fe6312a8"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/post21-coverage-probe/probe-run-2.log",
+      "bytes": 650,
+      "sha256": "dd15efe577bf0e7a28b8cb39480276fd24096be31dc56c13375fe9bae6304c54"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/post21-coverage-probe/docs/centropy/capability-coverage.json",
+      "bytes": 1645584,
+      "sha256": "7a1eff1566a3fbfd777a53fcd2e58d33cc0e44071aee58a5214760d7bf09eec9"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-workspace.json",
+      "bytes": 1197,
+      "sha256": "64544016ed1456fcc4f7c0db204af70ad39122e688f1d2582d95ba38e18f052d"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-workspace.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-client.json",
+      "bytes": 1204,
+      "sha256": "302c5341a06f46a79480158fcb33131dd7027ef7af0060f3392f16834176bc64"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-client.log",
+      "bytes": 90,
+      "sha256": "ee4ecfaf7d2db2cde8608d1b6625f8a1623933f107152db5b7480c5994f2f73d"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-forms.json",
+      "bytes": 1198,
+      "sha256": "8a81640c40883eee7ee94ffcdcca74689e84804b45d0d8a5e6de04ff00851e69"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-forms.log",
+      "bytes": 49,
+      "sha256": "cb655827e027a2a24764b6297abe19f2ec84df5f010808e6f8033ba33e32e64f"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-manifest.json",
+      "bytes": 1213,
+      "sha256": "eb8939209398f5f7181f9eeccc7c491c932f20bbadfa51802cf3a05232d6e15f"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-manifest.log",
+      "bytes": 1887,
+      "sha256": "bc4ff1046288aeefc535c1ad0d85c4ca8769c7cad5ec2742a92ab105039dc314"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-manifest-retry.json",
+      "bytes": 1142,
+      "sha256": "4be3d796edeeb76788ec4ec47e497e4fca48722c6c7191d6482339cea26ce301"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-manifest-retry.log",
+      "bytes": 72,
+      "sha256": "ef670de085ed1af2bacd0091b8a0b96647d19c27c11b1128123bc46bf1c4db38"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-coverage.json",
+      "bytes": 1209,
+      "sha256": "f6a0b9255f986bc838bc039d81c4e6caa82c446f534a07347092488e52cd3268"
+    },
+    {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-coverage.log",
+      "bytes": 945,
+      "sha256": "66bcb9a718237f94b23dd05e8bb4243b93013dbc68b39c454a1ba4108428c568"
+    }
+  ],
+  "probeUsesSymlinkedInputsNotIndependentInstall": true,
+  "probeSealedTreeModified": false,
+  "elapsedSeconds": 1.7581716530039557,
+  "auditOnlyPeakRssKiB": 26512,
+  "notCompleteS7Costs": true,
+  "state": "PASSED"
+}

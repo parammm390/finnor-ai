@@ -1,0 +1,1 @@
+droid exec: exiting with 1 undelivered background Execute completion(s) (completion-turn-failed: a completion turn did not complete); their results were not delivered; still-running commands are stopped when droid exec exits.

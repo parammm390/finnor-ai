@@ -1,0 +1,12 @@
+file:///home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/normalize-reviewed-membership.mjs:33
+const assert = (ok, reason) => { if (!ok) throw Error(reason); };
+                                                ^
+
+Error: Z3_MODE_CHANGED:finnor-os/packages/private-equity/src/allocation-store.ts
+    at assert (file:///home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/normalize-reviewed-membership.mjs:33:49)
+    at file:///home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/normalize-reviewed-membership.mjs:83:18
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.23.4

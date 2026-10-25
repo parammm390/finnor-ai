@@ -1,0 +1,210 @@
+{
+  "schema": "finnor.project-z.z0.retained-failure-ledger.v6",
+  "observedAt": "2026-10-25T01:30:28.620Z",
+  "priorImmutableLedger": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/retained-failures-05.json",
+    "bytes": 7237,
+    "sha256": "7c16b5d67cd88c273dcb74bbdf20b47287d4189f1708628a1bfc7cd843019b59"
+  },
+  "priorIndex": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/final-evidence-index-04.json",
+    "bytes": 116159,
+    "sha256": "dd8255482f6a58f916ea6691e03fa695fc5d26fdecddc275586facc51b66f19a"
+  },
+  "priorAudit": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/historical-evidence-audit.json",
+    "bytes": 10426,
+    "sha256": "f23245efc3fe8ea1cd16fb4d56235fc7ce3adf746adcd3a91913a6d3cc1e0be0"
+  },
+  "prior649MembersRehashed": true,
+  "priorOriginalFailuresAndPreEditMapsUnmodified": true,
+  "additional": [
+    {
+      "id": "actual-attempt-five-http-402",
+      "classification": "USAGE_DENIAL_NOT_PRODUCT_FAILURE_OR_ACCEPTANCE",
+      "receipt": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/usage-limit-attempt-005.json",
+        "bytes": 2197,
+        "sha256": "cc675769ff96cb4f7d45924bfa85c885db3eff827279bfd408f31c83519a0049"
+      },
+      "newAttemptSix402Observed": false
+    },
+    {
+      "id": "strict-combined-build-01-next-declaration",
+      "state": "FAILED",
+      "actualOverallExit": "NOT_RECORDED_IN_REPORT",
+      "frontendExit": 0,
+      "apiExit": 0,
+      "failure": "SOURCE_CHANGED_DURING_BUILD",
+      "drift": [
+        "next-env.d.ts"
+      ],
+      "report": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/inputs/build-01-report.json",
+        "bytes": 6423,
+        "sha256": "5ec679def34bbc978a672b4ad0d9b038fddf3758b0775234dd8fe6364b602d38"
+      },
+      "repair": "COORDINATOR_TYPEGEN_BEFORE_SOURCE_CUT_NOT_REBUILT",
+      "notCurrentInstalledProof": true
+    },
+    {
+      "id": "post21-manifest-timeout",
+      "report": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-manifest.json",
+        "bytes": 1213,
+        "sha256": "eb8939209398f5f7181f9eeccc7c491c932f20bbadfa51802cf3a05232d6e15f"
+      },
+      "log": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-manifest.log",
+        "bytes": 1887,
+        "sha256": "bc4ff1046288aeefc535c1ad0d85c4ca8769c7cad5ec2742a92ab105039dc314"
+      },
+      "actualExit": 1,
+      "elapsedSeconds": 30.25000063799962,
+      "predicate": "ETIMEDOUT_READ_CANONICAL_PLANNER_30_SECONDS",
+      "laterRetry": {
+        "report": {
+          "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-manifest-retry.json",
+          "bytes": 1142,
+          "sha256": "4be3d796edeeb76788ec4ec47e497e4fca48722c6c7191d6482339cea26ce301"
+        },
+        "log": {
+          "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-manifest-retry.log",
+          "bytes": 72,
+          "sha256": "ef670de085ed1af2bacd0091b8a0b96647d19c27c11b1128123bc46bf1c4db38"
+        },
+        "actualExit": 0,
+        "elapsedSeconds": 11.001457313999708
+      },
+      "timeoutCause": "NOT_ESTABLISHED",
+      "originalFailureRetained": true
+    },
+    {
+      "id": "post21-coverage-stale",
+      "report": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-coverage.json",
+        "bytes": 1209,
+        "sha256": "f6a0b9255f986bc838bc039d81c4e6caa82c446f534a07347092488e52cd3268"
+      },
+      "log": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/installation-18-proposal/post21-coverage.log",
+        "bytes": 945,
+        "sha256": "66bcb9a718237f94b23dd05e8bb4243b93013dbc68b39c454a1ba4108428c568"
+      },
+      "actualExit": 1,
+      "elapsedSeconds": 31.43101942100475,
+      "predicate": "CENTROPY_COVERAGE_AUDIT_IS_STALE",
+      "scope": "SEALED_HISTORICAL_POPULATION_NOT_CURRENT_COMBINED_VALIDATION",
+      "existingCoverageSha256": "eaf7f5b23b4199a8c77fc7f5eae1799944f3bc1767168d64ec580e939e7f0523",
+      "differingFields": [
+        "frontendImportGraph",
+        "executedProofIndexMode",
+        "manifestSha256",
+        "sourceBuildProvenance",
+        "capabilities"
+      ],
+      "coverageDiff": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/post21-coverage-probe/coverage-diff.json",
+        "bytes": 70688,
+        "sha256": "31627ac60f293763292962f4a7b3a6b3ee70afc8453e2ccbe807debb8ea7ed7f"
+      },
+      "currentCoordinatorValidation": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/inputs/validation-03-report.json",
+        "bytes": 3345,
+        "sha256": "dd08be08f06f2f5cf6588005c3cd5163d1efaa9cc9da63e4d74530b540c66efa"
+      }
+    },
+    {
+      "id": "post21-coverage-probe-initial-missing-tsconfig",
+      "actualExit": 1,
+      "originalLog": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/post21-coverage-probe/probe-run.log",
+        "bytes": 901,
+        "sha256": "34de39920cbe305a13e7e85e6e52b74c0e79db37243384b97c190395fe6312a8"
+      },
+      "actualToolResults": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/post21-probe-original-tool-results.json",
+        "bytes": 2095,
+        "sha256": "12540491a52b6649110e7a678f7662b8b4b7cfeb77bdb1fa8765ef18fcad471e"
+      },
+      "laterProbeActualExit": 0,
+      "laterProbeLog": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/post21-coverage-probe/probe-run-2.log",
+        "bytes": 650,
+        "sha256": "dd15efe577bf0e7a28b8cb39480276fd24096be31dc56c13375fe9bae6304c54"
+      },
+      "probeSharesSymlinkedSealedInputsAndDependencies": true,
+      "notSourceReconstructionOrNativeProof": true,
+      "sealedTreeModified": false
+    },
+    {
+      "id": "attempt-six-evidence-normalizer-shared-mode-schema",
+      "actualExit": 1,
+      "classification": "EVIDENCE_ADAPTER_SCHEMA_BUG_NOT_PRODUCT_FAILURE",
+      "failedLog": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/normalization-emit.log",
+        "bytes": 888,
+        "sha256": "8214b5ced0b56962f24eaaa3968a109237e547f429c54ad9707595c6246538bc"
+      },
+      "correction": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/normalization-schema-correction.md",
+        "bytes": 829,
+        "sha256": "09bb4330aacacf83c9c72ba897345d9975ceb26e300d4c384d2b1456d021e83b"
+      },
+      "correctedEmitActualExit": 0,
+      "correctedEmitLog": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/normalization-emit-02.log",
+        "bytes": 1982,
+        "sha256": "aff63028e6aa7022b7c0e0b861181639536b366ccad550a869b28067260ca486"
+      },
+      "verificationActualExit": 0,
+      "verificationLog": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/normalization-verify.log",
+        "bytes": 1984,
+        "sha256": "0f83968840beb4797237e803f7cffdbc8550b583fbbb57a87564a967789fff69"
+      },
+      "productExpectedValuesChanged": false,
+      "productFilesWritten": false
+    },
+    {
+      "id": "attempt-six-npm-path-probe",
+      "actualExit": 127,
+      "classification": "TOOLCHAIN_LOCATION_PROBE_NOT_PRODUCT_FAILURE",
+      "command": "env PATH=/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin:/usr/bin:/bin /home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/npm --version",
+      "message": "No such file or directory",
+      "toolCallId": "call_y5jVFU3U71uutp450ybtsOQY",
+      "correctedCommand": "env PATH=/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin:/usr/bin:/bin /usr/bin/npm --version",
+      "correctedActualExit": 0,
+      "actualNpmVersion": "11.19.1",
+      "correctedToolCallId": "call_UcDCT01mi9bbsgbazNlAEDUK"
+    }
+  ],
+  "retainedExpectedRefusal": {
+    "receipt": {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/source-native-refusal-21.json",
+      "bytes": 920,
+      "sha256": "456a906fbb0df6f0394f7d61339a6ab33d4186107ca2803650e8255530a9e9e4"
+    },
+    "actualExit": 2,
+    "expectedExit": 2,
+    "driverSha256": "457e2e05e4c6882eecbfd6b574748eb3dd161aea4dbed4117cb49c36a277aea8",
+    "newUnchangedDeniedRetry": false,
+    "nativeCasesExecuted": 0
+  },
+  "oldReplayDefect": {
+    "obsolete": {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/runtime-and-native-replay-04.md",
+      "bytes": 3899,
+      "sha256": "7298bae336d2c1d3d5a940df5968d5430c52cda66e8cfdcfe01b450345439436"
+    },
+    "correction": {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/replay-recipe.md",
+      "bytes": 7311,
+      "sha256": "6b41b728b651d5fbd8c9578897d7f90f680477faf9f09febd6fea366457e5b66"
+    },
+    "builtPreparedTargetNeverReused": true
+  },
+  "sourceNative": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "originalFailuresErasedOrRelabelled": false
+}

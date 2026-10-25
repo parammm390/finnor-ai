@@ -1,0 +1,189 @@
+{
+  "schema": "finnor.project-z.z0.retained-failure-ledger.v5",
+  "observedAt": "2026-10-24T22:47:54.471146+00:00",
+  "priorImmutableLedger": {
+    "path": "retained-failures-04.json",
+    "sha256": "279c60a8abfc7b0b9485ad7f4fe6a16ee22d39b0831cb16671a90764f6a0ec7f",
+    "bytes": 9090
+  },
+  "priorOriginalFailuresAndPreEditMapsRemainAuthoritative": true,
+  "additionalFailuresAndRefusals": [
+    {
+      "id": "reconstruction-17-managed-next-declaration-drift",
+      "actualExit": 1,
+      "native": false,
+      "command": {
+        "path": "reconstruction-17-command.json",
+        "sha256": "6f4949a0a2f1eac8437898b996ffdcdf3b5ad6071e53752d7a92d27610a6c07e",
+        "bytes": 1211
+      },
+      "failureReceipt": {
+        "path": "installation-17/reconstruction-failure.json",
+        "sha256": "e894bffabf474376a6125bf6aae713879fd1b7667470990a4f273f58ce60f343",
+        "bytes": 8546
+      },
+      "predicate": "Z0_RECONSTRUCTION_STEP_FAILED_08-complete-emission",
+      "stepsPassedBeforeFailure": 10,
+      "offlineDoctor": "NOT_RUN",
+      "preEditMap": {
+        "path": "managed-next-declaration-before-14.md",
+        "sha256": "5170d50aaedd7f0b093bde556c690d71199c54b157db4aeebae80fea0ca86c3a",
+        "bytes": 2913
+      },
+      "repairCommit": "48523967d0344b777729d258bf2e7e9749152340",
+      "repairReceipt": {
+        "path": "managed-next-declaration-repair-04.json",
+        "sha256": "9da8ed43be2f3891c840721795b924b2f8725fcc7fa783b45473409fdf55771d",
+        "bytes": 2430
+      },
+      "originalFailureEvidenceUnmodified": true
+    },
+    {
+      "id": "reconstruction-20-local-alias-externalized",
+      "actualExit": 1,
+      "native": false,
+      "command": {
+        "path": "reconstruction-20-command.json",
+        "sha256": "d8e0882c579656540e383ef7c89cc4ef32655b2a09472183e10e5894c55f74f1",
+        "bytes": 1209
+      },
+      "failureReceipt": {
+        "path": "installation-20/reconstruction-failure.json",
+        "sha256": "b8d11b6af47a1590ad6618ea8b693110f8295a5ed01f758f1f8c50b6e3ea2351",
+        "bytes": 8547
+      },
+      "predicate": "Z0_RECONSTRUCTION_STEP_FAILED_08-complete-emission",
+      "failedStepLogSha256": "26d0ac4288760d8c69cfb4d2d64445709a3dce790f7b439786920b8aa1cb9055",
+      "rootCause": "Two pinned frontend aliases (@/lib/centropy/capability-manifest, @/lib/centropy/supabase-browser) were externalized like npm packages by the catch-all resolver",
+      "preEditMap": {
+        "path": "source-alias-closure-before-16.md",
+        "sha256": "03ff35450ebd5aec71bb8b32df9e6945ec862049d4a1f221b7767d7a908b30d7",
+        "bytes": 2404
+      },
+      "repairCommit": "5ad4e8d75c61b9cc1ee273cc14f8d8068d5ebd41",
+      "offlineDoctor": "NOT_RUN_IN_20",
+      "originalFailureEvidenceUnmodified": true
+    },
+    {
+      "id": "catalogue-command-preflight-wrapper-misguess",
+      "scope": "TOOL_WRAPPER_ASSERTION_NOT_PRODUCT_OR_EXPECTED_VALUE",
+      "actualExit": 1,
+      "original": {
+        "path": "catalogue-command-preflight-failures-04.log",
+        "sha256": "e866046f29c3e6723633645118a349e10bdb3ac7cae4c89afa87cf753c3f4368",
+        "bytes": 5843
+      },
+      "correction": {
+        "path": "catalogue-command-preflight-correction-04.json",
+        "sha256": "8b2c8148bb767411e698995b138465afcc7c5dacc226c6871b707b2c16091761",
+        "bytes": 779
+      },
+      "expectedValuesChanged": false
+    },
+    {
+      "id": "installation-18-catalogue-prerequisite-failures",
+      "scope": "SOURCE_GENERATION_PREREQUISITES_NOT_NATIVE",
+      "originals": [
+        {
+          "path": "installation-18-proposal/before-manifest.json",
+          "sha256": "df87d312efcc4f6d00d8b84a7d9a2b7e521edc29e4d3f30700402266e3fa477c",
+          "bytes": 695
+        },
+        {
+          "path": "installation-18-proposal/before-coverage.json",
+          "sha256": "4e15b20c7c665764765699ced04e60b2ea794724e1eb07e6a7c8363173123ccc",
+          "bytes": 683
+        },
+        {
+          "path": "installation-18-proposal/before-ready-manifest.log",
+          "sha256": "04ce9a359decb2fffa8789884c8c201fb824d87815b805ba567891981caf79dd",
+          "bytes": 917
+        },
+        {
+          "path": "installation-18-proposal/before-ready-coverage.log",
+          "sha256": "66bcb9a718237f94b23dd05e8bb4243b93013dbc68b39c454a1ba4108428c568",
+          "bytes": 945
+        }
+      ],
+      "laterAfterChecksAllExitZero": true,
+      "afterReceipts": [
+        {
+          "path": "installation-18-proposal/after-workspace.json",
+          "sha256": "54fbdbfdabcfc6ff76779fc8ba5a75ac829277cbae1f3d6ba948a66fb28216e2",
+          "bytes": 863
+        },
+        {
+          "path": "installation-18-proposal/after-client.json",
+          "sha256": "a8decd09866382cb3d5bcbb620087049e0f0acb1cd421709a3f1002df4b0e684",
+          "bytes": 860
+        },
+        {
+          "path": "installation-18-proposal/after-forms.json",
+          "sha256": "d187d9ebadc4414873a64de64d392fc8f691072de32425806a41e4c4c16590be",
+          "bytes": 1004
+        },
+        {
+          "path": "installation-18-proposal/after-manifest.json",
+          "sha256": "4e0aacc43ab3be040e1678cb5eb8a9a30af0dd6a8a8483156f401ff16a2a96f3",
+          "bytes": 1014
+        },
+        {
+          "path": "installation-18-proposal/after-coverage.json",
+          "sha256": "b457b1fc1827cc784747ecb5df9c343d1077ffa2b61771c2e0f3ef5b2357a56c",
+          "bytes": 1014
+        }
+      ]
+    },
+    {
+      "id": "prepared-target-21-guard-refusals",
+      "classification": "EXPECTED_GUARD_REFUSALS_NOT_PRODUCT_FAILURES",
+      "expectedExit": 1,
+      "actualExit": 1,
+      "receipt": {
+        "path": "prepared-target-refusals-21.json",
+        "sha256": "d6e41398bd87625c5f584bd3402d3707b514aa3b7f86367b39568c715708cea3",
+        "bytes": 1184
+      },
+      "predicates": [
+        "Z0_PREPARED_TARGET_INPUT_HASH_CHANGED",
+        "Z0_PREPARED_TARGET_SOURCE_PREIMAGE_CHANGED:.eslintrc.cjs"
+      ]
+    }
+  ],
+  "currentReconstructionResult": {
+    "state": "PASSED_ENGINEERING_RECONSTRUCTION",
+    "stepsPassed": 12,
+    "command": {
+      "path": "reconstruction-21-command.json",
+      "sha256": "28b8f9113a2911df80ebe239b430b3c00a377e91f065a92e5b6f24d69b6123c2",
+      "bytes": 2187
+    },
+    "completionReceipt": {
+      "path": "installation-18-proposal/reconstruction.json",
+      "sha256": "4efaa47e218385659a5e5b7e7434855fc3126373bab417f77eb1834beca2181f",
+      "bytes": 12047
+    },
+    "launch": {
+      "path": "reconstruction-21-launch.json",
+      "sha256": "9b228343639029c92866807178d61da8de993b2922bab1f28b961925977b4ea4",
+      "bytes": 1166
+    },
+    "guardReceipt": {
+      "path": "pre-reconstruction-21-disk.json",
+      "sha256": "29e4b33ef3c332fc5f5245b0f0e1bc6c21bdb635e09b143944e13041bfed0034",
+      "bytes": 2047
+    },
+    "preparedTargetInput": {
+      "path": "prepared-target-input-21.json",
+      "sha256": "1d97ac0f350b5fc5a8b03845222cd3b54dbc180e58a524a0ad3eb5ecc498d5e8",
+      "bytes": 652758
+    },
+    "mode": "PREPARED_SOURCE_GENERATION_ONLY_TARGET_FRESH_REINSTALL_BOTH_LOCKS",
+    "native": "NOT_RUN",
+    "installedNative": "NOT_RUN"
+  },
+  "noNewPostCodeUnitTests": true,
+  "native": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "supervisorOrHooksModified": false
+}

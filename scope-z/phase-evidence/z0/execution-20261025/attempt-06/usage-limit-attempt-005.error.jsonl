@@ -1,0 +1,1 @@
+{"type":"error","source":"agent_loop","message":"402 {\"detail\":\"You've reached your 5-hour Droid Core usage limit (resets in 1h 15min).\\nReload Extra Usage credits or wait for your limits to reset.\",\"status\":402,\"title\":\"Payment Required\",\"displayToUser\":true}","timestamp":1792883841535,"session_id":"66647028-fac4-4793-bec3-22b564d12b90"}

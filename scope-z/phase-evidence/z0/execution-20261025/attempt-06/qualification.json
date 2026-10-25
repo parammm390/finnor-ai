@@ -1,0 +1,215 @@
+{
+  "schema": "finnor.project-z.z0.qualification.v7",
+  "phase": "Z0",
+  "principalOutputType": "ConvergedInstitutionRuntime",
+  "computationDisposition": "INCOMPLETE",
+  "overallEvidenceClass": "partial",
+  "interfaceVersion": "institution-runtime-convergence-v1",
+  "scientificIncrement": false,
+  "sourcePopulationSha256": "33d82ae209cd103c6419ed9b72094928e94fd1ec3dfef629112122d9ddc57efe",
+  "sourceProvenance": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/source-provenance.json",
+    "bytes": 17848,
+    "sha256": "9f41bbc85bb6d31462b8b270b203c5e3b32af6822b391613a694ddf87bc16eee"
+  },
+  "engineeringDelivery": "FROZEN_LOCAL_SOURCE_BOUND_AWAITING_COORDINATOR_REVIEW",
+  "sharedIntegration": "COORDINATOR_ADOPTED_27_PACKAGING_LEAVES_PLUS_THREE_5AD4E8D_CORRECTIONS",
+  "slotReleased": false,
+  "coordinatorGateWritten": false,
+  "scheduling": {
+    "accepted": [
+      "Z1",
+      "Z2"
+    ],
+    "occupied": [
+      "Z0",
+      "Z3",
+      "Z4",
+      "Z5"
+    ],
+    "releaseAuthority": "COORDINATOR_ONLY"
+  },
+  "gates": {
+    "architecture": {
+      "state": "IN_PROGRESS"
+    },
+    "internal-software": {
+      "state": "IN_PROGRESS"
+    },
+    "installed-development-reconstruction": {
+      "state": "IN_PROGRESS"
+    },
+    "mathematical-security-domain": {
+      "state": "NOT_RUN"
+    },
+    "protected-admission": {
+      "state": "NOT_RUN"
+    },
+    "equipped-increment": {
+      "state": "NOT_RUN"
+    },
+    "operational-100x": {
+      "state": "NOT_RUN"
+    },
+    "financial-100x": {
+      "state": "NOT_RUN"
+    },
+    "production-activation": {
+      "state": "NOT_RUN"
+    },
+    "financial-headroom": {
+      "state": "UNKNOWN"
+    }
+  },
+  "currentEngineering": {
+    "membership": "PASSED_METADATA_ONLY",
+    "boundedChecks": {
+      "state": "PASSED",
+      "count": 22,
+      "receipt": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/bounded-checks.json",
+        "bytes": 13267,
+        "sha256": "fa3153ff85904161f29b02e43fd07939c72f0c8b061cf74e425c483fb370c9cc"
+      }
+    },
+    "normalizationEmitExit": 0,
+    "normalizationVerifyExit": 0,
+    "historicalAudit": "PASSED_649_MEMBERS_PLUS_36_WITNESSES",
+    "actualCurrentCapture": "NOT_RUN",
+    "strictCombinedBuild": {
+      "lastAttempt": "FAILED",
+      "failure": "SOURCE_CHANGED_DURING_BUILD",
+      "nextAttempt": "NOT_RUN_RESOURCE_GUARD",
+      "coordinatorRepair": "TYPEGEN_BEFORE_CUT_SOURCE_ONLY"
+    },
+    "currentInstalledReconstruction": "NOT_RUN",
+    "coordinatorValidation03": {
+      "state": "PASSED",
+      "checks": 14,
+      "report": {
+        "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/inputs/validation-03-report.json",
+        "bytes": 3345,
+        "sha256": "dd08be08f06f2f5cf6588005c3cd5163d1efaa9cc9da63e4d74530b540c66efa"
+      },
+      "scope": "ORIGINAL_OFFLINE_SOURCE_REPORT_NOT_CURRENT_BUILD_OR_NATIVE_RECEIPT"
+    }
+  },
+  "historicalRun21": {
+    "state": "PASSED_ENGINEERING_RECONSTRUCTION",
+    "actualExit": 0,
+    "steps": 12,
+    "sourcePopulationSha256": "ded45547fa6ea84fec0e9d12a0fc88ee3e47847f204e5e2174051c9607d6a2bd",
+    "sourceArchiveSha256": "6666aeaed71c53a407fafdfc05b2008fe42e2e2d67ba5d2f119168b6308347ae",
+    "buildId": "z0-ded45547fa6ea84f",
+    "mountedSealSha256": "c637e91b46cc5e1a74bedd447ea9161c165817bd6dbdbdbb7066d4ce0d12c29c",
+    "postReconstructionCoverageCheck": "FAILED_RETAINED",
+    "notCurrentCombinedProof": true,
+    "native": "NOT_RUN"
+  },
+  "native": {
+    "source": "NOT_RUN",
+    "installed": "NOT_RUN",
+    "casesPerTarget": 54,
+    "totalCases": 108,
+    "completed": 0,
+    "coverage": {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/native-case-coverage.json",
+      "bytes": 49943,
+      "sha256": "7a2ec647c528c6dc919ba842d1ce79b0dc337a659ebe083930adccd94715a469"
+    },
+    "driverSha256": "457e2e05e4c6882eecbfd6b574748eb3dd161aea4dbed4117cb49c36a277aea8",
+    "independentFullOracle": "NOT_DELIVERED",
+    "independentLiteralFragment": {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/inventory-literal-04.json",
+      "bytes": 49792,
+      "sha256": "1636a647515d3b5f4b5f21ad547758b271ed0458d9fb4200c0b886fb3f7bee84"
+    },
+    "literalFragmentCommit": "c1a8f7c7c3314d31d61dd5787c86df51aa3e513a",
+    "literalIsExternallyDeliveredFullOracle": false,
+    "currentLiteralInputPins": 10,
+    "literalNativeComparison": "NOT_RUN",
+    "mountedAuth": "NOT_RUN",
+    "originalUsefulOwner": "NOT_RUN",
+    "physicalRecovery": {
+      "CLAIM": "NOT_RUN",
+      "ARTIFACT": "NOT_RUN",
+      "AMBIGUITY": "NOT_RUN"
+    }
+  },
+  "blockers": {
+    "resource": {
+      "availableBytes": 2169356288,
+      "combinedGuardBytes": 4294967296,
+      "guardSatisfied": false,
+      "freshReplayRecipeGuardBytes": 6442450944,
+      "guardLowered": false
+    },
+    "userDirection": {
+      "independentZ1ArchiveReplay": "BLOCKED_BY_USER_DIRECTION"
+    },
+    "internalRemaining": [
+      "CURRENT_STRICT_COMBINED_BUILD_AFTER_TYPEGEN",
+      "CURRENT_CUT_CAPTURE_AND_ARCHIVE",
+      "CLEAN_CURRENT_INSTALLED_RECONSTRUCTION_AND_FULL_CHECKS",
+      "108_NATIVE_SOURCE_AND_INSTALLED_EXECUTIONS"
+    ],
+    "externalInputsNotDelivered": [
+      "EXACT_EXPIRING_DISPOSABLE_NATIVE_AUTHORITY",
+      "TWO_ALREADY_INITIALIZED_ISOLATED_NATIVE_DB_TARGETS_AND_RESTRICTED_OBSERVERS",
+      "LAWFUL_ORIGINAL_FIXTURES_AND_FOUR_DISTINCT_RIGHTS_OWNERS",
+      "REAL_SAME_PROJECT_PRIMARY_ALTERNATE_AND_CASE_AUTH",
+      "FULL_INDEPENDENTLY_PRECOMMITTED_ORIGINAL_SEMANTICS_ORACLE_AND_EXACT_RECOVERY_SELECTORS",
+      "SOURCE_BOUND_PUBLIC_AUTH_BUILD_INPUT",
+      "OWNED_PROCESS_PORT_IDENTITIES_AND_FINITE_LEASES"
+    ],
+    "protectedOrFinancialAuthority": "NOT_GRANTED"
+  },
+  "realActions": {
+    "databaseActions": 0,
+    "authBypass": false,
+    "newOwners": 0,
+    "newListeners": 0,
+    "physicalFaults": 0,
+    "newReservations": 0,
+    "newS6Obligations": 0,
+    "preexistingRuntimeState": "UNKNOWN",
+    "externalSends": 0,
+    "pushPrMergeDeployProvision": false,
+    "financialEffects": false
+  },
+  "costs": {
+    "completeS7": "NOT_RUN",
+    "money": "UNKNOWN",
+    "labor": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "wholeRunCpu": "UNKNOWN",
+    "wholeRunPeakRss": "UNKNOWN",
+    "historicalRun21StepWindowSeconds": 406.228,
+    "historicalRun21CpuAndRss": "NOT_REAPED_BY_LAUNCH_WRAPPER_THIS_RUN",
+    "auditOnlyReceipt": {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/historical-evidence-audit.json",
+      "bytes": 10426,
+      "sha256": "f23245efc3fe8ea1cd16fb4d56235fc7ce3adf746adcd3a91913a6d3cc1e0be0"
+    },
+    "notEquippedOr100xProof": true
+  },
+  "retainedFailures": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/retained-failures.json",
+    "bytes": 9962,
+    "sha256": "a32efa444e981c2891c50ba63443a59e7abf8fb5cd64b9c64349f74dbda3c34c"
+  },
+  "replay": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/replay-recipe.md",
+    "bytes": 7311,
+    "sha256": "6b41b728b651d5fbd8c9578897d7f90f680477faf9f09febd6fea366457e5b66"
+  },
+  "noNewUnitTests": true,
+  "supersedesOnlyCurrentClaimsIn": [
+    "qualification-final-04.json",
+    "handoff-final-04.md",
+    "postcommit-binding-04.json",
+    "runtime-and-native-replay-04.md"
+  ],
+  "historicalFilesRemainUnmodified": true,
+  "noAuthorityGrantedByThisArtifact": true
+}

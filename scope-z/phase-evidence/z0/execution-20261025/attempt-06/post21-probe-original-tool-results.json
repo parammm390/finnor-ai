@@ -1,0 +1,26 @@
+{
+  "schema": "finnor.project-z.z0.selected-original-probe-results.v1",
+  "sourceStream": {
+    "path": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/continuity/evidence/Z0/attempt-005/stream.jsonl",
+    "bytes": 4055292,
+    "sha256": "d126775e2f13b620eb0421abaa2170bc2905361f1656eb882b0646d55f8f8a56"
+  },
+  "results": [
+    {
+      "sourceStream": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/continuity/evidence/Z0/attempt-005/stream.jsonl",
+      "line": 574,
+      "toolCallId": "call_e90c78941abb4eabb89976d0",
+      "toolId": "Script",
+      "rawToolResult": "exit 0\n{\"probeRun\": {\"actualExit\": 1, \"elapsedSeconds\": 10.900737210999068, \"maxRssKiB\": 518360, \"log\": {\"path\": \"post21-coverage-probe/probe-run.log\", \"sha256\": \"34de39920cbe305a13e7e85e6e52b74c0e79db37243384b97c190395fe6312a8\", \"bytes\": 901}}, \"manifestRetry\": {\"actualExit\": 0, \"elapsedSeconds\": 11.001457313999708}}\n\n[Script completed · 104.1 s elapsed · 1 call · log: /home/factory-user/.factory/artifacts/scripts/66647028-fac4-4793-bec3-22b564d12b90/call_e90c78941abb4eabb89976d0.log]"
+    },
+    {
+      "sourceStream": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/continuity/evidence/Z0/attempt-005/stream.jsonl",
+      "line": 583,
+      "toolCallId": "call_7abd7dc6d647463d89d50829",
+      "toolId": "Script",
+      "rawToolResult": "exit 0\n{\"probeRun2\": {\"actualExit\": 0, \"elapsedSeconds\": 22.29680771400308, \"maxRssKiB\": 898776, \"log\": {\"path\": \"post21-coverage-probe/probe-run-2.log\", \"sha256\": \"dd15efe577bf0e7a28b8cb39480276fd24096be31dc56c13375fe9bae6304c54\", \"bytes\": 650}}, \"coverageDiff\": {\"fields\": [\"frontendImportGraph\", \"executedProofIndexMode\", \"manifestSha256\", \"sourceBuildProvenance\", \"capabilities\"]}}\n\n[Script completed · 22.5 s elapsed · 1 call · log: /home/factory-user/.factory/artifacts/scripts/66647028-fac4-4793-bec3-22b564d12b90/call_7abd7dc6d647463d89d50829.log]"
+    }
+  ],
+  "notIndependentInstallation": true,
+  "noSealedProductWrites": true
+}

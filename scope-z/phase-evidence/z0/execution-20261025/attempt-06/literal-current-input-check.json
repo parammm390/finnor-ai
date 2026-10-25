@@ -1,0 +1,95 @@
+{
+  "schema": "finnor.project-z.z0.current-literal-input-custody.v1",
+  "sourcePopulationSha256": "33d82ae209cd103c6419ed9b72094928e94fd1ec3dfef629112122d9ddc57efe",
+  "literal": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261024/continuation-01/inventory-literal-04.json",
+    "bytes": 49792,
+    "sha256": "1636a647515d3b5f4b5f21ad547758b271ed0458d9fb4200c0b886fb3f7bee84"
+  },
+  "literalCommit": "c1a8f7c7c3314d31d61dd5787c86df51aa3e513a",
+  "independentFullOracle": "NOT_DELIVERED",
+  "externalPrecommitClaim": false,
+  "nativeComparison": "NOT_RUN",
+  "sourceInputs": [
+    {
+      "path": "finnor-os/scripts/release/action-hardening-spec.ts",
+      "bytes": 10163,
+      "sha256": "8576c158cfa10e3a0ec9a84213bf9df9c32bb651e0e49b36710ca3b8c888a768",
+      "source": "EXISTING_NATIVE_OWNER_CONTRACT_NOT_INVENTORY_OUTPUT",
+      "currentSourceSha256": "8576c158cfa10e3a0ec9a84213bf9df9c32bb651e0e49b36710ca3b8c888a768",
+      "matches": true
+    },
+    {
+      "path": "finnor-os/packages/domain-plugins/private-equity/schemas.ts",
+      "bytes": 10530,
+      "sha256": "85fc5f855cd92a36e69fcc60eccd637aa29dcb3f9affc3b6e4f5f10311006b3d",
+      "source": "EXISTING_NATIVE_OWNER_CONTRACT_NOT_INVENTORY_OUTPUT",
+      "currentSourceSha256": "85fc5f855cd92a36e69fcc60eccd637aa29dcb3f9affc3b6e4f5f10311006b3d",
+      "matches": true
+    },
+    {
+      "path": "finnor-os/packages/domain-plugins/universal-actions/schemas.ts",
+      "bytes": 8265,
+      "sha256": "49465283d8247815ed9cc7f15acb480da7e625e18eadc7668052f345210ad47b",
+      "source": "EXISTING_NATIVE_OWNER_CONTRACT_NOT_INVENTORY_OUTPUT",
+      "currentSourceSha256": "49465283d8247815ed9cc7f15acb480da7e625e18eadc7668052f345210ad47b",
+      "matches": true
+    },
+    {
+      "path": "finnor-os/packages/domain-plugins/clarification/index.ts",
+      "bytes": 2503,
+      "sha256": "3dce8b67c75bbb803ebd64981252e777558520633f783d1fffd3882d955ccfae",
+      "source": "EXISTING_NATIVE_OWNER_CONTRACT_NOT_INVENTORY_OUTPUT",
+      "currentSourceSha256": "3dce8b67c75bbb803ebd64981252e777558520633f783d1fffd3882d955ccfae",
+      "matches": true
+    },
+    {
+      "path": "finnor-os/packages/domain-plugins/web-research/index.ts",
+      "bytes": 15048,
+      "sha256": "6e0154d653830e0df71afa751c5bf21403458524424962857f7cbb77746ec496",
+      "source": "EXISTING_NATIVE_OWNER_CONTRACT_NOT_INVENTORY_OUTPUT",
+      "currentSourceSha256": "6e0154d653830e0df71afa751c5bf21403458524424962857f7cbb77746ec496",
+      "matches": true
+    },
+    {
+      "path": "finnor-os/packages/domain-plugins/computer-task/index.ts",
+      "bytes": 4816,
+      "sha256": "4c203e3ae488782b7c382a97525f75146c8f144534ef0fad96789af3b12b2a3c",
+      "source": "EXISTING_NATIVE_OWNER_CONTRACT_NOT_INVENTORY_OUTPUT",
+      "currentSourceSha256": "4c203e3ae488782b7c382a97525f75146c8f144534ef0fad96789af3b12b2a3c",
+      "matches": true
+    },
+    {
+      "path": "finnor-os/packages/shared-types/src/operational-queries.ts",
+      "bytes": 29938,
+      "sha256": "ebd417c6b3eceaf1be87a444f9e0aff8cca2291d1b63f34793f709291a243662",
+      "source": "EXISTING_NATIVE_OWNER_CONTRACT_NOT_INVENTORY_OUTPUT",
+      "currentSourceSha256": "ebd417c6b3eceaf1be87a444f9e0aff8cca2291d1b63f34793f709291a243662",
+      "matches": true
+    },
+    {
+      "path": "finnor-os/packages/db/migrations/0129_phase7_governed_workforce_learning.sql",
+      "bytes": 44207,
+      "sha256": "e34e1f0738cb39e6f3bad61cbc9357583304ba840ba477eda6e5e256336bd72b",
+      "source": "EXISTING_NATIVE_OWNER_CONTRACT_NOT_INVENTORY_OUTPUT",
+      "currentSourceSha256": "e34e1f0738cb39e6f3bad61cbc9357583304ba840ba477eda6e5e256336bd72b",
+      "matches": true
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/program-synthesis/economic-native.ts",
+      "bytes": 1754,
+      "sha256": "a68c864b43c5c24e8a00ed8999522b06b3951afd58b656b1e78336a58905ed3d",
+      "source": "EXISTING_NATIVE_OWNER_CONTRACT_NOT_INVENTORY_OUTPUT",
+      "currentSourceSha256": "a68c864b43c5c24e8a00ed8999522b06b3951afd58b656b1e78336a58905ed3d",
+      "matches": true
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/economic-action-theory/contracts.ts",
+      "bytes": 9562,
+      "sha256": "e6330a1322332eb60b40971376b3752c4be4337f3edac383cd85487881c3e7fc",
+      "source": "EXISTING_NATIVE_OWNER_CONTRACT_NOT_INVENTORY_OUTPUT",
+      "currentSourceSha256": "e6330a1322332eb60b40971376b3752c4be4337f3edac383cd85487881c3e7fc",
+      "matches": true
+    }
+  ]
+}

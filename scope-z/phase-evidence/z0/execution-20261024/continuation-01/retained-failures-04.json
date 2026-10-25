@@ -1,0 +1,243 @@
+{
+  "schema": "finnor.project-z.z0.retained-failure-ledger.v4",
+  "priorImmutableLedger": {
+    "path": "retained-failures-03.json",
+    "sha256": "860145d0472fbef131bfb53d6781f012365f0c1eb014c5d53ff9b06534dab542",
+    "bytes": 13636
+  },
+  "priorOriginalFailuresAndPreEditMapsRemainAuthoritative": true,
+  "additionalFailuresAndRefusals": [
+    {
+      "id": "old-capture-cli-missing-additional-source-input",
+      "actualExit": 1,
+      "native": false,
+      "original": {
+        "path": "source-index-before-11.log",
+        "sha256": "c69d343d346a7a1b2c0fa857a660a0455a8fb73a8bf07ae512f56d3fc5999565",
+        "bytes": 760
+      },
+      "predicate": "Z0_ABSOLUTE_SNAPSHOT_ARGUMENT_REQUIRED",
+      "preEditMap": {
+        "path": "coordinator-source-membership-before-11.md",
+        "sha256": "a35349cfeee7e5d28cd2f1a586bdeb7e182159aa79adfbc045f3a2a5c281f99f",
+        "bytes": 4414
+      },
+      "laterCompleteCaptureExit": 0,
+      "laterCompleteCapture": {
+        "path": "source-preparation-16.log",
+        "sha256": "0284821609901329703df9c089bc6eca9128c32ab5c3b0cc1aa50522635da312",
+        "bytes": 1374
+      }
+    },
+    {
+      "id": "wrong-additional-source-preimage",
+      "actualExit": 1,
+      "expectedExit": 1,
+      "native": false,
+      "original": {
+        "path": "source-index-wrong-pin-11.log",
+        "sha256": "a6466ca9d42b62e84bed1a6c10d176c8c08eeefa4fb5e5c390f62c1848638dc9",
+        "bytes": 447
+      },
+      "negativeInput": {
+        "path": "coordinator-additional-source-wrong-pin-05.json",
+        "sha256": "1b5f243d979d12919d7e7dd0214826bcc05b0df6d4dd0bf26e3841fd2700f82d",
+        "bytes": 23862
+      },
+      "predicate": "Z0_ADDITIONAL_COORDINATOR_SOURCE_PREIMAGE_DRIFT:finnor-os/packages/db/migrations/postz_z1_shared_work.sql",
+      "partialTargetRetained": true,
+      "successfulSnapshot": false,
+      "laterCompleteCapture": {
+        "path": "source-custody-audit-05.json",
+        "sha256": "5066f89f6555540a8650cb10a6dc015839cc7b701522a873bf63a53c6788fac6",
+        "bytes": 10608
+      }
+    },
+    {
+      "id": "coordinator-combined-config-expectation",
+      "scope": "COORDINATOR_FRESH_CONFIG_PROCESSES_NOT_NATIVE_AUTH",
+      "original": {
+        "path": "coordinator-receipts-05/config-combined-01.json",
+        "sha256": "adee5085c7b820b3ec41643300d2a95b8431b284e2cee58da4c2bc4b6254e1ab",
+        "bytes": 2366
+      },
+      "originalPassed": 16,
+      "originalFailed": 1,
+      "correction": {
+        "path": "coordinator-receipts-05/config-check-expectation-correction.md",
+        "sha256": "d7c9bfe92930e894ddd828c48e8130c355df4f3bd2e160a9de8766142e9d0835",
+        "bytes": 644
+      },
+      "productEditedForCorrection": false,
+      "later": {
+        "path": "coordinator-receipts-05/config-combined-02.json",
+        "sha256": "cbfaebaa0ae6b5efddc16541e1820a66b85983da13299302a1a8f435e2f653e2",
+        "bytes": 2365
+      },
+      "laterPassed": 17,
+      "laterFailed": 0
+    },
+    {
+      "id": "coordinator-z1-sql-grant-arity",
+      "scope": "SOURCE_GRAMMAR_AND_SIGNATURE_NOT_SQL_EXECUTION",
+      "original": {
+        "path": "coordinator-receipts-05/z1-sql-signature-before.json",
+        "sha256": "ecf6138302b913664144b73e5060fd32e9a645af7472995fe3f87a210ee2e449",
+        "bytes": 244
+      },
+      "originalDefinedArity": 6,
+      "originalGrantedArity": 4,
+      "later": {
+        "path": "coordinator-receipts-05/sql-after.json",
+        "sha256": "8a04fd6645ed5e00a4013cc5da495e3c51890114ded290a1780b7bc8add39882",
+        "bytes": 950
+      },
+      "correctedDefinedArity": 6,
+      "correctedGrantedArity": 6,
+      "databaseActions": 0
+    },
+    {
+      "id": "coordinator-combined-build-managed-source-drift",
+      "original": {
+        "path": "coordinator-receipts-05/build-01/report.json",
+        "sha256": "5ec679def34bbc978a672b4ad0d9b038fddf3758b0775234dd8fe6364b602d38",
+        "bytes": 6423
+      },
+      "frontendProcessExit": 0,
+      "apiProcessExit": 0,
+      "enclosingReportedState": "FAILED",
+      "enclosingActualExit": 1,
+      "predicate": "SOURCE_CHANGED_DURING_BUILD",
+      "originalLogs": [
+        {
+          "path": "coordinator-receipts-05/build-01/frontend-build.log",
+          "sha256": "01328f062a47199d6c5400d54102e5972c57a8181a2b19b2b15cd853a0c98b3f",
+          "bytes": 2604
+        },
+        {
+          "path": "coordinator-receipts-05/build-01/api-build.log",
+          "sha256": "1515b46efbd1cbb923bafa84daa220131c40a8dc68048d1274ba3a1bf10e510a",
+          "bytes": 18294
+        }
+      ],
+      "review": {
+        "path": "coordinator-receipts-05/build-01/review.md",
+        "sha256": "c64cdb7e73b3fa47fd5bca00f7f75a1369681dda014da14c5fad10c702cd6d05",
+        "bytes": 1477
+      },
+      "strictFailureNotPromotedToPass": true
+    },
+    {
+      "id": "coordinator-original-composition-staging",
+      "original": {
+        "path": "coordinator-receipts-04/composition-01-failure.md",
+        "sha256": "9c1e20039ac7e31c80d268115ef3f1ee2c1c10966988ae3c54232d9b67238f75",
+        "bytes": 482
+      },
+      "later": {
+        "path": "coordinator-receipts-04/composition-02/report.json",
+        "sha256": "f06fc74cd2db2b84ce4efb251b4fde069364adf0dae72ab0ba30597ace1990d3",
+        "bytes": 21771
+      },
+      "sourceAdoptionIsAcceptance": false
+    }
+  ],
+  "sourceAuthGap": {
+    "preEditMap": {
+      "path": "inventory-auth-binding-before-09.md",
+      "sha256": "af137c3534264d51c68d324edb9e7a49c7613b9d473b30c754df04a00b2c5c5d",
+      "bytes": 6432
+    },
+    "repair": {
+      "path": "native-auth-binding-04.patch",
+      "sha256": "a6383e439a2ecb0171909eebe536dc1beabea9ec9ef239721851edc6b2982962",
+      "bytes": 4424
+    },
+    "checks": {
+      "path": "native-auth-guard-checks-04.json",
+      "sha256": "f01a144dbae8183be3b390f3b9d7c21602389ab5438bea605510da46e103389e",
+      "bytes": 3354
+    },
+    "classification": "SOURCE_AUTH_BOUNDARY_FINDING_REPAIRED_NOT_AUTHENTICATED_NATIVE_REPRODUCTION",
+    "positiveAndInvalidBearerAndForeignActor": "NOT_RUN"
+  },
+  "independentLiteral": {
+    "preConstructionMap": {
+      "path": "inventory-literal-before-10.md",
+      "sha256": "e9f6c3a12ac1d1a340371f26847a21f77241b4ea6af953ee5b052b336d677834",
+      "bytes": 4358
+    },
+    "literal": {
+      "path": "inventory-literal-04.json",
+      "sha256": "1636a647515d3b5f4b5f21ad547758b271ed0458d9fb4200c0b886fb3f7bee84",
+      "bytes": 49792
+    },
+    "staticInputAudit": {
+      "path": "inventory-original-input-audit-04.json",
+      "sha256": "f6b7bfc7dfe7baad4fb42a87bc5a7d4c6bb5804948f19cbe7cbae956515d177b",
+      "bytes": 867
+    },
+    "currentInputCustody": {
+      "path": "inventory-current-input-custody-04.json",
+      "sha256": "10521a19185a38b99caab2db44a73e9138cb8f920c49cdf883528d052cb40011",
+      "bytes": 3039
+    },
+    "nativeComparison": "NOT_RUN"
+  },
+  "sourceTransition": {
+    "path": "source-cut-transition-audit-04.json",
+    "sha256": "3c513d6f77e329010f83b7d17017b945ed9523b5398379371128b8b8e1cf4f4b",
+    "bytes": 1776
+  },
+  "sourceTransitionExplanationCorrection": {
+    "path": "source-cut-cause-correction-04.md",
+    "sha256": "4ecad8a78d82158354b03c24f024326e2bceef309b9e4b54a28b4a1231e0195a",
+    "bytes": 1347
+  },
+  "catalogueFinding": {
+    "path": "catalogue-generation-before-12.md",
+    "sha256": "372f933cdd9992c4648dbc0e2a475e4d53aafb2cde061aab053b1347ae801f07",
+    "bytes": 3200
+  },
+  "currentReconstructionResult": "READ_SEPARATE_IMMUTABLE_RECONSTRUCTION_17_TERMINAL_RECEIPTS_NOT_THE_LAUNCH_RECORD",
+  "launch": {
+    "path": "reconstruction-17-launch.json",
+    "sha256": "c04963edfbd7465b86b08bcb6e99fe722949f0d4f0c55b9334d5ba87cecba12d",
+    "bytes": 723
+  },
+  "historicalCanceledLaunch": {
+    "path": "reconstruction-13-launch-cancelled.json",
+    "sha256": "8a803b4aa4ca41e4cd9f22395afdb9e60e86d284c9a344060c1941ee83083d53",
+    "bytes": 1665
+  },
+  "cancellationReason": "NOT_EXPOSED_NOT_INFERRED_AS_HTTP402_OR_DISK",
+  "historicalActual402Stream": {
+    "path": "continuity-receipts-03/attempt-004-stream.jsonl",
+    "sha256": "de69993263e82336c6646002e93d57f537006ee926e8271587ae38543fc62117",
+    "bytes": 8936
+  },
+  "historicalGenerationCleanup": {
+    "performedBy": "COORDINATOR_UNDER_EXPLICIT_USER_APPROVAL_NOT_THIS_LANE",
+    "authority": {
+      "path": "coordinator-receipts-04/cleanup-authority.md",
+      "sha256": "a57ca2eb62fb4db6a7e9527e3ef9bf7021870f1da2b45d69aa15b7f8111b6858",
+      "bytes": 2009
+    },
+    "exactActualResult": {
+      "path": "coordinator-receipts-04/cleanup-result.json",
+      "sha256": "c4fbbf4847d1d514904a3b5d1022332a0c738262b323cb83859966a5ca7b0544",
+      "bytes": 4602
+    },
+    "sourceArchivesLogsAndFailureEvidenceRetained": true,
+    "claimAllHistoricalGeneratedRuntimesStillExist": false
+  },
+  "packagingFailureAndCorrection": {
+    "path": "packaging-failures-04.json",
+    "sha256": "9b6bed1412cf1a234c03bff5fac7aa9faa892d5a9e5bc12b2a1ad4bd73cc1546",
+    "bytes": 907
+  },
+  "noNewPostCodeUnitTests": true,
+  "native": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "supervisorOrHooksModified": false
+}

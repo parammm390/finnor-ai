@@ -1,0 +1,177 @@
+{
+  "scope": "CURRENT_COMBINED_SOURCE_BUILDS_NOT_INSTALLED_OR_NATIVE",
+  "databaseActions": 0,
+  "authenticatedNativeActions": 0,
+  "steps": [
+    {
+      "name": "z0-js-syntax",
+      "command": [
+        "node",
+        "--input-type=module",
+        "-e",
+        "import {spawnSync} from 'node:child_process';for(const file of [\"finnor-os/scripts/project-z/z0/emit-converged-runtime.mjs\", \"finnor-os/scripts/project-z/z0/installed-loader.mjs\", \"finnor-os/scripts/project-z/z0/installed-source-custody.cjs\", \"finnor-os/scripts/project-z/z0/native-currentness.mjs\", \"finnor-os/scripts/project-z/z0/native-e2e-plan.mjs\", \"finnor-os/scripts/project-z/z0/native-mounted-build.mjs\", \"finnor-os/scripts/project-z/z0/native-mounted-work.mjs\", \"finnor-os/scripts/project-z/z0/native-observation-child.mjs\", \"finnor-os/scripts/project-z/z0/native-original-oracle.mjs\", \"finnor-os/scripts/project-z/z0/native-recovery.mjs\", \"finnor-os/scripts/project-z/z0/offline-runtime-doctor.mjs\", \"finnor-os/scripts/project-z/z0/prepare-converged-source.mjs\", \"finnor-os/scripts/project-z/z0/prepare-owner-use-integration.mjs\", \"finnor-os/scripts/project-z/z0/reconcile-current-integration.mjs\", \"finnor-os/scripts/project-z/z0/reconstruct-converged.mjs\", \"finnor-os/scripts/project-z/z0/run-native-e2e.mjs\", \"finnor-os/scripts/project-z/z0/verify-continuation-types.mjs\"]){const r=spawnSync(process.execPath,['--check',file],{stdio:'inherit'});if(r.status!==0)process.exit(r.status??1)}"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator",
+      "exitCode": 0,
+      "elapsedSeconds": 0.617,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "stamp-x3",
+      "command": [
+        "node",
+        "--import",
+        "./node_modules/tsx/dist/loader.mjs",
+        "scripts/x3/stamp-source.mts"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/finnor-os",
+      "exitCode": 0,
+      "elapsedSeconds": 0.317,
+      "logSha256": "89058f5c448d4fff7da4143b2de0b1192f7cda8e0c3a22afbda0bb79931183fb"
+    },
+    {
+      "name": "stamp-x5",
+      "command": [
+        "node",
+        "--import",
+        "./node_modules/tsx/dist/loader.mjs",
+        "scripts/x5/stamp-source.mts"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/finnor-os",
+      "exitCode": 0,
+      "elapsedSeconds": 0.32,
+      "logSha256": "b007fd25b935a4f8b84c17c4f9b57d9e880a1ee2907dca7d802de6d7567a7cf9"
+    },
+    {
+      "name": "stamp-x4",
+      "command": [
+        "node",
+        "--import",
+        "./node_modules/tsx/dist/loader.mjs",
+        "scripts/x4/stamp-source.mts"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/finnor-os",
+      "exitCode": 0,
+      "elapsedSeconds": 0.367,
+      "logSha256": "3b8755789f25bfe26706872d0351ab9c4b5fb31294693529408f280859430090"
+    },
+    {
+      "name": "stamp-y2",
+      "command": [
+        "node",
+        "--import",
+        "./node_modules/tsx/dist/loader.mjs",
+        "scripts/y2/stamp-source.mts"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/finnor-os",
+      "exitCode": 0,
+      "elapsedSeconds": 0.37,
+      "logSha256": "b3c4a8633539b80ee09bdf70908854ac484f8a8b731da82623eaf551dda21bee"
+    },
+    {
+      "name": "z0-tooling-types",
+      "command": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--incremental",
+        "false",
+        "-p",
+        "scripts/project-z/z0/tsconfig.json"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/finnor-os",
+      "exitCode": 0,
+      "elapsedSeconds": 1.783,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "frontend-build",
+      "command": [
+        "node",
+        "node_modules/next/dist/bin/next",
+        "build",
+        "--webpack"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator",
+      "exitCode": 0,
+      "elapsedSeconds": 92.312,
+      "logSha256": "01328f062a47199d6c5400d54102e5972c57a8181a2b19b2b15cd853a0c98b3f"
+    },
+    {
+      "name": "api-build",
+      "command": [
+        "npm",
+        "run",
+        "build",
+        "--workspace=@finnor/api"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/finnor-os",
+      "exitCode": 0,
+      "elapsedSeconds": 192.352,
+      "logSha256": "1515b46efbd1cbb923bafa84daa220131c40a8dc68048d1274ba3a1bf10e510a"
+    },
+    {
+      "name": "stamp-check-x3",
+      "command": [
+        "node",
+        "--import",
+        "./node_modules/tsx/dist/loader.mjs",
+        "scripts/x3/stamp-source.mts",
+        "--check"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/finnor-os",
+      "exitCode": 0,
+      "elapsedSeconds": 0.217,
+      "logSha256": "89058f5c448d4fff7da4143b2de0b1192f7cda8e0c3a22afbda0bb79931183fb"
+    },
+    {
+      "name": "stamp-check-x5",
+      "command": [
+        "node",
+        "--import",
+        "./node_modules/tsx/dist/loader.mjs",
+        "scripts/x5/stamp-source.mts",
+        "--check"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/finnor-os",
+      "exitCode": 0,
+      "elapsedSeconds": 0.171,
+      "logSha256": "b007fd25b935a4f8b84c17c4f9b57d9e880a1ee2907dca7d802de6d7567a7cf9"
+    },
+    {
+      "name": "stamp-check-x4",
+      "command": [
+        "node",
+        "--import",
+        "./node_modules/tsx/dist/loader.mjs",
+        "scripts/x4/stamp-source.mts",
+        "--check"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/finnor-os",
+      "exitCode": 0,
+      "elapsedSeconds": 0.217,
+      "logSha256": "3b8755789f25bfe26706872d0351ab9c4b5fb31294693529408f280859430090"
+    },
+    {
+      "name": "stamp-check-y2",
+      "command": [
+        "node",
+        "--import",
+        "./node_modules/tsx/dist/loader.mjs",
+        "scripts/y2/stamp-source.mts",
+        "--check"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/finnor-os",
+      "exitCode": 0,
+      "elapsedSeconds": 0.166,
+      "logSha256": "b3c4a8633539b80ee09bdf70908854ac484f8a8b731da82623eaf551dda21bee"
+    }
+  ],
+  "state": "FAILED",
+  "sourcePopulationSha256": "066ac61f896afaa3086aae986c55bfe5c5b50bb6aa5770eae1aac727836eedf6",
+  "sourceFiles": 3072,
+  "sourceDrift": [
+    "next-env.d.ts"
+  ],
+  "failure": "SOURCE_CHANGED_DURING_BUILD"
+}

@@ -1,0 +1,164 @@
+{
+  "scope": "OFFLINE_COMBINED_SOURCE_NOT_NATIVE_OR_INSTALLED_PROOF",
+  "startedAt": "2026-10-24T22:56:32.532126+00:00",
+  "databaseActions": 0,
+  "nativeOwnerExecuted": false,
+  "protectedAdmission": false,
+  "steps": [
+    {
+      "name": "migration-bundle",
+      "command": [
+        "npm",
+        "--prefix",
+        "finnor-os",
+        "run",
+        "db:bundle"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.572
+    },
+    {
+      "name": "openapi",
+      "command": [
+        "npm",
+        "--prefix",
+        "finnor-os",
+        "run",
+        "openapi"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 10.171
+    },
+    {
+      "name": "manifest",
+      "command": [
+        "npm",
+        "run",
+        "centropy:manifest"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 6.42
+    },
+    {
+      "name": "client",
+      "command": [
+        "npm",
+        "run",
+        "centropy:client"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.532
+    },
+    {
+      "name": "forms",
+      "command": [
+        "npm",
+        "run",
+        "centropy:forms"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.266
+    },
+    {
+      "name": "coverage",
+      "command": [
+        "npm",
+        "run",
+        "centropy:coverage"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 18.888
+    },
+    {
+      "name": "workspace-check",
+      "command": [
+        "npm",
+        "run",
+        "workspace:check"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.216
+    },
+    {
+      "name": "manifest-check",
+      "command": [
+        "npm",
+        "run",
+        "centropy:manifest:check"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 6.316
+    },
+    {
+      "name": "client-check",
+      "command": [
+        "npm",
+        "run",
+        "centropy:client:check"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 2.236
+    },
+    {
+      "name": "forms-check",
+      "command": [
+        "npm",
+        "run",
+        "centropy:forms:check"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 0.317
+    },
+    {
+      "name": "coverage-check",
+      "command": [
+        "npm",
+        "run",
+        "centropy:coverage:check"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 18.232
+    },
+    {
+      "name": "backend-types",
+      "command": [
+        "npm",
+        "--prefix",
+        "finnor-os",
+        "run",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 63.83
+    },
+    {
+      "name": "frontend-types",
+      "command": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--incremental",
+        "false"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 20.725
+    },
+    {
+      "name": "affected-lint",
+      "command": [
+        "node",
+        "node_modules/eslint/bin/eslint.js",
+        "src/components/centropy/world/WorldWorkRecord.tsx",
+        "src/components/centropy/world/ViabilityPanel.tsx",
+        "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
+        "src/app/api/centropy/[...path]/route.ts",
+        "scripts/centropy/generate-capability-manifest.mjs",
+        "scripts/centropy/audit-capability-coverage.mjs"
+      ],
+      "exitCode": 0,
+      "elapsedSeconds": 7.804
+    }
+  ],
+  "state": "PASSED",
+  "finishedAt": "2026-10-24T22:59:11.063989+00:00"
+}

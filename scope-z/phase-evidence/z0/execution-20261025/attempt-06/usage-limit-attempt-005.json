@@ -1,0 +1,50 @@
+{
+  "schema": "finnor.project-z.z0.actual-historical-usage-denial.v1",
+  "attempt": 5,
+  "sourceStream": {
+    "path": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/continuity/evidence/Z0/attempt-005/stream.jsonl",
+    "bytes": 4055292,
+    "sha256": "d126775e2f13b620eb0421abaa2170bc2905361f1656eb882b0646d55f8f8a56"
+  },
+  "errorLine": 584,
+  "error": {
+    "type": "error",
+    "source": "agent_loop",
+    "message": "402 {\"detail\":\"You've reached your 5-hour Droid Core usage limit (resets in 1h 15min).\\nReload Extra Usage credits or wait for your limits to reset.\",\"status\":402,\"title\":\"Payment Required\",\"displayToUser\":true}",
+    "timestamp": 1792883841535,
+    "session_id": "66647028-fac4-4793-bec3-22b564d12b90"
+  },
+  "extractedError": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/usage-limit-attempt-005.error.jsonl",
+    "bytes": 354,
+    "sha256": "1876cb83722592d7601c77a837e19c1bfe97a61c5db0ec2b31ec006635098163"
+  },
+  "stderr": {
+    "path": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/continuity/evidence/Z0/attempt-005/stderr.log",
+    "bytes": 226,
+    "sha256": "48fb8bffea1f70d6302a6f1d9d319b11fc2e0f5781875c954f029f95ceaa967f"
+  },
+  "copiedStderr": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/usage-limit-attempt-005.stderr.log",
+    "bytes": 226,
+    "sha256": "48fb8bffea1f70d6302a6f1d9d319b11fc2e0f5781875c954f029f95ceaa967f"
+  },
+  "classification": "ACTUAL_HTTP_402_USAGE_DENIAL_NOT_PRODUCT_FAILURE_OR_COMPLETION",
+  "currentAttemptSixNew402Observed": false,
+  "billingModelHooksSettingsOrBudgetsChanged": false,
+  "unchangedDeniedRetry": false,
+  "probeToolResultLocations": [
+    {
+      "line": 574,
+      "toolId": "Script",
+      "toolCallId": "call_e90c78941abb4eabb89976d0",
+      "eventSha256": "52e48cb1b8e0bfc160b024ee8fb3189c8e50ff78b836b2db9fda0750e8059ff8"
+    },
+    {
+      "line": 583,
+      "toolId": "Script",
+      "toolCallId": "call_7abd7dc6d647463d89d50829",
+      "eventSha256": "df3911aaa90f31797a57ab07605de1f9aeed8654173287e2dfbc1b2bb2263e07"
+    }
+  ]
+}
