@@ -1,0 +1,177 @@
+{
+  "schema": "finnor.project-z.z0.postcommit-engineering-binding.v7",
+  "observedAt": "2026-10-25T01:32:57.535Z",
+  "sessionId": "66647028-fac4-4793-bec3-22b564d12b90",
+  "computerId": "eea8d359-5a5c-4aff-b465-494dd7a8ba88",
+  "branch": "factory/project-z0",
+  "productCommit": "5ad4e8d75c61b9cc1ee273cc14f8d8068d5ebd41",
+  "productTree": "b792abf61b5dc9b61dce947c612808faf17cedb5",
+  "evidenceCommit": "a2d9e9ca2f95bad3215ca76ca5e546fef9848d8f",
+  "evidenceTree": "b86e577db41a1b5270d32e57bb49c7979899d8e0",
+  "evidenceOnlyDiffSha256": "d78ca8cfadda0415ab297ad1bcaf84628a8b3713413ed289a78ae9397d8ee927",
+  "evidenceCommitActualExit": 0,
+  "evidenceCommitToolCallId": "call_uWnjz6CdBTfVkOfy71j01RLi",
+  "evidenceIndex": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/evidence-index.json",
+    "bytes": 14324,
+    "sha256": "e3e680d7dfdc299c1efbfa70f91361f1a43fd12fdfbbddfd68af1c65da6585fc"
+  },
+  "committedMemberCount": 56,
+  "committedMemberBytes": 1679754,
+  "allIndexedAndSelectedRetainedBytesEqualCommittedBytes": true,
+  "nestedAbsolutePinOccurrencesVerified": 101,
+  "nestedUniqueAbsoluteFilesVerified": 73,
+  "ownedProductMembersVerifiedAtEvidenceCommit": 36,
+  "newProductCodeChanges": 0,
+  "unintendedCommitPaths": [],
+  "trackedWorktreeCleanAtObservation": true,
+  "newUntrackedHistoricalInputFilesUntouched": true,
+  "currentCoordinator": {
+    "head": "9f3edfd3b4c6758832c53139da0773218062191e",
+    "tree": "2dc4d5bc13d22853cf4dc9feb5f6ac7fbf6bb9c9",
+    "trimmedBinaryDiffSha256": "45557d982b550ac355e945d4ddf80434cc4d8f107f01646f1919dae1a06d6b05",
+    "sourcePopulationSha256": "33d82ae209cd103c6419ed9b72094928e94fd1ec3dfef629112122d9ddc57efe",
+    "files": 3156,
+    "totalBytes": 48829074,
+    "reference": {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/current-combined-source-reference.json",
+      "bytes": 806941,
+      "sha256": "1c437bd3b0f13138300f02fae1ae7526a6760b57fdd924f863eb9db047710073"
+    }
+  },
+  "sourceBarrier": {
+    "command": [
+      "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/normalize-reviewed-membership.mjs",
+      "--verify"
+    ],
+    "actualExit": 0,
+    "result": {
+      "state": "PASSED_EXPLICIT_MEMBERSHIP_METADATA_ONLY_NOT_BUILD_OR_NATIVE",
+      "mode": "--verify",
+      "observedAt": "2026-10-25T01:32:57.527Z",
+      "coordinatorHead": "9f3edfd3b4c6758832c53139da0773218062191e",
+      "coordinatorTree": "2dc4d5bc13d22853cf4dc9feb5f6ac7fbf6bb9c9",
+      "coordinatorTrackedDiffSha256": "45557d982b550ac355e945d4ddf80434cc4d8f107f01646f1919dae1a06d6b05",
+      "sourcePopulationSha256": "33d82ae209cd103c6419ed9b72094928e94fd1ec3dfef629112122d9ddc57efe",
+      "files": 3156,
+      "totalBytes": 48829074,
+      "additionalDeclared": 170,
+      "additionalActuallyUntracked": 143,
+      "ownedParity": 36,
+      "ownedDeltas": [],
+      "z3Owned": 22,
+      "z3Shared": 4,
+      "z3NewLeaves": 17,
+      "availableBytes": 3061911552,
+      "combinedBuildGuardBytes": 4294967296,
+      "buildExecuted": false,
+      "databaseActions": 0,
+      "nativeExecuted": false,
+      "outputs": [
+        {
+          "path": "additional-coordinator-source-index.json",
+          "bytes": 36667,
+          "sha256": "dd2c5a8a4f2069ab569dfec8877ba6412e43c0b6825ceb5d4837b76474a62354"
+        },
+        {
+          "path": "current-combined-source-reference.json",
+          "bytes": 806941,
+          "sha256": "1c437bd3b0f13138300f02fae1ae7526a6760b57fdd924f863eb9db047710073"
+        },
+        {
+          "path": "current-adopted-proposal/manifest.json",
+          "bytes": 278,
+          "sha256": "afe97b8b58c2096fcec65c97f5310048ce7d750d8f5097cf56d97bc4fb9a52d9"
+        },
+        {
+          "path": "current-adopted-proposal/owner-use.patch",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "inputs/build-inventory-preflight-01.json",
+          "bytes": 33073,
+          "sha256": "aa97d0ff34a38d818fde1d79298e767d4639a993875678c133a37de7f3b57911"
+        },
+        {
+          "path": "inputs/z3-application.json",
+          "bytes": 8034,
+          "sha256": "4ae0221bfa97e7122583e90ea8d0e4e901bf5b45de868960a0d1bad66a01d82d"
+        },
+        {
+          "path": "inputs/coordinator-resume-06.prompt.md",
+          "bytes": 4457,
+          "sha256": "008cd011210935e90222c78da91d0686527b919e7df1d2a023bad7ad58d36f16"
+        },
+        {
+          "path": "inputs/validation-03-report.json",
+          "bytes": 3345,
+          "sha256": "dd08be08f06f2f5cf6588005c3cd5163d1efaa9cc9da63e4d74530b540c66efa"
+        },
+        {
+          "path": "inputs/build-01-report.json",
+          "bytes": 6423,
+          "sha256": "5ec679def34bbc978a672b4ad0d9b038fddf3758b0775234dd8fe6364b602d38"
+        }
+      ]
+    }
+  },
+  "sourceArchiveForCurrentCut": "NOT_CREATED_RESOURCE_GUARD",
+  "currentInstalledBuild": "NOT_RUN",
+  "sourceNative": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "historicalBuildIdentity": {
+    "state": "PASSED_ENGINEERING_RECONSTRUCTION",
+    "actualExit": 0,
+    "steps": 12,
+    "sourcePopulationSha256": "ded45547fa6ea84fec0e9d12a0fc88ee3e47847f204e5e2174051c9607d6a2bd",
+    "sourceArchiveSha256": "6666aeaed71c53a407fafdfc05b2008fe42e2e2d67ba5d2f119168b6308347ae",
+    "buildId": "z0-ded45547fa6ea84f",
+    "mountedSealSha256": "c637e91b46cc5e1a74bedd447ea9161c165817bd6dbdbdbb7066d4ce0d12c29c",
+    "postReconstructionCoverageCheck": "FAILED_RETAINED",
+    "notCurrentCombinedProof": true,
+    "native": "NOT_RUN"
+  },
+  "handoff": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/handoff.md",
+    "bytes": 7910,
+    "sha256": "a23b474348569b18f6139b122474cd5126045e0e7de2414ceecd6b1441c5f6cc"
+  },
+  "qualification": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/qualification.json",
+    "bytes": 7658,
+    "sha256": "8db6a8d19816473c8ea934a7cfcc0a2e7b478253ee914059b9ff5bb1e4ab78b3"
+  },
+  "retainedFailures": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/retained-failures.json",
+    "bytes": 9962,
+    "sha256": "a32efa444e981c2891c50ba63443a59e7abf8fb5cd64b9c64349f74dbda3c34c"
+  },
+  "replay": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/replay-recipe.md",
+    "bytes": 7311,
+    "sha256": "6b41b728b651d5fbd8c9578897d7f90f680477faf9f09febd6fea366457e5b66"
+  },
+  "precommitChecks": {
+    "completeDeliveryCheckExit": 0,
+    "completeDeliveryCheckToolCallId": "call_hVwMBUxhlU6g995WPEza1wPd",
+    "stagedWhitespaceExit": 0,
+    "stagedDiffReviewExit": 0,
+    "stagedReviewToolCallId": "call_lm747DPYQyYeyQ3LDvbAZaMO",
+    "stagedStatusExit": 0,
+    "statusToolCallId": "call_LEcLGjR0wJf1hrGDHl4kpMhk"
+  },
+  "currentResourceGuard": {
+    "availableBytes": 3061911552,
+    "combinedMinimumBytes": 4294967296,
+    "buildExecuted": false,
+    "guardLowered": false
+  },
+  "coordinatorAcceptance": "NOT_ACCEPTED",
+  "slotReleased": false,
+  "coordinatorGateWritten": false,
+  "scientificIncrement": false,
+  "sidecarCommit": "NEXT_LOCAL_EVIDENCE_ONLY_COMMIT_CONTAINS_THIS_BINDING_NO_SELF_REFERENTIAL_HASH",
+  "noNewAuthorityGranted": true
+}
