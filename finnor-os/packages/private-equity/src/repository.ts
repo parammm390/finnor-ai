@@ -89,17 +89,17 @@ export function peProvenance(ctx: PeMutationContext): {
   };
 }
 
-function pgCode(error: unknown): string | undefined {
+function pgErrorField(error: unknown, field: "code" | "constraint"): string | undefined {
   if (typeof error !== "object" || error === null) return undefined;
-  if ("code" in error) {
-    const code = String((error as { code?: unknown }).code ?? "");
-    if (code) return code;
+  if (field in error) {
+    const value = String((error as Record<string, unknown>)[field] ?? "");
+    if (value) return value;
   }
-  return "cause" in error ? pgCode((error as { cause?: unknown }).cause) : undefined;
+  return "cause" in error ? pgErrorField((error as { cause?: unknown }).cause, field) : undefined;
 }
 
 type PeTransactionOptions = { readOnly?: boolean; isolation?: "read committed" | "repeatable read" | "serializable";
-  contentionBackoff?: true };
+  contentionBackoff?: true; retryUniqueConstraints?: readonly string[] };
 const mutationClients = new WeakMap<PeMutationContext, Client>();
 
 /** Compose one original mutation and its required Work result under the same
@@ -184,7 +184,10 @@ async function scopedPeTransaction<T>(
         return fn(client);
       });
     } catch (error) {
-      if (attempt < maxAttempts && (pgCode(error) === "40001" || pgCode(error) === "40P01")) {
+      const code = pgErrorField(error, "code");
+      const uniqueContention = code === "23505"
+        && options.retryUniqueConstraints?.includes(pgErrorField(error, "constraint") ?? "");
+      if (attempt < maxAttempts && (code === "40001" || code === "40P01" || uniqueContention)) {
         // X1 admission shares the live operational cursor. Pace only its
         // existing rolled-back attempts; no new attempt or effect retry.
         if (options.contentionBackoff) await new Promise(resolve => setTimeout(resolve, 200 * attempt + randomInt(100)));

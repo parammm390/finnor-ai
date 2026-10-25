@@ -17,11 +17,11 @@ export async function searchForProgram(ctx:PeMutationContext,programId:string):P
 export async function units(ctx:PeMutationContext,s:SearchRow,c:PoolClient):Promise<UnitRow[]>{const rows=(await c.query<UnitRow>('SELECT * FROM finnor_os.p2_units WHERE tenant_id=$1 AND principal_id=$2 AND search_id=$3 ORDER BY created_at,id',[s.tenant_id,s.principal_id,s.id])).rows;
  for(const u of rows)if(sha(u.body)!==u.digest||u.result&&sha(u.result)!==u.result_digest)throw Error('P2_UNIT_OR_RESULT_DIGEST_MISMATCH');return rows;}
 export async function append(ctx:PeMutationContext,s:SearchRow,kind:string,body:unknown,c:PoolClient){await c.query('INSERT INTO finnor_os.p2_events(tenant_id,principal_id,search_id,kind,body,digest) VALUES($1,$2,$3,$4,$5::jsonb,$6)',[s.tenant_id,s.principal_id,s.id,kind,stable(body),sha(body)]);}
-export async function currentSearch(ctx:PeMutationContext,s:SearchRow,q?:ProgramRow){
+export async function currentSearch(ctx:PeMutationContext,s:SearchRow,q?:ProgramRow,access:'execution'|'checked_evidence'='execution'){
  q??=await requestRow(ctx,s.program_id);await authorize(ctx,q.request.root,[{type:'work',id:q.work_id}]);
  if(['FAILED','PARTIAL','CANCELLED','INVALIDATED'].includes(q.status))throw Error('P2_PARENT_PROGRAM_WITHOUT_ACCEPTED_DELIVERY');
  if(['CANCELLED','INVALIDATED'].includes(s.status))throw Error('P2_TERMINAL_CURRENTNESS_FENCED');
- await assertProgramCurrent(ctx,q);
+ await assertProgramCurrent(ctx,q,undefined,false,access);
  await recheckSearchOwners(ctx,q,s);
  await validateDeliberationBinding(ctx,q,s.request);
  if(s.context){const d=await currentDerivation(ctx,s.context.derivationId);if(d.result?.digest!==s.context.sourceResultDigest||q.generation!==s.context.programGeneration)throw Error('P2_SOURCE_OR_PROGRAM_GENERATION_CHANGED');await assertDependencies(ctx,s.context.dependencies);if(s.context.physicalCapacity.digest!==(await nativeCapacitySnapshot(ctx,s.request.requestedKinds.includes('MODEL_REFINE'))).digest)throw Error('P2_SHARED_PHYSICAL_CAPACITY_POLICY_CHANGED');}
@@ -53,7 +53,7 @@ export async function snapshot(ctx:PeMutationContext,s:SearchRow,q:ProgramRow,c:
   bottleneck:{kind:incumbent?'EXPLORATION_OR_MODEL_AMBIGUITY':frontier.some(u=>u.kind==='VERIFY_P1'&&u.status==='FAILED')?'CHECKER_FAILURE':s.context?'VERIFICATION':'DATA_OR_SOURCE_UNCERTAINTY',source:'CURRENT_OWNER_AND_COMPLETED_UNIT_RESULTS',effectAuthority:false},
   topology:{strategy:s.request.strategy,maxParallel:s.request.limits.maxParallel,active:active.length,kind:active.length>1?'PARALLEL_INDEPENDENT':frontier.some(u=>u.body.prerequisites.length)?'COORDINATED_WITH_CHECK_BARRIER':'SEQUENTIAL',economicBenefit:null,selection:'VERSIONED_HEURISTIC_WITHOUT_CALIBRATED_VALUE'},
   bindings:{...s.binding,marginalWorkEstimate:estimate,sourceResultDigest:s.context?.sourceResultDigest??null,acceptanceDigest:q.proposed.acceptanceDigest,producer:q.proposed.producer,originalEpisode:q.episode_id},
-  qualifications:['ORDINARY_EXECUTED_P1_SEARCH_NO_PROTECTED_ADMISSION','NO_MODEL_OPINION_COUNT_IS_INFORMATION','NATIVE_GRANT_DOES_NOT_FUND_DOLLARS_OR_TOKENS','COMPLETE_BILLING_AND_AGGREGATE_CONTAINER_BOUND_UNAVAILABLE','CALIBRATED_TOPOLOGY_AND_ROUTING_GATE_UNPASSED',...remaining]};
+  qualifications:['SOURCE_BOUND_ANALYTICAL_P1_SEARCH_NO_PROTECTED_ADMISSION','NO_MODEL_OPINION_COUNT_IS_INFORMATION','NATIVE_GRANT_DOES_NOT_FUND_DOLLARS_OR_TOKENS','COMPLETE_BILLING_AND_AGGREGATE_CONTAINER_BOUND_UNAVAILABLE','CALIBRATED_TOPOLOGY_AND_ROUTING_GATE_UNPASSED',...remaining]};
  const planId=randomUUID(),policy=s.request.deliberation?await buildPolicy(ctx,s,q,plan,planId,c):null;
  if(policy)plan.deliberationPolicyRef=policy.ref;
  const head=(await c.query('INSERT INTO finnor_os.p2_plans(id,tenant_id,principal_id,search_id,revision,body,digest) VALUES($1,$2,$3,$4,$5,$6::jsonb,$7) RETURNING id',[planId,s.tenant_id,s.principal_id,s.id,plan.revision,stable(plan),sha(plan)])).rows[0].id;

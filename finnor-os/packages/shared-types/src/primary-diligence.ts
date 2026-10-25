@@ -290,6 +290,7 @@ export const PrimaryIntakeSchema = z.object({
   predecessorRef: VReferenceSchema.nullable(), mode: z.enum(["ordinary_disposable", "protected"]),
 }).strict();
 export type PrimaryIntake = z.infer<typeof PrimaryIntakeSchema>;
+export const PrimaryDiligenceActionSchema=PrimaryIntakeSchema.omit({schema:true,root:true,workId:true,idempotencyKey:true}).extend({dealId:z.string().uuid()});
 export type PrimaryProgrammeStatus = "PROGRESS" | "WAITING" | "BLOCKED" | "STOPPED" | "RECONCILING" | "FAILED" | "COMPLETE";
 export interface PrimaryAdvanceResult {
   status: PrimaryProgrammeStatus; principalArtifactRef: VReference | null;

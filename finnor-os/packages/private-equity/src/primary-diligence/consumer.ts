@@ -1,6 +1,6 @@
 import {z} from 'zod';
 import {attachWorkEntity} from '@finnor/db';
-import {compileUnderwritingModel,type ResolvedInput,type UnderwritingInputSnapshot,type UnderwritingModelIR} from '@finnor/underwriting';
+import {compileUnderwritingModel,fail,type ResolvedInput,type UnderwritingInputSnapshot,type UnderwritingModelIR} from '@finnor/underwriting';
 import {PrimaryUnderwritingInputsSchema,PrimaryUnderwritingScopeSchema,type PrimaryFindingBinding} from '@finnor/shared-types';
 import type {PoolClient} from 'pg';
 import type {PeMutationContext} from '../types';
@@ -29,13 +29,13 @@ export async function resolvePrimaryUnderwritingInputs(ctx:PeMutationContext,inv
   LEFT JOIN finnor_os.pe_deals d ON d.tenant_id=i.tenant_id AND d.id=i.deal_id
   LEFT JOIN finnor_os.pe_opportunities o ON o.tenant_id=i.tenant_id AND o.id=i.opportunity_id
   WHERE v.tenant_id=$1 AND v.investment_case_id=$2 AND v.id=$3`,[ctx.auth.tenantId,investmentCaseId,modelVersionId])).rows[0],true);
- if(!model?.target)throw Error('EXACT_PRIMARY_CONSUMER_MODEL_UNAVAILABLE');
+ if(!model?.target)fail('MODEL_SCHEMA_INVALID','EXACT_PRIMARY_CONSUMER_MODEL_UNAVAILABLE');
  const compiled=compileUnderwritingModel(model.definition),resolved:Record<string,ResolvedInput>={};
  for(const [nodeId,binding] of Object.entries(parsed)){
-  const node=compiled.nodeById[nodeId];if(!node||node.kind!=='input'||node.shape!=='scalar'||node.valueType!=='decimal'||node.source&&!['explicit','model_parameter'].includes(node.source.kind))throw Error('PRIMARY_FINDING_CANNOT_SHADOW_BOUND_OR_NONSCALAR_INPUT');
+  const node=compiled.nodeById[nodeId];if(!node||node.kind!=='input'||node.shape!=='scalar'||node.valueType!=='decimal'||node.source&&!['explicit','model_parameter'].includes(node.source.kind))fail('MODEL_SCHEMA_INVALID','PRIMARY_FINDING_CANNOT_SHADOW_BOUND_OR_NONSCALAR_INPUT');
   const expected=PrimaryUnderwritingScopeSchema.parse(node.primaryEvidenceScope),{finding:f,programme:p}=await currentFinding(ctx,binding.findingId);
   const assertion=p.intake.assertions.find(a=>a.assertionId===f.assertionRef.id&&String(a.revision)===f.assertionRef.revision);
-  if(!assertion)throw Error('PRIMARY_CONSUMER_FROZEN_ASSERTION_UNAVAILABLE');
+  if(!assertion)fail('MODEL_SCHEMA_INVALID','PRIMARY_CONSUMER_FROZEN_ASSERTION_UNAVAILABLE');
   const original=PrimaryUnderwritingScopeSchema.parse({
    predicateKind:assertion.predicateKind,field:assertion.field,economicRecordIds:assertion.economicRecordIds,semantics:assertion.semantics,
    requiredCoverage:assertion.requiredCoverage,acceptableSourceClasses:assertion.acceptableSourceClasses,
@@ -50,21 +50,24 @@ export async function resolvePrimaryUnderwritingInputs(ctx:PeMutationContext,inv
    f.observedPopulationAndCoverage.selectedEconomicIds[0]===binding.economicId&&witnesses.length>0&&
    witnesses.every(w=>hash(w.normalizedValue)===hash(f.establishedValueOrInterval))&&
    hash({...expected,predicateKind:original.predicateKind,economicRecordIds:original.economicRecordIds})===hash(original);
-  if(expected.semantics.legalEntityId!==model.target||!(binding.economicId?narrow:hash(expected)===hash(original)))throw Error('PRIMARY_CONSUMER_ENTITY_FACILITY_PERIOD_BASIS_COVERAGE_MISMATCH');
-  if(p.root.entityType==='pe_opportunity'&&p.root.entityId!==model.opportunity_id||p.root.entityType==='pe_deal'&&p.root.entityId!==model.deal_id)throw Error('PRIMARY_CONSUMER_CANONICAL_INVESTMENT_IDENTITY_MISMATCH');
-  if(f.conclusion==='UNRESOLVED'||!f.acceptedClaims.some(r=>hash(r)===hash(f.assertionRef))||f.establishedValueOrInterval.kind!=='EXACT')throw Error('PRIMARY_UNRESOLVED_OR_NONQUANTITATIVE_CLAIM_NOT_KNOWN_INPUT');
-  if(node.unit!=='money'||node.currency!==assertion.semantics.currency||assertion.semantics.units!=='dollars'||node.allowedTruthClasses&&!node.allowedTruthClasses.includes('OBSERVED_FACT'))throw Error('PRIMARY_CONSUMER_UNIT_OR_OBSERVED_TRUTH_CLASS_REFUSED');
+  if(expected.semantics.legalEntityId!==model.target||!(binding.economicId?narrow:hash(expected)===hash(original)))fail('MODEL_SCHEMA_INVALID','PRIMARY_CONSUMER_ENTITY_FACILITY_PERIOD_BASIS_COVERAGE_MISMATCH');
+  if(p.root.entityType==='pe_opportunity'&&p.root.entityId!==model.opportunity_id||p.root.entityType==='pe_deal'&&p.root.entityId!==model.deal_id)fail('MODEL_SCHEMA_INVALID','PRIMARY_CONSUMER_CANONICAL_INVESTMENT_IDENTITY_MISMATCH');
+  if(f.conclusion==='UNRESOLVED'||!f.acceptedClaims.some(r=>hash(r)===hash(f.assertionRef))||f.establishedValueOrInterval.kind!=='EXACT')fail('MODEL_SCHEMA_INVALID','PRIMARY_UNRESOLVED_OR_NONQUANTITATIVE_CLAIM_NOT_KNOWN_INPUT');
+  if(node.unit!=='money'||node.currency!==assertion.semantics.currency||assertion.semantics.units!=='dollars'||node.allowedTruthClasses&&!node.allowedTruthClasses.includes('OBSERVED_FACT'))fail('MODEL_SCHEMA_INVALID','PRIMARY_CONSUMER_UNIT_OR_OBSERVED_TRUTH_CLASS_REFUSED');
   resolved[nodeId]={nodeId,valueType:'decimal',unit:node.unit,currency:node.currency,shape:'scalar',value:exactDecimal(f.establishedValueOrInterval.quantity.numerator,f.establishedValueOrInterval.quantity.denominator),
    truthClass:'OBSERVED_FACT',status:'KNOWN',provenance:[{kind:'primary_finding',id:f.artifactId,versionId:f.artifactId,anchorId:assertion.assertionId,semanticHash:f.contentDigest,effectiveAt:f.effectiveTime,observedAt:f.observationTime??f.knowledgeTime,retrievedAt:f.knowledgeTime}],
-   reason:'INDEPENDENTLY_ESTABLISHED_EXACT_PRIMARY_SCOPE_DEVELOPMENT_NOT_ENTERPRISE_TOTAL_OR_S8_ADMISSION'};
+   reason:'INDEPENDENTLY_ESTABLISHED_EXACT_PRIMARY_SCOPE_NOT_ENTERPRISE_TOTAL_OR_S8_ADMISSION'};
  }
  return resolved;
 }
-export async function assertPrimarySnapshotCurrent(ctx:PeMutationContext,snapshot:UnderwritingInputSnapshot,c?:PoolClient,lock=false){
- for(const input of Object.values(snapshot.values))for(const ref of input.provenance.filter(p=>p.kind==='primary_finding')){
-  const {finding:f,programme:p}=await currentFinding(ctx,ref.id,c,lock),a=p.intake.assertions.find(a=>a.assertionId===ref.anchorId);
+export async function assertPrimaryInputsCurrent(ctx:PeMutationContext,inputs:readonly ResolvedInput[],c?:PoolClient,lock=false){
+ const checked=new Map<string,Awaited<ReturnType<typeof currentFinding>>>();
+ for(const input of inputs)for(const ref of input.provenance.filter(p=>p.kind==='primary_finding')){
+  let producer=checked.get(ref.id);if(!producer){producer=await currentFinding(ctx,ref.id,c,lock);checked.set(ref.id,producer);}
+  const {finding:f,programme:p}=producer,a=p.intake.assertions.find(a=>a.assertionId===ref.anchorId);
   if(!a||f.conclusion==='UNRESOLVED'||f.establishedValueOrInterval.kind!=='EXACT'||input.value!==exactDecimal(f.establishedValueOrInterval.quantity.numerator,f.establishedValueOrInterval.quantity.denominator)||input.truthClass!=='OBSERVED_FACT'||input.status!=='KNOWN'||ref.semanticHash!==f.contentDigest)throw Error('PRIMARY_CONSUMER_PROVENANCE_OR_CURRENTNESS_FAILED');
  }
+ return {primaryWorkIds:[...new Set([...checked.values()].map(({programme:p})=>p.work_id))]};
 }
 export async function bindPrimaryConsumerDependencies(ctx:PeMutationContext,c:PoolClient,runId:string,snapshot:UnderwritingInputSnapshot){
  for(const value of Object.values(snapshot.values))for(const ref of value.provenance.filter(p=>p.kind==='primary_finding')){

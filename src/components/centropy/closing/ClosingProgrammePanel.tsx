@@ -1,10 +1,13 @@
 "use client"
 
 import { lazy, Suspense, useEffect, useState } from "react"
+import {usePathname} from "next/navigation"
 import { RefreshCw } from "lucide-react"
 import { centropyPost } from "@/components/centropy/lib/api"
 import { onBusinessInvalidation } from "@/components/centropy/lib/business-invalidation"
+import {usePrivateRequestScope} from "@/components/centropy/lib/use-private-request-scope"
 import type { ClosingMoney, ClosingProjection } from "../../../../finnor-os/packages/shared-types/src/closing"
+import type {AcquisitionClosingContext} from "../../../../finnor-os/packages/shared-types/src/acquisition-closing"
 
 const HumanControlDesk = lazy(() => import("../controls/HumanControlDesk").then(module => ({ default: module.HumanControlDesk })))
 const words = (value: string) => value.replace(/([a-z])([A-Z])/g, "$1 $2").replaceAll("_", " ").toLowerCase()
@@ -26,13 +29,25 @@ const conjunctionLabels: Record<string, string> = {
   continuingDutiesHandedOff: "Continuing duties canonically owned",
 }
 
-export function ClosingProgrammePanel({ workId, transactionId, onChanged }: { workId?: string; transactionId?: string; onChanged?: () => void }) {
+type Props={workId?:string;transactionId?:string;onChanged?:()=>void}
+export function ClosingProgrammePanel(props:Props){
+  const pathname=usePathname()
+  const scope=usePrivateRequestScope("closing:"+pathname+":"+(props.workId??"none")+":"+(props.transactionId??"none"))
+  if(!scope.allowed)return <p role="status">An authenticated owner must review closing authority and evidence.</p>
+  return <ClosingProgrammeContent key={scope.key} {...props}/>
+}
+
+function ClosingProgrammeContent({ workId, transactionId, onChanged }: Props) {
   const [programmes, setProgrammes] = useState<ClosingProjection[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [revision, setRevision] = useState(0)
   const [controls, setControls] = useState(false)
   const [selected, setSelected] = useState("")
+  const [icCaseId,setIcCaseId]=useState("")
+  const [acquisition,setAcquisition]=useState<AcquisitionClosingContext|null>(null)
+  const [acquisitionError,setAcquisitionError]=useState<string|null>(null)
+  const [acquisitionLoading,setAcquisitionLoading]=useState(Boolean(workId))
   const refresh = () => setRevision(value => value + 1)
 
   useEffect(() => onBusinessInvalidation(event => {
@@ -40,6 +55,18 @@ export function ClosingProgrammePanel({ workId, transactionId, onChanged }: { wo
       setProgrammes(null); setRevision(value => value + 1)
     }
   }), [])
+  useEffect(() => {
+    if(!workId)return
+    let active=true
+    setAcquisitionError(null);setAcquisitionLoading(true)
+    void centropyPost<AcquisitionClosingContext>("company-brain/acquisition-closing-context",{workId,...(icCaseId?{icCaseId}:{})}).then(result=>{
+      if(!active)return
+      if(result.workId!==workId||result.applicable&&transactionId&&result.dealId!==transactionId||icCaseId&&result.selected?.icCaseId!==icCaseId)throw new Error("The reviewed acquisition Work or committee selection changed")
+      setAcquisition(result)
+    }).catch(cause=>{if(active)setAcquisitionError(cause instanceof Error?cause.message:"Acquisition closing review unavailable")})
+      .finally(()=>{if(active)setAcquisitionLoading(false)})
+    return()=>{active=false}
+  },[workId,transactionId,icCaseId,revision])
   useEffect(() => {
     let active = true
     setProgrammes(null); setError(null); setLoading(true)
@@ -59,7 +86,7 @@ export function ClosingProgrammePanel({ workId, transactionId, onChanged }: { wo
     const deadlines = (programmes ?? []).flatMap(q => [
       ...(q.checkCurrent && q.check ? [Date.parse(q.check.validUntil)] : []),
       ...(q.certificate?.currentlyValid ? [Date.parse(q.certificate.body.validityAndSupersession.validUntil)] : []),
-    ]).filter(Number.isFinite)
+    ]).concat(acquisition?.validUntil?[Date.parse(acquisition.validUntil)]:[]).filter(deadline=>Number.isFinite(deadline)&&deadline>Date.now())
     if (!deadlines.length) return
     const deadline = Math.min(...deadlines)
     let timer: ReturnType<typeof setTimeout> | undefined
@@ -71,13 +98,26 @@ export function ClosingProgrammePanel({ workId, transactionId, onChanged }: { wo
     }
     recheck()
     return () => clearTimeout(timer)
-  }, [programmes])
+  }, [programmes,acquisition?.validUntil])
 
   const q = programmes?.find(item => item.programmeId === selected) ?? programmes?.[0]
+  const acquisitionBlockers=!workId?[]:acquisitionLoading?["ACQUISITION_REVIEW_PENDING"]:acquisitionError?["ACQUISITION_REVIEW_UNAVAILABLE"]:acquisition?.applicable&&(!acquisition.eligible||!acquisition.validUntil||Date.parse(acquisition.validUntil)<=Date.now())?(acquisition.blockers.length?acquisition.blockers:["ACQUISITION_REVIEW_EXPIRED"]):[]
   return <section className="ct-world-work ct-closing" aria-label="Verified transaction closing">
     <div className="ct-world-work__top"><div><h4>Verified transaction closing</h4><p>Signature, acknowledgement and a completed checklist are not a verified close.</p></div><button type="button" aria-label="Refresh closing proof" disabled={loading} onClick={refresh}><RefreshCw size={15} /></button></div>
     {loading ? <p role="status">Reading canonical closing currentness…</p> : null}
     {error ? <p className="ct-world__error" role="alert">{error} <button type="button" onClick={refresh}>Retry</button></p> : null}
+    {workId?<section aria-label="Acquisition committee handoff" aria-busy={acquisitionLoading}>
+      {acquisitionLoading?<p role="status">Reading the original acquisition and committee decision…</p>:null}
+      {acquisitionError?<p role="alert">{acquisitionError} <button type="button" onClick={refresh}>Retry acquisition review</button></p>:null}
+      {acquisition?.applicable?<>
+        <label>Committee decision for this acquisition<select value={icCaseId} disabled={acquisitionLoading||controls} onChange={event=>setIcCaseId(event.target.value)}><option value="">Choose the exact committee case</option>{acquisition.cases.map(c=><option key={c.id} value={c.id}>{words(c.state)} · {c.outcome?words(c.outcome):"No final decision"} · {c.id.slice(0,8)}</option>)}</select></label>
+        {controls?<p>Close the record controls before selecting a different committee basis.</p>:null}
+        <p role="status">{acquisition.eligible?"The current committee basis satisfies the investment prerequisite. Legally accepted terms, allocations and execution approvals remain required.":"Closing requires the exact finalized investing decision and its current conditions."}</p>
+        {acquisition.blockers.length?<ul>{acquisition.blockers.map(b=><li key={b}>{words(b)}</li>)}</ul>:null}
+        {acquisition.conditions.length?<ul>{acquisition.conditions.map(c=><li key={c.id}><strong>{c.title}</strong> · {words(c.type)} · {words(c.state)}{c.required&&!c.discharged&&c.type==="MONITORING"?<p>Retain this duty in the approved closing plan. Owner · {c.ownerEmployeeId}. Due · {c.dueAt??"Specify an accepted due date"}.</p>:null}</li>)}</ul>:null}
+        {acquisition.limits?<p>The original Work retains {acquisition.limits.actionCount}/{acquisition.limits.maxActions} actions and {acquisition.limits.queryCount}/{acquisition.limits.maxQueries} queries. Deadline · {acquisition.deadlineAt}.</p>:null}
+      </>:null}
+    </section>:null}
     {programmes?.length === 0 ? <p>No legally accepted ClosingSpec is registered for this exact record. Verified close is not established.</p> : null}
     {programmes && programmes.length > 1 ? <label>Closing history<select value={q?.programmeId} onChange={event => setSelected(event.target.value)}>{programmes.map(item => <option key={item.programmeId} value={item.programmeId}>{item.status} · {item.specDigest.slice(0, 12)}</option>)}</select></label> : null}
     {q ? <>
@@ -95,6 +135,6 @@ export function ClosingProgrammePanel({ workId, transactionId, onChanged }: { wo
       {q.certificate ? <details><summary>{q.certificate.currentlyValid ? "Current verified close certificate" : "Historical certificate, not presently sufficient"}</summary><p>Certificate · {q.certificate.id}. Historical bytes are immutable.</p><p>Independent check · {q.certificate.body.receiptAndCurrentness.checkId}</p><p>Checker digest · {q.certificate.body.receiptAndCurrentness.checkerDigest}</p><p>Valid until · {q.certificate.body.validityAndSupersession.validUntil}</p></details> : <p>No VerifiedClosedTransaction certificate has been issued.</p>}
       {q.nativeBudget ? <p>Original finite grant · {q.nativeBudget.stepCount}/{q.nativeBudget.maxSteps} steps, {q.nativeBudget.actionCount}/{q.nativeBudget.maxActions} actions, {q.nativeBudget.queryCount}/{q.nativeBudget.maxQueries} queries. Deadline · {q.nativeBudget.deadlineAt}.</p> : null}
     </> : null}
-    <details className="ct-record-controls" onToggle={event => setControls(event.currentTarget.open)}><summary>Review accepted closing intake, signed evidence or retained controls</summary><p>Stopping does not erase an accepted draw, wire or liability. Continuing never resets the original grant. Only an independently signed observation can satisfy a professional predicate.</p>{controls ? <Suspense fallback={<p>Opening authenticated closing controls…</p>}><HumanControlDesk key={q?.programmeId ?? transactionId ?? workId} groups={["closing-programmes"]} context={{ programmeId: q?.programmeId }} fixedFields={["programmeId"]} writable={!loading && !error} onRecorded={() => { refresh(); onChanged?.() }} /></Suspense> : null}</details>
+    <details className="ct-record-controls" onToggle={event => setControls(event.currentTarget.open)}><summary>Review accepted closing intake, signed evidence or retained controls</summary><p>Stopping does not erase an accepted draw, wire or liability. Continuing never resets the original grant. Only an independently signed observation can satisfy a professional predicate.</p>{controls ? <Suspense fallback={<p>Opening authenticated closing controls…</p>}><HumanControlDesk key={q?.programmeId ?? transactionId ?? workId} groups={["closing-programmes"]} context={{ programmeId: q?.programmeId,...(acquisition?.applicable?{workId:acquisition.workId,continuation:acquisition.continuation,acquisitionIcCaseId:acquisition.selected?.icCaseId}:{}) }} fixedFields={["programmeId",...(acquisition?.applicable?["workId","continuation","acquisitionIcCaseId"]:[])]} eligibility={form=>form.routePattern==="closing/submit"?acquisitionBlockers:[]} writable={!loading && !error} onRecorded={() => { refresh(); onChanged?.() }} /></Suspense> : null}</details>
   </section>
 }

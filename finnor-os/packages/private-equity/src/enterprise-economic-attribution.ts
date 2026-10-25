@@ -52,10 +52,16 @@ function bindSources(e: OutcomeEstimand, assignments: EconomicAssignment[], acco
     if (e.assignment.kind === 'INDEPENDENT_CLUSTER_RANDOMIZATION') {
         const p = body(e.assignment.protocolRef);
         mark(e.assignment.protocolRef, p?.schema === 'finnor.s2.economic-assignment-protocol.v1' && same(p.probabilities, e.assignment.probabilities) && same(p.clusterIds, e.clusters.map(c => c.id)) && same(p.controllerIds, e.controllers.map(c => c.id)) && same(p.populationRef, e.populationRef) && same(p.mandateRef, e.mandateRef) && p.randomization === 'INDEPENDENT_CRYPTO_CATEGORICAL_V1');
+    }else{
+        const p=body(e.assignment.protocolRef);
+        mark(e.assignment.protocolRef,p?.schema==='finnor.s2.economic-assignment-protocol.v1'&&p.randomization==='NONE_OBSERVATIONAL_V1'&&same(p.identificationReasons,e.assignment.reasons)&&same(p.clusterIds,e.clusters.map(c=>c.id))&&same(p.controllerIds,e.controllers.map(c=>c.id))&&same(p.populationRef,e.populationRef)&&same(p.mandateRef,e.mandateRef)&&p.assignmentNotBefore===e.assignmentAt&&p.outcomeAccessNotBefore===e.outcomeAccessNotBefore&&p.controllerByCluster&&Object.keys(p.controllerByCluster).length===e.clusters.length&&e.clusters.every(c=>Object.hasOwn(p.controllerByCluster,c.id)&&e.controllers.some(controller=>controller.id===p.controllerByCluster[c.id])));
     }
     for (const a of assignments) {
         const p = body(a.assignmentRef);
-        mark(a.assignmentRef, p?.schema === 'finnor.s2.economic-assignment.v1' && p.clusterId === a.clusterId && p.controllerId === a.controllerId && p.assignedAt === a.assignedAt && same(p.protocolRef, a.protocolRef));
+        const protocol=body(e.assignment.protocolRef),lawMatches=e.assignment.kind==='INDEPENDENT_CLUSTER_RANDOMIZATION'
+            ?p?.randomization==='INDEPENDENT_CRYPTO_CATEGORICAL_V1'
+            :p?.randomization==='NONE_OBSERVATIONAL_V1'&&protocol?.controllerByCluster?.[a.clusterId]===a.controllerId;
+        mark(a.assignmentRef, p?.schema === 'finnor.s2.economic-assignment.v1' && lawMatches && p.clusterId === a.clusterId && p.controllerId === a.controllerId && p.assignedAt === a.assignedAt && same(p.protocolRef, a.protocolRef));
     }
     for (const s of accounting) {
         const manifest = body(s.sourceManifestRef);
@@ -84,16 +90,21 @@ function bindSources(e: OutcomeEstimand, assignments: EconomicAssignment[], acco
         mark(s.conservationRef, conservation?.schema === 'finnor.owner-conservation.v1' && same(conservation.ownerBoundaryRef, e.ownerBoundaryRef) && same(conservation.ownershipWaterfallRef, e.ownershipWaterfallRef) && conservation.asOf === s.asOf && conservation.distributionsRemovedFromResidual === true && conservation.residualIncludesEntityDebt === true && conservation.internalTransfersEliminated === true && Array.isArray(conservation.economicItemIds) && same([...conservation.economicItemIds].sort(), s.items.map(i => i.canonicalId).sort()));
     }
 }
-export async function registerEnterpriseOutcomeEstimand(ctx: PeMutationContext, input: {
+export interface OutcomeEstimandRegistrationInput {
     estimand: unknown;
     rightsRef: string;
     idempotencyKey?: string;
     mode?: 'PROSPECTIVE' | 'RETROSPECTIVE';
-}) {
-    const e = parseOutcomeEstimand(input.estimand), mode = input.mode ?? 'PROSPECTIVE', now = new Date().toISOString(), key = input.idempotencyKey ?? e.key, semanticRequestDigest = economicHash({ estimand: e, mode, rightsRef: input.rightsRef });
+}
+export async function registerEnterpriseOutcomeEstimand(ctx: PeMutationContext, input: OutcomeEstimandRegistrationInput) {
+    const e = parseOutcomeEstimand(input.estimand), mode = input.mode ?? 'PROSPECTIVE', key = input.idempotencyKey ?? e.key, semanticRequestDigest = economicHash({ estimand: e, mode, rightsRef: input.rightsRef });
     const replay = await readEconomicReplay(ctx, 'PREREGISTRATION', key, semanticRequestDigest);
     if (replay)
         return replay;
+    return persistEconomicRecord(ctx,await prepareOutcomeEstimandRegistration(ctx,input));
+}
+export async function prepareOutcomeEstimandRegistration(ctx:PeMutationContext,input:OutcomeEstimandRegistrationInput):Promise<import('./economic-store').EconomicRecordInput>{
+    const e=parseOutcomeEstimand(input.estimand),mode=input.mode??'PROSPECTIVE',key=input.idempotencyKey??e.key,semanticRequestDigest=economicHash({estimand:e,mode,rightsRef:input.rightsRef});
     if (mode === 'PROSPECTIVE' && (Date.parse(e.assignmentAt) <= Date.now() || Date.parse(e.outcomeAccessNotBefore) <= Date.now() || Date.parse(e.registeredAt) > Date.now() + 1000))
         fail('QUESTION_MUST_FREEZE_BEFORE_ASSIGNMENT_AND_OUTCOME_ACCESS');
     const cut = await resolveEconomicSourceCut(ctx, collectEconomicRefs(e), e), mandate = cut.readbacks.get(e.mandateRef.id)?.reference.content as any;
@@ -102,7 +113,7 @@ export async function registerEnterpriseOutcomeEstimand(ctx: PeMutationContext, 
     const prior = e.correctionOf ? await readStoredEconomicRecord(ctx, e.correctionOf.id) : null;
     if (prior && (prior.kind !== 'PREREGISTRATION' || !same(prior.ref, e.correctionOf)))
         fail('ORIGINAL_ESTIMAND_VERSION_REQUIRED');
-    return persistEconomicRecord(ctx, { kind: 'PREREGISTRATION', ...(mode === 'PROSPECTIVE' ? { freezeBefore: e.assignmentAt } : {}), payload: { estimand: e, mode, sourceQualification: cut.evidence.every(v => v.status === 'RESOLVED_AUTHENTICATED') ? 'AUTHENTICATED_SOURCE_COMMITMENTS_ONLY' : 'PREPARED_UNPROTECTED_OR_SOURCE_GAPS', sourceCut: cut.evidence }, rightsRef: input.rightsRef, idempotencyKey: key, semanticRequestDigest, ...(prior ? { revisionOf: prior.ref.id } : {}), validAt: e.registeredAt, horizon: 'H1', uncertainty: 'SOURCE_OR_COST_GAPS', dependencies: collectEconomicRefs(e) });
+    return { kind: 'PREREGISTRATION', ...(mode === 'PROSPECTIVE' ? { freezeBefore: e.assignmentAt } : {}), payload: { estimand: e, mode, sourceQualification: cut.evidence.every(v => v.status === 'RESOLVED_AUTHENTICATED') ? 'AUTHENTICATED_SOURCE_COMMITMENTS_ONLY' : 'PREPARED_UNPROTECTED_OR_SOURCE_GAPS', sourceCut: cut.evidence }, rightsRef: input.rightsRef, idempotencyKey: key, semanticRequestDigest, ...(prior ? { revisionOf: prior.ref.id } : {}), validAt: e.registeredAt, horizon: 'H1', uncertainty: 'SOURCE_OR_COST_GAPS', dependencies: collectEconomicRefs(e) };
 }
 export async function readEnterpriseEconomicRecord(ctx: PeMutationContext, input: {
     id: string;

@@ -11,7 +11,7 @@ import { readPeOperatingContext } from "@/components/centropy/pe/context-routing
 import { isPeWorldRootRef, type CompanyBrainNode, type CompanyBrainObjectRef, type PeWorldRootRef } from "@/components/centropy/pe/contracts"
 import { InstructionTraceRuntime, type InstructionTraceSnapshot } from "../runtime/instruction-events"
 import { presenceFromRuntime } from "../runtime/presence-state"
-import { CanvasDocument, type CanvasSourceError } from "../canvas/CanvasDocument"
+import { CanvasDocument, type CanvasSourceError, type CanvasInstrumentSelection } from "../canvas/CanvasDocument"
 import { CausalReplayPanel } from "../canvas/CausalReplayPanel"
 import { composeCanvasDocument } from "../canvas/canvas-compose"
 import { useCanvasSources } from "../canvas/use-canvas-sources"
@@ -19,6 +19,7 @@ import { WorldExplorer } from "../world/WorldExplorer"
 import { LiveInstitutionalControl } from "../controls/LiveInstitutionalControl"
 import { canonicalWorldFocus, operatingSelection } from "../world/world-context"
 import { createInvestigation, listInvestigations } from "../thread/thread-api"
+import {MissionSubmission,MissionUnconfirmedError,type MissionSpecification} from "../thread/mission-submission"
 import type { ConversationThreadSummary } from "../thread/thread-contract"
 import { useInvestigation } from "../thread/use-investigation"
 import { Composer } from "../thread/Composer"
@@ -112,7 +113,11 @@ function CentropyWorkspaceContent() {
   const [assignmentsOpen, setAssignmentsOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [density, setDensity] = useState<"comfortable" | "compact">("comfortable")
+  const missionSubmission=useRef<{scope:string;submission:MissionSubmission;specification:MissionSpecification;title:string;createdThread:boolean}|null>(null)
+  const missionAcceptances=useRef<Array<{scope:string;submission:MissionSubmission}>>([])
+  const [missionRetry,setMissionRetry]=useState(false)
   const [responseWork, setResponseWork] = useState<{ threadId: string; workId: string } | null>(null)
+  const [instrumentSelection,setInstrumentSelection]=useState<{threadId:string;principalId:string;selection:CanvasInstrumentSelection}|null>(null)
   const { key: mutationScopeKey, isCurrent: mutationIsCurrent, invalidate: invalidateSelection } =
     usePrivateRequestScope(`centropy-selection:${pathname}?${routeQuery}|${threadId ?? "home"}`)
   const [trace, setTrace] = useState<InstructionTraceSnapshot | null>(null)
@@ -211,6 +216,8 @@ function CentropyWorkspaceContent() {
     : selectedRootFromThread
   const canvasRoot = rootSelection.key === selectionKey && rootSelection.explicit
     ? rootSelection.value : routeClearsContext ? null : explicitRoot ?? persistedRoot
+  const {key:missionScopeKey,isCurrent:missionIsCurrent}=usePrivateRequestScope("centropy-mission:"+(threadId??"home")+":"+(canvasRoot?.entityType??"none")+":"+(canvasRoot?.entityId??"none"))
+  useEffect(()=>{missionSubmission.current=null;missionAcceptances.current=[];setMissionRetry(false)},[missionScopeKey])
   const routeSelectedObject = routeSelection.selectedObject
   const selectedIcCaseId = UUID.test(searchParams.get("icCaseId") ?? "") ? searchParams.get("icCaseId") : null
   const canvasSources = useCanvasSources(activeWorkId, canvasRoot, ready && Boolean(threadId || worldMode || canvasRoot), canvasRefresh + refreshToken, underwritingRefresh, selectedIcCaseId)
@@ -331,44 +338,38 @@ function CentropyWorkspaceContent() {
     router.replace(`/centropy/investigations/${id}${carried.size ? `?${carried.toString()}` : ""}`)
   }
 
-  async function startOutcomePack(packId: "deal_to_verified_closing_readiness" | "deal_request_resolution" | "critical_deal_dependency_resolution" | "general_operator_objective", mode: "shadow" | "approval" | "autopilot", title: string, input: Record<string, unknown>): Promise<void> {
+  async function startOutcomePack(packId: "deal_to_verified_closing_readiness" | "deal_request_resolution" | "critical_deal_dependency_resolution" | "general_operator_objective", mode: "shadow" | "approval" | "autopilot", title: string, input: Record<string, unknown>, budgets?:MissionSpecification["budgets"]): Promise<{workId:string}> {
     if (busy) throw new Error("Another instruction is still being submitted")
-    const current = () => mutationIsCurrent(mutationScopeKey)
-    if (!current()) return
+    const current = () => missionIsCurrent(missionScopeKey)
+    if (!current()) throw new Error("The selected Investigation or access changed before mission acceptance")
     if (!canvasRoot || canvasRoot.entityType !== "pe_deal") throw new Error("Select one exact Deal before starting a mission")
+    const specification:MissionSpecification={packId,input,...(budgets?{budgets}:{})}
+    const accepted=missionAcceptances.current.find(receipt=>receipt.scope===missionScopeKey&&receipt.submission.matches(specification,canvasRoot.entityId))?.submission
+    if(accepted?.acceptedWorkId)return {workId:accepted.acceptedWorkId}
+    const previous=missionSubmission.current?.scope===missionScopeKey?missionSubmission.current:null
+    const retained=previous
     setBusy(true)
     setSubmissionError(null)
-    const instructionId = crypto.randomUUID()
-    let currentThreadId = threadId
-    let createdThread = false
+    if(retained&&!retained.submission.matches(specification,canvasRoot.entityId)) {setBusy(false);throw new Error("Resolve the interrupted original mission before changing its inputs. Retry the original mission below.")}
+    let currentThreadId = retained?.submission.threadId??threadId
+    let createdThread = retained?.createdThread??false
+    let instructionId=retained?.submission.instructionId??""
     try {
       if (!currentThreadId) {
         const created = await createInvestigation(title)
-        if (!current()) return
+        if (!current()) throw new Error("The selected Investigation or access changed before mission acceptance")
         currentThreadId = created.id
         createdThread = true
       }
+      const submission=retained?.submission??new MissionSubmission(specification,{dealId:canvasRoot.entityId,threadId:currentThreadId??undefined})
+      instructionId=submission.instructionId
+      missionSubmission.current={scope:missionScopeKey,submission,specification:JSON.parse(JSON.stringify(specification)),title,createdThread}
       setPending({ instructionId, threadId: currentThreadId, text: `Start ${title} for this Deal in ${mode} mode.`, failed: false })
       startTrace(instructionId)
-      const response = await centropyPost<{ outcomePack?: { workId?: string; instructionId?: string }; threadId?: string; projectionWarnings?: Array<{ stage: string; code: string }> }>("outcome-packs", {
-        packId,
-        input,
-        channel: "console",
-        threadId: currentThreadId,
-        instructionId,
-        idempotencyKey: instructionId,
-        activeContext: {
-          version: 1,
-          capturedAt: new Date().toISOString(),
-          source: "console",
-          selectedEntities: [{ entityType: "pe_deal", entityId: canvasRoot.entityId }],
-          excludedEntities: [],
-          surface: { id: "deals", spatialState: "canvas" },
-          filters: [],
-        },
-      })
-      if (!current()) return
+      const response = await centropyPost<{ outcomePack?: { workId?: string; instructionId?: string }; threadId?: string; projectionWarnings?: Array<{ stage: string; code: string }> }>("outcome-packs", submission.body)
+      if (!current()) throw new Error("The selected Investigation or access changed before mission acceptance")
       if (response.threadId !== currentThreadId || response.outcomePack?.instructionId !== instructionId || !response.outcomePack.workId) throw new Error("Outcome Pack response did not confirm the selected Investigation and Work")
+      submission.confirm(response.outcomePack.workId);missionAcceptances.current.push({scope:missionScopeKey,submission});missionSubmission.current=null;setMissionRetry(false)
       setResponseWork({ threadId: currentThreadId, workId: response.outcomePack.workId })
       if (response.projectionWarnings?.length) {
         if (response.projectionWarnings.some((warning) => warning.stage === "conversation turn")) setPending(null)
@@ -378,19 +379,21 @@ function CentropyWorkspaceContent() {
       setCanvasRefresh((value) => value + 1)
       void refreshRecent()
       if (createdThread) selectCreatedThread(currentThreadId)
+      return {workId:response.outcomePack.workId}
     } catch (cause) {
-      if (!current()) return
+      if (!current()) throw new Error("The selected Investigation or access changed before mission acceptance")
       const recoverableWork = cause instanceof CentropyApiError && cause.details && typeof cause.details === "object" && "workId" in cause.details
         ? String((cause.details as { workId: unknown }).workId) : null
       if (recoverableWork && currentThreadId) setResponseWork({ threadId: currentThreadId, workId: recoverableWork })
-      if (recoverableWork && currentThreadId && createdThread) selectCreatedThread(currentThreadId)
-      const definitivelyRejected = !recoverableWork && cause instanceof CentropyApiError && [400, 401, 403, 404, 409, 422].includes(cause.status)
+      const definitivelyRejected = !missionSubmission.current?.submission.isUnconfirmed&&!recoverableWork && cause instanceof CentropyApiError && [400, 401, 403, 404, 409, 422].includes(cause.status)
       if (definitivelyRejected) {
+        missionSubmission.current=null;setMissionRetry(false)
         traceRuntime.current?.stop()
         setTrace(null)
         setPending(null)
-      } else setPending((current) => current?.instructionId === instructionId ? { ...current, failed: true } : current)
+      } else {missionSubmission.current?.submission.markUnconfirmed();setMissionRetry(Boolean(missionSubmission.current));setPending((current) => current?.instructionId === instructionId ? { ...current, failed: true } : current)}
       setSubmissionError({ scope: currentThreadId ?? noticeScope, message: cause instanceof Error ? cause.message : "Outcome Pack submission failed" })
+      if(missionSubmission.current?.submission.isUnconfirmed)throw new MissionUnconfirmedError(cause instanceof Error?cause.message:'The original mission outcome is unconfirmed')
       throw cause
     } finally { if (current()) setBusy(false) }
   }
@@ -515,6 +518,7 @@ function CentropyWorkspaceContent() {
           {activeWorkId && canvasSources.work.data?.work.id === activeWorkId ? <VerifiedUnderwritingOutcome work={canvasSources.work.data} underwriting={canvasSources.underwriting.data} dealId={canvasRoot?.entityType === "pe_deal" ? canvasRoot.entityId : null} onOpenCanvas={() => setMobilePane("canvas")} /> : null}
           {visiblePending && !messages.some((message) => message.instructionId === visiblePending.instructionId && message.role === "user") ? <article className="ct-turn" data-role="user" data-pending="true"><div className="ct-turn__identity"><span>YOU</span><span>{visiblePending.failed ? "Submission needs attention" : "Submitting"}</span></div><p>{visiblePending.text}</p></article> : null}
           {visibleTrace ? <ExecutionObject trace={visibleTrace} stopping={stopping} onStop={() => void stopInstruction()} canonicalWorkStatus={traceCanonicalWorkStatus} restoringHistory={!visiblePending && visibleTrace.instructionId === latestInstructionId} /> : null}
+          {missionRetry&&missionSubmission.current?.scope===missionScopeKey?<div className="ct-thread__notice" role="status"><p>The mission response was interrupted. Retry its original request to confirm the existing Work.</p><button type="button" disabled={busy} onClick={()=>{const retry=missionSubmission.current;if(!retry)return;void startOutcomePack(retry.specification.packId as "general_operator_objective",retry.specification.input.mode as "shadow"|"approval"|"autopilot",retry.title,retry.specification.input,retry.specification.budgets).catch(()=>undefined)}}>Retry original mission</button></div>:null}
           {canvasRoot?.entityType === "pe_deal" || canvasSources.work.data?.outcomePack ? <Suspense fallback={<p className="ct-thread__notice">Reading bounded missions…</p>}><OutcomePacks root={canvasRoot} run={canvasSources.work.data?.work.id === activeWorkId ? canvasSources.work.data.outcomePack : null} onStart={startOutcomePack} /></Suspense> : null}
           {activeWorkId && canvasSources.work.data?.work.id === activeWorkId && ["failed", "recovery"].includes(canvasSources.work.data.work.status) ? <Suspense fallback={<p className="ct-thread__notice">Reading Work recovery…</p>}><WorkRecovery key={activeWorkId} aggregate={canvasSources.work.data} current={canvasSources.work.status === "ready"} onChanged={() => { setRefreshToken((value) => value + 1); setCanvasRefresh((value) => value + 1) }} /></Suspense> : null}
           {activeWorkId && canvasSources.work.data?.work.id === activeWorkId && pendingActionSignature ? <Suspense fallback={<p className="ct-thread__notice">Reading governed effects…</p>}><PendingEffects key={activeWorkId} aggregate={canvasSources.work.data} current={canvasSources.work.status === "ready"} refreshKey={pendingActionSignature} onChanged={() => { setRefreshToken((value) => value + 1); setCanvasRefresh((value) => value + 1) }} /></Suspense> : null}
@@ -531,7 +535,7 @@ function CentropyWorkspaceContent() {
         {!worldMode && canvasRoot && focusedObject && canvasSources.projection.data && canvasSources.projection.status !== "error"
           ? <LiveInstitutionalControl root={canvasRoot} focus={focusedObject} workId={activeWorkId} onChanged={() => setCanvasRefresh(value => value + 1)} /> : null}
         {worldMode ? <WorldExplorer key={`${auth.session.user.id}:${auth.session.access_token}`} root={canvasRoot} projection={canvasSources.projection.data} projectionStatus={canvasSources.projection.status} projectionError={canvasSources.projection.error} initialObject={routeSelectedObject} workId={activeWorkId} onSelectRoot={selectWorldRoot} onSelectObject={selectWorldObject} onAsk={askAboutWorldNode} onRefresh={() => setCanvasRefresh((value) => value + 1)} />
-          : threadId ? replayWorkId ? <CausalReplayPanel workId={replayWorkId} onClose={() => selectReplayWorkId(null)} /> : canvasDocument ? <CanvasDocument key={threadId} onSelectProgramWork={(workId) => {invalidateSelection();setResponseWork({threadId,workId});setRefreshToken(value=>value+1);setCanvasRefresh(value=>value+1)}} document={canvasDocument} root={canvasRoot} sourceErrors={canvasErrors} refreshing={canvasLoading} onRefresh={() => setCanvasRefresh((value) => value + 1)} onRefreshUnderwriting={() => setUnderwritingRefresh((value) => value + 1)} work={canvasSources.work.status === "ready" ? canvasSources.work.data : null} underwriting={canvasSources.underwriting.data} underwritingReady={canvasSources.underwriting.status === "ready"} ic={canvasSources.ic.data} icReady={canvasSources.ic.status === "ready"} onSelectIcCase={selectIcCase} onOpenReplay={selectReplayWorkId} onInspectEntity={(id) => { const node = canvasSources.projection.data?.nodes.find((item) => `${item.ref.type}:${item.ref.id}` === id); if (node && canvasRoot) { invalidateSelection(); setFocusedObject(node.ref); router.push(worldHref(canvasRoot, node.ref)) } }} /> : investigation.status === "loading" || canvasLoading ? <p className="ct-canvas__loading" role="status">Assembling Canvas from persisted records…</p> : <div className="ct-canvas__invalid" role="alert"><h2>Canvas unavailable</h2><p>The typed document could not be composed from the current source records.</p><button type="button" onClick={() => setCanvasRefresh((value) => value + 1)}>Retry from sources</button></div>
+          : threadId ? replayWorkId ? <CausalReplayPanel workId={replayWorkId} onClose={() => selectReplayWorkId(null)} /> : canvasDocument ? <CanvasDocument key={threadId} selectedInstrument={instrumentSelection?.threadId===threadId&&instrumentSelection.principalId===auth.session.user.id?instrumentSelection.selection:undefined} onInstrumentRestored={sequence=>setInstrumentSelection(previous=>previous?.selection.sequence===sequence?{...previous,selection:{...previous.selection,restoreFocus:false}}:previous)} onSelectProgramWork={(workId,sectionId) => {if(sectionId)setInstrumentSelection(previous=>({threadId,principalId:auth.session!.user.id,selection:{workId,sectionId,sequence:previous?previous.selection.sequence+1:1,restoreFocus:true}}));invalidateSelection();setResponseWork({threadId,workId});setRefreshToken(value=>value+1);setCanvasRefresh(value=>value+1)}} document={canvasDocument} root={canvasRoot} sourceErrors={canvasErrors} refreshing={canvasLoading} onRefresh={() => setCanvasRefresh((value) => value + 1)} onRefreshUnderwriting={() => setUnderwritingRefresh((value) => value + 1)} work={canvasSources.work.status === "ready" ? canvasSources.work.data : null} underwriting={canvasSources.underwriting.data} underwritingReady={canvasSources.underwriting.status === "ready"} ic={canvasSources.ic.data} icReady={canvasSources.ic.status === "ready"} onSelectIcCase={selectIcCase} onOpenReplay={selectReplayWorkId} onInspectEntity={(id) => { const node = canvasSources.projection.data?.nodes.find((item) => `${item.ref.type}:${item.ref.id}` === id); if (node && canvasRoot) { invalidateSelection(); setFocusedObject(node.ref); router.push(worldHref(canvasRoot, node.ref)) } }} /> : investigation.status === "loading" || canvasLoading ? <p className="ct-canvas__loading" role="status">Assembling Canvas from persisted records…</p> : <div className="ct-canvas__invalid" role="alert"><h2>Canvas unavailable</h2><p>The typed document could not be composed from the current source records.</p><button type="button" onClick={() => setCanvasRefresh((value) => value + 1)}>Retry from sources</button></div>
           : draftArtifactInUrl ? <Suspense fallback={<p role="status">Reading the exact artifact draft…</p>}><StandaloneArtifactCanvas key={`${searchParams.get("artifactDocumentId")}:${searchParams.get("artifactVersionId")}`} documentId={searchParams.get("artifactDocumentId")!} initialVersionId={searchParams.get("artifactVersionId")!} onClose={() => { invalidateSelection(); const query = new URLSearchParams(routeQuery); for (const key of ["artifactMode", "artifactDocumentId", "artifactVersionId"]) query.delete(key); router.replace(`${pathname}${query.size ? `?${query}` : ""}`, { scroll: false }) }} onVersionChange={(id) => { if (!UUID.test(id)) return; invalidateSelection(); const query = new URLSearchParams(routeQuery); query.set("artifactVersionId", id); router.replace(`${pathname}?${query}`, { scroll: false }) }} /></Suspense>
           : <HomeCanvas recent={recent} recentError={recentError} onOpenInvestigation={openInvestigation} />}
       </main>

@@ -60,6 +60,7 @@ import { WorkflowRunControlSchema } from "../apps/api/lib/run-control-route";
 import { CreateThreadSchema, DeletePushSubscriptionSchema, EmptyProductControlSchema, GoogleConnectionStartSchema, HumanClosingActionSchema, InitiateCompensationSchema, PushSubscriptionSchema, ResolveReconciliationSchema, SubmitCorrectionSchema } from "../apps/api/lib/product-control-schemas";
 import { PE_ENTITY_TYPES, PE_WORLD_ROOT_TYPES } from "@finnor/private-equity";
 import { EVIDENCE_OPERATIONS, EvidenceOperationSchemas } from "../packages/private-equity/src/evidence-execution/api";
+import { ACQUISITION_OPERATIONS, AcquisitionOperationSchemas } from "../packages/private-equity/src/acquisition/decision";
 import { PRIMARY_OPERATIONS, PrimaryOperationSchemas } from "../packages/private-equity/src/primary-diligence/api";
 import { BilateralOperationSchemas } from "../packages/private-equity/src/bilateral-opportunities/api";
 import { PROGRAM_OPERATIONS } from "../packages/private-equity/src/program-synthesis/api";
@@ -87,6 +88,7 @@ import { DELIBERATION_OPERATIONS } from "../packages/private-equity/src/delibera
 import { ElicitationOperationSchemas } from "../packages/epistemic-runtime/src/incentive-rule-synthesis/contracts";
 import { R3OwnerOperationSchemas, R3WorkReviewSchema } from "../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts";
 import { ObligationOperationSchemas } from "../packages/private-equity/src/obligation-contracts";
+import {WorkEconomicOperationSchemas} from '../packages/private-equity/src/economic-work/contracts';
 import { ComputeSearchRequestSchema, SearchIdSchema, SearchProjectionSchema } from "../packages/private-equity/src/compute-search/contracts";
 import { R4_OPERATIONS, R4_OPERATION_SCHEMAS } from "../packages/private-equity/src/r4/contracts";
 import { OperationSchemas as DecisionAtlasOperationSchemas } from "../packages/private-equity/src/r7/contracts";
@@ -433,7 +435,7 @@ const paths = {
   "/api/vitals": { get: { security: secured, responses: { "200": { description: "Queue and runtime vitals" } } } },
   "/api/activity": { get: { security: secured, responses: { "200": { description: "Tenant-scoped raw diagnostic activity", ...json(RawActivityPageSchema) } } } },
   "/api/semantic-activity": { post: { security: secured, requestBody: json(SemanticActivityInputSchema), responses: { "200": { description: "Deterministic tenant-scoped PE semantic activity from P1-P7 canonical records" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "PE root absent from the authenticated tenant" } } } },
-  "/api/company-brain/{operation}": { post: { security: secured, parameters: [{ name: "operation", in: "path", required: true, schema: { type: "string", enum: ["opportunity-promote", "belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context", ...EVIDENCE_OPERATIONS, ...PROGRAM_OPERATIONS, ...COMPUTE_SEARCH_OPERATIONS, ...INTERFACE_OPERATIONS, ...M1_OPERATIONS, ...CONTINUATION_OPERATIONS, ...PROCEDURE_OPERATIONS, ...DELIBERATION_OPERATIONS, ...Object.keys(CAPITAL_FORMATION_OPERATIONS)] } }], responses: { "200": { description: "Tenant-scoped Company Brain operation. Owner request schemas and current authority are checked by each delegated handler." }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Root or object absent from the authenticated tenant" } } } },
+  "/api/company-brain/{operation}": { post: { security: secured, parameters: [{ name: "operation", in: "path", required: true, schema: { type: "string", enum: ["opportunity-promote", "belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context", ...EVIDENCE_OPERATIONS, ...ACQUISITION_OPERATIONS, ...PROGRAM_OPERATIONS, ...COMPUTE_SEARCH_OPERATIONS, ...INTERFACE_OPERATIONS, ...M1_OPERATIONS, ...CONTINUATION_OPERATIONS, ...PROCEDURE_OPERATIONS, ...DELIBERATION_OPERATIONS, ...Object.keys(CAPITAL_FORMATION_OPERATIONS)] } }], responses: { "200": { description: "Tenant-scoped Company Brain operation. Owner request schemas and current authority are checked by each delegated handler." }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Root or object absent from the authenticated tenant" } } } },
   "/api/private-equity/digital-twin": { post: { security: secured, requestBody: json(PeDigitalTwinRequestSchema), responses: { "200": { description: "Tenant-scoped PE Digital Twin query or transition" }, "201": { description: "Evidence-backed canonical PE fact, identity, observation, or exact relation created" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Canonical reference absent from the authenticated tenant" }, "409": { description: "Expected version or concurrent canonical truth conflict" }, "422": { description: "Canonical invariant rejected the requested fact" } } } },
   "/api/workflows/runs": { get: { security: secured, responses: { "200": { description: "Tenant-scoped workflow runs" } } } },
   "/api/workflows/runs/{id}/pause": { post: { security: secured, parameters: [documentIdParameter], requestBody: json(WorkflowRunControlSchema), responses: { "200": { description: "Authorized workflow pause" } } } },
@@ -876,8 +878,8 @@ for (const operation of COMPUTE_SEARCH_OPERATIONS) {
 for (const operation of PROCEDURE_OPERATIONS) {
   Object.assign(paths, { ["/api/company-brain/" + operation]: { post: {
     security: secured, requestBody: json(PROCEDURE_OPERATION_SCHEMAS[operation]), responses: {
-      "200": { description: "Authorized ordinary procedure preimage or lifecycle receipt; no admission" },
-      "202": { description: "Bounded ordinary induction accepted on original Work" },
+      "200": { description: "Authorized source-bound analytical procedure preimage or lifecycle receipt; no admission" },
+      "202": { description: "Bounded analytical induction accepted on original Work" },
       "400": { description: "Strict bounded procedure schema rejected" },
       "404": { description: "Absent or unauthorized principal-scoped procedure resource" },
       "422": { description: "Rights, currentness, grant or unsupported protected-port predicate unpassed" },
@@ -909,7 +911,7 @@ for (const operation of DELIBERATION_OPERATIONS) {
 }
 
 for (const [operation,schema] of [
-  ...Object.entries(M1OperationSchemas),...Object.entries(EvidenceOperationSchemas),
+  ...Object.entries(M1OperationSchemas),...Object.entries(EvidenceOperationSchemas),...Object.entries(AcquisitionOperationSchemas),
   ...Object.entries(PrimaryOperationSchemas),
   ...Object.entries(BilateralOperationSchemas),
   ...Object.entries(CapitalProgramV2Operations),
@@ -962,6 +964,13 @@ for (const [family,operations] of Object.entries({...R3OwnerOperationSchemas,obl
    "409":{description:"Currentness, immutable identity, resource or attempt responsibility fenced"},
    "413":{description:"Original byte/resource bound"},"422":{description:"Unsupported operation or required protected admission absent"}
   }}}});
+}
+for(const [operation,schema]of Object.entries(WorkEconomicOperationSchemas)){
+ Object.assign(paths,{['/api/economic-outcomes/'+operation]:{post:{security:secured,requestBody:json(schema),responses:{
+  '200':{description:'Original Work economic tracking under authenticated owner scope; registration confers no completion or economic credit.'},
+  '400':{description:'Exact economic contract required'},'401':{description:'Bearer identity required'},'404':{description:'Owned original Work or economic record unavailable'},
+  '409':{description:'Original anchor, prospective time, immutable binding or correction conflict'},'413':{description:'Bounded history or source read exceeded'},
+ }}}});
 }
 for (const [operation, schema] of Object.entries(ClosingOperationSchemas)) {
   Object.assign(paths, { [`/api/closing/${operation}`]: { post: {

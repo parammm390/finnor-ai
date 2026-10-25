@@ -12,7 +12,8 @@ import {
   type TenantContext,
 } from "@finnor/shared-types";
 import { attachWorkEntity } from "@finnor/db";
-import { parseObjectiveSuccessCondition } from "./objective-success";
+import {ReviewedAcquisitionRequestSchema} from '../../private-equity/src/acquisition/reviewed-request';
+import { assertReviewedAcquisitionSuccessCondition, parseObjectiveSuccessCondition } from "./objective-success";
 import {
   startWorkObjective,
   type StartObjectiveOptions,
@@ -149,7 +150,8 @@ const StartSchemas = {
     objective: z.string().trim().min(1).max(10_000),
     subjectRefs: z.array(RefSchema).min(1).max(20),
     successCondition: z.unknown(),
-  }),
+    acquisitionRequest:ReviewedAcquisitionRequestSchema.optional(),
+  }).strict(),
 } satisfies Record<OutcomePackId, z.ZodTypeAny>;
 
 function dealCondition(
@@ -186,6 +188,9 @@ export function bindOutcomePack(packId: OutcomePackId, rawInput: unknown): Outco
     objective = String(input.objective);
     subjectRefs = input.subjectRefs as CanonicalEntityRef<string>[];
     successCondition = parseObjectiveSuccessCondition(input.successCondition);
+    if (input.acquisitionRequest) {
+      assertReviewedAcquisitionSuccessCondition(successCondition, (input.acquisitionRequest as { dealId: string }).dealId);
+    }
   } else {
     const dealId = String(input.dealId);
     subjectRefs = [{ entityType: "pe_deal", entityId: dealId }];

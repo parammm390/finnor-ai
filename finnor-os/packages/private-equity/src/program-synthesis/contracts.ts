@@ -1,12 +1,15 @@
 import { z } from 'zod';
 import {ProcedureUseSchema} from '../procedure-induction/use-contracts';
-import { EvidenceRootSchema, EvidenceSourceSchema, FinancialSemanticsSchema, type EvidenceDependency, type EvidenceWitness, type FinancialSemantics } from '@finnor/shared-types';
+import { EvidenceRootSchema, EvidenceRequestSchema, EvidenceSourceSchema, FinancialSemanticsSchema, type EvidenceDependency, type EvidenceWitness, type FinancialSemantics } from '@finnor/shared-types';
 import type { GoalSpec, PlanGraph } from '@finnor/planning';
 import type { InstitutionResponsibility } from '../institution-program/responsibility';
 import type { InstitutionResourceDemand } from '../institution-program/resource-demand';
 import {X2RefSchema} from '../application-semantics/contracts';
+import type {AcquisitionProgramBinding} from '../acquisition/continuation';
 
 export const P1_VERSION = 'p1-bounded-native-v1';
+export const HarnessExecutorBindingSchema=z.object({schema:z.literal('finnor.p1.executor-binding.v1'),backend:z.enum(['local','daytona']),configurationDigest:z.string().regex(/^[a-f0-9]{64}$/)}).strict();
+export type HarnessExecutorBinding=z.infer<typeof HarnessExecutorBindingSchema>;
 export const OPERATIONS = ['derive','propose_model','design_inquiry','search','simulate','solve','compose_artifact','await_observation','propose_effect','stop'] as const;
 export const key = z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,63}$/);
 const uuid = z.string().uuid(), instant = z.string().datetime({offset:true});
@@ -32,7 +35,7 @@ export const OwnerOperationSchema=z.discriminatedUnion('op',[
  z.object({op:z.literal('stop'),key,reason:z.string().min(1).max(1000),remainingPredicates:z.array(key).max(32)}).strict(),
 ]);
 export const HarnessRequestSchema=z.object({schema:z.literal('finnor.harness-request.v1'),instruction:z.string().min(1).max(4000),root:EvidenceRootSchema,
- threadId:uuid.optional(),workId:uuid.optional(),workInputId:uuid.optional(),parentProgramId:uuid.optional(),idempotencyKey:z.string().min(1).max(160),validAt:instant,knowledgeAt:instant.optional(),mode:z.enum(['ordinary_disposable','protected']),
+ threadId:uuid.optional(),workId:uuid.optional(),workInputId:uuid.optional(),parentProgramId:uuid.optional(),idempotencyKey:z.string().min(1).max(160),validAt:instant,knowledgeAt:instant.optional(),mode:EvidenceRequestSchema.shape.mode,
  sources:z.array(z.object({key,source:EvidenceSourceSchema}).strict()).min(1).max(16),
  acceptance:z.object({requiredSourceKeys:z.array(key).min(1).max(16),targets:z.array(z.object({key,expression:ExpressionSchema,unit,currencyCode:z.string().regex(/^[A-Z]{3}$/).nullable()}).strict()).min(1).max(16),deliverable:z.object({kind:z.literal('analytical_draft'),title:z.string().min(1).max(300)}).strict()}).strict(),
  operations:z.array(OwnerOperationSchema).max(12).optional(),ownerBindings:z.object({policyRef:ownerRef.optional(),allocationRef:ownerRef.optional(),decisionSliceRef:ownerRef.optional()}).strict().optional(),
@@ -98,6 +101,8 @@ export interface HarnessNode {id:string;op:typeof OPERATIONS[number];dependsOn:s
 export interface HarnessValue {value:string;semantics:FinancialSemantics;truthClass:'DERIVED_VALUE';witnessIds:string[]}
 export interface HarnessProgram {
  schema:'finnor.harness-program.v1';id:string;tenantId:string;principalId:string;sharing:{scope:'PRINCIPAL';policy:'CURRENT_S1_AUTHORIZATION'};
+ ownerContinuation?:AcquisitionProgramBinding;
+ executionBinding:HarnessExecutorBinding;
  work:{id:string;revision:string;inputDigest:string;planRevisionId:string};parents:string[];acceptance:AnalyticalHarnessRequest['acceptance'];acceptanceDigest:string;goal:GoalSpec;
  rights:{revision:number;ref:string;evaluatedAt:string};validAt:string;knowledgeAt:string;producer:{version:typeof P1_VERSION;codeDigest:string;schemaDigest:string};
  graph:HarnessNode[];planGraph:PlanGraph;modules:NativeModule[];candidates:Array<{id:string;moduleId:string;structureDigest:string;status:'PROPOSED'|'CHECKED'|'REJECTED';counterexamples:unknown[]}>;

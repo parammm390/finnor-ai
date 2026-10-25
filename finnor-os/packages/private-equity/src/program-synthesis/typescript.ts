@@ -7,6 +7,7 @@ import {resolve} from 'node:path';
 import {sha,stable} from '../evidence-execution/store';
 import {P1_VERSION,type NativeModule,type TypeScriptModule} from './contracts';
 import {launchIsolatedNodeExecutor} from '../../../governed-execution/src/executor';
+import type {IsolatedExecutionOptions} from '../../../governed-execution/src/executor-custody';
 
 const runtimeSource=String.raw`
 type Decimal = { n: bigint; s: number };
@@ -78,7 +79,7 @@ export function compileTypeScriptModule(compiled:string,format:NativeModule['for
  const result:TypeScriptModule={source,sourceDigest,emitted,emittedDigest:sha(emitted),irDigest:sha(compiled),compiler:{name:'typescript',version:ts.version,optionsDigest:sha(options),libraries,librariesDigest:sha(libraries)},diagnostics};
  if(cache.size>=64)cache.delete(cache.keys().next().value!);cache.set(sourceDigest,result);return structuredClone(result);
 }
-export async function executeTypeScriptModule(module:NativeModule,input:Record<string,string>,remainingMs:number){
+export async function executeTypeScriptModule(module:NativeModule,input:Record<string,string>,remainingMs:number,options:IsolatedExecutionOptions){
  if(module.runtime.version!==P1_VERSION||sha(module.compiled)!==module.compiledDigest||sha(module.source)!==module.sourceDigest||module.id!=='module:'+module.compiledDigest)throw Error('EXECUTABLE_MODULE_BYTE_OR_VERSION_MISMATCH');
  const m=module.typescript;if(!m||m.compiler.version!==ts.version||sha(m.source)!==m.sourceDigest||sha(m.emitted)!==m.emittedDigest||m.irDigest!==module.compiledDigest||sha(m.compiler.libraries)!==m.compiler.librariesDigest||m.diagnostics.length)throw Error('TYPESCRIPT_SELECTED_BYTE_OR_COMPILER_MISMATCH');
  // A caller-rehashed manifest is not evidence of semantic compilation. Rebuild
@@ -86,11 +87,11 @@ export async function executeTypeScriptModule(module:NativeModule,input:Record<s
  if(stable(compileTypeScriptModule(module.compiled,module.format))!==stable(m))throw Error('TYPESCRIPT_REGISTERED_EMISSION_MISMATCH');
  if(!Number.isFinite(remainingMs)||remainingMs<1)throw Error('ORIGINAL_EPISODE_DEADLINE_EXHAUSTED');
  const script=m.emitted+`\nimport {readFileSync} from 'node:fs';\nconst supplied=JSON.parse(readFileSync(0,'utf8'));\nprocess.stdout.write(JSON.stringify({outputs:compute(supplied),moduleDigest:${quote(module.compiledDigest)},emittedDigest:${quote(m.emittedDigest)}}));\n`;
- const execution=await launchIsolatedNodeExecutor({script,input,wallTimeMs:Math.min(10000,Math.floor(remainingMs)),protectedExecution:false});let outputs:Record<string,string>|null=null;
+ const execution=await launchIsolatedNodeExecutor({script,input,wallTimeMs:Math.min(10000,Math.floor(remainingMs)),protectedExecution:false,...options});let outputs:Record<string,string>|null=null;
  if(execution.exitCode===0&&execution.termination==='EXITED'){
   let raw:unknown;try{raw=JSON.parse(execution.stdout);}catch{throw Error('TYPESCRIPT_EXECUTOR_OUTPUT_INVALID');}
   const value=raw as {outputs?:unknown;moduleDigest?:unknown;emittedDigest?:unknown};if(value?.moduleDigest!==module.compiledDigest||value.emittedDigest!==m.emittedDigest||!value.outputs||typeof value.outputs!=='object'||Array.isArray(value.outputs))throw Error('TYPESCRIPT_EXECUTOR_OUTPUT_BINDING_INVALID');
   const entries=Object.entries(value.outputs);if(entries.length!==module.outputs.length||entries.some(([key,v])=>!module.outputs.some(o=>o.key===key)||typeof v!=='string'||v.length>2048))throw Error('TYPESCRIPT_EXECUTOR_OUTPUT_SCHEMA_INVALID');outputs=value.outputs as Record<string,string>;
  }
- return {invocationId:randomUUID(),owner:'S6',operation:'P1_TYPESCRIPT_MODULE',moduleId:module.id,sourceDigest:m.sourceDigest,emittedDigest:m.emittedDigest,scriptDigest:sha(script),compiler:m.compiler,execution,outputs,costUSD:null,qualification:'LOCAL_ISOLATED_OUTPUT_REQUIRES_INDEPENDENT_OWNER_CHECK'};
+ return {invocationId:execution.provenance.substrate==='DAYTONA_PRIVATE_ANALYSIS_V1'?'daytona:'+String(execution.provenance.attemptKey):randomUUID(),owner:'S6',operation:'P1_TYPESCRIPT_MODULE',moduleId:module.id,sourceDigest:m.sourceDigest,emittedDigest:m.emittedDigest,scriptDigest:sha(script),compiler:m.compiler,execution,outputs,costUSD:null,qualification:'ISOLATED_OUTPUT_REQUIRES_INDEPENDENT_OWNER_CHECK'};
 }

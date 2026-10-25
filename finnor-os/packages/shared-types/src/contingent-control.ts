@@ -93,6 +93,8 @@ export interface EconomicMandate {
   schema: 'finnor.economic-mandate.v1'; ref: ExperimentRef;
   tenantId: string; principalId: string; episodeId: string; knowledgeAt: string; validUntil: string;
   businessOwnerRef: ExperimentRef; rightsRef: string; utilityRef: ExperimentRef;
+  /** Explicit programme-selection consent; grants no execution authority. */
+  economicProgrammeAssignment?: true;
   horizon: { startAt: string; periodMs: number; periods: number };
   utility: { unit: string; accountingConventionRef: ExperimentRef;
     periodTerms: Array<{ variableId: string; unit: string; coefficient: number }>;

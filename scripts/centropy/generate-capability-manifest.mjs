@@ -23,6 +23,7 @@ function block(source, start, end) {
 const companyBrainSource = readFileSync(join(apiRoot, "company-brain/[operation]/route.ts"), "utf8")
 const r1Operations = registeredOperations("finnor-os/packages/private-equity/src/r1/api.ts", "R1_OPERATIONS")
 const r1Reads=new Set(["r1-read","r1-review","r1-projection","r1-history","r1-record"])
+const economicWorkOperations=new Set(registeredOperations('finnor-os/packages/private-equity/src/economic-work/contracts.ts','WORK_ECONOMIC_OPERATIONS').map(operation=>'economic-outcomes/'+operation))
 function registeredOperations(path, name) {
   const source = readFileSync(join(project, path), "utf8")
   const match = source.match(new RegExp(`export\\s+const\\s+${name}\\s*=\\s*(?:new\\s+Set\\s*\\(\\s*)?\\[([\\s\\S]*?)\\]`))
@@ -37,6 +38,7 @@ function registeredOperations(path, name) {
 const delegatedRegistries = [
   ["INSTITUTION_OPERATIONS", "institution-program/api.ts"],
   ["EVIDENCE_OPERATIONS", "evidence-execution/api.ts"],
+  ["ACQUISITION_OPERATIONS", "acquisition/decision.ts"],
   ["PRIMARY_OPERATIONS", "primary-diligence/api.ts"],
   ["BILATERAL_OPERATIONS", "bilateral-opportunities/api.ts"],
   ["PROGRAM_OPERATIONS", "program-synthesis/api.ts"],
@@ -99,7 +101,7 @@ const companyBrainReads = new Set([
   "institution-read", "institution-status", "institution-witness", "institution-sources", "institution-inputs",
   "belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse",
   "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context",
-  "evidence-handles", "evidence-read", "evidence-witness",
+  "evidence-handles", "evidence-read", "evidence-witness", "acquisition-read", "acquisition-intake-context", "acquisition-intake-review", "acquisition-closing-context",
   "primary-context", "primary-read",
   "bilateral-context", "bilateral-read", "bilateral-handoff",
   "program-read", "program-witness", "program-module", "program-projection", "program-artifact", "program-ports", "program-interface-module",
@@ -135,7 +137,7 @@ for(const family of ["interventions","policies","allocations","obligations","exp
 }
 const ownerLeafReads=new Set(["query","validate","finite-preference","experiment-projection","read","read-mechanism",
  "resources","budget-status","read-commitment","read-execution-handoff","check-budget","check-dispatch",
- "history","execution-evidence","learning-assessment"])
+ "history","execution-evidence","learning-assessment","work-context"])
 const readModelsSource = readFileSync(join(apiRoot, "read-models/[view]/route.ts"), "utf8")
 const readModels = ["attention", ...[...block(readModelsSource, "const VIEWS:", "export async function GET").matchAll(/^[ \t]+"([a-z-]+)":/gm)].map((match) => match[1])]
 const artifactOperations = {
@@ -186,6 +188,7 @@ const familyRules = [
   [/^decision-atlases\//, "decision-atlas", "@finnor/private-equity", ["CANVAS"]],
   [/^elicitation-protocols\//,"elicitation-protocol","@finnor/private-equity",["CANVAS"]],
   [/^closing\//, "closing", "@finnor/private-equity", ["WORLD", "CANVAS"]],
+  [/^economic-outcomes\//,'economic-outcomes','@finnor/private-equity',['WORLD','CANVAS']],
   [/^live-controls$/, "live-control", "@finnor/private-equity", ["WORLD", "CANVAS"]],
   [/^branches\//,"branch-fabric","@finnor/private-equity",["CANVAS"]],
   [/^company-brain\//, "company-brain", "@finnor/private-equity", ["WORLD", "CANVAS"]],
@@ -228,6 +231,7 @@ const humanOnlyPatterns = [
   /^company-brain\/interaction-(?:consent|observe|action)$/,
   /^elicitation-protocols\/(?:report|event|review|close|use)$/,
   /^closing\/(submit|stop|resume|observe)$/,
+  /^economic-outcomes\/(?:bind-work|register-work)$/,
   /^private-equity\/ic\/committee-configurations$/,
   /^private-equity\/ic\/cases\/:id\/(votes|dissents|finalize)$/,
   /^private-equity\/ic\/cases\/:id\/reviewed-deck-link$/,
@@ -256,6 +260,7 @@ function tags(family) {
     "decision-atlas": ["work", "company-brain"],
     "identification-plan": ["work", "company-brain"],
     closing: ["closing", "work", "objective", "company-brain", "semantic-activity"],
+    'economic-outcomes':['work','company-brain'],
     "live-control": ["work", "company-brain", "underwriting", "authority"],
     "company-brain": ["company-brain"], "digital-twin": ["company-brain"], ic: ["ic", "company-brain", "semantic-activity"],
     underwriting: ["underwriting", "company-brain", "semantic-activity"], artifact: ["artifact", "source", "company-brain"], m365: ["source"], connection: ["source"],
@@ -277,7 +282,7 @@ function routeEntry(method, path, source) {
   const r1 = path.startsWith("policies/") && r1Operations.includes(path.slice("policies/".length))
   const ownerClassification = operationClasses.get(path)
   const read = method === "GET" || ownerClassification==="READ" || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family) || family === "closing" && ["read", "projection", "ports"].includes(path.slice("closing/".length))
-  const adminOnly = restrictedOperations.has(path) || !r1 && !coalitionClassification && denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)) ||
+  const adminOnly = restrictedOperations.has(path) || !r1 && !coalitionClassification && !economicWorkOperations.has(path) && denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)) ||
     (family === "read-model" && /read-models\/(reliability|readiness|readiness-slo|failure-injections)/.test(path))
   const control = r1&&["r1-cancel","r1-reconcile"].includes(path.slice("policies/".length)) || path === "live-controls" || path === "closing/stop" || controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program|capital-formation|application)-(?:cancel|resume|reconcile|advance)$/.test(path)
   const classification = adminOnly ? "ADMIN" : stream ? "STREAM" : ownerClassification ?? (read ? "READ" : control ? "CONTROL" : "MUTATION")

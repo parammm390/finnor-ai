@@ -1,3 +1,4 @@
+import {runAcquisitionDecisionJob} from '../../../packages/private-equity/src/acquisition/decision';
 import {runDecisionAtlasJob} from '../../../packages/private-equity/src/r7/worker';
 import {buildEnterpriseApplicationJob} from '../../../packages/private-equity/src/enterprise-applications/worker';
 import {compileLearnedPolicyJob} from '../../../packages/private-equity/src/policy-learning/worker';
@@ -10,6 +11,7 @@ import {constructInteractionProtocolJob} from '../../../packages/private-equity/
 import {handleBranch} from '@finnor/private-equity/src/branch-fabric/worker';
 import {runComputeSearchUnitJob} from '@finnor/private-equity/src/compute-search/worker';
 import {runHarnessProgramJob,runX1InstitutionContinuationJob} from '@finnor/private-equity/src/program-synthesis/worker';
+import {reconcileAnalyticalExecutorJob} from '@finnor/private-equity/src/program-synthesis/isolated-custody';
 import {runInstitutionCompilerJob} from '@finnor/private-equity/src/institution-program/worker';
 import {runInstitutionUpdateJob} from '@finnor/private-equity/src/live-recompilation/institution-worker';
 import {runInterfaceAcquisitionJob} from '@finnor/private-equity/src/interface-synthesis/worker';
@@ -101,7 +103,9 @@ export function createWorker(): JobQueue {
   queue.register('advance_primary_diligence_v1',advancePrimaryDiligenceJob,PRODUCTION_JOB_CONTRACTS.advance_primary_diligence_v1);
   queue.register('advance_bilateral_programme_v1',advanceBilateralProgrammeJob,PRODUCTION_JOB_CONTRACTS.advance_bilateral_programme_v1);
   queue.register('run_compute_search_unit_v1',runComputeSearchUnitJob,PRODUCTION_JOB_CONTRACTS.run_compute_search_unit_v1);
+  queue.register('evaluate_acquisition_v1',runAcquisitionDecisionJob,PRODUCTION_JOB_CONTRACTS.evaluate_acquisition_v1);
   queue.register('run_harness_program_v1',runHarnessProgramJob,PRODUCTION_JOB_CONTRACTS.run_harness_program_v1);
+  queue.register('reconcile_analytical_executor_v1',reconcileAnalyticalExecutorJob,PRODUCTION_JOB_CONTRACTS.reconcile_analytical_executor_v1);
   queue.register('run_x1_institution_continuation_v1',runX1InstitutionContinuationJob,PRODUCTION_JOB_CONTRACTS.run_x1_institution_continuation_v1);
   queue.register('run_x1_institution_compiler_v1',runInstitutionCompilerJob,PRODUCTION_JOB_CONTRACTS.run_x1_institution_compiler_v1);
   queue.register('run_x1_institution_update_v1',runInstitutionUpdateJob,PRODUCTION_JOB_CONTRACTS.run_x1_institution_update_v1);

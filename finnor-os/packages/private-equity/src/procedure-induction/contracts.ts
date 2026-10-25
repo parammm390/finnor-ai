@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { EvidenceRootSchema, FinancialSemanticsSchema } from '@finnor/shared-types';
+import { EvidenceRootSchema, EvidenceRequestSchema, FinancialSemanticsSchema } from '@finnor/shared-types';
 import { ExpressionSchema, type HarnessRequest, type NativeModule } from '../program-synthesis/contracts';
 import { sha, stable } from '../evidence-execution/store';
 export { ProcedureUseSchema, type ProcedureUse } from './use-contracts';
@@ -44,7 +44,7 @@ export function boundedJson(value: unknown, maxBytes = 1048576) {
 
 export const ExperienceRequestSchema = z.object({
   programIds: z.array(uuid).min(1).max(32), knowledgeCut: instant,
-  mode: z.enum(['ordinary_disposable', 'protected']),
+  mode: EvidenceRequestSchema.shape.mode,
 }).strict().superRefine((v, c) => {
   if (new Set(v.programIds).size !== v.programIds.length)
     c.addIssue({ code: 'custom', message: 'Unique original programme identifiers required' });
@@ -52,7 +52,7 @@ export const ExperienceRequestSchema = z.object({
 export const InductionRequestSchema = z.object({
   schema: z.literal('finnor.p6.induction-request.v1'), root: EvidenceRootSchema, workId: uuid,
   programIds: z.array(uuid).min(2).max(32), knowledgeCut: instant,
-  idempotencyKey: z.string().min(1).max(160), mode: z.enum(['ordinary_disposable', 'protected']),
+  idempotencyKey: z.string().min(1).max(160), mode: EvidenceRequestSchema.shape.mode,
 }).strict();
 export type InductionRequest = z.infer<typeof InductionRequestSchema>;
 export const IdSchema = z.object({ capsuleId: uuid }).strict();
@@ -124,7 +124,7 @@ export interface ProcedureCapsule {
   };
   support: { episodes: string[]; companies: string[]; cutDigest: string; adverseRecords: ImmutableRef[] };
   unavailableBindings: string[];
-  qualification: 'ORDINARY_TEST_ONLY_NO_S8_ADMISSION_NO_INTERVENTION_TRANSPORT_OR_ECONOMIC_CREDIT';
+  qualification: 'ORDINARY_TEST_ONLY_NO_S8_ADMISSION_NO_INTERVENTION_TRANSPORT_OR_ECONOMIC_CREDIT' | 'SOURCE_BOUND_ANALYTICAL_REUSE_NO_S8_ADMISSION_NO_INTERVENTION_TRANSPORT_OR_ECONOMIC_CREDIT';
 }
 
 /** Full-envelope codec plus immutable component/preimage and executable bindings. */
@@ -154,7 +154,7 @@ export function parseCapsule(value: unknown): ProcedureCapsule {
     support: z.object({ episodes: z.array(uuid).min(2).max(32), companies: z.array(uuid).min(2).max(32),
       cutDigest: digest, adverseRecords: z.array(ImmutableRefSchema).max(512) }).strict(),
     unavailableBindings: z.array(z.string().min(1).max(160)).min(1).max(32),
-    qualification: z.literal('ORDINARY_TEST_ONLY_NO_S8_ADMISSION_NO_INTERVENTION_TRANSPORT_OR_ECONOMIC_CREDIT'),
+    qualification: z.enum(['ORDINARY_TEST_ONLY_NO_S8_ADMISSION_NO_INTERVENTION_TRANSPORT_OR_ECONOMIC_CREDIT', 'SOURCE_BOUND_ANALYTICAL_REUSE_NO_S8_ADMISSION_NO_INTERVENTION_TRANSPORT_OR_ECONOMIC_CREDIT']),
   }).strict().parse(value) as unknown as ProcedureCapsule;
   for (const name of componentNames) {
     const reference = name === 'preconditions' ? capsule.preconditions[0]! :

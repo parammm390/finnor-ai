@@ -25,3 +25,60 @@ export function buildGeneralDealMissionInput(params: { dealId: string; mode: "sh
     },
   }
 }
+
+export type AcquisitionMissionBudgets = {
+  maxSteps: number
+  maxActions: number
+  maxQueries: number
+  maxPlannerFailures: number
+  maxConsecutiveNoProgress: number
+  deadlineAt: string
+}
+export type MissionStart = (
+  packId: "deal_to_verified_closing_readiness" | "deal_request_resolution" | "critical_deal_dependency_resolution" | "general_operator_objective",
+  mode: "shadow" | "approval" | "autopilot",
+  title: string,
+  input: Record<string, unknown>,
+  budgets?: AcquisitionMissionBudgets,
+) => Promise<{ workId: string }>
+
+export const ACQUISITION_OBJECTIVE = "Evaluate this acquisition, verify the financials, determine our maximum bid, compare financing, investigate material uncertainties, prepare IC, execute approved work, and track the economic outcome."
+
+export function buildAcquisitionMissionInput(params: {
+  dealId: string
+  mode: "shadow" | "approval" | "autopilot"
+  request: AcquisitionReviewedRequest
+}) {
+  if (params.request.dealId !== params.dealId) throw new Error("The reviewed request belongs to another Deal")
+  return {
+    mode: params.mode,
+    objective: ACQUISITION_OBJECTIVE,
+    subjectRefs: [{ entityType: "pe_deal", entityId: params.dealId }],
+    acquisitionRequest: params.request,
+    successCondition: {
+      version: 1,
+      statement: ACQUISITION_OBJECTIVE,
+      mode: "all",
+      source: "explicit",
+      criteria: [
+        { kind: "no_open_execution" },
+        { kind: "private_equity_ic_preparation", dealId: params.dealId, requireAcquisition: true, requireScenario: false },
+        { kind: "canonical_query", request: { intent: "closing_readiness", dealId: params.dealId }, assertion: { path: ["verifiedClosing", "status"], operator: "eq", expected: "CLOSED" } },
+        { kind: "manual_verification", reason: "Realized economic outcome requires prospective S7 estimand and authenticated settlement, costs and measurements; financial model profit is insufficient." },
+      ],
+    },
+  }
+}
+
+export type AcquisitionReviewedRequest = {
+  schema: "finnor.reviewed-acquisition-request.v1"
+  dealId: string
+  primary: Omit<import("../../../../finnor-os/packages/shared-types/src/primary-diligence").PrimaryIntake, "schema" | "root" | "workId" | "expectedWorkInputId" | "idempotencyKey">
+  underwriting: {
+    investmentCaseId: string
+    modelVersionId: string
+    primaryAssertions: Record<string, { assertionId: string; revision: number }>
+    explicitInputs?: import("../../../../finnor-os/packages/shared-types/src/acquisition-intake").AcquisitionIntakeDraft["explicitInputs"]
+  }
+  acquisition: import("../../../../finnor-os/packages/shared-types/src/acquisition-intake").AcquisitionIntakeDraft["acquisition"]
+}

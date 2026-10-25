@@ -6,6 +6,7 @@ import { PeDomainError, type PeMutationContext, type PeWorldRootRef } from "./ty
 
 export const principal = (ctx: PeMutationContext) => ctx.auth.employeeId ?? ctx.auth.userId;
 export const unavailable = () => new PeDomainError("PE_ENTITY_NOT_FOUND", "Evidence resource is unavailable in the authenticated scope");
+export const evidenceContextRevisionKey=(root:PeWorldRootRef)=>root.entityType==='pe_deal'?`deal-business:${root.entityId}`:`canonical:${root.entityType}:${root.entityId}`;
 export const tx = <T>(ctx: PeMutationContext, fn: (client: PoolClient, db: Db) => Promise<T>, readOnly = false) =>
   withTenantTransaction(ctx.auth.tenantId, { userId: principal(ctx), readOnly }, (db, client) => fn(client, db));
 export const closingTx = <T>(ctx: PeMutationContext, fn: (client: PoolClient, db: Db) => Promise<T>, readOnly = false) =>

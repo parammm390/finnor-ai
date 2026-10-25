@@ -37,6 +37,7 @@ export interface ProductionJobContract {
   protocolVersions: readonly number[];
   retrySafety: JobRetrySafety;
   leaseRecovery?: "immediate_after_expiry";
+  maxLeaseSeconds?:number;
   defaultClass: WorkloadClass;
   allowedClasses: readonly WorkloadClass[];
   classificationRule: JobClassificationRule;
@@ -51,11 +52,12 @@ const tenantFixed = (
   retrySafety: JobRetrySafety,
   rationale: string,
   options: { protocolVersions?: readonly number[]; obligationKind?: JobObligationKind;
-    leaseRecovery?: "immediate_after_expiry" } = {},
+    leaseRecovery?: "immediate_after_expiry";maxLeaseSeconds?:number } = {},
 ): ProductionJobContract => ({
   protocolVersions: options.protocolVersions ?? [1],
   retrySafety,
   ...(options.leaseRecovery ? { leaseRecovery: options.leaseRecovery } : {}),
+  ...(options.maxLeaseSeconds?{maxLeaseSeconds:options.maxLeaseSeconds}:{}),
   defaultClass: workloadClass,
   allowedClasses: [workloadClass],
   classificationRule: "fixed",
@@ -80,6 +82,7 @@ const tenantLaneClassified = (
 
 /** Exhaustive registry for every production handler registered by the worker. */
 export const PRODUCTION_JOB_CONTRACTS = {
+  evaluate_acquisition_v1: tenantFixed('HEAVY','locally_idempotent','Finite acquisition decisions from canonical underwriting; retained original Work/source cut, candidate budget and deadline; no financial execution authority.',{leaseRecovery:'immediate_after_expiry',maxLeaseSeconds:30}),
   learn_strategic_response_model_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Y2 finite actor-local response learning and independent complete model-set checking; original Work, no effects or protected authority.", {leaseRecovery:"immediate_after_expiry"}),
   evaluate_strategic_response_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Y2 coupled S3 prediction and actual S4 search with independent programme checking; original episode and cumulative use limits, no effects.", {leaseRecovery:"immediate_after_expiry"}),
   construct_interaction_protocol_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Y3 bounded dynamic interaction construction, separately checked full contingent deviations and global beliefs; original episode, no protected or effect authority.", {leaseRecovery:"immediate_after_expiry"}),
@@ -105,12 +108,13 @@ export const PRODUCTION_JOB_CONTRACTS = {
   run_procedure_induction_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P6 ordinary structural induction, no custody/admission grant."),
   run_programme_continuation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P7 ordinary source-bound continuation under the original P1 episode; no effect or resource authority."),
   run_interface_acquisition_v1: tenantFixed("INTERACTIVE", "reconcilable", "P5 bounded disposable acquisition; possible egress retains original identity and read-only recovery."),
-  run_compute_search_unit_v1: { ...tenantFixed("INTERACTIVE", "reconcilable", "P2 original-episode compute; submitted unknown attempts reconcile before retry."), protocolVersions: [1, 2] },
+  run_compute_search_unit_v1: { ...tenantFixed("INTERACTIVE", "reconcilable", "P2 original-episode compute; submitted unknown attempts reconcile before retry, with a bounded lease leaving time inside the original deadline.", {maxLeaseSeconds:30}), protocolVersions: [1, 2] },
   run_branch_fabric_v1: tenantFixed("HEAVY", "pure", "P3 frozen registered native branch work; no live mutation replay or self-admission."),
   run_evidence_derivation_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Bounded native evidence computation for accepted Work; no protected admission."),
   advance_primary_diligence_v1: tenantFixed("INTERACTIVE", "reconcilable", "V2 original Work/mandate/grant primary acquisition; unknown requests reconcile before retry."),
   advance_bilateral_programme_v1: tenantFixed("INTERACTIVE", "reconcilable", "V1 original Work, mandate and aggregate grant; S6 physical contact and independent original-record qualification."),
-  run_harness_program_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P1 bounded ordinary programme linked to canonical WorkPlanRevision; no effect authority."),
+  run_harness_program_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "P1 bounded ordinary programme linked to canonical WorkPlanRevision; original remote identities are adopted after lease expiry, never redispatched; no effect authority.",{leaseRecovery:'immediate_after_expiry',maxLeaseSeconds:30}),
+  reconcile_analytical_executor_v1: tenantFixed('BACKGROUND','locally_idempotent','Deletion-only reconciliation of an existing analytical sandbox; no new creation, inputs, execution or result publication.',{leaseRecovery:'immediate_after_expiry',maxLeaseSeconds:30}),
   run_x1_institution_continuation_v1: tenantFixed("INTERACTIVE", "reconcilable", "X1 owner-bound ordinary duty with gated action and independent canonical observation; no governed S6 origin."),
   run_x1_institution_compiler_v1: tenantFixed("INTERACTIVE", "reconcilable", "X1 authenticated raw-source reconstruction and original-evidence check under one original Work envelope."),
   run_x1_institution_update_v1: tenantFixed("INTERACTIVE", "reconcilable", "P7 current owner-input update under the original X1 Work episode; no replacement grant or effect authority."),

@@ -2,6 +2,7 @@ import type { MemorySnapshot } from "@finnor/shared-types";
 
 const RESEARCH_READ = /\b(?:research|search(?: the)? web|look up|online|latest|current (?:news|benchmark|market|source|industry)|competitor|market|reviews?|weather|benchmarks?|sources?|source-backed|cite|citations?)\b/i;
 const MUTATION_REQUEST = /\b(?:create|send|record|update|change|delete|remove|approve|reject|call|text|email|pay|charge|launch|assign|execute|run|start)\b/i;
+const EXPLICIT_PUBLIC_RESEARCH=/\b(?:research|search(?: the)? web|look up|online|latest|current (?:news|benchmark|market|source|industry)|competitors?|market|weather|benchmarks?)\b/i;
 
 export interface SafeReadFallback {
   action_type: "search_web";
@@ -11,9 +12,13 @@ export interface SafeReadFallback {
 
 /** A provider failure may fall back only to the one registered public-research read.
  * Internal business questions stay on the deterministic operational-query plane. */
-export function safeReadFallbackForInstruction(instruction: string, actionTypes: readonly string[]): SafeReadFallback | null {
-  const normalized = instruction.trim().replace(/\\s+/g, " ");
+export function safeReadFallbackForInstruction(instruction: string, actionTypes: readonly string[],canonicalBusinessContext=false): SafeReadFallback | null {
+  const normalized = instruction.trim().replace(/\s+/g, " ");
   if (!normalized || MUTATION_REQUEST.test(normalized)) return null;
+  // Citations, reviews and source checks also describe internal business
+  // analysis. A selected business root needs an explicit public-research intent
+  // before this shortcut may bypass the native planner.
+  if(canonicalBusinessContext&&!EXPLICIT_PUBLIC_RESEARCH.test(normalized))return null;
   if (!RESEARCH_READ.test(normalized) || !actionTypes.includes("search_web")) return null;
   return {
     action_type: "search_web",

@@ -213,8 +213,8 @@ export function verifyQuerySurfaceCoverage(openApi: unknown): string[] {
     Object.values(node).forEach((child) => { if (child && typeof child === "object") visit(child); });
   };
   visit(schema);
-  if (!equalSets(PROGRAM_OPERATIONAL_QUERY_INTENTS, ["harness_program_v1", "economic_programme_v1"])) {
-    errors.push("native-only query catalogue must retain the exact P1 and Y1 readers");
+  if (!equalSets(PROGRAM_OPERATIONAL_QUERY_INTENTS, ["harness_program_v1", "acquisition_decision_v1", "primary_diligence_v1", "economic_programme_v1"])) {
+    errors.push("native-only query catalogue must retain the harness, acquisition, primary diligence and economic programme readers");
   }
   if (!equalSets(CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS, ["confidential_economic_computation_v1"])) {
     errors.push("native-only query catalogue must retain the exact Y4 reader");
@@ -340,7 +340,7 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
   const discovered = await discoverActionRegistry();
   const discoveredTypes = discovered.map((row) => row.actionType);
   const expectedTypes = ACTION_HARDENING_SPEC.map((row) => row.actionType);
-  if (EXECUTABLE_ACTION_COUNT !== 46 || !equalSets(discoveredTypes, expectedTypes)) {
+  if (EXECUTABLE_ACTION_COUNT !== 48 || !equalSets(discoveredTypes, expectedTypes)) {
     errors.push(`active action registry mismatch: discovered=${discoveredTypes.length}, expected=${EXECUTABLE_ACTION_COUNT}`);
   }
   const retiredActions = discoveredTypes.filter((type) => (RETIRED_WATER_ACTION_TYPES as readonly string[]).includes(type));
@@ -348,7 +348,7 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
 
   const expectedVerticals = ["none", "private_equity"];
   if (!equalSets(EXECUTABLE_VERTICALS, expectedVerticals)) errors.push(`executable verticals are ${EXECUTABLE_VERTICALS.join(", ")}`);
-  if (OPERATIONAL_QUERY_INTENTS.length !== 19) errors.push(`active query registry has ${OPERATIONAL_QUERY_INTENTS.length} intents; expected 19 including P7 workforce_status, P1 harness_program_v1, Y1 economic_programme_v1 and Y4 confidential_economic_computation_v1`);
+  if (OPERATIONAL_QUERY_INTENTS.length !== 21) errors.push(`active query registry has ${OPERATIONAL_QUERY_INTENTS.length} intents; expected 21 including primary diligence and acquisition decision readers`);
   const retiredQueries = OPERATIONAL_QUERY_INTENTS.filter((intent) => (RETIRED_WATER_QUERY_INTENTS as readonly string[]).includes(intent));
   if (retiredQueries.length) errors.push(`retired queries registered: ${retiredQueries.join(", ")}`);
   const expectedParties = ["employee", "team", "location", "external_organization", "external_contact"];

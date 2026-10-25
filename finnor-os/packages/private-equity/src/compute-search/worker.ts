@@ -1,13 +1,14 @@
-import {env as runtimeEnvironment} from 'node:process';
+import {assertAnalyticalExecutionProfile} from '../evidence-execution/profile';
 import {acquireComputeResourceLeases,renewComputeResourceLeases,releaseComputeResourceLeases,ComputeCapacityUnavailableError,DatabaseExecutionDeadlineError,executionDeadlineMilliseconds,withDatabaseExecutionDeadline} from '@finnor/db';
 import {z} from 'zod';
 import type {JobExecutionContext} from '../../../../apps/worker/src/queue';
 import type {PeMutationContext} from '../types';
 import {sha,stable,tx,currentDerivation,assertDependencies} from '../evidence-execution/store';
-import {requestRow,assertProgramCurrent,trace,reserveCandidate} from '../program-synthesis/store';
+import {requestRow,assertProgramCurrent,trace,reserveCandidate,enqueueProgram} from '../program-synthesis/store';
 import {parseHarnessRequest,isInstitutionRequest,type NativeModule} from '../program-synthesis/contracts';
 import {constructModules} from '../program-synthesis/compiler';
 import {executeHarnessCandidate} from '../program-synthesis/execution';
+import {assertP1ExecutionBinding,p1IsolatedExecution} from '../program-synthesis/isolated-custody';
 import {checkNumericalAcceptance} from '../program-synthesis/checker';
 import {searchRow,currentSearch,units,append,snapshot} from './store';
 import {replan,addCandidateUnits} from './controller';
@@ -41,12 +42,16 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
  let attempt:{id:string;body:any}|null=null,leases:Awaited<ReturnType<typeof acquireComputeResourceLeases>>=[],released=false;
  const started=performance.now();let physicalCompleted=false,result:any=null,endpoint:any=null;
  try{
-  if(s.request.mode!=='ordinary_disposable'||runtimeEnvironment.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('P2_PROTECTED_FUNDING_AND_RUNTIME_UNAVAILABLE');
+  if(s.request.mode==='protected')throw Error('P2_PROTECTED_FUNDING_AND_RUNTIME_UNAVAILABLE');
+  assertAnalyticalExecutionProfile(s.request.mode);
   const q=await currentSearch(ctx,s);if(!s.context)throw Error('P2_CURRENT_SOURCE_CONTEXT_REQUIRED');
+  if(s.status==='WAITING'&&payload.recoveryAttemptId===undefined)throw Error('P2_SEARCH_SUSPENDED');
   if(deliveryDeadline!==null&&deliveryDeadline>Date.parse(q.proposed.bounds.deadlineAt))throw Error('M2_ORIGINAL_DELIVERY_DEADLINE_CANNOT_EXTEND_PARENT');
   const originalDeadline=Math.min(deliveryDeadline??Infinity,Date.parse(q.proposed.bounds.deadlineAt));
   const d=await currentDerivation(ctx,s.context.derivationId),request=parseHarnessRequest(q.request);
   if(isInstitutionRequest(request))throw Error('P2_ANALYTICAL_HARNESS_REQUIRED');
+  if(request.mode!==s.request.mode)throw Error('P2_EXACT_PARENT_EXECUTION_MODE_REQUIRED');
+  assertP1ExecutionBinding(q.proposed.executionBinding);
   if(u.body.sourceDigest!==d.result?.digest||u.body.inputDigest!==s.context.inputDigest)throw Error('P2_EXACT_UNIT_SOURCE_CUT_MISMATCH');
   const module=s.context.program.modules.find((m:NativeModule)=>m.id===u!.body.moduleId);
   if(u.kind==='MODEL_REFINE'){const endpoints=await readEndpointConfig();const route=u.body.routeIds[Math.min(u.attempts,u.body.routeIds.length-1)];endpoint=endpoints.find(e=>e.id===route);if(!endpoint)throw Error('P2_ROUTE_UNAVAILABLE');}
@@ -63,8 +68,9 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
   // Conservative byte ceiling for this local diagnostic protocol; actual
   // returned token counts must fit it. No general provider tokenizer is assumed.
   const providerBody=stable({instruction:request.instruction,accepted:request.acceptance,acceptanceDigest:s.context.acceptanceDigest,sourceSchemas:request.sources});
-  const inputTokens=endpoint?Buffer.byteLength(providerBody):0;attempt=await admit(ctx,s,u,x,steps,endpoint,inputTokens);
-  await updateAttempt(ctx,s,attempt.id,'SUBMITTED',{submittedAt:new Date().toISOString(),originalDeadlineAt:q.proposed.bounds.deadlineAt,deliveryDeadlineAt:new Date(originalDeadline).toISOString(),physicalDeadlineAt:new Date(Math.min(originalDeadline,Date.now()+10000)).toISOString(),leases:leases.map(l=>({resourceKey:l.resourceKey,fence:l.fence,token:l.token}))});
+  const recoveryAttemptId=payload.recoveryAttemptId===undefined?undefined:z.string().uuid().parse(payload.recoveryAttemptId);
+  const inputTokens=endpoint?Buffer.byteLength(providerBody):0;attempt=await admit(ctx,s,u,x,steps,endpoint,inputTokens,recoveryAttemptId);
+  await updateAttempt(ctx,s,attempt.id,'SUBMITTED',recoveryAttemptId?{reconnectedAt:new Date().toISOString()}: {submittedAt:new Date().toISOString(),originalDeadlineAt:q.proposed.bounds.deadlineAt,deliveryDeadlineAt:new Date(originalDeadline).toISOString(),physicalDeadlineAt:new Date(Math.min(originalDeadline,Date.now()+10000)).toISOString(),leases:leases.map(l=>({resourceKey:l.resourceKey,fence:l.fence,token:l.token}))});
   if(u.kind==='CONTROL_M2'){
    if(!s.request.deliberation||u.body.moduleId!==s.request.deliberation.moduleRef.id)throw Error('M2_CURRENT_REGISTERED_CONTROL_UNIT_REQUIRED');
    const input=await tx(ctx,c=>controlSnapshot(ctx,s,c),true);
@@ -82,7 +88,7 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
    }finally{physicalCompleted=true;}
   }else if(u.kind==='EXECUTE_P1'){
    if(!module)throw Error('P2_AUTHENTIC_P1_MODULE_REQUIRED');let used=0;
-   result=await executeHarnessCandidate(module,request,s.context.input,d,()=>{if(++used>steps||Date.now()>originalDeadline)throw Error('P2_ORIGINAL_EXECUTION_BOUND');},originalDeadline,async isolated=>{physicalCompleted=true;await trace(ctx,q,'ISOLATED_MODULE_EXECUTION',isolated);});
+   result=await executeHarnessCandidate(module,request,s.context.input,d,()=>{if(++used>steps||Date.now()>originalDeadline)throw Error('P2_ORIGINAL_EXECUTION_BOUND');},originalDeadline,async isolated=>{physicalCompleted=true;await trace(ctx,q,'ISOLATED_MODULE_EXECUTION',isolated);},await p1IsolatedExecution(ctx,q,x,module,s.context.input,d.id,d.result!.digest,{owner:'P2',searchId:s.id,searchGeneration:s.generation,unitId:u.id,unitBodyDigest:u.digest,attemptId:attempt.id}));
   }else if(u.kind==='VERIFY_P1'){
    const parent=await tx(ctx,async c=>(await units(ctx,s,c)).find(p=>p.id===u!.body.prerequisites[0]),true);
    if(!parent?.result?.values||parent.status!=='COMPLETED'||parent.result.moduleId!==u.body.moduleId)throw Error('P2_INDEPENDENT_CHECK_INPUT_BARRIER');
@@ -123,8 +129,8 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
    const reservation=(await c.query('SELECT status,revocation_reason FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND allocation_digest=$2 FOR SHARE',[s.tenant_id,s.request.computeGrant.contentDigest])).rows[0];
    if(!reservation||reservation.status==='RELEASED'||reservation.revocation_reason||Date.parse(s.binding.validUntil)<=Date.now())throw Error('P2_S5_PUBLICATION_FENCED');
    const current=(await units(ctx,locked,c)).find(v=>v.id===u!.id)!;
-   const claim=(await c.query("SELECT id FROM finnor_os.jobs WHERE id=$1 AND tenant_id=$2 AND status='running' AND claim_token=$3 AND claim_fence=$4 FOR SHARE",[x.jobId,s.tenant_id,x.claimToken,x.claimFence])).rows[0];
-   if(!claim||locked.generation!==s.generation||locked.status!=='RUNNING'||current.claim_token!==x.claimToken||Number(current.claim_fence)!==Number(x.claimFence)||current.status!=='RUNNING')throw Error('P2_UNIT_PUBLICATION_FENCED');
+   const claim=(await c.query("SELECT id FROM finnor_os.jobs WHERE id=$1 AND tenant_id=$2 AND type='run_compute_search_unit_v1' AND status='running' AND claim_token=$3 AND claim_fence=$4 AND protocol_version=$5 AND lease_expires_at>clock_timestamp() FOR SHARE",[x.jobId,s.tenant_id,x.claimToken,x.claimFence,x.protocolVersion])).rows[0];
+   if(!claim||locked.generation!==s.generation||!['RUNNING','WAITING'].includes(locked.status)||current.claim_token!==x.claimToken||Number(current.claim_fence)!==Number(x.claimFence)||current.status!=='RUNNING')throw Error('P2_UNIT_PUBLICATION_FENCED');
    if(u!.kind==='MODEL_REFINE'&&!result.duplicate){
     if(locked.context.program.modules.length>=q.proposed.bounds.maxCandidates||(await units(ctx,locked,c)).length+2>locked.request.limits.maxUnits)throw Error('P2_ORIGINAL_CANDIDATE_OR_UNIT_BOUND');
     const debit=await c.query('UPDATE finnor_os.p1_episodes SET candidates_used=candidates_used+1 WHERE id=$1 AND tenant_id=$2 AND principal_id=$3 AND candidates_used<max_candidates AND deadline_at>clock_timestamp() RETURNING id',[q.episode_id,s.tenant_id,s.principal_id]);if(!debit.rowCount)throw Error('P2_ORIGINAL_P1_CANDIDATE_BOUND');
@@ -132,7 +138,7 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
     await c.query('UPDATE finnor_os.p2_requests SET context=$4::jsonb WHERE tenant_id=$1 AND principal_id=$2 AND id=$3',[s.tenant_id,s.principal_id,s.id,stable(locked.context)]);await addCandidateUnits(ctx,locked,result.proposal,c);
    }
    result={...result,completedAt:Date.now()};
-   await updateAttempt(ctx,s,attempt!.id,'COMPLETED',{...result,proposal:result.proposal?{id:result.proposal.id,compiledDigest:result.proposal.compiledDigest}:undefined,elapsedMs:performance.now()-started,costUSD:null},c);
+   await updateAttempt(ctx,s,attempt!.id,'COMPLETED',{...result,physicalOutcome:'RETURNED',proposal:result.proposal?{id:result.proposal.id,compiledDigest:result.proposal.compiledDigest}:undefined,elapsedMs:performance.now()-started,costUSD:null},c);
    if(endpoint)await c.query('UPDATE finnor_os.p2_endpoint_windows SET active=active-1 WHERE endpoint_key=$1 AND active>0',[endpoint.key]);
    const disposition=u!.kind==='CONTROL_M2'?'PENDING':'COMPLETED';
    await c.query("UPDATE finnor_os.p2_units SET status=$4,result=$2::jsonb,result_digest=$3,claim_token=NULL,updated_at=clock_timestamp() WHERE id=$1",[u!.id,stable(result),sha(result),disposition]);
@@ -147,9 +153,20 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
   const reason=String((error as Error).message).match(/^[A-Z][A-Z0-9_]{0,159}$/)?.[0]??'P2_OWNER_OR_SCHEMA_PREDICATE_UNPASSED';
   await tx(ctx,async c=>{
    const locked=await searchRow(ctx,s.id,c,true),q=await requestRow(ctx,s.program_id,c),current=(await units(ctx,locked,c)).find(v=>v.id===u!.id);
-   const late=locked.generation!==s.generation||['CANCELLED','INVALIDATED','STOPPED'].includes(locked.status)||!current||!!attempt&&current.claim_token!==x.claimToken;
+   const claim=(await c.query("SELECT id FROM finnor_os.jobs WHERE id=$1 AND tenant_id=$2 AND type='run_compute_search_unit_v1' AND status='running' AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE",[x.jobId,s.tenant_id,x.claimToken,x.claimFence])).rows[0];
+   const late=!claim||locked.generation!==s.generation||['CANCELLED','INVALIDATED','STOPPED'].includes(locked.status)||!current||(!!attempt||current.status==='RUNNING')&&current.claim_token!==x.claimToken;
+   if(!late&&!attempt&&['P1_EXECUTOR_BOUND_CONFIGURATION_CHANGED','ANALYTICAL_RUNTIME_PROFILE_NOT_CONFIGURED','P2_SEARCH_SUSPENDED'].includes(reason)){
+    await c.query("UPDATE finnor_os.p2_units SET status=$2,claim_token=NULL,updated_at=clock_timestamp() WHERE id=$1",[u!.id,payload.recoveryAttemptId?'UNKNOWN':'PENDING']);
+    locked.status='WAITING';locked.reason=reason==='P2_SEARCH_SUSPENDED'?locked.reason:reason;
+    await c.query("UPDATE finnor_os.p2_requests SET status='WAITING',reason=$2 WHERE id=$1",[locked.id,locked.reason]);
+    await append(ctx,locked,'EXECUTOR_CONFIGURATION_WAIT',{unitId:u!.id,jobId:x.jobId,predicate:locked.reason,originalEpisode:q.episode_id,originalDeadlineAt:q.proposed.bounds.deadlineAt,physicalAttemptAdmitted:false,nativeGrantDebit:0},c);await snapshot(ctx,locked,q,c);return;
+   }
    if(attempt){await updateAttempt(ctx,s,attempt.id,!physicalCompleted?'UNKNOWN':late?'LATE':'FAILED',{predicate:reason,physicalOutcome:physicalCompleted?'RETURNED':'UNKNOWN',elapsedMs:performance.now()-started,actualProvider:endpoint?.provider??null,partialResultDigest:result?sha(result):null,checkResult:(error as any).checkResult??null,costUSD:null,liabilityRetained:true},c);if(endpoint&&physicalCompleted)await c.query('UPDATE finnor_os.p2_endpoint_windows SET active=active-1 WHERE endpoint_key=$1 AND active>0',[endpoint.key]);}
-   if(!late){const unknown=!!attempt&&!physicalCompleted;await c.query("UPDATE finnor_os.p2_units SET status=$2,result=$3::jsonb,result_digest=$4,updated_at=clock_timestamp() WHERE id=$1",[u!.id,unknown?'UNKNOWN':'FAILED',stable({predicate:reason,checks:(error as any).checkResult?.checks??null}),sha({predicate:reason,checks:(error as any).checkResult?.checks??null})]);await replan(ctx,locked,q,c);}
+   if(!late){const unknown=!!attempt&&!physicalCompleted;await c.query("UPDATE finnor_os.p2_units SET status=$2,result=$3::jsonb,result_digest=$4,updated_at=clock_timestamp() WHERE id=$1",[u!.id,unknown?'UNKNOWN':'FAILED',stable({predicate:reason,checks:(error as any).checkResult?.checks??null}),sha({predicate:reason,checks:(error as any).checkResult?.checks??null})]);await replan(ctx,locked,q,c);
+    if(unknown&&u!.kind==='EXECUTE_P1'&&q.proposed.executionBinding.backend==='daytona'){
+     await enqueueProgram(ctx,q,'p2-reconcile:'+s.id+':'+locked.revision,c,1000);
+    }
+   }
    else {await append(ctx,locked,'LATE_COMPLETION_FENCED',{unitId:u!.id,attemptId:attempt?.id??null,predicate:reason,privateResultPublished:false,liabilityRetained:true},c);await snapshot(ctx,locked,q,c);}
   });
  }finally{

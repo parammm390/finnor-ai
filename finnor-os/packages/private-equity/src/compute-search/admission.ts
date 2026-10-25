@@ -5,7 +5,7 @@ import {ComputeCapacityUnavailableError} from '@finnor/db';
 import type {JobExecutionContext} from '../../../../apps/worker/src/queue';
 import type {PeMutationContext} from '../types';
 import {sha,stable,tx,assertDependencies} from '../evidence-execution/store';
-import {requestRow,assertProgramCurrent} from '../program-synthesis/store';
+import {requestRow,assertProgramCurrent,enqueueProgram} from '../program-synthesis/store';
 import {searchRow,append} from './store';
 import type {SearchRow,UnitRow} from './contracts';
 import type {Endpoint} from './endpoints';
@@ -20,17 +20,23 @@ export async function debitNativeComputeAttemptTx(client:PoolClient,scope:{tenan
 /** One transaction admits all dimensions and original parent counters. A failed
  * quota admission commits no debit or physical intent. Submission is a separate
  * durable cut; after it, costs/liabilities never disappear on timeout/cancel. */
-export async function admit(ctx:PeMutationContext,s:SearchRow,u:UnitRow,x:Readonly<JobExecutionContext>,steps:number,endpoint?:Endpoint,inputTokens=0){
+export async function admit(ctx:PeMutationContext,s:SearchRow,u:UnitRow,x:Readonly<JobExecutionContext>,steps:number,endpoint?:Endpoint,inputTokens=0,recoveryAttemptId?:string){
  return tx(ctx,async c=>{
   // Same lock as S5 resource mutation/release; no physical I/O while held.
   await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',['s5-portfolio:'+s.tenant_id]);
   const locked=await searchRow(ctx,s.id,c,true),q=await requestRow(ctx,s.program_id,c);
-  if(locked.generation!==s.generation||locked.status!=='RUNNING')throw Error('P2_SEARCH_ADMISSION_FENCED');
+  if(locked.generation!==s.generation||locked.status!=='RUNNING'&&!(recoveryAttemptId&&locked.status==='WAITING'))throw Error('P2_SEARCH_ADMISSION_FENCED');
   await assertProgramCurrent(ctx,q,c,true);await assertDependencies(ctx,s.context.dependencies,c,true);
-  const job=(await c.query("SELECT id FROM finnor_os.jobs WHERE id=$1 AND tenant_id=$2 AND type='run_compute_search_unit_v1' AND status='running' AND claim_token=$3 AND claim_fence=$4 AND protocol_version=$5 FOR SHARE",[x.jobId,s.tenant_id,x.claimToken,x.claimFence,x.protocolVersion])).rows[0];if(!job)throw Error('P2_ACTUAL_JOB_CLAIM_REQUIRED');
+  const job=(await c.query<{payload:any;lease_expires_at:string}>("SELECT payload,lease_expires_at::text FROM finnor_os.jobs WHERE id=$1 AND tenant_id=$2 AND type='run_compute_search_unit_v1' AND status='running' AND claim_token=$3 AND claim_fence=$4 AND protocol_version=$5 AND lease_expires_at>clock_timestamp() FOR SHARE",[x.jobId,s.tenant_id,x.claimToken,x.claimFence,x.protocolVersion])).rows[0];if(!job||job.payload.recoveryAttemptId!==recoveryAttemptId||job.payload.searchId!==s.id||job.payload.unitId!==u.id||job.payload.principalId!==s.principal_id||job.payload.generation!==s.generation)throw Error('P2_ACTUAL_JOB_CLAIM_REQUIRED');
+  const enqueueRemoteRecovery=async()=>{
+   if(u.kind!=='EXECUTE_P1'||q.proposed.executionBinding.backend!=='daytona')return;
+   const deadline=Date.parse(q.proposed.bounds.deadlineAt);
+   await enqueueProgram(ctx,q,'p2-reconcile:'+s.id+':claim-'+x.jobId,c,Math.max(1,Math.min(Date.parse(job.lease_expires_at),deadline)-Date.now()+1));
+   await enqueueProgram(ctx,q,'p2-original-deadline:'+s.id,c,Math.max(1,deadline-Date.now()+1));
+  };
   const current=(await c.query<UnitRow>('SELECT * FROM finnor_os.p2_units WHERE id=$1 AND tenant_id=$2 AND principal_id=$3 FOR UPDATE',[u.id,s.tenant_id,s.principal_id])).rows[0];
   const perUnitBound=u.kind==='CONTROL_M2'&&locked.request.deliberation?Math.min(currentModule().body.config.maxRuns,q.proposed.bounds.maxAttempts):2;
-  if(!current||!['QUEUED','RUNNING'].includes(current.status)||current.generation!==s.generation||current.attempts>=perUnitBound)throw Error('P2_UNIT_PHYSICAL_ATTEMPT_BOUND');
+  if(!current||!['QUEUED','RUNNING'].includes(current.status)||current.generation!==s.generation||!recoveryAttemptId&&current.attempts>=perUnitBound)throw Error('P2_UNIT_PHYSICAL_ATTEMPT_BOUND');
   if(current.digest!==u.digest||sha(current.body)!==u.digest)throw Error('P2_EXACT_ADMISSION_UNIT_BODY_REQUIRED');
   if((await c.query('SELECT id FROM finnor_os.p2_attempts WHERE tenant_id=$1 AND principal_id=$2 AND delivery_id=$3',[s.tenant_id,s.principal_id,x.deliveryAttemptId])).rowCount)throw Error('P2_PHYSICAL_DELIVERY_ALREADY_ADMITTED');
   if(current.status==='RUNNING'&&current.claim_token!==x.claimToken)throw Error('P2_RECOVERY_RECONCILE_BEFORE_RETRY');
@@ -39,6 +45,17 @@ export async function admit(ctx:PeMutationContext,s:SearchRow,u:UnitRow,x:Readon
   if(!reservation||reservation.status==='RELEASED'||reservation.revocation_reason||stable(reservation.envelopes.find((e:any)=>e.resourceId===s.binding.resourceId))!==stable(s.binding.resourceEnvelope)||Date.parse(s.binding.validUntil)<=Date.now())throw Error('P2_S5_RESERVATION_REVOKED_OR_CHANGED');
   const resource=(await c.query('SELECT r.content_digest FROM finnor_os.s5_resources r JOIN finnor_os.s5_resource_heads h USING(tenant_id,resource_id,revision) WHERE r.tenant_id=$1 AND r.resource_id=$2 FOR SHARE OF h,r',[s.tenant_id,s.binding.resourceId])).rows[0];
   if(resource?.content_digest!==s.binding.resourceRef.contentDigest)throw Error('P2_COMPUTE_RESOURCE_REVISION_CHANGED');
+  if(recoveryAttemptId){
+   const a=(await c.query<{id:string;body:any;digest:string;status:string;endpoint_key:string|null}>('SELECT id,body,digest,status,endpoint_key FROM finnor_os.p2_attempts WHERE tenant_id=$1 AND principal_id=$2 AND search_id=$3 AND unit_id=$4 AND id=$5 FOR UPDATE',[s.tenant_id,s.principal_id,s.id,u.id,recoveryAttemptId])).rows[0];
+   if(endpoint||u.kind!=='EXECUTE_P1'||q.proposed.executionBinding.backend!=='daytona'||!a||a.status!=='UNKNOWN'||a.endpoint_key||sha(a.body)!==a.digest||a.body.unitBodyDigest!==u.digest||a.body.workKind!==u.kind||a.body.originalEpisode!==q.episode_id||a.body.grantDigest!==s.request.computeGrant.contentDigest||a.body.resourceId!==s.binding.resourceId||a.body.chargedNativeAttempts!==1||a.body.steps!==steps||a.body.unitInvocation!==current.attempts||Number(a.body.recoveryObservations??0)>=60)throw Error('P2_ORIGINAL_REMOTE_ATTEMPT_REQUIRED');
+   const parent=await c.query('UPDATE finnor_os.p1_episodes SET steps_used=steps_used+$4 WHERE id=$1 AND tenant_id=$2 AND principal_id=$3 AND steps_used+$4<=max_steps AND deadline_at>clock_timestamp() RETURNING id',[q.episode_id,s.tenant_id,s.principal_id,steps]);if(!parent.rowCount)throw Error('P2_ORIGINAL_P1_EPISODE_EXHAUSTED');
+   const body=await updateAttempt(ctx,s,a.id,'UNKNOWN',{recoveryObservations:Number(a.body.recoveryObservations??0)+1,recoveryStepsCharged:Number(a.body.recoveryStepsCharged??0)+steps,reconnection:{jobId:x.jobId,deliveryAttemptId:x.deliveryAttemptId,claimFence:x.claimFence,at:new Date().toISOString()},newPhysicalAttempt:false},c);
+   await c.query("UPDATE finnor_os.p2_units SET status='RUNNING',claim_token=$2,claim_fence=$3,job_id=$4,updated_at=clock_timestamp() WHERE id=$1",[u.id,x.claimToken,x.claimFence,x.jobId]);
+   await append(ctx,s,'ORIGINAL_REMOTE_ATTEMPT_RECONNECTED',{attemptId:a.id,unitId:u.id,jobId:x.jobId,deliveryAttemptId:x.deliveryAttemptId,claimFence:x.claimFence,stepsCharged:steps,chargedNativeAttempts:0,originalEpisode:q.episode_id,originalDeadlineAt:q.proposed.bounds.deadlineAt},c);
+   await enqueueRemoteRecovery();
+   return {id:a.id,body};
+  }
+  if((await c.query("SELECT id FROM finnor_os.p2_attempts WHERE tenant_id=$1 AND principal_id=$2 AND unit_id=$3 AND status IN('INTENT','SUBMITTED','UNKNOWN')",[s.tenant_id,s.principal_id,u.id])).rowCount)throw Error('P2_RECOVERY_RECONCILE_BEFORE_RETRY');
   if(endpoint){
    if(Date.parse(endpoint.expiresAt)<=Date.now())throw Error('P2_ENDPOINT_SNAPSHOT_EXPIRED');
    const minute=Math.floor(Date.now()/60000),day=Math.floor(Date.now()/86400000);
@@ -56,11 +73,14 @@ export async function admit(ctx:PeMutationContext,s:SearchRow,u:UnitRow,x:Readon
   await c.query("INSERT INTO finnor_os.p2_attempts(id,tenant_id,principal_id,search_id,unit_id,delivery_id,claim_fence,status,endpoint_key,body,digest) VALUES($1,$2,$3,$4,$5,$6,$7,'INTENT',$8,$9::jsonb,$10)",[id,s.tenant_id,s.principal_id,s.id,u.id,x.deliveryAttemptId,x.claimFence,endpoint?.key??null,stable(body),sha(body)]);
   await c.query("UPDATE finnor_os.p2_units SET status='RUNNING',attempts=attempts+1,claim_token=$2,claim_fence=$3,job_id=$4,updated_at=clock_timestamp() WHERE id=$1",[u.id,x.claimToken,x.claimFence,x.jobId]);
   await append(ctx,s,'PHYSICAL_ATTEMPT_ADMITTED',{attemptId:id,...body,quotaPolicyOnly:!!endpoint,allDimensionsAdmitted:true},c);
+  await enqueueRemoteRecovery();
   return {id,body};
  });
 }
 export async function updateAttempt(ctx:PeMutationContext,s:SearchRow,id:string,status:string,delta:any,c?:PoolClient){
- const action=async(client:PoolClient)=>{const r=(await client.query('SELECT body,status FROM finnor_os.p2_attempts WHERE id=$1 AND tenant_id=$2 AND principal_id=$3 FOR UPDATE',[id,s.tenant_id,s.principal_id])).rows[0];if(!r)throw Error('P2_DURABLE_ATTEMPT_MISSING');const body={...r.body,...delta};
+ const action=async(client:PoolClient)=>{const r=(await client.query('SELECT body,status FROM finnor_os.p2_attempts WHERE id=$1 AND tenant_id=$2 AND principal_id=$3 FOR UPDATE',[id,s.tenant_id,s.principal_id])).rows[0];if(!r)throw Error('P2_DURABLE_ATTEMPT_MISSING');
+  if(r.status==='COMPLETED'&&status!=='COMPLETED'){await append(ctx,s,'LATE_PHYSICAL_OBSERVATION',{attemptId:id,storedStatus:r.status,reportedStatus:status,observationDigest:sha(delta),priorCompletionRetained:true},client);return r.body;}
+  const body={...r.body,...delta};
   await client.query('UPDATE finnor_os.p2_attempts SET status=$4,body=$5::jsonb,digest=$6,updated_at=clock_timestamp() WHERE id=$1 AND tenant_id=$2 AND principal_id=$3',[id,s.tenant_id,s.principal_id,status,stable(body),sha(body)]);
   await append(ctx,s,'PHYSICAL_ATTEMPT_'+status,{attemptId:id,priorStatus:r.status,...body},client);return body;};return c?action(c):tx(ctx,action);
 }

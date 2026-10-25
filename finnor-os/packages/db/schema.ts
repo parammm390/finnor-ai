@@ -1121,6 +1121,8 @@ export const workQueryExecutions = pgTable(
         "closing_readiness",
         "pe_world_state",
         "harness_program_v1",
+        "acquisition_decision_v1",
+        "primary_diligence_v1",
         "economic_programme_v1",
         "confidential_economic_computation_v1",
       ],

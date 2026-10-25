@@ -22,6 +22,8 @@ const nodeLabel = (value: string) => value.replace(/^output[._]/i, "").replace(/
 const financialValue = (value: UnderwritingValue) => typeof value === "object" ? Object.entries(value).map(([key, item]) => `${key}: ${item}`).join(" · ").slice(0, 300) : String(value)
 const record = (value: unknown): Record<string, unknown> | null => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null
 type WorkEffect = WorkAggregateView["businessEffects"][number]
+const startsAcquisition=(effect:WorkEffect)=>record(record(effect.effect)?.operation)?.name==='start_acquisition_evaluation'
+const startsNativeAnalysis=(effect:WorkEffect)=>startsAcquisition(effect)||record(record(effect.effect)?.operation)?.name==='start_primary_diligence'
 const verifiedEffect = (effect: WorkEffect): boolean => {
   const verification = record(effect.verification)
   return effect.status === "verified" && verification?.state === "verified"
@@ -31,6 +33,7 @@ const verifiedEffect = (effect: WorkEffect): boolean => {
 }
 const effectStage = (effect: WorkEffect, index: number) => {
   const verification = record(effect.verification), verified = verifiedEffect(effect)
+  if(startsNativeAnalysis(effect)&&verified)return {id:`business-effect:${effect.id}`,label:startsAcquisition(effect)?'Acquisition analysis accepted':'Primary diligence accepted',state:'active' as const,detail:'The analysis request was accepted. Its independently checked result is read separately; accepting the request does not establish findings, a bid or profit.'}
   const state: "verified" | "active" | "waiting" | "blocked" = verified ? "verified"
     : ["failed", "divergent", "reconciliation_required"].includes(effect.status) ? "blocked"
       : effect.status === "executing" ? "active" : "waiting"
@@ -57,7 +60,15 @@ export function composeCanvasDocument(params: { thread: LoadedConversationThread
     const receipt = work.receipts.find((item) => item.finalizedAt) ?? work.receipts[0]
     const completedReads = work.queryExecutions.filter((query) => query.status === "succeeded")
     const failedReads = work.queryExecutions.filter((query) => query.status === "failed")
-    const verifiedEffects = work.businessEffects.filter(verifiedEffect).length
+    const verifiedEffects = work.businessEffects.filter(effect=>verifiedEffect(effect)&&!startsNativeAnalysis(effect)).length
+    const analysisPending=work.businessEffects.some(startsNativeAnalysis)
+    for(const row of work.businessEffects.filter(verifiedEffect)){
+      const effect=record(row.effect),source=record(effect?.source),operation=record(effect?.operation),observed=record(record(row.verification)?.observed),values=record(record(effect?.delta)?.values)
+      const decisionId=observed?.id,dealId=values?.dealId,uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      if(operation?.name==='start_acquisition_evaluation'&&source?.workId===work.work.id&&observed?.workId===work.work.id&&typeof decisionId==='string'&&uuid.test(decisionId)&&typeof dealId==='string'&&uuid.test(dealId)){
+        blocks.push({id:'acquisition:'+decisionId,type:'acquisition_decision',schemaVersion:1,sourceKind:'work',title:'Acquisition decision',payload:{decisionId,dealId,workId:work.work.id},entityRefs:[],sourceRefs:[{owner:'Work',table:'business_effects',id:row.id}],workRefs:[{workId:work.work.id,recordType:'acquisition_decision',recordId:decisionId}],truthState:'UNKNOWN',asOf,createdAt:asOf,updatedAt:asOf})
+      }
+    }
     const verified = Boolean(latestPlan?.completionProof && typeof latestPlan.completionProof === "object" && !Array.isArray(latestPlan.completionProof) && (latestPlan.completionProof as Record<string, unknown>).verified === true)
     blocks.push({
       id: `work:${work.work.id}`, type: "work_execution", schemaVersion: 1, sourceKind: "work", title: "Work and verification", payload: {
@@ -71,7 +82,7 @@ export function composeCanvasDocument(params: { thread: LoadedConversationThread
                 : work.actions.length || completedReads.length ? "active" : "waiting",
             detail: `${work.actions.length} recorded Work action${work.actions.length === 1 ? "" : "s"} · ${completedReads.length} completed canonical read${completedReads.length === 1 ? "" : "s"}${completedReads.length ? ` (${[...new Set(completedReads.map((query) => query.intent.replaceAll("_", " ")))].join(", ")})` : ""} · ${work.businessEffects.length} recorded business effect${work.businessEffects.length === 1 ? "" : "s"} · ${verifiedEffects} independently verified outcome${verifiedEffects === 1 ? "" : "s"}` },
           ...work.businessEffects.map(effectStage),
-          { id: "verification", label: "Verification", state: verified || Boolean(receipt?.finalizedAt && !receipt.failure) ? "verified" : receipt?.failure ? "blocked" : receipt ? "active" : "waiting", detail: verified ? "Completion proof verified" : receipt?.finalizedAt ? "Finalized receipt recorded" : receipt ? "Receipt pending finalization" : "No finalized receipt" },
+          { id: "verification", label: "Verification", state: verified || !analysisPending&&Boolean(receipt?.finalizedAt && !receipt.failure) ? "verified" : receipt?.failure ? "blocked" : receipt ? "active" : "waiting", detail: verified ? "Completion proof verified" : analysisPending?'Objective completion requires the checked analysis and all other accepted outcomes.':receipt?.finalizedAt ? "Finalized receipt recorded" : receipt ? "Receipt pending finalization" : "No finalized receipt" },
           { id: "outcome", label: "Outcome",
             state: work.work.failure || ["failed", "cancelled"].includes(work.work.status) ? "blocked"
               : work.work.status === "completed" && work.work.finalOutcome ? "verified" : "waiting",
@@ -101,8 +112,12 @@ export function composeCanvasDocument(params: { thread: LoadedConversationThread
         truthState:"UNKNOWN",asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})
     }
     if(["pe_opportunity","pe_deal"].includes(projection.root.entityType)){
+      const programmeIds=[...new Set((work?.businessEffects??[]).filter(verifiedEffect).flatMap(row=>{
+        const effect=record(row.effect),source=record(effect?.source),values=record(record(effect?.delta)?.values),observed=record(record(row.verification)?.observed);
+        return record(effect?.operation)?.name==='start_primary_diligence'&&source?.workId===work?.work.id&&observed?.workId===work?.work.id&&values?.dealId===projection.root.entityId&&typeof observed?.id==='string'&&/^[0-9a-f-]{36}$/i.test(observed.id)?[observed.id]:[];
+      }))];
       blocks.push({id:"primary-diligence:"+projection.root.entityId,type:"primary_diligence",schemaVersion:1,sourceKind:"company_brain",title:"Primary reality due diligence",
-        payload:{root:projection.root,workId:work?.work.id??thread.activeWorkId??null,investigation:{threadId:thread.id,expectedRevision:thread.revision}},entityRefs:[],sourceRefs:[],workRefs:work?[{workId:work.work.id,recordType:"primary_diligence"}]:[],
+        payload:{root:projection.root,workId:work?.work.id??thread.activeWorkId??null,programmeIds,investigation:{threadId:thread.id,expectedRevision:thread.revision}},entityRefs:[],sourceRefs:[],workRefs:work?[{workId:work.work.id,recordType:"primary_diligence"}]:[],
         truthState:"UNKNOWN",asOf:projection.asOf,createdAt:projection.asOf,updatedAt:projection.asOf})
     }
     const companyEdge=projection.edges.find(edge=>edge.fromRef.id===projection.root.entityId&&["deal_company","opportunity_company"].includes(edge.relationship))

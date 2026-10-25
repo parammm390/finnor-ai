@@ -7,7 +7,7 @@ import { LedgerFault } from '../../governed-execution/src/protocol';
 import { ownerTransportHash } from '../../governed-execution/src/owner-transport';
 import { enqueueOwnerDeliveryInTransaction } from '../../governed-execution/src/owner-delivery-store';
 import type { PeMutationContext } from './types';
-export type EconomicRecordKind = 'PREREGISTRATION' | 'SOURCE' | 'ASSIGNMENT' | 'EXPOSURE' | 'MEASUREMENT' | 'VALUATION' | 'COST' | 'ASSESSMENT' | 'AGGREGATION' | 'CORRECTION' | 'INVALIDATION' | 'COMPUTE' | 'BENCHMARK_REGISTRATION' | 'BENCHMARK_ASSESSMENT';
+export type EconomicRecordKind = 'PREREGISTRATION' | 'SOURCE' | 'ASSIGNMENT' | 'EXPOSURE' | 'MEASUREMENT' | 'VALUATION' | 'COST' | 'ASSESSMENT' | 'AGGREGATION' | 'CORRECTION' | 'INVALIDATION' | 'COMPUTE' | 'BENCHMARK_REGISTRATION' | 'BENCHMARK_ASSESSMENT' | 'WORK_BINDING';
 export interface StoredEconomicRecord {
     ref: {
         owner: 'S7';
@@ -64,15 +64,31 @@ function decode(row: any): StoredEconomicRecord {
     return value;
 }
 export async function readStoredEconomicRecord(ctx: PeMutationContext, id: string) {
+    return withTenantTransaction(ctx.auth.tenantId, { userId: economicActor(ctx), readOnly: true }, async (_db, c) => readStoredEconomicRecordTx(ctx,id,c));
+}
+export async function readStoredEconomicRecordTx(ctx:PeMutationContext,id:string,c:pg.PoolClient){
     if (typeof id !== 'string' || id.length > 4096)
         denied();
-    return withTenantTransaction(ctx.auth.tenantId, { userId: economicActor(ctx), readOnly: true }, async (_db, c) => {
         await authorizeEconomicActor(ctx, c, false);
         const row = (await c.query('SELECT * FROM finnor_os.s7_economic_records WHERE tenant_id=$1 AND principal_id=$2 AND record_id=$3', [ctx.auth.tenantId, economicActor(ctx), id])).rows[0];
         if (!row)
             denied();
         return decode(row);
-    });
+}
+export async function listStoredWorkEconomicRecords(ctx:PeMutationContext,scope:{workId:string;workInputId:string},c:pg.PoolClient){
+    await authorizeEconomicActor(ctx,c,false);
+    const metadata=(await c.query<{record_id:string;bytes:number}>(`SELECT record_id,octet_length(body::text)::int bytes FROM finnor_os.s7_economic_records
+      WHERE tenant_id=$1 AND principal_id=$2 AND
+       (kind='WORK_BINDING' AND body#>>'{payload,anchor,workId}'=$3 AND body#>>'{payload,anchor,workInputId}'=$4
+        OR kind='PREREGISTRATION' AND body#>>'{payload,estimand,episodeId}'=$3)
+      ORDER BY knowledge_at,record_id LIMIT 101`,[ctx.auth.tenantId,economicActor(ctx),scope.workId,scope.workInputId])).rows;
+    if(metadata.length>100||metadata.reduce((bytes,row)=>bytes+row.bytes,0)>8*1024*1024)
+        throw new LedgerFault(413,'ECONOMIC_WORK_HISTORY_LIMIT');
+    if(!metadata.length)return [];
+    const rows=(await c.query(`SELECT * FROM finnor_os.s7_economic_records
+      WHERE tenant_id=$1 AND principal_id=$2 AND record_id=ANY($3::text[])
+      ORDER BY knowledge_at,record_id`,[ctx.auth.tenantId,economicActor(ctx),metadata.map(row=>row.record_id)])).rows;
+    return rows.map(decode);
 }
 /** Bounded immutable compute history for one owned Work. The economic owner
  * validates every preimage; consumers cannot read raw unverified cost bodies. */
@@ -177,7 +193,9 @@ export async function persistEconomicRecordTx(ctx: PeMutationContext, input: Eco
             denied();
         if (id === input.estimandId && row.kind !== 'PREREGISTRATION')
             throw new LedgerFault(400, 'ECONOMIC_ESTIMAND_REQUIRED');
-        if (id === input.revisionOf && input.estimandId && row.estimand_id !== input.estimandId && row.record_id !== input.estimandId)
+        const workBindingCorrection=input.kind==='WORK_BINDING'&&row.kind==='WORK_BINDING'
+            &&ownerTransportHash(decode(row).payload.anchor)===ownerTransportHash(input.payload.anchor);
+        if (id === input.revisionOf && input.estimandId && row.estimand_id !== input.estimandId && row.record_id !== input.estimandId && !workBindingCorrection)
             throw new LedgerFault(409, 'ECONOMIC_REVISION_CONTEXT_MISMATCH');
     }
     const knowledgeAt = (await c.query("SELECT to_char(clock_timestamp() AT TIME ZONE 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"') AS now")).rows[0].now as string;
@@ -193,7 +211,7 @@ export async function persistEconomicRecordTx(ctx: PeMutationContext, input: Eco
     const eventDependencies = cuts.length ? cuts : dependencies;
     const compute = input.payload.computeInvocation as any;
     const computeReference = compute ? { owner: 'S7', id: compute.id, version: 's7-model-compute-v1', contentDigest: ownerTransportHash(compute), content: compute } : null;
-    const type = input.kind === 'SOURCE' ? 'MEASUREMENT' : input.kind === 'BENCHMARK_REGISTRATION' ? 'PREREGISTRATION' : input.kind === 'BENCHMARK_ASSESSMENT' ? 'ASSESSMENT' : input.kind;
+    const type = input.kind === 'SOURCE' ? 'MEASUREMENT' : input.kind === 'BENCHMARK_REGISTRATION' || input.kind === 'WORK_BINDING' ? 'PREREGISTRATION' : input.kind === 'BENCHMARK_ASSESSMENT' ? 'ASSESSMENT' : input.kind;
     const parents = input.revisionOf ? (await c.query('SELECT event FROM finnor_os.s7_economic_records WHERE tenant_id=$1 AND principal_id=$2 AND record_id=$3', [ctx.auth.tenantId, economicActor(ctx), input.revisionOf])).rows.map(row => row.event.eventId) : [];
     const eventBody = { schema: 'finnor.s7.experience.v1', semanticOwner: 'S7', type, episodeId: input.estimandId ?? ref.id, tenantId: ctx.auth.tenantId, principalId: economicActor(ctx), rightsRef: input.rightsRef, preparedParentRefs: parents, causalParents: [], revisionRef: ref.id, contentDigest, validAt: input.validAt, knowledgeAt, dependencyRefs: eventDependencies.map(r => r.id), freshnessRef: ref.id, uncertainty: input.uncertainty, horizon: input.horizon, provenanceRefs: eventDependencies.map(({ owner, id, version, contentDigest }) => ({ owner, id, version, contentDigest })), modelComputeRef: computeReference?.id ?? null, detail: encodedContent, protectedReceipt: null, appendAuthorityGranted: false, executionAuthorityGranted: false };
     const event = { ...eventBody, eventId: `s7-event:${ownerTransportHash(eventBody)}` };

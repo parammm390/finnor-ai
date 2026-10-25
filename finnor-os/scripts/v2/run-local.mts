@@ -8,7 +8,7 @@ import {spawn,type ChildProcess} from 'node:child_process';
 import {once} from 'node:events';
 import {configureTenantVertical,withTenantTransaction,createEmployeeConversationThread,loadEmployeeConversationThread,receiveWork,closePool,getPool} from '@finnor/db';
 import {createEvidenceSource,appendEvidenceVersion,searchEvidence} from '@finnor/memory';
-import {createStrategy,transitionStrategy,createOpportunity,createOpportunityInvestmentCase,activateInvestmentCase,createUnderwritingModel,createUnderwritingModelVersion,getUnderwritingRun,type PeMutationContext} from '@finnor/private-equity';
+import {createStrategy,transitionStrategy,createOpportunity,createOpportunityInvestmentCase,activateInvestmentCase,createDeal,createInvestmentCase,createUnderwritingModel,createUnderwritingModelVersion,getUnderwritingRun,type PeMutationContext} from '@finnor/private-equity';
 import {putAllocationResource} from '../../packages/private-equity/src/allocation-store';
 import {canonical,hash,reference,rightsBinding,methodIdentity} from '../../packages/private-equity/src/primary-diligence/store';
 import {nativeHttpFixture} from '../p7/native-http-fixture.mts';
@@ -79,9 +79,14 @@ if(!Number.isSafeInteger(shorterDeadlineMs)||shorterDeadlineMs<=0||shorterDeadli
 const budget=verificationBudget(Math.min(closurePlan?Date.parse(closurePlan.hardStop):Infinity,uiRecoveryCut,Date.parse(startedAt)+runSeconds*1000,Date.parse(startedAt)+shorterDeadlineMs));
 const deadlineShorteningEvents:any[]=[],initialDeadlineAt=budget.deadlineAt;
 const files=await Promise.all((await readdir(import.meta.dirname)).filter(p=>/\.(mts|mjs)$/.test(p)).sort().map(async name=>({path:'finnor-os/scripts/v2/'+name,sha256:createHash('sha256').update(await readFile(join(import.meta.dirname,name))).digest('hex')})));
+for(const name of (await readdir(resolve(import.meta.dirname,'../acquisition'))).filter(name=>/\.(mts|mjs)$/.test(name)).sort())files.push({path:'finnor-os/scripts/acquisition/'+name,sha256:createHash('sha256').update(await readFile(resolve(import.meta.dirname,'../acquisition',name))).digest('hex')});
+files.push({path:'src/components/centropy/thread/mission-submission.ts',sha256:createHash('sha256').update(await readFile(resolve(import.meta.dirname,'../../../src/components/centropy/thread/mission-submission.ts'))).digest('hex')});
+files.push({path:'finnor-os/scripts/p7/native-http-fixture.mts',sha256:createHash('sha256').update(await readFile(resolve(import.meta.dirname,'../p7/native-http-fixture.mts'))).digest('hex')});
+for(const name of ['economic-fixtures.mts','ledger-fixture.mts'])files.push({path:'finnor-os/scripts/s7/'+name,sha256:createHash('sha256').update(await readFile(resolve(import.meta.dirname,'../s7',name))).digest('hex')});
+files.push({path:'finnor-os/scripts/s4/operating-profit-fixtures.ts',sha256:createHash('sha256').update(await readFile(resolve(import.meta.dirname,'../s4/operating-profit-fixtures.ts'))).digest('hex')});
 await writeFile(join(output,'pre-run-freeze.json'),JSON.stringify({schema:'finnor.v2.run-freeze.v1',startedAt,command:'node --import=tsx scripts/v2/run-local.mts',harnessMode:process.env.FINNOR_V2_MOUNTED==='1'?'MOUNTED_PREREGISTERED_BOUNDARIES':'DEVELOPMENT_CAMPAIGN',caseFilter:process.env.FINNOR_V2_CASE_FILTER??null,apiPoolLimit:process.env.FINNOR_V2_ONE_CLIENT_PROOF==='1'?1:'LOCAL_DEFAULT',identity,files,node:process.version,productionAuthBypass:false,
  oracle:'Frozen synthetic source truth in failure-model.md, administered only by separate counterparty process. Not independently sealed blind-domain custody.',packagedOnly:process.env.FINNOR_V2_PACKAGED==='1',closureAssignment:closurePlan,uiRecoverySetupCorrection,deadlineSeconds:runSeconds,effectiveDeadlineAt:new Date(budget.deadlineAt).toISOString(),shorterDeadlineProbe:process.env.FINNOR_V2_SHORTER_DEADLINE_MS!==undefined,shorterDeadlineProbeAmendment:qualification&&process.env.FINNOR_V2_SHORTER_DEADLINE_MS?JSON.parse(await readFile(join(repo,'scope-v/v2-primary-reality-due-diligence/qualification-deadline-probe-amendment.json'),'utf8')):null,cleanInstall:false,LinuxImageProof:'NOT_RUN',V1Proof:'BLOCKED_PENDING_IMMUTABLE_HANDOFF'},null,2)+'\n');
-let platform:Awaited<ReturnType<typeof disposablePlatform>>|undefined,http:Awaited<ReturnType<typeof nativeHttpFixture>>|undefined,source:ChildProcess|undefined,publicDescriptor:any,scopeDirectory='';
+let platform:Awaited<ReturnType<typeof disposablePlatform>>|undefined,http:Awaited<ReturnType<typeof nativeHttpFixture>>|Awaited<ReturnType<typeof browserHttpFixture>>|undefined,source:ChildProcess|undefined,publicDescriptor:any,scopeDirectory='';
 const outcome=()=>rows.some(r=>r.status==='FAIL')?'FAIL':process.env.FINNOR_V2_MOUNTED==='1'?'PARTIAL_MOUNTED_DEVELOPMENT':rows.some(r=>r.status==='NOT_RUN')?'PARTIAL_LOCAL_DEVELOPMENT':'PASS_LOCAL_DEVELOPMENT';
 const save=async()=>writeFile(join(output,'results.json'),JSON.stringify({schema:'finnor.v2.e2e.v1',startedAt,finishedAt:new Date().toISOString(),status:outcome(),caseFilter:process.env.FINNOR_V2_CASE_FILTER??null,cases:rows,
  effectiveDeadlineAt:new Date(budget.deadlineAt).toISOString(),initialDeadlineAt:new Date(initialDeadlineAt).toISOString(),deadlineShorteningEvents,deadlineExhausted:budget.signal.aborted||Date.now()>=budget.deadlineAt,
@@ -98,17 +103,21 @@ async function test(id:string,input:unknown,invariant:string,fn:()=>Promise<unkn
 async function rpc(message:any){
  const id=randomUUID();return new Promise<any>((yes,no)=>{const timer=setTimeout(()=>{source!.off('message',listen);no(Error('CONTROLLED_SOURCE_RPC_DEADLINE'));},10000),listen=(m:any)=>{if(m.id!==id)return;clearTimeout(timer);source!.off('message',listen);yes(m);};source!.on('message',listen);source!.send({...message,id});});
 }
-async function worker(onStarted?:(child:ChildProcess)=>Promise<void>,expectedSignal?:NodeJS.Signals){
+async function worker(onStarted?:(child:ChildProcess)=>Promise<void>,expectedSignal?:NodeJS.Signals,runtimeEnvironment?:NodeJS.ProcessEnv,drainReady=false){
  budget.assertCurrent();
- const child=spawn(process.execPath,['--import=tsx',join(import.meta.dirname,'physical-worker.mts')],{cwd:resolve(import.meta.dirname,'../..'),env:{...process.env,DATABASE_URL:platform!.workerUrl},stdio:['ignore','pipe','pipe']});children.add(child);
- let log='';child.stdout.on('data',b=>{if(log.length<65536)log+=b.toString();});child.stderr.on('data',b=>{if(log.length<65536)log+=b.toString();});
+ const env:NodeJS.ProcessEnv={...process.env,DATABASE_URL:platform!.workerUrl,...runtimeEnvironment};
+ if(runtimeEnvironment?.NODE_ENV==='production'){delete env.AUTH_DEV_BYPASS;delete env.ALLOW_PLAINTEXT_ENV_SECRETS;delete env.DATABASE_URL;}
+ const child=spawn(process.execPath,['--import=tsx',join(import.meta.dirname,'physical-worker.mts'),...(drainReady?['--drain-ready']:[])],{cwd:resolve(import.meta.dirname,'../..'),env,stdio:['ignore','pipe','pipe']});children.add(child);
+ let head='',tail='',captured=0;const capture=(b:Buffer)=>{const text=b.toString();captured+=text.length;if(head.length<16384)head=(head+text).slice(0,16384);tail=(tail+text).slice(-65536);};child.stdout.on('data',capture);child.stderr.on('data',capture);
  const ended=once(child,'exit'),stop=()=>child.kill('SIGKILL'),timer=setTimeout(stop,budget.remainingMs(90000));budget.signal.addEventListener('abort',stop,{once:true});
  await onStarted?.(child);
  const [code,signal]=await ended;clearTimeout(timer);budget.signal.removeEventListener('abort',stop);children.delete(child);
  // No environment or bearer/credential content is retained in worker logs.
+ const log=captured<=65536?tail:head+'\n['+Math.max(0,captured-head.length-tail.length)+' middle log characters omitted]\n'+tail;
  const redacted=log.replace(/Bearer [^\s"]+/g,'Bearer [REDACTED]').replace(/postgres(?:ql)?:\/\/[^@\s]+@/g,'postgres://[REDACTED]@');
  await writeFile(join(output,'worker-'+child.pid+'.log'),redacted);
  budget.assertCurrent();if(expectedSignal){assert.equal(code,null);assert.equal(signal,expectedSignal);}else assert.equal(code,0,`ACTUAL_WORKER_EXIT_${code}_${signal}: ${redacted.slice(-2000)}`);
+ return redacted;
 }
 async function killAfterSourceAcceptance(child:ChildProcess){
  await new Promise<void>((yes,no)=>{
@@ -130,6 +139,7 @@ async function call(op:string,body:unknown,expected=200){budget.assertCurrent();
 async function governance(body:any){return (await call('primary-governance-put',{root,body,expectedRef:null},201)).ref;}
 async function build(kind:'facility'|'revenue',options:any={}){
  budget.assertCurrent();
+ const environment=options.environment??'DEVELOPMENT';
  if(qualification&&process.env.FINNOR_V2_SHORTER_DEADLINE_MS)options={...options,singleSource:true,source:{...options.source,delayMs:10000}};
  const authorityId=randomUUID(),semanticsId=randomUUID(),mandateId=randomUUID(),grantId=randomUUID(),consentId=randomUUID(),profileIds=[randomUUID(),...(kind==='facility'&&!options.singleSource?[randomUUID()]:[])];
  const channel='synthetic-lender-primary',decision=fixtureRef('BUSINESS_OWNER','registered-primary-decision:'+root.entityId),pricebook=fixtureRef('S5','synthetic-fixed-primary-pricebook');
@@ -137,7 +147,7 @@ async function build(kind:'facility'|'revenue',options:any={}){
   activities:['ACCESS_RECORDS','INTERPRET','CONTACT','DISCLOSE'].map(activity=>({activity,actorIds:[actor],channelIds:[channel]})),professionalRequirements:[],approvedTemplateRefs:[fixtureRef('S6','fixed-primary-request-v1')],negotiationBoundsRef:null,
   disclosureRules:['EXACT_ASSERTION_SCOPE_ONLY'],confidentialityRules:['AUTHORIZED_COMPANY_SCOPE_ONLY'],contactLimits:{maximumRequests:64,minimumSpacingMs:0,suppressedParticipantIds:[]},
   exposureLimitMicroUsd:'2000000',reservationRequired:true,approvalRef:fixtureRef('BUSINESS_OWNER','synthetic-ordinary-source-approval'),validFrom,expiresAt,
-  escalationConditions:['UNAUTHORIZED_OR_UNRESOLVED'],revocationConditions:['OWNER_REVOKED'],legalReviewEvidenceRefs:[fixtureRef('BUSINESS_OWNER','synthetic-record-purpose-only')],policyRevision:'synthetic-1',environment:'DEVELOPMENT'};
+  escalationConditions:['UNAUTHORIZED_OR_UNRESOLVED'],revocationConditions:['OWNER_REVOKED'],legalReviewEvidenceRefs:[fixtureRef('BUSINESS_OWNER','synthetic-record-purpose-only')],policyRevision:'synthetic-1',environment};
  const authorityRef=await governance(authority),review=fixtureRef('BUSINESS_OWNER','synthetic-explicit-recognition-profile-not-professional-certification');
  const rules=kind==='facility'?[{field:'outstanding',recordKinds:['FACILITY'],treatment:'EXACT_RECORDED_VALUE',requiredWitnessFields:['ledgerState'],excludedInterpretations:['ENTERPRISE_TOTAL_DEBT']}]:
   [{field:'classification',recordKinds:['BANK_TRANSACTION'],treatment:'EXACT_RECORDED_STATE',requiredWitnessFields:['ledgerState'],excludedInterpretations:['CASH_IS_REVENUE']},
@@ -145,18 +155,19 @@ async function build(kind:'facility'|'revenue',options:any={}){
    {field:'credit',recordKinds:['CREDIT_MEMO'],treatment:'EXACT_RECORDED_VALUE',requiredWitnessFields:['ledgerState'],excludedInterpretations:['ANNUAL_REVENUE']},
    {field:'revenue',recordKinds:['BANK_TRANSACTION','CREDIT_MEMO'],treatment:'EARNED_REVENUE',requiredWitnessFields:['performance','recognition','cutoff','grossNetTreatment','nonRevenueExclusions'],excludedInterpretations:['CASH_IS_EARNED_REVENUE']}];
  const meaning={schema:'finnor.primary-reference-semantics.v1',profileId:semanticsId,revision:1,issuerId:actor,acceptedBy:actor,authorityRef,legalEntityId:company,rules,grossNetTreatment:'SOURCE_SIGNED_GROSS_CREDIT_SEPARATE',recognitionRule:'PERFORMANCE_REQUIRED_OWNER_PROFILE',
-  calendarRef:'SYNTHETIC_2025_CALENDAR',consolidationRef:'STANDALONE_TARGET_ONLY',professionalReviewRef:kind==='revenue'?review:null,environment:'DEVELOPMENT',validFrom,expiresAt},semanticsRef=await governance(meaning);
+  calendarRef:'SYNTHETIC_2025_CALENDAR',consolidationRef:'STANDALONE_TARGET_ONLY',professionalReviewRef:kind==='revenue'?review:null,environment,validFrom,expiresAt},semanticsRef=await governance(meaning);
  const members=[kind==='facility'?'lender-participant-1':'company-ledger-1'],rights=(await rightsBinding(ctx,root)).rightsRef;
- const sourceProfiles=profileIds.map((profileId,i)=>({schema:'finnor.primary-source-profile.v1',profileId,revision:1,issuer:'Synthetic independent lender',system:'Synthetic issuer primary ledger',legalEntityId:company,
+ let sourceProfiles=profileIds.map((profileId,i)=>({schema:'finnor.primary-source-profile.v1',profileId,revision:1,issuer:'Synthetic independent lender',system:'Synthetic issuer primary ledger',legalEntityId:company,
   sourceClass:options.sourceClass??'EXTERNAL_AUTHORITATIVE_RECORD',sourceControl:options.sourceClass==='TARGET_CONTROLLED_RECORD'?'TARGET':'EXTERNAL_ISSUER',accountOrParticipantIds:members,products:['company-primary-records'],purpose:'PRIVATE_EQUITY_PRIMARY_DILIGENCE',channelId:channel,
   channelResolutionEvidenceRef:fixtureRef('S1','synthetic-issuer-resolved-channel'),endpoint:publicDescriptor.origin+'/primary',responsePublicKeyPem:publicDescriptor.publicKey,credentialRef:'source-'+profileId,
   authoritativeFields:kind==='facility'?['outstanding','ledgerState']:['classification','amount','credit','revenue','ledgerState','performance','recognition','cutoff','grossNetTreatment','nonRevenueExclusions'],
   respondentId:null,respondentRole:null,respondentKnowledge:[],respondentAuthorityRef:null,intermediary:null,availableHistory:{start:periodStart,end:periodEnd,reasons:[]},observationPredicates:['SIGNED_LEDGER_CUTOFF'],adapterVersion:'primary-records-http-v1',recovery:'IDEMPOTENT_REQUEST_WITH_STATUS',
-  price:{pricebookRef:pricebook,maximumRequestMicroUsd:i?'100000':'50000',statusReadMicroUsd:'0'},rightsRef:rights,authorityEvidenceRefs:[fixtureRef('S1','synthetic-issuer-data-authority')],environment:'DEVELOPMENT',admissionRef:null,validFrom,expiresAt}));
+  price:{pricebookRef:pricebook,maximumRequestMicroUsd:i?'100000':'50000',statusReadMicroUsd:'0'},rightsRef:rights,authorityEvidenceRefs:[fixtureRef('S1','synthetic-issuer-data-authority')],environment,admissionRef:null,validFrom,expiresAt}));
+ if(options.admitSource)sourceProfiles=await Promise.all(sourceProfiles.map(options.admitSource));
  const sourceProfileRefs=[];for(const p of sourceProfiles)sourceProfileRefs.push(await governance(p));
  const consent={schema:'finnor.primary-consent.v1',consentId,revision:1,issuerId:actor,authorizedActorId:actor,legalEntityId:company,sourceProfileIds:profileIds,accountOrParticipantIds:members,products:['company-primary-records'],
   purposes:['PRIVATE_EQUITY_PRIMARY_DILIGENCE'],periodStart,periodEnd,validFrom,expiresAt,rightsRef:rights,permissionEvidenceRef:fixtureRef('S1','synthetic-company-record-consent'),
-  retention:{rawUntil:options.rawRetentionMs?new Date(Date.now()+options.rawRetentionMs).toISOString():expiresAt,derivativesUntil:expiresAt,retainAfterRevocation:true},disclosureRules:['EXACT_ASSERTION_SCOPE_ONLY'],environment:'DEVELOPMENT'},consentRef=await governance(consent);
+  retention:{rawUntil:options.rawRetentionMs?new Date(Date.now()+options.rawRetentionMs).toISOString():expiresAt,derivativesUntil:expiresAt,retainAfterRevocation:true},disclosureRules:['EXACT_ASSERTION_SCOPE_ONLY'],environment},consentRef=await governance(consent);
  const semantics={legalEntityId:company,perimeter:[company],accountOrParticipantIds:members,periodStart,periodEnd,cutoff:periodEnd,currency:'USD',units:'dollars',scale:{numerator:'1',denominator:'1'},signConvention:'AS_RECORDED',
   basisRef:semanticsRef,grossNetTreatment:meaning.grossNetTreatment,recognitionRule:meaning.recognitionRule,calendarRef:meaning.calendarRef,consolidationRef:meaning.consolidationRef,timeBasis:'CUTOFF'};
  const assertion=(field:string,predicateKind:string,ids:string[],expect:any,kinds:string[],complete=true):DiligenceAssertion=>({
@@ -173,10 +184,10 @@ async function build(kind:'facility'|'revenue',options:any={}){
    assertion('revenue','POPULATION_TOTAL',[],{kind:'EXACT',quantity:{numerator:'40000000',denominator:'1'}},['BANK_TRANSACTION','CREDIT_MEMO'])];
  const originalDeadline=options.deadlineMs?new Date(Date.now()+options.deadlineMs).toISOString():expiresAt;
  const mandate={schema:'finnor.primary-mandate.v1',mandateId,revision:1,issuingPrincipalId:actor,legalEntityId:company,objective:'Actually acquire missing evidence and independently establish only registered scoped claims',permittedPurpose:'PRIVATE_EQUITY_PRIMARY_DILIGENCE',decisionRef:decision,authorityProfileId:authorityId,sourceProfileIds:profileIds,assertionIds:assertions.map(a=>a.assertionId),
-  stopping:{maxAcquisitions:options.limitRequests??32,deadline:originalDeadline,waitUntil:new Date(Math.min(Date.parse(originalDeadline),Date.now()+180000)).toISOString(),stopOnRequiredCoverage:true,contradictionRevalidationRequired:true},priorityRule:'MATERIAL_COVERAGE_PER_RESERVED_COST_THEN_DELAY',validFrom,expiresAt,environment:'DEVELOPMENT'},mandateRef=await governance(mandate);
+  stopping:{maxAcquisitions:options.limitRequests??32,deadline:originalDeadline,waitUntil:new Date(Math.min(Date.parse(originalDeadline),Date.now()+180000)).toISOString(),stopOnRequiredCoverage:true,contradictionRevalidationRequired:true},priorityRule:'MATERIAL_COVERAGE_PER_RESERVED_COST_THEN_DELAY',validFrom,expiresAt,environment},mandateRef=await governance(mandate);
  const reservation=options.sharedReservation??await call('primary-reserve-budget',{root,resourceRefs,maximumMicroUsd:'2000000',maximumCpuMicros:'100000000',idempotencyKey:randomUUID(),validUntil:expiresAt},201);
  const grant={schema:'finnor.primary-grant.v1',grantId,revision:1,issuingPrincipalId:actor,mandateId,legalEntityId:company,maximumMicroUsd:'2000000',maximumRequests:options.limitRequests??32,maximumNativeCpuMicros:'100000000',maximumMemoryBytes:'536870912',maximumHumanSeconds:0,maximumStoredBytes:4194304,
-  pricebook:{ref:pricebook,cpuMicroUsdPerSecond:{numerator:'1000',denominator:'1'},storageMicroUsdPerByte:options.storageTariff??{numerator:'0',denominator:'1'},orchestrationMicroUsdPerSecond:{numerator:'1000',denominator:'1'},humanMicroUsdPerSecond:{numerator:'0',denominator:'1'}},reservationRef:reservation.reservationRef,retainedObligationRefs:[],expiresAt,environment:'DEVELOPMENT'},budgetGrantRef=await governance(grant);
+  pricebook:{ref:pricebook,cpuMicroUsdPerSecond:{numerator:'1000',denominator:'1'},storageMicroUsdPerByte:options.storageTariff??{numerator:'0',denominator:'1'},orchestrationMicroUsdPerSecond:{numerator:'1000',denominator:'1'},humanMicroUsdPerSecond:{numerator:'0',denominator:'1'}},reservationRef:reservation.reservationRef,retainedObligationRefs:[],expiresAt,environment},budgetGrantRef=await governance(grant);
  const record=(id:string,kind:string,fields:PrimaryRecord['fields']):PrimaryRecord=>({issuerRecordId:'issuer-'+id,economicId:id,revision:1,kind,legalEntityId:company,accountOrParticipantId:members[0]!,periodStart,periodEnd,currency:'USD',units:'dollars',basisDigest:semanticsRef.contentDigest,state:'POSTED',
   replacesEconomicId:null,reversesEconomicId:null,aliasOf:null,effectiveAt:periodEnd,observedAt:validFrom,fields,witnessFields:{ledgerState:'POSTED',performance:'NOT_ESTABLISHED',recognition:meaning.recognitionRule,cutoff:periodEnd,grossNetTreatment:meaning.grossNetTreatment,nonRevenueExclusions:'NOT_ESTABLISHED'},relatedParty:'NO'});
  const future=kind==='facility'?[record('additional-facility-1','FACILITY',{outstanding:{kind:'EXACT',quantity:{numerator:'5000000',denominator:'1'}}})]:
@@ -185,8 +196,8 @@ async function build(kind:'facility'|'revenue',options:any={}){
  const configs=[];for(const p of sourceProfiles){const credential=randomBytes(24).toString('base64url');await writeFile(join(scopeDirectory,p.credentialRef),credential,{mode:0o600});
   configs.push({public:p,credential,records:typeof options.records==='function'?options.records(future):options.records??future,recordKinds:kind==='facility'?['FACILITY']:['BANK_TRANSACTION','CREDIT_MEMO'],...options.source});}
  await rpc({type:'configure',profiles:configs});
- const opened=await call('primary-open-work',{root,instruction:assertions[0]!.exactPredicate,idempotencyKey:randomUUID()},201);
- return {intake:{schema:'finnor.primary-diligence.v1',root,workId:opened.workId,expectedWorkInputId:opened.workInputId,idempotencyKey:randomUUID(),assertions,startingEvidenceRefs:[startingRef],mandateRef,authorityProfileRef:authorityRef,budgetGrantRef,sourceProfileRefs,consentRefs:[consentRef],referenceSemanticsRefs:[semanticsRef],predecessorRef:null,mode:'ordinary_disposable'},assertions,sourceProfiles,consent,consentRef,authorityRef,semanticsRef,budgetGrantRef,reservation};
+ const opened=options.work??await call('primary-open-work',{root,instruction:assertions[0]!.exactPredicate,idempotencyKey:randomUUID()},201);
+ return {intake:{schema:'finnor.primary-diligence.v1',root,workId:opened.workId,expectedWorkInputId:opened.workInputId,idempotencyKey:randomUUID(),assertions,startingEvidenceRefs:[startingRef],mandateRef,authorityProfileRef:authorityRef,budgetGrantRef,sourceProfileRefs,consentRefs:[consentRef],referenceSemanticsRefs:[semanticsRef],predecessorRef:null,mode:environment==='LIVE'?'protected':'ordinary_disposable'},assertions,sourceProfiles,consent,consentRef,authorityRef,semanticsRef,budgetGrantRef,reservation,mandate,grant};
 }
 async function finish(f:any){const accepted=await call('primary-submit',f.intake,202);await worker();const read=await call('primary-read',{programmeId:accepted.programmeId});return {...read,accepted};}
 function scopeOf(a:DiligenceAssertion){return PrimaryUnderwritingScopeSchema.parse({predicateKind:a.predicateKind,field:a.field,economicRecordIds:a.economicRecordIds,semantics:a.semantics,requiredCoverage:a.requiredCoverage,acceptableSourceClasses:a.acceptableSourceClasses});}
@@ -206,8 +217,20 @@ try{
  await configureTenantVertical({tenantId:tenant,verticalKey:'private_equity',expectedVersion:0,createdBy:actor,sourceSystem:'V2:disposable-E2E'});
  await platform.admin.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,'synthetic-v2-target','Synthetic Target A','other')",[company,tenant]);
  const strategy=await createStrategy(ctx,{name:'Synthetic existing PE strategy'});await transitionStrategy(ctx,{strategyId:String(strategy.row.id),expectedVersion:1,targetState:'active'});
- const opportunity=await createOpportunity(ctx,{strategyId:String(strategy.row.id),targetOrganizationId:company,name:'Synthetic pre-LOI opportunity'});root={entityType:'pe_opportunity',entityId:String(opportunity.row.id)};
- const c=await createOpportunityInvestmentCase(ctx,{opportunityId:root.entityId,title:'Pre-LOI exact primary underwriting'});caseId=String(c.row.id);await activateInvestmentCase(ctx,{investmentCaseId:caseId,expectedVersion:1});
+ const protectedPlanner=process.env.FINNOR_V2_CASE_FILTER==='primary-protected-planner-acquisition';
+ const economicTracking=process.env.FINNOR_V2_CASE_FILTER==='primary-protected-acquisition-economic-tracking';
+ const closingHandoff=economicTracking||process.env.FINNOR_V2_CASE_FILTER==='primary-protected-acquisition-closing-handoff';
+ const finalizeIc=closingHandoff||process.env.FINNOR_V2_CASE_FILTER==='primary-protected-guided-ic-finalized';
+ const guidedIntake=finalizeIc||process.env.FINNOR_V2_CASE_FILTER==='primary-protected-guided-intake';
+ const originalRequest=economicTracking||guidedIntake||process.env.FINNOR_V2_CASE_FILTER==='primary-protected-original-request';
+ const protectedAcquisition=originalRequest||protectedPlanner||process.env.FINNOR_V2_CASE_FILTER==='primary-protected-acquisition';
+ if(protectedAcquisition){
+  const deal=await createDeal(ctx,{targetOrganizationId:company,name:'Synthetic protected acquisition',dealLeadEmployeeId:actor,signedLoiAt:new Date('2026-01-01'),targetClosingAt:new Date('2026-12-31')});root={entityType:'pe_deal',entityId:String(deal.row.id)};
+  const c=await createInvestmentCase(ctx,{dealId:root.entityId,title:'Same Work source-bound acquisition'});caseId=String(c.row.id);
+ }else{
+  const opportunity=await createOpportunity(ctx,{strategyId:String(strategy.row.id),targetOrganizationId:company,name:'Synthetic pre-LOI opportunity'});root={entityType:'pe_opportunity',entityId:String(opportunity.row.id)};
+  const c=await createOpportunityInvestmentCase(ctx,{opportunityId:root.entityId,title:'Pre-LOI exact primary underwriting'});caseId=String(c.row.id);await activateInvestmentCase(ctx,{investmentCaseId:caseId,expectedVersion:1});
+ }
  const sourceEvidence=await createEvidenceSource(tenant,{sourceKey:'v2-starting-management',sourceType:'manual',title:'Synthetic incomplete management support'});
  const version=await appendEvidenceVersion(tenant,sourceEvidence.id,{content:'Management 2025 revenue USD 40,000,000; borrowing-1 classified SALE; credit-1 recorded credit 0. Facility population and recognition evidence unavailable.',snapshot:{managementRevenue:'40000000',borrowingClassification:'SALE',recordedCredit:'0'},asOf:new Date(periodEnd)});
  const raw=(await platform.admin.query('SELECT version_number,content_hash FROM finnor_os.evidence_source_versions WHERE tenant_id=$1 AND id=$2',[tenant,version.versionId])).rows[0];startingRef={owner:'S1',id:version.versionId,revision:String(raw.version_number),contentDigest:raw.content_hash};
@@ -221,7 +244,9 @@ try{
  const browserHttp=process.env.FINNOR_V2_MOUNTED==='1'||process.env.FINNOR_V2_PACKAGED==='1'?await browserHttpFixture(platform.admin,tenant,actor,other):undefined;
  http=browserHttp??await nativeHttpFixture(platform.admin,tenant,actor,other);
  scopeDirectory=join(platform.directory,'v2-private');await mkdir(scopeDirectory,{mode:0o700});
- source=spawn(process.execPath,['--import=tsx',join(import.meta.dirname,'controlled-source.mts'),scopeDirectory],{cwd:resolve(import.meta.dirname,'../..'),env:{PATH:process.env.PATH,NODE_ENV:'test'},stdio:['ignore','pipe','pipe','ipc']});children.add(source);
+ const protectedCase=protectedAcquisition||process.env.FINNOR_V2_CASE_FILTER==='primary-protected-liability';
+ const protectedSource=protectedCase?await (await import('./https-source-fixture.mts')).preparePrimaryHttpsFixture(scopeDirectory,tenant,actor):undefined;
+ source=spawn(process.execPath,['--import=tsx',join(import.meta.dirname,'controlled-source.mts'),scopeDirectory,...(protectedCase?['tls']:[])],{cwd:resolve(import.meta.dirname,'../..'),env:{PATH:process.env.PATH,NODE_ENV:'test'},stdio:['ignore','pipe','pipe','ipc']});children.add(source);
  publicDescriptor=await new Promise<any>((yes,no)=>{const timer=setTimeout(()=>no(Error('CONTROLLED_SOURCE_START_DEADLINE')),10000);source!.on('message',(m:any)=>{if(m.type==='ready'){clearTimeout(timer);yes(m);}});source!.once('exit',()=>no(Error('CONTROLLED_SOURCE_START_FAILED')));});
  if(qualification&&process.env.FINNOR_V2_SHORTER_DEADLINE_MS)source.on('message',(message:any)=>{
   if(message.type!=='accepted'||budget.signal.aborted||Date.now()>=budget.deadlineAt)return;
@@ -235,8 +260,95 @@ try{
  if(browserHttp&&process.env.FINNOR_V2_PACKAGED==='1'){
   await packagedRuntime({repo,output,platform,fixture:await build('facility',{singleSource:true}),http:browserHttp,call,sourceCalls,test,budget});
  }else if(browserHttp){
-  await mountedController({repo,output,platform,ctx,root,fixture:await build('facility',{singleSource:true}),http:browserHttp,worker,sourceCalls,call,test,budget});
+  await mountedController({repo,output,platform,ctx,root,fixture:await build('facility',{singleSource:true}),http:browserHttp,worker:async()=>{await worker();},sourceCalls,call,test,budget});
  }else{
+ if(protectedCase){
+ async function protectedWorker(){
+  const secrets=await (await import('./local-managed-secrets.mts')).localManagedSecrets({DATABASE_URL:platform!.workerUrl});
+  try{const log=await worker(undefined,undefined,{...secrets.environment,NODE_ENV:'production',DOTENV_CONFIG_PATH:join(scopeDirectory,'absent-env-file')},protectedPlanner||originalRequest);assert.deepEqual(secrets.observed,['DATABASE_URL']);assert.match(log,/"nodeEnvironment":"production"/);return {nodeEnvironment:'production',secretNames:secrets.observed,qualification:secrets.qualification};}
+  finally{await secrets.close();}
+ }
+ async function originalRequestFixture(f:any,work:any){
+  const scope=scopeOf(f.assertions[0]!),shape={valueType:'decimal',unit:'money',currency:'USD',shape:'scalar'} as const;
+  const input=(id:string)=>({id,kind:'input' as const,...shape,dependencies:[],required:true,source:{kind:'model_parameter' as const}}),ref=(nodeId:string)=>({op:'ref' as const,nodeId}),minus=(id:string,a:string,b:string)=>({id,kind:'expression' as const,...shape,dependencies:[a,b],expression:{op:'subtract' as const,args:[ref(a),ref(b)]}});
+  const model=await createUnderwritingModel(ctx,{investmentCaseId:caseId,modelKey:'original_acquisition',name:'Original reviewed population model'});
+  const definition={schemaVersion:'underwriting-model-ir.v1' as const,modelKey:'original_acquisition',modelVersion:'1',financialConventionVersion:'finnor-pe-lbo/1.0.0',minimumEngineVersion:'finnor-underwriting-engine/1.0.0',periodDefinition:{frequency:'annual' as const,forecastStart:'2026-01-01',count:1},circularBlocks:[],nodes:[
+   {...input('facility'),source:{kind:'explicit' as const},allowedTruthClasses:['OBSERVED_FACT' as const],primaryEvidenceScope:scope},input('price'),input('debt'),input('financing_cost'),
+   {id:'exit_value',kind:'constant' as const,...shape,dependencies:[],value:'150000000',truthClass:'MODEL_PARAMETER' as const},minus('entry_equity','price','debt'),minus('exit_equity','exit_value','debt'),minus('after_facility','exit_equity','facility'),minus('before_cost','after_facility','entry_equity'),minus('profit','before_cost','financing_cost'),
+   {id:'profit_output',kind:'output' as const,...shape,dependencies:['profit'],sourceNodeId:'profit'},{id:'equity_output',kind:'output' as const,...shape,dependencies:['entry_equity'],sourceNodeId:'entry_equity'}]};
+  const version=await createUnderwritingModelVersion(ctx,{modelId:String(model.id),definition});
+  const {schema:_schema,root:_root,workId:_work,expectedWorkInputId:_input,idempotencyKey:_key,...primary}=f.intake;
+  const request={schema:'finnor.reviewed-acquisition-request.v1',dealId:root.entityId,primary,underwriting:{investmentCaseId:caseId,modelVersionId:String(version.id),primaryAssertions:{facility:{assertionId:f.assertions[0].assertionId,revision:1}},explicitInputs:{price:{value:'100000000',truthClass:'MODEL_PARAMETER'},debt:{value:'0',truthClass:'MODEL_PARAMETER'},financing_cost:{value:'0',truthClass:'MODEL_PARAMETER'}}},acquisition:{bidDomain:{nodeId:'price',currency:'USD',values:['90000000','100000000','110000000','120000000']},financingCases:[{key:'cash',name:'Declared cash case',overrides:[{nodeId:'debt',value:'0',reason:'No new borrowing'},{nodeId:'financing_cost',value:'0',reason:'No financing charge'}]},{key:'debt50',name:'Declared debt50m/cost5m',overrides:[{nodeId:'debt',value:'50000000',reason:'Declared financing assumption'},{nodeId:'financing_cost',value:'5000000',reason:'Declared financing charge'}]},{key:'debt70',name:'Declared debt70m/cost12m',overrides:[{nodeId:'debt',value:'70000000',reason:'Declared financing assumption'},{nodeId:'financing_cost',value:'12000000',reason:'Declared financing charge'}]}],constraints:[{outputNodeId:'profit_output',operator:'gte',threshold:'35000000',unit:'money',currency:'USD'},{outputNodeId:'equity_output',operator:'lte',threshold:'60000000',unit:'money',currency:'USD'}],limits:{maxCandidates:256,deadlineMs:120000}}};
+  process.env.FINNOR_ORIGINAL_REQUEST_PROMPTS=join(output,'original-request-prompts.jsonl');
+  return {ctx,admin:platform!.admin,root,work,request,http,worker:protectedWorker,call,output,deadlineAt:budget.deadlineAt};
+ }
+ await test('primary-protected-liability',{source:'separate HTTPS issuer',worker:'production mode with controlled managed-secret SDK',starting:'No facility identity or amount'},'authorized protected read traverses native owners and independent checker into same Work scoped underwriting; private read and revoked consent remain fenced',async()=>{
+  assert(protectedSource);process.env.FINNOR_V2_PROFILE='production_primary';process.env.FINNOR_PRIMARY_TRANSPORT_POLICY_FILE=protectedSource.policyFile;
+  const f=await build('facility',{singleSource:true,environment:'LIVE',admitSource:(profile:any)=>protectedSource.admit(profile)});
+  const frozen={workId:f.intake.workId,inputId:f.intake.expectedWorkInputId,reservationRef:f.grant.reservationRef,maximumMicroUsd:f.grant.maximumMicroUsd,maximumCpuMicros:f.grant.maximumNativeCpuMicros,deadline:f.mandate.stopping.deadline};
+  assert(!canonical(f.intake).includes('5000000'));assert(!canonical(f.intake).includes('additional-facility-1'));
+  const accepted=await call('primary-submit',f.intake,202);
+  const workerBootstrap=await protectedWorker();
+  const read=await call('primary-read',{programmeId:accepted.programmeId});assert.equal(read.status,'COMPLETE',JSON.stringify(read));
+  assert.equal(read.workId,frozen.workId);assert.equal(read.workRevision,frozen.inputId);
+  const finding=read.findings[0];assert.equal(finding.environment,'LIVE');assert.equal(finding.conclusion,'SUPPORTED');
+  assert.deepEqual(finding.establishedValueOrInterval,{kind:'EXACT',quantity:{numerator:'5000000',denominator:'1'}});assert.equal(finding.auditOpinion,false);
+  assert(read.costReceipts.some((r:any)=>r.kind==='NATIVE'&&r.cpuMicros&&r.status==='RECONCILED'));
+  protectedSource.policy.trustedIssuerKeys[0]!.validUntil=new Date(Date.now()-1).toISOString();await protectedSource.savePolicy();
+  const retained=await call('primary-read',{programmeId:accepted.programmeId});assert.equal(retained.findings[0]?.artifactId,finding.artifactId);
+  const newReadDenied=await http!.call('primary-submit',{...f.intake,idempotencyKey:randomUUID()});assert.equal(newReadDenied.status,422);assert.match(JSON.stringify(newReadDenied),/PRIMARY_TRANSPORT_EXACT_ADMISSION_OR_SCOPE_UNPASSED/);
+  const persisted=(await platform!.admin.query('SELECT intake,starting_manifest FROM finnor_os.v2_programmes WHERE id=$1',[accepted.programmeId])).rows[0];
+  assert.deepEqual(persisted.intake,f.intake);assert(!canonical(persisted.starting_manifest.evidence).includes('5000000'));
+  const scope=scopeOf(f.assertions[0]!);scope.predicateKind='RECORD_VALUE';scope.economicRecordIds=['additional-facility-1'];
+  const version=await model(f.assertions[0]!,scope),payload={investmentCaseId:caseId,modelVersionId:version,worldAt:new Date().toISOString(),idempotencyKey:randomUUID(),workId:read.workId,bindings:{facility:{findingId:finding.artifactId,economicId:'additional-facility-1'}}};
+  const run=await call('primary-consume',payload);assert.equal(run.inputSnapshot.values.facility.value,'5000000');assert.equal(run.inputSnapshot.values.facility.truthClass,'OBSERVED_FACT');assert.equal(run.inputSnapshot.values.facility.status,'KNOWN');
+  const wrong=structuredClone(scope);wrong.requiredCoverage.populationId='ENTERPRISE_TOTAL_DEBT';
+  const refused=await http!.call('primary-consume',{...payload,modelVersionId:await model(f.assertions[0]!,wrong),idempotencyKey:randomUUID()});assert.equal(refused.status,422);assert.match(JSON.stringify(refused),/COVERAGE_MISMATCH/);
+  const foreign=await http!.call('primary-read',{programmeId:accepted.programmeId},'other');assert.equal(foreign.status,404);
+  const calls=await sourceCalls(f);assert.equal(calls.filter((c:any)=>c.operation==='ACQUIRE').length,1);assert.equal(calls.length,1);
+  await call('primary-governance-revoke',{root,ref:f.consentRef,reason:'CONTROLLED_PROTECTED_DOWNSTREAM_REVOCATION'});
+  const revoked=await call('primary-read',{programmeId:accepted.programmeId});assert.equal(revoked.findings.length,0);assert.equal(revoked.status,'BLOCKED');
+  await assert.rejects(()=>getUnderwritingRun(ctx,run.id),/SOURCE_RIGHTS_MEMBERSHIP_OR_WORK_CHANGED/);assert.equal((await sourceCalls(f)).length,1);
+  return {input:f.intake,frozen,read,retainedAfterTransportExpiry:retained,newReadDenied,run,sourceCalls:calls,foreign,scopeRefusal:refused,revoked,workerBootstrap,qualification:'CONTROLLED_PROTECTED_OWNER_PIPELINE_NOT_CUSTOMER_DOMAIN_OR_HOSTED_PRODUCTION_QUALIFICATION'};
+ });
+ await test(economicTracking?'primary-protected-acquisition-economic-tracking':closingHandoff?'primary-protected-acquisition-closing-handoff':finalizeIc?'primary-protected-guided-ic-finalized':guidedIntake?'primary-protected-guided-intake':originalRequest?'primary-protected-original-request':protectedPlanner?'primary-protected-planner-acquisition':'primary-protected-acquisition',{sourceFacility:'5000000 USD',declaredExit:'150000000 USD',minimumModelProfit:'35000000 USD',maximumEquity:'60000000 USD'},'actual primary evidence and independent parameters enter the same Deal/Work financial decision through the selected driver; revoked consent fences every dependent scenario',async()=>{
+  assert(protectedSource);assert(http&&'createRun'in http);process.env.FINNOR_V2_PROFILE='production_primary';process.env.FINNOR_PRIMARY_TRANSPORT_POLICY_FILE=protectedSource.policyFile;
+  const originalWork=await call('primary-open-work',{root,instruction:originalRequest?'Evaluate this acquisition, verify the financials, determine our maximum bid, compare financing, investigate material uncertainties, prepare IC, execute approved work, and track the economic outcome.':'Evaluate this acquisition, verify the financials, determine maximum bid and compare financing under the explicitly supplied constraints.',idempotencyKey:randomUUID()},201);
+  const controller=protectedPlanner?await(await import('./protected-planner-e2e.mts')).protectedPrimaryPlanner({ctx,admin:platform!.admin,root,work:originalWork,output,deadlineAt:new Date(budget.deadlineAt)}):null;
+  if(originalRequest)await(await import('../acquisition/original-request-e2e.mts')).prepareOriginalAcquisitionAuthority(ctx,platform!.admin);
+  if(originalRequest){process.env.FINNOR_ACQUISITION_IC_CONTROLLER_E2E='1';await(await import('../acquisition/ic-e2e.mts')).prepareAcquisitionIcFixture({ctx,tenant,actor,admin:platform!.admin,investmentCaseId:caseId,story:{mandate:{dealId:root.entityId}},evidence:output});}
+  const f=await build('facility',{singleSource:true,environment:'LIVE',work:originalWork,admitSource:(profile:any)=>protectedSource.admit(profile)});
+  if(originalRequest){let e:any=await originalRequestFixture(f,originalWork);if(guidedIntake)e=await(await import('../acquisition/guided-intake-e2e.mts')).guidedAcquisitionIntake(e);return(await import('../acquisition/original-request-e2e.mts')).originalAcquisitionRequest({...e,finalizeIc,closingHandoff,economicTracking});}
+  const accepted=controller?await controller.submit(f.intake):await call('primary-submit',f.intake,202);
+  const primaryWorker=await protectedWorker(),read=await call('primary-read',{programmeId:accepted.programmeId});assert.equal(read.status,'COMPLETE',JSON.stringify(read));
+  const plannerPrimaryRead=controller?await controller.primaryRead(accepted.programmeId,'COMPLETE'):null;
+  assert.equal(read.workId,f.intake.workId);assert.equal(read.workRevision,f.intake.expectedWorkInputId);assert(!canonical(f.intake).includes('5000000'));
+  const scope=scopeOf(f.assertions[0]!);scope.predicateKind='RECORD_VALUE';scope.economicRecordIds=['additional-facility-1'];
+  const shape={valueType:'decimal',unit:'money',currency:'USD',shape:'scalar'} as const,input=(id:string)=>({id,kind:'input' as const,...shape,dependencies:[],required:true,source:{kind:'model_parameter' as const}}),ref=(nodeId:string)=>({op:'ref' as const,nodeId}),minus=(id:string,a:string,b:string)=>({id,kind:'expression' as const,...shape,dependencies:[a,b],expression:{op:'subtract' as const,args:[ref(a),ref(b)]}});
+  const m=await createUnderwritingModel(ctx,{investmentCaseId:caseId,modelKey:'protected_acquisition',name:'Explicit one-period facility settlement model'});
+  const definition={schemaVersion:'underwriting-model-ir.v1' as const,modelKey:'protected_acquisition',modelVersion:'1',financialConventionVersion:'finnor-pe-lbo/1.0.0',minimumEngineVersion:'finnor-underwriting-engine/1.0.0',periodDefinition:{frequency:'annual' as const,forecastStart:'2026-01-01',count:1},circularBlocks:[],nodes:[
+   {...input('facility'),source:{kind:'explicit' as const},allowedTruthClasses:['OBSERVED_FACT' as const],primaryEvidenceScope:scope},input('price'),input('debt'),input('financing_cost'),
+   {id:'exit_value',kind:'constant' as const,...shape,dependencies:[],value:'150000000',truthClass:'MODEL_PARAMETER' as const},minus('entry_equity','price','debt'),minus('exit_equity','exit_value','debt'),minus('after_facility','exit_equity','facility'),minus('before_cost','after_facility','entry_equity'),minus('profit','before_cost','financing_cost'),
+   {id:'profit_output',kind:'output' as const,...shape,dependencies:['profit'],sourceNodeId:'profit'},{id:'equity_output',kind:'output' as const,...shape,dependencies:['entry_equity'],sourceNodeId:'entry_equity'}]};
+  const version=await createUnderwritingModelVersion(ctx,{modelId:String(m.id),definition});
+  const payload={investmentCaseId:caseId,modelVersionId:String(version.id),worldAt:new Date().toISOString(),idempotencyKey:randomUUID(),primaryFindingInputs:{facility:{findingId:read.findings[0].artifactId,economicId:'additional-facility-1'}},explicitInputs:{price:{value:'100000000',truthClass:'MODEL_PARAMETER'},debt:{value:'0',truthClass:'MODEL_PARAMETER'},financing_cost:{value:'0',truthClass:'MODEL_PARAMETER'}}};
+  const response=controller?null:await http.createRun(payload);if(response)assert.equal(response.status,201,JSON.stringify(response));const run=controller?await controller.createRun(payload):response!.body;
+  const replay=controller?null:await http.createRun({...payload,workId:f.intake.workId});if(replay){assert.equal(replay.status,200,JSON.stringify(replay));assert.equal(replay.body.id,run.id);}
+  assert.equal(run.inputSnapshot.values.facility.value,'5000000');assert.equal(run.inputSnapshot.values.facility.truthClass,'OBSERVED_FACT');
+  const persisted=(await platform!.admin.query('SELECT work_id::text FROM finnor_os.underwriting_runs WHERE id=$1',[run.id])).rows[0];assert.equal(persisted.work_id,f.intake.workId);
+  const otherWork=await call('primary-open-work',{root,instruction:'Independent unrelated work',idempotencyKey:randomUUID()},201),foreignWork=await http.createRun({...payload,idempotencyKey:randomUUID(),workId:otherWork.workId});assert.equal(foreignWork.status,400);assert.match(JSON.stringify(foreignWork),/PRIMARY_CONSUMER_EXACT_WORK_SCOPE_MISMATCH/);
+  const request={dealId:root.entityId,workId:f.intake.workId,baseRunId:run.id,idempotencyKey:randomUUID(),bidDomain:{nodeId:'price',currency:'USD',values:['90000000','100000000','110000000','120000000']},financingCases:[{key:'cash',name:'Declared cash case',overrides:[{nodeId:'debt',value:'0',reason:'No new borrowing'},{nodeId:'financing_cost',value:'0',reason:'No financing charge'}]},{key:'debt50',name:'Declared debt50m/cost5m',overrides:[{nodeId:'debt',value:'50000000',reason:'Explicit new financing assumption'},{nodeId:'financing_cost',value:'5000000',reason:'Explicit financing cost assumption'}]},{key:'debt70',name:'Declared debt70m/cost12m',overrides:[{nodeId:'debt',value:'70000000',reason:'Explicit new financing assumption'},{nodeId:'financing_cost',value:'12000000',reason:'Explicit financing cost assumption'}]}],constraints:[{outputNodeId:'profit_output',operator:'gte',threshold:'35000000',unit:'money',currency:'USD'},{outputNodeId:'equity_output',operator:'lte',threshold:'60000000',unit:'money',currency:'USD'}]};
+  const decision=controller?await controller.evaluate(request):await call('acquisition-evaluate',request,202),decisionWorker=await protectedWorker(),observed=await call('acquisition-read',{decisionId:decision.decisionId});
+  assert.equal(observed.status,'TESTED',JSON.stringify(observed));assert.equal(observed.workId,f.intake.workId);assert.equal(observed.workInputId,f.intake.expectedWorkInputId);assert.equal(observed.result.candidates.length,12);
+  assert.equal(observed.result.maximumBid.value,'100000000');assert.equal(observed.result.maximumBid.financingCaseKey,'debt50');assert.equal(observed.result.maximumBid.qualification,'MAXIMUM_IN_DECLARED_FINITE_DOMAIN');assert.equal(observed.result.executionAuthorityGranted,false);assert.equal(observed.result.realizedProfitEstablished,false);
+  const candidate=observed.result.candidates.find((c:any)=>c.bid==='110000000'&&c.financingCaseKey==='debt50');assert.equal(candidate.feasible,false);assert.deepEqual(candidate.failedConstraints,['profit_output']);
+  assert.equal((await platform!.admin.query('SELECT count(*)::int n FROM finnor_os.work_inputs WHERE work_id=$1',[f.intake.workId])).rows[0].n,1);
+  await call('primary-governance-revoke',{root,ref:f.consentRef,reason:'CONTROLLED_SOURCE_BOUND_ACQUISITION_REVOCATION'});
+  const stale=await http!.call('acquisition-read',{decisionId:decision.decisionId});assert.equal(stale.status,409);assert.equal(stale.body.code,'ACQUISITION_SOURCE_CUT_CHANGED');assert.equal(stale.body.result,undefined);
+  const calls=await sourceCalls(f);assert.equal(calls.length,1);assert.equal(calls[0].operation,'ACQUIRE');
+  return {originalWork,input:f.intake,sourceRead:read,plannerPrimaryRead,plannerStages:controller?.stages,definition,run,replay,request,observed,foreignWork,stale,calls,primaryWorker,decisionWorker,qualification:'ACTUAL_PROTECTED_SOURCE_TO_SAME_ACQUISITION_WORK_WITH_EXPLICIT_SYNTHETIC_FINANCIAL_MODEL_NOT_ECONOMIC_GAIN_OR_PRODUCTION_DEPLOYMENT'};
+ });
+ }
  await test('cumulative-storage-accounting',{pages:2,replayFirstPageOnce:true,storageTariff:{numerator:'1',denominator:'3'}},'actual signed source pages, replay and retained S5 storage agree with independently summed unique canonical bytes',async()=>{
   const f=await build('facility',{singleSource:true,storageTariff:{numerator:'1',denominator:'3'},source:{totalPages:2,replayFirstPageOnce:true}}),read=await finish(f);
   assert.equal(read.status,'COMPLETE',JSON.stringify(read));

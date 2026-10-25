@@ -6,6 +6,7 @@ import { sha, stable, tx, principal } from '../evidence-execution/store';
 import { readCapabilityExecutionExperience } from '../../../capability-evolution/src/experience';
 import { ExperienceRequestSchema, immutableRef, boundedJson,
   type EpisodeCut, type ExperienceRecord } from './contracts';
+import { assertAnalyticalExecutionProfile } from '../evidence-execution/profile';
 
 /** S6's authentic existing obligation handoff, not a manufactured analytical feed. */
 export async function readProcedureExecutionHistory(ctx: PeMutationContext, obligationId: string) {
@@ -16,8 +17,7 @@ export async function readProcedureExperience(ctx: PeMutationContext, body: unkn
   boundedJson(body, 65536);
   const input = ExperienceRequestSchema.parse(body), cut = Date.parse(input.knowledgeCut);
   if (input.mode === 'protected') throw Error('P6_COMPLETE_PROTECTED_ANALYTICAL_EPISODE_PORT_REQUIRED');
-  if (process.env.NODE_ENV === 'production' || process.env.FINNOR_P4_PROFILE !== 'ordinary_disposable')
-    throw Error('P6_ORDINARY_DISPOSABLE_PROFILE_REQUIRED');
+  assertAnalyticalExecutionProfile(input.mode);
   if (cut > Date.now() || !Number.isFinite(cut)) throw Error('P6_KNOWLEDGE_CUT_INVALID');
   // Discover original episodes from authenticated rows, then enumerate their
   // entire request universes. A caller cannot hide failed siblings by naming a head.

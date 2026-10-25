@@ -1,12 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { usePathname } from "next/navigation"
+import { usePrivateRequestScope } from "@/components/centropy/lib/use-private-request-scope"
+import { AcquisitionMissionBuilder } from "./AcquisitionMissionBuilder"
 import { ArrowRight, CircleAlert, ShieldCheck } from "lucide-react"
 import { z } from "zod"
 import { centropyGet } from "@/components/centropy/lib/api"
 import type { PeWorldRootRef } from "@/components/centropy/pe/contracts"
 import type { WorkAggregateView } from "@/components/centropy/product/contracts"
-import { buildGeneralDealMissionInput, type DealMissionCheck } from "./outcome-pack-model"
+import { buildGeneralDealMissionInput, type DealMissionCheck, type MissionStart } from "./outcome-pack-model"
 
 const PackId = z.enum([
   "deal_to_verified_closing_readiness",
@@ -43,11 +46,20 @@ function verificationState(value: unknown): string | null {
   return typeof state === "string" ? state : null
 }
 
-export function OutcomePacks({ root, run, onStart }: {
+type Props = {
   root: PeWorldRootRef | null
   run: WorkAggregateView["outcomePack"]
-  onStart: (packId: PackIdValue, mode: PackMode, title: string, input: Record<string, unknown>) => Promise<void>
-}) {
+  onStart: MissionStart
+}
+
+export function OutcomePacks(props: Props) {
+  const pathname = usePathname()
+  const scope = usePrivateRequestScope(`outcome-packs:${pathname}:${props.root?.entityType ?? "none"}:${props.root?.entityId ?? "none"}`)
+  if (!scope.allowed) return null
+  return <OutcomePacksContent key={scope.key} {...props} scopeKey={scope.key} isCurrent={scope.isCurrent} />
+}
+
+function OutcomePacksContent({ root, run, onStart, scopeKey, isCurrent }: Props & { scopeKey: string; isCurrent: (key: string) => boolean }) {
   const [open, setOpen] = useState(false)
   const [catalog, setCatalog] = useState<OutcomePack[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -56,6 +68,7 @@ export function OutcomePacks({ root, run, onStart }: {
   const [busy, setBusy] = useState(false)
   const [reload, setReload] = useState(0)
   const [generalObjective, setGeneralObjective] = useState("")
+  const [acquisitionOpen, setAcquisitionOpen] = useState(false)
   const [generalCheck, setGeneralCheck] = useState<DealMissionCheck>("closing_readiness")
   const dealId = root?.entityType === "pe_deal" ? root.entityId : null
 
@@ -65,22 +78,23 @@ export function OutcomePacks({ root, run, onStart }: {
     setCatalog(null)
     setError(null)
     void centropyGet<unknown>("outcome-packs").then((result) => {
-      if (!active) return
+      if (!active || !isCurrent(scopeKey)) return
       setCatalog(z.object({ packs: Pack.array() }).parse(result).packs)
       setError(null)
     }).catch((cause) => {
-      if (active) setError(cause instanceof Error ? cause.message : "Outcome Pack catalog unavailable")
+      if (active && isCurrent(scopeKey)) setError(cause instanceof Error ? cause.message : "Outcome Pack catalog unavailable")
     })
     return () => { active = false }
-  }, [open, reload])
+  }, [open, reload, scopeKey, isCurrent])
 
   useEffect(() => {
     setSelected(null)
     setGeneralObjective("")
+    setAcquisitionOpen(false)
   }, [dealId])
 
   async function start(pack: OutcomePack) {
-    if (!dealId || busy) return
+    if (!dealId || busy || !isCurrent(scopeKey)) return
     setBusy(true)
     setError(null)
     try {
@@ -89,11 +103,12 @@ export function OutcomePacks({ root, run, onStart }: {
         ? buildGeneralDealMissionInput({ dealId, mode, objective: generalObjective, check: generalCheck })
         : { dealId, mode }
       await onStart(pack.definition.id, mode, general ? generalObjective.trim() : pack.definition.title, input)
+      if (!isCurrent(scopeKey)) return
       setSelected(null)
       setOpen(false)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The mission was not accepted")
-    } finally { setBusy(false) }
+      if (isCurrent(scopeKey)) setError(cause instanceof Error ? cause.message : "The mission was not accepted")
+    } finally { if (isCurrent(scopeKey)) setBusy(false) }
   }
 
   if (!dealId && !run) return null
@@ -125,7 +140,9 @@ export function OutcomePacks({ root, run, onStart }: {
           <p>Recorded runs: {pack.readiness.metrics.verifiedRuns} verified of {pack.readiness.metrics.totalRuns} terminal; coverage {Math.round(pack.readiness.metrics.verificationCoverage * 100)}%.</p>
           {pack.readiness.gates.some((gate) => !gate.passed) ? <p className="ct-missions__caveat"><CircleAlert size={13} aria-hidden /> Autopilot gates unmet: {pack.readiness.gates.filter((gate) => !gate.passed).map((gate) => words(gate.code)).join(", ")}.</p> : null}
           {pack.definition.id === "general_operator_objective" ? <>
-            <p>This builder binds the general mission to the selected Deal. State the exact objective and choose the canonical condition that must pass.</p>
+            <button type="button" aria-expanded={acquisitionOpen} onClick={() => setAcquisitionOpen(value => !value)}>{acquisitionOpen ? "Close acquisition builder" : "Build a full acquisition mission"}</button>
+            {acquisitionOpen && dealId ? <AcquisitionMissionBuilder dealId={dealId} mode={mode} onStart={onStart} disabled={!pack.setting.enabled || (mode === "autopilot" && !pack.readiness.eligible)} /> : null}
+            <p>This general objective builder binds a smaller mission to the selected Deal. State its exact objective and choose its canonical condition.</p>
             <label>Objective <textarea value={generalObjective} maxLength={10_000} onChange={(event) => setGeneralObjective(event.target.value)} placeholder="State the bounded outcome for this Deal" /></label>
             <label>Completion check <select value={generalCheck} onChange={(event) => setGeneralCheck(event.target.value as DealMissionCheck)}><option value="closing_readiness">Closing readiness is eligible</option><option value="open_requests">No open Deal requests</option><option value="critical_dependencies">No unresolved critical dependencies</option></select></label>
           </> : null}

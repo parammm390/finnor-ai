@@ -30,6 +30,9 @@ export async function projectEnterpriseExactControlObservation(ctx:PeMutationCon
 }
 /** S2 factual measurement adapter. This validates an exact primary acquisition,
  * not a causal intervention or an experiment's protected qualification. */
+export function selectPrimaryConsent(ctx:PeMutationContext,input:Omit<Parameters<typeof assessPrimaryMeasurement>[1],'consent'>&{consents:import('@finnor/shared-types').PrimaryConsent[]}){
+ return input.consents.find(consent=>assessPrimaryMeasurement(ctx,{...input,consent}).eligible);
+}
 export function assessPrimaryMeasurement(ctx:PeMutationContext,input:{
  assertion:import('@finnor/shared-types').DiligenceAssertion;
  source:import('@finnor/shared-types').PrimarySourceProfile;
@@ -40,7 +43,7 @@ export function assessPrimaryMeasurement(ctx:PeMutationContext,input:{
 }):{eligible:boolean;reasons:string[];sourceClass:import('@finnor/shared-types').DiligenceSourceClass;protectedAdmission:null}{
  const {assertion:a,source:s,consent:c,authority:p,semantics:m}=input,reasons:string[]=[],now=Date.parse(input.at);
  const subset=(x:string[],y:string[])=>x.every(k=>y.includes(k));
- if([s,c,p,m].some(v=>v.environment!=='DEVELOPMENT'||now<Date.parse(v.validFrom)||now>=Date.parse(v.expiresAt)))reasons.push('PRIMARY_GOVERNANCE_NOT_VALID');
+ if([s,c,p,m].some(v=>v.environment!==s.environment||now<Date.parse(v.validFrom)||now>=Date.parse(v.expiresAt)))reasons.push('PRIMARY_GOVERNANCE_NOT_VALID');
  if([s.legalEntityId,c.legalEntityId,m.legalEntityId].some(id=>id!==a.semantics.legalEntityId)||!p.legalEntityIds.includes(a.semantics.legalEntityId))reasons.push('PRIMARY_LEGAL_ENTITY_MISMATCH');
  if(c.authorizedActorId!==principal(ctx)||!c.sourceProfileIds.includes(s.profileId)||c.rightsRef.contentDigest!==s.rightsRef.contentDigest||!c.purposes.includes(s.purpose)||!s.products.some(v=>c.products.includes(v)))reasons.push('PRIMARY_CONSENT_ACTOR_SOURCE_PURPOSE_MISMATCH');
  if(!subset(a.semantics.accountOrParticipantIds,s.accountOrParticipantIds)||!subset(a.semantics.accountOrParticipantIds,c.accountOrParticipantIds)||Date.parse(a.semantics.periodStart)<Date.parse(c.periodStart)||Date.parse(a.semantics.periodEnd)>Date.parse(c.periodEnd))reasons.push('PRIMARY_CONSENT_SCOPE_TOO_NARROW');

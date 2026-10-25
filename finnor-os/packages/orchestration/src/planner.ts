@@ -3,6 +3,7 @@
 // The model is a proposal source only. This file never inserts DomainAction rows.
 
 import { and, desc, eq, inArray, lte } from "drizzle-orm";
+import {redactFinancialInspection} from './financial-context';
 import { z } from "zod";
 import {
   OPERATIONAL_QUERY_INTENTS,
@@ -39,10 +40,10 @@ import {
   type PlanningWorldSnapshot,
 } from "@finnor/planning";
 import { canExerciseAuthority } from "@finnor/authority";
-import { redactStructured, redactText, restoreTokens } from "@finnor/security";
+import { redactStructured, redactReversibleText, restoreTokens } from "@finnor/security";
 import { ACTION_HARDENING_SPEC } from "../../../scripts/release/action-hardening-spec";
 import { resolveProviderForPurpose, type LLMChannel, type LLMProvider } from "./llm";
-import { groundEntitiesWithDb, groundReservedActionWithDb } from "./compiler";
+import { groundActionReferencesWithDb, groundReservedActionWithDb } from "./compiler";
 import { validateOperationalQueryRequest } from "./fast-read-lane";
 import { authorityResourcesFromPayload, queryAuthorityRequest } from "./authority-runtime";
 import type { PluginRegistry } from "./plugin-registry";
@@ -62,7 +63,8 @@ export { clarificationContinuationAction, enforceExternalResearchRoute, safeRead
 const CandidateEnvelopeSchema = z.object({ candidates: z.array(z.unknown()).min(1).max(4) }).passthrough();
 const CHANNEL_AWARE_ANSWER_ACTIONS = new Set(["search_web"]);
 const IC_PREPARATION_PROPOSER_ACTIONS = new Set([
-  "create_underwriting_run", "open_ic_case", "begin_ic_preparation", "create_ic_deck_draft", "create_ic_memo_draft",
+  "start_primary_diligence",
+  "start_acquisition_evaluation", "create_underwriting_run", "open_ic_case", "begin_ic_preparation", "create_ic_deck_draft", "create_ic_memo_draft",
   "select_ic_memo_version", "select_ic_underwriting_run", "create_ic_question",
   "request_ic_memo_review", "prepare_ic_recommendation", "prepare_ic_decision_proposal",
   "delegate_objective", "clarification_request", "search_web",
@@ -207,7 +209,7 @@ function plannerConstraintContext(constraints: ConstraintSet): Record<string, un
 /** Preserve the canonical refs and effect fences the proposer must reason over,
  * while leaving full capability metadata, hashes, and policy revisions with the
  * deterministic compiler that actually validates every proposed node. */
-function plannerSnapshotContext(snapshot: PlanningWorldSnapshot): Record<string, unknown> {
+function plannerSnapshotContext(snapshot: PlanningWorldSnapshot,goal?:GoalSpec,planningContext?:unknown): Record<string, unknown> {
   const dealId = snapshot.canonicalEntities.find((entity) => entity.kind === "entity" && entity.type === "pe_deal")?.id;
   const businessRoot = snapshot.businessRoot ?? (dealId ? { entityType: "pe_deal", entityId: dealId } : null);
   const availableReads = snapshot.capabilities
@@ -216,6 +218,7 @@ function plannerSnapshotContext(snapshot: PlanningWorldSnapshot): Record<string,
       const intent = item.capability.startsWith("query:") ? item.capability.slice("query:".length) : item.capability;
       const request = intent === "pe_world_state" && businessRoot
         ? { intent, root: businessRoot }
+        : ['acquisition_decision_v1','primary_diligence_v1'].includes(intent)&&dealId?{intent,workId:snapshot.work.id,dealId}
         : PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS.some((value) => value === intent) && dealId
           ? { intent, dealId }
           : item.requiredReferences.length === 0 ? { intent } : null;
@@ -223,6 +226,27 @@ function plannerSnapshotContext(snapshot: PlanningWorldSnapshot): Record<string,
       const valid = validateOperationalQueryRequest(request);
       return valid.success ? [{ request: valid.request }] : [];
     });
+  const addNativeRead=(request:unknown)=>{
+    const raw=record(request),intent=String(raw.intent??'');
+    if(!['harness_program_v1','acquisition_decision_v1','primary_diligence_v1'].includes(intent)||raw.workId!==snapshot.work.id
+      ||['acquisition_decision_v1','primary_diligence_v1'].includes(intent)&&raw.dealId!==dealId
+      ||!snapshot.capabilities.some(c=>c.kind==='query'&&c.capability==='query:'+intent&&c.available&&c.health!=='unavailable'))return;
+    const valid=validateOperationalQueryRequest(request);if(valid.success)availableReads.push({request:valid.request});
+  };
+  // Native programme criteria already contain an exact accepted Work/ref. A
+  // capability label without its request does not make that reader usable.
+  for(const c of goal?.criteria??[])if(c.criterion.kind==='canonical_query')addNativeRead(c.criterion.request);
+  const effects=record(planningContext).businessEffects;
+  for(const raw of Array.isArray(effects)?effects:[]){
+    const row=record(raw),effect=record(row.effect),verification=record(row.verification),observed=record(verification.observed);
+    const targets=Array.isArray(effect.targets)?effect.targets.map(record):[];
+    if(row.status==='verified'&&verification.state==='verified'&&record(effect.operation).name==='start_primary_diligence'
+      &&record(effect.source).workId===snapshot.work.id&&observed.workId===snapshot.work.id
+      &&targets.some(t=>t.type==='pe_deal'&&t.id===dealId))addNativeRead({intent:'primary_diligence_v1',dealId,workId:snapshot.work.id,programmeId:observed.id});
+    if(row.status==='verified'&&verification.state==='verified'&&record(effect.operation).name==='start_acquisition_evaluation'
+      &&record(effect.source).workId===snapshot.work.id&&observed.workId===snapshot.work.id
+      &&targets.some(t=>t.type==='pe_deal'&&t.id===dealId))addNativeRead({intent:'acquisition_decision_v1',dealId,workId:snapshot.work.id,decisionId:observed.id});
+  }
   return {
     capturedAt: snapshot.capturedAt,
     work: snapshot.work,
@@ -237,7 +261,7 @@ function plannerSnapshotContext(snapshot: PlanningWorldSnapshot): Record<string,
     sourceRefs: snapshot.sourceRefs,
     sourceHealth: snapshot.sourceHealth,
     authority: snapshot.authority,
-    availableReads,
+    availableReads:[...new Map(availableReads.map(r=>[sha256(r.request),r])).values()],
     unavailableCapabilities: snapshot.capabilities
       .filter((item) => !item.available || item.health === "unavailable")
       .map((item) => item.capability),
@@ -246,12 +270,16 @@ function plannerSnapshotContext(snapshot: PlanningWorldSnapshot): Record<string,
 
 function plannerInspectionContext(inspection: unknown): unknown {
   if (!inspection || typeof inspection !== "object" || Array.isArray(inspection)) return inspection ?? null;
-  const state = redactStructured(inspection) as Record<string, unknown>;
+  const state = redactFinancialInspection(inspection) as Record<string, unknown>;
   const objective = record(state.objective);
   // A bounded object keeps its first fields. Put the current IC basis and
   // completed actions before large query results so continuation never loses
   // the evidence that an underwriting run or approval already happened.
-  return boundedPromptValue({
+  const context={
+    reviewedAcquisition: state.reviewedAcquisition??null,
+    ownerReads: state.ownerReads??[],
+    eventWake: boundedPromptValue(state.eventWake??null,4_000),
+    eventWaits: boundedPromptValue(state.eventWaits??[],2_000),
     privateEquityIcBasis: boundedPromptValue(state.privateEquityIcBasis ?? null, 14_000),
     actions: boundedPromptValue(state.actions ?? [], 3_000),
     businessEffects: boundedPromptValue(state.businessEffects ?? [], 3_000),
@@ -260,7 +288,9 @@ function plannerInspectionContext(inspection: unknown): unknown {
     successVerification: boundedPromptValue(objective.successVerification ?? null, 2_000),
     businessState: boundedPromptValue(state.businessState ?? null, 2_000),
     executionAccess: boundedPromptValue(state.executionAccess ?? null, 1_000),
-  }, 24_000);
+  };
+  if(state.reviewedAcquisition&&JSON.stringify(context).length>180_000)throw Error('REVIEWED_ACQUISITION_PLANNER_CONTEXT_BOUND');
+  return state.reviewedAcquisition?context:boundedPromptValue(context,24_000);
 }
 
 function riskFor(actionType: string): { risk: "low" | "medium" | "high"; irreversible: boolean } {
@@ -393,7 +423,7 @@ function boundedIcUnderwritingCandidate(goal: GoalSpec, payload: Record<string, 
 
 function boundedIcActionCandidate(goal: GoalSpec, actionType: string, payload: Record<string, unknown>, candidateKey: string): CandidatePlan {
   const actionKey = actionType === "create_underwriting_run" ? "underwrite_revenue_scenario" : actionType;
-  const supports = goal.criteria.filter((item) => item.criterion.kind === "private_equity_ic_preparation" || item.criterion.kind === "private_equity_ic_deck_draft" || item.criterion.kind === "private_equity_underwriting_scenario" || item.criterion.kind === "decision_evidence").map((item) => item.id);
+  const supports = goal.criteria.map((item) => item.id);
   return {
     version: 1,
     candidateKey,
@@ -526,15 +556,24 @@ function icReviewCandidate(goal: GoalSpec, planningContext: unknown): CandidateP
   }, "grounded-ic-review-readiness");
 }
 
+function icRunForWork(goal:GoalSpec,snapshot:PlanningWorldSnapshot,basis:Record<string,unknown>):Record<string,unknown>|null{
+  const runs=Array.isArray(basis.recentRuns)?basis.recentRuns.map(record):[];
+  const acquisition=record(basis.acquisitionDecision);
+  const required=goal.criteria.some(item=>item.criterion.kind==='private_equity_ic_preparation'&&item.criterion.requireAcquisition);
+  if(basis.acquisitionDecision!=null||required){
+    if(acquisition.status!=='TESTED'||typeof acquisition.primaryUnderwritingRunId!=='string')return null;
+    return runs.find(run=>run.id===acquisition.primaryUnderwritingRunId&&run.workId===snapshot.work.id&&run.status==='SUCCEEDED'&&run.validity==='VALID')??null;
+  }
+  return runs.find(run=>run.workId===snapshot.work.id&&run.status==='SUCCEEDED'&&run.validity==='VALID'&&typeof run.scenarioId==='string')??null;
+}
+
 function icExistingCaseRunCandidate(goal: GoalSpec, snapshot: PlanningWorldSnapshot, planningContext: unknown): CandidatePlan | null {
   if (!goal.criteria.some((item) => item.criterion.kind === "private_equity_ic_preparation")) return null;
   const inspection = record(planningContext);
   const basis = record(inspection.privateEquityIcBasis);
   const actions = Array.isArray(inspection.actions) ? inspection.actions.map(record) : [];
   if (actions.some((item) => ["open_ic_case", "select_ic_underwriting_run"].includes(String(item.actionType)))) return null;
-  const runs = Array.isArray(basis.recentRuns) ? basis.recentRuns.map(record) : [];
-  const run = runs.find((item) => item.workId === snapshot.work.id && item.status === "SUCCEEDED"
-    && item.validity === "VALID" && typeof item.scenarioId === "string");
+  const run=icRunForWork(goal,snapshot,basis);
   if (!run || typeof run.id !== "string") return null;
   const cases = Array.isArray(basis.icCases) ? basis.icCases.map(record).filter((item) => item.investmentCaseId === run.investmentCaseId
     && !["DECIDED", "WITHDRAWN", "SUPERSEDED"].includes(String(item.state))) : [];
@@ -553,9 +592,7 @@ function icCaseOpeningCandidate(goal: GoalSpec, snapshot: PlanningWorldSnapshot,
   const basis = record(inspection.privateEquityIcBasis);
   const priorActions = Array.isArray(inspection.actions) ? inspection.actions.map(record) : [];
   if (priorActions.some((action) => action.actionType === "open_ic_case")) return null;
-  const runs = Array.isArray(basis.recentRuns) ? basis.recentRuns.map(record) : [];
-  const run = runs.find((item) => item.workId === snapshot.work.id && item.status === "SUCCEEDED"
-    && item.validity === "VALID" && typeof item.scenarioId === "string");
+  const run=icRunForWork(goal,snapshot,basis);
   if (!run || typeof run.id !== "string" || typeof run.investmentCaseId !== "string") return null;
   const investmentCases = Array.isArray(basis.investmentCases) ? basis.investmentCases.map(record) : [];
   if (!investmentCases.some((item) => item.id === run.investmentCaseId && item.state === "active")) return null;
@@ -843,6 +880,9 @@ export class LLMPlanner implements Planner {
       "If a required IC or model identifier is missing, make candidate 1 a native read-only query plan with no actions, using a request from snapshot.availableReads. Put any later mutation in a separate candidate only when every required identifier and input is grounded. Do not create a task as a substitute for underwriting, memo drafting, or IC preparation.",
       "When IC preparation has requireScenario:true, a create_underwriting_run step needs a new inline scenario with a real revenue input node from planningContext.privateEquityIcBasis. Pin baseRunId to the exact SUCCEEDED/VALID canonical base Run in that inspection so all non-overridden model inputs remain known. Derive the stressed value from that Run and label it as an exploratory downside hypothesis, not a reported fact. If no stress percentage was requested, use a clearly labeled 20% downside sensitivity. Propose that single bounded action followed by all required check nodes. Never add a later action that needs an ID this step will create.",
       "For an operational query, copy one exact request object from snapshot.availableReads. request.intent is the bare intent, never a query: capability name; do not put requiredReferences in a request. Deal queries require a grounded Deal UUID; pe_world_state requires a valid root object. Never copy explanatory text or a schema placeholder into an ID field.",
+      'For an acquisition with IC preparation, start_acquisition_evaluation remains available. Required bids, financing cases and constraints must come from the current mandate, never invented. IC uses the checked acquisition-selected run; when no candidate is feasible, use its effective checked base and preserve NO_FEASIBLE_CANDIDATE in the sourced memo. acquisition_decision_v1 without decisionId reads the available financial workspace. A verified start_acquisition_evaluation receipt proves queued analysis only; use its exact decision read in snapshot.availableReads. If QUEUED/RUNNING/WAITING_ANALYSIS, wait using the returned completionEvent and deadlineAt, then reread the same decision. Do not create a replacement analysis to poll progress. A TESTED result covers its declared finite bid/financing domain and stated model assumptions; it grants no execution authority and proves no realized profit. harness_program_v1 reads only the accepted exact Work/programme.',
+      'primary_diligence_v1 without programmeId reads current primary-source permissions and registered owner profiles for this Work and Deal. start_primary_diligence requires exact registered assertions, expectedWorkInputId and existing mandate, authority, consent, source, semantics and budget references. Never invent grants or permissions. Its verified receipt proves accepted work only. Read the exact programme in snapshot.availableReads; while PROGRESS/RECONCILING, wait using its completionEvent and original deadlineAt, then reread it. WAITING/BLOCKED/STOPPED/FAILED preserve the actual remainder and recovery obligations; do not start a replacement programme to refresh a grant or deadline. Independently checked current findings may bind create_underwriting_run.primaryFindingInputs with the exact findingId and, for a discovered facility, economicId. Use explicitInputs only for independently declared model parameters or permitted source inputs. Never paste a primary amount as model provenance. evidenceDerivationInputs bind exact checked data-room derivations through their native owner. A pinned baseRunId cannot combine newly resolved inputs.',
+      'planningContext.reviewedAcquisition is the original reviewed instruction contract, not an authority grant. Preserve its exact assertion/model/input/bid/financing bindings. Resolve future finding IDs from ownerReads by original assertion ID and revision; a whole-population binding does not need an invented economic ID. ownerReads records what an authenticated owner query observed, not a promise of currentness. After the exact eventWake correlation matches a pending owner read, reread that owner before consuming its result. Bound waits by the earlier native and original objective deadlines. IC preparation alone does not satisfy later closing or economic criteria.',
       "Use native canonical reads and typed domain capabilities for the requested work. A web result cannot substitute for a Deal record or underwriting run. Do not propose a message to a recipient unless the exact party identity and permitted channel are grounded in the supplied context.",
       "Do not add send_message, place_call, or clarification_request to an analysis task unless the instruction actually requires contact or a specific missing input must be requested. An empty missingFields array is invalid. For recipient and workRef objects, use the exact nested field names in the payload schema, not generic kind/type/id references.",
       "search_web and clarification_request are action types, not node kinds or operational query intents. Node kind must be exactly query, action, wait, or check.",
@@ -1053,7 +1093,7 @@ export class LLMPlanner implements Planner {
           // nulls and every other malformed value still reach the compiler.
           if (schema.safeParse(withoutAbsentOptionals).success) payload = withoutAbsentOptionals;
         }
-        if (node.actionType === "create_underwriting_run" && !payload.baseRunId) {
+        if (node.actionType === "create_underwriting_run" && !payload.baseRunId&&!payload.explicitInputs&&!payload.primaryFindingInputs&&!payload.evidenceDerivationInputs) {
           const baseRunId = icPinnedBaseRun(planningContext, payload);
           if (baseRunId) payload = { ...payload, baseRunId };
         }
@@ -1103,7 +1143,7 @@ export class LLMPlanner implements Planner {
     if (continuation) return candidateForAction(continuation, goal, "deterministic-continuation");
     // Public/current/source-backed reads have one registered execution path. They
     // do not need a model to choose between capabilities.
-    const researchRead = safeReadFallbackForInstruction(planningInstruction, allowedActionTypes);
+    const researchRead = safeReadFallbackForInstruction(planningInstruction, allowedActionTypes,Boolean(interactionBusinessRoot(opts.operatingContext?.interactionContext??undefined)||opts.operatingContext?.referencedEntities.some(r=>r.entityType==='pe_deal')));
     if (researchRead) return candidateForAction(researchRead, goal, "deterministic-research");
     return null;
   }
@@ -1149,7 +1189,7 @@ export class LLMPlanner implements Planner {
               const reserved = params.reservedActionIdentities?.[node.key];
               const fields = await withTenant(params.tenantContext.tenantId, (db) => reserved
                 ? groundReservedActionWithDb(db, params.tenantContext.tenantId, node.actionType, groundedPayload, reserved)
-                : groundEntitiesWithDb(db, params.tenantContext.tenantId, groundedPayload));
+                : groundActionReferencesWithDb(db, params.tenantContext.tenantId,node.actionType,groundedPayload,{workId:params.snapshot.work.id,principalId:params.tenantContext.employeeId??params.tenantContext.userId}), params.tenantContext.employeeId ?? params.tenantContext.userId);
               const rejected = fields.filter((field) => field.status !== "verified");
               grounded = rejected.length === 0;
               groundingErrors.push(...rejected.map((field) => `${field.field}:${field.status}`));
@@ -1346,11 +1386,15 @@ export class LLMPlanner implements Planner {
     // that path so a long unrelated action catalog cannot crowd out its exact
     // payload fields or completion checks. The compiler still enforces the
     // immutable full capability and policy snapshot.
-    const allowedActionTypes = goal.criteria.some((criterion) => criterion.criterion.kind === "private_equity_ic_preparation")
+    const inspection=record(opts.planningContext),reviewedAcquisition=record(inspection.reviewedAcquisition);
+    const acquisitionPending=Boolean(reviewedAcquisition.request)&&!(Array.isArray(inspection.ownerReads)&&inspection.ownerReads.map(record).some(read=>read.intent==='acquisition_decision_v1'&&read.projectionComplete===true&&record(read.data).status==='TESTED'&&record(read.data).completeSearch===true));
+    const icSatisfied=Array.isArray(record(record(inspection.objective).successVerification).results)
+      &&(record(record(inspection.objective).successVerification).results as unknown[]).map(record).some(result=>result.kind==='private_equity_ic_preparation'&&result.satisfied===true);
+    const allowedActionTypes = !reviewedAcquisition.request&&goal.criteria.some((criterion) => criterion.criterion.kind === "private_equity_ic_preparation")
       ? allActionTypes.filter((actionType) => IC_PREPARATION_PROPOSER_ACTIONS.has(actionType))
       : allActionTypes;
     const planningInstruction = plannerContinuationInstruction(instruction, memory.shortTerm);
-    const deterministic = exactGrowthScenarioCandidate(goal, opts.planningContext)
+    const deterministic = (acquisitionPending||icSatisfied?null:exactGrowthScenarioCandidate(goal, opts.planningContext)
       ?? parallelDealRecheckCandidate(goal, snapshot, opts.planningContext)
       ?? icBeginPreparationCandidate(goal, opts.planningContext)
       ?? icDeckDraftCandidate(goal, opts.planningContext)
@@ -1362,13 +1406,13 @@ export class LLMPlanner implements Planner {
       ?? icExistingCaseRunCandidate(goal, snapshot, opts.planningContext)
       ?? icCaseOpeningCandidate(goal, snapshot, opts.planningContext)
       ?? icRevenueSensitivityCandidate(goal, opts.planningContext)
-      ?? icGroundingReadCandidate(goal, snapshot, opts.planningContext)
+      ?? icGroundingReadCandidate(goal, snapshot, opts.planningContext))
       ?? this.deterministicCandidate(instruction, planningInstruction, memory, allowedActionTypes, goal, opts);
     if (!deterministic && goal.criteria.some((criterion) => criterion.criterion.kind === "private_equity_underwriting_scenario")) {
       throw new Error("EXACT_GROWTH_BASE_UNAVAILABLE: no valid canonical base Run with recorded growth-rate and exit-multiple inputs is available for the selected Deal");
     }
     const prior = record(opts.planningContext).priorIterations;
-    if (!deterministic && goal.criteria.some((item) => item.criterion.kind === "private_equity_ic_preparation")
+    if (!deterministic && !acquisitionPending&&!icSatisfied&&goal.criteria.some((item) => item.criterion.kind === "private_equity_ic_preparation")
       && Array.isArray(prior) && prior.map(record).some((item) => item.decisionKind === "complete" && item.outcome !== "completed")) {
       throw new Error("IC_PREPARATION_VERIFICATION_UNMET: the exact success check already failed; do not repeat a check-only plan without new canonical evidence");
     }
@@ -1377,15 +1421,16 @@ export class LLMPlanner implements Planner {
     if (deterministic) {
       candidates = [this.normalizeCandidate(deterministic, new Map(), opts.channel ?? "text", opts.operatingContext?.interactionContext, opts.planningContext)];
     } else {
-      const redacted = redactText(planningInstruction);
+      const redacted = redactReversibleText(planningInstruction);
+      const modelGoal = redactStructured(goal);
       try {
         const raw = await this.routedProvider(opts.channel ?? "text").complete({
-          system: this.systemPrompt(verticalKey, allowedActionTypes, goal),
+          system: this.systemPrompt(verticalKey, allowedActionTypes, modelGoal),
           user: JSON.stringify({
             instruction: redacted.value,
-            goal: boundedPromptValue(goal, 12_000),
+            goal: boundedPromptValue(modelGoal, 12_000),
             constraints: plannerConstraintContext(constraints),
-            snapshot: plannerSnapshotContext(snapshot),
+            snapshot: plannerSnapshotContext(snapshot,goal,opts.planningContext),
             operatingContext: plannerOperatingContext(opts.operatingContext),
             shortTermContext: plannerShortTermContext(planningInstruction, memory.shortTerm),
             memory: plannerMemoryContext(memory),
@@ -1418,7 +1463,7 @@ export class LLMPlanner implements Planner {
           // bounded read or scenario step from reaching the deterministic compiler.
           candidates = [groundedIcStep];
         } else {
-        const fallback = safeReadFallbackForInstruction(planningInstruction, allowedActionTypes);
+        const fallback = safeReadFallbackForInstruction(planningInstruction, allowedActionTypes,Boolean(snapshot.businessRoot||snapshot.canonicalEntities.some(r=>r.type==='pe_deal')));
         if (!fallback) throw error;
         candidates = [candidateForAction(fallback, goal, "provider-fallback-research")];
         }

@@ -1,4 +1,5 @@
 import { verify } from "node:crypto";
+import {assertEvidenceRunTransactionCurrent} from '../evidence-execution/consumer';
 import type { PoolClient } from "pg";
 import type { Db } from "@finnor/db";
 import { appendEvidenceVersionTx, createEvidenceSourceTx } from "@finnor/memory";
@@ -58,6 +59,12 @@ export async function assertClosingCurrent(ctx: PeMutationContext, q: ClosingPro
     const auth = (await client.query("SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1 FOR SHARE", [q.tenant_id])).rows[0];
     if (actor?.status !== "active" || actor.role !== "owner" || Number(auth?.revision ?? 1) !== q.authority_revision) throw new ClosingError("CLOSING_AUTHORITY_REVOKED_OR_CHANGED");
     if (input?.id !== q.work_input_id || closingDigest(input.body) !== q.work_input_digest) throw new ClosingError("CLOSING_EXACT_WORK_INPUT_CHANGED");
+    const reviewedAcquisition=(await client.query("SELECT 1 FROM finnor_os.outcome_pack_runs WHERE tenant_id=$1 AND work_id=$2 AND input ? 'acquisitionRequest'",[q.tenant_id,q.work_id])).rowCount;
+    if(reviewedAcquisition){
+      const intake=(await client.query("SELECT body->'acquisitionApproval' approval FROM finnor_os.pe_closing_events WHERE tenant_id=$1 AND programme_id=$2 AND kind='LEGAL_SPEC_INTAKE' AND idempotency_key='legal-intake'",[q.tenant_id,q.id])).rows[0];
+      if(!intake?.approval?.icCaseId||!intake.approval.acquisition?.runId||!q.dependency_pins.some(d=>d.key==='ic-approval:'+intake.approval.icCaseId))throw new ClosingError("CLOSING_REVIEWED_ACQUISITION_APPROVAL_REQUIRED",409);
+      await assertEvidenceRunTransactionCurrent(client,q.tenant_id,intake.approval.acquisition.runId);
+    }
     const pins = await revisions(ctx, q.dependency_pins.map(p => p.key), client, true);
     if (!sameRevisions(q.dependency_pins, pins)) throw new ClosingError("CLOSING_SOURCE_RIGHTS_OR_SPEC_DEPENDENCY_CHANGED");
     if (q.plan_revision_id) {

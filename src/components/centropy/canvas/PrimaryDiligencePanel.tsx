@@ -22,13 +22,15 @@ function value(v:Value){return v.kind==="EXACT"?quantity(v.quantity):v.kind==="S
 
 /** Mounted ordinary Work, not a test-only artifact viewer. Packets supply frozen
  * meaning and existing owner references, never a result, source reply or finding. */
-export function PrimaryDiligencePanel({root,workId,investigation,onSelectWork}:{root:Root;workId:string|null;investigation:{threadId:string;expectedRevision:number};onSelectWork?:(id:string)=>void}){
+export function PrimaryDiligencePanel({root,workId,programmeIds,investigation,onSelectWork}:{root:Root;workId:string|null;programmeIds?:string[];investigation:{threadId:string;expectedRevision:number};onSelectWork?:(id:string)=>void}){
  const {session}=useCentropyAuth(),pathname=usePathname(),router=useRouter(),search=useSearchParams()
- const identity=`${session?.user.id??"signed-out"}:${session?.access_token??""}:${root.entityType}:${root.entityId}:${workId??""}:${investigation.threadId}`
+ const parameter=search.get("primaryProgramme"),requestedProgramme=parameter&&/^[0-9a-f-]{36}$/i.test(parameter)?parameter:null
+ const selectedParameter=requestedProgramme??(programmeIds?.length===1?programmeIds[0]:null)
+ const selectionIds=[...new Set([...(programmeIds??[]),...(requestedProgramme?[requestedProgramme]:[])])]
+ const identity=`${session?.user.id??"signed-out"}:${session?.access_token??""}:${root.entityType}:${root.entityId}:${workId??""}:${investigation.threadId}:${selectedParameter??""}`
  const identityRef=useRef(identity),epoch=useRef(0),readSequence=useRef(0),pending=useRef<number|null>(null);identityRef.current=identity
  const [packet,setPacket]=useState(""),[mode,setMode]=useState("protected"),[busy,setBusy]=useState(false),[message,setMessage]=useState("Supply a frozen assertion register and current source, consent, authority and original S5 grant references.")
  const [programmeId,setProgramme]=useState<string|null>(null),[read,setRead]=useState<{identity:string;data:Read}|null>(null)
- const parameter=search.get("primaryProgramme")
  const clear=useCallback(()=>{setRead(null)},[])
  const refresh=useCallback(async(id:string,generation:number)=>{
   if(pending.current!==null||document.visibilityState!=="visible"||!navigator.onLine)return
@@ -39,7 +41,7 @@ export function PrimaryDiligencePanel({root,workId,investigation,onSelectWork}:{
    setRead({identity,data});setMessage(data.reason??data.status)
   }catch(error){if(generation!==epoch.current||sequence!==readSequence.current||identityRef.current!==identity)return;clear();if(error instanceof CentropyApiError&&[401,403,404].includes(error.status))setPacket("");setMessage(error instanceof CentropyApiError&&[401,403,404].includes(error.status)?"Primary evidence is unavailable in your current access or consent scope.":"Current evidence could not be revalidated. Private values cleared.")}
  },[identity,root.entityType,root.entityId,workId,clear])
- useEffect(()=>{epoch.current++;pending.current=null;clear();setBusy(false);setProgramme(parameter&&/^[0-9a-f-]{36}$/i.test(parameter)?parameter:null)},[identity,parameter,clear])
+ useEffect(()=>{epoch.current++;pending.current=null;clear();setBusy(false);setProgramme(selectedParameter&&/^[0-9a-f-]{36}$/i.test(selectedParameter)?selectedParameter:null)},[identity,selectedParameter,clear])
  useEffect(()=>{setPacket("")},[identity])
  useEffect(()=>{
   if(!programmeId||!session)return
@@ -72,6 +74,7 @@ export function PrimaryDiligencePanel({root,workId,investigation,onSelectWork}:{
  async function cancel(){if(!programmeId||pending.current!==null||!session)return;const generation=++epoch.current;pending.current=generation;clear();setBusy(true);try{await centropyPost("company-brain/primary-cancel",{programmeId});if(generation===epoch.current&&identityRef.current===identity)setMessage("Cancellation requested. Existing requests, charges and unknown exposure remain accountable.")}catch{if(generation===epoch.current&&identityRef.current===identity)setMessage("Cancellation is not confirmed. Private values cleared.")}finally{if(pending.current===generation){pending.current=null;if(identityRef.current===identity)setBusy(false)}}}
  async function advance(){if(!current||pending.current!==null||!session)return;const generation=++epoch.current;pending.current=generation;clear();setBusy(true);try{await centropyPost("company-brain/primary-advance",{...current.advanceBindings,programmeRef:current.ref,expectedRevision:Number(current.ref.revision),triggerRef:current.nextObligationRefs[0]??current.ref});if(pending.current===generation)pending.current=null;await refresh(current.programmeId,generation)}catch{if(generation===epoch.current&&identityRef.current===identity)setMessage("The current authority, evidence vector or original remaining grant blocks continuation. No grant or deadline was reset.")}finally{if(pending.current===generation||pending.current===null){pending.current=null;if(identityRef.current===identity)setBusy(false)}}}
  return <section className="ct-evidence" aria-label="Primary reality due diligence">
+  {selectionIds.length>1?<label>Primary diligence programme<select value={programmeId??""} disabled={busy||!session} onChange={event=>{epoch.current++;clear();setProgramme(event.target.value||null);const params=new URLSearchParams(search.toString());if(event.target.value)params.set("primaryProgramme",event.target.value);else params.delete("primaryProgramme");router.replace(`${pathname}?${params}`,{scroll:false})}}><option value="">Choose the analysis to inspect</option>{selectionIds.map(id=><option key={id} value={id}>{id}</option>)}</select></label>:null}
   <p>Primary acquisition is separate from uploaded support and checked computation. Live access, contact and protected activation require authority that this development path does not supply.</p>
   <form onSubmit={start}><label>Frozen material assertion register and current owner references<textarea aria-label="Primary assertion register" value={packet} onChange={e=>setPacket(e.target.value)} required maxLength={1048576} rows={8}/></label>
    <p>Required packet fields: assertions, startingEvidenceRefs, mandateRef, authorityProfileRef, budgetGrantRef, sourceProfileRefs, consentRefs and referenceSemanticsRefs. Exact entity, facility, period, basis and coverage must be explicit. Do not paste credentials or future source replies.</p>

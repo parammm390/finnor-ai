@@ -49,6 +49,7 @@ import {
   verifyBusinessEffectPreconditions,
 } from "./compiler";
 import { classifyExecutionFailure } from "./runtime-bridge";
+import { assertLiveControlBoundaryTx } from "./live-control-boundary";
 import { appendEpisode } from "@finnor/memory/episodic";
 import { advanceWorkflowForActionRequired } from "./workflow";
 import { emitInstructionEvent } from "./instruction-trace";
@@ -465,7 +466,6 @@ type CommitClaim =
  * and request reconciliation; there is no ambiguous approved-but-untracked window. */
 async function beginEffectCommit(loaded: LoadedExecution, fence?: StepFence): Promise<CommitClaim> {
   return withTenant(loaded.action.tenantId, async (db) => {
-    const { assertLiveControlBoundaryTx } = await import("./live-control-boundary");
     await assertLiveControlBoundaryTx(db, loaded.action.tenantId, loaded.action.id, loaded.action.initiatedBy);
     const generationViolation = await orchestrationGenerationViolationTx(db, loaded.action.tenantId, loaded.action);
     if (generationViolation) throw new DurableExecutionBlocked(`Orchestration generation invalidated: ${generationViolation}`);

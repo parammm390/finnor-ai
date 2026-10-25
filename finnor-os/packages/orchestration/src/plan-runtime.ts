@@ -12,7 +12,7 @@ import {
 } from "@finnor/db";
 import type { DomainAction, DomainPolicy, TenantContext } from "@finnor/shared-types";
 import { DETERMINISTIC_PLAN_COMPILER_VERSION, sha256, type PlanActionNode, type PlanViolation } from "@finnor/planning";
-import { buildCommandGraph, groundEntitiesWithDb } from "./compiler";
+import { buildCommandGraph, groundActionReferencesWithDb } from "./compiler";
 import type { PlanningResult } from "./planner";
 
 export class PlanCompilationError extends Error {
@@ -182,7 +182,7 @@ export async function selectAndMaterializePlan(params: Parameters<typeof selectP
         throw new PlanCompilationError([{ code: "POLICY_CONFLICT", candidateKey: selected.candidateKey, nodeKey: node.id, message: "Effective policy changed before PlanGraph materialization" }]);
       }
       const requiresConfirmation = node.authority === "approval_required" || policy?.requiresConfirmation === true;
-      const grounding = await groundEntitiesWithDb(db, params.tenantContext.tenantId, node.payload);
+      const grounding = await groundActionReferencesWithDb(db, params.tenantContext.tenantId,node.actionType,node.payload,{workId:params.workId,principalId:params.tenantContext.employeeId??params.tenantContext.userId});
       if (grounding.some((field) => field.status !== "verified")) {
         throw new PlanCompilationError([{ code: "UNGROUNDED_REFERENCE", candidateKey: selected.candidateKey, nodeKey: node.id, message: "Grounding changed before PlanGraph materialization" }]);
       }
@@ -194,7 +194,6 @@ export async function selectAndMaterializePlan(params: Parameters<typeof selectP
         policyId: policy?.id || null,
         policyVersion: policy?.version ?? null,
         status: "draft" as const,
-        groundedPayload: grounding,
         compiledGraph: buildCommandGraph(node.actionType, requiresConfirmation),
         planId: revision.id,
         dependsOn: node.dependsOn.flatMap((dependency) => actionIdByNode.get(dependency) ?? []),
@@ -212,7 +211,7 @@ export async function selectAndMaterializePlan(params: Parameters<typeof selectP
       eq(domainActions.tenantId, params.tenantContext.tenantId),
       eq(domainActions.planRevisionId, revision.id),
     )).limit(actionNodes.length);
-  });
+  }, params.tenantContext.employeeId ?? params.tenantContext.userId);
   const byNode = new Map(rows.map((row) => [row.planNodeId, row]));
   const ordered = actionNodes.map((node) => byNode.get(node.id)).filter((row): row is NonNullable<typeof row> => Boolean(row));
   if (ordered.length !== actionNodes.length) throw new Error("PlanGraph materialization did not produce exactly one DomainAction per action node");

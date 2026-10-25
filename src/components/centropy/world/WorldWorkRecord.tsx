@@ -8,6 +8,7 @@ import { CausalReplayPanel } from "../canvas/CausalReplayPanel"
 import { PendingEffects } from "../thread/PendingEffects"
 import { HumanControlDesk } from "../controls/HumanControlDesk"
 import { ClosingProgrammePanel } from "../closing/ClosingProgrammePanel"
+import {WorkEconomicOutcome} from './WorkEconomicOutcome'
 import { EconomicActionTheoryPanel } from "../canvas/EconomicActionTheoryPanel"
 import { StrategicResponsePanel } from "../canvas/StrategicResponsePanel"
 import { InteractionProtocolPanel } from "../canvas/InteractionProtocolPanel"
@@ -69,6 +70,7 @@ export function WorldWorkRecord({ workId, root, onChanged }: { workId: string; r
       <div className="ct-world-work__metrics"><div><span>Work</span><strong>{label(aggregate.work.status)}</strong></div><div><span>Verified effects</span><strong>{verified.length} / {aggregate.businessEffects.length}</strong></div><div><span>Finalized receipts</span><strong>{finalized.length} / {aggregate.receipts.length}</strong></div></div>
       <p className="ct-world-work__objective">{aggregate.work.initialInstruction}</p>
       <ClosingProgrammePanel key={workId} workId={workId} onChanged={onChanged} />
+      <WorkEconomicOutcome key={'economic:'+workId} workId={workId} onChanged={onChanged}/>
       {root ? <EconomicActionTheoryPanel key={`${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
       {root ? <StrategicResponsePanel key={`response:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
       {root ? <ConfidentialComputationPanel key={workId} root={root} workId={workId} /> : null}

@@ -47,6 +47,7 @@ export const ClosingIntakeSchema = z.object({
   legalAcceptance: ClosingObservationSchema,
   workId: z.string().uuid().optional(),
   continuation: ClosingWorkContinuationSchema.optional().describe("Exact original full-Work binding; requires workId and does not append an input or replace the goal"),
+  acquisitionIcCaseId:z.string().uuid().optional().describe("Exact finalized committee case for a reviewed acquisition Work; independent closing authority remains required"),
   idempotencyKey: z.string().min(1).max(160),
 }).strict();
 const ProgrammeId = z.object({ programmeId: z.string().uuid() }).strict();

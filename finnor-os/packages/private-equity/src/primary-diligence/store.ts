@@ -7,6 +7,7 @@ import {PeDomainError,type PeMutationContext,type PeWorldRootRef} from '../types
 import {assertDependencies,revisions,codeIdentity,schemaIdentity} from '../evidence-execution/store';
 import {canonical,digest as hash} from '../../../governed-execution/src/canonical';
 import {principal as actor,tx} from '../owner-context';
+import {primaryRuntimeEnvironment,assertPrimarySourceAdmission} from './profile';
 export {actor,tx};
 export {canonical,hash};
 export const unavailable=()=>new PeDomainError('PE_ENTITY_NOT_FOUND','Primary evidence is unavailable in the authenticated scope');
@@ -24,8 +25,9 @@ export function governanceIdentity(body:PrimaryGovernance):{id:string;revision:n
 }
 export async function putGovernance(ctx:PeMutationContext,value:unknown,expectedRef:VReference|null){
  const body=PrimaryGovernanceSchema.parse(value);await currentActor(ctx);
- if(body.environment!=='DEVELOPMENT'||process.env.NODE_ENV==='production'||process.env.FINNOR_V2_PROFILE!=='ordinary_disposable')throw Error('LIVE_SOURCE_AUTHORITY_AND_S8_ADMISSION_UNAVAILABLE');
+ if(body.environment!==primaryRuntimeEnvironment())throw Error('PRIMARY_EXECUTION_PROFILE_MISMATCH');
  if('issuingPrincipalId' in body&&body.issuingPrincipalId!==actor(ctx)||'authorizedActorId' in body&&body.authorizedActorId!==actor(ctx)||'acceptedBy' in body&&body.acceptedBy!==actor(ctx))throw unavailable();
+ if(body.schema==='finnor.primary-source-profile.v1')await assertPrimarySourceAdmission(ctx,body);
  return putOwnerRecord(ctx,body,governanceIdentity(body),expectedRef);
 }
 /** Shared append-only owner registry. Callers validate their registered schema and
@@ -55,7 +57,7 @@ export async function ownerRecord(ctx:PeMutationContext,ref:VReference,c?:PoolCl
 export async function governance<T extends PrimaryGovernance>(ctx:PeMutationContext,ref:VReference,schema:T['schema']|null,c?:PoolClient):Promise<T>{
  const action=async(client:PoolClient)=>{const row=(await client.query('SELECT v.*,h.state FROM finnor_os.primary_governance_versions v JOIN finnor_os.primary_governance_heads h USING(tenant_id,id,revision) WHERE v.tenant_id=$1 AND v.id=$2 AND v.revision=$3',[ctx.auth.tenantId,ref.id,Number(ref.revision)])).rows[0];
   if(!row||row.state!=='CURRENT'||schema!==null&&row.schema_name!==schema||row.semantic_owner!==ref.owner||hash(row.body)!==row.digest||row.digest!==ref.contentDigest)throw Error('CURRENT_EXACT_GOVERNANCE_UNAVAILABLE');
-  const body=PrimaryGovernanceSchema.parse(row.body);if(body.schema!==row.schema_name||ownerBySchema[body.schema]!==ref.owner)throw Error('CURRENT_EXACT_GOVERNANCE_UNAVAILABLE');if(body.environment!=='DEVELOPMENT')throw Error('LIVE_SOURCE_AUTHORITY_AND_S8_ADMISSION_UNAVAILABLE');return body as T;};
+  const body=PrimaryGovernanceSchema.parse(row.body);if(body.schema!==row.schema_name||ownerBySchema[body.schema]!==ref.owner)throw Error('CURRENT_EXACT_GOVERNANCE_UNAVAILABLE');return body as T;};
  return c?action(c):tx(ctx,action,true);
 }
 /** A retained issued obligation is not a current permission. Only the S6
@@ -63,7 +65,7 @@ export async function governance<T extends PrimaryGovernance>(ctx:PeMutationCont
 export async function retainedGovernance<T extends PrimaryGovernance>(ctx:PeMutationContext,ref:VReference,schema:T['schema']):Promise<T>{
  return tx(ctx,async c=>{await currentActor(ctx,c);const row=(await c.query('SELECT * FROM finnor_os.primary_governance_versions WHERE tenant_id=$1 AND id=$2 AND revision=$3 AND issuer_id=$4',[ctx.auth.tenantId,ref.id,Number(ref.revision),actor(ctx)])).rows[0];
   if(!row||row.schema_name!==schema||row.semantic_owner!==ref.owner||row.digest!==ref.contentDigest||hash(row.body)!==row.digest)throw unavailable();
-  const body=PrimaryGovernanceSchema.parse(row.body);if(body.environment!=='DEVELOPMENT')throw unavailable();return body as T;});
+  const body=PrimaryGovernanceSchema.parse(row.body);return body as T;});
 }
 export async function revokeGovernance(ctx:PeMutationContext,ref:VReference,reason:string){
  return tx(ctx,async c=>{await currentActor(ctx,c);const body=(await c.query('SELECT v.*,h.state FROM finnor_os.primary_governance_heads h JOIN finnor_os.primary_governance_versions v USING(tenant_id,id,revision) WHERE h.tenant_id=$1 AND h.id=$2 FOR UPDATE OF h',[ctx.auth.tenantId,ref.id])).rows[0];
@@ -77,6 +79,7 @@ export interface Programme {
  active_claim_token:string|null;active_claim_fence:number|null;principal_artifact_id:string|null;reason:string|null;
  next_obligations:VReference[];required_approvals:VReference[];
 }
+export const primaryCompletionEvent=(p:Pick<Programme,'id'|'work_id'|'revision'>)=>({eventType:'analysis.primary.terminal',resource:{type:'work' as const,id:p.work_id},correlationId:'primary:'+p.id+':'+p.revision});
 export async function programme(ctx:PeMutationContext,id:string,c?:PoolClient,lock=false):Promise<Programme>{
  const action=async(client:PoolClient)=>{const row=(await client.query<Programme>('SELECT * FROM finnor_os.v2_programmes WHERE tenant_id=$1 AND principal_id=$2 AND id=$3'+(lock?' FOR UPDATE':''),[ctx.auth.tenantId,actor(ctx),id])).rows[0];if(!row)throw unavailable();if(hash(row.intake)!==row.intake_digest||hash(row.starting_manifest)!==row.starting_digest)throw Error('FROZEN_PROGRAMME_DIGEST_MISMATCH');return row;};
  return c?action(c):tx(ctx,action,true);
@@ -117,16 +120,17 @@ export async function currentFinding(ctx:PeMutationContext,id:string,client?:Poo
   if(hash(finding)!==row.digest)throw Error('FINDING_DIGEST_MISMATCH');const {contentDigest,...preimage}=finding;if(hash(preimage)!==contentDigest)throw Error('FINDING_CONTENT_DIGEST_MISMATCH');
   // A changed sibling finding invalidates programme progression, not an
   // otherwise current independent scope. Its own exact dependency vector fences it.
-  if(p.cancellation_requested_at||Date.now()>=Date.parse(finding.freshnessAndReacquisitionConditions.expiresAt))throw Error('FINDING_INVALIDATED_EXPIRED_OR_CANCELLED');
+  if(p.cancellation_requested_at||Date.now()>=Date.parse(finding.freshnessAndReacquisitionConditions.expiresAt))throw new PeDomainError('STALE_EVIDENCE_DERIVATION','FINDING_INVALIDATED_EXPIRED_OR_CANCELLED');
   if(p.intake.predecessorRef)await (await import('../bilateral-opportunities/handoff')).resolveBilateralPredecessor(ctx,p.intake,c);
-  const identity=await methodIdentity();if(finding.producerDigest!==identity.code.digest||finding.dependencyLockDigest!==identity.lockDigest||!finding.independentCheckRefs.some(r=>r.contentDigest===identity.checker.contentDigest))throw Error('FINDING_METHOD_OR_CHECKER_CHANGED');
-  await assertDependencies(ctx,finding.invalidationDependencies.map(d=>({...d,nodeIds:[],digest:null})),c,lock);await exactWork(ctx,p,c);
+  const identity=await methodIdentity();if(finding.producerDigest!==identity.code.digest||finding.dependencyLockDigest!==identity.lockDigest||!finding.independentCheckRefs.some(r=>r.contentDigest===identity.checker.contentDigest))throw new PeDomainError('STALE_EVIDENCE_DERIVATION','FINDING_METHOD_OR_CHECKER_CHANGED');
+  try{await assertDependencies(ctx,finding.invalidationDependencies.map(d=>({...d,nodeIds:[],digest:null})),c,lock);await exactWork(ctx,p,c);}
+  catch(error){if(error instanceof Error&&['SOURCE_RIGHTS_MEMBERSHIP_OR_WORK_CHANGED','EXACT_WORK_REVISION_CHANGED'].includes(error.message))throw new PeDomainError('STALE_EVIDENCE_DERIVATION',error.message);throw error;}
   const used=(await c.query('SELECT body FROM finnor_os.s1_primary_observations WHERE tenant_id=$1 AND principal_id=$2 AND programme_id=$3 AND id=ANY($4::uuid[])',[ctx.auth.tenantId,actor(ctx),p.id,finding.actualPrimaryObservationRefs.map(r=>r.id)])).rows.map(r=>r.body as PrimaryObservation);
   if(used.length!==finding.actualPrimaryObservationRefs.length)throw Error('PRIMARY_FINDING_ASSIGNED_OBSERVATION_MISSING');
   const ownerRefs=[...new Map([...used.flatMap(o=>[o.request.consentRef,o.request.sourceProfileRef]),finding.domainProfileRef,p.intake.authorityProfileRef,p.intake.mandateRef,p.intake.budgetGrantRef].map(ref=>[hash(ref),ref])).values()];
   for(const ref of ownerRefs){
-   const body=await governance(ctx,ref,null,c);if(Date.now()>=Date.parse(body.expiresAt))throw Error('GOVERNANCE_EXPIRED');
-   if('retention' in body&&Date.now()>=Date.parse(body.retention.derivativesUntil))throw Error('DERIVATIVE_RETENTION_EXPIRED');
+   const body=await governance(ctx,ref,null,c);if(Date.now()>=Date.parse(body.expiresAt))throw new PeDomainError('STALE_EVIDENCE_DERIVATION','GOVERNANCE_EXPIRED');
+   if('retention' in body&&Date.now()>=Date.parse(body.retention.derivativesUntil))throw new PeDomainError('STALE_EVIDENCE_DERIVATION','DERIVATIVE_RETENTION_EXPIRED');
   }
   return {finding,programme:p};};
  // The predecessor uses this exact scoped client, including read-only reads.

@@ -33,6 +33,8 @@ export interface JobHandlerContract {
   retrySafety: JobRetrySafety;
   /** Only exact registered nonconsequential handlers may opt in. */
   leaseRecovery?: "immediate_after_expiry";
+  /** A short bounded owner must be recoverable before its original deadline. */
+  maxLeaseSeconds?:number;
   /** Production handlers declare their exact class capability in the canonical
    * compute registry. Test-only handlers may omit this. */
   allowedClasses?: readonly WorkloadClass[];
@@ -173,6 +175,7 @@ export class JobQueue {
     if (contract.leaseRecovery !== undefined && (
       contract.leaseRecovery !== "immediate_after_expiry" || contract.retrySafety !== "locally_idempotent"
     )) throw new Error("Immediate expired-lease recovery requires a locally idempotent handler");
+    if(contract.maxLeaseSeconds!==undefined&&(!Number.isInteger(contract.maxLeaseSeconds)||contract.maxLeaseSeconds<3||contract.maxLeaseSeconds>300))throw Error('Job handler has an invalid maximum lease');
     if (this.workloadClass && contract.allowedClasses && !contract.allowedClasses.includes(this.workloadClass)) return;
     this.handlers.set(type, {
       handler,
@@ -419,7 +422,7 @@ export class JobQueue {
                     max_attempts AS "maxAttempts",protocol_version AS "protocolVersion",
                     retry_safety AS "retrySafety",claim_token AS "claimToken",
                     claim_fence AS "claimFence",workload_class AS "workloadClass"`,
-          [candidate.id, this.instanceId, String(this.leaseSeconds), claimToken,
+          [candidate.id, this.instanceId, String(Math.min(this.leaseSeconds,registration.contract.maxLeaseSeconds??this.leaseSeconds)), claimToken,
             registration.contract.retrySafety, candidate.tenantId, candidate.protocolVersion, this.workloadClass],
         );
         if (claimed.rows.length !== 1) {
@@ -492,7 +495,8 @@ export class JobQueue {
     });
     const start = Date.now();
     const claimHeartbeatCallbacks = new Set<() => Promise<boolean>>();
-    const renewEveryMs = Math.max(1_000, Math.floor(this.leaseSeconds * 1_000 / 3));
+    const claimLeaseSeconds=Math.min(this.leaseSeconds,registration?.contract.maxLeaseSeconds??this.leaseSeconds);
+    const renewEveryMs = Math.max(1_000, Math.floor(claimLeaseSeconds * 1_000 / 3));
     let leaseLost = false;
     const renewLease = async (): Promise<void> => {
       const result = await getPool().query(
@@ -503,7 +507,7 @@ export class JobQueue {
          )
          UPDATE job_delivery_attempts SET heartbeat_at=now()
           WHERE id=$6 AND claim_token=$3 AND EXISTS (SELECT 1 FROM renewed)`,
-        [job!.id, this.instanceId, job!.claimToken, job!.claimFence, String(this.leaseSeconds), job!.deliveryAttemptId],
+        [job!.id, this.instanceId, job!.claimToken, job!.claimFence, String(claimLeaseSeconds), job!.deliveryAttemptId],
       );
       if (result.rowCount !== 1) leaseLost = true;
       if (!leaseLost) {

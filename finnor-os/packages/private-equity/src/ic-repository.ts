@@ -207,6 +207,7 @@ function canonicalActor(ctx: PeMutationContext): string {
 
 function actorBoundContext(ctx: PeMutationContext): PeMutationContext {
   const actor = canonicalActor(ctx);
+  if (peProvenance(ctx).createdBy === actor) return ctx;
   return { ...ctx, provenance: { ...ctx.provenance, createdBy: actor } };
 }
 

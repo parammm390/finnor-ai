@@ -1,9 +1,10 @@
 /** Separate counterparty process. The product receives its public descriptor,
  * scoped credential and permitted request, not this administrator's records.
  * This synthetic custodian is not an independently sealed domain-test split. */
-import {createServer} from 'node:http';
+import {createServer as createHttpServer,type RequestListener} from 'node:http';
+import {createServer as createHttpsServer} from 'node:https';
 import {generateKeyPairSync,sign,createHash,timingSafeEqual} from 'node:crypto';
-import {writeFile,open} from 'node:fs/promises';
+import {writeFile,open,readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {PrimaryRequestSchema} from '@finnor/shared-types';
 const directory=process.argv[2];if(!directory||!directory.startsWith('/'))throw Error('OWNED_DIRECTORY_REQUIRED');
@@ -13,7 +14,7 @@ const {publicKey,privateKey}=generateKeyPairSync('ed25519');
 const signed=(body:any)=>({body,signature:sign(null,Buffer.from(canonical(body)),privateKey).toString('base64')});
 const profiles=new Map<string,any>(),requests=new Map<string,any>(),calls:any[]=[];
 const durable=async()=>{const file=await open(join(directory,'source-ledger.json'),'w',0o600);try{await file.writeFile(JSON.stringify({requests:[...requests],calls}));await file.sync();}finally{await file.close();}};
-const server=createServer(async(req,res)=>{
+const handler:RequestListener=async(req,res)=>{
  res.setHeader('content-type','application/json');
  try{
   const url=new URL(req.url??'/','http://127.0.0.1'),credential=String(req.headers.authorization??'').replace(/^Bearer /,''),profile=[...profiles.values()].find(p=>{
@@ -66,9 +67,12 @@ const server=createServer(async(req,res)=>{
   const response=record.rawPages[page];
   if(!response){res.writeHead(404);res.end('{}');return;}res.end(JSON.stringify(response));
  }catch{if(!res.headersSent)res.writeHead(422);res.end('{"code":"CONTROLLED_SOURCE_REQUEST_REFUSED"}');}
-});
+};
+const tls=process.argv[3]==='tls';
+if(tls&&process.env.NODE_ENV!=='test')throw Error('DISPOSABLE_TLS_SOURCE_REQUIRED');
+const server=tls?createHttpsServer({key:await readFile(join(directory,'source-tls.key')),cert:await readFile(join(directory,'source-tls.crt'))},handler):createHttpServer(handler);
 await new Promise<void>(yes=>server.listen(0,'127.0.0.1',yes));const address=server.address();if(!address||typeof address==='string')throw Error('OWNED_SOURCE_PORT_REQUIRED');
-const descriptor={origin:'http://127.0.0.1:'+address.port,publicKey:publicKey.export({format:'pem',type:'spki'}).toString(),pid:process.pid};
+const descriptor={origin:(tls?'https:':'http:')+'//127.0.0.1:'+address.port,publicKey:publicKey.export({format:'pem',type:'spki'}).toString(),pid:process.pid};
 await writeFile(join(directory,'public-descriptor.json'),JSON.stringify(descriptor),{mode:0o600});process.send?.({type:'ready',...descriptor});
 process.on('message',async(message:any)=>{
  if(message.type==='configure'){for(const p of message.profiles)profiles.set(p.public.profileId,p);await durable();process.send?.({type:'configured',id:message.id});}

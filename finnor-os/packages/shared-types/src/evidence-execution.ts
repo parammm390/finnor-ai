@@ -35,8 +35,18 @@ export type EvidenceUnderwritingBinding=z.infer<typeof EvidenceUnderwritingBindi
 const semanticInput=FinancialSemanticsSchema.omit({entityType:true,entityId:true});
 const MetricSourceSchema=semanticInput.extend({kind:z.literal('metric'),subject:EvidenceRootSchema,metricKey:z.string().min(1).max(128)}).strict();
 const columns=z.object({entityId:z.string().max(32),metricKey:z.string().max(32),value:z.string().max(32),periodStart:z.string().max(32),periodEnd:z.string().max(32),currencyCode:z.string().max(32),frequency:z.string().max(32),unit:z.string().max(32),calendar:z.string().max(32),consolidation:z.string().max(32),instrument:z.string().max(32),scale:z.string().max(32),sign:z.string().max(32)}).strict();
+export const FinancialDocumentNumberFormatSchema=z.enum(['PLAIN_DECIMAL','COMMA_GROUPED','DOT_GROUPED']);
+const contextRole=z.enum(['entity','period','currency','scale','consolidation','instrument']);
+const cellAddress=z.string().regex(/^[A-Z]{1,3}[1-9][0-9]{0,6}$/);
+const cellContext=z.object({role:contextRole,cell:cellAddress,text:z.string().min(1).max(2000)}).strict();
+const pageContext=z.object({role:contextRole,page:z.number().int().min(1),quote:z.string().min(1).max(2000)}).strict();
+export const FinancialDocumentSelectionSchema=z.discriminatedUnion('kind',[
+ z.object({kind:z.literal('financial_cells'),numberFormat:FinancialDocumentNumberFormatSchema,context:z.array(cellContext).min(2).max(16),values:z.array(z.object({cell:cellAddress,label:z.object({cell:cellAddress,text:z.string().min(1).max(2000)}).strict()}).strict()).min(1).max(1000)}).strict(),
+ z.object({kind:z.literal('financial_text'),numberFormat:FinancialDocumentNumberFormatSchema,context:z.array(pageContext).min(2).max(16),values:z.array(z.object({page:z.number().int().min(1),quote:z.string().min(1).max(4000),valueText:z.string().min(1).max(256),label:z.string().min(1).max(2000)}).strict()).min(1).max(1000)}).strict(),
+]);
+export type FinancialDocumentSelection=z.infer<typeof FinancialDocumentSelectionSchema>;
 const ArtifactSourceSchema=semanticInput.extend({kind:z.literal('artifact'),subject:EvidenceRootSchema,documentId:z.string().uuid(),documentVersionId:z.string().uuid(),metricKey:z.string().min(1).max(128),
- layout:z.object({format:z.enum(['xlsx','pdf','image']),sheet:z.string().max(128).optional(),headerRow:z.number().int().min(1).max(100).default(1),columns:columns.optional(),delimiter:z.literal('|').optional()}).strict()}).strict();
+ layout:z.object({format:z.enum(['xlsx','pdf','image']),sheet:z.string().max(128).optional(),headerRow:z.number().int().min(1).max(100).default(1),columns:columns.optional(),delimiter:z.literal('|').optional(),selection:FinancialDocumentSelectionSchema.optional()}).strict()}).strict();
 const DerivationSourceSchema=z.object({kind:z.literal('derivation'),derivationId:z.string().uuid(),output:z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,63}$/)}).strict();
 const ModelSourceSchema=z.object({kind:z.literal('model'),subject:EvidenceRootSchema,modelVersionId:z.string().uuid(),runId:z.string().uuid(),output:z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,63}$/)}).strict();
 export const EvidenceSourceSchema=z.discriminatedUnion('kind',[MetricSourceSchema,ArtifactSourceSchema,DerivationSourceSchema,ModelSourceSchema]);
@@ -56,12 +66,12 @@ export const DerivationProgramSchema=z.object({schema:z.literal('finnor.derivati
 export type DerivationProgram=z.infer<typeof DerivationProgramSchema>;
 export const EvidenceHandlesRequestSchema=z.object({root:EvidenceRootSchema,validAt:instant.optional(),knowledgeAt:instant.optional(),inputs:z.array(z.object({inputId:id,source:EvidenceSourceSchema}).strict()).max(16)}).strict();
 export const EvidenceRequestSchema=z.object({schema:z.literal('finnor.evidence-request.v1'),question:z.string().min(1).max(4000),root:EvidenceRootSchema,workId:z.string().uuid().optional(),validAt:instant.optional(),knowledgeAt:instant.optional(),
- idempotencyKey:z.string().min(1).max(200),mode:z.enum(['ordinary_disposable','protected']),inputs:z.array(z.object({inputId:id,handleId:z.string().uuid()}).strict()).min(1).max(16),program:DerivationProgramSchema,
+ idempotencyKey:z.string().min(1).max(200),mode:z.enum(['ordinary_disposable','production_analysis','protected']),inputs:z.array(z.object({inputId:id,handleId:z.string().uuid()}).strict()).min(1).max(16),program:DerivationProgramSchema,
  acceptance:z.object({selectedUniverse:z.literal('COMPLETE'),absoluteTolerance:z.literal('0'),materialOutputs:z.array(id).min(1).max(16)}).strict(),
  limits:z.object({maxRows:z.number().int().min(1).max(1000).default(1000),maxBytes:z.number().int().min(1024).max(8388608).default(8388608),deadlineMs:z.number().int().min(25).max(30000).default(30000)}).strict().optional()}).strict();
 export type EvidenceRequest=z.infer<typeof EvidenceRequestSchema>;
 export interface EvidenceDependency {key:string;revision:number;nodeIds:string[];digest:string|null}
-export interface EvidenceWitness {id:string;sourceKind:'canonical'|'xlsx'|'pdf'|'image'|'derivation'|'model';owner:string;recordId:string;version:string;contentDigest:string;field:string;rawValue:string;anchor:{sheet?:string;cell?:string;page?:number;quote?:string;region?:number[]};semantics:FinancialSemantics;modulePath:string[];uncertainty:string[]}
+export interface EvidenceWitness {id:string;sourceKind:'canonical'|'xlsx'|'pdf'|'image'|'derivation'|'model';owner:string;recordId:string;version:string;contentDigest:string;field:string;rawValue:string;anchor:{sheet?:string;cell?:string;page?:number;quote?:string;region?:number[]};semantics:FinancialSemantics;modulePath:string[];uncertainty:string[];interpretation?:{numberFormat:z.infer<typeof FinancialDocumentNumberFormatSchema>;storageEncoding?:'OOXML_NUMERIC'|'TEXT';mappingDigest:string;scope:'EXPLICIT_SELECTED_ANCHORS';context:Array<{role:string;anchor:{sheet?:string;cell?:string;page?:number;quote?:string};text:string}>}}
 export interface FinancialRow {recordId:string;metricKey:string;value:string;semantics:FinancialSemantics;witnessIds:string[];fields:Record<string,string|null>}
 export interface EvidenceValue {kind:'scalar'|'table';value:string|null;rows?:FinancialRow[];semantics:FinancialSemantics|null;truthClass:'DERIVED_VALUE';witnessIds:string[];qualification:string[]}
 export interface IndependentCheck {id:string;method:'POSTGRES_NUMERIC'|'SQL_SOURCE_COUNT'|'SEMANTIC_EDGE'|'COVERAGE';status:'PASS'|'FAIL';expected:string|null;actual:string|null;predicate:string;witnessIds:string[]}

@@ -7,6 +7,7 @@ import {parseRequest} from './contracts';
 import {createHandle,loadHandle} from './sources';
 import {assertDependencies,authorize,codeIdentity,currentDerivation,event,newId,principal,query,schemaIdentity,sha,stable,storedDerivation,tx,unavailable} from './store';
 import {consumeEvidenceUnderwriting,EvidenceConsumeRequestSchema} from './consumer';
+import {assertAnalyticalExecutionProfile} from './profile';
 export const EVIDENCE_OPERATIONS = ['evidence-handles','evidence-submit','evidence-read','evidence-witness','evidence-replay','evidence-cancel','evidence-consume'] as const;
 const querySchema=z.object({queryId:z.string().uuid()}).strict();
 export const EvidenceOperationSchemas={
@@ -17,7 +18,7 @@ export const EvidenceOperationSchemas={
 } as const;
 const safePredicate=(error:unknown)=>String((error as Error).message).match(/^[A-Z][A-Z0-9_]{0,159}$/)?.[0]??'UNSUPPORTED_EVIDENCE_REQUEST';
 export async function submitEvidence(ctx:PeMutationContext,body:unknown){const request=parseRequest(body);await authorize(ctx,request.root as PeWorldRootRef,request.workId?[{type:'work',id:request.workId}]:[]);
- if(request.mode!=='ordinary_disposable'||process.env.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('PROTECTED_FUNDING_ADMISSION_AND_RUNTIME_BINDINGS_UNAVAILABLE');
+ assertAnalyticalExecutionProfile(request.mode);
  const handles=await Promise.all(request.inputs.map(i=>loadHandle(ctx,i.handleId,request.root as PeWorldRootRef)));if(handles.some((h,i)=>h.inputId!==request.inputs[i]!.inputId))throw Error('HANDLE_INPUT_ID_MISMATCH');
  const digest=sha(request),prior=await tx(ctx,async c=>(await c.query<{id:string;request_digest:string;work_id:string;status:string}>('SELECT id,request_digest,work_id,status FROM finnor_os.p4_queries WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3',[ctx.auth.tenantId,principal(ctx),request.idempotencyKey])).rows[0],true);
  if(prior){if(prior.request_digest!==digest)throw Error('IDEMPOTENCY_REQUEST_CONFLICT');return {queryId:prior.id,workId:prior.work_id,status:prior.status,replayed:true};}

@@ -1,17 +1,18 @@
 import {createEvidenceSourceTx,appendEvidenceVersionTx} from '@finnor/memory';
 import {recordBusinessEvent} from '@finnor/data-platform';
-import {ComputeCapacityUnavailableError,DatabaseExecutionDeadlineError} from '@finnor/db';
+import {ComputeCapacityUnavailableError,DatabaseExecutionDeadlineError,ingestIntegrationEventTx} from '@finnor/db';
 import type pg from 'pg';
 import type {JobExecutionContext} from '../../../../apps/worker/src/queue';
 import type {DiligenceAssertion,IndependentlyEstablishedFinding,PrimaryClaimCheck,PrimaryCostReceipt,PrimaryObservation,PrimaryRequest,VReference} from '@finnor/shared-types';
 import {PrimaryRequestSchema} from '@finnor/shared-types';
 import type {PeMutationContext} from '../types';
-import {assessPrimaryMeasurement} from '../enterprise-experiments';
+import {assessPrimaryMeasurement,selectPrimaryConsent} from '../enterprise-experiments';
 import {choosePrimaryAcquisition} from '../enterprise-control';
 import {reservePrimaryCharge} from '../allocation-store';
 import {invokePrimaryInterface,primaryInterface} from '../interface-synthesis/primary-adapter';
-import {actor,assertClaim,assertDependencies,authorize,canonical,costReceipts,event,exactWork,hash,methodIdentity,newId,observations,programme,reference,revisions,tx,type Programme} from './store';
+import {actor,assertClaim,assertDependencies,authorize,canonical,costReceipts,event,exactWork,hash,methodIdentity,newId,observations,programme,primaryCompletionEvent,reference,revisions,tx,type Programme} from './store';
 import {ownerBindings,retainedStatusBindings,type OwnerBindings} from './governance';
+import {assertPrimaryRuntimeMode} from './profile';
 import {reconcilePrimary} from './reconcile';
 import {independentPrimaryCheck,PrimaryNativeFailure,priceCeiling,settleNative} from './native';
 
@@ -41,13 +42,25 @@ async function reconcileProviderCharge(ctx:PeMutationContext,p:Programme,b:Owner
  return {receipt,prior};
 }
 async function requests(ctx:PeMutationContext,p:Programme){return tx(ctx,async c=>(await c.query<RequestRow>('SELECT * FROM finnor_os.s6_primary_requests WHERE tenant_id=$1 AND principal_id=$2 AND programme_id=$3 ORDER BY created_at,id LIMIT 257',[ctx.auth.tenantId,actor(ctx),p.id])).rows,true);}
-async function transition(ctx:PeMutationContext,p:Programme,status:Programme['status'],reason:string,next:VReference[]=[],approval:VReference[]=[]){
- await tx(ctx,async c=>{await c.query('UPDATE finnor_os.v2_programmes SET status=$4,reason=$5,next_obligations=$6::jsonb,required_approvals=$7::jsonb,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 AND revision=$8',[ctx.auth.tenantId,actor(ctx),p.id,status,reason,canonical(next),canonical(approval),p.revision]);await event(ctx,p,'S4','PROGRESSION',{status,reason,nextObligationRefs:next,requiredApprovalRefs:approval,releaseGranted:false},c);});
+async function transition(ctx:PeMutationContext,p:Programme,execution:Readonly<JobExecutionContext>,status:Programme['status'],reason:string,next:VReference[]=[],approval:VReference[]=[]){
+ await tx(ctx,async(c,db)=>{
+  await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,904))',[ctx.auth.tenantId]);
+  const current=await programme(ctx,p.id,c,true);
+  await assertClaim(ctx,current,execution,c,status!=='COMPLETE');
+  if(current.revision!==p.revision)throw Error('PRIMARY_REVISION_FENCED');
+  if(status==='COMPLETE')await ownerBindings(ctx,current,c);
+  const saved=await c.query('UPDATE finnor_os.v2_programmes SET status=$4,reason=$5,next_obligations=$6::jsonb,required_approvals=$7::jsonb,updated_at=clock_timestamp() WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 AND revision=$8 AND active_claim_token=$9 AND active_claim_fence=$10',[ctx.auth.tenantId,actor(ctx),p.id,status,reason,canonical(next),canonical(approval),p.revision,execution.claimToken,execution.claimFence]);
+  if(saved.rowCount!==1)throw Error('PRIMARY_PROGRESSION_FENCED');
+  await event(ctx,p,'S4','PROGRESSION',{status,reason,nextObligationRefs:next,requiredApprovalRefs:approval,releaseGranted:false},c);
+  if(['COMPLETE','STOPPED','BLOCKED','FAILED'].includes(status))await ingestIntegrationEventTx(db,{tenantId:ctx.auth.tenantId,source:'primary_worker',sourceEventId:'primary:'+p.id+':'+p.revision+':terminal',...primaryCompletionEvent(p),workId:p.work_id,
+   payload:{status,reason,workInputId:p.work_input_id,revision:p.revision},evidenceRefs:[],trustClass:'trusted_runtime'});
+ });
 }
 async function requestPrimary(ctx:PeMutationContext,p:Programme,b:OwnerBindings,a:DiligenceAssertion,sourceId:string,execution:JobExecutionContext,revalidationOf:string|null){
- const s=b.sources.find(s=>s.profileId===sourceId)!,consent=b.consents.find(c=>c.sourceProfileIds.includes(sourceId)&&c.legalEntityId===s.legalEntityId),sem=b.semantics.find(m=>m.profileId===a.semantics.basisRef.id);
+ const s=b.sources.find(s=>s.profileId===sourceId)!,sem=b.semantics.find(m=>m.profileId===a.semantics.basisRef.id);
+ const consent=sem?selectPrimaryConsent(ctx,{assertion:a,source:s,consents:b.consents,authority:b.authority,semantics:sem,at:new Date().toISOString()}):undefined;
  if(!consent||!sem)throw Error('PRIMARY_MATCHING_CONSENT_OR_SEMANTICS_MISSING');
- const assessment=assessPrimaryMeasurement(ctx,{assertion:a,source:s,consent,authority:b.authority,semantics:sem,at:new Date().toISOString()});if(!assessment.eligible)throw Error('PRIMARY_S2_MEASUREMENT_NOT_ADMISSIBLE');
+ const assessment=assessPrimaryMeasurement(ctx,{assertion:a,source:s,consent,authority:b.authority,semantics:sem,at:new Date().toISOString()});if(!assessment.eligible)throw Error('PRIMARY_MEASUREMENT_ADMISSION_CHANGED');
  const rule=sem.rules.find(r=>r.field===a.field)!,fields=[...new Set([a.field,...rule.requiredWitnessFields])].sort();
  const id=newId(),body=PrimaryRequestSchema.parse({schema:'finnor.primary-request.v1',requestId:id,tenantId:ctx.auth.tenantId,principalId:actor(ctx),programmeId:p.id,
   assertionRefs:[reference('V2',a.assertionId,a.revision,a)],sourceProfileRef:p.intake.sourceProfileRefs.find(r=>r.id===s.profileId)!,consentRef:p.intake.consentRefs.find(r=>r.id===consent.consentId)!,
@@ -168,7 +181,7 @@ async function publish(ctx:PeMutationContext,p:Programme,b:OwnerBindings,executi
   acquisitionPlanAndConsentRefs:[...planRefs,...p.intake.consentRefs],actualPrimaryObservationRefs:selected.map(o=>o.sourceRef),sourceAuthorityAndIndependenceBasis:selected.map(o=>({sourceRef:o.sourceRef,sourceClass:o.sourceClass,sourceControl:o.sourceProfile.sourceControl,authorityRefs:o.sourceProfile.authorityEvidenceRefs,issuer:o.sourceProfile.issuer,respondentId:o.sourceProfile.respondentId,intermediary:o.sourceProfile.intermediary})),
   observedPopulationAndCoverage:check.independentReconciliation,normalizedReconciliationAndCheckerRefs:[reconciliationRef,checkRef],conclusion:check.conclusion,establishedValueOrInterval:check.establishedValue,unobservedRemainderAndMaterialGaps:check.independentReconciliation.gaps,downstreamInvalidationRefs:[],
   freshnessAndReacquisitionConditions:{expiresAt:expiry,conditions:['SOURCE_REVISION','RIGHTS_CONSENT_AUTHORITY','WORK_OR_OPPORTUNITY_REVISION','REFERENCE_MEANING','CHECKER_METHOD','EXPIRY_REQUIRES_ACTUAL_REACQUISITION']},
-  evidenceLabels:check.conclusion==='UNRESOLVED'?['UNRESOLVED','COMPUTATION_CHECKED']:check.conclusion==='CONTRADICTED'?['CONTRADICTED','COMPUTATION_CHECKED']:selected.some(o=>o.sourceClass==='DIRECT_EXTERNAL_CONFIRMATION')?['EXTERNALLY_CONFIRMED','COMPUTATION_CHECKED']:['SOURCE_ASSERTED','COMPUTATION_CHECKED'],environment:'DEVELOPMENT',auditOpinion:false};
+  evidenceLabels:check.conclusion==='UNRESOLVED'?['UNRESOLVED','COMPUTATION_CHECKED']:check.conclusion==='CONTRADICTED'?['CONTRADICTED','COMPUTATION_CHECKED']:selected.some(o=>o.sourceClass==='DIRECT_EXTERNAL_CONFIRMATION')?['EXTERNALLY_CONFIRMED','COMPUTATION_CHECKED']:['SOURCE_ASSERTED','COMPUTATION_CHECKED'],environment:b.mandate.environment,auditOpinion:false};
  const finding:IndependentlyEstablishedFinding={...preimage,contentDigest:hash(preimage)};
  await tx(ctx,async(c,db)=>{
   const current=await programme(ctx,p.id,c,true);await assertClaim(ctx,current,execution,c);if(current.revision!==p.revision)throw Error('PRIMARY_REVISION_FENCED');await ownerBindings(ctx,current,c);await assertDependencies(ctx,deps,c,true);await exactWork(ctx,p,c);
@@ -187,7 +200,7 @@ export async function advancePrimaryDiligenceJob(payload:Record<string,unknown>,
  if(!execution||typeof payload.tenantId!=='string'||typeof payload.principalId!=='string'||typeof payload.programmeId!=='string'||typeof payload.revision!=='number'||execution.protocolVersion!==1||execution.tenantId!==payload.tenantId)throw Error('ACTUAL_PRIMARY_DURABLE_CLAIM_REQUIRED');
  const ctx:PeMutationContext={auth:{tenantId:payload.tenantId,userId:payload.principalId,employeeId:payload.principalId,role:'owner'},provenance:{sourceSystem:'V2:primary-diligence-worker',createdBy:payload.principalId}};
  const p=await programme(ctx,payload.programmeId);await authorize(ctx,p.root,p.work_id);if(p.revision!==payload.revision||['FAILED','COMPLETE','STOPPED'].includes(p.status))return;
- if(p.intake.mode!=='ordinary_disposable'||process.env.NODE_ENV==='production'||process.env.FINNOR_V2_PROFILE!=='ordinary_disposable')throw Error('LIVE_PRIMARY_SOURCE_AUTHORITY_AND_S8_ADMISSION_UNAVAILABLE');
+ assertPrimaryRuntimeMode(p.intake.mode);
  await tx(ctx,async c=>{const current=await programme(ctx,p.id,c,true);
   const claimed=(await c.query("SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2 AND status='running' AND claim_token=$3 AND claim_fence=$4 FOR SHARE",[ctx.auth.tenantId,execution.jobId,execution.claimToken,execution.claimFence])).rows[0];
   if(!claimed||current.revision!==p.revision)throw Error('PRIMARY_CLAIM_FENCED');
@@ -202,10 +215,10 @@ export async function advancePrimaryDiligenceJob(payload:Record<string,unknown>,
    bindings=await retainedStatusBindings(ctx,p);
   }
   for(const r of prior.filter(r=>['INTENDED','POSSIBLE_EGRESS','UNKNOWN','ACKNOWLEDGED'].includes(r.status)||r.next_cursor)){
-   if(!await retrieve(ctx,p,bindings,r,execution as JobExecutionContext,!!p.cancellation_requested_at)){await transition(ctx,p,'RECONCILING','PRIOR_PHYSICAL_REQUEST_OUTCOME_UNKNOWN',[reference('S6',r.id,1,r.body)]);return;}
+   if(!await retrieve(ctx,p,bindings,r,execution as JobExecutionContext,!!p.cancellation_requested_at)){await transition(ctx,p,execution,'RECONCILING','PRIOR_PHYSICAL_REQUEST_OUTCOME_UNKNOWN',[reference('S6',r.id,1,r.body)]);return;}
   }
-  if(p.cancellation_requested_at){await transition(ctx,p,'STOPPED','CANCELLED_RECONCILED_RESPONSIBILITY_RETAINED');return;}
-  if(bindings.retainedOnly){await transition(ctx,p,'BLOCKED','RETAINED_REQUEST_STATUS_RECONCILED_NEW_PRIMARY_PERMISSION_UNAVAILABLE',[],[p.intake.authorityProfileRef]);return;}
+  if(p.cancellation_requested_at){await transition(ctx,p,execution,'STOPPED','CANCELLED_RECONCILED_RESPONSIBILITY_RETAINED');return;}
+  if(bindings.retainedOnly){await transition(ctx,p,execution,'BLOCKED','RETAINED_REQUEST_STATUS_RECONCILED_NEW_PRIMARY_PERMISSION_UNAVAILABLE',[],[p.intake.authorityProfileRef]);return;}
   let currentRequests=await requests(ctx,p);
   for(let i=currentRequests.length;i<Math.min(bindings.mandate.stopping.maxAcquisitions,128);i++){
    const currentRaw=await observations(ctx,p),checkedAt=new Date().toISOString(),reconciliations=new Map(p.intake.assertions.map(a=>[a.assertionId,reconcilePrimary(a,currentRaw,bindings.semantics.find(m=>m.profileId===a.semantics.basisRef.id)!,{checkedAt,authorityRef:p.intake.authorityProfileRef})]));
@@ -215,20 +228,20 @@ export async function advancePrimaryDiligenceJob(payload:Record<string,unknown>,
     const needsRevalidation=!!reconciliation.discrepancy||reconciliation.gaps.some(g=>g.startsWith('SUSPICIOUS_REVALIDATION_REQUIRED:')),revalidated=prior.some(r=>r.revalidation_of&&r.status==='OBSERVED'&&!r.next_cursor);
     if(bindings.mandate.stopping.stopOnRequiredCoverage&&reconciliation.observedValue.kind!=='UNKNOWN'&&(!needsRevalidation||currentRequests.some(r=>r.body.assertionRefs.some(ref=>ref.id===a.assertionId)&&r.revalidation_of&&r.status==='OBSERVED'&&!r.next_cursor)))continue;
     if(prior.length&&(!needsRevalidation||revalidated||prior.some(r=>r.revalidation_of)))continue;
-    const consent=bindings.consents.find(c=>c.sourceProfileIds.includes(s.profileId)),semantics=bindings.semantics.find(m=>m.profileId===a.semantics.basisRef.id);
-    const assessment=consent&&semantics?assessPrimaryMeasurement(ctx,{assertion:a,source:s,consent,authority:bindings.authority,semantics,at:new Date().toISOString()}):{eligible:false};
-    candidates.push({assertionId:a.assertionId,sourceProfileId:s.profileId,eligible:assessment.eligible,materialObligations:a.requiredCoverage.members.length+a.knownGaps.length,reservedMicroUsd:s.price.maximumRequestMicroUsd,revalidation:needsRevalidation,revalidationOf:prior[0]?.id??null});
+    const semantics=bindings.semantics.find(m=>m.profileId===a.semantics.basisRef.id);
+    const consent=semantics?selectPrimaryConsent(ctx,{assertion:a,source:s,consents:bindings.consents,authority:bindings.authority,semantics,at:new Date().toISOString()}):undefined;
+    candidates.push({assertionId:a.assertionId,sourceProfileId:s.profileId,eligible:Boolean(consent),materialObligations:a.requiredCoverage.members.length+a.knownGaps.length,reservedMicroUsd:s.price.maximumRequestMicroUsd,revalidation:needsRevalidation,revalidationOf:prior[0]?.id??null});
    }
    const choice=choosePrimaryAcquisition({candidates,remainingRequests:bindings.mandate.stopping.maxAcquisitions-currentRequests.length,deadline:bindings.mandate.stopping.deadline,at:new Date().toISOString()});
    const plan={schema:'finnor.primary-acquisition-plan.v1',programmeRef:{id:p.id,revision:p.revision},choice,candidates,grantRef:p.intake.budgetGrantRef,deadline:bindings.mandate.stopping.deadline,at:new Date().toISOString()},planId=newId();
    await tx(ctx,async c=>{await c.query('INSERT INTO finnor_os.v2_plans(tenant_id,principal_id,programme_id,id,programme_revision,body,digest) VALUES($1,$2,$3,$4,$5,$6::jsonb,$7)',[ctx.auth.tenantId,actor(ctx),p.id,planId,p.revision,canonical(plan),hash(plan)]);await event(ctx,p,'S4','ACQUISITION_SELECTED',{planRef:reference('S4',planId,1,plan),choice},c);});
    if(!choice.selected)break;
    const a=p.intake.assertions.find(a=>a.assertionId===choice.selected!.assertionId)!,candidate=candidates.find(c=>c.assertionId===a.assertionId&&c.sourceProfileId===choice.selected!.sourceProfileId)!,r=await requestPrimary(ctx,p,bindings,a,choice.selected.sourceProfileId,execution as JobExecutionContext,candidate.revalidation?candidate.revalidationOf:null);
-   if(!await retrieve(ctx,p,bindings,r,execution as JobExecutionContext)){await transition(ctx,p,'RECONCILING','PHYSICAL_REQUEST_OUTCOME_UNKNOWN',[reference('S6',r.id,1,r.body)]);return;}
+   if(!await retrieve(ctx,p,bindings,r,execution as JobExecutionContext)){await transition(ctx,p,execution,'RECONCILING','PHYSICAL_REQUEST_OUTCOME_UNKNOWN',[reference('S6',r.id,1,r.body)]);return;}
    currentRequests=await requests(ctx,p);
    const paged=currentRequests.find(v=>v.id===r.id)!;
    for(let page=1;paged.next_cursor&&page<256;page++){
-    if(!await retrieve(ctx,p,bindings,paged,execution as JobExecutionContext)){await transition(ctx,p,'RECONCILING','PRIMARY_PAGE_OUTCOME_UNKNOWN',[reference('S6',r.id,1,r.body)]);return;}
+    if(!await retrieve(ctx,p,bindings,paged,execution as JobExecutionContext)){await transition(ctx,p,execution,'RECONCILING','PRIMARY_PAGE_OUTCOME_UNKNOWN',[reference('S6',r.id,1,r.body)]);return;}
     Object.assign(paged,(await requests(ctx,p)).find(v=>v.id===r.id));
    }
   }
@@ -244,11 +257,11 @@ export async function advancePrimaryDiligenceJob(payload:Record<string,unknown>,
    await publish(ctx,p,bindings,execution as JobExecutionContext,a,result.check,raw,reconciliationId,hash(proposed));
   }
   const obligation=reference('S4',p.id+':remaining-coverage',p.revision,{assertions:p.intake.assertions.map(a=>a.assertionId),unresolved,deadline:bindings.mandate.stopping.deadline,remainingGrantRef:p.intake.budgetGrantRef,reachableNewOpportunity:'NONE_CURRENTLY_REGISTERED'});
-  await transition(ctx,p,unresolved?(Date.now()>=Date.parse(bindings.mandate.stopping.waitUntil)?'STOPPED':'WAITING'):'COMPLETE',unresolved?'REGISTERED_MATERIAL_REMAINDER_UNRESOLVED':'EXACT_REGISTERED_CLAIMS_DEVELOPMENT_CHECKED',unresolved?[obligation]:[]);
+  await transition(ctx,p,execution,unresolved?(Date.now()>=Date.parse(bindings.mandate.stopping.waitUntil)?'STOPPED':'WAITING'):'COMPLETE',unresolved?'REGISTERED_MATERIAL_REMAINDER_UNRESOLVED':'EXACT_REGISTERED_CLAIMS_INDEPENDENTLY_CHECKED',unresolved?[obligation]:[]);
  }catch(error){
   if(error instanceof ComputeCapacityUnavailableError||error instanceof DatabaseExecutionDeadlineError)throw error;
   if(error instanceof PrimaryNativeFailure){try{const b=await ownerBindings(ctx,p);await settleNative(ctx,p,b.grant,error.receipt);}catch{await event(ctx,p,'S5','NATIVE_METER_UNAVAILABLE',{receipt:error.receipt,responsibilityRetained:true});}}
   const predicate=safe(error);await event(ctx,p,'S6','CLAIM_FAILURE',{predicate,responsibilityRetained:true,releaseGranted:false});
-  await transition(ctx,p,/GRANT|BUDGET|LIMIT|AUTHORITY|GOVERNANCE|REVISION|FENCED|RETENTION/.test(predicate)?'BLOCKED':'FAILED',predicate,[],[reference('S4',p.id+':approval',p.revision,{predicate,originalGrantRef:p.intake.budgetGrantRef,permissionToExecute:false})]);
+  await transition(ctx,p,execution,/GRANT|BUDGET|LIMIT|AUTHORITY|GOVERNANCE|REVISION|FENCED|RETENTION/.test(predicate)?'BLOCKED':'FAILED',predicate,[],[reference('S4',p.id+':approval',p.revision,{predicate,originalGrantRef:p.intake.budgetGrantRef,permissionToExecute:false})]);
  }
 }

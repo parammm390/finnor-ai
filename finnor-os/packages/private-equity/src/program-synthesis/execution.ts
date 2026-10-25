@@ -4,9 +4,10 @@ import type {NativeModule,HarnessRequest,HarnessValue} from './contracts';
 import {executeNativeModule} from './native';
 import {executeTypeScriptModule} from './typescript';
 import {stable} from '../evidence-execution/store';
-export async function executeHarnessCandidate(module:NativeModule,request:HarnessRequest,input:Record<string,string>,d:any,meter:()=>void,deadlineAt:number,onIsolatedReceipt:(receipt:any)=>Promise<void>) {
+import type {IsolatedExecutionOptions} from '../../../governed-execution/src/executor-custody';
+export async function executeHarnessCandidate(module:NativeModule,request:HarnessRequest,input:Record<string,string>,d:any,meter:()=>void,deadlineAt:number,onIsolatedReceipt:(receipt:any)=>Promise<void>,executionOptions:IsolatedExecutionOptions) {
  const output=executeNativeModule(module,input,meter);meter();
- const isolated=await executeTypeScriptModule(module,input,deadlineAt-Date.now());
+ const isolated=await executeTypeScriptModule(module,input,deadlineAt-Date.now(),executionOptions);
  await onIsolatedReceipt(isolated);
  if(!isolated.outputs||stable(isolated.outputs)!==stable(output))throw Error('ISOLATED_NATIVE_OUTPUT_DISAGREEMENT');
  const values:Record<string,HarnessValue>={};

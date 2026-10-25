@@ -1,3 +1,5 @@
+import {executeAcquisitionDecisionQuery} from "@finnor/private-equity/src/acquisition/operational-query";
+import {executePrimaryDiligenceQuery} from "@finnor/private-equity/src/primary-diligence/operational-query";
 import { resolveTenantVertical } from "@finnor/db";
 import {
   executePrivateEquityOperationalQuery,
@@ -47,6 +49,8 @@ export async function executeTenantOperationalQuery<T extends CanonicalOperation
   const vertical = await resolveTenantVertical(tenantId);
   const allowed = operationalQueryIntentsForVertical(vertical.verticalKey);
   if (!allowed.includes(request.intent)) throw new Error("Operational query intent is unavailable for this tenant vertical");
+  if(request.intent === "primary_diligence_v1")return executePrimaryDiligenceQuery(tenantId,request,options) as Promise<OperationalQueryResultFor<T>>;
+  if(request.intent === "acquisition_decision_v1")return executeAcquisitionDecisionQuery(tenantId,request,options) as Promise<OperationalQueryResultFor<T>>;
   if (request.intent === "harness_program_v1") return executeHarnessProgramQuery(tenantId, request, options) as Promise<OperationalQueryResultFor<T>>;
   if (request.intent === "economic_programme_v1") return executeEconomicProgrammeQuery(tenantId, request, options) as Promise<OperationalQueryResultFor<T>>;
   if(request.intent==="confidential_economic_computation_v1")return executeConfidentialComputationQuery(tenantId,request,options) as Promise<OperationalQueryResultFor<T>>;

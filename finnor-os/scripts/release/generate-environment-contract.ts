@@ -19,6 +19,8 @@ const systems = [
   ["GLM provider family", [/^GLM_|^AWS_BEDROCK_GLM_|^AWS_BEDROCK_API_KEY$|^AWS_BEARER_TOKEN_BEDROCK$/], "required if selected by router"], ["Mistral", [/^MISTRAL_|^AWS_BEDROCK_MISTRAL_|^AWS_BEDROCK_API_KEY$|^AWS_BEARER_TOKEN_BEDROCK$/], "required if selected by router"],
   ["DeepSeek", [/^DEEPSEEK_|^AWS_BEDROCK_DEEPSEEK_|^AWS_BEDROCK_API_KEY$|^AWS_BEARER_TOKEN_BEDROCK$/], "required if selected by router"], ["Exa", [/^EXA_/], "required for web discovery"],
   ["Firecrawl", [/^FIRECRAWL_/], "required for verified web facts"], ["Embeddings", [/EMBEDDINGS|EMBEDDING/], "optional unless semantic evidence is enabled"],
+  ["Daytona analytical executor", [/^DAYTONA_API_KEY$|^DAYTONA_API_URL$|^FINNOR_DAYTONA_PROFILE$|^FINNOR_P1_EXECUTOR$/], "required only when the P1 Daytona executor is selected; requires a pinned private runtime"],
+  ["Primary-source HTTPS transport", [/^FINNOR_PRIMARY_TRANSPORT_POLICY_FILE$|^FINNOR_V2_PROFILE$/], "required only for independently admitted production_primary transport; diligence, consent and financial release gates remain separate"],
   ["Zep", [/^ZEP_/], "optional"],
   ["Gmail / email", [/^GMAIL_/], "required only for a tenant-bound Gmail communication identity"],
   ["Resend / system notifications", [/^RESEND_/], "required only when the Finnor-owned notification sender is enabled"],

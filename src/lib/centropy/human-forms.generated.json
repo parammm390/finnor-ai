@@ -2591,6 +2591,12 @@
             ],
             "additionalProperties": false
           },
+          "acquisitionIcCaseId": {
+            "description": "Exact finalized committee case for a reviewed acquisition Work; independent closing authority remains required",
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
           "idempotencyKey": {
             "type": "string",
             "minLength": 1,
@@ -8808,6 +8814,112 @@
                       },
                       "required": [
                         "kind"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "evidenceSemantics": {
+                      "type": "object",
+                      "properties": {
+                        "entityType": {
+                          "type": "string",
+                          "maxLength": 64
+                        },
+                        "entityId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "periodStart": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        },
+                        "periodEnd": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "currency",
+                            "count",
+                            "ratio",
+                            "multiple",
+                            "rate"
+                          ]
+                        },
+                        "currencyCode": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "pattern": "^[A-Z]{3}$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "frequency": {
+                          "type": "string",
+                          "enum": [
+                            "annual",
+                            "quarterly",
+                            "monthly",
+                            "instant",
+                            "daily",
+                            "weekly",
+                            "event"
+                          ]
+                        },
+                        "calendar": {
+                          "type": "string",
+                          "enum": [
+                            "OWNER_RECORDED",
+                            "GREGORIAN"
+                          ]
+                        },
+                        "consolidation": {
+                          "type": "string",
+                          "enum": [
+                            "OWNER_SUBJECT_ONLY",
+                            "CONSOLIDATED",
+                            "STANDALONE"
+                          ]
+                        },
+                        "instrument": {
+                          "type": "string",
+                          "maxLength": 128
+                        },
+                        "scale": {
+                          "type": "string",
+                          "enum": [
+                            "1",
+                            "1000",
+                            "1000000"
+                          ]
+                        },
+                        "sign": {
+                          "type": "string",
+                          "enum": [
+                            "AS_RECORDED",
+                            "NEGATE"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "entityType",
+                        "entityId",
+                        "periodStart",
+                        "periodEnd",
+                        "unit",
+                        "currencyCode",
+                        "frequency",
+                        "calendar",
+                        "consolidation",
+                        "instrument",
+                        "scale",
+                        "sign"
                       ],
                       "additionalProperties": false
                     }

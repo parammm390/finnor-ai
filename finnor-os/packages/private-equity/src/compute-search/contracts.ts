@@ -1,11 +1,12 @@
 import {z} from 'zod';
 import type {ExperimentRef} from '@finnor/shared-types';
 import type {HarnessValue} from '../program-synthesis/contracts';
+import {EvidenceRequestSchema} from '@finnor/shared-types';
 export const P2_VERSION='p2-compute-search-v1';
 const ref=z.object({owner:z.string().min(1).max(64),id:z.string().min(1).max(256),version:z.string().min(1).max(80),contentDigest:z.string().regex(/^[a-f0-9]{64}$/)}).strict();
 export const ComputeSearchRequestSchema=z.object({
  schema:z.literal('finnor.compute-search-request.v1'),programId:z.string().uuid(),policyRequest:ref,computeGrant:ref,
- idempotencyKey:z.string().min(1).max(200),mode:z.enum(['ordinary_disposable','protected']),
+ idempotencyKey:z.string().min(1).max(200),mode:EvidenceRequestSchema.shape.mode,
  strategy:z.enum(['ADAPTIVE','FIXED_SEQUENTIAL','FIXED_WIDE']).default('ADAPTIVE'),
  limits:z.object({maxUnits:z.number().int().min(2).max(8),maxParallel:z.number().int().min(1).max(2)}).strict(),
  requestedKinds:z.array(z.literal('MODEL_REFINE')).max(1).default([]),routeIds:z.array(z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/)).max(4).default([]),
@@ -16,6 +17,7 @@ export const SearchIdSchema=z.object({searchId:z.string().uuid()}).strict();
 // Existing callers retain the complete projection. The optional method owner
 // narrows discovery only; it confers no owner, grant or execution authority.
 export const SearchProjectionSchema=z.object({root:z.object({entityType:z.string(),entityId:z.string().uuid()}).strict(),workId:z.string().uuid(),methodOwner:z.enum(['P2','M2']).optional()}).strict();
+export const EligibleSearchProgramSchema=z.object({programId:z.string().uuid(),status:z.enum(['QUEUED','WAITING']),workRevision:z.string().uuid(),policyRequest:ref,computeGrant:ref,mode:EvidenceRequestSchema.shape.mode}).strict();
 export function boundedDecode(value:unknown):void {
  if(Buffer.byteLength(JSON.stringify(value))>65536)throw Error('P2_REQUEST_BYTE_BOUND');
  let nodes=0;const seen=new Set<object>();
