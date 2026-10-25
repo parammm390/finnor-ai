@@ -53,3 +53,20 @@ integer/proof checks and the real pinned verifier. A separately installed
 mechanism run, build, missing-authority refusal or zero command exit does not
 establish authenticated source/installed native E2E, protected custody,
 financial qualification or coordinator acceptance.
+
+## Actual delivery-path failure, before its repair
+
+`delivery-01` failed with `Z4_DELIVERY_UNSAFE_PATH`. Its bounded diagnostic
+records eight actual API NFT references to the `@finnor/source-custody`
+workspace symlink. All resolve inside the declared target, but the symlink
+branch retained the trace's literal `../` components in the archive name.
+An attempted complete diagnostic walk timed out at 90 seconds and supplied
+no result; that timeout is not a successful inventory.
+
+Canonicalize existing parent components before admitting a member, retain
+the final symlink itself, and keep both lexical and resolved paths inside
+the declared target. Deduplicate canonical directory traversal so repeated
+trace aliases cannot bypass exact cache/native-intermediate exclusions.
+Keep the independent archive unsafe-member and symlink-target guards.
+Repeat actual full packaging/readback and relocation, not a post-code unit
+test or a relaxed manifest check.

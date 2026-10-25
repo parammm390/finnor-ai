@@ -124,15 +124,25 @@ def evidence_files(root, output, target):
 
 
 def installed_files(target):
-    files = set()
+    target = target.resolve()
+    files, directories = set(), set()
 
     def add(path):
-        check(path.resolve().is_relative_to(target.resolve()), "Z4_INSTALLED_PACKAGE_SOURCE_FALLBACK")
+        # NFT paths contain ../ components. Resolve parents, not the final
+        # workspace symlink whose alias must remain in the installed closure.
+        path = path.parent.resolve() / path.name
+        if path.name == "..":
+            path = path.resolve()
+        check(path.is_relative_to(target) and path.resolve().is_relative_to(target),
+              "Z4_INSTALLED_PACKAGE_SOURCE_FALLBACK")
         if path.is_symlink():
             files.add(str(path.relative_to(target)))
         elif path.is_file():
-            files.add(str(path.resolve().relative_to(target)))
+            files.add(str(path.relative_to(target)))
         elif path.is_dir():
+            if path in directories:
+                return
+            directories.add(path)
             for child in sorted(path.iterdir()):
                 if child in (target / ".next-x1-install/cache", target / "finnor-os/apps/api/.next/cache"):
                     continue
