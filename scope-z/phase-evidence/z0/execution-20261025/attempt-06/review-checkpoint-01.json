@@ -1,0 +1,315 @@
+{
+  "schema": "finnor.project-z.z0.unaccepted-engineering-review-checkpoint.v1",
+  "observedAt": "2026-10-25T01:40:15.696Z",
+  "reason": "USER_REQUIRES_CONTINUATION_UNTIL_COORDINATOR_REVIEW_NO_NEW_AUTHORITY_OR_SOURCE_CORRECTION_DELIVERED",
+  "sessionId": "66647028-fac4-4793-bec3-22b564d12b90",
+  "computerId": "eea8d359-5a5c-4aff-b465-494dd7a8ba88",
+  "branch": "factory/project-z0",
+  "reviewBase": {
+    "head": "89c94374169a2fbf533bc08930fd11847ebf6287",
+    "tree": "6b90f72e6641e7707170321bb9735fd4b6f6903d"
+  },
+  "productCommit": "5ad4e8d75c61b9cc1ee273cc14f8d8068d5ebd41",
+  "productTree": "b792abf61b5dc9b61dce947c612808faf17cedb5",
+  "frozenPayload": {
+    "commit": "a2d9e9ca2f95bad3215ca76ca5e546fef9848d8f",
+    "tree": "b86e577db41a1b5270d32e57bb49c7979899d8e0",
+    "index": {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/evidence-index.json",
+      "bytes": 14324,
+      "sha256": "e3e680d7dfdc299c1efbfa70f91361f1a43fd12fdfbbddfd68af1c65da6585fc"
+    },
+    "binding": {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/postcommit-binding.json",
+      "bytes": 7525,
+      "sha256": "356ce660aba26e71004582737d5914aded3e644a1a44c65403b0b98161773288"
+    }
+  },
+  "actualFeedback": {
+    "driverReview": {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/orchestration/shared-computer-launch/coordinator-driver-review-06.md",
+      "bytes": 2132,
+      "sha256": "4af4cffddae6827b4feb0617ae1ba6622cc9b55cf4e0a07fb397674b7179e3a6"
+    },
+    "currentCoordinatorDirection": {
+      "path": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/continuity/evidence/Z0/coordinator-resume-06.prompt.md",
+      "bytes": 4457,
+      "sha256": "008cd011210935e90222c78da91d0686527b919e7df1d2a023bad7ad58d36f16"
+    }
+  },
+  "reviewedAdapters": {
+    "driver": {
+      "path": "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/run-native-e2e.mjs",
+      "bytes": 81668,
+      "sha256": "457e2e05e4c6882eecbfd6b574748eb3dd161aea4dbed4117cb49c36a277aea8"
+    },
+    "recovery": {
+      "path": "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/native-recovery.mjs",
+      "bytes": 10069,
+      "sha256": "fc4c81fc33655716f1548ac757759b56b5aea84fac93d3abb77f14b727944104"
+    }
+  },
+  "findings": [
+    {
+      "reviewItem": 1,
+      "state": "SOURCE_CLOSURE_PRESENT_NATIVE_NOT_RUN",
+      "finding": "ONE_CANONICAL_NEW_REFUSAL_POPULATION_AND_STRUCTURED_PREDICATE_SHARED_BY_WAIT_AND_FINAL_ASSERTION",
+      "source": "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/run-native-e2e.mjs",
+      "reviewedRanges": [
+        {
+          "startLine": 217,
+          "endLine": 221,
+          "sha256": "8cd6fe0a8c653293a5b855dc18777b90023c01eba34434917ffc73489b9cff71"
+        },
+        {
+          "startLine": 293,
+          "endLine": 301,
+          "sha256": "9f2f66dcd69f246bed7726640adf8f2eaf6595f7b3ca60d6cb2eeae418a808fd"
+        },
+        {
+          "startLine": 649,
+          "endLine": 655,
+          "sha256": "d6d522c8d5cd4048626a05b898c0fc3b78fe905f9ea3157ce0866f406889f8e9"
+        },
+        {
+          "startLine": 706,
+          "endLine": 722,
+          "sha256": "1813d01dda75ccf9ca577d09c225f3a236b94d438b446567121ce76ef112e2ac"
+        }
+      ]
+    },
+    {
+      "reviewItem": 2,
+      "state": "SOURCE_CLOSURE_PRESENT_NATIVE_NOT_RUN",
+      "finding": "ACTUAL_SNAPSHOT_AND_SOURCE_HASHES_INSTALLED_POPULATION_AND_SNAPSHOT_CONJUNCTION_ASSET_CUSTODY_MOUNTED_AND_ENTRY_BINDING_BEFORE_AUTH_DB",
+      "source": "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/run-native-e2e.mjs",
+      "reviewedRanges": [
+        {
+          "startLine": 807,
+          "endLine": 907,
+          "sha256": "b3ed26445ccc7557d33f06e8ad73db2b7d960709daceb56e01a49302bed7e839"
+        },
+        {
+          "startLine": 943,
+          "endLine": 956,
+          "sha256": "e1f18c319a0ecb8865e988e74f5a38cc74544135f11ea84525f00728cf53590b"
+        },
+        {
+          "startLine": 998,
+          "endLine": 1012,
+          "sha256": "c81a9a85eaaf19b84acd66bdd147e263d939124051da8d2a96d577d9a844129c"
+        }
+      ]
+    },
+    {
+      "reviewItem": 3,
+      "state": "SOURCE_CLOSURE_PRESENT_NATIVE_NOT_RUN",
+      "finding": "EXACT_JOB_SELECTOR_PAYLOAD_DELIVERY_ARTIFACT_OR_EFFECT_AND_SAME_JOB_HIGHER_FENCE_RECOVERY_WITH_INDEPENDENT_TERMINAL_STATE",
+      "source": "/home/factory-user/repos/finnor-z0/finnor-os/scripts/project-z/z0/native-recovery.mjs",
+      "recoveryAnchors": {
+        "selector": 26,
+        "boundary": 89,
+        "recovery": 128,
+        "retention": 136
+      },
+      "recoveryAdapterSha256": "fc4c81fc33655716f1548ac757759b56b5aea84fac93d3abb77f14b727944104",
+      "driverReviewedRanges": [
+        {
+          "startLine": 482,
+          "endLine": 554,
+          "sha256": "9e59e222f7fda7ff3f154da6f097b6771a256ab52927de965fdc2c3f232f3577"
+        }
+      ]
+    }
+  ],
+  "sourceBarrier": {
+    "command": [
+      "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/normalize-reviewed-membership.mjs",
+      "--verify"
+    ],
+    "actualExit": 0,
+    "result": {
+      "state": "PASSED_EXPLICIT_MEMBERSHIP_METADATA_ONLY_NOT_BUILD_OR_NATIVE",
+      "mode": "--verify",
+      "observedAt": "2026-10-25T01:40:15.686Z",
+      "coordinatorHead": "9f3edfd3b4c6758832c53139da0773218062191e",
+      "coordinatorTree": "2dc4d5bc13d22853cf4dc9feb5f6ac7fbf6bb9c9",
+      "coordinatorTrackedDiffSha256": "45557d982b550ac355e945d4ddf80434cc4d8f107f01646f1919dae1a06d6b05",
+      "sourcePopulationSha256": "33d82ae209cd103c6419ed9b72094928e94fd1ec3dfef629112122d9ddc57efe",
+      "files": 3156,
+      "totalBytes": 48829074,
+      "additionalDeclared": 170,
+      "additionalActuallyUntracked": 143,
+      "ownedParity": 36,
+      "ownedDeltas": [],
+      "z3Owned": 22,
+      "z3Shared": 4,
+      "z3NewLeaves": 17,
+      "availableBytes": 1932730368,
+      "combinedBuildGuardBytes": 4294967296,
+      "buildExecuted": false,
+      "databaseActions": 0,
+      "nativeExecuted": false,
+      "outputs": [
+        {
+          "path": "additional-coordinator-source-index.json",
+          "bytes": 36667,
+          "sha256": "dd2c5a8a4f2069ab569dfec8877ba6412e43c0b6825ceb5d4837b76474a62354"
+        },
+        {
+          "path": "current-combined-source-reference.json",
+          "bytes": 806941,
+          "sha256": "1c437bd3b0f13138300f02fae1ae7526a6760b57fdd924f863eb9db047710073"
+        },
+        {
+          "path": "current-adopted-proposal/manifest.json",
+          "bytes": 278,
+          "sha256": "afe97b8b58c2096fcec65c97f5310048ce7d750d8f5097cf56d97bc4fb9a52d9"
+        },
+        {
+          "path": "current-adopted-proposal/owner-use.patch",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "inputs/build-inventory-preflight-01.json",
+          "bytes": 33073,
+          "sha256": "aa97d0ff34a38d818fde1d79298e767d4639a993875678c133a37de7f3b57911"
+        },
+        {
+          "path": "inputs/z3-application.json",
+          "bytes": 8034,
+          "sha256": "4ae0221bfa97e7122583e90ea8d0e4e901bf5b45de868960a0d1bad66a01d82d"
+        },
+        {
+          "path": "inputs/coordinator-resume-06.prompt.md",
+          "bytes": 4457,
+          "sha256": "008cd011210935e90222c78da91d0686527b919e7df1d2a023bad7ad58d36f16"
+        },
+        {
+          "path": "inputs/validation-03-report.json",
+          "bytes": 3345,
+          "sha256": "dd08be08f06f2f5cf6588005c3cd5163d1efaa9cc9da63e4d74530b540c66efa"
+        },
+        {
+          "path": "inputs/build-01-report.json",
+          "bytes": 6423,
+          "sha256": "5ec679def34bbc978a672b4ad0d9b038fddf3758b0775234dd8fe6364b602d38"
+        }
+      ]
+    }
+  },
+  "addendum": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/review-addendum-01.md",
+    "bytes": 7229,
+    "sha256": "c23949663cc5ab29a76375d9bedcf60d84ca4fbe10d3dce301aa1fc8e315fbee"
+  },
+  "previousExistingChecks": {
+    "receipt": {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/bounded-checks.json",
+      "bytes": 13267,
+      "sha256": "fa3153ff85904161f29b02e43fd07939c72f0c8b061cf74e425c483fb370c9cc"
+    },
+    "count": 22,
+    "allActualExit": 0,
+    "rerunThisContinuation": false
+  },
+  "previousCoordinatorOfflineFullChecks": {
+    "receipt": {
+      "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/inputs/validation-03-report.json",
+      "bytes": 3345,
+      "sha256": "dd08be08f06f2f5cf6588005c3cd5163d1efaa9cc9da63e4d74530b540c66efa"
+    },
+    "count": 14,
+    "allActualExit": 0,
+    "rerunByThisProducer": false
+  },
+  "retainedFailures": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/retained-failures.json",
+    "bytes": 9962,
+    "sha256": "a32efa444e981c2891c50ba63443a59e7abf8fb5cd64b9c64349f74dbda3c34c"
+  },
+  "sourceProvenance": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/source-provenance.json",
+    "bytes": 17848,
+    "sha256": "9f41bbc85bb6d31462b8b270b203c5e3b32af6822b391613a694ddf87bc16eee"
+  },
+  "replayRecipe": {
+    "path": "/home/factory-user/repos/finnor-z0/scope-z/phase-evidence/z0/execution-20261025/attempt-06/replay-recipe.md",
+    "bytes": 7311,
+    "sha256": "6b41b728b651d5fbd8c9578897d7f90f680477faf9f09febd6fea366457e5b66"
+  },
+  "resource": {
+    "availableBytes": 1932730368,
+    "combinedGuardBytes": 4294967296,
+    "guardSatisfied": false,
+    "freshReplayRecipeGuardBytes": 6442450944
+  },
+  "internalRemaining": [
+    "CURRENT_STRICT_COMBINED_BUILD_AFTER_TYPEGEN",
+    "CURRENT_CUT_CAPTURE_AND_ARCHIVE",
+    "CLEAN_CURRENT_INSTALLED_RECONSTRUCTION_AND_FULL_CHECKS",
+    "108_NATIVE_SOURCE_AND_INSTALLED_EXECUTIONS"
+  ],
+  "externalInputsNotDelivered": [
+    "EXACT_EXPIRING_DISPOSABLE_NATIVE_AUTHORITY",
+    "TWO_ALREADY_INITIALIZED_ISOLATED_NATIVE_DB_TARGETS_AND_RESTRICTED_OBSERVERS",
+    "LAWFUL_ORIGINAL_FIXTURES_AND_FOUR_DISTINCT_RIGHTS_OWNERS",
+    "REAL_SAME_PROJECT_PRIMARY_ALTERNATE_AND_CASE_AUTH",
+    "FULL_INDEPENDENTLY_PRECOMMITTED_ORIGINAL_SEMANTICS_ORACLE_AND_EXACT_RECOVERY_SELECTORS",
+    "SOURCE_BOUND_PUBLIC_AUTH_BUILD_INPUT",
+    "OWNED_PROCESS_PORT_IDENTITIES_AND_FINITE_LEASES"
+  ],
+  "independentZ1ArchiveReplay": "BLOCKED_BY_USER_DIRECTION",
+  "unapprovedAuthoritySearchOrCredentialRead": false,
+  "productChanges": [],
+  "newSharedIntegrationRequests": [],
+  "newTestsWritten": false,
+  "newUnitTestsWritten": false,
+  "deniedNativeOrBuildActionRetried": false,
+  "newInstallCopyBuildDatabaseAuthListenerOrFinancialAction": false,
+  "gates": {
+    "architecture": {
+      "state": "IN_PROGRESS"
+    },
+    "internal-software": {
+      "state": "IN_PROGRESS"
+    },
+    "installed-development-reconstruction": {
+      "state": "IN_PROGRESS"
+    },
+    "mathematical-security-domain": {
+      "state": "NOT_RUN"
+    },
+    "protected-admission": {
+      "state": "NOT_RUN"
+    },
+    "equipped-increment": {
+      "state": "NOT_RUN"
+    },
+    "operational-100x": {
+      "state": "NOT_RUN"
+    },
+    "financial-100x": {
+      "state": "NOT_RUN"
+    },
+    "production-activation": {
+      "state": "NOT_RUN"
+    },
+    "financial-headroom": {
+      "state": "UNKNOWN"
+    }
+  },
+  "sourceNative": "NOT_RUN",
+  "installedNative": "NOT_RUN",
+  "nativeCasesExecuted": 0,
+  "nativeCasesNotRun": 108,
+  "completion": "INCOMPLETE",
+  "coordinatorAccepted": false,
+  "slotReleased": false,
+  "coordinatorGateWritten": false,
+  "scientificIncrement": false,
+  "noModelBudgetHookSettingsOrSupervisorChanges": true,
+  "noNewAuthorityGranted": true
+}
