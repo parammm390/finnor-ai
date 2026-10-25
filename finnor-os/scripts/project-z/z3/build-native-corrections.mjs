@@ -1,5 +1,5 @@
 // Additive, exact-preimage shared requests. Does not change shared live files.
-import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { readFileSync, mkdirSync, writeFileSync, lstatSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -7,10 +7,15 @@ import { resolve, join, relative, isAbsolute } from "node:path";
 
 const repo = resolve(fileURLToPath(new URL("../../../..", import.meta.url)));
 const output = process.argv.find(a => a.startsWith("--output="))?.slice(9);
-if (!output || !isAbsolute(output) || relative(join(repo, "scope-z/phase-evidence/z3"), output).startsWith("..")) {
+const generatorOnly = process.argv.find(a => a.startsWith("--emit-generator-only="))?.slice(22);
+const catalogueOverlay = process.argv.find(a => a.startsWith("--catalogue-overlay="))?.slice(20);
+if (!output && !generatorOnly) throw Error("Fresh absolute owned --output required");
+if (generatorOnly && !isAbsolute(generatorOnly)) throw Error("Absolute generator output required");
+if (output && (!catalogueOverlay || !isAbsolute(catalogueOverlay))) throw Error("Absolute validated catalogue overlay required");
+if (output && (!isAbsolute(output) || relative(join(repo, "scope-z/phase-evidence/z3"), output).startsWith(".."))) {
   throw Error("Fresh absolute owned --output required");
 }
-mkdirSync(output, { recursive: false });
+if (output) mkdirSync(output, { recursive: false });
 const sha = body => createHash("sha256").update(body).digest("hex");
 const blob = body => shaBlob(Buffer.from(body));
 const shaBlob = bytes => createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex");
@@ -19,6 +24,28 @@ const replace = (body, find, replacement) => {
   if (body.split(find).length !== 2) throw Error("Exact unique correction anchor missing: " + find.slice(0, 90));
   return body.replace(find, replacement);
 };
+// Coordinator review 06 catalogue corrections as exact generator bytes.
+// Computed before any emit so --emit-generator-only can seed the disposable
+// generation copy without a packet directory.
+const genPath = "scripts/centropy/generate-capability-manifest.mjs", genBefore = read(genPath);
+let gen = replace(genBefore,
+  "const companyBrainOperations = [...new Set([",
+  'const z3ViabilityOperations = registeredOperations("finnor-os/packages/private-equity/src/project-z/z3-viability/contracts.ts", "Z3_OPERATIONS")\n'
+  + 'if (!z3ViabilityOperations.length || !companyBrainSource.includes("VIABILITY_OPERATIONS")) throw new Error("Z3 viability operations must be actually delegated")\n'
+  + "const companyBrainOperations = [...new Set([");
+gen = replace(gen, "...capitalOperations,...formationOperations,...m4Operations.keys(),",
+  "...capitalOperations,...formationOperations,...m4Operations.keys(),...z3ViabilityOperations,");
+gen = replace(gen, ' "interaction-local", "interaction-run-read",\n])',
+  ' "interaction-local", "interaction-run-read",\n  "viability-read",\n])');
+gen = replace(gen, '  operationClasses.set(`company-brain/${operation}`, "CONTROL")',
+  '  operationClasses.set(`company-brain/${operation}`, "CONTROL")\noperationClasses.set("company-brain/viability-recover", "CONTROL")');
+gen = replace(gen, '      path.startsWith("company-brain/response-")?["work","company-brain"]:',
+  '      path.startsWith("company-brain/viability-")?["work","company-brain"]:\n      path.startsWith("company-brain/response-")?["work","company-brain"]:');
+if (generatorOnly) {
+  writeFileSync(generatorOnly, gen, { flag: "wx" });
+  console.log(JSON.stringify({ generatorSha256: sha(gen) }));
+  process.exit(0);
+}
 const requests = [];
 function request(path, before, after, reason) {
   const ordinal = String(requests.length + 1).padStart(2, "0");
@@ -33,6 +60,10 @@ function request(path, before, after, reason) {
   return result;
 }
 // execFileSync throws on git-diff's expected exit 1.
+function emitFromFile(path, absoluteAfter, reason) {
+  const after = readFileSync(absoluteAfter, "utf8");
+  emit(path, read(path), after, reason);
+}
 function emit(path, before, after, reason) {
   const ordinal = String(requests.length + 1).padStart(2, "0"), leaf = path.split("/").at(-1);
   let raw;
@@ -50,7 +81,8 @@ function emit(path, before, after, reason) {
   writeFileSync(join(output, patchFile), patch, { flag: "wx" });
   requests.push({ path, reason, beforeFile: `${ordinal}-${leaf}.before`, afterFile: `${ordinal}-${leaf}.after`,
     beforeSha256: sha(before), afterSha256: sha(after), beforeBlob: blob(before), afterBlob: blob(after),
-    patchFile, patchSha256: sha(patch), appliedToLiveSharedSource: false });
+    beforeMode: path === "src/components/centropy/world/ViabilityPanel.tsx" ? 0o644 : lstatSync(join(repo, path)).mode & 0o777,
+    afterMode: 0o644, patchFile, patchSha256: sha(patch), appliedToLiveSharedSource: false });
 }
 
 const s5Path = "finnor-os/packages/private-equity/src/allocation-store.ts";
@@ -136,10 +168,20 @@ queue = replace(queue,
   "WHERE id=$1 AND status='running' AND lease_owner=$2 AND claim_token=$3 AND claim_fence=$4\n            RETURNING id\n         )\n         UPDATE job_delivery_attempts SET outcome='completed'",
   "WHERE id=$1 AND status='running' AND lease_owner=$2 AND claim_token=$3 AND claim_fence=$4\n              AND lease_expires_at>clock_timestamp()\n            RETURNING id\n         )\n         UPDATE job_delivery_attempts SET outcome='completed'");
 emit(queuePath, queueBefore, queue, "Do not resurrect or complete an expired physical lease, even without a successor; exact global queue request only");
+emit(genPath, genBefore, gen, "Enumerate delegated Z3 viability operations; read stays READ, recover becomes CONTROL, both writes invalidate work/company-brain per coordinator review 06");
+if (!catalogueOverlay || !isAbsolute(catalogueOverlay)) throw Error("Absolute --catalogue-overlay with --check-validated regenerated catalogue bytes required");
+emitFromFile("src/lib/centropy/capability-manifest.generated.json", join(catalogueOverlay, "src/lib/centropy/capability-manifest.generated.json"),
+  "Regenerated deterministic capability manifest including the three mounted viability operations");
+emitFromFile("docs/centropy/capability-coverage.json", join(catalogueOverlay, "docs/centropy/capability-coverage.json"),
+  "Regenerated coverage audit; generatedAt/sourceBaseCommit are generation metadata excluded from the staleness comparison");
 const prior = read("scope-z/phase-evidence/z3/integration-patches/manifest.json");
-const manifest = { schema: "finnor.z3.native-correction-patches.v3", repoSource: "CURRENT_OWNED_WORKTREE",
+const manifest = { schema: "finnor.z3.native-correction-patches.v4", repoSource: "CURRENT_OWNED_WORKTREE",
   priorNinePatchManifestSha256: sha(prior), sharedApplicationOwner: "COORDINATOR",
-  prerequisite: "Original nine patches; coordinator catalogue CONTROL/invalidation corrections remain untouched",
+  builderSha256: sha(readFileSync(fileURLToPath(import.meta.url))),
+  nativeOwnerCorrectionCommit: "ae8d1f68e201c23044be9cf7b7fec2c19a71750c",
+  purpose: "STANDALONE_RECONSTRUCTION_ONLY_ALREADY_ADOPTED_NOT_COORDINATOR_REAPPLY",
+  coordinatorDisposition: "v3 owner corrections and equivalent Z3 catalogue semantics are already integrated; retain the combined S5/Z1 source and do not reapply this standalone packet",
+  prerequisite: "Original nine patches; supersedes retained v2/v3; requests 05-07 carry the coordinator review 06 catalogue corrections as preimage-bound bytes",
   requests, databaseExecutionAuthorized: false, protectedQualification: "NOT_RUN" };
 writeFileSync(join(output, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n", { flag: "wx" });
 console.log(JSON.stringify({ patches: requests.length, manifestSha256: sha(readFileSync(join(output, "manifest.json"))) }));

@@ -130,3 +130,74 @@ N23: lost-key semantic aliases must not grow an unbounded request ledger after
 physical allowance is exhausted. New submit/recovery request keys share a
 256-row original-Work history bound under the same native serializer; existing
 keys still replay without a new row or charge. Refusal does not renew capacity.
+
+N24: the reconstruction source distribution silently omitted tracked
+build-relevant root files: sentry.server.config.ts and sentry.edge.config.ts
+(instrumentation.ts imports both), the actual postcss.config.js (the include
+list even named a nonexistent postcss.config.mjs), vercel.json and both
+.npmrc files. Detected by the first lock-installed run's frontend-build
+module-not-found errors (install-01 logs retained). A source distribution
+that cannot build is not a reconstruction.
+
+N25: the producer bundle bytes are working-directory sensitive (esbuild
+embeds entry-relative comment paths). install-01 built from finnor-os/ and
+produced 22dd0973..., which the boundary runner correctly REFUSED with
+Z3_PRODUCER_ASSET_NOT_APPROVED (retained). The approved pin 43a3d180...
+reproduces byte-exactly only from the repository root with the lockfile
+esbuild (verified twice: live tree and reconstruction copy). The canonical
+recipe is root-cwd; the install step was corrected, not the pin.
+
+N26: the mounted panel's three literal calls are denied by the stale
+committed catalogue (install-01 centropy-manifest-check and
+centropy-coverage-check exit 1, retained): the coordinator's catalogue
+additions existed only in the coordinator's composition, never as
+preimage-bound bytes in this lane. The v4 packet adds an exact generator
+patch (Z3_OPERATIONS delegation proof, viability-read READ, viability-recover
+CONTROL, both writes' invalidation tags work/company-brain per coordinator
+review 06) plus the regenerated capability manifest and coverage postimages.
+At this checkpoint that v4 packet was not emitted or validated. The later
+bounded delivery receipts, not this planned correction, determine its status.
+Live shared files remain untouched.
+
+## Final bounded delivery failure model (2026-10-25, before these fixes)
+
+N27: a generic directory-name exclusion removed the production route
+`finnor-os/apps/api/app/api/integrations/microsoft-graph/coverage/route.ts`.
+The third retained catalogue-generation attempt consequently denied its real
+mounted GET. Canonical completeness must include apps as well as packages.
+The `.npmrc` allowlist also lost to an earlier dotfile filter. Preserve the
+actual production route and only the inspected credential-free npm policies;
+do not weaken the existing catalogue checks or hide the mounted call.
+
+N28: `git init` creates `.git/info/exclude`; writing it with `flag:"wx"` can
+abort the installation driver before a report. Append exclusions only in
+that fresh disposable repository. A future install must refuse before npm,
+builds or replay when the original 4 GiB free-headroom requirement is absent.
+A source-only preflight must record this refusal, not count as an install.
+The retained install-02 log is an invalid-argument exit before installation
+(`--copy`/`--install` instead of `--reconstruction`/`--output`).
+
+N29: a content-only inventory can miss executable-mode drift, omitted
+application source, uncommitted packaging changes or an archive inconsistent
+with its declared source. Freeze file modes, exact patch chains, final
+regular-file membership, lockfiles and public replay assets. Verify archive
+contents and original-commit correspondence without installing dependencies.
+Check producer reproduction from the required root cwd and the approved
+checker/interpreters without changing their pins.
+
+N30: a standalone catalogue packet can overwrite another lane's combined
+generator even when its Z3 semantics are already integrated. The v4 package
+is for standalone reconstruction of this lane's exact preimages only. Compare
+the three Z3 rows and owner postimages against the actual coordinator source,
+retain the S5 disjoint composition, and explicitly request no reapplication.
+Neither an inventory preflight nor fourteen source checks is a native build,
+authenticated mounted proof, scheduling acceptance or protected qualification.
+
+Expected bounded run: prepare one committed regular source distribution;
+independently check its archive/modes/patch chain and original source
+correspondence; run the real generated-catalogue checks with openly declared
+existing dependencies; reproduce the pinned producer and check asset hashes;
+retain actual exits and failures. No npm install, full application build,
+giant replay, DB/Auth/DDL/seed/grant/listener or external action is permitted
+in this final attempt. Existing installed receipts retain their original
+source binding and cannot qualify later source.

@@ -1,0 +1,13 @@
+Command: git -C /home/factory-user/repos/finnor-z3 diff --cached --check
+Actual exit: 2
+Output (JSON-escaped derivative; original tool transcript retained):
+"scope-z/phase-evidence/z3/integration-corrections/v4/03-ViabilityPanel.tsx.patch:16: trailing whitespace.\n+ \n"
+
+The stored unified diff's line 16 is the required one-space prefix for an
+empty context line, not trailing whitespace in the panel postimage.
+The patch is byte-identical to adopted v3 and was not rewritten.
+The staged non-patch source check exited 0 before this diagnostic was added.
+Its first literal diagnostic copy also exited 2 on the quoted whitespace;
+this derivative escapes that line rather than altering the original patch.
+Exact patch application and
+forward/reverse postimage checks remain mandatory, not waived.

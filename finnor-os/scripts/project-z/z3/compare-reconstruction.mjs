@@ -14,8 +14,11 @@ const canonical = v => v === null || typeof v !== "object" ? JSON.stringify(v)
     : "{" + Object.keys(v).filter(k => k !== "metrics").sort().map(k => JSON.stringify(k) + ":" + canonical(v[k])).join(",") + "}";
 const readJson = async p => JSON.parse(await readFile(p, "utf8"));
 const manifest = await readJson(join(reconstruction, "manifest.json"));
+const modeBody = manifest.modeInventorySha256 ? await readFile(join(reconstruction, "source-modes.json")) : null;
+const modes = modeBody ? JSON.parse(modeBody) : null;
 const before = await readJson(join(sourceRun, "report.json")), after = await readJson(join(installedRun, "report.json"));
 const failures = [];
+if (modeBody && sha(modeBody) !== manifest.modeInventorySha256) failures.push("SOURCE_MODE_INVENTORY_CHANGED");
 const installationReport = await readJson(join(installation, "report.json"));
 if (installationReport.schema !== "finnor.z3.lock-installed-engineering.v2"
   || installationReport.sourceManifestSha256 !== sha(await readFile(join(reconstruction, "manifest.json")))
@@ -48,7 +51,8 @@ const generated = new Set(["next-env.d.ts", "tsconfig.json", "finnor-os/apps/api
   "finnor-os/packages/epistemic-runtime/src/strategic-response/source-manifest.generated.ts"]);
 for (const [p, expected] of Object.entries(originalInventory)) {
   const actual = await readFile(join(reconstruction, "source", p));
-  if (sha(actual) !== postbuild[p] || (await lstat(join(reconstruction, "source", p))).isSymbolicLink()
+  const stat = await lstat(join(reconstruction, "source", p));
+  if (sha(actual) !== postbuild[p] || !stat.isFile() || modes && (stat.mode & 0o777) !== modes[p]
     || expected !== postbuild[p] && !generated.has(p)) failures.push("INSTALLED_SOURCE_CHANGED:" + p);
 }
 if (before.status !== "PASS" || after.status !== "PASS" || before.requests !== 3892 || after.requests !== 3892

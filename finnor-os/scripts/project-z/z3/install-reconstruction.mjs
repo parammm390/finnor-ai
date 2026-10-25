@@ -1,6 +1,6 @@
 // Explicit own-lock engineering install/build. No DB, auth, listener or effect
 // command exists here. Run under the coordinator's shared heavy lock.
-import { readFileSync, writeFileSync, mkdirSync, existsSync, lstatSync, realpathSync } from "node:fs";
+import { readFileSync, writeFileSync, appendFileSync, mkdirSync, existsSync, lstatSync, realpathSync, statfsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
@@ -14,13 +14,31 @@ const sha = body => createHash("sha256").update(body).digest("hex");
 const json = p => JSON.parse(readFileSync(p, "utf8"));
 const manifest = json(join(reconstruction, "manifest.json"));
 const inventory = json(join(reconstruction, "source-inventory.json"));
+const modesBody = readFileSync(join(reconstruction, "source-modes.json")), modes = JSON.parse(modesBody);
 if (sha(readFileSync(join(reconstruction, "source-inventory.json"))) !== manifest.inventorySha256
+  || sha(modesBody) !== manifest.modeInventorySha256
   || sha(readFileSync(join(reconstruction, "source.tar.gz"))) !== manifest.archiveSha256) throw Error("RECONSTRUCTION_SOURCE_IDENTITY_CHANGED");
 for (const [p, expected] of Object.entries(inventory)) {
-  if (lstatSync(join(source, p)).isSymbolicLink() || sha(readFileSync(join(source, p))) !== expected) throw Error("FRESH_SOURCE_CHANGED:" + p);
+  const stat = lstatSync(join(source, p));
+  if (!stat.isFile() || (stat.mode & 0o777) !== modes[p]
+    || sha(readFileSync(join(source, p))) !== expected) throw Error("FRESH_SOURCE_CHANGED:" + p);
 }
 for (const p of [join(source, "node_modules"), join(backend, "node_modules")]) {
   if (existsSync(p)) throw Error("INSTALL_TARGET_NOT_FRESH");
+}
+const disk = statfsSync(source), freeBytes = disk.bavail * disk.bsize;
+const preflight = { schema: "finnor.z3.install-preflight.v1",
+  status: process.version !== "v22.23.4" ? "BLOCKED_TOOLCHAIN"
+    : freeBytes < 4 * 1024 ** 3 ? "BLOCKED_DISK_HEADROOM" : "READY_NOT_INSTALLED",
+  sourceManifestSha256: sha(readFileSync(join(reconstruction, "manifest.json"))),
+  node: process.version, freeBytes, requiredFreeBytes: 4 * 1024 ** 3,
+  sourceFilesVerified: Object.keys(inventory).length, modesVerified: true,
+  npmExecuted: false, applicationBuildExecuted: false, replayExecuted: false,
+  databaseActions: 0, listenerStarted: false, installedNative: "NOT_RUN" };
+writeFileSync(join(output, "preflight.json"), JSON.stringify(preflight, null, 2) + "\n", { flag: "wx" });
+if (process.argv.includes("--preflight-only") || preflight.status !== "READY_NOT_INSTALLED") {
+  console.log(JSON.stringify(preflight));
+  process.exit(preflight.status === "READY_NOT_INSTALLED" ? 0 : 2);
 }
 const steps = [];
 const environment = { PATH: dirname(process.execPath) + ":" + (process.env.PATH ?? "/usr/bin:/bin"),
@@ -43,6 +61,17 @@ run("toolchain-python", "/usr/bin/python3.12", ["--version"], source);
 run("toolchain-gcc", "gcc", ["--version"], source);
 const frontendInstalled = run("root-ci", "npm", ["ci", "--no-audit", "--no-fund"], source);
 const backendInstalled = run("backend-ci", "npm", ["ci", "--no-audit", "--no-fund"], backend);
+// The coverage audit calls git rev-parse HEAD in both modes; a plain source
+// copy has no git metadata. Provide disposable metadata (info/exclude only,
+// never a working-tree write) so the real existing check actually runs.
+if (run("catalogue-git-context", "git", ["-C", source, "init", "-q"], source)) {
+  appendFileSync(join(source, ".git/info/exclude"), "\nnode_modules\n.next\nout\ndist\n");
+  run("catalogue-git-snapshot", "git", ["-C", source, "add", "-A"], source);
+  // Uses the environment's already-configured identity; never overrides it.
+  run("catalogue-git-commit", "git", ["-C", source, "commit", "-q", "-m",
+    "Create disposable catalogue check context", "-m",
+    "Co-authored-by: factory-droid[bot] <138933559+factory-droid[bot]@users.noreply.github.com>"], source);
+}
 if (frontendInstalled) {
   for (const check of ["workspace:check", "centropy:manifest:check", "centropy:coverage:check",
     "centropy:client:check", "centropy:forms:check"]) run(check.replaceAll(":", "-"), "npm", ["run", check], source);
@@ -62,8 +91,10 @@ if (frontendInstalled) run("frontend-build", "npm", ["run", "build"], source, tr
 if (backendInstalled) run("backend-build", "npm", ["run", "build", "--workspace", "@finnor/api"], backend, true);
 const cli = join(output, "cli.mjs");
 if (backendInstalled) {
+  // The approved bundle pin is bound to the root working directory: esbuild
+  // embeds entry-relative comment paths. Root cwd + lockfile esbuild only.
   const built = run("cli-build", join(backend, "node_modules/.bin/esbuild"),
-    ["scripts/project-z/z3/cli.mts", "--bundle", "--platform=node", "--format=esm", "--outfile=" + cli], backend);
+    ["finnor-os/scripts/project-z/z3/cli.mts", "--bundle", "--platform=node", "--format=esm", "--outfile=" + cli], source);
   if (built) {
     run("public-run", "/usr/bin/python3.12", [join(backend, "scripts/project-z/z3/finite-e2e.py"),
       "--cli", cli, "--output", join(output, "public")], source);

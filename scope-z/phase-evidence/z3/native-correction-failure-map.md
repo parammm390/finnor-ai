@@ -99,3 +99,22 @@ overlay checks use that config, plus the actual root config and owned entry
 config. Nineteen–twenty-two and N18a in `native-correction-plan.md` were added
 before their respective driver/reconstruction/queue corrections. No native
 case is promoted by an offline subprocess or static/type pass.
+
+install-01 (first lock-installed run, logs retained) detected N24, N25 and
+N26 from native-correction-plan.md: frontend-build module-not-found
+(sentry server/edge configs omitted from the distribution), boundary-run
+Z3_PRODUCER_ASSET_NOT_APPROVED (cwd-sensitive bundle recipe), and stale
+catalogue checks (coordinator composition additions were never preimage-bound
+here). These prompted source-distribution and driver corrections; their
+planned status was previously overstated. The frontend build failure
+was a distribution omission, not evidence of a native product regression. The coverage audit
+requires git context (git rev-parse HEAD); a plain copy cannot run it, so the
+installed run initialises disposable git metadata (info/exclude only, no
+working-tree writes) before executing the real existing check.
+
+The final bounded failure model is N27–N30 in `native-correction-plan.md`.
+It additionally covers the omitted real `coverage/route.ts`, the ineffective
+`.npmrc` exception, the pre-existing Git exclude file, insufficient installation
+headroom, modes/archive correspondence, and already-integrated coordinator
+catalogue semantics. Final source-only receipts must close these packaging
+cases without promoting them to current-source installed or native proof.

@@ -1,0 +1,40 @@
+diff --git a/scripts/centropy/generate-capability-manifest.mjs b/scripts/centropy/generate-capability-manifest.mjs
+index fef29d7b7889e2b2df7c762d923c41c882353815..45434620f799dd05bcf56e0982f49d7726d1a83f 100644
+--- a/scripts/centropy/generate-capability-manifest.mjs
++++ b/scripts/centropy/generate-capability-manifest.mjs
+@@ -86,8 +86,10 @@ const coalitionOperations = new Map([
+   ["obligations/coalition-consent-history", "READ"],
+   ["obligations/coalition-prepare", "MUTATION"],
+ ])
++const z3ViabilityOperations = registeredOperations("finnor-os/packages/private-equity/src/project-z/z3-viability/contracts.ts", "Z3_OPERATIONS")
++if (!z3ViabilityOperations.length || !companyBrainSource.includes("VIABILITY_OPERATIONS")) throw new Error("Z3 viability operations must be actually delegated")
+ const companyBrainOperations = [...new Set([
+-  ...capitalOperations,...formationOperations,...m4Operations.keys(),
++  ...capitalOperations,...formationOperations,...m4Operations.keys(),...z3ViabilityOperations,
+   ...[...companyBrainSource.matchAll(/case "([a-z-]+)":/g)].map((match) => match[1]),
+   ...delegatedRegistries.flatMap(([name, file]) => {
+     if (!companyBrainSource.includes(name)) throw new Error(`Undelegated operation registry ${name}`)
+@@ -120,6 +122,7 @@ const companyBrainReads = new Set([
+   "economic-programme-read", "economic-reservation-read",
+   "response-model-read", "response-model-list", "response-model-artifact", "response-model-compare", "response-use-read",
+   "interaction-read", "interaction-list", "interaction-artifact", "interaction-compare", "interaction-local", "interaction-run-read",
++  "viability-read",
+ ])
+ const elicitationOperations=registeredOperations("finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts","ELICITATION_OPERATIONS")
+ const elicitationReads=new Set(["context","read","status","history"])
+@@ -154,6 +157,7 @@ if (!atlasOperations.size) throw new Error("Missing versioned R7 operation class
+ const operationClasses = new Map()
+ for (const operation of ["response-model-cancel", "response-model-resume", "response-use-cancel", "response-use-resume"])
+   operationClasses.set(`company-brain/${operation}`, "CONTROL")
++operationClasses.set("company-brain/viability-recover", "CONTROL")
+ for (const [family, operations] of ownerLeafOperations) for (const operation of operations)
+   operationClasses.set(`${family}/${operation}`, ownerLeafReads.has(operation) ? "READ" :
+     ["cancel-delivery", "reconcile-request", "reconcile"].includes(operation) ? "CONTROL" : "MUTATION")
+@@ -295,6 +299,7 @@ function routeEntry(method, path, source) {
+     verificationClass: read ? "canonical_read" : "canonical_reread",
+     presentationTargets: userProduct ? presentationTargets : [],
+     invalidationTags: read ? [] : family==="elicitation-protocol"?["work","company-brain","elicitation-protocol"]:family==="branch-fabric"?["work","branch-fabric"]:
++      path.startsWith("company-brain/viability-")?["work","company-brain"]:
+       path.startsWith("company-brain/response-")?["work","company-brain"]:
+       path.startsWith("company-brain/confidential-")?["work","company-brain","authority","source","underwriting"]:
+       path.startsWith("company-brain/capital-formation-")?["work","company-brain","authority","source"]:

@@ -1,0 +1,104 @@
+diff --git a/src/lib/centropy/capability-manifest.generated.json b/src/lib/centropy/capability-manifest.generated.json
+index e606a991203282c0d85236bb51509d22535a852d..9b6dffacb2e4a13c7d05a397e0450961ab5958dc 100644
+--- a/src/lib/centropy/capability-manifest.generated.json
++++ b/src/lib/centropy/capability-manifest.generated.json
+@@ -11913,6 +11913,99 @@
+       "tests": [],
+       "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+     },
++    {
++      "capabilityId": "http.post.company-brain.viability-read",
++      "family": "company-brain",
++      "owner": "@finnor/private-equity",
++      "transport": "http",
++      "method": "POST",
++      "routePattern": "company-brain/viability-read",
++      "routeDepth": 2,
++      "classification": "READ",
++      "kind": "read",
++      "userProduct": true,
++      "agentProduct": false,
++      "modelCallable": false,
++      "humanOnly": false,
++      "adminOnly": false,
++      "systemOnly": false,
++      "requiredContext": [],
++      "authorityClass": "query",
++      "effectClass": null,
++      "verificationClass": "canonical_read",
++      "presentationTargets": [
++        "WORLD",
++        "CANVAS"
++      ],
++      "invalidationTags": [],
++      "timeoutClass": "READ",
++      "tests": [],
++      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
++    },
++    {
++      "capabilityId": "http.post.company-brain.viability-recover",
++      "family": "company-brain",
++      "owner": "@finnor/private-equity",
++      "transport": "http",
++      "method": "POST",
++      "routePattern": "company-brain/viability-recover",
++      "routeDepth": 2,
++      "classification": "CONTROL",
++      "kind": "control",
++      "userProduct": true,
++      "agentProduct": false,
++      "modelCallable": false,
++      "humanOnly": false,
++      "adminOnly": false,
++      "systemOnly": false,
++      "requiredContext": [],
++      "authorityClass": "backend_policy",
++      "effectClass": "runtime_control",
++      "verificationClass": "canonical_reread",
++      "presentationTargets": [
++        "WORLD",
++        "CANVAS"
++      ],
++      "invalidationTags": [
++        "work",
++        "company-brain"
++      ],
++      "timeoutClass": "WRITE",
++      "tests": [],
++      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
++    },
++    {
++      "capabilityId": "http.post.company-brain.viability-submit",
++      "family": "company-brain",
++      "owner": "@finnor/private-equity",
++      "transport": "http",
++      "method": "POST",
++      "routePattern": "company-brain/viability-submit",
++      "routeDepth": 2,
++      "classification": "MUTATION",
++      "kind": "mutation",
++      "userProduct": true,
++      "agentProduct": false,
++      "modelCallable": false,
++      "humanOnly": false,
++      "adminOnly": false,
++      "systemOnly": false,
++      "requiredContext": [],
++      "authorityClass": "backend_policy",
++      "effectClass": "domain_mutation",
++      "verificationClass": "canonical_reread",
++      "presentationTargets": [
++        "WORLD",
++        "CANVAS"
++      ],
++      "invalidationTags": [
++        "work",
++        "company-brain"
++      ],
++      "timeoutClass": "WRITE",
++      "tests": [],
++      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
++    },
+     {
+       "capabilityId": "http.post.computer.runs.$id.cancel",
+       "family": "computer",
