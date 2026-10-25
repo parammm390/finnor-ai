@@ -1,0 +1,214 @@
+
+> @finnor/api@0.1.0 build
+> tsx ../../scripts/x3/stamp-source.mts && tsx ../../scripts/x5/stamp-source.mts && tsx ../../scripts/x4/stamp-source.mts && tsx ../../scripts/y2/stamp-source.mts && next build
+
+X3_EMITTED_SOURCE_STAMP 50
+X5_EMITTED_SOURCE_STAMP 78
+X4_EMITTED_SOURCE_STAMP 112
+Y2_EMITTED_SEMANTIC_SOURCE_STAMP 20
+   ▲ Next.js 15.5.28
+   - Experiments (use with caution):
+     · cpus: 1
+     · extensionAlias
+     ✓ webpackMemoryOptimizations
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings in 50s
+
+../../packages/epistemic-runtime/src/verified-capital-compiler/native.ts
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+../../packages/epistemic-runtime/src/verified-capital-compiler/native.ts
+../../packages/epistemic-runtime/src/verified-capital-compiler/index.ts
+../../packages/epistemic-runtime/src/index.ts
+./app/api/allocations/[operation]/route.ts
+
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+(node:145699) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+   Generating static pages (0/66) ...
+   Generating static pages (16/66) 
+   Generating static pages (32/66) 
+   Generating static pages (49/66) 
+ ✓ Generating static pages (66/66)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                                  Size  First Load JS
+┌ ƒ /api/actions                                                            485 B         102 kB
+├ ƒ /api/actions/[id]/confirm                                               485 B         102 kB
+├ ƒ /api/actions/[id]/escalate                                              485 B         102 kB
+├ ƒ /api/actions/[id]/reject                                                485 B         102 kB
+├ ƒ /api/actions/[id]/revert                                                485 B         102 kB
+├ ƒ /api/actions/human                                                      485 B         102 kB
+├ ƒ /api/actions/pending                                                    485 B         102 kB
+├ ƒ /api/actions/review-capability                                          485 B         102 kB
+├ ƒ /api/activity                                                           485 B         102 kB
+├ ƒ /api/admin/migrate                                                      485 B         102 kB
+├ ƒ /api/allocations/[operation]                                            485 B         102 kB
+├ ƒ /api/artifact-templates                                                 485 B         102 kB
+├ ƒ /api/artifact-templates/[key]/instantiate                               485 B         102 kB
+├ ƒ /api/artifacts                                                          485 B         102 kB
+├ ƒ /api/audit                                                              485 B         102 kB
+├ ƒ /api/branches/[operation]                                               485 B         102 kB
+├ ƒ /api/closing/[operation]                                                485 B         102 kB
+├ ƒ /api/coalition-programmes/[operation]                                   485 B         102 kB
+├ ƒ /api/company-brain/[operation]                                          485 B         102 kB
+├ ƒ /api/computer/runs/[id]                                                 485 B         102 kB
+├ ƒ /api/computer/runs/[id]/cancel                                          485 B         102 kB
+├ ƒ /api/connections/[ref]                                                  485 B         102 kB
+├ ƒ /api/connections/[ref]/verify                                           485 B         102 kB
+├ ƒ /api/connections/google/callback                                        485 B         102 kB
+├ ƒ /api/connections/google/start                                           485 B         102 kB
+├ ƒ /api/connections/microsoft-graph/callback                               485 B         102 kB
+├ ƒ /api/connections/microsoft-graph/start                                  485 B         102 kB
+├ ƒ /api/connections/microsoft-graph/status                                 485 B         102 kB
+├ ƒ /api/corrections                                                        485 B         102 kB
+├ ƒ /api/decision-atlases/[operation]                                       485 B         102 kB
+├ ƒ /api/dlq                                                                485 B         102 kB
+├ ƒ /api/dlq/[id]                                                           485 B         102 kB
+├ ƒ /api/dlq/[id]/discard                                                   485 B         102 kB
+├ ƒ /api/dlq/[id]/replay                                                    485 B         102 kB
+├ ƒ /api/documents/[id]                                                     485 B         102 kB
+├ ƒ /api/documents/[id]/artifact                                            485 B         102 kB
+├ ƒ /api/documents/[id]/artifact/[...action]                                485 B         102 kB
+├ ƒ /api/economic-outcomes/[operation]                                      485 B         102 kB
+├ ƒ /api/elicitation-protocols/[operation]                                  485 B         102 kB
+├ ƒ /api/employees                                                          485 B         102 kB
+├ ƒ /api/events                                                             485 B         102 kB
+├ ƒ /api/experiments/[operation]                                            485 B         102 kB
+├ ƒ /api/health                                                             485 B         102 kB
+├ ƒ /api/identification-plans/[operation]                                   485 B         102 kB
+├ ƒ /api/insights                                                           485 B         102 kB
+├ ƒ /api/instructions/[id]                                                  485 B         102 kB
+├ ƒ /api/instructions/[id]/cancel                                           485 B         102 kB
+├ ƒ /api/instructions/[id]/events                                           485 B         102 kB
+├ ƒ /api/integrations/microsoft-graph/coverage                              485 B         102 kB
+├ ƒ /api/integrations/microsoft-graph/source-scopes                         485 B         102 kB
+├ ƒ /api/integrations/microsoft-graph/source-scopes/[id]                    485 B         102 kB
+├ ƒ /api/integrations/status                                                485 B         102 kB
+├ ƒ /api/interventions/[operation]                                          485 B         102 kB
+├ ƒ /api/investment-cases                                                   485 B         102 kB
+├ ƒ /api/investment-cases/[id]/underwriting                                 485 B         102 kB
+├ ƒ /api/live-controls                                                      485 B         102 kB
+├ ƒ /api/me                                                                 485 B         102 kB
+├ ƒ /api/objectives                                                         485 B         102 kB
+├ ƒ /api/obligations/[operation]                                            485 B         102 kB
+├ ƒ /api/operating-profile                                                  485 B         102 kB
+├ ƒ /api/operational-deltas                                                 485 B         102 kB
+├ ƒ /api/operations/[id]                                                    485 B         102 kB
+├ ƒ /api/outcome-packs                                                      485 B         102 kB
+├ ƒ /api/outcome-packs/control                                              485 B         102 kB
+├ ƒ /api/outcome-packs/grants                                               485 B         102 kB
+├ ƒ /api/outcome-packs/grants/[id]                                          485 B         102 kB
+├ ƒ /api/policies/[operation]                                               485 B         102 kB
+├ ƒ /api/policies/[operation]/[actionType]                                  485 B         102 kB
+├ ƒ /api/policies/[operation]/[actionType]/simulate                         485 B         102 kB
+├ ƒ /api/private-equity/calibration                                         485 B         102 kB
+├ ƒ /api/private-equity/digital-twin                                        485 B         102 kB
+├ ƒ /api/private-equity/ic/cases                                            485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]                                       485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/begin-preparation                     485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/conditions                            485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/conditions/[conditionId]/activate     485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/conditions/[conditionId]/fail         485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/conditions/[conditionId]/satisfy      485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/conditions/[conditionId]/supersede    485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/conditions/[conditionId]/waive        485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/decision-proof                        485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/decision-proposals                    485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/dissents                              485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/finalize                              485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/memos                                 485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/open-questions                        485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/questions                             485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/questions/[questionId]/answer         485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/questions/[questionId]/resolve        485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/questions/[questionId]/sources        485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/questions/[questionId]/supersede      485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/questions/[questionId]/waive          485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/ready-for-review                      485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/ready-for-vote                        485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/recommendations                       485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/reviewed-deck-link                    485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/underwriting-run                      485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/votes                                 485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/voting/close                          485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/voting/open                           485 B         102 kB
+├ ƒ /api/private-equity/ic/cases/[id]/withdraw                              485 B         102 kB
+├ ƒ /api/private-equity/ic/committee-configurations                         485 B         102 kB
+├ ƒ /api/push-subscriptions                                                 485 B         102 kB
+├ ƒ /api/queries                                                            485 B         102 kB
+├ ƒ /api/read-models/[view]                                                 485 B         102 kB
+├ ƒ /api/ready                                                              485 B         102 kB
+├ ƒ /api/receipts                                                           485 B         102 kB
+├ ƒ /api/receipts/[id]                                                      485 B         102 kB
+├ ƒ /api/reconciliation/[id]/resolve                                        485 B         102 kB
+├ ƒ /api/release                                                            485 B         102 kB
+├ ƒ /api/semantic-activity                                                  485 B         102 kB
+├ ƒ /api/setup/status                                                       485 B         102 kB
+├ ƒ /api/stream                                                             485 B         102 kB
+├ ƒ /api/threads                                                            485 B         102 kB
+├ ƒ /api/threads/[id]                                                       485 B         102 kB
+├ ƒ /api/threads/[id]/canvas                                                485 B         102 kB
+├ ƒ /api/underwriting/artifact-bindings                                     485 B         102 kB
+├ ƒ /api/underwriting/comparisons                                           485 B         102 kB
+├ ƒ /api/underwriting/model-versions/[id]/affected                          485 B         102 kB
+├ ƒ /api/underwriting/model-versions/diff                                   485 B         102 kB
+├ ƒ /api/underwriting/models                                                485 B         102 kB
+├ ƒ /api/underwriting/models/[id]/versions                                  485 B         102 kB
+├ ƒ /api/underwriting/projections                                           485 B         102 kB
+├ ƒ /api/underwriting/runs                                                  485 B         102 kB
+├ ƒ /api/underwriting/runs/[id]                                             485 B         102 kB
+├ ƒ /api/underwriting/runs/[id]/explain                                     485 B         102 kB
+├ ƒ /api/underwriting/runs/diff                                             485 B         102 kB
+├ ƒ /api/underwriting/scenarios                                             485 B         102 kB
+├ ƒ /api/underwriting/sensitivities                                         485 B         102 kB
+├ ƒ /api/underwriting/sensitivities/[id]                                    485 B         102 kB
+├ ƒ /api/user-prefs                                                         485 B         102 kB
+├ ƒ /api/user-prefs/digest                                                  485 B         102 kB
+├ ƒ /api/vitals                                                             485 B         102 kB
+├ ƒ /api/webhooks/esign                                                     485 B         102 kB
+├ ƒ /api/webhooks/ghl                                                       485 B         102 kB
+├ ƒ /api/webhooks/marketing                                                 485 B         102 kB
+├ ƒ /api/webhooks/microsoft-graph                                           485 B         102 kB
+├ ƒ /api/webhooks/payment                                                   485 B         102 kB
+├ ƒ /api/webhooks/vapi                                                      485 B         102 kB
+├ ƒ /api/workflows/runs                                                     485 B         102 kB
+├ ƒ /api/workflows/runs/[id]/cancel                                         485 B         102 kB
+├ ƒ /api/workflows/runs/[id]/escalate                                       485 B         102 kB
+├ ƒ /api/workflows/runs/[id]/pause                                          485 B         102 kB
+├ ƒ /api/workflows/runs/[id]/resume                                         485 B         102 kB
+├ ƒ /api/workflows/runs/[id]/retry                                          485 B         102 kB
+├ ƒ /api/workflows/steps/[id]/compensate                                    485 B         102 kB
+├ ƒ /api/workforce/assignments/[id]/reassign                                485 B         102 kB
+├ ƒ /api/workforce/profiles                                                 485 B         102 kB
+├ ƒ /api/workforce/proposals/[id]                                           485 B         102 kB
+├ ƒ /api/works                                                              485 B         102 kB
+├ ƒ /api/works/[id]                                                         485 B         102 kB
+├ ƒ /api/works/[id]/execution                                               485 B         102 kB
+├ ƒ /api/works/[id]/handoff                                                 485 B         102 kB
+├ ƒ /api/works/[id]/objective                                               485 B         102 kB
+├ ƒ /api/works/[id]/replay                                                  485 B         102 kB
+├ ƒ /api/works/[id]/retry                                                   485 B         102 kB
+└ ƒ /api/workspace-config                                                   485 B         102 kB
++ First Load JS shared by all                                              101 kB
+  ├ chunks/1956-5064779a29ef0a5d.js                                       45.6 kB
+  ├ chunks/87c73c54-0375ba195de27293.js                                   54.2 kB
+  └ other shared chunks (total)                                           1.53 kB
+
+Route (pages)                                                                Size  First Load JS
+─ ○ /404                                                                    182 B          83 kB
++ First Load JS shared by all                                             82.8 kB
+  ├ chunks/framework-bf8cc7b0cd28b74f.js                                  44.8 kB
+  ├ chunks/main-779016d3a860739c.js                                       36.4 kB
+  └ other shared chunks (total)                                            1.6 kB
+
+ƒ Middleware                                                              32.7 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
