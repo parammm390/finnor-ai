@@ -1,5 +1,7 @@
 "use client"
 
+import { NangoConnectionDesk } from "./NangoConnectionDesk"
+
 import { useEffect, useState } from "react"
 import { RefreshCw } from "lucide-react"
 import { z } from "zod"
@@ -80,7 +82,7 @@ export function SourceDiagnostics({ root }: { root: PeWorldRootRef | null }) {
     return () => { active = false }
   }, [rootType, rootId, refresh])
 
-  return <section className="ct-source-diagnostics" aria-labelledby="ct-source-diagnostics-title">
+  return <><NangoConnectionDesk /><section className="ct-source-diagnostics" aria-labelledby="ct-source-diagnostics-title">
     <header><div><span className="ct-eyebrow">MICROSOFT 365 / SOURCE TRUTH</span><h3 id="ct-source-diagnostics-title">Connection and evidence coverage</h3></div><button type="button" aria-label="Refresh Microsoft 365 source diagnostics" onClick={() => setRefresh((value) => value + 1)} disabled={connections.loading || coverage.loading}><RefreshCw size={15} /></button></header>
     <p>These are recorded integration and source-scope states. A healthy connection alone does not verify an individual document.</p>
     {connections.loading ? <p role="status">Reading Microsoft connection status…</p> : null}
@@ -92,5 +94,5 @@ export function SourceDiagnostics({ root }: { root: PeWorldRootRef | null }) {
       {coverage.error ? <p className="ct-source-diagnostics__error" role="alert">Scoped coverage unavailable · {coverage.error}</p> : null}
       {coverage.data ? <><p className="ct-source-diagnostics__asof">As of {dateLabel(coverage.data.asOf)}{coverage.data.partial ? " · first 300 scopes shown; more exist" : ""}</p>{coverage.data.scopes.length ? <ol>{coverage.data.scopes.map((scope) => <li key={scope.sourceScopeId}><div><strong>{label(scope.sourceKind)}</strong><span data-state={scope.coverage.state}>{label(scope.coverage.state)}</span></div><p>{scope.providerResourceId ?? "Provider resource unavailable"}</p><dl><div><dt>Freshness</dt><dd>{label(scope.freshness.state)} · observed {dateLabel(scope.freshness.lastObservedAt)}</dd></div><div><dt>Permission</dt><dd>{scope.permission.mode ? label(scope.permission.mode) : "unknown"} · checked {dateLabel(scope.permission.verifiedAt)}</dd></div><div><dt>Integration</dt><dd>{label(scope.integrationHealth.health)} · {label(scope.integrationHealth.syncStatus)}</dd></div><div><dt>Enabled</dt><dd>{scope.enabled ? "Yes" : "No"}</dd></div></dl>{scope.coverage.reason ? <p className="ct-source-diagnostics__reason">Recorded reason · {scope.coverage.reason}</p> : null}{scope.coverage.unresolvedObservations || scope.coverage.ambiguousObservations ? <small>{scope.coverage.unresolvedObservations} unresolved · {scope.coverage.ambiguousObservations} ambiguous observations</small> : null}</li>)}</ol> : <p>No Microsoft source scope is bound to this selected root. This read does not assess unbound or differently bound sources.</p>}</> : null}
     </> : <p>Select an institutional root to inspect source-scope coverage. Connection status above remains tenant scoped.</p>}
-  </section>
+  </section></>
 }

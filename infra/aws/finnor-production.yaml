@@ -2,1222 +2,1244 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: FINNOR four-class ECS Fargate compute with a REALTIME HTTPS SSE gateway.
 
 Metadata:
-  AWSToolsMetrics:
-    AWSAgentToolkit: aws-cloudformation@2
+ AWSToolsMetrics:
+  AWSAgentToolkit: aws-cloudformation@2
 
 Parameters:
-  GlmModel: {Type: String}
-  MistralModel: {Type: String}
-  DeepseekModel: {Type: String}
-  VpcId:
-    Type: AWS::EC2::VPC::Id
-    Default: vpc-0d7e56436d2d05193
-  PublicSubnet1:
-    Type: AWS::EC2::Subnet::Id
-    Default: subnet-014251451583c1b79
-  PublicSubnet2:
-    Type: AWS::EC2::Subnet::Id
-    Default: subnet-07c14e3fee9606ce0
-  CertificateArn:
-    Type: String
-  GitHubOidcProviderArn:
-    Type: String
-  GitHubOwner:
-    Type: String
-    Default: parammm390
-  GitHubRepositoryName:
-    Type: String
-    Default: finnor-ai
-  GitHubOwnerId:
-    Type: String
-    Default: '221117685'
-  GitHubRepositoryId:
-    Type: String
-    Default: '1306076635'
-  GitHubEnvironment:
-    Type: String
-    Default: production
-  ImageUri:
-    Type: String
-  ReleaseCommitSha:
-    Type: String
-    AllowedPattern: '[0-9a-fA-F]{40}'
-  ReleaseBuildId:
-    Type: String
-  ReleaseVersion:
-    Type: String
-  CoreCertificationId:
-    Type: String
-  SecretMap:
-    Type: String
-    NoEcho: true
-  RealtimeSecretMap:
-    Type: String
-    NoEcho: true
-  HeavySecretMap:
-    Type: String
-    NoEcho: true
-  SseAllowedOrigins:
-    Type: String
-    Default: https://finnorai.com
-  SupabaseUrl:
-    Type: String
-    Default: https://kpxrnonhnhexutvdywbh.supabase.co
-  ComputePlaneStage:
-    Type: String
-    AllowedValues: [preparing, routing, finalized]
-    Default: preparing
-    Description: Warm, route, finalize after legacy drain.
-  LegacyWorkerTaskDefinitionArn:
-    Type: String
-    Default: ''
+ GlmModel: {Type: String}
+ MistralModel: {Type: String}
+ DeepseekModel: {Type: String}
+ VpcId:
+  Type: AWS::EC2::VPC::Id
+  Default: vpc-0d7e56436d2d05193
+ PublicSubnet1:
+  Type: AWS::EC2::Subnet::Id
+  Default: subnet-014251451583c1b79
+ PublicSubnet2:
+  Type: AWS::EC2::Subnet::Id
+  Default: subnet-07c14e3fee9606ce0
+ CertificateArn:
+  Type: String
+ GitHubOidcProviderArn:
+  Type: String
+ GitHubOwner:
+  Type: String
+  Default: parammm390
+ GitHubRepositoryName:
+  Type: String
+  Default: finnor-ai
+ GitHubOwnerId:
+  Type: String
+  Default: '221117685'
+ GitHubRepositoryId:
+  Type: String
+  Default: '1306076635'
+ GitHubEnvironment:
+  Type: String
+  Default: production
+ ImageUri:
+  Type: String
+ ReleaseCommitSha:
+  Type: String
+  AllowedPattern: '[0-9a-fA-F]{40}'
+ ReleaseBuildId:
+  Type: String
+ ReleaseVersion:
+  Type: String
+ CoreCertificationId:
+  Type: String
+ SecretMap:
+  Type: String
+  NoEcho: true
+ RealtimeSecretMap:
+  Type: String
+  NoEcho: true
+ HeavySecretMap:
+  Type: String
+  NoEcho: true
+ SseAllowedOrigins:
+  Type: String
+  Default: https://finnorai.com
+ SupabaseUrl:
+  Type: String
+  Default: https://kpxrnonhnhexutvdywbh.supabase.co
+ ComputePlaneStage:
+  Type: String
+  AllowedValues: [preparing, routing, finalized]
+  Default: preparing
+  Description: Warm, route, finalize after legacy drain.
+ LegacyWorkerTaskDefinitionArn:
+  Type: String
+  Default: ''
 
 Conditions:
-  ComputePreparing: !Equals [!Ref ComputePlaneStage, preparing]
-  ComputeRouting: !Equals [!Ref ComputePlaneStage, routing]
-  HasLegacyWorkerTask: !Not [!Equals [!Ref LegacyWorkerTaskDefinitionArn, '']]
-  RouteLegacyTraffic: !And [!Condition ComputePreparing, !Condition HasLegacyWorkerTask]
-  RunLegacyWorker: !And [!Condition HasLegacyWorkerTask, !Or [!Condition ComputePreparing, !Condition ComputeRouting]]
+ ComputePreparing: !Equals [!Ref ComputePlaneStage, preparing]
+ ComputeRouting: !Equals [!Ref ComputePlaneStage, routing]
+ HasLegacyWorkerTask: !Not [!Equals [!Ref LegacyWorkerTaskDefinitionArn, '']]
+ RouteLegacyTraffic: !And [!Condition ComputePreparing, !Condition HasLegacyWorkerTask]
+ RunLegacyWorker: !And [!Condition HasLegacyWorkerTask, !Or [!Condition ComputePreparing, !Condition ComputeRouting]]
 
 Resources:
-  WorkerDatabaseSecretPolicy:
-    Type: AWS::SecretsManager::ResourcePolicy
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Metadata: { com.aws.cloudformation.Context: { why: Independent worker credential, must: [API deny remains explicit] } }
-    Properties:
-      SecretId: finnor/prod/worker-database-url
-      BlockPublicPolicy: true
-      ResourcePolicy:
-        Version: '2012-10-17'
-        Statement:
-          - {Effect: Deny, Principal: { AWS: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:user/finnor-app-prod' }, Action: 'secretsmanager:*', Resource: '*'}
-  WorkerRepository:
-    Type: AWS::ECR::Repository
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      RepositoryName: finnor-worker
-      ImageTagMutability: IMMUTABLE
-      ImageScanningConfiguration:
-        ScanOnPush: true
-      EncryptionConfiguration:
-        EncryptionType: AES256
-      LifecyclePolicy:
-        LifecyclePolicyText: |
-          {
-            "rules": [
-              {
-                "rulePriority": 1,
-                "description": "Retain the ten most recent immutable release images",
-                "selection": {"tagStatus": "any", "countType": "imageCountMoreThan", "countNumber": 10},
-                "action": {"type": "expire"}
-              }
-            ]
-          }
+ WorkerDatabaseSecretPolicy:
+  Type: AWS::SecretsManager::ResourcePolicy
+  DeletionPolicy: Retain
+  UpdateReplacePolicy: Retain
+  Metadata: { com.aws.cloudformation.Context: { why: Independent worker credential, must: [API deny remains explicit] } }
+  Properties:
+   SecretId: finnor/prod/worker-database-url
+   BlockPublicPolicy: true
+   ResourcePolicy:
+     Version: '2012-10-17'
+     Statement:
+       - {Effect: Deny, Principal: { AWS: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:user/finnor-app-prod' }, Action: 'secretsmanager:*', Resource: '*'}
+ WorkerRepository:
+  Type: AWS::ECR::Repository
+  DeletionPolicy: Retain
+  UpdateReplacePolicy: Retain
+  Properties:
+   RepositoryName: finnor-worker
+   ImageTagMutability: IMMUTABLE
+   ImageScanningConfiguration:
+     ScanOnPush: true
+   EncryptionConfiguration:
+     EncryptionType: AES256
+   LifecyclePolicy:
+     LifecyclePolicyText: |
+       {
+         "rules": [
+           {
+             "rulePriority": 1,
+             "description": "Retain the ten most recent immutable release images",
+             "selection": {"tagStatus": "any", "countType": "imageCountMoreThan", "countNumber": 10},
+             "action": {"type": "expire"}
+           }
+         ]
+       }
 
-  WorkerLogGroup:
-    Type: AWS::Logs::LogGroup
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      LogGroupName: /ecs/finnor-worker
-      RetentionInDays: 7
+ WorkerLogGroup:
+  Type: AWS::Logs::LogGroup
+  DeletionPolicy: Retain
+  UpdateReplacePolicy: Retain
+  Properties:
+   LogGroupName: /ecs/finnor-worker
+   RetentionInDays: 7
 
-  WorkerCluster:
-    Type: AWS::ECS::Cluster
-    Properties:
-      ClusterName: finnor-production
-      ClusterSettings:
-        - Name: containerInsights
-          Value: enabled
-      Tags:
-        - Key: service
-          Value: finnor-worker
-        - Key: environment
-          Value: production
+ WorkerCluster:
+  Type: AWS::ECS::Cluster
+  Properties:
+   ClusterName: finnor-production
+   ClusterSettings:
+     - Name: containerInsights
+       Value: enabled
+   Tags:
+     - Key: service
+       Value: finnor-worker
+     - Key: environment
+       Value: production
 
-  WorkerExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: finnor-ecs-execution
-      Description: ECS Fargate image and CloudWatch Logs execution role for FINNOR.
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ecs-tasks.amazonaws.com
-            Action: sts:AssumeRole
-            Condition:
-              ArnLike:
-                aws:SourceArn: !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:*'
-              StringEquals:
-                aws:SourceAccount: !Ref AWS::AccountId
-      Policies:
-        - PolicyName: finnor-ecs-execution-minimal
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Sid: EcrAuth
-                Effect: Allow
-                Action: ecr:GetAuthorizationToken
-                Resource: '*'
-              - Sid: EcrPull
-                Effect: Allow
-                Action: [ecr:BatchCheckLayerAvailability, ecr:BatchGetImage, ecr:GetDownloadUrlForLayer]
-                Resource: !GetAtt WorkerRepository.Arn
-              - Sid: CloudWatchLogs
-                Effect: Allow
-                Action: [logs:CreateLogStream, logs:PutLogEvents]
-                Resource: !Sub '${WorkerLogGroup.Arn}:*'
+ WorkerExecutionRole:
+  Type: AWS::IAM::Role
+  Properties:
+   RoleName: finnor-ecs-execution
+   Description: ECS Fargate image and CloudWatch Logs execution role for FINNOR.
+   AssumeRolePolicyDocument:
+     Version: '2012-10-17'
+     Statement:
+       - Effect: Allow
+         Principal:
+           Service: ecs-tasks.amazonaws.com
+         Action: sts:AssumeRole
+         Condition:
+           ArnLike:
+             aws:SourceArn: !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:*'
+           StringEquals:
+             aws:SourceAccount: !Ref AWS::AccountId
+   Policies:
+     - PolicyName: finnor-ecs-execution-minimal
+       PolicyDocument:
+         Version: '2012-10-17'
+         Statement:
+           - Sid: EcrAuth
+             Effect: Allow
+             Action: ecr:GetAuthorizationToken
+             Resource: '*'
+           - Sid: EcrPull
+             Effect: Allow
+             Action: [ecr:BatchCheckLayerAvailability, ecr:BatchGetImage, ecr:GetDownloadUrlForLayer]
+             Resource: !GetAtt WorkerRepository.Arn
+           - Sid: CloudWatchLogs
+             Effect: Allow
+             Action: [logs:CreateLogStream, logs:PutLogEvents]
+             Resource: !Sub '${WorkerLogGroup.Arn}:*'
 
-  TenantProviderSecretPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      ManagedPolicyName: finnor-compute-tenant-provider
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - {Sid: ReadRotateTenantSecrets, Effect: Allow, Action: [secretsmanager:GetSecretValue, secretsmanager:PutSecretValue], Resource: !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/tenants/*'}
-          - Sid: CreateTenantSecrets
-            Effect: Allow
-            Action: secretsmanager:CreateSecret
-            Resource: '*'
-            Condition: { StringLike: { 'secretsmanager:Name': 'finnor/tenants/*' } }
-          - {Sid: SecretKmsForwardAccess, Effect: Allow, Action: [kms:Decrypt, kms:GenerateDataKey], Resource: '*', Condition: { StringEquals: { 'kms:ViaService': !Sub 'secretsmanager.${AWS::Region}.amazonaws.com' } }}
-          - {Sid: MicrosoftOutboundIdentity, Effect: Allow, Action: [sts:GetWebIdentityToken, sts:TagGetWebIdentityToken], Resource: '*'}
+ TenantProviderSecretPolicy:
+  Type: AWS::IAM::ManagedPolicy
+  Properties:
+   ManagedPolicyName: finnor-compute-tenant-provider
+   PolicyDocument:
+     Version: '2012-10-17'
+     Statement:
+       - {Sid: ReadRotateTenantSecrets, Effect: Allow, Action: [secretsmanager:GetSecretValue, secretsmanager:PutSecretValue], Resource: !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/tenants/*'}
+       - Sid: CreateTenantSecrets
+         Effect: Allow
+         Action: secretsmanager:CreateSecret
+         Resource: '*'
+         Condition: { StringLike: { 'secretsmanager:Name': 'finnor/tenants/*' } }
+       - {Sid: SecretKmsForwardAccess, Effect: Allow, Action: [kms:Decrypt, kms:GenerateDataKey], Resource: '*', Condition: { StringEquals: { 'kms:ViaService': !Sub 'secretsmanager.${AWS::Region}.amazonaws.com' } }}
+       - {Sid: MicrosoftOutboundIdentity, Effect: Allow, Action: [sts:GetWebIdentityToken, sts:TagGetWebIdentityToken], Resource: '*'}
 
-  CoreRuntimeSecretPolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      ManagedPolicyName: finnor-compute-core-runtime-secrets
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action: secretsmanager:GetSecretValue
-            Resource:
-              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/worker-database-url-*'
-              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/groq-api-key-*'
-              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/redis-url-*'
-              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/sentry-dsn-*'
-              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/supabase-service-role-key-*'
-              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/vapi-api-key-*'
-              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/vapi-webhook-secret-*'
+ CoreRuntimeSecretPolicy:
+  Type: AWS::IAM::ManagedPolicy
+  Properties:
+   ManagedPolicyName: finnor-compute-core-runtime-secrets
+   PolicyDocument:
+     Version: '2012-10-17'
+     Statement:
+       - Effect: Allow
+         Action: secretsmanager:GetSecretValue
+         Resource:
+           - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/worker-database-url-*'
+           - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/groq-api-key-*'
+           - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/redis-url-*'
+           - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/sentry-dsn-*'
+           - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/supabase-service-role-key-*'
+           - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/vapi-api-key-*'
+           - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/vapi-webhook-secret-*'
 
-  WorkerTaskRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: finnor-worker-task
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - {Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole', Condition: { ArnLike: { 'aws:SourceArn': !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:*' }, StringEquals: { 'aws:SourceAccount': !Ref 'AWS::AccountId' } }}
-      ManagedPolicyArns: [!Ref TenantProviderSecretPolicy, !Ref CoreRuntimeSecretPolicy]
+ WorkerTaskRole:
+  Type: AWS::IAM::Role
+  Properties:
+   RoleName: finnor-worker-task
+   AssumeRolePolicyDocument:
+     Version: '2012-10-17'
+     Statement:
+       - {Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole', Condition: { ArnLike: { 'aws:SourceArn': !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:*' }, StringEquals: { 'aws:SourceAccount': !Ref 'AWS::AccountId' } }}
+   ManagedPolicyArns: [!Ref TenantProviderSecretPolicy, !Ref CoreRuntimeSecretPolicy]
 
-  BackgroundTaskRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: finnor-background-task
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - {Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole', Condition: { ArnLike: { 'aws:SourceArn': !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:*' }, StringEquals: { 'aws:SourceAccount': !Ref 'AWS::AccountId' } }}
-      ManagedPolicyArns: [!Ref TenantProviderSecretPolicy, !Ref CoreRuntimeSecretPolicy]
+ BackgroundTaskRole:
+  Type: AWS::IAM::Role
+  Properties:
+   RoleName: finnor-background-task
+   AssumeRolePolicyDocument:
+     Version: '2012-10-17'
+     Statement:
+       - {Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole', Condition: { ArnLike: { 'aws:SourceArn': !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:*' }, StringEquals: { 'aws:SourceAccount': !Ref 'AWS::AccountId' } }}
+   ManagedPolicyArns: [!Ref TenantProviderSecretPolicy, !Ref CoreRuntimeSecretPolicy]
 
-  HeavyTaskRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: finnor-heavy-task
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - {Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole', Condition: { ArnLike: { 'aws:SourceArn': !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:*' }, StringEquals: { 'aws:SourceAccount': !Ref 'AWS::AccountId' } }}
-      ManagedPolicyArns: [!Ref TenantProviderSecretPolicy]
-      Policies:
-        - PolicyName: finnor-heavy-secret-read
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action: secretsmanager:GetSecretValue
-                Resource:
-                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/worker-database-url-*'
-                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/groq-api-key-*'
-                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/redis-url-*'
-                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/sentry-dsn-*'
+ HeavyTaskRole:
+  Type: AWS::IAM::Role
+  Properties:
+   RoleName: finnor-heavy-task
+   AssumeRolePolicyDocument:
+     Version: '2012-10-17'
+     Statement:
+       - {Effect: Allow, Principal: { Service: ecs-tasks.amazonaws.com }, Action: 'sts:AssumeRole', Condition: { ArnLike: { 'aws:SourceArn': !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:*' }, StringEquals: { 'aws:SourceAccount': !Ref 'AWS::AccountId' } }}
+   ManagedPolicyArns: [!Ref TenantProviderSecretPolicy]
+   Policies:
+     - PolicyName: finnor-heavy-secret-read
+       PolicyDocument:
+         Version: '2012-10-17'
+         Statement:
+           - Effect: Allow
+             Action: secretsmanager:GetSecretValue
+             Resource:
+               - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/worker-database-url-*'
+               - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/groq-api-key-*'
+               - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/redis-url-*'
+               - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/sentry-dsn-*'
 
-  RealtimeTaskRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: finnor-realtime-task
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ecs-tasks.amazonaws.com
-            Action: sts:AssumeRole
-            Condition:
-              ArnLike:
-                aws:SourceArn: !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:*'
-              StringEquals:
-                aws:SourceAccount: !Ref AWS::AccountId
-      Policies:
-        - PolicyName: finnor-realtime-secrets-read
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action: [secretsmanager:DescribeSecret, secretsmanager:GetSecretValue]
-                Resource:
-                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/worker-database-url-*'
-                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/sentry-dsn-*'
-                  - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/supabase-service-role-key-*'
-              - Effect: Allow
-                Action: kms:Decrypt
-                Resource: '*'
-                Condition:
-                  StringEquals:
-                    kms:ViaService: !Sub 'secretsmanager.${AWS::Region}.amazonaws.com'
+ RealtimeTaskRole:
+  Type: AWS::IAM::Role
+  Properties:
+   RoleName: finnor-realtime-task
+   AssumeRolePolicyDocument:
+     Version: '2012-10-17'
+     Statement:
+       - Effect: Allow
+         Principal:
+           Service: ecs-tasks.amazonaws.com
+         Action: sts:AssumeRole
+         Condition:
+           ArnLike:
+             aws:SourceArn: !Sub 'arn:${AWS::Partition}:ecs:${AWS::Region}:${AWS::AccountId}:*'
+           StringEquals:
+             aws:SourceAccount: !Ref AWS::AccountId
+   Policies:
+     - PolicyName: finnor-realtime-secrets-read
+       PolicyDocument:
+         Version: '2012-10-17'
+         Statement:
+           - Effect: Allow
+             Action: [secretsmanager:DescribeSecret, secretsmanager:GetSecretValue]
+             Resource:
+               - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/worker-database-url-*'
+               - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/sentry-dsn-*'
+               - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/supabase-service-role-key-*'
+           - Effect: Allow
+             Action: kms:Decrypt
+             Resource: '*'
+             Condition:
+               StringEquals:
+                 kms:ViaService: !Sub 'secretsmanager.${AWS::Region}.amazonaws.com'
 
-  GitHubActionsRole:
-    Type: AWS::IAM::Role
-    Metadata:
-      com.aws.cloudformation.Context:
-        why: short-lived production release identity; GitHub OIDC over stored AWS keys
-        must:
-          - AWS-supported sub binds immutable repo + owner IDs and the production environment
-          - audience remains sts.amazonaws.com
-        mutable: change-with-constraints
-        mutability:
-          AssumeRolePolicyDocument: change-with-constraints
-    Properties:
-      RoleName: finnor-github-actions-deploy
-      Description: GitHub main OIDC role for governed FINNOR releases.
-      MaxSessionDuration: 3600
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Federated: !Ref GitHubOidcProviderArn
-            Action: sts:AssumeRoleWithWebIdentity
-            Condition:
-              StringEquals:
-                token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub 'repo:${GitHubOwner}@${GitHubOwnerId}/${GitHubRepositoryName}@${GitHubRepositoryId}:environment:${GitHubEnvironment}'
-      Policies:
-        - PolicyName: finnor-github-actions-release
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Sid: EcrAuth
-                Effect: Allow
-                Action: ecr:GetAuthorizationToken
-                Resource: '*'
-              - Sid: EcrReleaseRepository
-                Effect: Allow
-                Action: [ecr:BatchCheckLayerAvailability, ecr:BatchGetImage, ecr:CompleteLayerUpload, ecr:DescribeImages, ecr:DescribeRepositories, ecr:GetDownloadUrlForLayer, ecr:InitiateLayerUpload, ecr:PutImage, ecr:UploadLayerPart]
-                Resource: !GetAtt WorkerRepository.Arn
-              - Sid: EcsRelease
-                Effect: Allow
-                Action: [ecs:CreateService, ecs:DeleteService, ecs:DeregisterTaskDefinition, ecs:DescribeClusters, ecs:DescribeServiceDeployments, ecs:DescribeServices, ecs:DescribeTaskDefinition, ecs:DescribeTasks, ecs:ListClusters, ecs:ListServiceDeployments, ecs:ListServices, ecs:ListTagsForResource, ecs:ListTasks, ecs:ListTaskDefinitions, ecs:RegisterTaskDefinition, ecs:StopServiceDeployment, ecs:TagResource, ecs:UntagResource, ecs:UpdateClusterSettings, ecs:UpdateService]
-                Resource: '*'
-              - Sid: LoadBalancerHealth
-                Effect: Allow
-                Action: [elasticloadbalancing:DescribeLoadBalancers, elasticloadbalancing:DescribeListenerAttributes, elasticloadbalancing:DescribeTargetGroups, elasticloadbalancing:DescribeListeners, elasticloadbalancing:DescribeLoadBalancerAttributes, elasticloadbalancing:DescribeRules, elasticloadbalancing:DescribeTags, elasticloadbalancing:DescribeTargetGroupAttributes, elasticloadbalancing:DescribeTargetHealth, elasticloadbalancing:AddTags, elasticloadbalancing:CreateRule, elasticloadbalancing:CreateTargetGroup, elasticloadbalancing:DeleteRule, elasticloadbalancing:DeleteTargetGroup, elasticloadbalancing:ModifyListener, elasticloadbalancing:ModifyRule, elasticloadbalancing:ModifyTargetGroup, elasticloadbalancing:ModifyTargetGroupAttributes, elasticloadbalancing:RemoveTags, elasticloadbalancing:SetRulePriorities]
-                Resource: '*'
-              - Sid: NetworkInspection
-                Effect: Allow
-                Action: [ec2:DescribeSecurityGroups, ec2:DescribeInstances, ec2:DescribeNatGateways, ec2:DescribeSubnets, ec2:DescribeVpcs, ec2:AuthorizeSecurityGroupEgress, ec2:AuthorizeSecurityGroupIngress, ec2:CreateSecurityGroup, ec2:CreateTags, ec2:DeleteSecurityGroup, ec2:DeleteTags, ec2:RevokeSecurityGroupEgress, ec2:RevokeSecurityGroupIngress]
-                Resource: '*'
-              - Sid: GovernedStackChanges
-                Effect: Allow
-                Action: [cloudformation:CreateChangeSet, cloudformation:DescribeChangeSet, cloudformation:DescribeStacks, cloudformation:ExecuteChangeSet]
-                Resource: '*'
-              - {"Effect":"Allow","Action":["kms:Decrypt"],"Resource":["arn:aws:kms:us-east-1:601804670058:key/*"],"Condition":{"StringEquals":{"kms:ViaService":["secretsmanager.us-east-1.amazonaws.com"]},"StringLike":{"kms:EncryptionContext:aws:secretsmanager:arn":["arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????","arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/worker-database-url-??????"]}}}
-              - {"Effect":"Allow","Action":["secretsmanager:GetSecretValue"],"Resource":["arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????","arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/worker-database-url-??????"]}
-              - {"Effect":"Allow","Action":["secretsmanager:GetResourcePolicy","secretsmanager:PutResourcePolicy"],"Resource":["arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/worker-database-url-??????"]}
-              - {"Effect":"Allow","Action":["cloudformation:GetTemplate"],"Resource":["arn:aws:cloudformation:us-east-1:601804670058:stack/finnor-production/*"]}
-              - Sid: ComputeScaling
-                Effect: Allow
-                Action: [application-autoscaling:RegisterScalableTarget, application-autoscaling:DeregisterScalableTarget, application-autoscaling:PutScalingPolicy, application-autoscaling:DeleteScalingPolicy, application-autoscaling:DescribeScalableTargets, application-autoscaling:DescribeScalingPolicies, application-autoscaling:DescribeScheduledActions]
-                Resource: '*'
-              - {Sid: ComputeScalingTags, Effect: Allow, Action: [application-autoscaling:TagResource, application-autoscaling:UntagResource], Resource: !Sub 'arn:${AWS::Partition}:application-autoscaling:${AWS::Region}:${AWS::AccountId}:scalable-target/*'}
-              - Sid: ComputeAlarms
-                Effect: Allow
-                Action: [cloudwatch:PutMetricAlarm, cloudwatch:DeleteAlarms, cloudwatch:DescribeAlarms, cloudwatch:ListTagsForResource, cloudwatch:TagResource, cloudwatch:UntagResource]
-                Resource: !Sub 'arn:${AWS::Partition}:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:finnor-*'
-              - {Sid: ComputeRoleLifecycle, Effect: Allow, Action: [iam:CreateRole, iam:DeleteRole, iam:GetRole, iam:TagRole, iam:UntagRole, iam:UpdateAssumeRolePolicy, iam:UpdateRole, iam:UpdateRoleDescription, iam:PutRolePolicy, iam:DeleteRolePolicy, iam:GetRolePolicy, iam:ListRolePolicies, iam:AttachRolePolicy, iam:DetachRolePolicy, iam:ListAttachedRolePolicies], Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/finnor-*'}
-              - {Sid: ComputePolicyLifecycle, Effect: Allow, Action: [iam:CreatePolicy, iam:DeletePolicy, iam:GetPolicy, iam:CreatePolicyVersion, iam:DeletePolicyVersion, iam:GetPolicyVersion, iam:ListEntitiesForPolicy, iam:ListPolicyVersions, iam:TagPolicy, iam:UntagPolicy], Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/finnor-compute-*'}
-              - {Sid: ComputeServiceLinkedRoles, Effect: Allow, Action: iam:CreateServiceLinkedRole, Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/*', Condition: { StringEquals: { iam:AWSServiceName: [ecs.amazonaws.com, ecs.application-autoscaling.amazonaws.com, elasticloadbalancing.amazonaws.com] } }}
-              - {Sid: ReleaseLogs, Effect: Allow, Action: [logs:DescribeLogStreams, logs:GetLogEvents], Resource: !Sub '${WorkerLogGroup.Arn}:*'}
-              - {Sid: LogGroupLookup, Effect: Allow, Action: logs:DescribeLogGroups, Resource: '*'}
-              - Sid: PassOnlyFinnorRoles
-                Effect: Allow
-                Action: iam:PassRole
-                Resource: [!GetAtt WorkerExecutionRole.Arn, !GetAtt WorkerTaskRole.Arn, !GetAtt BackgroundTaskRole.Arn, !GetAtt HeavyTaskRole.Arn, !GetAtt RealtimeTaskRole.Arn]
+ GitHubActionsRole:
+  Type: AWS::IAM::Role
+  Metadata:
+   com.aws.cloudformation.Context:
+     why: short-lived production release identity; GitHub OIDC over stored AWS keys
+     must:
+       - AWS-supported sub binds immutable repo + owner IDs and the production environment
+       - audience remains sts.amazonaws.com
+     mutable: change-with-constraints
+     mutability:
+       AssumeRolePolicyDocument: change-with-constraints
+  Properties:
+   RoleName: finnor-github-actions-deploy
+   Description: GitHub main OIDC role for governed FINNOR releases.
+   MaxSessionDuration: 3600
+   AssumeRolePolicyDocument:
+     Version: '2012-10-17'
+     Statement:
+       - Effect: Allow
+         Principal:
+           Federated: !Ref GitHubOidcProviderArn
+         Action: sts:AssumeRoleWithWebIdentity
+         Condition:
+           StringEquals:
+             token.actions.githubusercontent.com:aud: sts.amazonaws.com
+             token.actions.githubusercontent.com:sub: !Sub 'repo:${GitHubOwner}@${GitHubOwnerId}/${GitHubRepositoryName}@${GitHubRepositoryId}:environment:${GitHubEnvironment}'
+   Policies:
+     - PolicyName: finnor-github-actions-release
+       PolicyDocument:
+         Version: '2012-10-17'
+         Statement:
+           - Sid: EcrAuth
+             Effect: Allow
+             Action: ecr:GetAuthorizationToken
+             Resource: '*'
+           - Sid: EcrReleaseRepository
+             Effect: Allow
+             Action: [ecr:BatchCheckLayerAvailability, ecr:BatchGetImage, ecr:CompleteLayerUpload, ecr:DescribeImages, ecr:DescribeRepositories, ecr:GetDownloadUrlForLayer, ecr:InitiateLayerUpload, ecr:PutImage, ecr:UploadLayerPart]
+             Resource: !GetAtt WorkerRepository.Arn
+           - Sid: EcsRelease
+             Effect: Allow
+             Action: [ecs:CreateService, ecs:DeleteService, ecs:DeregisterTaskDefinition, ecs:DescribeClusters, ecs:DescribeServiceDeployments, ecs:DescribeServices, ecs:DescribeTaskDefinition, ecs:DescribeTasks, ecs:ListClusters, ecs:ListServiceDeployments, ecs:ListServices, ecs:ListTagsForResource, ecs:ListTasks, ecs:ListTaskDefinitions, ecs:RegisterTaskDefinition, ecs:StopServiceDeployment, ecs:TagResource, ecs:UntagResource, ecs:UpdateClusterSettings, ecs:UpdateService]
+             Resource: '*'
+           - Sid: LoadBalancerHealth
+             Effect: Allow
+             Action: [elasticloadbalancing:DescribeLoadBalancers, elasticloadbalancing:DescribeListenerAttributes, elasticloadbalancing:DescribeTargetGroups, elasticloadbalancing:DescribeListeners, elasticloadbalancing:DescribeLoadBalancerAttributes, elasticloadbalancing:DescribeRules, elasticloadbalancing:DescribeTags, elasticloadbalancing:DescribeTargetGroupAttributes, elasticloadbalancing:DescribeTargetHealth, elasticloadbalancing:AddTags, elasticloadbalancing:CreateRule, elasticloadbalancing:CreateTargetGroup, elasticloadbalancing:DeleteRule, elasticloadbalancing:DeleteTargetGroup, elasticloadbalancing:ModifyListener, elasticloadbalancing:ModifyRule, elasticloadbalancing:ModifyTargetGroup, elasticloadbalancing:ModifyTargetGroupAttributes, elasticloadbalancing:RemoveTags, elasticloadbalancing:SetRulePriorities]
+             Resource: '*'
+           - Sid: NetworkInspection
+             Effect: Allow
+             Action: [ec2:DescribeSecurityGroups, ec2:DescribeInstances, ec2:DescribeNatGateways, ec2:DescribeSubnets, ec2:DescribeVpcs, ec2:AuthorizeSecurityGroupEgress, ec2:AuthorizeSecurityGroupIngress, ec2:CreateSecurityGroup, ec2:CreateTags, ec2:DeleteSecurityGroup, ec2:DeleteTags, ec2:RevokeSecurityGroupEgress, ec2:RevokeSecurityGroupIngress]
+             Resource: '*'
+           - Sid: GovernedStackChanges
+             Effect: Allow
+             Action: [cloudformation:CreateChangeSet, cloudformation:DescribeChangeSet, cloudformation:DescribeStacks, cloudformation:ExecuteChangeSet]
+             Resource: '*'
+           - {"Effect":"Allow","Action":["kms:Decrypt"],"Resource":["arn:aws:kms:us-east-1:601804670058:key/*"],"Condition":{"StringEquals":{"kms:ViaService":["secretsmanager.us-east-1.amazonaws.com"]},"StringLike":{"kms:EncryptionContext:aws:secretsmanager:arn":["arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????","arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/worker-database-url-??????"]}}}
+           - {"Effect":"Allow","Action":["secretsmanager:GetSecretValue"],"Resource":["arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/database-url-??????","arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/worker-database-url-??????"]}
+           - {"Effect":"Allow","Action":["secretsmanager:GetResourcePolicy","secretsmanager:PutResourcePolicy"],"Resource":["arn:aws:secretsmanager:us-east-1:601804670058:secret:finnor/prod/worker-database-url-??????"]}
+           - {"Effect":"Allow","Action":["cloudformation:GetTemplate"],"Resource":["arn:aws:cloudformation:us-east-1:601804670058:stack/finnor-production/*"]}
+           - Sid: ComputeScaling
+             Effect: Allow
+             Action: [application-autoscaling:RegisterScalableTarget, application-autoscaling:DeregisterScalableTarget, application-autoscaling:PutScalingPolicy, application-autoscaling:DeleteScalingPolicy, application-autoscaling:DescribeScalableTargets, application-autoscaling:DescribeScalingPolicies, application-autoscaling:DescribeScheduledActions]
+             Resource: '*'
+           - {Sid: ComputeScalingTags, Effect: Allow, Action: [application-autoscaling:TagResource, application-autoscaling:UntagResource], Resource: !Sub 'arn:${AWS::Partition}:application-autoscaling:${AWS::Region}:${AWS::AccountId}:scalable-target/*'}
+           - Sid: ComputeAlarms
+             Effect: Allow
+             Action: [cloudwatch:PutMetricAlarm, cloudwatch:DeleteAlarms, cloudwatch:DescribeAlarms, cloudwatch:ListTagsForResource, cloudwatch:TagResource, cloudwatch:UntagResource]
+             Resource: !Sub 'arn:${AWS::Partition}:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:finnor-*'
+           - {Sid: ComputeRoleLifecycle, Effect: Allow, Action: [iam:CreateRole, iam:DeleteRole, iam:GetRole, iam:TagRole, iam:UntagRole, iam:UpdateAssumeRolePolicy, iam:UpdateRole, iam:UpdateRoleDescription, iam:PutRolePolicy, iam:DeleteRolePolicy, iam:GetRolePolicy, iam:ListRolePolicies, iam:AttachRolePolicy, iam:DetachRolePolicy, iam:ListAttachedRolePolicies], Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/finnor-*'}
+           - {Sid: ComputePolicyLifecycle, Effect: Allow, Action: [iam:CreatePolicy, iam:DeletePolicy, iam:GetPolicy, iam:CreatePolicyVersion, iam:DeletePolicyVersion, iam:GetPolicyVersion, iam:ListEntitiesForPolicy, iam:ListPolicyVersions, iam:TagPolicy, iam:UntagPolicy], Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/finnor-compute-*'}
+           - {Sid: ComputeServiceLinkedRoles, Effect: Allow, Action: iam:CreateServiceLinkedRole, Resource: !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aws-service-role/*', Condition: { StringEquals: { iam:AWSServiceName: [ecs.amazonaws.com, ecs.application-autoscaling.amazonaws.com, elasticloadbalancing.amazonaws.com] } }}
+           - {Sid: ReleaseLogs, Effect: Allow, Action: [logs:DescribeLogStreams, logs:GetLogEvents], Resource: !Sub '${WorkerLogGroup.Arn}:*'}
+           - {Sid: LogGroupLookup, Effect: Allow, Action: logs:DescribeLogGroups, Resource: '*'}
+           - Sid: PassOnlyFinnorRoles
+             Effect: Allow
+             Action: iam:PassRole
+             Resource: [!GetAtt WorkerExecutionRole.Arn, !GetAtt WorkerTaskRole.Arn, !GetAtt BackgroundTaskRole.Arn, !GetAtt HeavyTaskRole.Arn, !GetAtt RealtimeTaskRole.Arn]
 
-  AlbSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Public HTTPS ingress for the FINNOR realtime ALB.
-      VpcId: !Ref VpcId
-      Tags:
-        - Key: Name
-          Value: finnor-production-realtime-alb
-        - Key: service
-          Value: finnor-worker
-      SecurityGroupIngress:
-        - Description: HTTPS realtime ingress
-          IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-        - Description: HTTP redirect to HTTPS
-          IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
-        - Description: ALB outbound to the worker and health checks
-          IpProtocol: -1
-          CidrIp: 0.0.0.0/0
+ AlbSecurityGroup:
+  Type: AWS::EC2::SecurityGroup
+  Properties:
+   GroupDescription: Public HTTPS ingress for the FINNOR realtime ALB.
+   VpcId: !Ref VpcId
+   Tags:
+     - Key: Name
+       Value: finnor-production-realtime-alb
+     - Key: service
+       Value: finnor-worker
+   SecurityGroupIngress:
+     - Description: HTTPS realtime ingress
+       IpProtocol: tcp
+       FromPort: 443
+       ToPort: 443
+       CidrIp: 0.0.0.0/0
+     - Description: HTTP redirect to HTTPS
+       IpProtocol: tcp
+       FromPort: 80
+       ToPort: 80
+       CidrIp: 0.0.0.0/0
+   SecurityGroupEgress:
+     - Description: ALB outbound to the worker and health checks
+       IpProtocol: -1
+       CidrIp: 0.0.0.0/0
 
-  TaskSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: FINNOR worker ingress is limited to the realtime ALB.
-      VpcId: !Ref VpcId
-      Tags:
-        - Key: Name
-          Value: finnor-production-worker
-        - Key: service
-          Value: finnor-worker
-      SecurityGroupIngress:
-        - Description: ALB-only worker HTTP and SSE ingress
-          IpProtocol: tcp
-          FromPort: 8090
-          ToPort: 8090
-          SourceSecurityGroupId: !Ref AlbSecurityGroup
-      SecurityGroupEgress:
-        - Description: Worker outbound access to Supabase and configured providers
-          IpProtocol: -1
-          CidrIp: 0.0.0.0/0
+ TaskSecurityGroup:
+  Type: AWS::EC2::SecurityGroup
+  Properties:
+   GroupDescription: FINNOR worker ingress is limited to the realtime ALB.
+   VpcId: !Ref VpcId
+   Tags:
+     - Key: Name
+       Value: finnor-production-worker
+     - Key: service
+       Value: finnor-worker
+   SecurityGroupIngress:
+     - Description: ALB-only worker HTTP and SSE ingress
+       IpProtocol: tcp
+       FromPort: 8090
+       ToPort: 8090
+       SourceSecurityGroupId: !Ref AlbSecurityGroup
+   SecurityGroupEgress:
+     - Description: Worker outbound access to Supabase and configured providers
+       IpProtocol: -1
+       CidrIp: 0.0.0.0/0
 
-  ComputeTaskSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: No-ingress security group for FINNOR interactive, background, and heavy tasks.
-      VpcId: !Ref VpcId
-      SecurityGroupEgress:
-        - Description: Outbound database and configured provider traffic
-          IpProtocol: -1
-          CidrIp: 0.0.0.0/0
+ ComputeTaskSecurityGroup:
+  Type: AWS::EC2::SecurityGroup
+  Properties:
+   GroupDescription: No-ingress security group for FINNOR interactive, background, and heavy tasks.
+   VpcId: !Ref VpcId
+   SecurityGroupEgress:
+     - Description: Outbound database and configured provider traffic
+       IpProtocol: -1
+       CidrIp: 0.0.0.0/0
 
-  RealtimeLoadBalancer:
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    Properties:
-      Name: finnor-production-realtime
-      Scheme: internet-facing
-      Type: application
-      IpAddressType: ipv4
-      SecurityGroups:
-        - !Ref AlbSecurityGroup
-      Subnets:
-        - !Ref PublicSubnet1
-        - !Ref PublicSubnet2
-      LoadBalancerAttributes:
-        - Key: idle_timeout.timeout_seconds
-          Value: '3600'
-        - Key: routing.http2.enabled
-          Value: 'true'
-      Tags:
-        - Key: service
-          Value: finnor-worker
-        - Key: environment
-          Value: production
+ RealtimeLoadBalancer:
+  Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+  Properties:
+   Name: finnor-production-realtime
+   Scheme: internet-facing
+   Type: application
+   IpAddressType: ipv4
+   SecurityGroups:
+     - !Ref AlbSecurityGroup
+   Subnets:
+     - !Ref PublicSubnet1
+     - !Ref PublicSubnet2
+   LoadBalancerAttributes:
+     - Key: idle_timeout.timeout_seconds
+       Value: '3600'
+     - Key: routing.http2.enabled
+       Value: 'true'
+   Tags:
+     - Key: service
+       Value: finnor-worker
+     - Key: environment
+       Value: production
 
-  WorkerTargetGroup:
-    Condition: RunLegacyWorker
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      Name: finnor-worker
-      VpcId: !Ref VpcId
-      TargetType: ip
-      Protocol: HTTP
-      Port: 8090
-      HealthCheckEnabled: true
-      HealthCheckProtocol: HTTP
-      HealthCheckPath: /healthz
-      HealthCheckPort: traffic-port
-      Matcher:
-        HttpCode: '200'
-      HealthyThresholdCount: 2
-      UnhealthyThresholdCount: 3
-      HealthCheckIntervalSeconds: 30
-      HealthCheckTimeoutSeconds: 10
-      TargetGroupAttributes:
-        - Key: deregistration_delay.timeout_seconds
-          Value: '30'
-        - Key: stickiness.enabled
-          Value: 'false'
-      Tags:
-        - Key: service
-          Value: finnor-worker
+ WorkerTargetGroup:
+  Condition: RunLegacyWorker
+  Type: AWS::ElasticLoadBalancingV2::TargetGroup
+  Properties:
+   Name: finnor-worker
+   VpcId: !Ref VpcId
+   TargetType: ip
+   Protocol: HTTP
+   Port: 8090
+   HealthCheckEnabled: true
+   HealthCheckProtocol: HTTP
+   HealthCheckPath: /healthz
+   HealthCheckPort: traffic-port
+   Matcher:
+     HttpCode: '200'
+   HealthyThresholdCount: 2
+   UnhealthyThresholdCount: 3
+   HealthCheckIntervalSeconds: 30
+   HealthCheckTimeoutSeconds: 10
+   TargetGroupAttributes:
+     - Key: deregistration_delay.timeout_seconds
+       Value: '30'
+     - Key: stickiness.enabled
+       Value: 'false'
+   Tags:
+     - Key: service
+       Value: finnor-worker
 
-  RealtimeTargetGroup:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Properties:
-      Name: finnor-realtime
-      VpcId: !Ref VpcId
-      TargetType: ip
-      Protocol: HTTP
-      Port: 8090
-      HealthCheckEnabled: true
-      HealthCheckProtocol: HTTP
-      HealthCheckPath: /healthz
-      HealthCheckPort: traffic-port
-      Matcher:
-        HttpCode: '200'
-      HealthyThresholdCount: 2
-      UnhealthyThresholdCount: 3
-      HealthCheckIntervalSeconds: 30
-      HealthCheckTimeoutSeconds: 10
-      TargetGroupAttributes:
-        - Key: deregistration_delay.timeout_seconds
-          Value: '30'
-        - Key: stickiness.enabled
-          Value: 'false'
+ RealtimeTargetGroup:
+  Type: AWS::ElasticLoadBalancingV2::TargetGroup
+  Properties:
+   Name: finnor-realtime
+   VpcId: !Ref VpcId
+   TargetType: ip
+   Protocol: HTTP
+   Port: 8090
+   HealthCheckEnabled: true
+   HealthCheckProtocol: HTTP
+   HealthCheckPath: /healthz
+   HealthCheckPort: traffic-port
+   Matcher:
+     HttpCode: '200'
+   HealthyThresholdCount: 2
+   UnhealthyThresholdCount: 3
+   HealthCheckIntervalSeconds: 30
+   HealthCheckTimeoutSeconds: 10
+   TargetGroupAttributes:
+     - Key: deregistration_delay.timeout_seconds
+       Value: '30'
+     - Key: stickiness.enabled
+       Value: 'false'
 
-  HttpRedirectListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties:
-      LoadBalancerArn: !Ref RealtimeLoadBalancer
-      Port: 80
-      Protocol: HTTP
-      DefaultActions:
-        - Type: redirect
-          RedirectConfig:
-            Protocol: HTTPS
-            Port: '443'
-            StatusCode: HTTP_301
+ HttpRedirectListener:
+  Type: AWS::ElasticLoadBalancingV2::Listener
+  Properties:
+   LoadBalancerArn: !Ref RealtimeLoadBalancer
+   Port: 80
+   Protocol: HTTP
+   DefaultActions:
+     - Type: redirect
+       RedirectConfig:
+         Protocol: HTTPS
+         Port: '443'
+         StatusCode: HTTP_301
 
-  HttpsRealtimeListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties:
-      LoadBalancerArn: !Ref RealtimeLoadBalancer
-      Port: 443
-      Protocol: HTTPS
-      SslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
-      Certificates:
-        - CertificateArn: !Ref CertificateArn
-      DefaultActions:
-        - Type: forward
-          TargetGroupArn: !If [RouteLegacyTraffic, !Ref WorkerTargetGroup, !Ref RealtimeTargetGroup]
+ HttpsRealtimeListener:
+  Type: AWS::ElasticLoadBalancingV2::Listener
+  Properties:
+   LoadBalancerArn: !Ref RealtimeLoadBalancer
+   Port: 443
+   Protocol: HTTPS
+   SslPolicy: ELBSecurityPolicy-TLS13-1-2-2021-06
+   Certificates:
+     - CertificateArn: !Ref CertificateArn
+   DefaultActions:
+     - Type: forward
+       TargetGroupArn: !If [RouteLegacyTraffic, !Ref WorkerTargetGroup, !Ref RealtimeTargetGroup]
 
-  RealtimeWarmupListenerRule:
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
-    Properties:
-      ListenerArn: !Ref HttpsRealtimeListener
-      Priority: 100
-      Conditions:
-        - Field: host-header
-          HostHeaderConfig:
-            Values: [finnor-compute-warmup.invalid]
-        - Field: path-pattern
-          PathPatternConfig:
-            Values: [/__finnor_warmup_only]
-      Actions:
-        - Type: forward
-          TargetGroupArn: !Ref RealtimeTargetGroup
+ RealtimeWarmupListenerRule:
+  Type: AWS::ElasticLoadBalancingV2::ListenerRule
+  Properties:
+   ListenerArn: !Ref HttpsRealtimeListener
+   Priority: 100
+   Conditions:
+     - Field: host-header
+       HostHeaderConfig:
+         Values: [finnor-compute-warmup.invalid]
+     - Field: path-pattern
+       PathPatternConfig:
+         Values: [/__finnor_warmup_only]
+   Actions:
+     - Type: forward
+       TargetGroupArn: !Ref RealtimeTargetGroup
 
-  LegacyDrainListenerRule:
-    Condition: RunLegacyWorker
-    Type: AWS::ElasticLoadBalancingV2::ListenerRule
-    Properties:
-      ListenerArn: !Ref HttpsRealtimeListener
-      Priority: 101
-      Conditions: [{ Field: host-header, HostHeaderConfig: { Values: [finnor-legacy-drain.invalid] } }]
-      Actions: [{ Type: forward, TargetGroupArn: !Ref WorkerTargetGroup }]
+ LegacyDrainListenerRule:
+  Condition: RunLegacyWorker
+  Type: AWS::ElasticLoadBalancingV2::ListenerRule
+  Properties:
+   ListenerArn: !Ref HttpsRealtimeListener
+   Priority: 101
+   Conditions: [{ Field: host-header, HostHeaderConfig: { Values: [finnor-legacy-drain.invalid] } }]
+   Actions: [{ Type: forward, TargetGroupArn: !Ref WorkerTargetGroup }]
 
-  WorkerTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Metadata:
-      com.aws.cloudformation.Context:
-        why: Ingress-owning realtime profile remains independent while staged routing drains the legacy worker.
-        must:
-          - Use the same certified image digest and release as the other compute classes.
-          - Only the realtime service receives SSE ingress; retain replaced revisions for rollback evidence.
-        mutable: change-with-constraints
-    Properties:
-      Family: finnor-realtime
-      Cpu: '512'
-      Memory: '1024'
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
-      ExecutionRoleArn: !GetAtt WorkerExecutionRole.Arn
-      TaskRoleArn: !GetAtt RealtimeTaskRole.Arn
-      RuntimePlatform:
-        CpuArchitecture: X86_64
-        OperatingSystemFamily: LINUX
-      ContainerDefinitions:
-        - Name: finnor-realtime
-          Image: !Ref ImageUri
-          Essential: true
-          StopTimeout: 120
-          PortMappings:
-            - ContainerPort: 8090
-              HostPort: 8090
-              Protocol: tcp
-          Environment:
-            - {Name: AWS_REGION, Value: !Ref AWS::Region}
-            - {Name: NODE_ENV, Value: production}
-            - {Name: FINNOR_ENVIRONMENT, Value: production}
-            - {Name: FINNOR_RELEASE_SOURCE, Value: github-actions}
-            - {Name: FINNOR_COMMIT_SHA, Value: !Ref ReleaseCommitSha}
-            - {Name: FINNOR_BUILD_ID, Value: !Ref ReleaseBuildId}
-            - {Name: FINNOR_VERSION, Value: !Ref ReleaseVersion}
-            - {Name: FINNOR_CORE_CERTIFICATION_ID, Value: !Ref CoreCertificationId}
-            - {Name: SUPABASE_URL, Value: !Ref SupabaseUrl}
-            - {Name: FINNOR_WORKER_DEPLOYMENT_ID, Value: !Sub 'ecs:${AWS::StackName}:realtime:${ReleaseCommitSha}'}
-            - {Name: FINNOR_WORKLOAD_CLASS, Value: REALTIME}
-            - {Name: FINNOR_WORKER_CAPABILITIES, Value: 'jobs,realtime,sse'}
-            - {Name: SECRETS_PROVIDER, Value: aws-secrets-manager}
-            - {Name: FINNOR_SECRET_IDS, Value: !Ref RealtimeSecretMap}
-            - {Name: FINNOR_TENANT_SECRET_PREFIX, Value: finnor/tenants}
-            - {Name: CENTROPY_SSE_ALLOWED_ORIGINS, Value: !Ref SseAllowedOrigins}
-            - {Name: WORKER_CONCURRENCY, Value: '2'}
-            - {Name: WORKER_INTERACTIVE_RESERVED_CONCURRENCY, Value: '0'}
-            - {Name: FINNOR_DB_POOL_MAX, Value: '1'}
-            - {Name: PORT, Value: '8090'}
-            - {Name: SSE_PORT, Value: '8090'}
-          HealthCheck:
-            Command:
-              - CMD-SHELL
-              - node -e "fetch('http://127.0.0.1:8090/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-            Interval: 30
-            Timeout: 5
-            Retries: 3
-            StartPeriod: 30
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref WorkerLogGroup
-              awslogs-region: !Ref AWS::Region
-              awslogs-stream-prefix: ecs
+ WorkerTaskDefinition:
+  Type: AWS::ECS::TaskDefinition
+  DeletionPolicy: Retain
+  UpdateReplacePolicy: Retain
+  Metadata:
+   com.aws.cloudformation.Context:
+     why: Ingress-owning realtime profile remains independent while staged routing drains the legacy worker.
+     must:
+       - Use the same certified image digest and release as the other compute classes.
+       - Only the realtime service receives SSE ingress; retain replaced revisions for rollback evidence.
+     mutable: change-with-constraints
+  Properties:
+   Family: finnor-realtime
+   Cpu: '512'
+   Memory: '1024'
+   NetworkMode: awsvpc
+   RequiresCompatibilities:
+     - FARGATE
+   ExecutionRoleArn: !GetAtt WorkerExecutionRole.Arn
+   TaskRoleArn: !GetAtt RealtimeTaskRole.Arn
+   RuntimePlatform:
+     CpuArchitecture: X86_64
+     OperatingSystemFamily: LINUX
+   ContainerDefinitions:
+     - Name: finnor-realtime
+       Image: !Ref ImageUri
+       Essential: true
+       StopTimeout: 120
+       PortMappings:
+         - ContainerPort: 8090
+           HostPort: 8090
+           Protocol: tcp
+       Environment:
+         - {Name: AWS_REGION, Value: !Ref AWS::Region}
+         - {Name: NODE_ENV, Value: production}
+         - {Name: FINNOR_ENVIRONMENT, Value: production}
+         - {Name: FINNOR_RELEASE_SOURCE, Value: github-actions}
+         - {Name: FINNOR_COMMIT_SHA, Value: !Ref ReleaseCommitSha}
+         - {Name: FINNOR_BUILD_ID, Value: !Ref ReleaseBuildId}
+         - {Name: FINNOR_VERSION, Value: !Ref ReleaseVersion}
+         - {Name: FINNOR_CORE_CERTIFICATION_ID, Value: !Ref CoreCertificationId}
+         - {Name: SUPABASE_URL, Value: !Ref SupabaseUrl}
+         - {Name: FINNOR_WORKER_DEPLOYMENT_ID, Value: !Sub 'ecs:${AWS::StackName}:realtime:${ReleaseCommitSha}'}
+         - {Name: FINNOR_WORKLOAD_CLASS, Value: REALTIME}
+         - {Name: FINNOR_WORKER_CAPABILITIES, Value: 'jobs,realtime,sse'}
+         - {Name: SECRETS_PROVIDER, Value: aws-secrets-manager}
+         - {Name: FINNOR_SECRET_IDS, Value: !Ref RealtimeSecretMap}
+         - {Name: FINNOR_TENANT_SECRET_PREFIX, Value: finnor/tenants}
+         - {Name: CENTROPY_SSE_ALLOWED_ORIGINS, Value: !Ref SseAllowedOrigins}
+         - {Name: WORKER_CONCURRENCY, Value: '2'}
+         - {Name: WORKER_INTERACTIVE_RESERVED_CONCURRENCY, Value: '0'}
+         - {Name: FINNOR_DB_POOL_MAX, Value: '1'}
+         - {Name: PORT, Value: '8090'}
+         - {Name: SSE_PORT, Value: '8090'}
+       HealthCheck:
+         Command:
+           - CMD-SHELL
+           - node -e "fetch('http://127.0.0.1:8090/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+         Interval: 30
+         Timeout: 5
+         Retries: 3
+         StartPeriod: 30
+       LogConfiguration:
+         LogDriver: awslogs
+         Options:
+           awslogs-group: !Ref WorkerLogGroup
+           awslogs-region: !Ref AWS::Region
+           awslogs-stream-prefix: ecs
 
-  WorkerService:
-    Condition: RunLegacyWorker
-    Type: AWS::ECS::Service
-    DependsOn:
-      - HttpsRealtimeListener
-    Properties:
-      ServiceName: finnor-worker
-      Cluster: !Ref WorkerCluster
-      TaskDefinition: !Ref LegacyWorkerTaskDefinitionArn
-      DesiredCount: 1
-      LaunchType: FARGATE
-      PlatformVersion: LATEST
-      HealthCheckGracePeriodSeconds: 120
-      DeploymentConfiguration:
-        MinimumHealthyPercent: 100
-        MaximumPercent: 200
-        DeploymentCircuitBreaker:
-          Enable: true
-          Rollback: true
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets:
-            - !Ref PublicSubnet1
-            - !Ref PublicSubnet2
-          SecurityGroups:
-            - !Ref TaskSecurityGroup
-      LoadBalancers:
-        - ContainerName: finnor-worker
-          ContainerPort: 8090
-          TargetGroupArn: !Ref WorkerTargetGroup
-      EnableECSManagedTags: true
-      PropagateTags: SERVICE
-      Tags:
-        - Key: service
-          Value: finnor-worker
-        - Key: environment
-          Value: production
+ WorkerService:
+  Condition: RunLegacyWorker
+  Type: AWS::ECS::Service
+  DependsOn:
+   - HttpsRealtimeListener
+  Properties:
+   ServiceName: finnor-worker
+   Cluster: !Ref WorkerCluster
+   TaskDefinition: !Ref LegacyWorkerTaskDefinitionArn
+   DesiredCount: 1
+   LaunchType: FARGATE
+   PlatformVersion: LATEST
+   HealthCheckGracePeriodSeconds: 120
+   DeploymentConfiguration:
+     MinimumHealthyPercent: 100
+     MaximumPercent: 200
+     DeploymentCircuitBreaker:
+       Enable: true
+       Rollback: true
+   NetworkConfiguration:
+     AwsvpcConfiguration:
+       AssignPublicIp: ENABLED
+       Subnets:
+         - !Ref PublicSubnet1
+         - !Ref PublicSubnet2
+       SecurityGroups:
+         - !Ref TaskSecurityGroup
+   LoadBalancers:
+     - ContainerName: finnor-worker
+       ContainerPort: 8090
+       TargetGroupArn: !Ref WorkerTargetGroup
+   EnableECSManagedTags: true
+   PropagateTags: SERVICE
+   Tags:
+     - Key: service
+       Value: finnor-worker
+     - Key: environment
+       Value: production
 
-  RealtimeService:
-    Type: AWS::ECS::Service
-    DependsOn: RealtimeWarmupListenerRule
-    Properties:
-      ServiceName: finnor-realtime
-      Cluster: !Ref WorkerCluster
-      TaskDefinition: !Ref WorkerTaskDefinition
-      DesiredCount: 1
-      LaunchType: FARGATE
-      PlatformVersion: LATEST
-      HealthCheckGracePeriodSeconds: 120
-      DeploymentConfiguration:
-        MinimumHealthyPercent: 100
-        MaximumPercent: 200
-        DeploymentCircuitBreaker: { Enable: true, Rollback: true }
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets: [!Ref PublicSubnet1, !Ref PublicSubnet2]
-          SecurityGroups: [!Ref TaskSecurityGroup]
-      LoadBalancers:
-        - ContainerName: finnor-realtime
-          ContainerPort: 8090
-          TargetGroupArn: !Ref RealtimeTargetGroup
-      EnableECSManagedTags: true
-      PropagateTags: SERVICE
-      Tags:
-        - {Key: service, Value: finnor-realtime}
-        - {Key: environment, Value: production}
+ RealtimeService:
+  Type: AWS::ECS::Service
+  DependsOn: RealtimeWarmupListenerRule
+  Properties:
+   ServiceName: finnor-realtime
+   Cluster: !Ref WorkerCluster
+   TaskDefinition: !Ref WorkerTaskDefinition
+   DesiredCount: 1
+   LaunchType: FARGATE
+   PlatformVersion: LATEST
+   HealthCheckGracePeriodSeconds: 120
+   DeploymentConfiguration:
+     MinimumHealthyPercent: 100
+     MaximumPercent: 200
+     DeploymentCircuitBreaker: { Enable: true, Rollback: true }
+   NetworkConfiguration:
+     AwsvpcConfiguration:
+       AssignPublicIp: ENABLED
+       Subnets: [!Ref PublicSubnet1, !Ref PublicSubnet2]
+       SecurityGroups: [!Ref TaskSecurityGroup]
+   LoadBalancers:
+     - ContainerName: finnor-realtime
+       ContainerPort: 8090
+       TargetGroupArn: !Ref RealtimeTargetGroup
+   EnableECSManagedTags: true
+   PropagateTags: SERVICE
+   Tags:
+     - {Key: service, Value: finnor-realtime}
+     - {Key: environment, Value: production}
 
-  InteractiveTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      Family: finnor-interactive
-      Cpu: '1024'
-      Memory: '2048'
-      NetworkMode: awsvpc
-      RequiresCompatibilities: [FARGATE]
-      ExecutionRoleArn: !GetAtt WorkerExecutionRole.Arn
-      TaskRoleArn: !GetAtt WorkerTaskRole.Arn
-      RuntimePlatform:
-        CpuArchitecture: X86_64
-        OperatingSystemFamily: LINUX
-      ContainerDefinitions:
-        - Name: finnor-interactive
-          Image: !Ref ImageUri
-          Essential: true
-          StopTimeout: 120
-          PortMappings:
-            - ContainerPort: 8090
-              Protocol: tcp
-          Environment:
-            - {Name: AWS_REGION, Value: !Ref 'AWS::Region'}
-            - {Name: NODE_ENV, Value: production}
-            - {Name: FINNOR_ENVIRONMENT, Value: production}
-            - {Name: FINNOR_RELEASE_SOURCE, Value: github-actions}
-            - {Name: FINNOR_COMMIT_SHA, Value: !Ref ReleaseCommitSha}
-            - {Name: FINNOR_BUILD_ID, Value: !Ref ReleaseBuildId}
-            - {Name: FINNOR_VERSION, Value: !Ref ReleaseVersion}
-            - {Name: FINNOR_CORE_CERTIFICATION_ID, Value: !Ref CoreCertificationId}
-            - {Name: SUPABASE_URL, Value: !Ref SupabaseUrl}
-            - {Name: FINNOR_WORKER_DEPLOYMENT_ID, Value: !Sub 'ecs:${AWS::StackName}:interactive:${ReleaseCommitSha}'}
-            - {Name: FINNOR_WORKLOAD_CLASS, Value: INTERACTIVE}
-            - {Name: AWS_BEDROCK_GLM_MODEL_ID, Value: !Ref GlmModel}
-            - {Name: AWS_BEDROCK_MISTRAL_MODEL_ID, Value: !Ref MistralModel}
-            - {Name: AWS_BEDROCK_DEEPSEEK_MODEL_ID, Value: !Ref DeepseekModel}
-            - {Name: AWS_BEDROCK_AUTH_MODE, Value: iam}
-            - {Name: FINNOR_WORKER_CAPABILITIES, Value: 'jobs,orchestration,event-wake,workflow'}
-            - {Name: SECRETS_PROVIDER, Value: aws-secrets-manager}
-            - {Name: FINNOR_SECRET_IDS, Value: !Ref SecretMap}
-            - {Name: FINNOR_TENANT_SECRET_PREFIX, Value: finnor/tenants}
-            - {Name: WORKER_CONCURRENCY, Value: '2'}
-            - {Name: FINNOR_DB_POOL_MAX, Value: '1'}
-            - {Name: PORT, Value: '8090'}
-          HealthCheck:
-            Command: [CMD-SHELL, 'node -e "fetch(''http://127.0.0.1:8090/healthz'').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"']
-            Interval: 30
-            Timeout: 5
-            Retries: 3
-            StartPeriod: 30
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref WorkerLogGroup
-              awslogs-region: !Ref 'AWS::Region'
-              awslogs-stream-prefix: interactive
+ InteractiveTaskDefinition:
+  Type: AWS::ECS::TaskDefinition
+  Properties:
+   Family: finnor-interactive
+   Cpu: '1024'
+   Memory: '2048'
+   NetworkMode: awsvpc
+   RequiresCompatibilities: [FARGATE]
+   ExecutionRoleArn: !GetAtt WorkerExecutionRole.Arn
+   TaskRoleArn: !GetAtt WorkerTaskRole.Arn
+   RuntimePlatform:
+     CpuArchitecture: X86_64
+     OperatingSystemFamily: LINUX
+   ContainerDefinitions:
+     - Name: finnor-interactive
+       Image: !Ref ImageUri
+       Essential: true
+       StopTimeout: 120
+       PortMappings:
+         - ContainerPort: 8090
+           Protocol: tcp
+       Environment:
+         - {Name: AWS_REGION, Value: !Ref 'AWS::Region'}
+         - {Name: NODE_ENV, Value: production}
+         - {Name: FINNOR_ENVIRONMENT, Value: production}
+         - {Name: FINNOR_RELEASE_SOURCE, Value: github-actions}
+         - {Name: FINNOR_COMMIT_SHA, Value: !Ref ReleaseCommitSha}
+         - {Name: FINNOR_BUILD_ID, Value: !Ref ReleaseBuildId}
+         - {Name: FINNOR_VERSION, Value: !Ref ReleaseVersion}
+         - {Name: FINNOR_CORE_CERTIFICATION_ID, Value: !Ref CoreCertificationId}
+         - {Name: SUPABASE_URL, Value: !Ref SupabaseUrl}
+         - {Name: FINNOR_WORKER_DEPLOYMENT_ID, Value: !Sub 'ecs:${AWS::StackName}:interactive:${ReleaseCommitSha}'}
+         - {Name: FINNOR_WORKLOAD_CLASS, Value: INTERACTIVE}
+         - {Name: AWS_BEDROCK_GLM_MODEL_ID, Value: !Ref GlmModel}
+         - {Name: AWS_BEDROCK_MISTRAL_MODEL_ID, Value: !Ref MistralModel}
+         - {Name: AWS_BEDROCK_DEEPSEEK_MODEL_ID, Value: !Ref DeepseekModel}
+         - {Name: AWS_BEDROCK_AUTH_MODE, Value: iam}
+         - {Name: FINNOR_WORKER_CAPABILITIES, Value: 'jobs,orchestration,event-wake,workflow'}
+         - {Name: SECRETS_PROVIDER, Value: aws-secrets-manager}
+         - {Name: FINNOR_SECRET_IDS, Value: !Ref SecretMap}
+         - {Name: LANGFUSE_ENABLED, Value: '1'}
+         - {Name: LANGFUSE_BASE_URL, Value: 'https://us.cloud.langfuse.com'}
+         - {Name: FINNOR_TENANT_SECRET_PREFIX, Value: finnor/tenants}
+         - {Name: WORKER_CONCURRENCY, Value: '2'}
+         - {Name: FINNOR_DB_POOL_MAX, Value: '1'}
+         - {Name: PORT, Value: '8090'}
+       HealthCheck:
+         Command: [CMD-SHELL, 'node -e "fetch(''http://127.0.0.1:8090/healthz'').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"']
+         Interval: 30
+         Timeout: 5
+         Retries: 3
+         StartPeriod: 30
+       LogConfiguration:
+         LogDriver: awslogs
+         Options:
+           awslogs-group: !Ref WorkerLogGroup
+           awslogs-region: !Ref 'AWS::Region'
+           awslogs-stream-prefix: interactive
 
-  BackgroundTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      Family: finnor-background
-      Cpu: '512'
-      Memory: '1024'
-      NetworkMode: awsvpc
-      RequiresCompatibilities: [FARGATE]
-      ExecutionRoleArn: !GetAtt WorkerExecutionRole.Arn
-      TaskRoleArn: !GetAtt BackgroundTaskRole.Arn
-      RuntimePlatform:
-        CpuArchitecture: X86_64
-        OperatingSystemFamily: LINUX
-      ContainerDefinitions:
-        - Name: finnor-background
-          Image: !Ref ImageUri
-          Essential: true
-          StopTimeout: 120
-          PortMappings:
-            - ContainerPort: 8090
-              Protocol: tcp
-          Environment:
-            - {Name: AWS_REGION, Value: !Ref 'AWS::Region'}
-            - {Name: NODE_ENV, Value: production}
-            - {Name: FINNOR_ENVIRONMENT, Value: production}
-            - {Name: FINNOR_RELEASE_SOURCE, Value: github-actions}
-            - {Name: FINNOR_COMMIT_SHA, Value: !Ref ReleaseCommitSha}
-            - {Name: FINNOR_BUILD_ID, Value: !Ref ReleaseBuildId}
-            - {Name: FINNOR_VERSION, Value: !Ref ReleaseVersion}
-            - {Name: FINNOR_CORE_CERTIFICATION_ID, Value: !Ref CoreCertificationId}
-            - {Name: SUPABASE_URL, Value: !Ref SupabaseUrl}
-            - {Name: FINNOR_WORKER_DEPLOYMENT_ID, Value: !Sub 'ecs:${AWS::StackName}:background:${ReleaseCommitSha}'}
-            - {Name: FINNOR_WORKLOAD_CLASS, Value: BACKGROUND}
-            - {Name: AWS_BEDROCK_GLM_MODEL_ID, Value: !Ref GlmModel}
-            - {Name: AWS_BEDROCK_MISTRAL_MODEL_ID, Value: !Ref MistralModel}
-            - {Name: AWS_BEDROCK_DEEPSEEK_MODEL_ID, Value: !Ref DeepseekModel}
-            - {Name: AWS_BEDROCK_AUTH_MODE, Value: iam}
-            - {Name: FINNOR_WORKER_CAPABILITIES, Value: 'jobs,recovery,connection-health,scheduled-scans'}
-            - {Name: SECRETS_PROVIDER, Value: aws-secrets-manager}
-            - {Name: FINNOR_SECRET_IDS, Value: !Ref SecretMap}
-            - {Name: FINNOR_TENANT_SECRET_PREFIX, Value: finnor/tenants}
-            - {Name: WORKER_CONCURRENCY, Value: '2'}
-            - {Name: FINNOR_DB_POOL_MAX, Value: '1'}
-            - {Name: PORT, Value: '8090'}
-          HealthCheck:
-            Command: [CMD-SHELL, 'node -e "fetch(''http://127.0.0.1:8090/healthz'').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"']
-            Interval: 30
-            Timeout: 5
-            Retries: 3
-            StartPeriod: 30
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref WorkerLogGroup
-              awslogs-region: !Ref 'AWS::Region'
-              awslogs-stream-prefix: background
+ BackgroundTaskDefinition:
+  Type: AWS::ECS::TaskDefinition
+  Properties:
+   Family: finnor-background
+   Cpu: '512'
+   Memory: '1024'
+   NetworkMode: awsvpc
+   RequiresCompatibilities: [FARGATE]
+   ExecutionRoleArn: !GetAtt WorkerExecutionRole.Arn
+   TaskRoleArn: !GetAtt BackgroundTaskRole.Arn
+   RuntimePlatform:
+     CpuArchitecture: X86_64
+     OperatingSystemFamily: LINUX
+   ContainerDefinitions:
+     - Name: finnor-background
+       Image: !Ref ImageUri
+       Essential: true
+       StopTimeout: 120
+       PortMappings:
+         - ContainerPort: 8090
+           Protocol: tcp
+       Environment:
+         - {Name: AWS_REGION, Value: !Ref 'AWS::Region'}
+         - {Name: NODE_ENV, Value: production}
+         - {Name: FINNOR_ENVIRONMENT, Value: production}
+         - {Name: FINNOR_RELEASE_SOURCE, Value: github-actions}
+         - {Name: FINNOR_COMMIT_SHA, Value: !Ref ReleaseCommitSha}
+         - {Name: FINNOR_BUILD_ID, Value: !Ref ReleaseBuildId}
+         - {Name: FINNOR_VERSION, Value: !Ref ReleaseVersion}
+         - {Name: FINNOR_CORE_CERTIFICATION_ID, Value: !Ref CoreCertificationId}
+         - {Name: SUPABASE_URL, Value: !Ref SupabaseUrl}
+         - {Name: FINNOR_WORKER_DEPLOYMENT_ID, Value: !Sub 'ecs:${AWS::StackName}:background:${ReleaseCommitSha}'}
+         - {Name: FINNOR_WORKLOAD_CLASS, Value: BACKGROUND}
+         - {Name: AWS_BEDROCK_GLM_MODEL_ID, Value: !Ref GlmModel}
+         - {Name: AWS_BEDROCK_MISTRAL_MODEL_ID, Value: !Ref MistralModel}
+         - {Name: AWS_BEDROCK_DEEPSEEK_MODEL_ID, Value: !Ref DeepseekModel}
+         - {Name: AWS_BEDROCK_AUTH_MODE, Value: iam}
+         - {Name: FINNOR_WORKER_CAPABILITIES, Value: 'jobs,recovery,connection-health,scheduled-scans'}
+         - {Name: SECRETS_PROVIDER, Value: aws-secrets-manager}
+         - {Name: FINNOR_SECRET_IDS, Value: !Ref SecretMap}
+         - {Name: LANGFUSE_ENABLED, Value: '1'}
+         - {Name: LANGFUSE_BASE_URL, Value: 'https://us.cloud.langfuse.com'}
+         - {Name: FINNOR_TENANT_SECRET_PREFIX, Value: finnor/tenants}
+         - {Name: WORKER_CONCURRENCY, Value: '2'}
+         - {Name: FINNOR_DB_POOL_MAX, Value: '1'}
+         - {Name: PORT, Value: '8090'}
+       HealthCheck:
+         Command: [CMD-SHELL, 'node -e "fetch(''http://127.0.0.1:8090/healthz'').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"']
+         Interval: 30
+         Timeout: 5
+         Retries: 3
+         StartPeriod: 30
+       LogConfiguration:
+         LogDriver: awslogs
+         Options:
+           awslogs-group: !Ref WorkerLogGroup
+           awslogs-region: !Ref 'AWS::Region'
+           awslogs-stream-prefix: background
 
-  HeavyTaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      Family: finnor-heavy
-      Cpu: '2048'
-      Memory: '4096'
-      NetworkMode: awsvpc
-      RequiresCompatibilities: [FARGATE]
-      ExecutionRoleArn: !GetAtt WorkerExecutionRole.Arn
-      TaskRoleArn: !GetAtt HeavyTaskRole.Arn
-      RuntimePlatform:
-        CpuArchitecture: X86_64
-        OperatingSystemFamily: LINUX
-      ContainerDefinitions:
-        - Name: finnor-heavy
-          Image: !Ref ImageUri
-          Essential: true
-          StopTimeout: 120
-          PortMappings:
-            - ContainerPort: 8090
-              Protocol: tcp
-          Environment:
-            - {Name: AWS_REGION, Value: !Ref 'AWS::Region'}
-            - {Name: NODE_ENV, Value: production}
-            - {Name: FINNOR_ENVIRONMENT, Value: production}
-            - {Name: FINNOR_RELEASE_SOURCE, Value: github-actions}
-            - {Name: FINNOR_COMMIT_SHA, Value: !Ref ReleaseCommitSha}
-            - {Name: FINNOR_BUILD_ID, Value: !Ref ReleaseBuildId}
-            - {Name: FINNOR_VERSION, Value: !Ref ReleaseVersion}
-            - {Name: FINNOR_CORE_CERTIFICATION_ID, Value: !Ref CoreCertificationId}
-            - {Name: SUPABASE_URL, Value: !Ref SupabaseUrl}
-            - {Name: FINNOR_WORKER_DEPLOYMENT_ID, Value: !Sub 'ecs:${AWS::StackName}:heavy:${ReleaseCommitSha}'}
-            - {Name: FINNOR_WORKLOAD_CLASS, Value: HEAVY}
-            - {Name: AWS_BEDROCK_GLM_MODEL_ID, Value: !Ref GlmModel}
-            - {Name: AWS_BEDROCK_MISTRAL_MODEL_ID, Value: !Ref MistralModel}
-            - {Name: AWS_BEDROCK_DEEPSEEK_MODEL_ID, Value: !Ref DeepseekModel}
-            - {Name: AWS_BEDROCK_AUTH_MODE, Value: iam}
-            - {Name: FINNOR_WORKER_CAPABILITIES, Value: 'jobs,computer,artifact'}
-            - {Name: SECRETS_PROVIDER, Value: aws-secrets-manager}
-            - {Name: FINNOR_SECRET_IDS, Value: !Ref HeavySecretMap}
-            - {Name: FINNOR_TENANT_SECRET_PREFIX, Value: finnor/tenants}
-            - {Name: WORKER_CONCURRENCY, Value: '1'}
-            - {Name: FINNOR_DB_POOL_MAX, Value: '1'}
-            - {Name: PORT, Value: '8090'}
-          HealthCheck:
-            Command: [CMD-SHELL, 'node -e "fetch(''http://127.0.0.1:8090/healthz'').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"']
-            Interval: 30
-            Timeout: 5
-            Retries: 3
-            StartPeriod: 30
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref WorkerLogGroup
-              awslogs-region: !Ref 'AWS::Region'
-              awslogs-stream-prefix: heavy
+ HeavyTaskDefinition:
+  Type: AWS::ECS::TaskDefinition
+  Properties:
+   Family: finnor-heavy
+   Cpu: '2048'
+   Memory: '4096'
+   NetworkMode: awsvpc
+   RequiresCompatibilities: [FARGATE]
+   ExecutionRoleArn: !GetAtt WorkerExecutionRole.Arn
+   TaskRoleArn: !GetAtt HeavyTaskRole.Arn
+   RuntimePlatform:
+     CpuArchitecture: X86_64
+     OperatingSystemFamily: LINUX
+   ContainerDefinitions:
+     - Name: finnor-heavy
+       Image: !Ref ImageUri
+       Essential: true
+       StopTimeout: 120
+       PortMappings:
+         - ContainerPort: 8090
+           Protocol: tcp
+       Environment:
+         - {Name: AWS_REGION, Value: !Ref 'AWS::Region'}
+         - {Name: NODE_ENV, Value: production}
+         - {Name: FINNOR_ENVIRONMENT, Value: production}
+         - {Name: FINNOR_RELEASE_SOURCE, Value: github-actions}
+         - {Name: FINNOR_COMMIT_SHA, Value: !Ref ReleaseCommitSha}
+         - {Name: FINNOR_BUILD_ID, Value: !Ref ReleaseBuildId}
+         - {Name: FINNOR_VERSION, Value: !Ref ReleaseVersion}
+         - {Name: FINNOR_CORE_CERTIFICATION_ID, Value: !Ref CoreCertificationId}
+         - {Name: SUPABASE_URL, Value: !Ref SupabaseUrl}
+         - {Name: FINNOR_WORKER_DEPLOYMENT_ID, Value: !Sub 'ecs:${AWS::StackName}:heavy:${ReleaseCommitSha}'}
+         - {Name: FINNOR_WORKLOAD_CLASS, Value: HEAVY}
+         - {Name: AWS_BEDROCK_GLM_MODEL_ID, Value: !Ref GlmModel}
+         - {Name: AWS_BEDROCK_MISTRAL_MODEL_ID, Value: !Ref MistralModel}
+         - {Name: AWS_BEDROCK_DEEPSEEK_MODEL_ID, Value: !Ref DeepseekModel}
+         - {Name: AWS_BEDROCK_AUTH_MODE, Value: iam}
+         - {Name: FINNOR_WORKER_CAPABILITIES, Value: 'jobs,computer,artifact'}
+         - {Name: SECRETS_PROVIDER, Value: aws-secrets-manager}
+         - {Name: FINNOR_SECRET_IDS, Value: !Ref HeavySecretMap}
+         - {Name: FINNOR_NANGO_ENABLED, Value: '1'}
+         - {Name: FINNOR_NANGO_PROVIDER_CATALOG, Value: '[{"providerConfigKey":"finnor-public-50886919","models":["FinnorPublicRepository"],"readOnly":true}]'}
+         - {Name: LANGFUSE_ENABLED, Value: '1'}
+         - {Name: LANGFUSE_BASE_URL, Value: 'https://us.cloud.langfuse.com'}
+         - {Name: FINNOR_MODAL_ENABLED, Value: '1'}
+         - {Name: FINNOR_MODAL_APP_NAME, Value: 'finnor-capabilities'}
+         - {Name: FINNOR_MODAL_IMAGE_ID, Value: 'im-6seZXB42SdpnqIIAiN34Ig'}
+         - {Name: FINNOR_PAGEINDEX_ENABLED, Value: '1'}
+         - {Name: FINNOR_PARALLEL_ENABLED, Value: '1'}
+         - {Name: FINNOR_PARALLEL_MONITORS_ENABLED, Value: '1'}
+         - {Name: FINNOR_GEPA_ENABLED, Value: '1'}
+         - {Name: FINNOR_GEPA_PLANNER_CANDIDATES_ENABLED, Value: '1'}
+         - {Name: FINNOR_SHINKA_ENABLED, Value: '1'}
+         - {Name: FINNOR_PARALLEL_MAX_RUNS_PER_TENANT_DAY, Value: '1'}
+         - {Name: FINNOR_PAGEINDEX_MAX_RUNS_PER_TENANT_DAY, Value: '1'}
+         - {Name: FINNOR_MODAL_MAX_RUNS_PER_TENANT_DAY, Value: '1'}
+         - {Name: FINNOR_GEPA_MAX_RUNS_PER_TENANT_DAY, Value: '1'}
+         - {Name: FINNOR_SHINKA_MAX_RUNS_PER_TENANT_DAY, Value: '1'}
+         - {Name: FINNOR_TENANT_SECRET_PREFIX, Value: finnor/tenants}
+         - {Name: WORKER_CONCURRENCY, Value: '1'}
+         - {Name: FINNOR_DB_POOL_MAX, Value: '1'}
+         - {Name: PORT, Value: '8090'}
+       HealthCheck:
+         Command: [CMD-SHELL, 'node -e "fetch(''http://127.0.0.1:8090/healthz'').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"']
+         Interval: 30
+         Timeout: 5
+         Retries: 3
+         StartPeriod: 30
+       LogConfiguration:
+         LogDriver: awslogs
+         Options:
+           awslogs-group: !Ref WorkerLogGroup
+           awslogs-region: !Ref 'AWS::Region'
+           awslogs-stream-prefix: heavy
 
-  InteractiveService:
-    Type: AWS::ECS::Service
-    Properties:
-      ServiceName: finnor-interactive
-      Cluster: !Ref WorkerCluster
-      TaskDefinition: !Ref InteractiveTaskDefinition
-      DesiredCount: 1
-      LaunchType: FARGATE
-      PlatformVersion: LATEST
-      DeploymentConfiguration:
-        MinimumHealthyPercent: 100
-        MaximumPercent: 200
-        DeploymentCircuitBreaker: { Enable: true, Rollback: true }
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets: [!Ref PublicSubnet1, !Ref PublicSubnet2]
-          SecurityGroups: [!Ref ComputeTaskSecurityGroup]
-      EnableECSManagedTags: true
-      PropagateTags: SERVICE
-      Tags:
-        - {Key: service, Value: finnor-interactive}
-        - {Key: environment, Value: production}
+ InteractiveService:
+  Type: AWS::ECS::Service
+  Properties:
+   ServiceName: finnor-interactive
+   Cluster: !Ref WorkerCluster
+   TaskDefinition: !Ref InteractiveTaskDefinition
+   DesiredCount: 1
+   LaunchType: FARGATE
+   PlatformVersion: LATEST
+   DeploymentConfiguration:
+     MinimumHealthyPercent: 100
+     MaximumPercent: 200
+     DeploymentCircuitBreaker: { Enable: true, Rollback: true }
+   NetworkConfiguration:
+     AwsvpcConfiguration:
+       AssignPublicIp: ENABLED
+       Subnets: [!Ref PublicSubnet1, !Ref PublicSubnet2]
+       SecurityGroups: [!Ref ComputeTaskSecurityGroup]
+   EnableECSManagedTags: true
+   PropagateTags: SERVICE
+   Tags:
+     - {Key: service, Value: finnor-interactive}
+     - {Key: environment, Value: production}
 
-  BackgroundService:
-    Type: AWS::ECS::Service
-    Properties:
-      ServiceName: finnor-background
-      Cluster: !Ref WorkerCluster
-      TaskDefinition: !Ref BackgroundTaskDefinition
-      DesiredCount: 1
-      LaunchType: FARGATE
-      PlatformVersion: LATEST
-      DeploymentConfiguration:
-        MinimumHealthyPercent: 100
-        MaximumPercent: 200
-        DeploymentCircuitBreaker: { Enable: true, Rollback: true }
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets: [!Ref PublicSubnet1, !Ref PublicSubnet2]
-          SecurityGroups: [!Ref ComputeTaskSecurityGroup]
-      EnableECSManagedTags: true
-      PropagateTags: SERVICE
-      Tags:
-        - {Key: service, Value: finnor-background}
-        - {Key: environment, Value: production}
+ BackgroundService:
+  Type: AWS::ECS::Service
+  Properties:
+   ServiceName: finnor-background
+   Cluster: !Ref WorkerCluster
+   TaskDefinition: !Ref BackgroundTaskDefinition
+   DesiredCount: 1
+   LaunchType: FARGATE
+   PlatformVersion: LATEST
+   DeploymentConfiguration:
+     MinimumHealthyPercent: 100
+     MaximumPercent: 200
+     DeploymentCircuitBreaker: { Enable: true, Rollback: true }
+   NetworkConfiguration:
+     AwsvpcConfiguration:
+       AssignPublicIp: ENABLED
+       Subnets: [!Ref PublicSubnet1, !Ref PublicSubnet2]
+       SecurityGroups: [!Ref ComputeTaskSecurityGroup]
+   EnableECSManagedTags: true
+   PropagateTags: SERVICE
+   Tags:
+     - {Key: service, Value: finnor-background}
+     - {Key: environment, Value: production}
 
-  HeavyService:
-    Type: AWS::ECS::Service
-    Properties:
-      ServiceName: finnor-heavy
-      Cluster: !Ref WorkerCluster
-      TaskDefinition: !Ref HeavyTaskDefinition
-      DesiredCount: 1
-      LaunchType: FARGATE
-      PlatformVersion: LATEST
-      DeploymentConfiguration:
-        MinimumHealthyPercent: 100
-        MaximumPercent: 200
-        DeploymentCircuitBreaker: { Enable: true, Rollback: true }
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets: [!Ref PublicSubnet1, !Ref PublicSubnet2]
-          SecurityGroups: [!Ref ComputeTaskSecurityGroup]
-      EnableECSManagedTags: true
-      PropagateTags: SERVICE
-      Tags:
-        - {Key: service, Value: finnor-heavy}
-        - {Key: environment, Value: production}
+ HeavyService:
+  Type: AWS::ECS::Service
+  Properties:
+   ServiceName: finnor-heavy
+   Cluster: !Ref WorkerCluster
+   TaskDefinition: !Ref HeavyTaskDefinition
+   DesiredCount: 1
+   LaunchType: FARGATE
+   PlatformVersion: LATEST
+   DeploymentConfiguration:
+     MinimumHealthyPercent: 100
+     MaximumPercent: 200
+     DeploymentCircuitBreaker: { Enable: true, Rollback: true }
+   NetworkConfiguration:
+     AwsvpcConfiguration:
+       AssignPublicIp: ENABLED
+       Subnets: [!Ref PublicSubnet1, !Ref PublicSubnet2]
+       SecurityGroups: [!Ref ComputeTaskSecurityGroup]
+   EnableECSManagedTags: true
+   PropagateTags: SERVICE
+   Tags:
+     - {Key: service, Value: finnor-heavy}
+     - {Key: environment, Value: production}
 
-  # One wake publisher per class.
-  RealtimeScaleTarget:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: RealtimeService
-    Properties:
-      ServiceNamespace: ecs
-      ScalableDimension: ecs:service:DesiredCount
-      ResourceId: !Sub 'service/${WorkerCluster}/finnor-realtime'
-      MinCapacity: 1
-      MaxCapacity: 2
-  InteractiveScaleTarget:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: InteractiveService
-    Properties:
-      ServiceNamespace: ecs
-      ScalableDimension: ecs:service:DesiredCount
-      ResourceId: !Sub 'service/${WorkerCluster}/finnor-interactive'
-      MinCapacity: 1
-      MaxCapacity: 3
-  BackgroundScaleTarget:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: BackgroundService
-    Properties:
-      ServiceNamespace: ecs
-      ScalableDimension: ecs:service:DesiredCount
-      ResourceId: !Sub 'service/${WorkerCluster}/finnor-background'
-      MinCapacity: 1
-      MaxCapacity: 2
-  HeavyScaleTarget:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    DependsOn: HeavyService
-    Properties:
-      ServiceNamespace: ecs
-      ScalableDimension: ecs:service:DesiredCount
-      ResourceId: !Sub 'service/${WorkerCluster}/finnor-heavy'
-      MinCapacity: 1
-      MaxCapacity: 2
+ # One wake publisher per class.
+ RealtimeScaleTarget:
+  Type: AWS::ApplicationAutoScaling::ScalableTarget
+  DependsOn: RealtimeService
+  Properties:
+   ServiceNamespace: ecs
+   ScalableDimension: ecs:service:DesiredCount
+   ResourceId: !Sub 'service/${WorkerCluster}/finnor-realtime'
+   MinCapacity: 1
+   MaxCapacity: 2
+ InteractiveScaleTarget:
+  Type: AWS::ApplicationAutoScaling::ScalableTarget
+  DependsOn: InteractiveService
+  Properties:
+   ServiceNamespace: ecs
+   ScalableDimension: ecs:service:DesiredCount
+   ResourceId: !Sub 'service/${WorkerCluster}/finnor-interactive'
+   MinCapacity: 1
+   MaxCapacity: 3
+ BackgroundScaleTarget:
+  Type: AWS::ApplicationAutoScaling::ScalableTarget
+  DependsOn: BackgroundService
+  Properties:
+   ServiceNamespace: ecs
+   ScalableDimension: ecs:service:DesiredCount
+   ResourceId: !Sub 'service/${WorkerCluster}/finnor-background'
+   MinCapacity: 1
+   MaxCapacity: 2
+ HeavyScaleTarget:
+  Type: AWS::ApplicationAutoScaling::ScalableTarget
+  DependsOn: HeavyService
+  Properties:
+   ServiceNamespace: ecs
+   ScalableDimension: ecs:service:DesiredCount
+   ResourceId: !Sub 'service/${WorkerCluster}/finnor-heavy'
+   MinCapacity: 1
+   MaxCapacity: 2
 
-  RealtimeScaleOutPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: finnor-realtime-scale-out
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref RealtimeScaleTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 60
-        MetricAggregationType: Maximum
-        StepAdjustments: [{ MetricIntervalLowerBound: 0, ScalingAdjustment: 1 }]
-  RealtimeScaleInPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: finnor-realtime-scale-in
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref RealtimeScaleTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 600
-        MetricAggregationType: Maximum
-        StepAdjustments: [{ MetricIntervalUpperBound: 0, ScalingAdjustment: -1 }]
-  InteractiveScaleOutPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: finnor-interactive-scale-out
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref InteractiveScaleTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 60
-        MetricAggregationType: Maximum
-        StepAdjustments: [{ MetricIntervalLowerBound: 0, ScalingAdjustment: 1 }]
-  InteractiveScaleInPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: finnor-interactive-scale-in
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref InteractiveScaleTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 600
-        MetricAggregationType: Maximum
-        StepAdjustments: [{ MetricIntervalUpperBound: 0, ScalingAdjustment: -1 }]
-  BackgroundScaleOutPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: finnor-background-scale-out
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref BackgroundScaleTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 120
-        MetricAggregationType: Maximum
-        StepAdjustments: [{ MetricIntervalLowerBound: 0, ScalingAdjustment: 1 }]
-  BackgroundScaleInPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: finnor-background-scale-in
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref BackgroundScaleTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 900
-        MetricAggregationType: Maximum
-        StepAdjustments: [{ MetricIntervalUpperBound: 0, ScalingAdjustment: -1 }]
-  HeavyScaleOutPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: finnor-heavy-scale-out
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref HeavyScaleTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 180
-        MetricAggregationType: Maximum
-        StepAdjustments: [{ MetricIntervalLowerBound: 0, ScalingAdjustment: 1 }]
-  HeavyScaleInPolicy:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Properties:
-      PolicyName: finnor-heavy-scale-in
-      PolicyType: StepScaling
-      ScalingTargetId: !Ref HeavyScaleTarget
-      StepScalingPolicyConfiguration:
-        AdjustmentType: ChangeInCapacity
-        Cooldown: 1200
-        MetricAggregationType: Maximum
-        StepAdjustments: [{ MetricIntervalUpperBound: 0, ScalingAdjustment: -1 }]
+ RealtimeScaleOutPolicy:
+  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  Properties:
+   PolicyName: finnor-realtime-scale-out
+   PolicyType: StepScaling
+   ScalingTargetId: !Ref RealtimeScaleTarget
+   StepScalingPolicyConfiguration:
+     AdjustmentType: ChangeInCapacity
+     Cooldown: 60
+     MetricAggregationType: Maximum
+     StepAdjustments: [{ MetricIntervalLowerBound: 0, ScalingAdjustment: 1 }]
+ RealtimeScaleInPolicy:
+  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  Properties:
+   PolicyName: finnor-realtime-scale-in
+   PolicyType: StepScaling
+   ScalingTargetId: !Ref RealtimeScaleTarget
+   StepScalingPolicyConfiguration:
+     AdjustmentType: ChangeInCapacity
+     Cooldown: 600
+     MetricAggregationType: Maximum
+     StepAdjustments: [{ MetricIntervalUpperBound: 0, ScalingAdjustment: -1 }]
+ InteractiveScaleOutPolicy:
+  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  Properties:
+   PolicyName: finnor-interactive-scale-out
+   PolicyType: StepScaling
+   ScalingTargetId: !Ref InteractiveScaleTarget
+   StepScalingPolicyConfiguration:
+     AdjustmentType: ChangeInCapacity
+     Cooldown: 60
+     MetricAggregationType: Maximum
+     StepAdjustments: [{ MetricIntervalLowerBound: 0, ScalingAdjustment: 1 }]
+ InteractiveScaleInPolicy:
+  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  Properties:
+   PolicyName: finnor-interactive-scale-in
+   PolicyType: StepScaling
+   ScalingTargetId: !Ref InteractiveScaleTarget
+   StepScalingPolicyConfiguration:
+     AdjustmentType: ChangeInCapacity
+     Cooldown: 600
+     MetricAggregationType: Maximum
+     StepAdjustments: [{ MetricIntervalUpperBound: 0, ScalingAdjustment: -1 }]
+ BackgroundScaleOutPolicy:
+  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  Properties:
+   PolicyName: finnor-background-scale-out
+   PolicyType: StepScaling
+   ScalingTargetId: !Ref BackgroundScaleTarget
+   StepScalingPolicyConfiguration:
+     AdjustmentType: ChangeInCapacity
+     Cooldown: 120
+     MetricAggregationType: Maximum
+     StepAdjustments: [{ MetricIntervalLowerBound: 0, ScalingAdjustment: 1 }]
+ BackgroundScaleInPolicy:
+  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  Properties:
+   PolicyName: finnor-background-scale-in
+   PolicyType: StepScaling
+   ScalingTargetId: !Ref BackgroundScaleTarget
+   StepScalingPolicyConfiguration:
+     AdjustmentType: ChangeInCapacity
+     Cooldown: 900
+     MetricAggregationType: Maximum
+     StepAdjustments: [{ MetricIntervalUpperBound: 0, ScalingAdjustment: -1 }]
+ HeavyScaleOutPolicy:
+  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  Properties:
+   PolicyName: finnor-heavy-scale-out
+   PolicyType: StepScaling
+   ScalingTargetId: !Ref HeavyScaleTarget
+   StepScalingPolicyConfiguration:
+     AdjustmentType: ChangeInCapacity
+     Cooldown: 180
+     MetricAggregationType: Maximum
+     StepAdjustments: [{ MetricIntervalLowerBound: 0, ScalingAdjustment: 1 }]
+ HeavyScaleInPolicy:
+  Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  Properties:
+   PolicyName: finnor-heavy-scale-in
+   PolicyType: StepScaling
+   ScalingTargetId: !Ref HeavyScaleTarget
+   StepScalingPolicyConfiguration:
+     AdjustmentType: ChangeInCapacity
+     Cooldown: 1200
+     MetricAggregationType: Maximum
+     StepAdjustments: [{ MetricIntervalUpperBound: 0, ScalingAdjustment: -1 }]
 
-  # max(age/target, backlog/fresh-task/target); missing metrics never scale in.
-  RealtimeScaleOutAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: finnor-realtime-compute-pressure-high
-      Namespace: FINNOR/ComputePlane
-      MetricName: ScalePressure
-      Dimensions: [{ Name: Environment, Value: production }, { Name: ServiceClass, Value: REALTIME }]
-      Statistic: Maximum
-      Period: 60
-      EvaluationPeriods: 2
-      DatapointsToAlarm: 2
-      Threshold: 1
-      ComparisonOperator: GreaterThanThreshold
-      TreatMissingData: notBreaching
-      AlarmActions: [!Ref RealtimeScaleOutPolicy]
-  RealtimeScaleInAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: finnor-realtime-compute-pressure-low
-      Namespace: FINNOR/ComputePlane
-      MetricName: ScalePressure
-      Dimensions: [{ Name: Environment, Value: production }, { Name: ServiceClass, Value: REALTIME }]
-      Statistic: Maximum
-      Period: 60
-      EvaluationPeriods: 10
-      DatapointsToAlarm: 10
-      Threshold: 0.2
-      ComparisonOperator: LessThanThreshold
-      TreatMissingData: notBreaching
-      AlarmActions: [!Ref RealtimeScaleInPolicy]
-  InteractiveScaleOutAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: finnor-interactive-compute-pressure-high
-      Namespace: FINNOR/ComputePlane
-      MetricName: ScalePressure
-      Dimensions: [{ Name: Environment, Value: production }, { Name: ServiceClass, Value: INTERACTIVE }]
-      Statistic: Maximum
-      Period: 60
-      EvaluationPeriods: 2
-      DatapointsToAlarm: 2
-      Threshold: 1
-      ComparisonOperator: GreaterThanThreshold
-      TreatMissingData: notBreaching
-      AlarmActions: [!Ref InteractiveScaleOutPolicy]
-  InteractiveScaleInAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: finnor-interactive-compute-pressure-low
-      Namespace: FINNOR/ComputePlane
-      MetricName: ScalePressure
-      Dimensions: [{ Name: Environment, Value: production }, { Name: ServiceClass, Value: INTERACTIVE }]
-      Statistic: Maximum
-      Period: 60
-      EvaluationPeriods: 10
-      DatapointsToAlarm: 10
-      Threshold: 0.2
-      ComparisonOperator: LessThanThreshold
-      TreatMissingData: notBreaching
-      AlarmActions: [!Ref InteractiveScaleInPolicy]
-  BackgroundScaleOutAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: finnor-background-compute-pressure-high
-      Namespace: FINNOR/ComputePlane
-      MetricName: ScalePressure
-      Dimensions: [{ Name: Environment, Value: production }, { Name: ServiceClass, Value: BACKGROUND }]
-      Statistic: Maximum
-      Period: 60
-      EvaluationPeriods: 2
-      DatapointsToAlarm: 2
-      Threshold: 1
-      ComparisonOperator: GreaterThanThreshold
-      TreatMissingData: notBreaching
-      AlarmActions: [!Ref BackgroundScaleOutPolicy]
-  BackgroundScaleInAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: finnor-background-compute-pressure-low
-      Namespace: FINNOR/ComputePlane
-      MetricName: ScalePressure
-      Dimensions: [{ Name: Environment, Value: production }, { Name: ServiceClass, Value: BACKGROUND }]
-      Statistic: Maximum
-      Period: 60
-      EvaluationPeriods: 10
-      DatapointsToAlarm: 10
-      Threshold: 0.2
-      ComparisonOperator: LessThanThreshold
-      TreatMissingData: notBreaching
-      AlarmActions: [!Ref BackgroundScaleInPolicy]
-  HeavyScaleOutAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: finnor-heavy-compute-pressure-high
-      Namespace: FINNOR/ComputePlane
-      MetricName: ScalePressure
-      Dimensions: [{ Name: Environment, Value: production }, { Name: ServiceClass, Value: HEAVY }]
-      Statistic: Maximum
-      Period: 60
-      EvaluationPeriods: 2
-      DatapointsToAlarm: 2
-      Threshold: 1
-      ComparisonOperator: GreaterThanThreshold
-      TreatMissingData: notBreaching
-      AlarmActions: [!Ref HeavyScaleOutPolicy]
-  HeavyScaleInAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Properties:
-      AlarmName: finnor-heavy-compute-pressure-low
-      Namespace: FINNOR/ComputePlane
-      MetricName: ScalePressure
-      Dimensions: [{ Name: Environment, Value: production }, { Name: ServiceClass, Value: HEAVY }]
-      Statistic: Maximum
-      Period: 60
-      EvaluationPeriods: 10
-      DatapointsToAlarm: 10
-      Threshold: 0.2
-      ComparisonOperator: LessThanThreshold
-      TreatMissingData: notBreaching
-      AlarmActions: [!Ref HeavyScaleInPolicy]
+ # max(age/target, backlog/fresh-task/target); missing metrics never scale in.
+ RealtimeScaleOutAlarm:
+  Type: AWS::CloudWatch::Alarm
+  Properties:
+   AlarmName: finnor-realtime-compute-pressure-high
+   Namespace: FINNOR/ComputePlane
+   MetricName: ScalePressure
+   Dimensions: [{ Name: Environment, Value: production }, { Name: ServiceClass, Value: REALTIME }]
+   Statistic: Maximum
+   Period: 60
+   EvaluationPeriods: 2
+   DatapointsToAlarm: 2
+   Threshold: 1
+   ComparisonOperator: GreaterThanThreshold
+   TreatMissingData: notBreaching
+   AlarmActions: [!Ref RealtimeScaleOutPolicy]
+ RealtimeScaleInAlarm:
+  Type: AWS::CloudWatch::Alarm
+  Properties:
+   AlarmName: finnor-realtime-compute-pressure-low
+   Namespace: FINNOR/ComputePlane
+   MetricName: ScalePressure
+   Dimensions: [{ Name: Environment, Value: production }, { Name: ServiceClass, Value: REALTIME }]
+   Statistic: Maximum
+   Period: 60
+   EvaluationPeriods: 10
+   DatapointsToAlarm: 10
+   Threshold: 0.2
+   ComparisonOperator: LessThanThreshold
+   TreatMissingData: notBreaching
+   AlarmActions: [!Ref RealtimeScaleInPolicy]
+ InteractiveScaleOutAlarm:
+  Type: AWS::CloudWatch::Alarm
+  Properties:
+   AlarmName: finnor-interactive-compute-pressure-high
+   Namespace: FINNOR/ComputePlane
+   MetricName: ScalePressure
+   Dimensions: [{ Name: Environment, Value: production }, { Name: ServiceClass, Value: INTERACTIVE }]
+   Statistic: Maximum
+   Period: 60
+   EvaluationPeriods: 2
+   DatapointsToAlarm: 2
+   Threshold: 1
+   ComparisonOperator: GreaterThanThreshold
+   TreatMissingData: notBreaching
+   AlarmActions: [!Ref InteractiveScaleOutPolicy]
+ InteractiveScaleInAlarm:
+  Type: AWS::CloudWatch::Alarm
+  Properties:
+   AlarmName: finnor-interactive-compute-pressure-low
+   Namespace: FINNOR/ComputePlane
+   MetricName: ScalePressure
+   Dimensions: [{ Name: Environment, Value: production }, { Name: ServiceClass, Value: INTERACTIVE }]
+   Statistic: Maximum
+   Period: 60
+   EvaluationPeriods: 10
+   DatapointsToAlarm: 10
+   Threshold: 0.2
+   ComparisonOperator: LessThanThreshold
+   TreatMissingData: notBreaching
+   AlarmActions: [!Ref InteractiveScaleInPolicy]
+ BackgroundScaleOutAlarm:
+  Type: AWS::CloudWatch::Alarm
+  Properties:
+   AlarmName: finnor-background-compute-pressure-high
+   Namespace: FINNOR/ComputePlane
+   MetricName: ScalePressure
+   Dimensions: [{ Name: Environment, Value: production }, { Name: ServiceClass, Value: BACKGROUND }]
+   Statistic: Maximum
+   Period: 60
+   EvaluationPeriods: 2
+   DatapointsToAlarm: 2
+   Threshold: 1
+   ComparisonOperator: GreaterThanThreshold
+   TreatMissingData: notBreaching
+   AlarmActions: [!Ref BackgroundScaleOutPolicy]
+ BackgroundScaleInAlarm:
+  Type: AWS::CloudWatch::Alarm
+  Properties:
+   AlarmName: finnor-background-compute-pressure-low
+   Namespace: FINNOR/ComputePlane
+   MetricName: ScalePressure
+   Dimensions: [{ Name: Environment, Value: production }, { Name: ServiceClass, Value: BACKGROUND }]
+   Statistic: Maximum
+   Period: 60
+   EvaluationPeriods: 10
+   DatapointsToAlarm: 10
+   Threshold: 0.2
+   ComparisonOperator: LessThanThreshold
+   TreatMissingData: notBreaching
+   AlarmActions: [!Ref BackgroundScaleInPolicy]
+ HeavyScaleOutAlarm:
+  Type: AWS::CloudWatch::Alarm
+  Properties:
+   AlarmName: finnor-heavy-compute-pressure-high
+   Namespace: FINNOR/ComputePlane
+   MetricName: ScalePressure
+   Dimensions: [{ Name: Environment, Value: production }, { Name: ServiceClass, Value: HEAVY }]
+   Statistic: Maximum
+   Period: 60
+   EvaluationPeriods: 2
+   DatapointsToAlarm: 2
+   Threshold: 1
+   ComparisonOperator: GreaterThanThreshold
+   TreatMissingData: notBreaching
+   AlarmActions: [!Ref HeavyScaleOutPolicy]
+ HeavyScaleInAlarm:
+  Type: AWS::CloudWatch::Alarm
+  Properties:
+   AlarmName: finnor-heavy-compute-pressure-low
+   Namespace: FINNOR/ComputePlane
+   MetricName: ScalePressure
+   Dimensions: [{ Name: Environment, Value: production }, { Name: ServiceClass, Value: HEAVY }]
+   Statistic: Maximum
+   Period: 60
+   EvaluationPeriods: 10
+   DatapointsToAlarm: 10
+   Threshold: 0.2
+   ComparisonOperator: LessThanThreshold
+   TreatMissingData: notBreaching
+   AlarmActions: [!Ref HeavyScaleInPolicy]
 
 Outputs:
-  WorkerRepositoryUri:
-    Value: !GetAtt WorkerRepository.RepositoryUri
-  WorkerClusterName:
-    Value: !Ref WorkerCluster
-  WorkerServiceName:
-    Condition: RunLegacyWorker
-    Value: finnor-worker
-  RealtimeServiceName:
-    Value: finnor-realtime
-  InteractiveServiceName:
-    Value: finnor-interactive
-  BackgroundServiceName:
-    Value: finnor-background
-  HeavyServiceName:
-    Value: finnor-heavy
-  WorkerTaskDefinitionArn:
-    Condition: RunLegacyWorker
-    Value: !Ref LegacyWorkerTaskDefinitionArn
-  RealtimeTaskDefinitionArn:
-    Value: !Ref WorkerTaskDefinition
-  WorkerExecutionRoleArn:
-    Value: !GetAtt WorkerExecutionRole.Arn
-  WorkerTaskRoleArn:
-    Value: !GetAtt WorkerTaskRole.Arn
-  RealtimeTaskRoleArn:
-    Value: !GetAtt RealtimeTaskRole.Arn
-  ComputeTaskSecurityGroupId:
-    Value: !Ref ComputeTaskSecurityGroup
-  GithubActionsRoleArn:
-    Value: !GetAtt GitHubActionsRole.Arn
-  LoadBalancerArn:
-    Value: !Ref RealtimeLoadBalancer
-  LoadBalancerDnsName:
-    Value: !GetAtt RealtimeLoadBalancer.DNSName
-  TargetGroupArn:
-    Condition: RunLegacyWorker
-    Value: !Ref WorkerTargetGroup
-  RealtimeTargetGroupArn:
-    Value: !Ref RealtimeTargetGroup
-  HttpsListenerArn:
-    Value: !Ref HttpsRealtimeListener
-  AlbSecurityGroupId:
-    Value: !Ref AlbSecurityGroup
-  TaskSecurityGroupId:
-    Value: !Ref TaskSecurityGroup
-  WorkerLogGroupName:
-    Value: !Ref WorkerLogGroup
+ WorkerRepositoryUri:
+  Value: !GetAtt WorkerRepository.RepositoryUri
+ WorkerClusterName:
+  Value: !Ref WorkerCluster
+ WorkerServiceName:
+  Condition: RunLegacyWorker
+  Value: finnor-worker
+ RealtimeServiceName:
+  Value: finnor-realtime
+ InteractiveServiceName:
+  Value: finnor-interactive
+ BackgroundServiceName:
+  Value: finnor-background
+ HeavyServiceName:
+  Value: finnor-heavy
+ WorkerTaskDefinitionArn:
+  Condition: RunLegacyWorker
+  Value: !Ref LegacyWorkerTaskDefinitionArn
+ RealtimeTaskDefinitionArn:
+  Value: !Ref WorkerTaskDefinition
+ WorkerExecutionRoleArn:
+  Value: !GetAtt WorkerExecutionRole.Arn
+ WorkerTaskRoleArn:
+  Value: !GetAtt WorkerTaskRole.Arn
+ RealtimeTaskRoleArn:
+  Value: !GetAtt RealtimeTaskRole.Arn
+ ComputeTaskSecurityGroupId:
+  Value: !Ref ComputeTaskSecurityGroup
+ GithubActionsRoleArn:
+  Value: !GetAtt GitHubActionsRole.Arn
+ LoadBalancerArn:
+  Value: !Ref RealtimeLoadBalancer
+ LoadBalancerDnsName:
+  Value: !GetAtt RealtimeLoadBalancer.DNSName
+ TargetGroupArn:
+  Condition: RunLegacyWorker
+  Value: !Ref WorkerTargetGroup
+ RealtimeTargetGroupArn:
+  Value: !Ref RealtimeTargetGroup
+ HttpsListenerArn:
+  Value: !Ref HttpsRealtimeListener
+ AlbSecurityGroupId:
+  Value: !Ref AlbSecurityGroup
+ TaskSecurityGroupId:
+  Value: !Ref TaskSecurityGroup
+ WorkerLogGroupName:
+  Value: !Ref WorkerLogGroup

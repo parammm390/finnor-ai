@@ -61,3 +61,7 @@ vercel_output.txt
 /finnor-os/packages/private-equity/src/interaction-synthesis/__pycache__/
 /scope-postx/y3-dynamic-interaction-synthesizer/evidence/
 /scope-postx/y3-dynamic-interaction-synthesizer/handoff/
+
+# Local capability verification runtimes and model cache
+/finnor-os/.capability-models
+/finnor-os/.capability-venv

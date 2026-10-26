@@ -101,6 +101,14 @@ RUN uv python install 3.11.15 3.12.13 \
     && uv pip sync --require-hashes --only-binary :all: --python /opt/r3-upstream-runtime/bin/python /locks/upstream-requirements.lock \
     && /opt/r3-upstream-runtime/bin/python -I -m compileall -q -j 3 /opt/r3-upstream-runtime
 
+FROM python:3.11.15-slim-bookworm@sha256:d29f48a31a8b408ed19272ca1e7b10ebae13b240a27e862d3d4217c528e2e0c3 AS capability-scientific
+COPY finnor-os/packages/tools/src/capabilities/python/requirements-linux-cpu.lock.txt /tmp/finnor-capability-requirements.lock
+COPY finnor-os/packages/tools/src/capabilities/python/provision_docling_models.py /tmp/provision-capability-models.py
+RUN python3 -m venv /opt/finnor-capabilities \
+    && /opt/finnor-capabilities/bin/pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu -r /tmp/finnor-capability-requirements.lock \
+    && timeout 600s /opt/finnor-capabilities/bin/python -I -B /tmp/provision-capability-models.py /opt/finnor-models/docling \
+    && chmod -R a-w /opt/finnor-models/docling
+
 FROM scientific-runtime AS runtime
 
 WORKDIR /app/finnor-os
@@ -112,7 +120,7 @@ RUN test -x /usr/local/bin/python3.12 \
 # callee, while production R1/R2/R4 environments remain unchanged.
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends \
-       libexpat1 zlib1g libffi8 libsqlite3-0 libbz2-1.0 liblzma5 libgomp1 \
+       libglib2.0-0 libgl1 libexpat1 zlib1g libffi8 libsqlite3-0 libbz2-1.0 liblzma5 libgomp1 \
        libssl3 libreadline8 libncursesw6 libuuid1 libgfortran5 procps \
        bubblewrap=0.8.0-2+deb12u1 libcap2-bin openssl=3.0.22-1~deb12u1 libssl3=3.0.22-1~deb12u1 \
     && rm -rf /var/lib/apt/lists/*
@@ -120,6 +128,8 @@ COPY --from=r4-scientific /usr/local/bin/python3.11 /usr/local/bin/python3.11
 COPY --from=r4-scientific /usr/local/lib/libpython3.11.so.1.0 /usr/local/lib/libpython3.11.so.1.0
 COPY --from=r4-scientific /usr/local/lib/python3.11 /usr/local/lib/python3.11
 COPY --from=r4-scientific /opt/finnor/r4 /opt/finnor/r4
+COPY --from=capability-scientific /opt/finnor-capabilities /opt/finnor-capabilities
+COPY --from=capability-scientific /opt/finnor-models /opt/finnor-models
 COPY --from=node-runtime /usr/local/bin/node /usr/local/bin/node
 COPY --from=dependencies /app /app
 COPY --from=r2-scientific-build /opt/r2-build/runtime /opt/finnor-r2/runtime
@@ -135,6 +145,7 @@ COPY --from=s6-native-callee /opt/finnor-s6-jail-arm64 /opt/finnor-s6-jail-arm64
 COPY --from=s6-launcher-build /opt/linux-launcher /opt/linux-launcher
 COPY --from=r2-scientific-build /opt/r2-build/gmp.tar.xz /opt/finnor-r2/sources/gmp.tar.xz
 COPY --from=r2-scientific-build /opt/r2-build/mpfr.tar.xz /opt/finnor-r2/sources/mpfr.tar.xz
+RUN npm run capabilities:planner-manifest -- --check
 RUN node scripts/r3/seal-linux-callee.mjs
 RUN if [ "$(node -p process.arch)" = x64 ]; then node scripts/r3/package-linux-jail.mjs /usr/local/bin/node /opt/linux-launcher /opt/finnor-s6-jail-x64; fi \
     && mknod -m 666 /opt/finnor-s6-jail-arm64/root/dev/null c 1 3 \
@@ -146,6 +157,8 @@ ENV FINNOR_R2_RUNTIME=/opt/finnor-r2/runtime \
     FINNOR_R2_PYTHON=/opt/finnor-python/bin/python \
     NODE_ENV=production \
     NODE_OPTIONS=--max-old-space-size=384 \
+    FINNOR_CAPABILITY_PYTHON=/opt/finnor-capabilities/bin/python \
+    FINNOR_DOCLING_MODELS_DIR=/opt/finnor-models/docling \
     FINNOR_R4_PYTHON=/opt/finnor/r4/bin/python \
     PORT=8090 \
     SSE_PORT=8090 \

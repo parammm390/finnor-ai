@@ -1,5 +1,690 @@
-// Generated from finnor-os/openapi.json, SHA-256 7c42b88ad863addf789a225087db7a2315ae45e420e06dcae54f95f4ce7c38c2.
+// Generated from finnor-os/openapi.json, SHA-256 4175fb2f1dce21396fc4251cebda133bd5c3b85b3812b02b2cbae31a6c190665.
 export interface paths {
+    "/api/interventions/assess-pywhy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        idempotencyKey: string;
+                        /** @default 60000 */
+                        timeoutMs?: number;
+                        /** @constant */
+                        kind: "pywhy_assess";
+                        dataset: {
+                            /** Format: uuid */
+                            documentId: string;
+                            /** Format: uuid */
+                            versionId: string;
+                            name: string;
+                            /** @enum {string} */
+                            format: "csv" | "json" | "parquet";
+                        };
+                        treatment: string;
+                        outcome: string;
+                        commonCauses: string[];
+                        /** @default [] */
+                        effectModifiers?: string[];
+                        /** @enum {string} */
+                        estimator: "linear" | "double_ml" | "causal_forest";
+                        assumptions: {
+                            statement: string;
+                            evidenceRef: string;
+                        }[];
+                        /** @default 0 */
+                        seed?: number;
+                        interventionModelRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Original assessment submission replayed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description S3-bound conditional assessment accepted into the canonical HEAVY queue; temporal model remains unchanged */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current permitted S3 model is unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interventions/read-pywhy-assessment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        runId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current-authorized S3-bound PyWhy result with separate estimator/assumption/diagnostic qualification; no temporal model compatibility or admission */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owned S3 assessment or its current model context is unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/capabilities/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Requires versionId for exact document scope */
+                    documentId?: string;
+                    versionId?: string;
+                    kind?: string;
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Owned, currently authorized metadata page; no result payloads */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        idempotencyKey: string;
+                        /** @default 60000 */
+                        timeoutMs?: number;
+                        /** @constant */
+                        kind: "duckdb_query";
+                        datasets: {
+                            /** Format: uuid */
+                            documentId: string;
+                            /** Format: uuid */
+                            versionId: string;
+                            name: string;
+                            /** @enum {string} */
+                            format: "csv" | "json" | "parquet";
+                        }[];
+                        query: string;
+                        /** @default 1000 */
+                        maxRows?: number;
+                    } | {
+                        idempotencyKey: string;
+                        /** @default 60000 */
+                        timeoutMs?: number;
+                        /** @constant */
+                        kind: "docling_extract";
+                        source: {
+                            /** Format: uuid */
+                            documentId: string;
+                            /** Format: uuid */
+                            versionId: string;
+                        };
+                        /** @default false */
+                        forceOcr?: boolean;
+                    } | {
+                        idempotencyKey: string;
+                        /** @default 60000 */
+                        timeoutMs?: number;
+                        /** @constant */
+                        kind: "pageindex_index";
+                        source: {
+                            /** Format: uuid */
+                            documentId: string;
+                            /** Format: uuid */
+                            versionId: string;
+                        };
+                    } | {
+                        idempotencyKey: string;
+                        /** @default 60000 */
+                        timeoutMs?: number;
+                        /** @constant */
+                        kind: "pageindex_retrieve";
+                        indexRunIds: string[];
+                        question: string;
+                    } | {
+                        idempotencyKey: string;
+                        /** @default 60000 */
+                        timeoutMs?: number;
+                        /** @constant */
+                        kind: "pywhy_assess";
+                        dataset: {
+                            /** Format: uuid */
+                            documentId: string;
+                            /** Format: uuid */
+                            versionId: string;
+                            name: string;
+                            /** @enum {string} */
+                            format: "csv" | "json" | "parquet";
+                        };
+                        treatment: string;
+                        outcome: string;
+                        commonCauses: string[];
+                        /** @default [] */
+                        effectModifiers?: string[];
+                        /** @enum {string} */
+                        estimator: "linear" | "double_ml" | "causal_forest";
+                        assumptions: {
+                            statement: string;
+                            evidenceRef: string;
+                        }[];
+                        /** @default 0 */
+                        seed?: number;
+                        interventionModelRef?: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    } | {
+                        idempotencyKey: string;
+                        /** @default 60000 */
+                        timeoutMs?: number;
+                        /** @constant */
+                        kind: "gepa_optimize";
+                        dataset: {
+                            /** Format: uuid */
+                            documentId: string;
+                            /** Format: uuid */
+                            versionId: string;
+                        };
+                        /** @default 16 */
+                        maxMetricCalls?: number;
+                        /** @default 0 */
+                        seed?: number;
+                    } | {
+                        idempotencyKey: string;
+                        /** @default 60000 */
+                        timeoutMs?: number;
+                        /** @constant */
+                        kind: "shinka_evolve";
+                        problemSet: {
+                            /** Format: uuid */
+                            documentId: string;
+                            /** Format: uuid */
+                            versionId: string;
+                        };
+                        /** @default 4 */
+                        generations?: number;
+                        /** @default 0 */
+                        seed?: number;
+                    } | {
+                        idempotencyKey: string;
+                        /** @default 60000 */
+                        timeoutMs?: number;
+                        /** @constant */
+                        kind: "modal_execute";
+                        code: string;
+                        /** @default [] */
+                        sources?: {
+                            /** Format: uuid */
+                            documentId: string;
+                            /** Format: uuid */
+                            versionId: string;
+                        }[];
+                        /** @default  */
+                        stdin?: string;
+                    } | {
+                        idempotencyKey: string;
+                        /** @default 60000 */
+                        timeoutMs?: number;
+                        /** @constant */
+                        kind: "modal_control";
+                        /** Format: uuid */
+                        executionRunId: string;
+                        /** @enum {string} */
+                        operation: "status" | "terminate";
+                    } | {
+                        idempotencyKey: string;
+                        /** @default 60000 */
+                        timeoutMs?: number;
+                        /** @constant */
+                        kind: "nango_sync";
+                        /** Format: uuid */
+                        integrationId: string;
+                        /** Format: uuid */
+                        sourceScopeId: string;
+                        model: string;
+                    } | {
+                        idempotencyKey: string;
+                        /** @default 60000 */
+                        timeoutMs?: number;
+                        /** @constant */
+                        kind: "parallel_task";
+                        input: string;
+                        outputSchema: {
+                            [key: string]: unknown;
+                        };
+                        /**
+                         * @default core
+                         * @enum {string}
+                         */
+                        processor?: "lite" | "base" | "core" | "pro" | "ultra";
+                    } | {
+                        idempotencyKey: string;
+                        /** @default 60000 */
+                        timeoutMs?: number;
+                        /** @constant */
+                        kind: "parallel_find";
+                        objective: string;
+                        /** @enum {string} */
+                        entityType: "companies" | "people" | "products" | "other";
+                        matchConditions: {
+                            name: string;
+                            description: string;
+                        }[];
+                        /** @default 10 */
+                        matchLimit?: number;
+                        /**
+                         * @default core
+                         * @enum {string}
+                         */
+                        generator?: "core" | "preview";
+                    } | {
+                        idempotencyKey: string;
+                        /** @default 60000 */
+                        timeoutMs?: number;
+                        /** @constant */
+                        kind: "parallel_monitor";
+                        query: string;
+                        /**
+                         * @default daily
+                         * @enum {string}
+                         */
+                        cadence?: "hourly" | "daily" | "weekly";
+                    } | {
+                        idempotencyKey: string;
+                        /** @default 60000 */
+                        timeoutMs?: number;
+                        /** @constant */
+                        kind: "parallel_monitor_control";
+                        /** Format: uuid */
+                        monitorRunId: string;
+                        /** @enum {string} */
+                        operation: "status" | "events" | "cancel";
+                        eventGroupId?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Same request replayed under its original idempotency key */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Canonical HEAVY computation accepted; not a completed result or business authority */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current source or capability authority denied */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Idempotency or immutable source identity conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/capabilities/runs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Owned run with current source rights; typed result, failure, retained remote identity or uncertain outcome */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current source or capability authority denied */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Owned accessible run not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/capabilities/nango/connect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        idempotencyKey: string;
+                        providerConfigKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Prepared owner-bound authorization session; credential returned once and never stored */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Session intent idempotency conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/capabilities/nango/sources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Server-approved read-only catalog and current-authorized source bindings/checkpoints */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/capabilities/planner/activation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Reviewed background planner preference and expected revision */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expectedRevision: number;
+                        idempotencyKey: string;
+                        reviewNote: string;
+                        /** @constant */
+                        operation: "activate";
+                        /** Format: uuid */
+                        runId: string;
+                        reviewedResultDigest: string;
+                    } | {
+                        expectedRevision: number;
+                        idempotencyKey: string;
+                        reviewNote: string;
+                        /** @constant */
+                        operation: "disable";
+                    };
+                };
+            };
+            responses: {
+                /** @description Immutable reviewed candidate activation or incumbent restoration; no business execution authority */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Planner activation authority denied */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Reviewed digest, environment, expected revision or idempotency conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/webhooks/nango": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    "x-nango-hmac-sha256": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description Prepared binding or bounded source-sync wake accepted; webhook records not applied */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact-byte HMAC invalid */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/live-controls": {
         parameters: {
             query?: never;

@@ -8,26 +8,44 @@
       "path": ".github/workflows/production-release.yml",
       "classification": "PRODUCTION_MUTATOR",
       "state": "ACTIVE",
-      "operations": ["ecr-publish", "vercel-environment-update", "vercel-production-deploy", "database-migrate", "aws-compute-stack-deploy", "compute-cutover-activate", "compute-cutover-finalize", "product-authority-update", "epistemic-impact-activate"],
+      "operations": [
+        "ecr-publish",
+        "vercel-environment-update",
+        "vercel-production-deploy",
+        "database-migrate",
+        "aws-compute-stack-deploy",
+        "compute-cutover-activate",
+        "compute-cutover-finalize",
+        "product-authority-update",
+        "epistemic-impact-activate"
+      ],
       "authorization": "finnor-production-mutation-authorization.v1",
       "serialization": "finnor-production-release"
     },
     {
       "id": "vercel-production-deployments",
       "path": "scripts/release/deploy-production.mjs",
-      "supportingPaths": ["scripts/release/vercel-auth.mjs"],
+      "supportingPaths": [
+        "scripts/release/vercel-auth.mjs"
+      ],
       "classification": "PRODUCTION_MUTATOR",
       "state": "ACTIVE",
-      "operations": ["vercel-production-deploy"],
+      "operations": [
+        "vercel-production-deploy"
+      ],
       "authorization": "finnor-production-mutation-authorization.v1"
     },
     {
       "id": "vercel-realtime-environment",
       "path": "scripts/release/configure-vercel-realtime.mjs",
-      "supportingPaths": ["scripts/release/configure-vercel-model-runtime.mjs"],
+      "supportingPaths": [
+        "scripts/release/configure-vercel-model-runtime.mjs"
+      ],
       "classification": "PRODUCTION_MUTATOR",
       "state": "ACTIVE",
-      "operations": ["vercel-environment-update"],
+      "operations": [
+        "vercel-environment-update"
+      ],
       "authorization": "finnor-production-mutation-authorization.v1"
     },
     {
@@ -39,25 +57,37 @@
       ],
       "classification": "PRODUCTION_MUTATOR",
       "state": "ACTIVE",
-      "operations": ["database-migrate"],
+      "operations": [
+        "database-migrate"
+      ],
       "authorization": "finnor-production-mutation-authorization.v1"
     },
     {
       "id": "aws-compute-plane-deployment",
       "path": "scripts/release/deploy-aws-compute-plane.mjs",
-      "supportingPaths": ["scripts/release/compute-plane-policy.mjs"],
+      "supportingPaths": [
+        "scripts/release/compute-plane-policy.mjs"
+      ],
       "classification": "PRODUCTION_MUTATOR",
       "state": "ACTIVE",
-      "operations": ["aws-compute-stack-deploy", "compute-cutover-activate", "compute-cutover-finalize"],
+      "operations": [
+        "aws-compute-stack-deploy",
+        "compute-cutover-activate",
+        "compute-cutover-finalize"
+      ],
       "authorization": "finnor-production-mutation-authorization.v1"
     },
     {
       "id": "product-authority-cutover",
       "path": "scripts/release/run-p8-production-water-retirement.mjs",
-      "supportingPaths": ["scripts/release/p8-water-retirement-store.mjs"],
+      "supportingPaths": [
+        "scripts/release/p8-water-retirement-store.mjs"
+      ],
       "classification": "PRODUCTION_MUTATOR",
       "state": "ACTIVE",
-      "operations": ["product-authority-update"],
+      "operations": [
+        "product-authority-update"
+      ],
       "authorization": "finnor-production-mutation-authorization.v1"
     },
     {
@@ -65,7 +95,9 @@
       "path": "finnor-os/scripts/release/rollout-scope5-production.ts",
       "classification": "PRODUCTION_MUTATOR",
       "state": "ACTIVE",
-      "operations": ["epistemic-impact-activate"],
+      "operations": [
+        "epistemic-impact-activate"
+      ],
       "authorization": "finnor-production-mutation-authorization.v1",
       "serialization": "finnor-production-release"
     },
@@ -121,7 +153,9 @@
     {
       "id": "direct-user-provisioning",
       "path": "finnor-os/scripts/create-user.ts",
-      "supportingPaths": ["finnor-os/scripts/tenant-user.ts"],
+      "supportingPaths": [
+        "finnor-os/scripts/tenant-user.ts"
+      ],
       "classification": "READ_ONLY",
       "state": "PRODUCTION_BLOCKED",
       "reason": "Canonical production database and Supabase project targets are rejected before any admin call."
@@ -228,7 +262,22 @@
         "scripts/release/worker-image-layout.e2e.test.mjs",
         "scripts/release/production-artifact.e2e.mjs",
         "scripts/release/api-build-context.e2e.test.mjs",
-        "scripts/release/api-artifact.e2e.test.mjs"
+        "scripts/release/api-artifact.e2e.test.mjs",
+        "scripts/release/run-capability-ui-e2e.mjs",
+        "finnor-os/scripts/release/create-scanned-pdf-fixture.py",
+        "finnor-os/scripts/release/generate-planner-replay-manifest.mts",
+        "finnor-os/scripts/release/modal-protocol-fixture.py",
+        "finnor-os/scripts/release/probe-capability-claim.mts",
+        "finnor-os/scripts/release/run-capability-causal-e2e.mts",
+        "finnor-os/scripts/release/run-capability-delivery-e2e.mts",
+        "finnor-os/scripts/release/run-capability-engines-e2e.mts",
+        "finnor-os/scripts/release/run-capability-live-e2e.mts",
+        "finnor-os/scripts/release/run-capability-worker-once.mts",
+        "finnor-os/scripts/release/run-nango-cold-webhook-e2e.mts",
+        "finnor-os/scripts/release/run-nango-origin-webhook-e2e.mts",
+        "finnor-os/scripts/release/run-nango-public-live-e2e.mts",
+        "finnor-os/scripts/release/run-shinka-native-e2e.mts",
+        "finnor-os/scripts/release/verify-langfuse-registered-path.mts"
       ],
       "classification": "READ_ONLY",
       "state": "TEST_ONLY"
@@ -250,7 +299,13 @@
     },
     {
       "id": "declarative-production-source",
-      "paths": ["infra/aws/finnor-production.yaml", "infra/aws/finnor-model-runtime.yaml", "infra/deployment/production.contract.json", "infra/deployment/production-database-admission-policy.json", "infra/deployment/vercel-build-settings.json"],
+      "paths": [
+        "infra/aws/finnor-production.yaml",
+        "infra/aws/finnor-model-runtime.yaml",
+        "infra/deployment/production.contract.json",
+        "infra/deployment/production-database-admission-policy.json",
+        "infra/deployment/vercel-build-settings.json"
+      ],
       "classification": "READ_ONLY",
       "state": "DECLARATIVE_SOURCE_ONLY",
       "reason": "Repository code does not provide an independent apply path; active release mutations consume the contract and separately authorize each write."

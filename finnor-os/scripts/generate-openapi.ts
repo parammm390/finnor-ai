@@ -1,3 +1,7 @@
+import { ExperimentRefSchema } from "@finnor/epistemic-runtime";
+import { CapabilityRequestSchema, PywhyAssessmentRequestSchema } from "../packages/orchestration/src/capabilities/contracts";
+import { NangoConnectInputSchema } from "../packages/orchestration/src/capabilities/nango-bindings";
+import { PlannerActivationRequestSchema } from "../packages/orchestration/src/capabilities/planner-activation";
 // OpenAPI is generated from the active Phase-5 boundary schemas only. Historical
 // Water webhook payloads are intentionally opaque quarantine receipts and never
 // regain an executable public schema here.
@@ -348,6 +352,26 @@ const icMutation = (schema: z.ZodTypeAny, description: string, parameters: reado
   },
 });
 const paths = {
+  "/api/interventions/assess-pywhy": { post: { security: secured, requestBody: json(PywhyAssessmentRequestSchema.extend({ interventionModelRef: ExperimentRefSchema }).strict()), responses: { "202": { description: "S3-bound conditional assessment accepted into the canonical HEAVY queue; temporal model remains unchanged" }, "200": { description: "Original assessment submission replayed" }, "404": { description: "Current permitted S3 model is unavailable" } } } },
+  "/api/interventions/read-pywhy-assessment": { post: { security: secured, requestBody: json(z.object({ runId: z.string().uuid() }).strict()), responses: { "200": { description: "Current-authorized S3-bound PyWhy result with separate estimator/assumption/diagnostic qualification; no temporal model compatibility or admission" }, "404": { description: "Owned S3 assessment or its current model context is unavailable" } } } },
+  "/api/capabilities/runs": {
+    get: { security: secured, parameters: [
+      { name: "documentId", in: "query", schema: { type: "string", format: "uuid" }, description: "Requires versionId for exact document scope" },
+      { name: "versionId", in: "query", schema: { type: "string", format: "uuid" } },
+      { name: "kind", in: "query", schema: { type: "string" } },
+      { name: "cursor", in: "query", schema: { type: "string", format: "uuid" } },
+      { name: "limit", in: "query", schema: { type: "integer", minimum: 1, maximum: 25 } },
+    ], responses: { "200": { description: "Owned, currently authorized metadata page; no result payloads" } } },
+    post: { security: secured, requestBody: json(CapabilityRequestSchema), responses: { "202": { description: "Canonical HEAVY computation accepted; not a completed result or business authority" }, "200": { description: "Same request replayed under its original idempotency key" }, "403": { description: "Current source or capability authority denied" }, "409": { description: "Idempotency or immutable source identity conflict" } } },
+  },
+  "/api/capabilities/runs/{id}": { get: { security: secured, parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }], responses: { "200": { description: "Owned run with current source rights; typed result, failure, retained remote identity or uncertain outcome" }, "404": { description: "Owned accessible run not found" }, "403": { description: "Current source or capability authority denied" } } } },
+  "/api/capabilities/nango/connect": { post: { security: secured, requestBody: json(NangoConnectInputSchema), responses: { "201": { description: "Prepared owner-bound authorization session; credential returned once and never stored" }, "409": { description: "Session intent idempotency conflict" } } } },
+  "/api/capabilities/nango/sources": { get: { security: secured, responses: { "200": { description: "Server-approved read-only catalog and current-authorized source bindings/checkpoints" } } } },
+  "/api/capabilities/planner/activation": {
+    get: { security: secured, responses: { "200": { description: "Reviewed background planner preference and expected revision" } } },
+    post: { security: secured, requestBody: json(PlannerActivationRequestSchema), responses: { "200": { description: "Immutable reviewed candidate activation or incumbent restoration; no business execution authority" }, "409": { description: "Reviewed digest, environment, expected revision or idempotency conflict" }, "403": { description: "Planner activation authority denied" } } },
+  },
+  "/api/webhooks/nango": { post: { parameters: [{ name: "x-nango-hmac-sha256", in: "header", required: true, schema: { type: "string", pattern: "^[a-fA-F0-9]{64}$" } }], requestBody: { content: { "application/json": { schema: { type: "object", description: "Raw bytes verified with the distinct webhook HMAC key before parsing or prepared-identity routing" } } } }, responses: { "202": { description: "Prepared binding or bounded source-sync wake accepted; webhook records not applied" }, "403": { description: "Exact-byte HMAC invalid" } } } },
   "/api/live-controls": {
     post: { security: secured, requestBody: json(z.union([
       z.object({ operation: z.literal("begin"), input: LIVE_CONTROL_OPERATION_SCHEMAS.open.omit({ workId: true }).extend({ idempotencyKey: z.string().uuid() }).strict() }).strict(),

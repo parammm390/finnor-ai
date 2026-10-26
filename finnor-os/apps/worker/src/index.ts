@@ -26,7 +26,7 @@ import {runLiveControlEvaluationJob} from '@finnor/private-equity/src/live-contr
 
 import "dotenv/config";
 
-import { describeLLMReadiness, initObservability, getLogger, applyEmulatorFaultsFromEnv } from "@finnor/tools";
+import { describeLLMReadiness, initObservability, getLogger, applyEmulatorFaultsFromEnv, flushLangfuse } from "@finnor/tools";
 import { ensureSecretsLoaded } from "@finnor/security";
 import { JobQueue } from "./queue";
 import { reconciliation } from "./handlers/reconciliation";
@@ -55,6 +55,7 @@ import { releaseProbe } from "./handlers/release-probe";
 import { syncSource, syncSources } from "./handlers/sync-source";
 import { observeExternalEffectHandler } from "./handlers/observe-external-effect";
 import { maintainIntegrationSubscriptions } from "./handlers/maintain-integration-subscriptions";
+import { runCapabilityProvider } from "./handlers/run-capability-provider";
 import { materializeArtifactVersion } from "./handlers/materialize-artifact-version";
 import { processEpistemicChange, recoverEpistemicChanges, refreshEpistemicGraph, scanEpistemicFreshness } from "./handlers/epistemic-impact";
 import { PRODUCTION_JOB_CONTRACTS } from "./job-contracts";
@@ -134,6 +135,7 @@ export function createWorker(): JobQueue {
   queue.register("sync_source", syncSource, PRODUCTION_JOB_CONTRACTS.sync_source);
   queue.register("observe_external_effect", observeExternalEffectHandler, PRODUCTION_JOB_CONTRACTS.observe_external_effect);
   queue.register("maintain_integration_subscriptions", maintainIntegrationSubscriptions, PRODUCTION_JOB_CONTRACTS.maintain_integration_subscriptions);
+  queue.register("run_capability_provider_v1", runCapabilityProvider, PRODUCTION_JOB_CONTRACTS.run_capability_provider_v1);
   queue.register("materialize_artifact_version", materializeArtifactVersion, PRODUCTION_JOB_CONTRACTS.materialize_artifact_version);
   queue.register("process_epistemic_change_v2", processEpistemicChange, PRODUCTION_JOB_CONTRACTS.process_epistemic_change_v2);
   queue.register("scan_epistemic_freshness_v2", scanEpistemicFreshness, PRODUCTION_JOB_CONTRACTS.scan_epistemic_freshness_v2);
@@ -251,9 +253,11 @@ if (isMain) {
     .runLoop(2000, controller.signal)
     .then(async () => {
       await heartbeat.markDraining();
+      await flushLangfuse(Date.now() + 2000);
       process.exit(0);
     })
-    .catch((err) => {
+    .catch(async (err) => {
+      await flushLangfuse(Date.now() + 2000);
       log.fatal({ err: err instanceof Error ? err.message : String(err) }, "[worker] run loop crashed");
       process.exit(1);
     });

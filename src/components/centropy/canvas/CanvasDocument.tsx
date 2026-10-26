@@ -33,6 +33,7 @@ const IcCaseContinuation = lazy(() => import("./IcCaseContinuation").then((modul
 const IcHumanControls = lazy(() => import("../controls/IcHumanControls").then((module) => ({ default: module.IcHumanControls })))
 const ArtifactCanvas = lazy(() => import("./ArtifactCanvas").then((module) => ({ default: module.ArtifactCanvas })))
 const ArtifactTemplateDesk = lazy(() => import("./ArtifactTemplateDesk").then((module) => ({ default: module.ArtifactTemplateDesk })))
+const ResearchCapabilityDesk = lazy(() => import("./ResearchCapabilityDesk").then(module => ({ default: module.ResearchCapabilityDesk })))
 const SourceDiagnostics = lazy(() => import("./SourceDiagnostics").then((module) => ({ default: module.SourceDiagnostics })))
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const ClosingProgrammePanel = lazy(() => import("../closing/ClosingProgrammePanel").then(module => ({ default: module.ClosingProgrammePanel })))
@@ -187,6 +188,7 @@ export function CanvasDocument({ onSelectProgramWork, document, root, sourceErro
     {work && !sourceErrors.some(error => error.kind === "work")
       ? <Suspense fallback={<p role="status">Reading standing responsibility…</p>}><InstitutionProgramPanel key={work.work.id} workId={work.work.id} /></Suspense> : null}
     <div className="ct-canvas-layout"><span>THREAD CANVAS ORDER · {preferences.status === "loading" ? "READING" : preferences.status.toUpperCase()}</span>{preferences.dirty && preferences.status === "ready" ? <button type="button" onClick={() => void preferences.save()}>Save order and focus</button> : null}{["unavailable", "uncertain"].includes(preferences.status) ? <button type="button" onClick={preferences.reload}>Reload saved order</button> : null}{preferences.message ? <p role="status">{preferences.message}</p> : null}</div>
+    {work?.work.id ? <Suspense fallback={<p role="status">Opening research tools…</p>}><ResearchCapabilityDesk /></Suspense> : null}
     {sourcesOpen ? <Suspense fallback={<p role="status">Opening source diagnostics…</p>}><SourceDiagnostics root={root ?? null} /></Suspense> : null}
     {sourceErrors.map((error) => <p className="ct-canvas__source-error" role="alert" key={error.kind}>{({ work: "Work", company_brain: "Company Brain", underwriting: "Underwriting", ic: "Investment committee" })[error.kind]} source unavailable · {error.message}. {error.retained ? "Its last loaded instruments are marked stale." : "No instrument from this source is shown."}</p>)}
     {preferences.order.length ? preferences.order.map((id, index) => {

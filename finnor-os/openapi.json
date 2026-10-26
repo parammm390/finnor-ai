@@ -18364,6 +18364,1412 @@
     }
   },
   "paths": {
+    "/api/interventions/assess-pywhy": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "timeoutMs": {
+                    "default": 60000,
+                    "type": "integer",
+                    "minimum": 100,
+                    "maximum": 300000
+                  },
+                  "kind": {
+                    "type": "string",
+                    "const": "pywhy_assess"
+                  },
+                  "dataset": {
+                    "type": "object",
+                    "properties": {
+                      "documentId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "versionId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "name": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-z0-9_]{0,62}$"
+                      },
+                      "format": {
+                        "type": "string",
+                        "enum": [
+                          "csv",
+                          "json",
+                          "parquet"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "documentId",
+                      "versionId",
+                      "name",
+                      "format"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "treatment": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "outcome": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "commonCauses": {
+                    "minItems": 1,
+                    "maxItems": 32,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    }
+                  },
+                  "effectModifiers": {
+                    "default": [],
+                    "maxItems": 16,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    }
+                  },
+                  "estimator": {
+                    "type": "string",
+                    "enum": [
+                      "linear",
+                      "double_ml",
+                      "causal_forest"
+                    ]
+                  },
+                  "assumptions": {
+                    "minItems": 1,
+                    "maxItems": 32,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "statement": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000
+                        },
+                        "evidenceRef": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 1024
+                        }
+                      },
+                      "required": [
+                        "statement",
+                        "evidenceRef"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "seed": {
+                    "default": 0,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "interventionModelRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "idempotencyKey",
+                  "kind",
+                  "dataset",
+                  "treatment",
+                  "outcome",
+                  "commonCauses",
+                  "estimator",
+                  "assumptions",
+                  "interventionModelRef"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Original assessment submission replayed"
+          },
+          "202": {
+            "description": "S3-bound conditional assessment accepted into the canonical HEAVY queue; temporal model remains unchanged"
+          },
+          "404": {
+            "description": "Current permitted S3 model is unavailable"
+          }
+        }
+      }
+    },
+    "/api/interventions/read-pywhy-assessment": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "runId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  }
+                },
+                "required": [
+                  "runId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current-authorized S3-bound PyWhy result with separate estimator/assumption/diagnostic qualification; no temporal model compatibility or admission"
+          },
+          "404": {
+            "description": "Owned S3 assessment or its current model context is unavailable"
+          }
+        }
+      }
+    },
+    "/api/capabilities/runs": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "documentId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Requires versionId for exact document scope"
+          },
+          {
+            "name": "versionId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 25
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owned, currently authorized metadata page; no result payloads"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "timeoutMs": {
+                        "default": 60000,
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 300000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "duckdb_query"
+                      },
+                      "datasets": {
+                        "minItems": 1,
+                        "maxItems": 8,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "documentId": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "name": {
+                              "type": "string",
+                              "pattern": "^[a-z][a-z0-9_]{0,62}$"
+                            },
+                            "format": {
+                              "type": "string",
+                              "enum": [
+                                "csv",
+                                "json",
+                                "parquet"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "documentId",
+                            "versionId",
+                            "name",
+                            "format"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "query": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 50000
+                      },
+                      "maxRows": {
+                        "default": 1000,
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10000
+                      }
+                    },
+                    "required": [
+                      "idempotencyKey",
+                      "kind",
+                      "datasets",
+                      "query"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "timeoutMs": {
+                        "default": 60000,
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 300000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "docling_extract"
+                      },
+                      "source": {
+                        "type": "object",
+                        "properties": {
+                          "documentId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        },
+                        "required": [
+                          "documentId",
+                          "versionId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "forceOcr": {
+                        "default": false,
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "idempotencyKey",
+                      "kind",
+                      "source"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "timeoutMs": {
+                        "default": 60000,
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 300000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "pageindex_index"
+                      },
+                      "source": {
+                        "type": "object",
+                        "properties": {
+                          "documentId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        },
+                        "required": [
+                          "documentId",
+                          "versionId"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "idempotencyKey",
+                      "kind",
+                      "source"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "timeoutMs": {
+                        "default": 60000,
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 300000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "pageindex_retrieve"
+                      },
+                      "indexRunIds": {
+                        "minItems": 1,
+                        "maxItems": 8,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        }
+                      },
+                      "question": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 10000
+                      }
+                    },
+                    "required": [
+                      "idempotencyKey",
+                      "kind",
+                      "indexRunIds",
+                      "question"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "timeoutMs": {
+                        "default": 60000,
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 300000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "pywhy_assess"
+                      },
+                      "dataset": {
+                        "type": "object",
+                        "properties": {
+                          "documentId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "name": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]{0,62}$"
+                          },
+                          "format": {
+                            "type": "string",
+                            "enum": [
+                              "csv",
+                              "json",
+                              "parquet"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "documentId",
+                          "versionId",
+                          "name",
+                          "format"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "treatment": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "outcome": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "commonCauses": {
+                        "minItems": 1,
+                        "maxItems": 32,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        }
+                      },
+                      "effectModifiers": {
+                        "default": [],
+                        "maxItems": 16,
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        }
+                      },
+                      "estimator": {
+                        "type": "string",
+                        "enum": [
+                          "linear",
+                          "double_ml",
+                          "causal_forest"
+                        ]
+                      },
+                      "assumptions": {
+                        "minItems": 1,
+                        "maxItems": 32,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "statement": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2000
+                            },
+                            "evidenceRef": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 1024
+                            }
+                          },
+                          "required": [
+                            "statement",
+                            "evidenceRef"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "seed": {
+                        "default": 0,
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 2147483647
+                      },
+                      "interventionModelRef": {
+                        "type": "object",
+                        "properties": {
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "owner",
+                          "id",
+                          "version",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "idempotencyKey",
+                      "kind",
+                      "dataset",
+                      "treatment",
+                      "outcome",
+                      "commonCauses",
+                      "estimator",
+                      "assumptions"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "timeoutMs": {
+                        "default": 60000,
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 300000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "gepa_optimize"
+                      },
+                      "dataset": {
+                        "type": "object",
+                        "properties": {
+                          "documentId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        },
+                        "required": [
+                          "documentId",
+                          "versionId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "maxMetricCalls": {
+                        "default": 16,
+                        "type": "integer",
+                        "minimum": 4,
+                        "maximum": 256
+                      },
+                      "seed": {
+                        "default": 0,
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 2147483647
+                      }
+                    },
+                    "required": [
+                      "idempotencyKey",
+                      "kind",
+                      "dataset"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "timeoutMs": {
+                        "default": 60000,
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 300000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "shinka_evolve"
+                      },
+                      "problemSet": {
+                        "type": "object",
+                        "properties": {
+                          "documentId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "versionId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          }
+                        },
+                        "required": [
+                          "documentId",
+                          "versionId"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "generations": {
+                        "default": 4,
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 32
+                      },
+                      "seed": {
+                        "default": 0,
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 2147483647
+                      }
+                    },
+                    "required": [
+                      "idempotencyKey",
+                      "kind",
+                      "problemSet"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "timeoutMs": {
+                        "default": 60000,
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 300000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "modal_execute"
+                      },
+                      "code": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 100000
+                      },
+                      "sources": {
+                        "default": [],
+                        "maxItems": 8,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "documentId": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            },
+                            "versionId": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                            }
+                          },
+                          "required": [
+                            "documentId",
+                            "versionId"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "stdin": {
+                        "default": "",
+                        "type": "string",
+                        "maxLength": 100000
+                      }
+                    },
+                    "required": [
+                      "idempotencyKey",
+                      "kind",
+                      "code"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "timeoutMs": {
+                        "default": 60000,
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 300000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "modal_control"
+                      },
+                      "executionRunId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "operation": {
+                        "type": "string",
+                        "enum": [
+                          "status",
+                          "terminate"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "idempotencyKey",
+                      "kind",
+                      "executionRunId",
+                      "operation"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "timeoutMs": {
+                        "default": 60000,
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 300000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "nango_sync"
+                      },
+                      "integrationId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "sourceScopeId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "model": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      }
+                    },
+                    "required": [
+                      "idempotencyKey",
+                      "kind",
+                      "integrationId",
+                      "sourceScopeId",
+                      "model"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "timeoutMs": {
+                        "default": 60000,
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 300000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "parallel_task"
+                      },
+                      "input": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 10000
+                      },
+                      "outputSchema": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      },
+                      "processor": {
+                        "default": "core",
+                        "type": "string",
+                        "enum": [
+                          "lite",
+                          "base",
+                          "core",
+                          "pro",
+                          "ultra"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "idempotencyKey",
+                      "kind",
+                      "input",
+                      "outputSchema"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "timeoutMs": {
+                        "default": 60000,
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 300000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "parallel_find"
+                      },
+                      "objective": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 10000
+                      },
+                      "entityType": {
+                        "type": "string",
+                        "enum": [
+                          "companies",
+                          "people",
+                          "products",
+                          "other"
+                        ]
+                      },
+                      "matchConditions": {
+                        "minItems": 1,
+                        "maxItems": 16,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "description": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2000
+                            }
+                          },
+                          "required": [
+                            "name",
+                            "description"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "matchLimit": {
+                        "default": 10,
+                        "type": "integer",
+                        "minimum": 5,
+                        "maximum": 100
+                      },
+                      "generator": {
+                        "default": "core",
+                        "type": "string",
+                        "enum": [
+                          "core",
+                          "preview"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "idempotencyKey",
+                      "kind",
+                      "objective",
+                      "entityType",
+                      "matchConditions"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "timeoutMs": {
+                        "default": 60000,
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 300000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "parallel_monitor"
+                      },
+                      "query": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 10000
+                      },
+                      "cadence": {
+                        "default": "daily",
+                        "type": "string",
+                        "enum": [
+                          "hourly",
+                          "daily",
+                          "weekly"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "idempotencyKey",
+                      "kind",
+                      "query"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "timeoutMs": {
+                        "default": 60000,
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 300000
+                      },
+                      "kind": {
+                        "type": "string",
+                        "const": "parallel_monitor_control"
+                      },
+                      "monitorRunId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "operation": {
+                        "type": "string",
+                        "enum": [
+                          "status",
+                          "events",
+                          "cancel"
+                        ]
+                      },
+                      "eventGroupId": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9_-]{1,256}$"
+                      }
+                    },
+                    "required": [
+                      "idempotencyKey",
+                      "kind",
+                      "monitorRunId",
+                      "operation"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Same request replayed under its original idempotency key"
+          },
+          "202": {
+            "description": "Canonical HEAVY computation accepted; not a completed result or business authority"
+          },
+          "403": {
+            "description": "Current source or capability authority denied"
+          },
+          "409": {
+            "description": "Idempotency or immutable source identity conflict"
+          }
+        }
+      }
+    },
+    "/api/capabilities/runs/{id}": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owned run with current source rights; typed result, failure, retained remote identity or uncertain outcome"
+          },
+          "403": {
+            "description": "Current source or capability authority denied"
+          },
+          "404": {
+            "description": "Owned accessible run not found"
+          }
+        }
+      }
+    },
+    "/api/capabilities/nango/connect": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "idempotencyKey": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "providerConfigKey": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9_.:-]{1,128}$"
+                  }
+                },
+                "required": [
+                  "idempotencyKey",
+                  "providerConfigKey"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Prepared owner-bound authorization session; credential returned once and never stored"
+          },
+          "409": {
+            "description": "Session intent idempotency conflict"
+          }
+        }
+      }
+    },
+    "/api/capabilities/nango/sources": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server-approved read-only catalog and current-authorized source bindings/checkpoints"
+          }
+        }
+      }
+    },
+    "/api/capabilities/planner/activation": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reviewed background planner preference and expected revision"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "expectedRevision": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "reviewNote": {
+                        "type": "string",
+                        "minLength": 16,
+                        "maxLength": 4000
+                      },
+                      "operation": {
+                        "type": "string",
+                        "const": "activate"
+                      },
+                      "runId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "reviewedResultDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "expectedRevision",
+                      "idempotencyKey",
+                      "reviewNote",
+                      "operation",
+                      "runId",
+                      "reviewedResultDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "expectedRevision": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "idempotencyKey": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "reviewNote": {
+                        "type": "string",
+                        "minLength": 16,
+                        "maxLength": 4000
+                      },
+                      "operation": {
+                        "type": "string",
+                        "const": "disable"
+                      }
+                    },
+                    "required": [
+                      "expectedRevision",
+                      "idempotencyKey",
+                      "reviewNote",
+                      "operation"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Immutable reviewed candidate activation or incumbent restoration; no business execution authority"
+          },
+          "403": {
+            "description": "Planner activation authority denied"
+          },
+          "409": {
+            "description": "Reviewed digest, environment, expected revision or idempotency conflict"
+          }
+        }
+      }
+    },
+    "/api/webhooks/nango": {
+      "post": {
+        "parameters": [
+          {
+            "name": "x-nango-hmac-sha256",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{64}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Raw bytes verified with the distinct webhook HMAC key before parsing or prepared-identity routing"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Prepared binding or bounded source-sync wake accepted; webhook records not applied"
+          },
+          "403": {
+            "description": "Exact-byte HMAC invalid"
+          }
+        }
+      }
+    },
     "/api/live-controls": {
       "post": {
         "security": [

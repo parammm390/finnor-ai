@@ -60,6 +60,7 @@ export function providerObservationKey(observation: ProviderObservation): string
     observedAt: observation.observedAt,
     deleted: observation.deleted,
     payloadHash: observation.payloadHash,
+    ...(observation.provider === "nango" ? { accessCut: observation.providerMetadata.finnorAccessCut ?? null } : {}),
   })).digest("hex");
 }
 

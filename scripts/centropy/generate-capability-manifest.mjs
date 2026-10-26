@@ -133,7 +133,7 @@ for(const family of ["interventions","policies","allocations","obligations","exp
  if (!operations.size) throw new Error(`Missing owner operation dispatch: ${family}`)
  ownerLeafOperations.set(family,[...operations])
 }
-const ownerLeafReads=new Set(["query","validate","finite-preference","experiment-projection","read","read-mechanism",
+const ownerLeafReads=new Set(["read-pywhy-assessment","query","validate","finite-preference","experiment-projection","read","read-mechanism",
  "resources","budget-status","read-commitment","read-execution-handoff","check-budget","check-dispatch",
  "history","execution-evidence","learning-assessment"])
 const readModelsSource = readFileSync(join(apiRoot, "read-models/[view]/route.ts"), "utf8")
@@ -181,6 +181,7 @@ for (const [path, operations] of [
 
 
 const familyRules = [
+  [/^capabilities\//, "capability-upgrades", "@finnor/orchestration", ["CANVAS"]],
   [/^policies\/r1-/, "exact-control", "@finnor/private-equity", ["CANVAS"]],
   [/^identification-plans\//, "identification-plan", "@finnor/private-equity", ["CANVAS"]],
   [/^decision-atlases\//, "decision-atlas", "@finnor/private-equity", ["CANVAS"]],

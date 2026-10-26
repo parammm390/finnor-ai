@@ -3,16 +3,26 @@
  * that the corresponding application task is healthy. */
 
 export const COMPUTE_CLASSES = Object.freeze(["REALTIME", "INTERACTIVE", "BACKGROUND", "HEAVY"])
-export function computeSecretMap(contract, workloadClass, { legacy = false } = {}) {
+export function computeSecretMap(contract, workloadClass, { legacy = false, capabilities = true } = {}) {
+  const capabilitySecrets = !legacy && capabilities && contract.topology.capabilityUpgrades?.rolloutEnabled ? contract.topology.capabilityUpgrades.secrets : {}
+  const telemetry = Object.fromEntries(Object.entries(capabilitySecrets).filter(([key]) => ["LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY"].includes(key)))
   const base = contract.topology.worker.secretMap
   const providers = legacy ? {} : contract.topology.computePlane.providerRuntime.workerSecrets
   if (workloadClass === "REALTIME") return Object.fromEntries(["DATABASE_URL", "SENTRY_DSN", "SUPABASE_SERVICE_ROLE_KEY"].map(key => [key, base[key]]))
   if (workloadClass === "HEAVY") return {
     ...Object.fromEntries((legacy ? ["DATABASE_URL", "GROQ_API_KEY", "REDIS_URL", "SENTRY_DSN"] : ["DATABASE_URL", "REDIS_URL", "SENTRY_DSN"]).map(key => [key, base[key]])),
+    ...capabilitySecrets,
     ...(providers.EMBEDDINGS_API_KEY ? { EMBEDDINGS_API_KEY: providers.EMBEDDINGS_API_KEY } : {}),
   }
   if (!["INTERACTIVE", "BACKGROUND"].includes(workloadClass)) throw new Error("Unknown compute class")
-  return { ...Object.fromEntries(Object.entries(base).filter(([key]) => legacy || key !== "GROQ_API_KEY")), ...providers }
+  return { ...Object.fromEntries(Object.entries(base).filter(([key]) => legacy || key !== "GROQ_API_KEY")), ...providers, ...telemetry }
+}
+export function computeCapabilityEnvironment(contract, workloadClass) {
+  if (!contract.topology.capabilityUpgrades?.rolloutEnabled || workloadClass === "REALTIME") return {}
+  const environment = contract.topology.capabilityUpgrades.environment
+  if (workloadClass === "HEAVY") return environment
+  if (!["INTERACTIVE", "BACKGROUND"].includes(workloadClass)) throw new Error("Unknown compute class")
+  return Object.fromEntries(Object.entries(environment).filter(([key]) => ["LANGFUSE_ENABLED", "LANGFUSE_BASE_URL"].includes(key)))
 }
 const COMPUTE_ROLLOUT_RESOURCES = new Set([
   "WorkerTaskDefinition", "InteractiveTaskDefinition", "BackgroundTaskDefinition", "HeavyTaskDefinition",
@@ -124,6 +134,7 @@ export function assertComputeNoopFleet({ profiles, services, tasksByClass, taskD
       FINNOR_RELEASE_SOURCE: expected.source, FINNOR_CORE_CERTIFICATION_ID: coreCertificationId,
       FINNOR_WORKLOAD_CLASS: workloadClass,
       FINNOR_SECRET_IDS: JSON.stringify(computeSecretMap(contract, workloadClass)),
+      ...computeCapabilityEnvironment(contract, workloadClass),
       ...(workloadClass === "REALTIME" ? {} : Object.fromEntries(Object.entries(contract.topology.computePlane.providerRuntime.environment).filter(([key]) => key !== "AWS_BEDROCK_REGION"))),
     }
     if (!definition?.taskDefinitionArn || definition.taskDefinitionArn !== service.taskDefinition

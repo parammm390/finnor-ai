@@ -1,0 +1,3 @@
+# Exact runtime used for the initial analytical integration. Other engines have
+# separate requirements so document/model dependencies do not inflate this image.
+duckdb==1.4.5

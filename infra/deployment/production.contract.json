@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "postx_y4_runtime_recipient_recovery.sql",
+    "requiredMigrationHead": "postx_y5_capability_5_capability_nango_lifecycle.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",
@@ -18,7 +18,16 @@
       "FINNOR_ENVIRONMENT",
       "FINNOR_RELEASE_SOURCE"
     ],
-    "requiredComponents": ["frontend", "api", "computeRealtime", "computeInteractive", "computeBackground", "computeHeavy", "supplierCanaryApp", "supplierCanaryAuth"],
+    "requiredComponents": [
+      "frontend",
+      "api",
+      "computeRealtime",
+      "computeInteractive",
+      "computeBackground",
+      "computeHeavy",
+      "supplierCanaryApp",
+      "supplierCanaryAuth"
+    ],
     "concurrencyGroup": "finnor-production-release",
     "mutationAuthorization": {
       "schema": "finnor-production-mutation-authorization.v1",
@@ -26,7 +35,9 @@
       "workflowName": "production-release",
       "oidcAudience": "finnor-production-mutation.v1",
       "maxAgeSeconds": 7200,
-      "certificationJobs": ["post-merge-certification"],
+      "certificationJobs": [
+        "post-merge-certification"
+      ],
       "allowedOperations": [
         "ecr-publish",
         "vercel-environment-update",
@@ -110,10 +121,74 @@
       "clusterName": "finnor-production",
       "metricNamespace": "FINNOR/ComputePlane",
       "classes": {
-        "REALTIME": { "serviceName": "finnor-realtime", "heartbeatService": "compute-realtime", "taskFamily": "finnor-realtime", "containerName": "finnor-realtime", "cpu": 512, "memory": 1024, "workerConcurrency": 2, "minTasks": 1, "maxTasks": 2, "leaseSeconds": 300, "stopTimeoutSeconds": 120, "ageTargetSeconds": 15, "backlogPerTaskTarget": 2, "ingress": "sse-alb", "taskRoleName": "finnor-realtime-task" },
-        "INTERACTIVE": { "serviceName": "finnor-interactive", "heartbeatService": "compute-interactive", "taskFamily": "finnor-interactive", "containerName": "finnor-interactive", "cpu": 1024, "memory": 2048, "workerConcurrency": 2, "minTasks": 1, "maxTasks": 3, "leaseSeconds": 300, "stopTimeoutSeconds": 120, "ageTargetSeconds": 60, "backlogPerTaskTarget": 4, "ingress": "none", "taskRoleName": "finnor-worker-task" },
-        "BACKGROUND": { "serviceName": "finnor-background", "heartbeatService": "compute-background", "taskFamily": "finnor-background", "containerName": "finnor-background", "cpu": 512, "memory": 1024, "workerConcurrency": 2, "minTasks": 1, "maxTasks": 2, "leaseSeconds": 300, "stopTimeoutSeconds": 120, "ageTargetSeconds": 900, "backlogPerTaskTarget": 8, "ingress": "none", "taskRoleName": "finnor-background-task" },
-        "HEAVY": { "serviceName": "finnor-heavy", "heartbeatService": "compute-heavy", "taskFamily": "finnor-heavy", "containerName": "finnor-heavy", "cpu": 2048, "memory": 4096, "workerConcurrency": 1, "minTasks": 1, "maxTasks": 2, "leaseSeconds": 300, "stopTimeoutSeconds": 120, "ageTargetSeconds": 1800, "backlogPerTaskTarget": 1, "ingress": "none", "taskRoleName": "finnor-heavy-task" }
+        "REALTIME": {
+          "serviceName": "finnor-realtime",
+          "heartbeatService": "compute-realtime",
+          "taskFamily": "finnor-realtime",
+          "containerName": "finnor-realtime",
+          "cpu": 512,
+          "memory": 1024,
+          "workerConcurrency": 2,
+          "minTasks": 1,
+          "maxTasks": 2,
+          "leaseSeconds": 300,
+          "stopTimeoutSeconds": 120,
+          "ageTargetSeconds": 15,
+          "backlogPerTaskTarget": 2,
+          "ingress": "sse-alb",
+          "taskRoleName": "finnor-realtime-task"
+        },
+        "INTERACTIVE": {
+          "serviceName": "finnor-interactive",
+          "heartbeatService": "compute-interactive",
+          "taskFamily": "finnor-interactive",
+          "containerName": "finnor-interactive",
+          "cpu": 1024,
+          "memory": 2048,
+          "workerConcurrency": 2,
+          "minTasks": 1,
+          "maxTasks": 3,
+          "leaseSeconds": 300,
+          "stopTimeoutSeconds": 120,
+          "ageTargetSeconds": 60,
+          "backlogPerTaskTarget": 4,
+          "ingress": "none",
+          "taskRoleName": "finnor-worker-task"
+        },
+        "BACKGROUND": {
+          "serviceName": "finnor-background",
+          "heartbeatService": "compute-background",
+          "taskFamily": "finnor-background",
+          "containerName": "finnor-background",
+          "cpu": 512,
+          "memory": 1024,
+          "workerConcurrency": 2,
+          "minTasks": 1,
+          "maxTasks": 2,
+          "leaseSeconds": 300,
+          "stopTimeoutSeconds": 120,
+          "ageTargetSeconds": 900,
+          "backlogPerTaskTarget": 8,
+          "ingress": "none",
+          "taskRoleName": "finnor-background-task"
+        },
+        "HEAVY": {
+          "serviceName": "finnor-heavy",
+          "heartbeatService": "compute-heavy",
+          "taskFamily": "finnor-heavy",
+          "containerName": "finnor-heavy",
+          "cpu": 2048,
+          "memory": 4096,
+          "workerConcurrency": 1,
+          "minTasks": 1,
+          "maxTasks": 2,
+          "leaseSeconds": 300,
+          "stopTimeoutSeconds": 120,
+          "ageTargetSeconds": 1800,
+          "backlogPerTaskTarget": 1,
+          "ingress": "none",
+          "taskRoleName": "finnor-heavy-task"
+        }
       },
       "providerRuntime": {
         "environment": {
@@ -167,7 +242,46 @@
       "supabaseUrl": "https://kpxrnonhnhexutvdywbh.supabase.co",
       "schema": "finnor_os",
       "migrationTable": "_migrations"
+    },
+    "capabilityUpgrades": {
+      "schema": "finnor.capability-runtime.v1",
+      "rolloutEnabled": true,
+      "environment": {
+        "FINNOR_NANGO_ENABLED": "1",
+        "FINNOR_NANGO_PROVIDER_CATALOG": "[{\"providerConfigKey\":\"finnor-public-50886919\",\"models\":[\"FinnorPublicRepository\"],\"readOnly\":true}]",
+        "LANGFUSE_ENABLED": "1",
+        "LANGFUSE_BASE_URL": "https://us.cloud.langfuse.com",
+        "FINNOR_MODAL_ENABLED": "1",
+        "FINNOR_MODAL_APP_NAME": "finnor-capabilities",
+        "FINNOR_MODAL_IMAGE_ID": "im-6seZXB42SdpnqIIAiN34Ig",
+        "FINNOR_PAGEINDEX_ENABLED": "1",
+        "FINNOR_PARALLEL_ENABLED": "1",
+        "FINNOR_PARALLEL_MONITORS_ENABLED": "1",
+        "FINNOR_GEPA_ENABLED": "1",
+        "FINNOR_GEPA_PLANNER_CANDIDATES_ENABLED": "1",
+        "FINNOR_SHINKA_ENABLED": "1",
+        "FINNOR_PARALLEL_MAX_RUNS_PER_TENANT_DAY": "1",
+        "FINNOR_PAGEINDEX_MAX_RUNS_PER_TENANT_DAY": "1",
+        "FINNOR_MODAL_MAX_RUNS_PER_TENANT_DAY": "1",
+        "FINNOR_GEPA_MAX_RUNS_PER_TENANT_DAY": "1",
+        "FINNOR_SHINKA_MAX_RUNS_PER_TENANT_DAY": "1"
+      },
+      "secrets": {
+        "NANGO_API_KEY": "finnor/prod/nango-api-key",
+        "NANGO_WEBHOOK_SIGNING_KEY": "finnor/prod/nango-webhook-signing-key",
+        "LANGFUSE_PUBLIC_KEY": "finnor/prod/langfuse-public-key",
+        "LANGFUSE_SECRET_KEY": "finnor/prod/langfuse-secret-key",
+        "MODAL_TOKEN_ID": "finnor/prod/modal-token-id",
+        "MODAL_TOKEN_SECRET": "finnor/prod/modal-token-secret",
+        "PAGEINDEX_API_KEY": "finnor/prod/pageindex-api-key",
+        "PARALLEL_API_KEY": "finnor/prod/parallel-api-key"
+      },
+      "qualification": "Managed references must be provisioned before certified rollout. Public Nango function is fixed readonly metadata; no private source enrollment. Default limits bound submissions, not invoices."
     }
   },
-  "forbiddenActiveProviders": ["railway", "render", "azure"]
+  "forbiddenActiveProviders": [
+    "railway",
+    "render",
+    "azure"
+  ]
 }

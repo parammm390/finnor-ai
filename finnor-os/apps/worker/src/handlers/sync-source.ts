@@ -386,7 +386,7 @@ function microsoftScope(row: typeof integrationSourceScopes.$inferSelect): Micro
     tenantId: row.tenantId,
     integrationId: row.integrationId,
     provider: MICROSOFT_PROVIDER,
-    sourceKind: row.sourceKind,
+    sourceKind: microsoft365SourceCapability(row.sourceKind).sourceKind,
     scopeKey: row.scopeKey,
     providerResourceId: row.providerResourceId,
     providerParentId: row.providerParentId,
