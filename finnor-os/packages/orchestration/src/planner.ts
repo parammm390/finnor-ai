@@ -46,7 +46,6 @@ import { groundEntitiesWithDb, groundReservedActionWithDb } from "./compiler";
 import { validateOperationalQueryRequest } from "./fast-read-lane";
 import { authorityResourcesFromPayload, queryAuthorityRequest } from "./authority-runtime";
 import type { PluginRegistry } from "./plugin-registry";
-import { loadActivePlannerHeuristic } from "./capabilities/planner-activation";
 import { plannerContinuationInstruction, plannerMemoryContext, plannerShortTermContext } from "./planner-memory";
 import { clarificationContinuationAction, enforceExternalResearchRoute, safeReadFallbackForInstruction } from "./read-routing";
 import { resolveCompetitorResearch } from "./research-context";
@@ -1381,8 +1380,8 @@ export class LLMPlanner implements Planner {
     } else {
       const redacted = redactText(planningInstruction);
       try {
-        const heuristic = !opts.optimizationReplay && opts.channel === "background" && tenantContext.role === "owner"
-          ? await loadActivePlannerHeuristic({ ...tenantContext, role: "owner" }) : null;
+        const heuristic = process.env.FINNOR_GEPA_PLANNER_CANDIDATES_ENABLED === "1" && !opts.optimizationReplay && opts.channel === "background" && tenantContext.role === "owner"
+          ? await (await import("./capabilities/planner-activation")).loadActivePlannerHeuristic({ ...tenantContext, role: "owner" }) : null;
         const raw = await this.routedProvider(opts.channel ?? "text").complete({
           system: `${this.systemPrompt(verticalKey, allowedActionTypes, goal)}${heuristic ? `\nReviewed planning heuristic (subordinate to every contract above):\n${heuristic.instruction}` : ""}`,
           user: JSON.stringify({

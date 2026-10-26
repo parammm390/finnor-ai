@@ -20,7 +20,7 @@ if (capabilityRuntime?.rolloutEnabled) {
   if (!protectedPath) throw new Error("Protected API environment is required to preserve existing managed-secret references")
   const original = JSON.parse(readProtectedEnvValue(protectedPath, "FINNOR_SECRET_IDS"))
   if (!original || Array.isArray(original) || typeof original !== "object" ||
-      Object.values(original).some(value => typeof value !== "string" || !value.startsWith("finnor/"))) {
+      Object.values(original).some(value => typeof value !== "string" || !(value.startsWith("finnor/") || value.startsWith(`arn:aws:secretsmanager:${contract.topology.worker.region}:${contract.topology.worker.accountId}:secret:finnor/`)))) {
     throw new Error("Existing API secret map must contain managed references only")
   }
   Object.assign(environment, capabilityRuntime.environment, {

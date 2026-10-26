@@ -8,7 +8,7 @@ export class CapabilityEngineError extends Error {
 }
 export interface EngineLimits { deadlineAt: number; maxOutputBytes?: number; signal?: AbortSignal }
 export interface EngineResult { result: Record<string, unknown>; identity: { engine: string; scriptSha256: string; node: string; elapsedMs: number } }
-const scripts = { duckdb: "duckdb_engine.py", docling: "docling_engine.py", pywhy: "pywhy_engine.py", pageindex: "pageindex_engine.py", gepa: "gepa_engine.py", shinka: "shinka_engine.py", modal: "modal_engine.py" } as const;
+const scripts = { duckdb: "duckdb_engine.py", docling: "docling_engine.py", pywhy: "pywhy_engine.py", gepa: "gepa_engine.py", shinka: "shinka_engine.py", modal: "modal_engine.py" } as const;
 export type PythonEngine = keyof typeof scripts;
 let active = 0;
 const launcher = [
