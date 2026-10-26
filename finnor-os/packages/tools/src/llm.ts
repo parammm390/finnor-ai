@@ -10,10 +10,11 @@
 
 import Groq from "groq-sdk";
 import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { withTenant, decisionReceipts, llmCalls, tenantLlmBudgets, withGovernedModelInvocation, ComputeCapacityUnavailableError } from "@finnor/db";
 import { and, eq, gte, sql } from "drizzle-orm";
 import { initObservability, Sentry } from "./observability";
+import { observeAiOperation } from "./langfuse";
 import { orderProvidersByHealth, recordOutcome } from "./provider-health";
 
 export type LLMPurpose = "planning" | "critic" | "repair" | "classification" | "answer";
@@ -46,7 +47,14 @@ export interface LLMUsage {
   inputTokens: number | null;
   outputTokens: number | null;
 }
+export type LLMProviderQualificationIdentity =
+  | { transport: "openai-compatible"; name: string; model: string; endpointSha256: string }
+  | { transport: "bedrock-invoke" | "bedrock-converse"; name: string; model: string; region: string }
+  | { transport: "groq"; name: string; models: string[]; endpointSha256: string }
+  | { transport: "composite"; members: LLMProviderQualificationIdentity[] }
+  | { transport: "custom"; name: string; revision: string };
 export interface LLMProvider {
+  readonly qualificationIdentity?: LLMProviderQualificationIdentity;
   name: string;
   /** Usage belongs to the immediately preceding complete() call. Providers that do
    * not return it leave it undefined rather than estimating it. */
@@ -243,6 +251,11 @@ class OpenAICompatibleProvider implements LLMProvider {
     private readonly endpoint: string,
   ) {}
 
+  get qualificationIdentity(): LLMProviderQualificationIdentity {
+    return { transport: "openai-compatible", name: this.name, model: this.model,
+      endpointSha256: createHash("sha256").update(this.endpoint).digest("hex") };
+  }
+
   async complete(opts: LLMCallOptions): Promise<string> {
     if (!this.apiKey) throw new Error(`${this.name.toUpperCase()}_API_KEY is not set`);
     this.lastUsage = undefined;
@@ -318,6 +331,10 @@ export class BedrockAnthropicProvider implements LLMProvider {
     private region = process.env.AWS_BEDROCK_REGION ?? "us-east-1",
   ) {}
 
+  get qualificationIdentity(): LLMProviderQualificationIdentity {
+    return { transport: "bedrock-invoke", name: this.name, model: this.modelId, region: this.region };
+  }
+
   async complete(opts: LLMCallOptions): Promise<string> {
     if (!this.apiKey) throw new Error("AWS_BEDROCK_API_KEY or AWS_BEARER_TOKEN_BEDROCK is not set");
     assertSelectedAwsRegion(this.region);
@@ -367,6 +384,10 @@ export class BedrockConverseProvider implements LLMProvider {
     name = "bedrock-converse",
   ) {
     this.name = name;
+  }
+
+  get qualificationIdentity(): LLMProviderQualificationIdentity {
+    return { transport: "bedrock-converse", name: this.name, model: this.modelId, region: this.region };
   }
 
   async complete(opts: LLMCallOptions): Promise<string> {
@@ -444,6 +465,15 @@ export class CompositeProvider implements LLMProvider {
   lastUsage?: LLMUsage;
   lastAttempts: Array<Record<string, unknown>> = [];
   selectedProviderName?: string;
+  get qualificationIdentity(): LLMProviderQualificationIdentity | undefined {
+    const members: LLMProviderQualificationIdentity[] = [];
+    for (const provider of this.providers) {
+      if (!provider.qualificationIdentity) return undefined;
+      members.push(provider.qualificationIdentity);
+    }
+    return { transport: "composite", members };
+  }
+
   async complete(opts: LLMCallOptions): Promise<string> {
     const sharedOpts = normalizeCallOptions(opts);
     this.lastUsage = undefined;
@@ -506,6 +536,10 @@ export class GroqProvider implements LLMProvider {
     // not the default.
     const fallbacks = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
     this.models = [model, ...fallbacks.filter((m) => m !== model)];
+  }
+
+  get qualificationIdentity(): LLMProviderQualificationIdentity {
+    return { transport: "groq", name: this.name, models: [...this.models], endpointSha256: createHash("sha256").update(this.client.baseURL).digest("hex") };
   }
 
   async complete(opts: LLMCallOptions): Promise<string> {
@@ -640,6 +674,7 @@ export function registerProvider(name: string, factory: () => LLMProvider, confi
 function withObservability(provider: LLMProvider): LLMProvider {
   return {
     name: provider.name,
+    get qualificationIdentity() { return provider.qualificationIdentity; },
     get lastUsage() { return provider.lastUsage; },
     get lastAttempts() { return provider.lastAttempts; },
     get selectedProviderName() { return provider.selectedProviderName; },
@@ -649,6 +684,7 @@ function withObservability(provider: LLMProvider): LLMProvider {
     recordsHealthInternally: true,
     async complete(opts) {
       const sharedOpts = normalizeCallOptions(opts);
+      return observeAiOperation({ kind: "generation", name: `llm:${sharedOpts.purpose ?? "answer"}`, tenantId: sharedOpts.tenantId, correlationId: sharedOpts.traceId, actionId: sharedOpts.actionId, purpose: sharedOpts.purpose, channel: sharedOpts.channel, model: sharedOpts.model }, async () => {
       initObservability();
       const start = Date.now();
       try {
@@ -672,6 +708,7 @@ function withObservability(provider: LLMProvider): LLMProvider {
         await recordCall(provider, sharedOpts, deferred ? "deferred" : "failed", { error: (err as Error).message }).catch(() => undefined);
         throw err;
       }
+      }, () => provider.lastUsage);
     },
   };
 }
@@ -697,6 +734,7 @@ export interface LLMRouteDescription {
   purpose: LLMPurpose;
   channel: LLMChannel;
   providerNames: string[];
+  providerIdentities: Array<{ alias: string; identity: LLMProviderQualificationIdentity | null }>;
   deadlineMs: number;
 }
 
@@ -762,7 +800,9 @@ function routeNames(purpose: LLMPurpose, channel: LLMChannel): string[] {
 }
 
 export function describeLLMRoute(purpose: LLMPurpose, channel: LLMChannel = "text"): LLMRouteDescription {
-  return { purpose, channel, providerNames: routeNames(purpose, channel), deadlineMs: DEFAULT_DEADLINE_MS[channel] };
+  const providerNames = routeNames(purpose, channel);
+  return { purpose, channel, providerNames, providerIdentities: providerNames.map(alias => ({ alias,
+    identity: providers.get(alias)?.factory().qualificationIdentity ?? null })), deadlineMs: DEFAULT_DEADLINE_MS[channel] };
 }
 
 export function isProviderConfigured(name: string): boolean {
@@ -796,6 +836,7 @@ export function resolveProviderForRequest(request: LLMRouteRequest): LLMProvider
   const provider = selected.length === 1 ? selected[0]! : new CompositeProvider(selected);
   const boundProvider: LLMProvider = {
     name: provider.name,
+    get qualificationIdentity() { return provider.qualificationIdentity; },
     get lastUsage() { return provider.lastUsage; },
     get lastAttempts() { return provider.lastAttempts; },
     get selectedProviderName() { return provider.selectedProviderName; },

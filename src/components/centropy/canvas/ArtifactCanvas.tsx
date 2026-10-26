@@ -1,5 +1,6 @@
 "use client"
 
+import { DocumentCapabilityDesk } from "./DocumentCapabilityDesk"
 import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, ArrowRight, Download, FileText, GitCompareArrows, RefreshCw } from "lucide-react"
 import { z } from "zod"
@@ -135,6 +136,7 @@ export function ArtifactCanvas({ documentId, initialVersionId, pinnedVersionId, 
   }
 
   return <div className="ct-artifact">
+    <DocumentCapabilityDesk key={`capabilities:${documentId}:${versionId}`} documentId={documentId} versionId={versionId} />
     <header><button type="button" onClick={onClose}><ArrowLeft size={16} /> Back to Investigation Canvas</button><span>ARTIFACT / EXACT VERSION</span><button type="button" disabled={downloading || !selectedVersionReady} onClick={() => void download()}><Download size={16} /> {downloading ? "Downloading…" : "Download exact version"}</button><button type="button" onClick={() => setRefresh((value) => value + 1)} aria-label="Refresh artifact"><RefreshCw size={16} /></button></header>
     {downloadError ? <p role="alert" className="ct-artifact__error-text">{downloadError}</p> : null}
     {state.loading ? <p role="status">Reading the persisted artifact and semantic content…</p> : null}

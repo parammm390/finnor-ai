@@ -35,3 +35,5 @@ export * from "./tenant-provider";
 export * from "./source-adapters";
 export * from "./gmail-observation";
 export * from "./source-truth-health";
+
+export * from "./langfuse";

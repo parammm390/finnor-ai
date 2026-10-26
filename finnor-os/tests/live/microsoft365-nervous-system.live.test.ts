@@ -50,7 +50,7 @@ function sourceScope(row: typeof integrationSourceScopes.$inferSelect): Microsof
     tenantId: row.tenantId,
     integrationId: row.integrationId,
     provider: "microsoft_graph",
-    sourceKind: row.sourceKind,
+    sourceKind: microsoft365SourceCapability(row.sourceKind).sourceKind,
     scopeKey: row.scopeKey,
     providerResourceId: row.providerResourceId,
     providerParentId: row.providerParentId,

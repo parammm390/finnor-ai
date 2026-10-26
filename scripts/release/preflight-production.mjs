@@ -6,7 +6,7 @@ import { createRequire } from "node:module"
 import { resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { readProtectedEnv, readProtectedEnvValue } from "./protected-env.mjs"
-import { computeSecretMap } from "./compute-plane-policy.mjs"
+import { computeSecretMap, computeCapabilityEnvironment } from "./compute-plane-policy.mjs"
 import { assertAwsTarget, assertCanonicalRelease, assertImmutableEcrRelease, assertMigrationLineage, assertResolvedTarget, expectedRelease, loadContract, readGitRelease } from "./release-policy.mjs"
 import { pgConnectionConfig } from "../../finnor-os/packages/db/postgres-connection.mjs"
 import { assertProductionDatabaseTarget, verifyRestrictedApplicationRole } from "../../finnor-os/packages/db/production-database-admission.mjs"
@@ -180,8 +180,16 @@ if (computeStage !== "legacy") {
     if ("AWS_ACCESS_KEY_ID" in env || "AWS_SECRET_ACCESS_KEY" in env) throw new Error(`${workloadClass} contains static AWS credentials`)
     let secretMap
     try { secretMap = JSON.parse(env.FINNOR_SECRET_IDS ?? "") } catch { throw new Error(`${workloadClass} FINNOR_SECRET_IDS is invalid`) }
-    const expectedSecretMap = computeSecretMap(contract, workloadClass, { legacy: env.AWS_BEDROCK_AUTH_MODE !== "iam" })
-    if (JSON.stringify(secretMap) !== JSON.stringify(expectedSecretMap)) throw new Error(`${workloadClass} secret map exceeds or differs from its contract`)
+    const legacy = env.AWS_BEDROCK_AUTH_MODE !== "iam"
+    const expectedSecretMap = computeSecretMap(contract, workloadClass, { legacy })
+    const previousSecretMap = computeSecretMap(contract, workloadClass, { legacy, capabilities: false })
+    const currentRelease = env.FINNOR_COMMIT_SHA === expected.commitSha
+    const exactMap = JSON.stringify(secretMap) === JSON.stringify(expectedSecretMap)
+    const exactPreviousMap = !currentRelease && JSON.stringify(secretMap) === JSON.stringify(previousSecretMap)
+    if (!exactMap && !exactPreviousMap) throw new Error(`${workloadClass} secret map exceeds or differs from its contract`)
+    if (currentRelease) for (const [name, value] of Object.entries(computeCapabilityEnvironment(contract, workloadClass))) {
+      if (env[name] !== value) throw new Error(`${workloadClass} capability runtime differs from the current release`)
+    }
     classServices[workloadClass] = { service: classService, taskDefinition: classTask }
   }
   service = classServices.REALTIME.service

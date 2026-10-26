@@ -45,6 +45,41 @@ Resources:
           - Effect: Allow
             Action: secretsmanager:GetSecretValue
             Resource: !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/embeddings-api-key-??????'
+  CapabilityRuntimeSecretPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: finnor-capability-runtime-secrets
+      Roles: [finnor-heavy-task]
+      Users: [finnor-app-prod]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: secretsmanager:GetSecretValue
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/nango-api-key-??????'
+              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/nango-webhook-signing-key-??????'
+              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/langfuse-public-key-??????'
+              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/langfuse-secret-key-??????'
+              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/modal-token-id-??????'
+              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/modal-token-secret-??????'
+              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/pageindex-api-key-??????'
+              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/parallel-api-key-??????'
+
+  CapabilityTelemetrySecretPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: finnor-capability-telemetry-secrets
+      Roles: [finnor-worker-task, finnor-background-task]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: secretsmanager:GetSecretValue
+            Resource:
+              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/langfuse-public-key-??????'
+              - !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:finnor/prod/langfuse-secret-key-??????'
+
 Outputs:
   ModelPolicyArn:
     Value: !Ref ModelRuntimePolicy

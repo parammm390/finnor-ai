@@ -4347,7 +4347,7 @@ export const tenantIntegrations = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
     capability: text("capability", {
-      enum: ["scheduling", "documents", "inventory", "crm", "communications", "esign", "accounting", "payments", "marketing", "private_equity_source"],
+      enum: ["scheduling", "documents", "inventory", "crm", "communications", "esign", "accounting", "payments", "marketing", "private_equity_source", "connected_source"],
     }).notNull(),
     binding: text("binding").notNull(),
     mode: text("mode", { enum: ["real", "sandbox", "emulator"] }).notNull().default("emulator"),
@@ -4442,6 +4442,7 @@ export const integrationSourceScopes = pgTable(
         "teams_transcript_organizer",
         "sharepoint_drive",
         "sharepoint_list",
+        "nango_records",
       ],
     }).notNull(),
     providerScopeType: text("provider_scope_type").notNull(),

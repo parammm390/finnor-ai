@@ -29,16 +29,15 @@ test("the actual image layout imports every worker owner and rechecks source cus
     recursive: true,
     filter: (path) => !relative(source, path).split("/").some((part) => part === "node_modules" || part === "evidence" || part.startsWith(".")),
   })
-  for (const name of ["packages", "apps", "scripts"]) copy(join(backend, name), join(deployed, name))
-  for (const name of ["package.json", "package-lock.json", "tsconfig.json", "tsconfig.base.json"]) {
-    cpSync(join(backend, name), join(deployed, name))
-  }
-  if (/COPY package-lock\.json \/app\/package-lock\.json/.test(dockerfile)) {
-    cpSync(join(root, "package-lock.json"), join(fixture, "app/package-lock.json"))
-  }
-  if (/COPY infra\/deployment\/production\.contract\.json \/app\/infra\/deployment\//.test(dockerfile)) {
-    mkdirSync(join(fixture, "app/infra/deployment"), { recursive: true })
-    cpSync(join(root, "infra/deployment/production.contract.json"), join(fixture, "app/infra/deployment/production.contract.json"))
+  const dependencyStage = dockerfile.split("FROM node-runtime AS dependencies")[1].split("\nFROM ")[0]
+  for (const instruction of dependencyStage.matchAll(/^COPY (?! --)(.+)$/gm)) {
+    const operands = instruction[1].trim().split(/\s+/)
+    const destination = operands.pop()
+    const target = destination.startsWith("/") ? join(fixture, destination.slice(1)) : resolve(deployed, destination)
+    const directory = operands.length > 1 || destination.endsWith("/")
+    if (directory) mkdirSync(target, { recursive: true })
+    else mkdirSync(dirname(target), { recursive: true })
+    for (const source of operands) copy(join(root, source), directory ? join(target, source.split("/").at(-1)) : target)
   }
   // Reuse third-party packages from the host install, but never its workspace
   // links: those point back to another checkout and can make this relocation
@@ -121,7 +120,31 @@ test("the actual image layout imports every worker owner and rechecks source cus
     console.log(JSON.stringify({workerImported:true,p4Sources:p4.files.length,m4Sources:m4.files.length,projectionResolution}));
   `
   let result, installedOwnerCommitWired = false
+  const prebuild = []
   try {
+    const build = JSON.parse(readFileSync(join(deployed, "apps/api/package.json"), "utf8")).scripts.build
+    const stages = build.split(/\s*&&\s*/)
+    assert.equal(stages.pop(), "next build", "review changed API build stages before relying on this source-custody proof")
+    const manifestPath = join(deployed, "packages/orchestration/src/capabilities/planner-replay-manifest.json")
+    const pinned = JSON.parse(readFileSync(manifestPath, "utf8"))
+    const before = new Map(pinned.sources.map(source => [source.file, createHash("sha256").update(readFileSync(join(deployed, source.file))).digest("hex")]))
+    for (const stage of stages) {
+      assert.match(stage, /^tsx [^ ]+$/)
+      const observed = spawnSync(process.execPath, ["--import=tsx", resolve(deployed, "apps/api", stage.slice(4))], {
+        cwd: join(deployed, "apps/api"), encoding: "utf8", timeout: 30_000,
+        env: { PATH: dirname(process.execPath), NODE_ENV: "test", TSX_TSCONFIG_PATH: join(deployed, "tsconfig.json") },
+      })
+      prebuild.push({ command: stage, exitCode: observed.status, stdout: observed.stdout, stderr: observed.stderr })
+      assert.equal(observed.status, 0, JSON.stringify(prebuild))
+    }
+    const check = spawnSync(process.execPath, ["--import=tsx", "scripts/release/generate-planner-replay-manifest.mts", "--check"], {
+      cwd: deployed, encoding: "utf8", timeout: 30_000,
+      env: { PATH: dirname(process.execPath), NODE_ENV: "test", TSX_TSCONFIG_PATH: join(deployed, "tsconfig.json") },
+    })
+    prebuild.push({ command: "planner manifest check after API source stamping", exitCode: check.status, stdout: check.stdout, stderr: check.stderr })
+    assert.equal(check.status, 0, JSON.stringify(prebuild))
+    for (const [file, digest] of before) assert.equal(createHash("sha256").update(readFileSync(join(deployed, file))).digest("hex"), digest, `API prebuild changed pinned source: ${file}`)
+
     result = spawnSync(process.execPath, [
       "--import=" + join(backend, "node_modules/tsx/dist/loader.mjs"),
       "--input-type=module", "-e", script,
@@ -159,9 +182,10 @@ test("the actual image layout imports every worker owner and rechecks source cus
     writeFileSync(join(directory, "worker-image-layout.json"), JSON.stringify({
       schema: "finnor.worker-image-layout-proof.v1",
       inputs: { workdir, dockerfileSha256: createHash("sha256").update(dockerfile).digest("hex"), smokeSha256: createHash("sha256").update(smoke).digest("hex") },
-      steps: ["Copy production source into image WORKDIR outside checkout", "Reuse host third-party dependencies while mapping workspace packages to relocated candidate source", "Import actual worker owners", "Recheck P4/M4 canonical source identities"],
+      steps: ["Copy production source into image WORKDIR outside checkout", "Reuse host third-party dependencies while mapping workspace packages to relocated candidate source", "Execute the actual API prebuild source stamps and check pinned planner sources remain unchanged", "Import actual worker owners", "Recheck P4/M4 canonical source identities"],
       observed: {
         installedOwnerCommitWired,
+        prebuild,
         exitCode: result?.status,
         signal: result?.signal,
         error: result?.error ? { name: result.error.name, message: result.error.message, code: result.error.code, errno: result.error.errno, syscall: result.error.syscall } : null,
@@ -169,6 +193,38 @@ test("the actual image layout imports every worker owner and rechecks source cus
         stderr: result?.stderr,
       },
       rerun: "node --test scripts/release/worker-image-layout.e2e.test.mjs",
+      actualLinuxImageProof: false,
+    }, null, 2) + "\n")
+    rmSync(fixture, { recursive: true, force: true })
+  }
+})
+
+test("runtime manifest check executes with Node and no build tools on PATH", () => {
+  const dockerfile = readFileSync(join(backend, "Dockerfile.worker"), "utf8")
+  const runtime = dockerfile.slice(dockerfile.lastIndexOf("\nFROM ") + 1)
+  const instruction = runtime.split("\n").find(line => line.startsWith("RUN ") && /capabilities:planner-manifest|generate-planner-replay-manifest/.test(line))
+  assert.ok(instruction, "the final image must check the planner source manifest")
+  const command = instruction.slice(4)
+  const fixture = mkdtempSync(join(tmpdir(), "finnor-worker-node-only-"))
+  const directory = process.env.FINNOR_WORKER_LAYOUT_EVIDENCE_DIR
+    ?? mkdtempSync(join(tmpdir(), "finnor-worker-runtime-command-proof-"))
+  mkdirSync(directory, { recursive: true })
+  const node = join(fixture, "node")
+  symlinkSync(process.execPath, node)
+  let result
+  try {
+    result = spawnSync("/bin/sh", ["-c", command], {
+      cwd: backend, env: { PATH: fixture, NODE_ENV: "test", TSX_TSCONFIG_PATH: join(backend, "tsconfig.json") },
+      encoding: "utf8", timeout: 30_000, maxBuffer: 1024 * 1024,
+    })
+    assert.equal(result.status, 0, JSON.stringify({ command, status: result.status, error: result.error?.message, stdout: result.stdout, stderr: result.stderr }))
+  } finally {
+    writeFileSync(join(directory, "runtime-command.json"), JSON.stringify({
+      schema: "finnor.worker-runtime-command-proof.v1",
+      inputs: { command, pathContainsOnlyNode: true, dockerfileSha256: createHash("sha256").update(dockerfile).digest("hex") },
+      steps: ["Read the actual image manifest-check instruction", "Execute it with only Node on PATH"],
+      observed: { exitCode: result?.status, signal: result?.signal, stdout: result?.stdout, stderr: result?.stderr, error: result?.error?.message },
+      rerun: "node --test --test-name-pattern='runtime manifest check' scripts/release/worker-image-layout.e2e.test.mjs",
       actualLinuxImageProof: false,
     }, null, 2) + "\n")
     rmSync(fixture, { recursive: true, force: true })

@@ -1,3 +1,9 @@
+import { PywhyAssessmentRequestSchema } from '../../../../../../packages/orchestration/src/capabilities/contracts';
+import { createCapabilityRun, readCapabilityRun } from '../../../../../../packages/orchestration/src/capabilities/repository';
+import { CapabilityEngineError } from '../../../../../../packages/tools/src/capabilities/python-runner';
+import { capabilityError } from '../../../../lib/capabilities';
+const conditionalAssessment = PywhyAssessmentRequestSchema.extend({ interventionModelRef: ExperimentRefSchema }).strict();
+const conditionalRead = z.object({ runId: z.string().uuid() }).strict();
 import { z } from 'zod';
 import { PE_WORLD_ROOT_TYPES, PeDomainError, fitEnterpriseInterventionModel, queryEnterpriseInterventionModel, validateEnterpriseInterventionModel,
   prepareEnterpriseExactControlModel, projectEnterpriseInterventionExperiment, designEnterpriseInterventionExperiment, recordEnterpriseInterventionAssessment } from '@finnor/private-equity';
@@ -40,6 +46,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ operati
     const [auth, route] = await Promise.all([requireContext(req), params]), ctx = { auth };
     const body = await boundedJson(req);
     switch (route.operation) {
+      case 'assess-pywhy': { const accepted = await createCapabilityRun(auth, conditionalAssessment.parse(body)); return response({ ...accepted, owner: 'S3', assessmentRole: 'CONDITIONAL_ASSESSMENT_NOT_TEMPORAL_MODEL' }, accepted.replayed ? 200 : 202); }
+      case 'read-pywhy-assessment': { const input = conditionalRead.parse(body), run = await readCapabilityRun(auth, input.runId); if (!run || run.request.kind !== 'pywhy_assess' || !run.request.interventionModelRef) throw new CapabilityEngineError('PYWHY_S3_ASSESSMENT_NOT_FOUND'); return response({ run, owner: 'S3', temporalModelReplaced: false }); }
       case 'exact-control-model': return response(await prepareEnterpriseExactControlModel(ctx,z.object({workId:z.string().uuid(),workRevision:z.string().uuid(),modelBytes:z.string().max(2*1024*1024),mandate:z.unknown()}).strict().parse(body)));
       case 'fit': return response(await fitEnterpriseInterventionModel(ctx, fit.parse(body).request));
       case 'refit': { const input = refit.parse(body); return response(await fitEnterpriseInterventionModel(ctx, input.request, input.priorRef)); }
@@ -53,6 +61,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ operati
       default: return response({ error: 'S3 operation was not found', code: 'NOT_FOUND' }, 404);
     }
   } catch (e) {
+    if (e instanceof CapabilityEngineError) return capabilityError(e);
     if (e instanceof ExactControlError) return response({status:e.disposition,error:e.predicate,code:'EXACT_MODEL_UNSUPPORTED'},400);
     if (e instanceof z.ZodError) return response({ error: 'Invalid S3 request', code: 'INVALID_REQUEST' }, 400);
     if (e instanceof InterventionContractError || e instanceof ExperimentContractError) return response({ error: e.message, code: e.code }, e.code === 'LIMIT_EXCEEDED' ? 413 : e.code === 'PERMITTED_CONTEXT_UNAVAILABLE' ? 404 : 400);

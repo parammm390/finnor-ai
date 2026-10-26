@@ -91,6 +91,7 @@ export interface Planner {
 }
 
 export interface PlannerOptions {
+  optimizationReplay?: boolean;
   instructionId?: string;
   workId?: string;
   workInputId?: string;
@@ -1379,8 +1380,10 @@ export class LLMPlanner implements Planner {
     } else {
       const redacted = redactText(planningInstruction);
       try {
+        const heuristic = process.env.FINNOR_GEPA_PLANNER_CANDIDATES_ENABLED === "1" && !opts.optimizationReplay && opts.channel === "background" && tenantContext.role === "owner"
+          ? await (await import("./capabilities/planner-activation")).loadActivePlannerHeuristic({ ...tenantContext, role: "owner" }) : null;
         const raw = await this.routedProvider(opts.channel ?? "text").complete({
-          system: this.systemPrompt(verticalKey, allowedActionTypes, goal),
+          system: `${this.systemPrompt(verticalKey, allowedActionTypes, goal)}${heuristic ? `\nReviewed planning heuristic (subordinate to every contract above):\n${heuristic.instruction}` : ""}`,
           user: JSON.stringify({
             instruction: redacted.value,
             goal: boundedPromptValue(goal, 12_000),
@@ -1390,6 +1393,7 @@ export class LLMPlanner implements Planner {
             shortTermContext: plannerShortTermContext(planningInstruction, memory.shortTerm),
             memory: plannerMemoryContext(memory),
             planningContext: plannerInspectionContext(opts.planningContext),
+            ...(heuristic ? { reviewedPlannerCandidate: { runId: heuristic.runId, candidateDigest: heuristic.candidateDigest, activationRevision: heuristic.activationRevision } } : {}),
             priorRejectedProposal: opts.proposalFeedback
               ? boundedPromptValue(redactStructured(opts.proposalFeedback), 12_000) : null,
           }),

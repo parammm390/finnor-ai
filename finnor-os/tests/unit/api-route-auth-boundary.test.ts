@@ -39,6 +39,8 @@ const EXPLICIT_BOUNDARIES: Record<string, RegExp> = {
   // against the stored hash and matches directory/resource before tenant work.
   // microsoft365-webhook.test.ts exercises forged and cross-tenant envelopes.
   "webhooks/microsoft-graph/route.ts": /verifySubscriptionClientState\(notification\.clientState, row\.client_state_hash\)/,
+  // Native cold-webhook and delivery drivers verify raw-byte HMAC, prepared owner routing, and forged/cross-tenant refusal.
+  "webhooks/nango/route.ts": /acceptNangoWebhook\(raw,/,
   "webhooks/payment/route.ts": /verifyPaymentSignature/,
   "webhooks/vapi/route.ts": /verifyTimestampedHmacSignature/,
   "workflows/runs/\[id\]/cancel/route.ts": /makeRunControlRoute/,

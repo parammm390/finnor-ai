@@ -199,8 +199,10 @@ const descriptors: Record<Microsoft365SourceKind, Microsoft365SourceCapability> 
 
 export const MICROSOFT365_SOURCE_CAPABILITIES = Object.freeze(descriptors);
 
-export function microsoft365SourceCapability(sourceKind: Microsoft365SourceKind): Microsoft365SourceCapability {
-  return descriptors[sourceKind];
+export function microsoft365SourceCapability(sourceKind: string): Microsoft365SourceCapability {
+  const capability = Object.values(descriptors).find(candidate => candidate.sourceKind === sourceKind);
+  if (!capability) throw new Error("Unsupported Microsoft source kind");
+  return capability;
 }
 
 export function allMicrosoft365SourceCapabilities(): Microsoft365SourceCapability[] {

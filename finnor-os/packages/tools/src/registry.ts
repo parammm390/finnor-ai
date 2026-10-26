@@ -3,6 +3,7 @@
 
 import { z } from "zod";
 import type { ToolCallResult, RetryPolicy } from "./wrap";
+import { observeAiOperation } from "./langfuse";
 import { wrappedCall, DEFAULT_RETRY } from "./wrap";
 import { IntegrationError } from "./errors";
 import { createHash } from "node:crypto";
@@ -194,7 +195,9 @@ export class ToolRegistry {
         && Boolean(runtime.providerIdempotencyKey)
         && runtime.providerIdempotencyExpiresAt !== undefined
         && runtime.providerIdempotencyExpiresAt.getTime() > Date.now());
-    const result = await wrappedCall(
+    let toolFailed = false;
+    const result = await observeAiOperation({ kind: "tool", name, tenantId: runtime.tenantId, actionId: runtime.domainActionId, purpose: runtime.purpose }, async () => {
+    const outcome = await wrappedCall(
       tool.integration,
       () => executionContract.effect==="consequential"&&runtime.withConsequentialDispatch
         ? runtime.withConsequentialDispatch({toolName:name,provider:tool.integration,input:safeInput,runtime},()=>tool.run(safeInput,runtime))
@@ -222,6 +225,9 @@ export class ToolRegistry {
         } : {}),
       },
     );
+    toolFailed = !outcome.ok;
+    return outcome;
+    }, () => ({ failed: toolFailed }));
     const ms = Date.now() - start;
     Sentry.addBreadcrumb({ category: "tool", message: name, data: { integration: tool.integration, ok: result.ok, ms } });
     if (!result.ok) Sentry.captureMessage(`tool_failed:${name}`, { level: "warning" });

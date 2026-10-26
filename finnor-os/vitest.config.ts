@@ -7,7 +7,7 @@ const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 // Vite's bare string aliases also match subpaths. Put canonical package exports
 // first so @finnor/memory/evidence never becomes src/index.ts/evidence, etc.
 const ownerSubpaths = Object.fromEntries(
-  ["computer", "memory", "orchestration", "workflow-runtime"].flatMap((owner) => {
+  ["computer", "memory", "orchestration", "workflow-runtime", "tools"].flatMap((owner) => {
     const manifest = JSON.parse(readFileSync(r(`./packages/${owner}/package.json`), "utf8"));
     return Object.entries(manifest.exports as Record<string, { import: string }>)
       .filter(([subpath]) => subpath.startsWith("./"))

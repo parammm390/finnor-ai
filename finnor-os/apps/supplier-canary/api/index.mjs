@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/i;
-const CURRENT_MIGRATION_HEAD = "postx_y4_runtime_recipient_recovery.sql";
+const CURRENT_MIGRATION_HEAD = "postx_y5_capability_5_capability_nango_lifecycle.sql";
 const CUTOVER_PROTOCOL = 5;
 
 const DILIGENCE_RECORD = Object.freeze({

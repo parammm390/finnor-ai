@@ -124,6 +124,7 @@ export interface EvidenceSearchResult {
 
 export interface EvidenceSearchInput {
   tenantId: string;
+  principalId?: string;
   query: string;
   limit?: number;
   candidateLimit?: number;
@@ -588,6 +589,7 @@ export async function searchEvidence(input: EvidenceSearchInput): Promise<Eviden
     await client.query("SET LOCAL search_path = finnor_os, public");
     await client.query("SET LOCAL statement_timeout = 10000");
     await client.query("SELECT set_config('app.tenant_id', $1, true)", [input.tenantId]);
+    if (input.principalId) await client.query("SELECT set_config('app.user_id', $1, true)", [input.principalId]);
     const params = [input.tenantId, input.query, asOf.toISOString(), candidateLimit];
     const base = baseEvidenceSelect(input.scope ?? "all");
     if (input.query.trim()) {
