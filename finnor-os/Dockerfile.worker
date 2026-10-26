@@ -146,7 +146,7 @@ COPY --from=s6-native-callee /opt/finnor-s6-jail-arm64 /opt/finnor-s6-jail-arm64
 COPY --from=s6-launcher-build /opt/linux-launcher /opt/linux-launcher
 COPY --from=r2-scientific-build /opt/r2-build/gmp.tar.xz /opt/finnor-r2/sources/gmp.tar.xz
 COPY --from=r2-scientific-build /opt/r2-build/mpfr.tar.xz /opt/finnor-r2/sources/mpfr.tar.xz
-RUN npm run capabilities:planner-manifest -- --check
+RUN node --import=tsx scripts/release/generate-planner-replay-manifest.mts --check
 RUN node scripts/r3/seal-linux-callee.mjs
 RUN if [ "$(node -p process.arch)" = x64 ]; then node scripts/r3/package-linux-jail.mjs /usr/local/bin/node /opt/linux-launcher /opt/finnor-s6-jail-x64; fi \
     && mknod -m 666 /opt/finnor-s6-jail-arm64/root/dev/null c 1 3 \

@@ -174,3 +174,35 @@ test("the actual image layout imports every worker owner and rechecks source cus
     rmSync(fixture, { recursive: true, force: true })
   }
 })
+
+test("runtime manifest check executes with Node and no build tools on PATH", () => {
+  const dockerfile = readFileSync(join(backend, "Dockerfile.worker"), "utf8")
+  const runtime = dockerfile.slice(dockerfile.lastIndexOf("\nFROM ") + 1)
+  const instruction = runtime.split("\n").find(line => line.startsWith("RUN ") && /capabilities:planner-manifest|generate-planner-replay-manifest/.test(line))
+  assert.ok(instruction, "the final image must check the planner source manifest")
+  const command = instruction.slice(4)
+  const fixture = mkdtempSync(join(tmpdir(), "finnor-worker-node-only-"))
+  const directory = process.env.FINNOR_WORKER_LAYOUT_EVIDENCE_DIR
+    ?? mkdtempSync(join(tmpdir(), "finnor-worker-runtime-command-proof-"))
+  mkdirSync(directory, { recursive: true })
+  const node = join(fixture, "node")
+  symlinkSync(process.execPath, node)
+  let result
+  try {
+    result = spawnSync("/bin/sh", ["-c", command], {
+      cwd: backend, env: { PATH: fixture, NODE_ENV: "test", TSX_TSCONFIG_PATH: join(backend, "tsconfig.json") },
+      encoding: "utf8", timeout: 30_000, maxBuffer: 1024 * 1024,
+    })
+    assert.equal(result.status, 0, JSON.stringify({ command, status: result.status, error: result.error?.message, stdout: result.stdout, stderr: result.stderr }))
+  } finally {
+    writeFileSync(join(directory, "runtime-command.json"), JSON.stringify({
+      schema: "finnor.worker-runtime-command-proof.v1",
+      inputs: { command, pathContainsOnlyNode: true, dockerfileSha256: createHash("sha256").update(dockerfile).digest("hex") },
+      steps: ["Read the actual image manifest-check instruction", "Execute it with only Node on PATH"],
+      observed: { exitCode: result?.status, signal: result?.signal, stdout: result?.stdout, stderr: result?.stderr, error: result?.error?.message },
+      rerun: "node --test --test-name-pattern='runtime manifest check' scripts/release/worker-image-layout.e2e.test.mjs",
+      actualLinuxImageProof: false,
+    }, null, 2) + "\n")
+    rmSync(fixture, { recursive: true, force: true })
+  }
+})
