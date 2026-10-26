@@ -18,6 +18,8 @@ Rerun local delivery from `finnor-os/` with a provisioned Python environment and
 ```sh
 FINNOR_CAPABILITY_PYTHON=/absolute/path/to/python \
 FINNOR_VERIFY_MODAL_PROTOCOL=1 \
+FINNOR_VERIFY_GEPA=1 \
+FINNOR_VERIFY_DOCLING=1 \
 FINNOR_CAPABILITY_EVIDENCE_DIR=/absolute/path/to/fresh-evidence \
 node --import=tsx scripts/release/run-capability-delivery-e2e.mts
 ```

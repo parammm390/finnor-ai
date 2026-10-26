@@ -687,7 +687,7 @@ try {
     const exited = new Promise<void>(done => { child.once("exit", () => done()); child.once("error", () => done()); });
     let pausedBackend: number | null = null, pausedState: unknown;
     try {
-      pausedBackend = await until(async () => { const row = (await admin.query("SELECT pid FROM pg_stat_activity WHERE datname='finnor' AND wait_event='PgSleep' AND query ILIKE '%capability_run_events%' AND pid<>pg_backend_pid()")).rows[0]; return row ? Number(row.pid) : null; });
+      pausedBackend = await until(async () => { const row = (await admin.query("SELECT pid FROM pg_stat_activity WHERE datname='finnor' AND wait_event='PgSleep' AND query ILIKE '%capability_run_events%' AND pid<>pg_backend_pid()")).rows[0]; return row ? Number(row.pid) : null; }, 30_000);
       pausedState = (await admin.query("SELECT status,remote_state FROM finnor_os.capability_runs WHERE id=$1", [value.run.id])).rows[0];
       assert.deepEqual(pausedState, { status: "RUNNING", remote_state: {} });
       assert.equal(providerSubmissions.filter(p => p.path === "/v1/tasks/runs").length, createsBefore);

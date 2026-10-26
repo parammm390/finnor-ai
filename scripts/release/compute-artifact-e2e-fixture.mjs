@@ -16,9 +16,13 @@ const hash = (bytes) => createHash("sha256").update(bytes).digest("hex")
 // Expected workload privileges are independent of the deployment mapper.
 function fixtureSecretMap(contract, workloadClass) {
   const keys = workloadClass === "REALTIME" ? ["DATABASE_URL", "SENTRY_DSN", "SUPABASE_SERVICE_ROLE_KEY"]
-    : workloadClass === "HEAVY" ? ["DATABASE_URL", "REDIS_URL", "SENTRY_DSN", "EMBEDDINGS_API_KEY"]
+    : workloadClass === "HEAVY" ? ["DATABASE_URL", "REDIS_URL", "SENTRY_DSN"]
     : ["DATABASE_URL", "REDIS_URL", "SENTRY_DSN", "SUPABASE_SERVICE_ROLE_KEY", "VAPI_API_KEY", "VAPI_WEBHOOK_SECRET", "EXA_API_KEY", "EMBEDDINGS_API_KEY"]
-  const secrets = { ...contract.topology.worker.secretMap, ...contract.topology.computePlane.providerRuntime.workerSecrets }
+  const capabilities = contract.topology.capabilityUpgrades
+  const capabilitySecrets = capabilities?.rolloutEnabled ? capabilities.secrets : {}
+  if (workloadClass === "HEAVY") keys.push("NANGO_API_KEY", "NANGO_WEBHOOK_SIGNING_KEY", "LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "MODAL_TOKEN_ID", "MODAL_TOKEN_SECRET", "PAGEINDEX_API_KEY", "PARALLEL_API_KEY", "EMBEDDINGS_API_KEY")
+  else if (workloadClass !== "REALTIME") keys.push("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY")
+  const secrets = { ...contract.topology.worker.secretMap, ...contract.topology.computePlane.providerRuntime.workerSecrets, ...capabilitySecrets }
   return Object.fromEntries(keys.map(key => [key, secrets[key]]))
 }
 
@@ -150,7 +154,7 @@ function fleet(s) {
     const taskArn = `arn:aws:ecs:us-east-1:${s.contract.topology.worker.accountId}:task/finnor-production/${name}`
     const definition = `arn:aws:ecs:us-east-1:${s.contract.topology.worker.accountId}:task-definition/${profile.taskFamily}:7`
     const ip = `10.0.0.${i + 10}`
-    const env = { FINNOR_COMMIT_SHA: SHA, FINNOR_BUILD_ID: `finnor-${SHA.slice(0, 12)}`, FINNOR_VERSION: `0.1.0+${SHA.slice(0, 12)}`, FINNOR_RELEASE_SOURCE: "github-actions", FINNOR_ENVIRONMENT: "production", FINNOR_CORE_CERTIFICATION_ID: `post-merge:${SHA}`, FINNOR_WORKLOAD_CLASS: name, FINNOR_SECRET_IDS: JSON.stringify(fixtureSecretMap(s.contract, name)), ...(name === "REALTIME" ? {} : Object.fromEntries(Object.entries(s.contract.topology.computePlane.providerRuntime.environment).filter(([key]) => key !== "AWS_BEDROCK_REGION"))) }
+    const env = { FINNOR_COMMIT_SHA: SHA, FINNOR_BUILD_ID: `finnor-${SHA.slice(0, 12)}`, FINNOR_VERSION: `0.1.0+${SHA.slice(0, 12)}`, FINNOR_RELEASE_SOURCE: "github-actions", FINNOR_ENVIRONMENT: "production", FINNOR_CORE_CERTIFICATION_ID: `post-merge:${SHA}`, FINNOR_WORKLOAD_CLASS: name, FINNOR_SECRET_IDS: JSON.stringify(fixtureSecretMap(s.contract, name)), ...(name === "HEAVY" ? s.contract.topology.capabilityUpgrades.environment : name === "REALTIME" ? {} : { LANGFUSE_ENABLED: "1", LANGFUSE_BASE_URL: "https://us.cloud.langfuse.com" }), ...(name === "REALTIME" ? {} : Object.fromEntries(Object.entries(s.contract.topology.computePlane.providerRuntime.environment).filter(([key]) => key !== "AWS_BEDROCK_REGION"))) }
     return { name, profile, taskArn, definition, ip,
       service: { status: "ACTIVE", serviceName: profile.serviceName, launchType: "FARGATE", desiredCount: 1, runningCount: 1, pendingCount: 0, taskDefinition: definition, deployments: [{ status: "PRIMARY", taskDefinition: definition, rolloutState: "COMPLETED" }] },
       task: { taskArn, taskDefinitionArn: definition, lastStatus: "RUNNING", attachments: [{ details: [{ name: "privateIPv4Address", value: ip }] }], containers: [{ name: profile.containerName, lastStatus: "RUNNING", healthStatus: "HEALTHY", imageDigest: DIGEST }] },
