@@ -348,6 +348,10 @@
     "migrationBundle": "236 migrations bundled",
     "mountedReload": "INCONCLUSIVE: browser control disabled in Work settings",
     "productionActivation": "NOT_PERFORMED; baseline still active",
-    "independentFinalReview": "Prior independent findings were addressed; latest source-preservation guards have direct E2E evidence, without a further independent review after reviewer usage limit"
+    "independentFinalReview": "Prior independent findings were addressed; latest source-preservation guards have direct E2E evidence, without a further independent review after reviewer usage limit",
+    "releaseTruth": "PASS after migration-head contract/canary alignment",
+    "releaseRegression": "81 PASS",
+    "ciProcess": "8 PASS",
+    "dependencyRemediation": "@hono/node-server override/lock2.1.3; import PASS; PR scanner rerun pending"
   }
 }
