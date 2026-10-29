@@ -1,3 +1,4 @@
+import { bindWorkInputConversation } from "./conversation-memory";
 // Orchestration core (§9): Planner → confirmation gate → Executor → Reflection.
 // This module is the single entry point the API, webhooks, and workers all use.
 
@@ -614,6 +615,7 @@ export class FinnorOrchestrator implements Orchestrator {
           activeContext: undefined,
           authorityContext: intakeAuthorityContext(ctx),
         });
+    await bindWorkInputConversation({ ctx, workId: received.workId, workInputId: received.workInputId, conversation: opts.conversationContext });
     const interactionContext = await resolveOperatingInteractionContext({
       tenantId: ctx.tenantId,
       context: opts.activeContext,
@@ -763,6 +765,7 @@ export class FinnorOrchestrator implements Orchestrator {
         workInputId,
         idempotencyKey: opts.idempotencyKey,
         activeContext: opts.activeContext,
+        conversationContext: opts.conversationContext,
       });
       await emitInstructionEvent(ctx.tenantId, instructionId, "plan_ready", { route: "objective", objectiveLoopId: started.objectiveLoopId, boundedIterations: true });
       return { actions: [], workId, workInputId, instructionId, objective: { objectiveLoopId: started.objectiveLoopId, state: started.state, route: "OBJECTIVE" } };
@@ -909,6 +912,7 @@ export class FinnorOrchestrator implements Orchestrator {
         workInputId,
         idempotencyKey: opts.idempotencyKey,
         activeContext: opts.activeContext,
+        conversationContext: opts.conversationContext,
       });
       await emitInstructionEvent(ctx.tenantId, instructionId, "plan_ready", { route: "objective", objectiveLoopId: started.objectiveLoopId, boundedIterations: true });
       return { actions: [], workId, workInputId, instructionId, objective: { objectiveLoopId: started.objectiveLoopId, state: started.state, route: "OBJECTIVE" } };
@@ -1997,3 +2001,4 @@ export function providerForPolicy(policy: DomainPolicy, channel: "voice" | "text
   return policy.modelProvider ? resolveProvider(policy.modelProvider) : resolveProviderForPurpose("planning", channel);
 }
 export * from "./workflow";
+export { compactEmployeeConversation, ConversationCompactionJobSchema, loadWorkInputConversation } from "./conversation-memory";

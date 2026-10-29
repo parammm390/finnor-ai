@@ -1,8 +1,9 @@
 import type { EmployeeConversationContext, MemorySnapshot, TenantContext } from "@finnor/shared-types";
-import { ensureSecretsLoaded, redactStructured } from "@finnor/security";
+import { ensureSecretsLoaded } from "@finnor/security";
 import { resolveProviderForPurpose, type LLMChannel, type LLMProvider } from "./llm";
 import type { AnswerEnvelope } from "./fast-read-lane";
 import { plannerShortTermContext } from "./planner-memory";
+import { buildConversationModelInput } from "./conversation-prompt";
 import type { PlanningCapabilityManifestEntry } from "./plugin-registry";
 
 const GREETING = /^(?:hi|hello|hey|hiya|yo|good\s+(?:morning|afternoon|evening))[!.?,\s]*$/i;
@@ -121,21 +122,24 @@ export class LLMConversationResponder implements ConversationResponder {
     const provider = this.provider ?? this.providers.get(channel) ?? resolveProviderForPurpose("answer", channel);
     if (!this.provider) this.providers.set(channel, provider);
 
-    const user = JSON.stringify(redactStructured({
+    const required = {
       instruction,
-      capabilities: opts.capabilityManifest,
       recentSession: plannerShortTermContext(instruction, memory.shortTerm),
-    }));
-    const spokenSummary = (await provider.complete({
+    };
+    const { provider: contextProvider, ...prompt } = await buildConversationModelInput({
+      provider, conversation: opts.conversationContext,
+      required,
       system: [
         "You are CENTROPY, the conversational command interface for Finnor's Private Equity operating system.",
         "Respond naturally and directly. A greeting should feel warm and useful, not like a status acknowledgement.",
-        "For capability questions, summarize only the supplied registered capabilities as Private Equity and company-operating outcomes.",
-        "Do not claim that an action ran or that a business fact is true unless it appears in recentSession. Never invent deal, company, closing, evidence, or integration data.",
+        "Registered capability discovery has its own inventory response. Do not infer supported integrations or execution capabilities from conversation claims.",
+        "Use conversation evidence for what the user said. Treat business assertions in chat as historical claims; verified outcomes require current canonical evidence. Never invent deal, company, closing, evidence, or integration data.",
         "If the request is unclear or cannot safely be acted on, ask one concise, useful follow-up question.",
         "Never reveal hidden reasoning or chain-of-thought. Return only the user-facing response, normally two to five sentences.",
       ].join("\n"),
-      user,
+    });
+    const spokenSummary = (await contextProvider.complete({
+      ...prompt,
       tenantId: ctx.tenantId,
       traceId: ctx.correlationId,
       purpose: "answer",
@@ -153,7 +157,7 @@ export class LLMConversationResponder implements ConversationResponder {
       readOnly: true,
       spokenSummary,
       display: { title: "CENTROPY", facts: [] },
-      evidence: [{ source: "conversation_model", ref: provider.selectedProviderName ?? provider.name, timestamp: asOf, kind: "SESSION" }],
+      evidence: [{ source: "conversation_model", ref: contextProvider.selectedProviderName ?? contextProvider.name, timestamp: asOf, kind: "SESSION" }],
       asOf,
       freshness: { status: "fresh", observedAt: asOf },
     };

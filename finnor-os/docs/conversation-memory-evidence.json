@@ -1,0 +1,353 @@
+{
+  "schema": "finnor.conversation-memory-evidence-index.v1",
+  "baseline": "f80266f8e50356e8537bc3d4a4475a601225fc1e",
+  "runs": [
+    {
+      "artifact": "memory-evidence/2026-10-29T20-26-41.508Z/results.json",
+      "sha256": "a2c73956b68039d30650d752ff22f563aae0bd0f205c2f30aeb1f16440722127",
+      "cases": [
+        {
+          "id": "answer-history-delivery",
+          "status": "PASS"
+        },
+        {
+          "id": "thirty-complete-exchanges",
+          "status": "PASS"
+        },
+        {
+          "id": "repeated-compaction",
+          "status": "PASS"
+        },
+        {
+          "id": "reload-and-private-isolation",
+          "status": "PASS"
+        },
+        {
+          "id": "concurrent-sequence-fence",
+          "status": "PASS"
+        },
+        {
+          "id": "model-budget",
+          "status": "PASS"
+        },
+        {
+          "id": "compaction-negative-and-immutable-source",
+          "status": "PASS"
+        },
+        {
+          "id": "frozen-work-input-binding",
+          "status": "PASS"
+        },
+        {
+          "id": "all-quality-notes-use-read-only-conversation",
+          "status": "PASS"
+        },
+        {
+          "id": "historical-task-continuation-preserves-action-intent",
+          "status": "PASS"
+        }
+      ],
+      "model": null,
+      "physicalAttempts": null,
+      "sourceHashes": [
+        {
+          "path": "packages/orchestration/src/conversation.ts",
+          "sha256": "2595202ed13ed63e58ac1c3b5b88571d4fae7984ded649f82b15f55bec98f8d9"
+        },
+        {
+          "path": "packages/orchestration/src/conversation-kernel.ts",
+          "sha256": "297585426756fb65152b9ba285d91dfe285d4c2d2edb3a38f9aaed9611c79b7c"
+        },
+        {
+          "path": "packages/orchestration/src/planner.ts",
+          "sha256": "e9c3cd8c754760ef2a65e0f8a054a663fb0cd7d335ffa539a69a8b6b3e2006ff"
+        },
+        {
+          "path": "packages/orchestration/src/objective-loop.ts",
+          "sha256": "11478bacff1d6307ee187e9ec90352424d6de60f446ff5c49cca97ea1ecd57c5"
+        },
+        {
+          "path": "packages/db/index.ts",
+          "sha256": "7f4df1d179b9faffbf72d8f934e0a7eb1387c6d79a002c878c4be581f3b4076b"
+        },
+        {
+          "path": "packages/shared-types/src/conversation-context.ts",
+          "sha256": "1d37c3d0057f2b0174cf1e3177df8d94895ee7c9389c78b6cb4ff6bf8deedf1b"
+        },
+        {
+          "path": "scripts/memory/verification-plan.json",
+          "sha256": "bb9236eecbba1de16b53bbb49663b0e531611d3cdbd43220e89e91ec05c6fe95"
+        }
+      ]
+    },
+    {
+      "artifact": "memory-evidence/boundaries-2026-10-29T16-52-59.360Z/results.json",
+      "sha256": "2d0a407f8d95b24b10b11a1e445c67902b6dc7626ddd2ca9c69d3bf6dfde7813",
+      "cases": [
+        {
+          "id": "worker-crash-before-publication",
+          "status": "PASS"
+        },
+        {
+          "id": "worker-crash-after-publication",
+          "status": "PASS"
+        },
+        {
+          "id": "new-input-recovers-no-op-compaction",
+          "status": "PASS"
+        },
+        {
+          "id": "objective-fresh-worker-and-redirect",
+          "status": "PASS"
+        },
+        {
+          "id": "objective-compat-fresh-worker-and-redirect",
+          "status": "PASS"
+        },
+        {
+          "id": "oversized-complete-exchange",
+          "status": "PASS"
+        },
+        {
+          "id": "future-carried-target-excluded",
+          "status": "PASS"
+        },
+        {
+          "id": "revoked-owner-fenced-at-publication",
+          "status": "PASS"
+        },
+        {
+          "id": "legacy-work-and-migration-rerun",
+          "status": "PASS"
+        }
+      ],
+      "model": null,
+      "physicalAttempts": null,
+      "sourceHashes": [
+        {
+          "path": "packages/orchestration/src/conversation-memory.ts",
+          "sha256": "a8803e6bc7921907fa10546e56eeff5fe1c7e90625d7806784e6fe83cc3ebf74"
+        },
+        {
+          "path": "packages/db/conversation-memory.ts",
+          "sha256": "9d7cebdde60697ac79d3c5be30c145858bd83820566ac1d765f6fa8c09137c40"
+        },
+        {
+          "path": "packages/orchestration/src/objective-loop.ts",
+          "sha256": "11478bacff1d6307ee187e9ec90352424d6de60f446ff5c49cca97ea1ecd57c5"
+        },
+        {
+          "path": "apps/api/app/api/works/[id]/objective/route.ts",
+          "sha256": "1b82d6b2ab13ed4a23677477db654b3ef705a474c91e1a6c4c7c33f701e7c3d4"
+        },
+        {
+          "path": "apps/worker/src/queue.ts",
+          "sha256": "d7b9bcacad8f78ed92343e57ed31df8fd5bfcbff149cbbbb29c62361c8bd2082"
+        },
+        {
+          "path": "scripts/memory/worker-once.mts",
+          "sha256": "e270a7a2b28933655815be73a6a925856d60e6a434983f40a4bb41cf69e29d63"
+        },
+        {
+          "path": "scripts/memory/run-boundaries.mts",
+          "sha256": "052fa68775735f23a83095088a3fc905412ee8fc6f2e1de8419bbbe2952cdc3b"
+        }
+      ]
+    },
+    {
+      "artifact": "memory-evidence/boundaries-2026-10-29T16-56-48.856Z/results.json",
+      "sha256": "0604927d55a7f65ad333225b3afcfab24c5ee750ea2396ade391b38fa670ed71",
+      "cases": [
+        {
+          "id": "oversized-complete-exchange",
+          "status": "PASS"
+        }
+      ],
+      "model": null,
+      "physicalAttempts": null,
+      "sourceHashes": [
+        {
+          "path": "packages/orchestration/src/conversation-memory.ts",
+          "sha256": "5842fda3047b46fb483c14eeb0129450c46f039d07acfb9fbb29d94ab7eead80"
+        },
+        {
+          "path": "packages/db/conversation-memory.ts",
+          "sha256": "9d7cebdde60697ac79d3c5be30c145858bd83820566ac1d765f6fa8c09137c40"
+        },
+        {
+          "path": "packages/orchestration/src/objective-loop.ts",
+          "sha256": "11478bacff1d6307ee187e9ec90352424d6de60f446ff5c49cca97ea1ecd57c5"
+        },
+        {
+          "path": "apps/api/app/api/works/[id]/objective/route.ts",
+          "sha256": "1b82d6b2ab13ed4a23677477db654b3ef705a474c91e1a6c4c7c33f701e7c3d4"
+        },
+        {
+          "path": "apps/worker/src/queue.ts",
+          "sha256": "d7b9bcacad8f78ed92343e57ed31df8fd5bfcbff149cbbbb29c62361c8bd2082"
+        },
+        {
+          "path": "scripts/memory/worker-once.mts",
+          "sha256": "e270a7a2b28933655815be73a6a925856d60e6a434983f40a4bb41cf69e29d63"
+        },
+        {
+          "path": "scripts/memory/run-boundaries.mts",
+          "sha256": "d3bc79cacd339c969cc0db76463375c16ee869b28071abe4b51ace4ab0cb913f"
+        }
+      ]
+    },
+    {
+      "artifact": "memory-evidence/2026-10-29T20-37-35.658Z/results.json",
+      "sha256": "4051daf84a27e74446b71379c97359d248a5604503093f51bdde19dbe8cac761",
+      "cases": [
+        {
+          "id": "compaction-negative-and-immutable-source",
+          "status": "PASS"
+        }
+      ],
+      "model": null,
+      "physicalAttempts": null,
+      "sourceHashes": [
+        {
+          "path": "packages/orchestration/src/conversation.ts",
+          "sha256": "2595202ed13ed63e58ac1c3b5b88571d4fae7984ded649f82b15f55bec98f8d9"
+        },
+        {
+          "path": "packages/orchestration/src/conversation-kernel.ts",
+          "sha256": "297585426756fb65152b9ba285d91dfe285d4c2d2edb3a38f9aaed9611c79b7c"
+        },
+        {
+          "path": "packages/orchestration/src/planner.ts",
+          "sha256": "e9c3cd8c754760ef2a65e0f8a054a663fb0cd7d335ffa539a69a8b6b3e2006ff"
+        },
+        {
+          "path": "packages/orchestration/src/objective-loop.ts",
+          "sha256": "11478bacff1d6307ee187e9ec90352424d6de60f446ff5c49cca97ea1ecd57c5"
+        },
+        {
+          "path": "packages/db/index.ts",
+          "sha256": "7f4df1d179b9faffbf72d8f934e0a7eb1387c6d79a002c878c4be581f3b4076b"
+        },
+        {
+          "path": "packages/shared-types/src/conversation-context.ts",
+          "sha256": "1d37c3d0057f2b0174cf1e3177df8d94895ee7c9389c78b6cb4ff6bf8deedf1b"
+        },
+        {
+          "path": "scripts/memory/verification-plan.json",
+          "sha256": "bb9236eecbba1de16b53bbb49663b0e531611d3cdbd43220e89e91ec05c6fe95"
+        }
+      ]
+    },
+    {
+      "artifact": "memory-evidence/2026-10-29T20-38-53.427Z/results.json",
+      "sha256": "ed9cedc24085efe2558a7c9ff08cb59530a453261cf59ee1a843ba8270b231f6",
+      "cases": [
+        {
+          "id": "empty-extraction-preserves-original-user-evidence",
+          "status": "PASS"
+        }
+      ],
+      "model": null,
+      "physicalAttempts": null,
+      "sourceHashes": [
+        {
+          "path": "packages/orchestration/src/conversation.ts",
+          "sha256": "2595202ed13ed63e58ac1c3b5b88571d4fae7984ded649f82b15f55bec98f8d9"
+        },
+        {
+          "path": "packages/orchestration/src/conversation-kernel.ts",
+          "sha256": "297585426756fb65152b9ba285d91dfe285d4c2d2edb3a38f9aaed9611c79b7c"
+        },
+        {
+          "path": "packages/orchestration/src/planner.ts",
+          "sha256": "e9c3cd8c754760ef2a65e0f8a054a663fb0cd7d335ffa539a69a8b6b3e2006ff"
+        },
+        {
+          "path": "packages/orchestration/src/objective-loop.ts",
+          "sha256": "11478bacff1d6307ee187e9ec90352424d6de60f446ff5c49cca97ea1ecd57c5"
+        },
+        {
+          "path": "packages/db/index.ts",
+          "sha256": "7f4df1d179b9faffbf72d8f934e0a7eb1387c6d79a002c878c4be581f3b4076b"
+        },
+        {
+          "path": "packages/shared-types/src/conversation-context.ts",
+          "sha256": "1d37c3d0057f2b0174cf1e3177df8d94895ee7c9389c78b6cb4ff6bf8deedf1b"
+        },
+        {
+          "path": "scripts/memory/verification-plan.json",
+          "sha256": "bb9236eecbba1de16b53bbb49663b0e531611d3cdbd43220e89e91ec05c6fe95"
+        }
+      ]
+    },
+    {
+      "artifact": "memory-evidence/real-2026-10-29T20-36-49.300Z/results.json",
+      "sha256": "4764ae3e5c2b8e462ab50b621427a42cc5190bf6e60da2ed564414e619dc34ba",
+      "cases": [
+        {
+          "id": "thirty-real-model-exchanges",
+          "status": "PASS"
+        },
+        {
+          "id": "corrected-financial-model-assumptions",
+          "status": "PASS"
+        },
+        {
+          "id": "unknown-fact-and-unverified-action",
+          "status": "PASS"
+        },
+        {
+          "id": "paraphrased-topic-resumption",
+          "status": "PASS"
+        },
+        {
+          "id": "temporal-reference",
+          "status": "PASS"
+        }
+      ],
+      "model": "openai/gpt-oss-20b",
+      "physicalAttempts": 10,
+      "sourceHashes": [
+        {
+          "path": "packages/orchestration/src/conversation-memory.ts",
+          "sha256": "148533a3defcbe1471e4d7dd2fa27fb0b6cd6875ff8239a887a89d883734289a"
+        },
+        {
+          "path": "packages/orchestration/src/conversation-prompt.ts",
+          "sha256": "b654d8c02cea9c5353946dd3c0930945c23ccc0968dd8e5c031b19e9dd513089"
+        },
+        {
+          "path": "packages/orchestration/src/conversation.ts",
+          "sha256": "2595202ed13ed63e58ac1c3b5b88571d4fae7984ded649f82b15f55bec98f8d9"
+        },
+        {
+          "path": "packages/tools/src/model-context.ts",
+          "sha256": "70452cf02f21706c71ffcb64140ae242addb44cb12465280992386aa1fca6aa9"
+        },
+        {
+          "path": "packages/tools/src/llm.ts",
+          "sha256": "63f4c1098dd0e38a7e2162e5b5a3b942101d7b4a9b297a81985e88fb67f0a562"
+        },
+        {
+          "path": "packages/db/conversation-memory.ts",
+          "sha256": "9d7cebdde60697ac79d3c5be30c145858bd83820566ac1d765f6fa8c09137c40"
+        },
+        {
+          "path": "scripts/memory/run-real-quality.mts",
+          "sha256": "0848f41c6de6bef1510f0e552caa287aab15643b01a377d48a82af1e51ecd33c"
+        }
+      ]
+    }
+  ],
+  "gates": {
+    "typecheck": "PASS; final product code",
+    "existingRegressionTests": "29 PASS in4 suites",
+    "apiBuild": "PASS on pre-final memory-guard cut; final guard source typechecked and exercised through actual handlers",
+    "registryManifest": "46/46 PASS",
+    "domainBoundary": "PASS",
+    "migrationBundle": "236 migrations bundled",
+    "mountedReload": "INCONCLUSIVE: browser control disabled in Work settings",
+    "productionActivation": "NOT_PERFORMED; baseline still active",
+    "independentFinalReview": "Prior independent findings were addressed; latest source-preservation guards have direct E2E evidence, without a further independent review after reviewer usage limit"
+  }
+}

@@ -16,6 +16,9 @@ import { and, eq, gte, sql } from "drizzle-orm";
 import { initObservability, Sentry } from "./observability";
 import { observeAiOperation } from "./langfuse";
 import { orderProvidersByHealth, recordOutcome } from "./provider-health";
+import { compositeContextWindowTokens, LLMContextBudgetError } from "./model-context";
+
+export { countPromptTokensUpperBound, resolveLLMContextBudget, LLMContextBudgetError, type LLMContextBudget, type LLMContextBudgetErrorCode } from "./model-context";
 
 export type LLMPurpose = "planning" | "critic" | "repair" | "classification" | "answer";
 export type LLMChannel = "voice" | "text" | "console" | "background";
@@ -39,6 +42,7 @@ export interface LLMCallOptions {
   signal?: AbortSignal;
   /** Explicit bounded output allowance; defaults retain each native adapter profile. */
   maxOutputTokens?: number;
+  reasoningEffort?: "low" | "medium" | "high";
 }
 export interface LLMUsage {
   model: string;
@@ -55,6 +59,9 @@ export type LLMProviderQualificationIdentity =
   | { transport: "custom"; name: string; revision: string };
 export interface LLMProvider {
   readonly qualificationIdentity?: LLMProviderQualificationIdentity;
+  /** Explicit supported ceiling for custom providers; all fallbacks must fit it. */
+  readonly contextWindowTokens?: number;
+  withContextWindow?(minimumTokens: number): LLMProvider;
   name: string;
   /** Usage belongs to the immediately preceding complete() call. Providers that do
    * not return it leave it undefined rather than estimating it. */
@@ -462,6 +469,22 @@ export class CompositeProvider implements LLMProvider {
   recordsHealthInternally = true;
   constructor(private providers: LLMProvider[]) {}
 
+  get contextWindowTokens(): number {
+    return compositeContextWindowTokens(this.providers);
+  }
+
+  withContextWindow(minimumTokens: number): LLMProvider {
+    const eligible = this.providers.filter(provider => {
+      try { return compositeContextWindowTokens([provider]) >= minimumTokens; }
+      catch (error) {
+        if (error instanceof LLMContextBudgetError && error.code === "UNKNOWN_CAPACITY") return false;
+        throw error;
+      }
+    });
+    if (!eligible.length) throw new LLMProviderSelectionError("No configured provider can fit the required conversation context");
+    return new CompositeProvider(eligible);
+  }
+
   lastUsage?: LLMUsage;
   lastAttempts: Array<Record<string, unknown>> = [];
   selectedProviderName?: string;
@@ -522,19 +545,16 @@ export class GroqProvider implements LLMProvider {
   lastUsage?: LLMUsage;
   lastAttempts: Array<Record<string, unknown>> = [];
 
-  constructor(apiKey = process.env.GROQ_API_KEY, model = process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile") {
+  constructor(apiKey = process.env.GROQ_API_KEY, model = process.env.GROQ_MODEL ?? "openai/gpt-oss-120b") {
     if (process.env.AWS_BEDROCK_AUTH_MODE === "iam") throw new LLMProviderSelectionError("Groq is disabled in Bedrock IAM deployments");
     if (!apiKey) throw new Error("GROQ_API_KEY is not set");
     // No SDK-level retries: a throttled call fails in milliseconds and we fail over
     // to the next model, whose rate-limit bucket is separate — instead of sitting
     // out a 20-40s retry-after on the free tier.
     this.client = new Groq({ apiKey, timeout: 8_000, maxRetries: 0 });
-    // 70B first: this model's whole job is precise structured-field extraction (which
-    // action_type, which exact payload fields) — the 8B model is fast but was
-    // regularly stuffing entire sentences into single fields and misrouting between
-    // similarly-named actions. 8B stays as the fallback for when 70B is rate-limited,
-    // not the default.
-    const fallbacks = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
+    // Keep configured primary identity; current supported fallbacks have a
+    // documented 131,072-token window and independent rate-limit buckets.
+    const fallbacks = (process.env.GROQ_FALLBACK_MODELS ?? "openai/gpt-oss-120b,openai/gpt-oss-20b").split(",").map(value => value.trim()).filter(Boolean);
     this.models = [model, ...fallbacks.filter((m) => m !== model)];
   }
 
@@ -564,6 +584,7 @@ export class GroqProvider implements LLMProvider {
             ],
             temperature: 0.1,
             max_tokens: sharedOpts.maxOutputTokens ?? 700,
+            ...(/^openai\/gpt-oss-(?:20b|120b)$/.test(model) && sharedOpts.reasoningEffort ? { reasoning_effort: sharedOpts.reasoningEffort } : {}),
             ...(sharedOpts.json ? { response_format: { type: "json_object" as const } } : {}),
           },
           { signal: sharedOpts.signal, timeout },
@@ -675,6 +696,8 @@ function withObservability(provider: LLMProvider): LLMProvider {
   return {
     name: provider.name,
     get qualificationIdentity() { return provider.qualificationIdentity; },
+    get contextWindowTokens() { return provider.contextWindowTokens; },
+    ...(provider.withContextWindow ? { withContextWindow: (minimum: number) => withObservability(provider.withContextWindow!(minimum)) } : {}),
     get lastUsage() { return provider.lastUsage; },
     get lastAttempts() { return provider.lastAttempts; },
     get selectedProviderName() { return provider.selectedProviderName; },
@@ -834,9 +857,16 @@ export function resolveProviderForRequest(request: LLMRouteRequest): LLMProvider
   }
   const selected = names.map((name) => providers.get(name)!.factory());
   const provider = selected.length === 1 ? selected[0]! : new CompositeProvider(selected);
-  const boundProvider: LLMProvider = {
+  return withObservability(bindProviderToRequest(provider, request));
+}
+
+function bindProviderToRequest(provider: LLMProvider, request: LLMRouteRequest): LLMProvider {
+  const channel = request.channel ?? "text";
+  return {
     name: provider.name,
     get qualificationIdentity() { return provider.qualificationIdentity; },
+    get contextWindowTokens() { return provider.contextWindowTokens; },
+    ...(provider.withContextWindow ? { withContextWindow: (minimum: number) => bindProviderToRequest(provider.withContextWindow!(minimum), request) } : {}),
     get lastUsage() { return provider.lastUsage; },
     get lastAttempts() { return provider.lastAttempts; },
     get selectedProviderName() { return provider.selectedProviderName; },
@@ -852,7 +882,6 @@ export function resolveProviderForRequest(request: LLMRouteRequest): LLMProvider
       });
     },
   };
-  return withObservability(boundProvider);
 }
 
 /** Purpose/channel-aware resolver used by orchestration and answer plugins. The

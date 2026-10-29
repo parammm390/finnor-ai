@@ -1,0 +1,70 @@
+{
+  "schema": "finnor.conversation-memory-verification.v1",
+  "baseline": "f80266f8e50356e8537bc3d4a4475a601225fc1e",
+  "scope": "Authenticated employee Investigation conversation, answer/planner and durable Objective memory",
+  "failureModel": "docs/conversation-memory-failure-model.md",
+  "commands": {
+    "transportAndPersistence": "node_modules/.bin/tsx scripts/memory/run-e2e.mts",
+    "restartAndObjectives": "node_modules/.bin/tsx scripts/memory/run-boundaries.mts",
+    "realModelQuality": "node_modules/.bin/tsx scripts/memory/run-real-quality.mts",
+    "typecheck": "npm run typecheck",
+    "buildApi": "npm run build --workspace @finnor/api"
+  },
+  "cases": [
+    {
+      "id": "answer-history-delivery",
+      "oracle": "The actual model request includes the earlier source and latest correction through the current accepted sequence."
+    },
+    {
+      "id": "thirty-complete-exchanges",
+      "oracle": "Persist 30 user and assistant exchanges; recall early and middle requirements and exact artifact identifiers through real handler and model input."
+    },
+    {
+      "id": "repeated-compaction",
+      "oracle": "At least three committed compactions preserve source-backed constraints and corrections; final answer uses the corrected value."
+    },
+    {
+      "id": "paraphrase-and-topic-resumption",
+      "oracle": "Original source is retrieved for a paraphrased reference after a topic switch."
+    },
+    {
+      "id": "temporal-and-multi-message",
+      "oracle": "Time ordering and distinct facts across source messages are interpreted correctly."
+    },
+    {
+      "id": "unknown-and-action-status",
+      "oracle": "No invented fact or verified effect follows from missing source or assistant claims."
+    },
+    {
+      "id": "private-isolation",
+      "oracle": "Other employees and tenants cannot read or bind private messages, summaries or retrieval results."
+    },
+    {
+      "id": "concurrent-sequence-fence",
+      "oracle": "Earlier request excludes a later concurrently submitted turn."
+    },
+    {
+      "id": "compactor-retry-and-restart",
+      "oracle": "Duplicate, stale and interrupted publication cannot regress coverage or lose durable original messages."
+    },
+    {
+      "id": "objective-restart-binding",
+      "oracle": "Fresh worker loads only the accepted Work-input conversation, independent of later chat; current authority stays separate."
+    },
+    {
+      "id": "model-budget",
+      "oracle": "Whole request fits the declared minimum fallback capacity; newest exchange and mandatory fields survive; impossible fit is explicit."
+    },
+    {
+      "id": "migration-and-legacy",
+      "oracle": "Old transcripts remain usable, migration rerun is idempotent, and legacy Work inputs cannot acquire unrelated memory."
+    }
+  ],
+  "operationalLimits": {
+    "perRunWallSeconds": 1800,
+    "realModelCallsMaximum": 45,
+    "repeatFailedCaseMaximumBeforeDiagnosis": 2
+  },
+  "rerunRule": "Retain original failures; rerun only affected cases after a concrete source/fixture repair. Limits never relax a required predicate.",
+  "evidence": "Each run records exact source hashes, inputs, expected observations, HTTP/DB/queue/model steps, checkpoints and source coverage, output, failures and rerun command. Deterministic provider transport is not model-quality evidence."
+}

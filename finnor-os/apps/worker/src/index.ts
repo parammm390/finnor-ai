@@ -124,6 +124,7 @@ export function createWorker(): JobQueue {
   queue.register("repair_plan_after_terminal_failure", repairPlanAfterTerminalFailure, PRODUCTION_JOB_CONTRACTS.repair_plan_after_terminal_failure);
   queue.register("purge_retention", purgeRetention, PRODUCTION_JOB_CONTRACTS.purge_retention);
   queue.register("run_objective_iteration", runObjectiveIteration, PRODUCTION_JOB_CONTRACTS.run_objective_iteration);
+  queue.register("compact_employee_conversation_v1", compactEmployeeConversationJob, PRODUCTION_JOB_CONTRACTS.compact_employee_conversation_v1);
   queue.register("run_workforce_assignment", runWorkforceAssignment, PRODUCTION_JOB_CONTRACTS.run_workforce_assignment);
   queue.register("recover_objectives", recoverObjectives, PRODUCTION_JOB_CONTRACTS.recover_objectives);
   queue.register("run_computer_task", runComputerTask, PRODUCTION_JOB_CONTRACTS.run_computer_task);
@@ -273,3 +274,4 @@ if (isMain) {
     process.exit(1);
   });
 }
+import { compactEmployeeConversationJob } from "./handlers/compact-employee-conversation";

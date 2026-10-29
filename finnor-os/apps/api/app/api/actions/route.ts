@@ -211,6 +211,8 @@ export async function POST(req: Request): Promise<Response> {
         threadId: body.data.threadId,
         instruction: body.data.instruction,
         instructionId: received.instructionId,
+        workId: received.workId,
+        workInputId: received.workInputId,
         idempotencyKey: body.data.idempotencyKey,
         channel: body.data.channel,
         transportSessionId: body.data.sessionId,

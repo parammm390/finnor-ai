@@ -34,6 +34,11 @@
       "import": "./src/llm.ts",
       "default": "./src/llm.ts"
     },
+    "./model-context": {
+      "types": "./src/model-context.ts",
+      "import": "./src/model-context.ts",
+      "default": "./src/model-context.ts"
+    },
     "./registry": {
       "types": "./src/registry.ts",
       "import": "./src/registry.ts",

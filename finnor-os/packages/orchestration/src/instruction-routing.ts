@@ -2,6 +2,7 @@ import type { DomainAction, OperatingInteractionContext } from "@finnor/shared-t
 import type { PlanGraph } from "@finnor/planning";
 import type { OperationalQueryDecision } from "./fast-read-lane";
 import { isConsequentialAction } from "./compiler";
+import { INFORMATIONAL_QUESTION, REQUESTED_WORK, isReadOnlyConversationQuestion } from "./conversation-intent";
 
 export const INSTRUCTION_ROUTING_POLICY_VERSION = 1 as const;
 
@@ -27,16 +28,16 @@ const ATOMIC_VERB = /^(?:please\s+)?(?:send|text|email|message|call|assign|updat
 const DIRECT_TARGET = /(?:\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b|\+\d{8,15}\b|\b[^\s@]+@[^\s@]+\.[^\s@]+\b)/i;
 const NAMED_TARGET = /\b(?:to|for|on)\s+(?:the\s+)?[\p{L}\d][\p{L}\d'’&.-]*(?:\s+[\p{L}\d][\p{L}\d'’&.-]*){0,5}\s*$/iu;
 const PREPARED_EFFECT = /\b(?:this|that|already[- ]prepared|exact)\b.*\b(?:message|task|document|finding|risk|condition|record)\b/i;
-const QUESTION_SHAPE = /^(?:(?:please\s+)?(?:how|what|which|where|when|who|is|are|do|does|did|can|could|would)\b|(?:please\s+)?(?:tell me|show(?:\s+me)?|pull\s+up|find|get|give me|list|summarize|explain)\b)|\?\s*$/i;
 const QUESTION_OBJECTIVE_LANGUAGE = [
   /\b(?:and then|then|after|before|once|until|unless|if|whenever)\b/i,
   ...OBJECTIVE_SIGNALS.slice(1),
 ];
 
 function isLightweightInformationalQuestion(instruction: string, decision: OperationalQueryDecision): boolean {
+  if (REQUESTED_WORK.test(instruction.trim())) return false;
   if (decision.route === "planner" && (decision.reason === "mutation_or_advice" || decision.reason === "external_or_ambiguous")) return false;
   const value = instruction.replace(/\s+/g, " ").trim();
-  return QUESTION_SHAPE.test(value) && !QUESTION_OBJECTIVE_LANGUAGE.some((signal) => signal.test(value));
+  return INFORMATIONAL_QUESTION.test(value) && !QUESTION_OBJECTIVE_LANGUAGE.some((signal) => signal.test(value));
 }
 
 function exactContextTarget(context: OperatingInteractionContext | Record<string, unknown> | undefined): boolean {
@@ -65,6 +66,9 @@ export function classifyInstructionRoute(input: {
   if (input.conversational) return { version: 1, route: "CONVERSATION", reasonCodes: ["non_business_conversation"] };
   if (input.fastReadDecision.route === "fast_read") {
     return { version: 1, route: "QUERY", reasonCodes: ["deterministic_canonical_read"], queryDecision: input.fastReadDecision };
+  }
+  if (isReadOnlyConversationQuestion(input.instruction)) {
+    return { version: 1, route: "CONVERSATION", reasonCodes: ["private_conversation_recall"] };
   }
   // A plain informational question outside the typed business-read grammar is
   // still not an objective. Keep it on the lightweight answer lane; business

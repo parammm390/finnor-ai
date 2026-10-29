@@ -1,3 +1,6 @@
+import { buildConversationModelInput } from "./conversation-prompt";
+import { bindWorkInputConversation, loadWorkInputConversation } from "./conversation-memory";
+import type { EmployeeConversationContext } from "@finnor/shared-types";
 // Upgrade 9: the smallest governed objective loop that sits inside Durable Work.
 //
 // This is deliberately a controller over proven primitives, not another agent
@@ -314,6 +317,7 @@ async function inspectPrivateEquityIcBasis(tenantId: string, dealId: string, wor
 
 export interface ObjectiveDecisionPlanner {
   decide(input: {
+    conversationContext?: EmployeeConversationContext | null;
     objective: string;
     inspection: ObjectiveInspection;
     allowedActionTypes: string[];
@@ -355,6 +359,7 @@ export interface ObjectiveBudgets {
 }
 
 export interface StartObjectiveOptions extends ObjectiveBudgets {
+  conversationContext?: EmployeeConversationContext;
   channel?: "voice" | "text" | "console";
   sessionId?: string;
   instructionId?: string;
@@ -505,18 +510,20 @@ export const parseObjectiveModelJson = parseModelJson;
 
 export class LLMObjectiveDecisionPlanner implements ObjectiveDecisionPlanner {
   private provider: LLMProvider | undefined;
+  private lastProvider: LLMProvider | undefined;
 
   constructor(provider?: LLMProvider) {
     this.provider = provider;
   }
 
   get providerName(): string | undefined {
-    return this.provider?.selectedProviderName ?? this.provider?.name;
+    return this.lastProvider?.selectedProviderName ?? this.lastProvider?.name ?? this.provider?.name;
   }
 
   async decide(input: Parameters<ObjectiveDecisionPlanner["decide"]>[0]): Promise<ObjectiveDecision> {
     this.provider ??= resolveProviderForPurpose("planning", input.channel);
-    const raw = await this.provider.complete({
+    const { provider: contextProvider, ...prompt } = await buildConversationModelInput({
+      provider: this.provider, conversation: input.conversationContext,
       system: [
         "You are CENTROPY's governed objective-step decision maker.",
         "Choose exactly ONE bounded next step from the current canonical business inspection.",
@@ -536,7 +543,11 @@ export class LLMObjectiveDecisionPlanner implements ObjectiveDecisionPlanner {
         'For governed external diligence evidence, computer_task requires all six typed fields: application (copy the exact configured application), authProfileRef (copy the exact active profile ref), task, target {kind:"diligence_record",identifier:<exact reference>}, mode:"READ_ONLY", and a non-empty successCriteria array. Never invent a URL, account, profile, or reference.',
         'Return one JSON object. query/action/wait may include recoveryMode: retry|replan|recover|compensate|escalate. Shapes: {"kind":"query","request":{"intent":"..."},"reason":"...","nextStep":"..."}; {"kind":"action","actionType":"...","payload":{},"reason":"...","nextStep":"..."}; {"kind":"wait","waitFor":{"eventType":"delegation.acknowledged","delegationId":"exact UUID","subject":{"type":"employee","id":"exact UUID"}},"deadlineAt":"optional ISO","condition":"short label","reason":"..."}; {"kind":"complete","outcome":{},"evidence":[{"kind":"canonical_query","request":{"intent":"..."},"assertion":{"path":["rows"],"operator":"array_contains","expected":{}}}],"reason":"..."}; {"kind":"block","reason":"...","recovery":"..."}; {"kind":"fail","reason":"...","failure":{}}.',
       ].join("\n"),
-      user: JSON.stringify({ objective: input.objective, remainingBudget: input.remaining, canonicalInspection: input.inspection }),
+      required: { objective: input.objective, remainingBudget: input.remaining, canonicalInspection: input.inspection },
+    });
+    this.lastProvider = contextProvider;
+    const raw = await contextProvider.complete({
+      ...prompt,
       json: true,
       tenantId: input.tenantId,
       traceId: input.workId,
@@ -659,6 +670,7 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
       activeContext: undefined,
       authorityContext: intakeAuthorityContext(ctx),
     });
+  await bindWorkInputConversation({ ctx, workId: input.workId, workInputId: input.workInputId, conversation: options.conversationContext });
   const acceptedInput = await latestWorkInput(ctx.tenantId, input.workId);
   if (!acceptedInput || acceptedInput.id !== input.workInputId) throw new Error("Objective input is no longer the active Work input");
   const interaction = await resolveOperatingInteractionContext({
@@ -2631,12 +2643,14 @@ export class ObjectiveLoopRuntime {
           ctx,
           plugins: this.plugins,
         });
+        const conversationContext = await loadWorkInputConversation({ ctx, workId: params.workId, workInputId: inputs.workInputId });
         let planning: PlanningResult;
         let compatibilityDecision: ObjectiveDecision | undefined;
         if (this.compatibilityPlanner) {
           const { plannerActionTypesForVertical } = await import("./plugin-registry");
           const allowedActionTypes = plannerActionTypesForVertical(this.plugins, inputs.verticalKey);
           const proposed = await this.compatibilityPlanner.decide({
+            conversationContext,
             objective: loop.objective,
             inspection,
             allowedActionTypes,
@@ -2680,6 +2694,7 @@ export class ObjectiveLoopRuntime {
           )).orderBy(desc(workPlannerAttempts.attempt)).limit(1));
           const previousCompilation = previousRejected?.compilationResult as { candidates?: Array<{ candidateKey?: string; violations?: unknown[] }> } | null | undefined;
           const operating = await assembleOperatingContext(ctx, {
+            conversationContext: conversationContext ?? undefined,
             instruction: loop.objective,
             workId: params.workId,
             ...(isRecord(inspection.work.activeContext) ? { activeContext: inspection.work.activeContext } : {}),

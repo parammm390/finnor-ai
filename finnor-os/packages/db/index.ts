@@ -6,7 +6,7 @@
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "./schema";
-import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
 import {connectWithExecutionDeadline,queryWithExecutionDeadline} from "./execution-deadline";
 import { CURRENT_MIGRATION_HEAD } from "./migration-head";
@@ -42,6 +42,7 @@ export * from "./identification-resources";
 export { pgConnectionConfig } from "./postgres-connection.mjs";
 export * from "./execution-deadline";
 export * from "./governed-egress";
+export * from "./conversation-memory";
 export { schema };
 
 export type Db = NodePgDatabase<typeof schema>;
@@ -2282,7 +2283,7 @@ function iso(value: Date | string): string {
   return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
 }
 
-function conversationMessage(row: typeof schema.employeeConversationMessages.$inferSelect): EmployeeConversationMessage {
+export function conversationMessage(row: typeof schema.employeeConversationMessages.$inferSelect): EmployeeConversationMessage {
   return {
     id: row.id,
     threadId: row.threadId,
@@ -2454,6 +2455,7 @@ export async function loadEmployeeConversationThread(params: {
   threadId: string;
   messageLimit?: number;
   beforeSequence?: number;
+  throughSequence?: number;
 }): Promise<LoadedEmployeeConversationThread | null> {
   requireEmployeeOwner(params.ownerEmployeeId);
   const messageLimit = Math.max(1, Math.min(params.messageLimit ?? 50, 200));
@@ -2472,6 +2474,7 @@ export async function loadEmployeeConversationThread(params: {
       eq(schema.employeeConversationMessages.ownerEmployeeId, params.ownerEmployeeId),
       eq(schema.employeeConversationMessages.threadId, params.threadId),
       before,
+      params.throughSequence !== undefined ? sql`${schema.employeeConversationMessages.sequence} <= ${params.throughSequence}` : sql`true`,
     )).orderBy(desc(schema.employeeConversationMessages.sequence)).limit(messageLimit);
     return {
       thread: {
@@ -2571,9 +2574,19 @@ export async function updateEmployeeConversationThreadContext(params: {
   outcomeRefs?: Array<Record<string, unknown>>;
   summary?: string | null;
   summaryThroughSequence?: number;
+  throughSequence?: number;
 }): Promise<void> {
   requireEmployeeOwner(params.ownerEmployeeId);
   await withTenant(params.tenantId, async (db) => {
+    if (params.throughSequence !== undefined) {
+      await db.execute(sql`SELECT id FROM ${schema.employeeConversationThreads} WHERE id=${params.threadId}
+        AND tenant_id=${params.tenantId} AND owner_employee_id=${params.ownerEmployeeId} FOR UPDATE`);
+      const [later] = await db.select({ id: schema.employeeConversationMessages.id }).from(schema.employeeConversationMessages).where(and(
+        eq(schema.employeeConversationMessages.threadId, params.threadId),
+        eq(schema.employeeConversationMessages.role, "user"), gt(schema.employeeConversationMessages.sequence, params.throughSequence),
+      )).limit(1);
+      if (later) return;
+    }
     const now = new Date();
     const rows = await db.update(schema.employeeConversationThreads).set({
       ...(params.activeReferences ? { activeReferences: boundedJson(params.activeReferences, 64_000) as object[] } : {}),
@@ -2632,6 +2645,7 @@ export async function searchEmployeeConversationMessages(params: {
   query: string;
   threadId?: string;
   limit?: number;
+  throughSequence?: number;
 }): Promise<EmployeeConversationMessage[]> {
   requireEmployeeOwner(params.ownerEmployeeId);
   const terms = params.query.replace(/[^\p{L}\p{N}@._ -]+/gu, " ").trim().slice(0, 500);
@@ -2642,6 +2656,7 @@ export async function searchEmployeeConversationMessages(params: {
       eq(schema.employeeConversationMessages.tenantId, params.tenantId),
       eq(schema.employeeConversationMessages.ownerEmployeeId, params.ownerEmployeeId),
       params.threadId ? eq(schema.employeeConversationMessages.threadId, params.threadId) : sql`true`,
+      params.throughSequence !== undefined ? sql`${schema.employeeConversationMessages.sequence} <= ${params.throughSequence}` : sql`true`,
       sql`to_tsvector('simple',${schema.employeeConversationMessages.originalText}) @@ plainto_tsquery('simple',${terms})`,
     )).orderBy(desc(schema.employeeConversationMessages.createdAt)).limit(limit);
     return rows.map(conversationMessage);
