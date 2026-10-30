@@ -1,0 +1,71 @@
+# Z1 native integrated session — progress note
+
+Scope: Z1 only. This note records engineering state, not admission. No protected
+authority, qualification, 100× or activation is claimed here or by the run.
+
+## Branch
+
+`w/z1-native`, coordinator-owned. Base: integrated candidate `a5209ab`.
+
+- `7e88d22` failure model `scope-z/phase-evidence/z1/native-integrated-failure-model.md`
+- `f8f296e` merge of the Z4 native stack support (auth-tls, production build, z4 profile)
+- `6ec7669` z1 profile carries the S3/S4 owner stores (`--s3-python`, stores under
+  state `z4-stores/`), bounded `--budget-ms` (600000–7200000) on launcher and runner
+- `75b1fe6` queue census and owned workers on the separate `finnor_worker` role:
+  guard requires `FINNOR_Z1_WORKER_DATABASE_URL` (loopback, same database, the
+  manifest's `database.workerRole`, distinct from the application role), verifies the
+  application processes never hold it; driver verifies the worker role is
+  nonprivileged and not the application role, checks the census against the
+  tenant-scoped view (positive control), spawns owned workers with the worker role
+  URL; migration-name pattern accepts the `post`-series files; README updated
+- `86fb6ab` `finnor-os/scripts/project-z/native/z1-session.mjs` scenario
+
+## Session scenario design (z1-session.mjs)
+
+1. Reads `native-environment-01.private.json` (requires the launcher run with
+   `--no-worker`, z1 profile and `--s3-python`), asserts scenario-owned workers.
+2. Real Auth password grant; `/api/centropy/me` owner identity.
+3. Product-library seeding (app role): deal rooted at the phase-9 target
+   organization `90000000-0000-4000-8000-000000000027`, one active investment case,
+   three original Works + one foreign-root Work, five canonical evidence sources,
+   four S5 compute allocation resources (logical/cpu/storage/memory).
+4. Real S3 fit → S4 synthesize → S5 resource/clear → S4 handoff over authenticated
+   loopback HTTP on 3101, via `createUpstreamFixtureSupport` in existing mode
+   (root = the phase-9 external organization; admin client sets
+   `app.test_vertical_mode='explicit'`; pinned `FINNOR_S3_PYTHON` generates the
+   reference rows). The fit/synthesize stores come from the launcher.
+5. One unresolved S6 obligation bound to Work 3 through
+   `prepareEnterpriseDurableObligation(..., { workId })` in the scenario process
+   (the HTTP prepare route takes no workId), verified in `domain_actions`,
+   `business_effects`, `s6_obligation_origins` (`workLineage`).
+6. Bindings read after all seeding (authority revision stable), fixture
+   materialized offline by `make-native-fixture.mjs`, installed source stamped by
+   `stamp-installed.mjs` with declared reconstruction input (HEAD commit/tree,
+   `git diff --binary a5209ab HEAD`, `git archive HEAD` digests).
+7. Target manifest pins: SOURCE_DEVELOPMENT flavor, loopback frontend/API, same
+   auth origin, database name/port/role/workerRole, fixture digest, applied
+   migration head, native schema digest, `z1_%` catalog digest, browser executable
+   digest, and the three listener processes by `/proc` (pid, start ticks, uid,
+   executable digest, port, command-line digest, cwd).
+8. Queue census on the worker role must be empty before the episode (exclusive
+   queue custody), then `z1/native-e2e.mjs --report <new dir>` runs the guarded
+   driver (ORIGINAL_EPISODE: seven stages, three physical SIGKILLs at
+   CLAIM/CHECKPOINT/DELIVERY, duplicate replay, cancellation, stale-claim refusal).
+
+## Runs (remote verify host, one stack at a time)
+
+- `w1-native-01`: first attempt at `86fb6ab`, queued on the stack lock.
+  Evidence: `fzv-int-out/native/w1-native-01/` and
+  `fzv-int-out/native/w1-native-01/scenario-01/z1-native-e2e-report-01/`.
+  Rerun: new immutable name only (e.g. `w1-native-02`), same command shape:
+  `native-run.sh <name> z1 finnor-os/scripts/project-z/native/z1-session.mjs
+  --no-worker --budget-ms=7200000 --forward-env=PLAYWRIGHT_BROWSERS_PATH`
+  with `PLAYWRIGHT_BROWSERS_PATH=/home/factory-user/repos/fzv-browsers` and the
+  pinned `FINNOR_S3_PYTHON` exported.
+
+## Known limits of this attempt
+
+- SOURCE_DEVELOPMENT flavor only; SEPARATELY_INSTALLED_DEVELOPMENT (pinned builds,
+  `FINNOR_Z1_INSTALLED_DEVELOPMENT=1`) is a later run on the frozen final cut.
+- Costs remain UNKNOWN; interrupted physical attempts retain UNKNOWN responsibility.
+- The scenario claims no admission; the guarded report is the only result.
