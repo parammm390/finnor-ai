@@ -12,7 +12,7 @@ import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   readNativeEnvironment, signInOwner, startOwnedWorker, createOriginalInstitutionParent,
-  driveAcquisitionToModelReady, submitInstitutionAcquisition,
+  driveAcquisitionToModelReady, submitInstitutionAcquisition, createStandaloneApplicationWork,
 } from "./x1-origin-fixture.mts";
 
 const state = process.env.FINNOR_NATIVE_STATE, evidence = process.env.FINNOR_NATIVE_EVIDENCE;
@@ -134,6 +134,99 @@ await runCase("P0-08", "Anonymous acquisition is refused with no state change", 
   ensure(after.sessions === before.sessions && sameBudget(before, after), "ANONYMOUS_CHANGED_STATE");
   return { status: submitted.response.status };
 });
+
+
+/**
+ * `reject` mode (failure model section 12): the remaining G1 rejects and the standalone control, each on the same
+ * fresh original parent. It ends the run: the original Work admits one root application parent, and P0-15 consumes it.
+ */
+if (process.env.FINNOR_Z0_MODE === "reject") {
+  const STOP = ["MODEL_READY", "FAILED", "BLOCKED", "UNKNOWN", "STALE", "CANCELLED"];
+  let ordinary = null;
+  await runCase("P0-13a", "An ordinary Work (no X1 episode, own resource) exists beside the original parent", async () => {
+    ordinary = await createStandaloneApplicationWork(env, parent);
+    const [episodes] = await q("SELECT count(*)::int n FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND work_id=$2", [parent.tenantId, ordinary.workId]);
+    ensure(episodes.n === 0 && ordinary.workId !== parent.workId && !Object.values(parent.resources).includes(ordinary.resourceId), "ORDINARY_WORK_IS_NOT_ORDINARY");
+    return { detail: { workId: ordinary.workId, resourceId: ordinary.resourceId, x1Episodes: episodes.n } };
+  });
+  const sessionsOf = async workId => (await q("SELECT count(*)::int n FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND work_id=$2", [parent.tenantId, workId]))[0].n;
+  await runCase("P0-13", "NO_ORIGINAL_PARENT: an ordinary Work carrying the original parent's selector is refused", async () => {
+    if (!ordinary) return { outcome: "NOT_RUN", detail: { reason: "ordinary Work was not created (P0-13a)" } };
+    const before = await witness(parent), ordinaryBefore = await sessionsOf(ordinary.workId);
+    const submitted = await submitInstitutionAcquisition(env, parent, { privateRoot, record,
+      mutate: request => ({ ...request, workId: ordinary.workId, resourceDemand: [{ resourceId: ordinary.resourceId, unit: "request", amount: "480" }] }) }, owner);
+    await submitted.handle.portal.stop();
+    const after = await witness(parent);
+    ensure(submitted.response.status >= 400 && submitted.response.status < 500, "NOT_REFUSED_" + submitted.response.status);
+    ensure(after.sessions === before.sessions && await sessionsOf(ordinary.workId) === ordinaryBefore && after.charges.count === before.charges.count && sameBudget(before, after), "REFUSAL_CHANGED_OWNER_STATE");
+    return { detail: { status: submitted.response.status, body: submitted.response.body, before, after } };
+  });
+  await refusal({ id: "14", title: "DEADLINE_EXPIRED: an already expired deadline is refused" },
+    { mutate: request => ({ ...request, deadlineAt: new Date(Date.now() - 60000).toISOString() }) }, ["Z0_ORIGINAL_DEADLINE_EXHAUSTED_OR_EXTENDED", "DEADLINE"]);
+  let firstSession = null;
+  await runCase("P0-15", "PENDING_LEARNING: a second acquisition while the first session is non-terminal is refused", async () => {
+    const before = await witness(parent);
+    const first = await submitInstitutionAcquisition(env, parent, { privateRoot, record }, owner);
+    ensure(first.response.status === 202, "FIRST_ACQUIRE_NOT_ACCEPTED_" + first.response.status);
+    const sessionId = first.response.body.sessionId, statusOf = async () => (await q("SELECT status FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parent.tenantId, sessionId]))[0]?.status;
+    const state = await statusOf();
+    try {
+      if (STOP.includes(state)) return { outcome: "NOT_RUN", reason: "PENDING_WINDOW_NOT_REACHED", detail: { statusBeforeSecond: state } };
+      const second = await submitInstitutionAcquisition(env, parent, { privateRoot, record, requestUnits: 120 }, owner);
+      await second.handle.portal.stop();
+      const text = JSON.stringify(second.response.body);
+      const roots = (await q("SELECT count(*)::int n FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND work_id=$2 AND id=parent_id", [parent.tenantId, parent.workId]))[0].n;
+      const cancelled = await owner.operation("application-cancel", { root: first.request.root, workId: parent.workId, sessionId });
+      let final = null;
+      for (let i = 0; i < 90 && !STOP.includes(final); i++) { final = await statusOf(); if (!STOP.includes(final)) await sleep(2000); }
+      const after = await witness(parent);
+      ensure(second.response.status >= 400 && second.response.status < 500, "SECOND_ACQUISITION_NOT_REFUSED_" + second.response.status);
+      ensure(roots === 1, "TWO_ORIGINAL_PARENT_ROOTS_" + roots);
+      ensure(after.reservations.count === before.reservations.count && after.original.envelopes === before.original.envelopes && after.episode === before.episode, "PENDING_REFUSAL_CHANGED_BUDGET");
+      firstSession = { sessionId, final };
+      const named = /PENDING|SUBCOMPUTATION/.test(text);
+      return { outcome: named ? "PASS" : "FAIL", detail: { predicate: named ? "PENDING_NAMED" : "REFUSED_WITHOUT_PENDING_CODE", statusBeforeSecond: state, secondStatus: second.response.status, body: second.response.body,
+        roots, cancel: { status: cancelled.status }, final, before, after } };
+    } finally { await first.handle.portal.stop(); }
+  });
+  await runCase("P0-16", "Standalone X2 on an ordinary Work stays lawful (the Z0 refusal is specific to X1 Works)", async () => {
+    if (!ordinary) return { outcome: "NOT_RUN", detail: { reason: "ordinary Work was not created (P0-13a)" } };
+    const before = await witness(parent);
+    const submitted = await submitInstitutionAcquisition(env, parent, { privateRoot, record,
+      mutate: request => { const { institutionalOrigin, ...rest } = request; return { ...rest, workId: ordinary.workId, resourceDemand: [{ resourceId: ordinary.resourceId, unit: "request", amount: "480" }] }; } }, owner);
+    try {
+      ensure(submitted.response.status === 202, `STANDALONE_NOT_ACCEPTED_${submitted.response.status}:${JSON.stringify(submitted.response.body).slice(0, 300)}`);
+      const sessionId = submitted.response.body.sessionId;
+      let row = null;
+      for (let i = 0; i < 360; i++) {
+        row = (await q("SELECT status,reason,reservation_ref,original_parent_ref,work_id::text FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parent.tenantId, sessionId]))[0];
+        if (STOP.includes(row?.status)) break;
+        await sleep(2500);
+      }
+      ensure(STOP.includes(row?.status), "STANDALONE_SESSION_DID_NOT_SETTLE_" + row?.status);
+      const after = await witness(parent);
+      const [acceptance] = await q("SELECT count(*)::int n FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 AND kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED'", [parent.tenantId, sessionId]);
+      const standaloneReservation = row.reservation_ref?.id ?? null;
+      ensure(row.work_id === ordinary.workId, "SESSION_NOT_ON_ORDINARY_WORK");
+      ensure((row.original_parent_ref?.institutionalProgramRef ?? null) === null, "STANDALONE_SESSION_CARRIES_INSTITUTIONAL_PROGRAM_REF");
+      ensure(standaloneReservation && standaloneReservation !== parent.parentReservation.id, "STANDALONE_SESSION_USES_THE_X1_PARENT_RESERVATION");
+      ensure(acceptance.n === 0, "STANDALONE_SESSION_HAS_INSTITUTION_ACCEPTANCE");
+      ensure(after.original.envelopes === before.original.envelopes && after.episode === before.episode && after.charges.count === before.charges.count && after.peRequests === before.peRequests, "STANDALONE_ACQUISITION_CHANGED_THE_X1_PARENT");
+      return { outcome: row.status === "MODEL_READY" ? "PASS" : "FAIL", detail: { predicate: row.status === "MODEL_READY" ? "STANDALONE_CHECKED_MODEL_READY" : "STANDALONE_SETTLED_" + row.status, status: row.status, reason: row.reason,
+        sessionId, standaloneReservation, parentReservation: parent.parentReservation.id, institutionalProgramRef: row.original_parent_ref?.institutionalProgramRef ?? null, before, after, firstInstitutionalSession: firstSession } };
+    } finally { await submitted.handle.portal.stop(); }
+  });
+  notRun("P0-17", "UNSUPPORTED_MODEL / INCOMPLETE_MODEL rejects", "no owner path makes the stock learner emit an unsupported or incomplete model against the disposable portal and hand-written model artifacts are forbidden; observed only through the P0-11 consumer fallback reason in the default mode run");
+  notRun("P0-18", "PRIVATE_REPLAY reject", "the disposable portal has no private-source replay surface; the learner refusal is not reachable on this fixture");
+  notRun("P0-19", "S6_UNKNOWN reject", "no UNKNOWN S6 obligation exists on the original Work: w0-native-11 resolved the lost request to VERIFIED by independent observation");
+  const tallyReject = results.reduce((acc, row) => ({ ...acc, [row.outcome]: (acc[row.outcome] ?? 0) + 1 }), {});
+  record("summary", { tally: tallyReject, results, tenantId: parent.tenantId, parents: [parent.programId] });
+  await sql.end();
+  await worker?.stop();
+  chmodSync(workerLog, 0o600);
+  console.log(JSON.stringify({ event: "Z0_SESSION_DONE", mode: "reject", tally: tallyReject }));
+  process.exit(tallyReject.FAIL ? 1 : 0);
+}
 
 const killMode = process.env.FINNOR_Z0_MODE === "kill";
 const invariants = async (before, sessionId, portalDir = null) => {

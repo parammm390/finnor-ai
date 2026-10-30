@@ -522,3 +522,36 @@ export async function createForeignIdentity(env: NativeEnvironment, options: { t
     return { tenantId, userId, email, password, sameTenantAsOwner: Boolean(options.tenantId) };
   } finally { await sql.end(); }
 }
+
+export interface StandaloneApplicationWork { workId: string; resourceId: string; units: string; tenantId: string }
+
+/**
+ * An ordinary Work (no X1 mandate, no compiler episode) on the parent's deal with its OWN compute resource, created
+ * through the same owner code the parent fixture uses. It lets the Z0 refusals be shown to be specific to X1 Works and
+ * lets a lawful standalone X2 acquisition run beside the original parent. The resource is not the original reservation.
+ */
+export async function createStandaloneApplicationWork(env: NativeEnvironment, parent: OriginalInstitutionParent, options: { units?: string } = {}): Promise<StandaloneApplicationWork> {
+  const { db, store, contracts } = await owners(env);
+  const { tenantId, ownerId: userId, dealId } = parent;
+  const ctx = { auth: { tenantId, userId, employeeId: userId, role: "owner" as const }, provenance: { sourceSystem: "existing-crm-owner", createdBy: userId } };
+  const units = options.units ?? "520", tag = randomUUID().slice(0, 8);
+  const intake = await db.receiveWork({ tenantId, userId, channel: "console", idempotencyKey: `z0-standalone-intake:${tag}:${randomUUID()}`,
+    instruction: "Ordinary application-learning Work with no institutional mandate",
+    activeContext: { entityType: "pe_deal", entityId: dealId }, authorityContext: { principalId: userId, scope: "DISPOSABLE_STANDALONE_APPLICATION_LEARNING_ONLY" } });
+  const workId = intake.workId as string;
+  await db.attachWorkEntity(tenantId, workId, { entityType: "pe_deal", entityId: dealId, source: "Z0:standalone-owner-registration" });
+  const sql = await admin(env);
+  try {
+    const rights = String((await sql.query("SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1", [tenantId])).rows[0].revision);
+    const ref = (ownerName: string, id: string) => ({ owner: ownerName, id, version: "owner-fixture-v1", contentDigest: sha(id) });
+    const resourceId = `z0-standalone-compute-${tag}`, start = new Date().toISOString(), until = new Date(Date.now() + 2 * 3600000).toISOString();
+    await store.putAllocationResource(ctx, contracts.parseAllocationResource({ schema: "finnor.allocation-resource.v1", resourceId, resourceClass: "COMPUTE", tenantId,
+      ownerRef: ref("BUSINESS_OWNER", userId), legalEntityRef: ref("S1", dealId), scopeRef: ref("BUSINESS_OWNER", "z0-standalone-" + tag),
+      permittedRoots: [{ entityType: "pe_deal", entityId: dealId }], rightsRef: `authority:${tenantId}:${rights}`,
+      unit: "request", currency: null, kind: "CUMULATIVE_EXPENDITURE", horizon: { startAt: start, periodMs: 3600000, periods: 2 },
+      sourceRef: ref("BUSINESS_OWNER", "capacity:" + resourceId), asOf: start, knowledgeAt: start, validUntil: until, beliefPins: [],
+      availability: [{ amount: units, basis: "REPORTED_AVAILABLE" }, { amount: units, basis: "REPORTED_AVAILABLE" }, { amount: units, basis: "REPORTED_AVAILABLE" }],
+      existingUse: ["0", "0", "0"], safetyMargin: "0", covenants: [], revoked: false, qualification: "AUTHENTICATED_OWNER_ASSERTION_UNADMITTED" }), null);
+    return { workId, resourceId, units, tenantId };
+  } finally { await sql.end(); }
+}
