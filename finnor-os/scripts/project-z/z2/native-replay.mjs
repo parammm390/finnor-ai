@@ -561,7 +561,9 @@ try {
     const browserEnv = { HOME: browserHome, TMPDIR: browserTmp, PATH: dirname(process.execPath)+":/usr/bin:/bin",
       NODE_ENV: "test", LANG: "C.UTF-8", LC_ALL: "C.UTF-8" };
     browser = await chromium.launch({ headless: true, executablePath: build.browser.executablePath, env: browserEnv,
-      args: ["--disable-background-networking", "--disable-component-update"] });
+      args: ["--disable-background-networking", "--disable-component-update",
+        // z2-native: a self-signed loopback issuer is trusted only by its declared public-key pin, never by disabling verification.
+        ...(target.authIssuerSpkiSha256Base64 ? ["--ignore-certificate-errors-spki-list="+target.authIssuerSpkiSha256Base64] : [])] });
     record("explicit-installed-browser", { executableSha256: build.browser.executableSha256,
       browserAssetsDigest: build.browser.assetsDigest, playwrightVersion: build.browser.playwrightVersion,
       environmentNames: Object.keys(browserEnv).sort(), inheritedSecrets: false, transport: "PIPE_NO_LISTENER" });

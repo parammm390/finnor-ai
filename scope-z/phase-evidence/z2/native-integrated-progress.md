@@ -20,3 +20,8 @@ Evidence stays on the remote under `/home/factory-user/repos/fzv-int-out/`. Pack
 - prepare-replay.py: added `--git-commit` mode (reads only `git archive` objects, blob-sha verified) with `--external-root`; delimited `z2-native` block.
 - install-owner.py: added `--external-root`, `--node-version-pin`, `--node-headers-seed`, `--public-env` (delimited `z2-native` blocks). Existing refusal guards unchanged. Not yet exercised.
 - Next: toolchain assembly, TLS/anon-key decision, Z2 stack launcher, scenario, pack build.
+
+## Update 3: declared SPKI pin for the loopback https issuer
+
+- native-replay.mjs/schema: optional `authIssuerSpkiSha256Base64` adds Chromium `--ignore-certificate-errors-spki-list` for the declared self-signed issuer; certificate verification is never disabled.
+- Decisions: Node 22.23.4 (host-pinned, headers cached) with recorded deviation from repo pin 22.22.3; `NEXT_PUBLIC_SUPABASE_URL` and a non-validated anon placeholder are fixed at install time via `--public-env`; GoTrue `GOTRUE_JWT_ISSUER` is set to the https front so JWT `iss` equals the declared issuer (Z2-owned auth starter copy, shared starter untouched).

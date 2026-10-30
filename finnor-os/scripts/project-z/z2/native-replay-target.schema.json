@@ -57,6 +57,7 @@
     "apiOrigin": {"type": "string", "pattern": "^http://(127\\.0\\.0\\.1|localhost|\\[::1\\]):[0-9]+$"},
     "frontendAuthIssuer": {"type": "string", "pattern": "^https://"},
     "apiAuthIssuer": {"type": "string", "pattern": "^https://"},
+    "authIssuerSpkiSha256Base64": {"type": "string", "pattern": "^[A-Za-z0-9+/]{43}=$"},
     "sourceRoot": {"$ref": "#/$defs/absolutePath"},
     "sourceSha256": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/sha256"}},
     "buildReceiptPath": {"$ref": "#/$defs/absolutePath"},
