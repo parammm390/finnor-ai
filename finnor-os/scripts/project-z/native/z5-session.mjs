@@ -123,23 +123,51 @@ await runCase("Z5N-02", "Separate S6 ledger process and launcher-root-signed own
   const { createZ5Ledger } = await import("./z5-ledger.mts");
   const dispatchLib = S.dispatchLib = await import("./z5-dispatch.mts");
   S.valuator = randomUUID();
-  // The X1 parent's capacity resources carry `authority:<tenant>:<authority revision>`; the revision advances while the
-  // parents are created, so a bounded window of S5 references is declared up front (the ledger policy is signed once).
+  // The X1 parent's S5 capacity resources and S7 compute attribution carry `authority:<tenant>:<authority revision>`; the
+  // revision advances while the parents are created, so a bounded window is declared up front for those two owners (the
+  // ledger and transport policies are signed once). The window is finite: the controls below prove it is not a wildcard.
   const [{ revision }] = await q("SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1", [S.tenantId]);
-  const s5ExtraRightsRefs = Array.from({ length: 96 }, (_, i) => `authority:${S.tenantId}:${Number(revision) + i}`);
+  const authorityRightsRefs = Array.from({ length: 96 }, (_, i) => `authority:${S.tenantId}:${Number(revision) + i}`);
   S.dispatch = await dispatchLib.startDispatchFixtures(join(privateRoot, "dispatch"), () => owner.call);
   const ownerPublicKeyPem = createPublicKey(createPrivateKey(readFileSync(join(privateRoot, "owner-signer.pem")))).export({ type: "spki", format: "pem" }).toString();
   const sources = ["enterprise-obligations.ts", "enterprise-allocation.ts", "enterprise-control.ts", "enterprise-beliefs.ts", "allocation-store.ts",
     "obligation-contracts.ts"].map(name => join(BACKEND, "packages/private-equity/src", name)).concat(join(BACKEND, "apps/api/app/api/obligations/[operation]/route.ts"));
   S.ledger = await createZ5Ledger(S.tenantId, S.ownerId, S.valuator, { directory: join(privateRoot, "ledger"),
-    rightsRef: RIGHTS, transportPath, transportPrivateKeyPem: readFileSync(join(privateRoot, "transport-root.key"), "utf8"), s5ExtraRightsRefs,
+    rightsRef: RIGHTS, transportPath, transportPrivateKeyPem: readFileSync(join(privateRoot, "transport-root.key"), "utf8"), authorityRightsRefs,
     dispatch: { ...S.dispatch.ledgerOptions, ownerPublicKeyPem, ownerSourcePaths: sources } });
   S.children.push(S.ledger.child());
   // The API, lifecycle, worker and driver children all read the launcher-fixed transport path.
   process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG = transportPath;
   process.env.FINNOR_S6_OWNER_TRANSPORT_ROOT = env.FINNOR_S6_OWNER_TRANSPORT_ROOT;
+  // Controls on the signed S7 route (the one whose list D14 widened): the declared window accepts exactly its members.
+  const transportLib = await import("../../../packages/governed-execution/src/owner-transport.ts");
+  const s7Scope = { semanticOwner: "S7", tenantId: S.tenantId, principalId: S.ownerId };
+  const s7Route = await transportLib.ownerTransportRoute(s7Scope);
+  ensure(s7Route && s7Route.rightsRefs.length === 1 + authorityRightsRefs.length, "S7_ROUTE_RIGHTS_WINDOW_NOT_DECLARED");
+  ensure(s7Route.rightsRefs.includes(RIGHTS) && authorityRightsRefs.every(ref => s7Route.rightsRefs.includes(ref)), "S7_ROUTE_RIGHTS_WINDOW_INCOMPLETE");
+  const probe = rightsRef => {
+    const content = { schema: "finnor.z5.rights-window-probe.v1", rightsRef };
+    const contentDigest = transportLib.ownerTransportHash(content), id = "z5-rights-probe:" + contentDigest;
+    return { ...s7Scope, kind: "REFERENCE", identity: id,
+      payload: { reference: { id, owner: "S7", version: "z5-rights-probe-v1", contentDigest, content }, rightsRefs: [rightsRef] } };
+  };
+  const controls = [];
+  for (const [label, rightsRef, expected] of [
+    ["WINDOW_FIRST", authorityRightsRefs[0], "ACCEPTED"],
+    ["WINDOW_LAST", authorityRightsRefs.at(-1), "ACCEPTED"],
+    ["JUST_OUTSIDE_WINDOW", `authority:${S.tenantId}:${Number(revision) + authorityRightsRefs.length}`, "OWNER_ORIGIN_RIGHTS_INVALID"],
+    ["OTHER_TENANT", `authority:${randomUUID()}:${revision}`, "OWNER_ORIGIN_RIGHTS_INVALID"],
+    ["WILDCARD", "authority:*", "OWNER_ORIGIN_RIGHTS_INVALID"]]) {
+    let observed;
+    try { await transportLib.signOwnerDeliveryOrigin(s7Route, probe(rightsRef)); observed = "ACCEPTED"; }
+    catch (error) { observed = String(error?.message ?? error); }
+    controls.push({ label, expected, observed });
+    ensure(observed === expected, `RIGHTS_WINDOW_CONTROL_${label}:${observed}`);
+  }
   return { detail: { endpoint: S.ledger.endpoint(), policyDigest: sha(JSON.stringify(S.ledger.policy)),
-    owners: S.ledger.policy.owners.map(o => [o.owner, o.append, Boolean(o.dispatch), Boolean(o.protectedExecution)]),
+    owners: S.ledger.policy.owners.map(o => [o.owner, o.append, Boolean(o.dispatch), Boolean(o.protectedExecution), o.rightsRefs.length]),
+    routeRightsCounts: JSON.parse(readFileSync(transportPath, "utf8")).policy.routes.map(r => [r.semanticOwner, r.purpose, r.rightsRefs.length]),
+    authorityWindow: { firstRevision: Number(revision), size: authorityRightsRefs.length }, controls,
     provider: S.dispatch.providerOrigin, authority: S.dispatch.ledgerOptions.authority.endpoint } };
 });
 

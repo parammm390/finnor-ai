@@ -26,8 +26,9 @@ export interface Z5DispatchOptions {
 
 export async function createZ5Ledger(tenant: string, principal: string, valuatorPrincipal: string, options: {
   directory: string; rightsRef: string; transportPath: string; transportPrivateKeyPem: string; dispatch?: Z5DispatchOptions;
-  /** Additional rights references accepted for S5 origins only (the X1 parent's capacity resources carry the authority revision). */
-  s5ExtraRightsRefs?: string[];
+  /** Authority-revision references (`authority:<tenant>:<n>`) accepted for the owners that carry them: S5 capacity resources
+   * and S7 compute attribution written by the original X1 parent. Every other owner keeps the single scenario rights reference. */
+  authorityRightsRefs?: string[];
 }) {
   const root = options.directory;
   await mkdir(root, { recursive: true, mode: 0o700 });
@@ -46,7 +47,8 @@ export async function createZ5Ledger(tenant: string, principal: string, valuator
   const tokenOwners = ['S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'BUSINESS_OWNER', 'FINANCIAL_SOURCE', 'INDEPENDENT_VALUER', 'READER', 'S8_READER'] as const;
   const tokens: Record<string, string> = Object.fromEntries(tokenOwners.map(k => [k, randomUUID() + randomUUID()]));
   const dispatch = options.dispatch;
-  const rightsFor = (owner: string) => owner === 'S5' ? [rights, ...(options.s5ExtraRightsRefs ?? [])] : [rights];
+  const authorityBound = new Set(['S5', 'S7', 'READER']);
+  const rightsFor = (owner: string) => authorityBound.has(owner) ? [rights, ...(options.authorityRightsRefs ?? [])] : [rights];
   const protectedToken = randomUUID() + randomUUID();
   const owners: any[] = tokenOwners.map(owner => ({
     owner: owner === 'READER' ? 'S7' : owner === 'S8_READER' ? 'S8' : owner,
