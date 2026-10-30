@@ -148,8 +148,8 @@ await runCase("P0-11", "Original continuation after acceptance consumes or falls
   if (!acquired) return { outcome: "NOT_RUN", detail: "no accepted model" };
   await sleep(45000);
   const events = await q(`SELECT e.kind,e.generation,left(e.body::text,600) body FROM finnor_os.p1_events e WHERE e.tenant_id=$1 AND e.request_id=$2 ORDER BY e.created_at`, [parent.tenantId, parent.programId]);
-  const jobs = await q("SELECT type,status,left(coalesce(last_error,''),300) error,attempts FROM finnor_os.jobs WHERE tenant_id=$1 AND (payload->>'programId'=$2 OR payload->>'sessionId'=$3) ORDER BY created_at", [parent.tenantId, parent.programId, acquired.sessionId]).catch(async () =>
-    q("SELECT type,status FROM finnor_os.jobs WHERE tenant_id=$1 AND (payload->>'programId'=$2 OR payload->>'sessionId'=$3) ORDER BY created_at", [parent.tenantId, parent.programId, acquired.sessionId]));
+  const jobs = await q("SELECT type,status,left(coalesce(last_error,''),300) error,attempts FROM finnor_os.jobs WHERE tenant_id=$1 AND (payload->>'programId'=$2 OR payload->>'sessionId'=$3) ORDER BY run_at,id", [parent.tenantId, parent.programId, acquired.sessionId]).catch(async () =>
+    q("SELECT type,status FROM finnor_os.jobs WHERE tenant_id=$1 AND (payload->>'programId'=$2 OR payload->>'sessionId'=$3) ORDER BY run_at,id", [parent.tenantId, parent.programId, acquired.sessionId]));
   const used = events.filter(row => /P1_ORIGINAL_APPLICATION_/.test(row.kind));
   const w = await witness(parent);
   return { outcome: used.length ? "PASS" : "FAIL", detail: { used: used.map(row => row.kind), events: events.map(row => row.kind), jobs, witness: w,

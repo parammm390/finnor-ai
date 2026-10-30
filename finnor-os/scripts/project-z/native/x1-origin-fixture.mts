@@ -328,7 +328,7 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
     if (!duty) throw Error("Z0_FIXTURE_TERMINAL_CHECKED_DUTY_MISSING");
     const iso = (value: unknown) => new Date(value as string | Date).toISOString();
     const deadlines = [iso(episode.original_deadline), iso(episode.wall_deadline), iso(duty.obligation.originalDeadline), iso(head.bounds.deadlineAt)];
-    const jobs = (await sql.query(`SELECT id,type,status FROM finnor_os.jobs WHERE tenant_id=$1 AND (payload->>'requestId'=$2 OR payload->>'programId'=$3) ORDER BY created_at`,
+    const jobs = (await sql.query(`SELECT id,type,status FROM finnor_os.jobs WHERE tenant_id=$1 AND (payload->>'requestId'=$2 OR payload->>'programId'=$3) ORDER BY run_at,id`,
       [tenantId, compilerRequestId, cut.program_id])).rows;
     const parent: OriginalInstitutionParent = { schema: "finnor.project-z.native.z0-original-parent.v1", tag, shape,
       tenantId, ownerId: userId, dealId, registrationId, institutionId, workId, workInputId: cut.work_input_id, workInputDigest: cut.work_input_digest,
