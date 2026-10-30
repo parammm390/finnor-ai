@@ -38,7 +38,7 @@ export const ConstructionOutput = z.object({
   schema: z.literal("finnor.project-z.z2.construction.v1"),
   status: z.enum(["CANDIDATE", "CHECKED_INFEASIBLE", "INCOMPLETE", "UNSUPPORTED"]),
   reason: z.string(), problemDigest: hex, profileDigest: hex,
-  candidate: z.record(z.unknown()).nullable(), certificates: z.array(z.unknown()),
+  candidate: z.record(z.string(), z.unknown()).nullable(), certificates: z.array(z.unknown()),
   search: z.object({ complete: z.boolean() }).passthrough(),
   processDigest: hex, protectedQualification: z.literal(false), executionAuthorityGranted: z.literal(false)
 }).passthrough();

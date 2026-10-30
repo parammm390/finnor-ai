@@ -23,10 +23,10 @@ const ProfileSchema = z.object({
   sourceDependencies: z.array(z.object({ key: z.string().min(1).max(512), revision: z.number().int().safe().nonnegative(),
     nodeIds: z.array(z.string()).max(256), digest: z.null() }).strict()).min(1).max(128),
   nativeLocals: z.array(z.object({ component: z.string().min(1).max(192),
-    owner: z.enum(["S4_PREPARATION", "S5_RESERVATION", "S6_EFFECT"]), states: z.record(z.string().min(1).max(192)) }).strict()).min(2).max(16),
+    owner: z.enum(["S4_PREPARATION", "S5_RESERVATION", "S6_EFFECT"]), states: z.record(z.string(), z.string().min(1).max(192)) }).strict()).min(2).max(16),
   nativeCells: z.array(z.object({ cell: z.string().min(1).max(192),
     meaning: z.enum(["POLICY_DIGEST", "RESERVATION_ID", "OBLIGATION_DIGEST", "RESOURCE_ENVELOPE_DIGEST", "RIGHTS_REVISION", "UNKNOWN_FLAG"]),
-    values: z.record(z.string().min(1).max(192)) }).strict()).min(1).max(8),
+    values: z.record(z.string(), z.string().min(1).max(192)) }).strict()).min(1).max(8),
   protectedAdmission: z.literal(false), executionAuthorityGranted: z.literal(false),
 }).strict();
 export async function registerFixedProfile(ctx: PeMutationContext, raw: unknown) {

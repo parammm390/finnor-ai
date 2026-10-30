@@ -13,8 +13,8 @@ const columns=z.array(z.object({kind:z.enum(['STATE','EXPOSURE']),variableId:z.s
 const history=z.object({modelRef:ExperimentRefSchema,periods:z.array(z.number().int().min(0).max(65535)).min(1).max(256),columns});
 const guard=z.object({register:z.number().int().min(0).max(7),unit:z.string().min(1).max(64),minimum:integerSchema,maximum:integerSchema}).strict();
 export const ownerContractSchema=z.discriminatedUnion('owner',[
- history.extend({owner:z.literal('S3'),query:z.record(z.unknown()),guard}).strict(),
- history.extend({owner:z.literal('S4'),policyRef:ExperimentRefSchema,decision:z.record(z.unknown()),allocationRef:ExperimentRefSchema.nullable(),guard}).strict(),
+ history.extend({owner:z.literal('S3'),query:z.record(z.string(),z.unknown()),guard}).strict(),
+ history.extend({owner:z.literal('S4'),policyRef:ExperimentRefSchema,decision:z.record(z.string(),z.unknown()),allocationRef:ExperimentRefSchema.nullable(),guard}).strict(),
 ]);
 const requestObject=z.object({
  schema:z.literal('finnor.z4.submit.v1'),mode:z.literal('ordinary_disposable'),root:rootSchema,workId:z.string().uuid(),
