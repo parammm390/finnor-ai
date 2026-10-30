@@ -14,3 +14,9 @@ Evidence stays on the remote under `/home/factory-user/repos/fzv-int-out/`. Pack
 1. prepare-replay `--git-commit` mode, install-owner external-root/node pin/headers seed/public env.
 2. `native/z2-stack.mjs` (+ `native/z2-auth.mjs` variant) and driver HTTPS trust field.
 3. `native/z2-session.mjs` scenario; dev-iteration; final pack; run.
+
+## Update 2: installer/prepare external-root modes
+
+- prepare-replay.py: added `--git-commit` mode (reads only `git archive` objects, blob-sha verified) with `--external-root`; delimited `z2-native` block.
+- install-owner.py: added `--external-root`, `--node-version-pin`, `--node-headers-seed`, `--public-env` (delimited `z2-native` blocks). Existing refusal guards unchanged. Not yet exercised.
+- Next: toolchain assembly, TLS/anon-key decision, Z2 stack launcher, scenario, pack build.

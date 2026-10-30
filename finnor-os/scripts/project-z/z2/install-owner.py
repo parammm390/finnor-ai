@@ -148,13 +148,19 @@ def main():
     parser.add_argument("--evidence-dir", required=True)
     parser.add_argument("--node", required=True)
     parser.add_argument("--temporary-cache-parent", help="New private npm/header/temp cache under /dev/shm only")
+    # BEGIN z2-native integrated-candidate options (inert unless given)
+    parser.add_argument("--external-root", help="Pack parent outside the worktree; source, evidence and Node must be inside it")
+    parser.add_argument("--node-version-pin", help="Exact Node version of the supplied binary when it differs from the repo release pin")
+    parser.add_argument("--node-headers-seed", help="Existing node-gyp devdir holding include/node for exactly the pinned Node version")
+    parser.add_argument("--public-env", action="append", default=[], help="NEXT_PUBLIC_NAME=value build-time loopback settings")
+    # END z2-native
     args = parser.parse_args()
     if not args.temporary_cache_parent:
         return install(args)
     parent = Path(args.temporary_cache_parent)
     assert parent.is_absolute() and parent.resolve() == Path("/dev/shm")
     out = Path(args.evidence_dir).resolve()
-    out.relative_to(Path(args.repo).resolve()/"scope-z/phase-evidence/z2")
+    out.relative_to(Path(args.external_root).resolve() if args.external_root else Path(args.repo).resolve()/"scope-z/phase-evidence/z2")
     assert not out.exists(), "Z2_NEW_INSTALL_EVIDENCE_DIRECTORY_REQUIRED"
     cache = tempfile.TemporaryDirectory(prefix="z2-install-cache-", dir=parent)
     temporary = Path(cache.name)
@@ -189,12 +195,37 @@ def main():
 
 def install(args, temporary_cache=None):
     repo, source, out, node = [Path(v).resolve() for v in (args.repo, args.source_tree, args.evidence_dir, args.node)]
-    source.relative_to(repo/"scope-z/phase-evidence/z2")
-    out.relative_to(repo/"scope-z/phase-evidence/z2")
-    node.relative_to(repo)
+    # BEGIN z2-native integrated-candidate guards
+    external = Path(args.external_root).resolve() if args.external_root else None
+    assert external is None or external == repo, "Z2_EXTERNAL_ROOT_MUST_EQUAL_REPO_ARGUMENT"
+    assert external is not None or not (args.node_version_pin or args.node_headers_seed or args.public_env), \
+        "Z2_INTEGRATED_OPTIONS_REQUIRE_EXTERNAL_ROOT"
+    if external is not None:
+        try:
+            external.relative_to(Path(__file__).resolve().parents[4])
+            raise AssertionError("Z2_EXTERNAL_PACK_MUST_BE_OUTSIDE_THE_WORKTREE")
+        except ValueError:
+            pass
+    public_env = {}
+    for item in args.public_env:
+        name, _, value = item.partition("=")
+        assert re.fullmatch(r"NEXT_PUBLIC_[A-Z0-9_]{1,80}", name) and name not in public_env, "Z2_PUBLIC_ENV_NAME"
+        if name.endswith("_URL"):
+            parsed = urlsplit(value)
+            assert parsed.scheme in ("http", "https") and parsed.hostname == "127.0.0.1" and parsed.port and \
+                parsed.path in ("", "/") and not parsed.query and not parsed.fragment and not parsed.username, "Z2_PUBLIC_ENV_LOOPBACK_URL"
+        else:
+            assert re.fullmatch(r"[A-Za-z0-9._-]{16,4096}", value), "Z2_PUBLIC_ENV_VALUE"
+        public_env[name] = value
+    # END z2-native
+    base = external if external is not None else repo/"scope-z/phase-evidence/z2"
+    source.relative_to(base)
+    out.relative_to(base)
+    node.relative_to(external if external is not None else repo)
     npm_path = node.parent.parent/"lib/node_modules/npm/bin/npm-cli.js"
     assert node.is_file() and npm_path.is_file() and npm_path.resolve() == npm_path, "Z2_OWN_NODE_DISTRIBUTION_NPM_REQUIRED"
-    required_node = json.loads((source/"infra/deployment/release-toolchain.json").read_text())["nodeVersion"]
+    release_node = json.loads((source/"infra/deployment/release-toolchain.json").read_text())["nodeVersion"]
+    required_node = args.node_version_pin or release_node
     out.mkdir(parents=True, exist_ok=False)
     pack, logs, home = out/"pack", out/"logs", out/"home"
     bin_dir = pack/"finnor-os/.z2-installed/bin"
@@ -235,6 +266,16 @@ def install(args, temporary_cache=None):
         (temporary_cache/"tmp").mkdir()
         env.update(npm_config_cache=str(temporary_cache/"npm-cache"),
                    npm_config_devdir=str(temporary_cache/"node-headers"), TMPDIR=str(temporary_cache/"tmp"))
+    # BEGIN z2-native integrated-candidate environment
+    env.update(public_env)
+    header_seed = None
+    if args.node_headers_seed:
+        seed = Path(args.node_headers_seed).resolve()/required_node
+        assert (seed/"installVersion").is_file() and (seed/"include/node/node.h").is_file(), "Z2_NODE_HEADER_SEED_SHAPE"
+        shutil.copytree(seed, Path(env["npm_config_devdir"])/required_node)
+        header_seed = {"source": str(seed), "version": required_node,
+                       "reason": "NODEJS_ORG_DOWNLOAD_OUTSIDE_APPROVED_NETWORK_SCOPE_USING_CACHED_HEADERS_FOR_THE_SAME_VERSION"}
+    # END z2-native
     backend = pack/"finnor-os"
     for name, path in {"FINNOR_Z2_ASSET_ROOT": "finnor-os/packages/epistemic-runtime/src/project-z/z2-coalitions",
                        "FINNOR_Z2_OWNER_ASSET_ROOT": "finnor-os/packages/private-equity/src/project-z/z2-coalitions",
@@ -463,6 +504,18 @@ def install(args, temporary_cache=None):
                 else:
                     trace_problems.append({"manifest": str(manifest.relative_to(pack)), "missing": local})
     (out/"installed-trace-closure-sha256.json").write_text(json.dumps(trace_files, sort_keys=True, indent=2)+"\n")
+    # BEGIN z2-native public build environment scan
+    public_report, public_inlined = {}, None
+    if public_env:
+        static = pack/".next-x1-install/static"
+        chunks = [p.read_bytes() for p in sorted(static.rglob("*.js"))] if static.is_dir() else []
+        public_inlined = True
+        for name, value in sorted(public_env.items()):
+            found = any(value.encode() in chunk for chunk in chunks)
+            public_report[name] = {"sha256": hashlib.sha256(value.encode()).hexdigest(), "inlinedInClientChunks": found,
+                                   **({"value": value} if name.endswith("_URL") else {})}
+            public_inlined = public_inlined and found
+    # END z2-native
     coverage = json.loads((pack/"docs/centropy/capability-coverage.json").read_text())
     source_metadata = json.loads((pack/".z2-source-build.json").read_text())
     source_metadata_verified = (coverage.get("executedProofIndexMode") == "DECLARED_BASELINE_INDEX_NOT_REOBSERVED" and
@@ -490,8 +543,11 @@ def install(args, temporary_cache=None):
               "engineeringStatus": "PASSED" if all(r["passed"] for r in steps) and not forbidden and
                   all(build_ids.values()) and native_assets and trace_files and not trace_problems and browser_assets and
                   browser_proof.get("status") == "PASSED" and not browser_problems and system_libraries and
-                  not library_problems and source_metadata_verified else "FAILED",
-              "node": {"path": str(node), "sha256": sha(node), "requiredVersion": required_node},
+                  not library_problems and source_metadata_verified and public_inlined is not False else "FAILED",
+              "node": {"path": str(node), "sha256": sha(node), "requiredVersion": required_node,
+                       "releaseToolchainVersion": release_node, "versionDeviation": required_node != release_node},
+              "nodeHeaderSeed": header_seed, "externalRoot": str(external) if external else None,
+              "publicBuildEnvironment": public_report, "publicBuildEnvironmentInlined": public_inlined,
               "npm": {"path": str(npm_path), "sha256": sha(npm_path), "borrowedSystemNpm": False},
               "pythonSha256": sha(Path("/usr/bin/python3").resolve()),
               "heavyLock": heavy_lock, "authorityOrQuotaStop": authority_stop,
