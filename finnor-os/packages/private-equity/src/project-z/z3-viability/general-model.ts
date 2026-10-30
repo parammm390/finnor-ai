@@ -19,9 +19,19 @@ const observer = z.discriminatedUnion("kind", [
     instrumentId: id, availablePeriod: z.number().int().min(0).max(1e9) }).strict(),
   z.object({ id, kind: z.literal("EXACT_POLICY"), policyRef: ExperimentRefSchema }).strict(),
   z.object({ id, kind: z.literal("APPLICATION_SNAPSHOT"),
-    responsibilityIdentity: z.string().regex(/^x1-obligation:[a-f0-9]{64}$/),
+    responsibilityIdentity: z.string().regex(/^x1-obligation:[a-f0-9]{64}$/).optional(),
+    lateBinding: z.literal("ACCEPTED_ORIGIN_MODEL").optional(),
     observation: z.literal("CURRENT_ORIGINAL_LAWFUL_READBACK") }).strict(),
 ]);
+/** An original Work's instruction exists before its mandate (and so its
+ * responsibility identity) and before the acquisition's accepted model. A
+ * late-bound application observer therefore carries no identity and its
+ * predicates carry this fixed placeholder; the real model, check, authority
+ * and original parent stay in the owner context digest. */
+export const LATE_BOUND_MODEL_REVISION: ExperimentRef = {
+  owner: "S4", id: "z3-late-bound-origin-model", version: "late-bound-v1",
+  contentDigest: "33e3a8208acc6c82599a6c45f1f09c269e1f67c1cb361df645942c91c8988095",
+};
 const operation = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("CONTROL_OBSERVE"), observerId: id }).strict(),
   z.object({ kind: z.literal("EXACT_CONTROL_CHOOSE"), observerId: id, decision: z.unknown(),
@@ -195,6 +205,11 @@ export function parseGeneralNativeModel(value: unknown): GeneralNativeModel {
   }
   const observers = new Map(original.observers.map(o => [o.id, o]));
   if (observers.size !== original.observers.length) z3Fault("Z3_NATIVE_DUPLICATE_OBSERVER");
+  for (const o of original.observers) {
+    if (o.kind === "APPLICATION_SNAPSHOT" && (o.lateBinding === undefined) === (o.responsibilityIdentity === undefined)) {
+      z3Fault("Z3_GENERAL_NATIVE_MAPPING_SCHEMA");
+    }
+  }
   const states = new Map(arena.states.map(state => [state.id, state]));
   exactIndices(original.controller.map(row => row.edgeIndex),
     arena.edges.flatMap((edge, i) => states.get(edge.from)?.owner === "C" ? [i] : []),

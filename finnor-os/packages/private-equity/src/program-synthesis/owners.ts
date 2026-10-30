@@ -70,6 +70,31 @@ export async function executeOwnerOperation(ctx:PeMutationContext,q:ProgramRow|I
  return {status:'WAITING',value:{waitId:waiting?.id??null,status:waiting?.status??'NATIVE_WAIT_INSTALL_PENDING',remainingPredicate:operation.key,planNodeId:planNode.id,deadlineAt:operation.deadlineAt,goalSuccess:false}};
 }
 
+/** One canonical composition step selected by Z3 through S4 and executed by the
+ * application owner under its own claim. Same S6 callee as continuation, bounded
+ * to the selected step; no program body, URL or step is supplied by the caller. */
+export async function executeGovernedApplicationStep(ctx:PeMutationContext,
+ input:{sessionId:string;compositionRef:import('@finnor/shared-types').ExperimentRef;stepId:string},
+ execution:Readonly<import('../../../../apps/worker/src/queue').JobExecutionContext>,
+ runtime:import('../application-semantics/runtime').NativeApplicationRuntime){
+ const store=await import('../application-semantics/store'),contracts=await import('../application-semantics/contracts');
+ const row=await store.applicationSession(ctx,input.sessionId);
+ if(runtime.session.id!==row.id||runtime.execution.deliveryAttemptId!==execution.deliveryAttemptId)
+  contracts.x2Fault('X2_P1_ACTUAL_APPLICATION_CONSUMER_REQUIRED');
+ await (await import('../application-semantics/obligations')).assertApplicationClaim(ctx,row,execution);
+ await store.currentApplicationWork(ctx,row);
+ if(!row.composition_ref||!contracts.sameX2Ref(input.compositionRef,row.composition_ref))
+  contracts.x2Fault('X2_P1_CANONICAL_COMPOSITION_REQUIRED');
+ const body=await store.applicationArtifact<Omit<import('@finnor/shared-types').CheckedApplicationComposition,'ref'>>(ctx,input.compositionRef);
+ const composition=contracts.parseApplicationComposition({...body,ref:input.compositionRef});
+ const started=performance.now();
+ const observation=await (await import('../application-semantics/runtime')).continueNativeApplicationComposition(ctx,row.id,composition,execution,runtime,input.stepId);
+ await store.applicationEvent(ctx,row,'Z3_SELECTED_STEP_S6_OWNER_INVOCATION',{stepId:input.stepId,
+  outputRef:contracts.x2Ref('COMPUTER','application-observation',observation),elapsedMs:performance.now()-started,
+  effectOwner:'S6',p1AuthorityGranted:false,acknowledgmentSufficient:false});
+ return observation;
+}
+
 /** P1 consumes the application algebra through the real S4/S6 owners. The
  * analytical Harness path above neither dispatches nor changes qualification. */
 export async function executeApplicationOwnerOperation(ctx:PeMutationContext,

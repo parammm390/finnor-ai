@@ -191,6 +191,8 @@ export interface OriginalInstitutionParent {
 
 export interface ParentOptions {
   tag?: string; shape?: ParentShape; record?: Recorder; timeoutMs?: number; ruleWindowMs?: number;
+  /** Original Work instruction text; a Work input cannot be appended later, so a caller whose instruction is itself a typed mapping must supply it here. */
+  instruction?: string;
 }
 
 /**
@@ -232,7 +234,7 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
       await pe.addDealParty(ctxFor(recipientExternalId), { dealId, party: { partyType: "external_organization", partyId: organizationId }, role: "target_management" });
     }
     const intake = await db.receiveWork({ tenantId, userId, channel: "console", idempotencyKey: `z0-original-intake:${tag}:${randomUUID()}`,
-      instruction: "Maintain the supplied standing evidence responsibility from authorized originals, with no external approval or settlement",
+      instruction: options.instruction ?? "Maintain the supplied standing evidence responsibility from authorized originals, with no external approval or settlement",
       activeContext: { entityType: "pe_deal", entityId: dealId }, authorityContext: { principalId: userId, scope: "DISPOSABLE_INTERNAL_REQUEST_CREATION_ONLY" } });
     const workId = intake.workId as string;
     await db.attachWorkEntity(tenantId, workId, { entityType: "pe_deal", entityId: dealId, source: "Z0:original-owner-registration" });
