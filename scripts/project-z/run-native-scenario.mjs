@@ -33,6 +33,8 @@ assert.ok(forwarded.every(key => /^[A-Z][A-Z0-9_]{2,60}$/.test(key) && !/KEY|TOK
   "Only named non-secret environment variables may be forwarded")
 const state = join(root, ".centropy-certification", name)
 assert.ok(!existsSync(state) && state !== evidence && !state.startsWith(evidence + "/") && !evidence.startsWith(state + "/"))
+// The pinned Auth starter refuses a missing or symlinked state parent, and a clean checkout has no .centropy-certification.
+mkdirSync(dirname(state), { recursive: true, mode: 0o700 })
 // BEGIN --auth-tls / --production-build / z4 profile (inert unless the flag or profile is given)
 const authTls = process.argv.includes("--auth-tls")
 const productionBuild = process.argv.includes("--production-build")
