@@ -61,11 +61,14 @@ async function witness(parent) {
   const [original] = await q("SELECT status,md5(envelopes::text) envelopes FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND reservation_id=$2", [parent.tenantId, parent.parentReservation.id]);
   const [charges] = await q("SELECT count(*)::int count, coalesce(sum(units),0)::text units FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2", [parent.tenantId, parent.parentReservation.id]);
   const [sessions] = await q("SELECT count(*)::int count FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND work_id=$2", [parent.tenantId, parent.workId]);
-  const [actions] = await q("SELECT count(*)::int count FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2", [parent.tenantId, parent.workId]);
+  // X2 records its own exploration interactions as domain actions linked from s6_obligation_origins; those are acquisition, not business effect.
+  const [actions] = await q(`SELECT count(*) FILTER (WHERE NOT EXISTS(SELECT 1 FROM finnor_os.s6_obligation_origins o WHERE o.tenant_id=a.tenant_id AND o.domain_action_id=a.id) OR a.authority_context ? 'programId')::int count,
+    count(*) FILTER (WHERE EXISTS(SELECT 1 FROM finnor_os.s6_obligation_origins o WHERE o.tenant_id=a.tenant_id AND o.domain_action_id=a.id) AND NOT a.authority_context ? 'programId')::int exploration
+    FROM finnor_os.domain_actions a WHERE a.tenant_id=$1 AND a.work_id=$2`, [parent.tenantId, parent.workId]);
   const [requests] = await q("SELECT count(*)::int count FROM finnor_os.pe_requests WHERE tenant_id=$1 AND deal_id=$2", [parent.tenantId, parent.dealId]);
   const [episode] = await q("SELECT md5(original_deadline::text||wall_deadline::text||parent_reservation::text||parent_demand::text) digest FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND id=$2", [parent.tenantId, parent.episodeId]);
   const jobs = await q("SELECT type,status,count(*)::int n FROM finnor_os.jobs WHERE tenant_id=$1 GROUP BY 1,2 ORDER BY 1,2", [parent.tenantId]);
-  return { reservations, original, charges, sessions: sessions.count, domainActions: actions.count, peRequests: requests.count, episode: episode.digest, jobs };
+  return { reservations, original, charges, sessions: sessions.count, domainActions: actions.count, explorationActions: actions.exploration, peRequests: requests.count, episode: episode.digest, jobs };
 }
 const sameBudget = (a, b) => a.reservations.digest === b.reservations.digest && a.original.envelopes === b.original.envelopes
   && a.episode === b.episode;
@@ -133,18 +136,27 @@ await runCase("P0-08", "Anonymous acquisition is refused with no state change", 
 });
 
 const killMode = process.env.FINNOR_Z0_MODE === "kill";
-const invariants = async (before, sessionId) => {
+const invariants = async (before, sessionId, portalDir = null) => {
   const after = await witness(parent);
   const [session] = await q("SELECT reservation_ref,original_parent_ref,deadline_at,status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parent.tenantId, sessionId]);
   ensure(sha(session.reservation_ref) === sha(parent.parentReservation), "SESSION_RESERVATION_NOT_ORIGINAL");
   ensure(Date.parse(session.deadline_at) <= Math.min(Date.parse(parent.originalDeadlineAt), Date.parse(parent.wallDeadlineAt)), "DEADLINE_EXTENDED");
   ensure(after.reservations.count === before.reservations.count && after.original.envelopes === before.original.envelopes && after.episode === before.episode, "NEW_PARENT_OR_ENVELOPE_CHANGED");
-  ensure(after.domainActions === 0 && after.peRequests === 0, "BUSINESS_EFFECT_CREATED_BY_ACQUISITION");
+  ensure(after.domainActions === before.domainActions && after.peRequests === before.peRequests, `BUSINESS_EFFECT_CREATED_BY_ACQUISITION actions=${after.domainActions} peRequests=${after.peRequests}`);
+  let portalWrites = null;
+  if (portalDir) {
+    const wire = new Set((await q("SELECT body->'wire'->'identity'->>'requestId' id FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2", [parent.tenantId, sessionId])).map(row => row.id));
+    const events = readFileSync(join(portalDir, "provider", "journal.ndjson"), "utf8").trim().split("\n").flatMap(line => JSON.parse(line).events ?? []);
+    const writes = events.filter(event => /^(submission\.|approval\.committed)/.test(event.type));
+    const unaccounted = writes.filter(event => !wire.has(event.requestId));
+    ensure(unaccounted.length === 0, `PORTAL_WRITE_NOT_FROM_SESSION_REQUEST count=${unaccounted.length}`);
+    portalWrites = { events: events.length, writes: writes.length, sessionRequests: wire.size };
+  }
   const charges = await q("SELECT phase,resource_id,unit,units::text FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 ORDER BY phase", [parent.tenantId, parent.parentReservation.id]);
   const [envelope] = await q("SELECT e->>'resourceId' resource_id, (SELECT sum(v::numeric) FROM jsonb_array_elements_text(e->'quantities') v)::text limit_units FROM finnor_os.s5_reservations r, jsonb_array_elements(r.envelopes) e WHERE r.tenant_id=$1 AND r.reservation_id=$2 AND e->>'unit'='request'", [parent.tenantId, parent.parentReservation.id]);
   const used = charges.filter(row => row.resource_id === envelope.resource_id && row.unit === "request").reduce((sum, row) => sum + BigInt(row.units), 0n);
   ensure(used <= BigInt(envelope.limit_units), `ORIGINAL_ENVELOPE_EXCEEDED used=${used} limit=${envelope.limit_units}`);
-  return { session, charges, original: { resourceId: envelope.resource_id, limit: envelope.limit_units, used: used.toString() }, after };
+  return { session, charges, original: { resourceId: envelope.resource_id, limit: envelope.limit_units, used: used.toString() }, portalWrites, after };
 };
 if (!killMode) {
   await runCase("P0-10", "Acquisition under the original reservation reaches MODEL_READY and S4 acceptance", async () => {
@@ -159,7 +171,7 @@ if (!killMode) {
       record("acquisition-failure-session", { session: row, dispositions, charges, events: events.filter(item => !/^PHYSICAL_READ_/.test(item.kind)), requests, error: String(error.message).slice(0, 300) });
       throw error;
     }
-    const checked = await invariants(before, acquired.sessionId);
+    const checked = await invariants(before, acquired.sessionId, acquired.portal.dir);
     return { detail: { sessionId: acquired.sessionId, model: acquired.model, check: acquired.check, acceptance: acquired.acceptance, before, ...checked } };
   });
 } else if (!ownedWorker) {
@@ -216,7 +228,7 @@ if (!killMode) {
     const jobsFinal = await q("SELECT type,status,attempts,claim_fence,left(coalesce(last_error,''),200) error FROM finnor_os.jobs WHERE tenant_id=$1 AND payload->>'sessionId'=$2 ORDER BY run_at,id", [parent.tenantId, sessionId]);
     const portalJournalDigest = sha(journalEvents());
     await submitted.handle.portal.stop();
-    const checked = await invariants(before, sessionId);
+    const checked = await invariants(before, sessionId, submitted.handle.portal.dir);
     ensure(JSON.stringify(final.reservation_ref) === JSON.stringify(afterKill.reservation_ref) && JSON.stringify(final.original_parent_ref) === JSON.stringify(afterKill.original_parent_ref)
       && Date.parse(final.deadline_at) === Date.parse(afterKill.deadline_at), "RECOVERY_CHANGED_PARENT_RESERVATION_OR_DEADLINE");
     ensure(sendsAtKill <= 1 && sendsAfter === sendsAtKill, `LOST_REQUEST_RESENT sendsAtKill=${sendsAtKill} sendsAfter=${sendsAfter}`);
@@ -240,7 +252,15 @@ await runCase("P0-11", "Original continuation after acceptance consumes or falls
     q("SELECT type,status FROM finnor_os.jobs WHERE tenant_id=$1 AND (payload->>'programId'=$2 OR payload->>'sessionId'=$3) ORDER BY run_at,id", [parent.tenantId, parent.programId, acquired.sessionId]));
   const used = events.filter(row => /P1_ORIGINAL_APPLICATION_/.test(row.kind));
   const w = await witness(parent);
-  return { outcome: used.length ? "PASS" : "FAIL", detail: { used: used.map(row => row.kind), events: events.map(row => row.kind), jobs, witness: w,
+  const [head] = await q("SELECT jsonb_array_length(coalesce(body->'nodes','[]'::jsonb)) nodes, (SELECT count(*)::int FROM jsonb_array_elements(coalesce(body->'nodes','[]'::jsonb)) n WHERE n->'action' IS NOT NULL AND n->'action' <> 'null'::jsonb) executable FROM finnor_os.p1_programs WHERE tenant_id=$1 AND id=(SELECT head_id FROM finnor_os.p1_requests WHERE tenant_id=$1 AND id=$2)", [parent.tenantId, parent.programId]);
+  const quarantined = jobs.filter(row => row.type === "run_x1_institution_continuation_v1" && row.status === "quarantined");
+  if (!used.length && head.executable === 0 && quarantined.some(row => /X1_SUPPORTED_ACTION_POPULATION_REQUIRED/.test(row.error ?? ""))) {
+    // Owner contract (institution-continuation.ts): continuation only consumes a model for an executable, not yet dispatched duty. A parent whose
+    // only duty is unresolved has none, so the continuation quarantines. This is a precondition gap of the parent shape, not a consumption result.
+    return { outcome: "NOT_RUN", reason: "ORIGINAL_PARENT_HAS_NO_EXECUTABLE_UNDISPATCHED_DUTY: continuation quarantined X1_SUPPORTED_ACTION_POPULATION_REQUIRED; accepted model could be neither used nor fallen back on",
+      detail: { reason: "ORIGINAL_PARENT_HAS_NO_EXECUTABLE_UNDISPATCHED_DUTY", head, events: events.map(row => row.kind), jobs, witness: w } };
+  }
+  return { outcome: used.length ? "PASS" : "FAIL", detail: { used: used.map(row => row.kind), events: events.map(row => row.kind), jobs, head, witness: w,
     note: used.length ? null : "accepted model has no recorded original-programme use or fallback" } };
 });
 

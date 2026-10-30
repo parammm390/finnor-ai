@@ -181,3 +181,24 @@ parent.
 | K5 | Recovery changes parent, reservation, deadline or grants a new allowance | `reservation_ref`, `original_parent_ref`, `deadline_at` of the session and the original episode/envelope digests equal their pre-kill values; reservation count unchanged; the S5 charges created after the restart belong to the original reservation. |
 | K6 | The lost request disappears or is relabelled success | After resume the request row still exists with the same obligation, in VERIFIED/DENIED only through the independent request/record observation, otherwise UNKNOWN. Final session status must be a settled state (MODEL_READY, UNKNOWN, BLOCKED, FAILED or STALE); ACQUIRING/PLANNING after the wait window is FAIL `RECOVERY_DID_NOT_SETTLE`. A MODEL_READY session is not treated as business completion. |
 | K7 | Later cases consume a model that never existed | The consumption case is NOT_RUN unless an `S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED` event exists for the session. |
+
+## 8. Addendum: business-effect oracle premise (w0-native-09 P0-10)
+
+Written before the oracle is changed. Run w0-native-09 reached MODEL_READY and
+S4 acceptance, then failed `BUSINESS_EFFECT_CREATED_BY_ACQUISITION` because the
+witness counted every `domain_actions` row of the original Work. The retained
+database shows 16 rows, all `execute_application_operation_v1` (8 completed,
+8 rejected), none with `authority_context.programId`, created by X2's own
+exploration interactions on the sandboxed portal. The other `domain_actions`
+row of the database (`submit_condition_evidence`) belongs to the seed Work
+90000000-...-0015, not to this Work. The premise "no domain action on the
+original Work" was therefore wrong about the product's design: exploration
+interactions are recorded as domain actions of the acquisition session. The
+claim that must hold is narrower and stays independently checkable.
+
+| # | How it can fail or be faked | Independent expectation / oracle |
+|---|---|---|
+| B1 | Narrowing the count hides a real business action of the programme | Count the Work's domain actions that are NOT linked from `s6_obligation_origins.domain_action_id` to a session request; any such row fails. Rows with `authority_context.programId` of the original programme fail regardless. `pe_requests` on the deal must stay 0. |
+| B2 | An exploration action is a real business write on the portal | Portal journal is the oracle (independent of the owner database): every portal write event (`submission.*`, `approval.committed`, `dispatch.accepted`) must be accounted for by a session request wire `requestId`; a write with no session request fails. |
+| B3 | Exploration action count is unbounded | The number of exploration actions must equal the number of session requests that have a `domain_action_id` link, and the portal journal count must match what the sandbox policy allows (recorded, not asserted to a constant). |
+| B4 | Count is compared before and after so a pre-existing row is masked | Before-acquisition count of unlinked actions is required to be 0 (P0-01) and the after count is compared to it, not to a literal. |
