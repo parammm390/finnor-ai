@@ -30,6 +30,8 @@ const requestObject=z.object({
   caseId:z.string().min(1).max(128),compilerFrozenAt:z.string().datetime({offset:true})}).strict().optional(),
 }).strict();
 export const intakeSchema=requestObject.omit({workId:true,workInputId:true,workRevisionRef:true});
+/** `adoptWorkId` is deliberately outside `acceptedDefinition`: plan and submit must see the same definition whether or not the Work pre-existed. */
+export const adoptingIntakeSchema=intakeSchema.extend({adoptWorkId:z.string().uuid().optional()});
 export const planSchema=requestObject.omit({workRevisionRef:true});
 export const submitSchema=requestObject.superRefine((value,ctx)=>{
  try{
@@ -49,7 +51,7 @@ export const guardSchema=z.object({schema:z.literal('finnor.z4.owner-guard.v1'),
 export const consumeSchema=sessionSchema.extend({capsuleDigest:digestSchema,idempotencyKey:z.string().min(1).max(128)}).strict();
 export const listSchema=z.object({root:rootSchema,workId:z.string().uuid()}).strict();
 export const OPERATION_SCHEMAS={
- 'execution-proof-intake':intakeSchema,'execution-proof-plan':planSchema,
+ 'execution-proof-intake':adoptingIntakeSchema,'execution-proof-plan':planSchema,
  'execution-proof-submit':submitSchema,'execution-proof-read':sessionSchema,'execution-proof-list':listSchema,
  'execution-proof-audit':sessionSchema,'execution-proof-consume':consumeSchema,'execution-proof-cancel':sessionSchema,
 } as const;
