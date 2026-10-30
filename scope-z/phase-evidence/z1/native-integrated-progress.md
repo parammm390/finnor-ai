@@ -128,6 +128,21 @@ authority, qualification, 100× or activation is claimed here or by the run.
   login have run; the login, the mounted actions, the three physical kills and the rest of
   the driver have still never run against a live stack. Fixed together with a private
   `diagnostic.private.json` (I1, I2). Rerun is gated by the session's UTC-midnight guard.
+- Before `w1-native-10` (head 2247a37, failure model I3): a failure in the first live
+  episode would still have named no cause, because the owned worker reduced every error to
+  one fixed code, the driver discarded the worker's output and a failing browser step ended
+  as a Playwright timeout. The episode now writes `failure-snapshot.private.json` (0600) on
+  any failure: read-only queries on the episode's own request, events, attempts and jobs, the
+  bounded redacted tails and `FAILED` detail of each owned worker, and the page's path, title,
+  visible text, screenshot and rings of console errors, page errors and failing responses.
+  Exercised once offline (restored `w1-native-09` database on a spare port, origins pointing
+  at a closed port, no stack): the snapshot, the screenshot and `native-doctor.json` were
+  written with mode 0600, the four queries ran against the installed schema with the
+  application role (empty results for a random request id), the ring recorded the refused
+  navigation, no configured secret appeared in the snapshot, and an owned worker pointed at
+  an unreachable database with a password in its URL reported `ECONNREFUSED` with the
+  password replaced. The offline copy and its server were deleted afterwards. The browser and
+  queue-flow parts of the snapshot with a real request remain unexercised until a live run.
 
 ## Known limits of this attempt
 
