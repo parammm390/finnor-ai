@@ -15,6 +15,7 @@ import { currentFreshApplicationAuthority } from "../../application-semantics/fr
 import { chooseExactS4Branch } from "../../capital-program/r2-owners";
 import { readApplicationObligation } from "../../application-semantics/obligations";
 import type { InstitutionApplicationOrigin } from "../../../../orchestration/src/project-z/z0-convergence/institution-origin";
+import { isGovernedChild, Z3_STEP_RECEIPT, type ApplicationSelectionRow } from "../../application-semantics/governed";
 import { assertViabilityClaimTx, viabilitySession } from "./store";
 import { hash, z3Fault, type ViabilityClaim } from "./contracts";
 import { parseGeneralNativeModel, type GeneralNativeModel, type NativeDomainField, type NativeDomainRegion,
@@ -301,6 +302,20 @@ async function retainObservation(ctx: PeMutationContext, request: GeneralOwnerRe
   await app.retainApplicationArtifact(ctx, receiptRef, body, true, c);
   return { ...observation, receiptRef };
 }
+/** The executable path is a separately versioned S4 export; a missing or
+ * different binding is a named refusal, never a fall back to the review path. */
+export function generalS4ExecutableOwners() {
+  const owner = s4 as unknown as Record<string, unknown>;
+  if (owner.Z3_EXECUTABLE_OPERATION_BINDING !== GENERAL_S4_EXECUTABLE_BINDING
+    || typeof owner.readEnterpriseViabilityExecutableSelectionTx !== "function"
+    || typeof owner.selectEnterpriseViabilityExecutableOperationTx !== "function") {
+    z3Fault("Z3_S4_EXECUTABLE_OPERATION_OWNER_NOT_INSTALLED");
+  }
+  return s4 as unknown as {
+    readEnterpriseViabilityExecutableSelectionTx: typeof executableSelectionStateTx;
+    selectEnterpriseViabilityExecutableOperationTx: typeof selectGeneralExecutableOperationTx;
+  };
+}
 export async function readGeneralS4ObservationTx(ctx: PeMutationContext, request: GeneralOwnerRequest,
   receiptRef: ExperimentRef, sessionId: string, c: PoolClient): Promise<GeneralOwnerObservation> {
   const body = await app.applicationArtifact<{ schema: string; tenantId: string; principalId: string; workId: string;
@@ -379,25 +394,74 @@ export async function dispatchGeneralS4OperationTx(ctx: PeMutationContext, reque
 }
 
 /** Independently versioned executable selection. v2 above stays a non-effect
- * review. This S4 precheck reads the application owner's own canonical
- * composition; it never selects one, holds or copies an application claim,
- * writes a receipt or grants execution. Until the S5 debit, S6 stable future
- * effect identity and application-owner consumption representations exist,
- * every path ends in a named refusal. */
+ * review. A governed origin child exists only because the owner explicitly
+ * requested execution of an accepted institution model; its presence is the
+ * opt-in. This S4 writer reads the application owner's own canonical
+ * composition and retains exactly one once-only selection of its first
+ * unexecuted step. It never executes, never holds an application claim and
+ * grants nothing: the application owner consumes the selection under its own
+ * durable claim, and Z3 later reads the retained owner receipt. */
 export const GENERAL_S4_EXECUTABLE_BINDING = "finnor.s4.z3-original-executable-operation-binding.v1" as const;
-export async function selectGeneralExecutableOperationTx(ctx: PeMutationContext, request: GeneralOwnerRequest,
-  edgeIndex: number, invocation: GeneralOwnerInvocation, c: PoolClient): Promise<never> {
-  await invocationCurrent(ctx, request, invocation, c);
-  await resolveGeneralS4BindingsTx(ctx, request, c);
+export type GeneralExecutableSelectionState =
+  | { state: "NOT_GOVERNED" }
+  | { state: "NONE" }
+  | { state: "LIVE"; selectionId: string; status: "SELECTED" | "CONSUMING" }
+  | { state: "RETAINED"; selectionId: string }
+  | { state: "FAILED"; selectionId: string; status: "REFUSED" | "STALE"; reason: string | null };
+export type GeneralExecutableSelection =
+  | { status: "AWAITING_APPLICATION_OWNER"; selectionId: string; stepId: string; operationId: string;
+    selectionStatus: "SELECTED" | "CONSUMING"; executionAuthorityGranted: false }
+  | { status: "RESULT"; selectionId: string; observation: GeneralOwnerObservation };
+
+async function executableTarget(ctx: PeMutationContext, request: GeneralOwnerRequest, edgeIndex: number, c: PoolClient) {
   const binding = request.model.original.controller.find(row => row.edgeIndex === edgeIndex);
   if (!binding) z3Fault("Z3_NATIVE_TOTAL_C_EDGE_BINDING_REQUIRED");
   const operation = binding.operation;
-  if (operation.kind !== "APPLICATION_COMPOSE") z3Fault("Z3_S4_EXECUTABLE_APPLICATION_OPERATION_REQUIRED");
+  if (operation.kind !== "APPLICATION_COMPOSE") return null;
   const observer = request.model.original.observers.find(o => o.id === operation.observerId);
   if (!observer || observer.kind !== "APPLICATION_SNAPSHOT") z3Fault("Z3_NATIVE_TYPED_OPERATION_OWNER_MISMATCH");
   const value = await applicationContext(ctx, request, observer, c);
+  if (!isGovernedChild(value.row)) return null;
+  return { operation, observer, value };
+}
+type ExecutableTarget = NonNullable<Awaited<ReturnType<typeof executableTarget>>>;
+
+async function selectionForEdge(ctx: PeMutationContext, target: ExecutableTarget, edgeIndex: number,
+  invocation: GeneralOwnerInvocation, c: PoolClient) {
+  const row = target.value.row;
+  return (await c.query<ApplicationSelectionRow>(
+    `SELECT * FROM finnor_os.z3_application_selections WHERE tenant_id=$1 AND principal_id=$2 AND session_id=$3
+     AND z3_session_id=$4 AND z3_cursor_digest=$5 AND z3_edge_index=$6 ORDER BY created_at,id LIMIT 1 FOR SHARE`,
+    [ctx.auth.tenantId, principal(ctx), row.id, invocation.sessionId, invocation.cursorDigest, edgeIndex])).rows[0] ?? null;
+}
+
+/** Read-only classification of the selection for exactly this cursor and edge. */
+export async function executableSelectionStateTx(ctx: PeMutationContext, request: GeneralOwnerRequest, edgeIndex: number,
+  invocation: GeneralOwnerInvocation, c: PoolClient): Promise<GeneralExecutableSelectionState> {
+  await invocationCurrent(ctx, request, invocation, c);
+  const target = await executableTarget(ctx, request, edgeIndex, c);
+  if (!target) return { state: "NOT_GOVERNED" };
+  const selection = await selectionForEdge(ctx, target, edgeIndex, invocation, c);
+  if (!selection) return { state: "NONE" };
+  if (selection.status === "RESULT_RETAINED") return { state: "RETAINED", selectionId: selection.id };
+  if (selection.status === "REFUSED" || selection.status === "STALE") {
+    return { state: "FAILED", selectionId: selection.id, status: selection.status, reason: selection.reason };
+  }
+  return { state: "LIVE", selectionId: selection.id, status: selection.status };
+}
+
+export async function selectGeneralExecutableOperationTx(ctx: PeMutationContext, request: GeneralOwnerRequest,
+  edgeIndex: number, invocation: GeneralOwnerInvocation, c: PoolClient): Promise<GeneralExecutableSelection> {
+  await invocationCurrent(ctx, request, invocation, c);
+  await resolveGeneralS4BindingsTx(ctx, request, c);
+  const target = await executableTarget(ctx, request, edgeIndex, c);
+  if (!target) z3Fault("Z3_S4_EXECUTABLE_GOVERNED_APPLICATION_CHILD_REQUIRED");
+  const { operation, value } = target;
   const { row, model, check, authority, execute } = value;
+  const existing = await selectionForEdge(ctx, target, edgeIndex, invocation, c);
+  if (existing) return executableOutcome(ctx, request, invocation, target, existing, c);
   if (!row.composition_ref) z3Fault("Z3_S4_EXECUTABLE_CANONICAL_APPLICATION_COMPOSITION_REQUIRED");
+  if (row.status !== "PLANNING") z3Fault("Z3_S4_EXECUTABLE_CHILD_NOT_PARKED_FOR_SELECTION");
   const composition = parseApplicationComposition({
     ...await app.applicationArtifact<object>(ctx, row.composition_ref, c), ref: row.composition_ref });
   if (!sameX2Ref(composition.modelRef, model.ref) || !sameX2Ref(composition.checkRef, check.ref)) {
@@ -408,25 +472,81 @@ export async function selectGeneralExecutableOperationTx(ctx: PeMutationContext,
     || !sameX2Ref(composition.originalParentRef, row.original_parent_ref)) {
     z3Fault("Z3_S4_EXECUTABLE_ORIGINAL_SCOPE_OR_TARGET_CHANGED");
   }
+  if (row.deadline_at.getTime() <= Date.now() || row.cancel_requested_at) z3Fault("Z3_S4_EXECUTABLE_ORIGINAL_DEADLINE_OR_CANCELLED");
   const requests = (await c.query<{ node_id: string; status: string; possible_egress: boolean }>(
     `SELECT node_id,status,possible_egress FROM finnor_os.application_semantics_requests
      WHERE tenant_id=$1 AND principal_id=$2 AND session_id=$3 FOR SHARE`,
     [ctx.auth.tenantId, principal(ctx), row.id])).rows;
   let next: number | null = null;
   for (const [index, step] of composition.steps.entries()) {
-    const existing = requests.find(r => r.node_id === step.id);
-    if (!existing) { next = index; break; }
-    if (!existing.possible_egress || existing.status !== "VERIFIED") z3Fault("Z3_S6_PENDING_UNKNOWN_BLOCKS_EXECUTABLE_SELECTION");
+    const prior = requests.find(r => r.node_id === step.id);
+    if (!prior) { next = index; break; }
+    if (!prior.possible_egress || prior.status !== "VERIFIED") z3Fault("Z3_S6_PENDING_UNKNOWN_BLOCKS_EXECUTABLE_SELECTION");
   }
   if (next === null) z3Fault("Z3_S4_EXECUTABLE_CANONICAL_COMPOSITION_EXHAUSTED");
   const step = composition.steps[next]!;
   if (step.operationId !== operation.operationId) z3Fault("Z3_S4_EXECUTABLE_WRONG_NEXT_CANONICAL_OPERATION");
   const actual = model.operations.find(o => o.id === step.operationId);
   if (!actual || actual.semanticRevision !== operation.semanticRevision) z3Fault("Z3_S4_EXECUTABLE_SEMANTIC_REVISION_CHANGED");
-  if (!authority.bindings.some(b => b.operationIds.includes(actual.id) && b.role === actual.authorization.role
-    && sameX2Ref(b.originalGrantRef, actual.authorization.grantRef))) z3Fault("Z3_S4_EXECUTABLE_ORIGINAL_GRANT_REQUIRED");
-  z3Fault("Z3_S4_EXECUTABLE_BINDING_APPLICATION_CONSUMER_NOT_INSTALLED");
+  const grant = authority.bindings.find(b => b.operationIds.includes(actual.id) && b.role === actual.authorization.role
+    && sameX2Ref(b.originalGrantRef, actual.authorization.grantRef));
+  if (!grant) z3Fault("Z3_S4_EXECUTABLE_ORIGINAL_GRANT_REQUIRED");
+  const z3 = await viabilitySession(ctx, invocation.sessionId, c);
+  const inserted = (await c.query<ApplicationSelectionRow>(
+    `INSERT INTO finnor_os.z3_application_selections(tenant_id,id,principal_id,session_id,parent_session_id,work_id,work_input_id,
+       composition_ref,composition_digest,step_id,step_index,operation_id,semantic_revision,original_grant_ref,
+       z3_session_id,z3_edge_index,z3_cursor_digest,z3_map_digest,z3_job_id,z3_claim_token_digest,z3_claim_fence,
+       z3_delivery_attempt_id,z3_session_generation,deadline_at)
+     VALUES($1,gen_random_uuid(),$2,$3,$4,$5,$6,$7::jsonb,$8,$9,$10,$11,$12,$13::jsonb,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)
+     ON CONFLICT DO NOTHING RETURNING *`,
+    [ctx.auth.tenantId, principal(ctx), row.id, row.parent_id, row.work_id, row.work_input_id,
+      JSON.stringify(row.composition_ref), row.composition_ref.contentDigest, step.id, next, step.operationId,
+      actual.semanticRevision, JSON.stringify(grant.originalGrantRef), invocation.sessionId, edgeIndex, invocation.cursorDigest,
+      request.model.mapDigest, invocation.claim.physical.jobId, hash(invocation.claim.physical.claimToken),
+      invocation.claim.sessionFence, invocation.claim.physical.deliveryAttemptId, z3.generation, row.deadline_at])).rows[0];
+  if (!inserted) z3Fault("Z3_S4_EXECUTABLE_STEP_ALREADY_SELECTED_BY_ANOTHER_EDGE");
+  await app.applicationEvent(ctx, row, "Z3_STEP_SELECTED", { selectionId: inserted.id, stepId: step.id,
+    operationId: step.operationId, z3SessionId: invocation.sessionId, edgeIndex, cursorDigest: invocation.cursorDigest,
+    originalDeadline: row.parent.deadlineAt, executionAuthorityGranted: false, newAllowance: false }, c);
+  await app.enqueueApplicationSelection(ctx, row, inserted.id, c);
+  return { status: "AWAITING_APPLICATION_OWNER", selectionId: inserted.id, stepId: step.id,
+    operationId: step.operationId, selectionStatus: "SELECTED", executionAuthorityGranted: false };
 }
+
+async function executableOutcome(ctx: PeMutationContext, request: GeneralOwnerRequest, invocation: GeneralOwnerInvocation,
+  target: ExecutableTarget, selection: ApplicationSelectionRow, c: PoolClient): Promise<GeneralExecutableSelection> {
+  if (selection.status === "SELECTED" || selection.status === "CONSUMING") {
+    return { status: "AWAITING_APPLICATION_OWNER", selectionId: selection.id, stepId: selection.step_id,
+      operationId: selection.operation_id, selectionStatus: selection.status, executionAuthorityGranted: false };
+  }
+  if (selection.status !== "RESULT_RETAINED" || !selection.receipt_ref) z3Fault("Z3_S4_EXECUTABLE_SELECTION_REFUSED_OR_STALE");
+  const receipt = await app.applicationArtifact<{ schema: string; tenantId: string; principalId: string; workId: string;
+    workInputId: string; originalParentRef: ExperimentRef; sessionId: string; selectionId: string; stepId: string;
+    operationId: string; semanticRevision: string; compositionRef: ExperimentRef; afterState: ApplicationSnapshot["state"];
+    afterObservationRef: ExperimentRef; disposition: string;
+    z3: { sessionId: string; edgeIndex: number; cursorDigest: string; mapDigest: string } }>(ctx, selection.receipt_ref, c);
+  const row = target.value.row;
+  if (selection.receipt_ref.owner !== "S4" || receipt.schema !== Z3_STEP_RECEIPT
+    || selection.receipt_ref.contentDigest !== selection.receipt_digest
+    || receipt.tenantId !== ctx.auth.tenantId || receipt.principalId !== principal(ctx)
+    || receipt.workId !== request.workId || receipt.workInputId !== request.workInputId
+    || !sameX2Ref(receipt.originalParentRef, row.original_parent_ref) || receipt.sessionId !== row.id
+    || receipt.selectionId !== selection.id || receipt.stepId !== selection.step_id
+    || receipt.operationId !== selection.operation_id || receipt.semanticRevision !== selection.semantic_revision
+    || !sameX2Ref(receipt.compositionRef, selection.composition_ref) || receipt.disposition !== "VERIFIED"
+    || receipt.z3.sessionId !== invocation.sessionId || receipt.z3.cursorDigest !== invocation.cursorDigest
+    || receipt.z3.edgeIndex !== selection.z3_edge_index || receipt.z3.mapDigest !== request.model.mapDigest) {
+    z3Fault("Z3_NATIVE_OWNER_RECEIPT_ORIGINAL_BINDING_CHANGED");
+  }
+  await invocationCurrent(ctx, request, invocation, c);
+  const observation: NativeObservation = { observerId: target.observer.id, revision: target.value.model.ref,
+    sourceRef: selection.receipt_ref,
+    facts: { ...flattenState(receipt.afterState), $view: "OPERATION_RETURNED", resultKind: "EXECUTED_APPLICATION_STEP_READBACK",
+      disposition: null, operationId: receipt.operationId },
+    qualification: "ACTUAL_APPLICATION_OWNER_STEP_INDEPENDENT_READBACK_NOT_ACCEPTANCE_OR_RELEASE" };
+  return { status: "RESULT", selectionId: selection.id, observation: await retainObservation(ctx, request, invocation, observation, c) };
+}
+
 /** Independently versioned typed result domains of the actual S4 owners above.
  * Named values come from the pinned owner contracts and revisions. Values that
  * are only learned from observation (S2 tokens, observed application values,
