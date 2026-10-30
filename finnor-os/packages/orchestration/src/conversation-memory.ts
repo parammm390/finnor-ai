@@ -194,12 +194,12 @@ export async function compactEmployeeConversation(raw: unknown, options: { provi
   const ctx = await requireOwner(cut);
   const previous = await readConversationCheckpoint({ ...cut, throughSequence: 2_147_483_647 });
   if ((previous?.throughSequence ?? 0) >= cut.throughSequence) return { status: "already_compacted" as const };
-  const pending = await readConversationMessages({ ...cut, afterSequence: previous?.throughSequence ?? 0, limit: 12 });
+  const pending = await readConversationMessages({ ...cut, afterSequence: previous?.throughSequence ?? 0, limit: 200 });
   const messages: EmployeeConversationMessage[] = [];
   let bytes = 0;
   for (const message of pending) {
     const size = countPromptTokensUpperBound(JSON.stringify(message));
-    if (messages.at(-1)?.role === "assistant" && bytes + size > 18000) break;
+    if (messages.at(-1)?.role === "assistant" && (messages.length >= 12 || bytes + size > 18000)) break;
     messages.push(message); bytes += size;
   }
   // Seal complete older exchanges; never cut a user message away from its reply.

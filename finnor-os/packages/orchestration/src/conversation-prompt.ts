@@ -49,13 +49,20 @@ export async function buildConversationModelInput(params: {
   const history = context.exactRecentMessages.filter(message => message.id !== currentId && message.sequence <= cut);
   const newest = history.slice(-2);
   const active = (context.memory?.checkpoint?.items ?? []).filter(item => item.supersededBy === null);
-  const requiredItems = active.filter(item => item.kind !== "assistant_proposal"
-    && (item.kind !== "context" || item.sources.some(source => source.role === "user")));
+  const requiredItems = active.filter(item => item.sources.some(source => source.role === "user")
+    || (item.kind !== "context" && item.kind !== "assistant_proposal"));
+  const activeSourceKeys = new Set(requiredItems.flatMap(item => item.sources.map(source => source.messageId + ":" + source.quote)));
+  const earlierUserSources = [...new Map((context.memory?.checkpoint?.items ?? []).flatMap(item => item.sources)
+    .filter(source => source.role === "user" && !activeSourceKeys.has(source.messageId + ":" + source.quote))
+    .map(source => [source.messageId + ":" + source.quote, source])).values()]
+    .sort((a, b) => a.sequence - b.sequence)
+    .map(({ sequence, role, quote, recordedAt }) => ({ sequence, role, quote, recordedAt }));
   const conversation = {
     threadId: context.thread.id, throughSequence: cut, checkpointId: context.memory?.checkpoint?.id ?? null,
     timezone: context.memory?.timezone ?? null,
     inputRecordedAt: context.exactRecentMessages.find(message => message.id === currentId)?.createdAt ?? null,
     retainedItems: requiredItems.map(promptItem),
+    earlierUserSources,
     recentMessages: newest.map(promptMessage),
     relevantEarlierMessages: [] as ReturnType<typeof promptMessage>[],
     personalMemories: context.personalMemories,

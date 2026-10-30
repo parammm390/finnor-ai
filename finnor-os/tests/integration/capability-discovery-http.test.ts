@@ -77,7 +77,7 @@ describe.skipIf(!adminUrl)("authenticated capability discovery", () => {
     delete process.env.ZEP_API_KEY;
     process.env.RATE_LIMIT_INTAKE_PER_MINUTE = "1000";
     process.env.LLM_PROVIDER_ANSWER_TEXT = `discovery-${runId}`;
-    registerProvider(`discovery-${runId}`, () => ({ name: `discovery-${runId}`, async complete(options) {
+    registerProvider(`discovery-${runId}`, () => ({ name: `discovery-${runId}`, contextWindowTokens: 131072, async complete(options) {
       modelInputs.push(JSON.parse(options.user));
       return "I can describe registered instruction capabilities. Execution requires current authority and configuration.";
     } }));
