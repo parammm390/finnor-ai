@@ -37,7 +37,7 @@ Z5 calls the ORIGINAL S8 lifecycle (`packages/capability-evolution/src/server.mt
 login; pool role; contract register 200; submit 202 + conflicting preimage 409 `Z5_ORIGINAL_IDEMPOTENCY_CONFLICT`; kill AFTER_CLAIM; kill AFTER_CERTIFICATE; kill AFTER_REPLACEMENT; final worker -> `USED`, queue `completed`, 4 attempts; composition-plan 200 + `S4_ORIGINAL_COMPOSITION_PLAN_CONSUMED`; non-mutating reads; fifth delivery refused; mounted panel + alternate Work; second tenant denied; sign-out; delayed callback -> `STALE`; stale use refused; cancel; post-cancel refusals; revoke -> `REVOKED` visible after reload. Anything not reached is NOT_RUN with the blocking step named.
 
 ## Defects expected a priori (each gets an entry before its fix)
-D1. Driver spawns the worker with the driver's `DATABASE_URL` (finnor_app) -> fix in `z5/native-e2e.mjs`: worker child uses `FINNOR_WORKER_DATABASE_URL`.
+D1 (FIXED in native-e2e.mjs workerEnvironment). Driver spawns the worker with the driver's `DATABASE_URL` (finnor_app) -> fix in `z5/native-e2e.mjs`: worker child uses `FINNOR_WORKER_DATABASE_URL`.
 D2. Launcher has no `z5` profile -> add localized `// BEGIN z5-native` block (profile whitelist plus env paths).
 D3. Evidence directory restriction vs runner evidence dir -> scenario copies.
 
