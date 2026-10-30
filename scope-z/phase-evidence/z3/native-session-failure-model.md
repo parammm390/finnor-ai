@@ -91,6 +91,16 @@ N16 v2 byte stability. The public Z3 suite (`scripts/project-z/run-ci.mjs --phas
 change shows identical evidence digests (runs `w3-z3ci-before-1` / `w3-z3ci-after-1` exist; a new pair is run
 after this change).
 
+N17 Acquisition child allocation smaller than the real exploration. OBSERVED in run w3-gov-05 (not predicted):
+the child allocation of 128 request units under the original 520-unit envelope was exhausted by a full
+two-target, two-role exploration of the fake portal (17 portal dispatches plus their independent reads); the
+last exploration step recorded `Z0_ORIGINAL_BUDGET_EXHAUSTED` with disposition UNKNOWN and the learner then
+raised `X2_EXPLORATION_RECONCILIATION_REQUIRED` (session UNKNOWN, G01 FAIL). The refusal is the correct
+owner behavior, so the fix is in the scenario input, not in the owner: the Z3 scenarios request a 480-unit
+allocation (still inside the original remaining) and wait up to 20 minutes for MODEL_READY. The same failure
+and sizing were found independently by the Z0 worker (run w0-native-05, commit c7c41ec on its branch); the Z3
+scenarios pass the values as options and do not edit the Z0-owned fixture default.
+
 ## Scope limits recorded up front (not silently narrowed later)
 
 - The map is a controlled recurring cycle over the first canonical steps of the portal composition

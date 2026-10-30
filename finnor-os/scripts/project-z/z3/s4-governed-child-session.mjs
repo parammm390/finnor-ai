@@ -95,7 +95,7 @@ const DEADLINE_CAP_MS = 14 * 60000;
 let parent = null, acquired = null;
 await runCase("G01", "Original X1 parent reaches MODEL_READY with S4 acceptance (real owners)", async () => {
   parent = await createOriginalInstitutionParent(env, { record, tag: "g" + randomUUID().slice(0, 6) });
-  acquired = await driveAcquisitionToModelReady(env, parent, { privateRoot, record, deadlineCapMs: DEADLINE_CAP_MS });
+  acquired = await driveAcquisitionToModelReady(env, parent, { privateRoot, record, deadlineCapMs: DEADLINE_CAP_MS, requestUnits: 480, timeoutMs: 1200000 });
   ensure(acquired.status === "MODEL_READY" && acquired.acceptance?.acceptanceRef, "PARENT_NOT_MODEL_READY_AND_ACCEPTED");
   return { detail: { sessionId: acquired.sessionId, deadlineAt: acquired.deadlineAt, model: acquired.model, acceptance: acquired.acceptance } };
 });
