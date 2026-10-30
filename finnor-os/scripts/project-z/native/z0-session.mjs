@@ -141,7 +141,10 @@ const invariants = async (before, sessionId) => {
   ensure(after.reservations.count === before.reservations.count && after.original.envelopes === before.original.envelopes && after.episode === before.episode, "NEW_PARENT_OR_ENVELOPE_CHANGED");
   ensure(after.domainActions === 0 && after.peRequests === 0, "BUSINESS_EFFECT_CREATED_BY_ACQUISITION");
   const charges = await q("SELECT phase,resource_id,unit,units::text FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 ORDER BY phase", [parent.tenantId, parent.parentReservation.id]);
-  return { session, charges, after };
+  const [envelope] = await q("SELECT e->>'resourceId' resource_id, (SELECT sum(v::numeric) FROM jsonb_array_elements_text(e->'quantities') v)::text limit_units FROM finnor_os.s5_reservations r, jsonb_array_elements(r.envelopes) e WHERE r.tenant_id=$1 AND r.reservation_id=$2 AND e->>'unit'='request'", [parent.tenantId, parent.parentReservation.id]);
+  const used = charges.filter(row => row.resource_id === envelope.resource_id && row.unit === "request").reduce((sum, row) => sum + BigInt(row.units), 0n);
+  ensure(used <= BigInt(envelope.limit_units), `ORIGINAL_ENVELOPE_EXCEEDED used=${used} limit=${envelope.limit_units}`);
+  return { session, charges, original: { resourceId: envelope.resource_id, limit: envelope.limit_units, used: used.toString() }, after };
 };
 if (!killMode) {
   await runCase("P0-10", "Acquisition under the original reservation reaches MODEL_READY and S4 acceptance", async () => {
@@ -151,7 +154,9 @@ if (!killMode) {
       const row = (await q("SELECT id,status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC LIMIT 1", [parent.tenantId, parent.workId]))[0] ?? null;
       const events = row ? await q("SELECT kind,left(body::text,900) body FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 ORDER BY created_at,event_id", [parent.tenantId, row.id]) : [];
       const requests = row ? await q("SELECT node_id,status,reason,possible_egress,left(body::text,500) body FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2 ORDER BY created_at", [parent.tenantId, row.id]) : [];
-      record("acquisition-failure-session", { session: row, events, requests, error: String(error.message).slice(0, 300) });
+      const dispositions = row ? await q("SELECT created_at,body->'detail'->>'disposition' disposition,body->'detail'->>'reason' reason FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 AND kind IN ('INDEPENDENT_APPLICATION_DISPOSITION','FAILED_OR_FENCED_PHYSICAL_DELIVERY') ORDER BY created_at,event_id", [parent.tenantId, row.id]) : [];
+      const charges = await q("SELECT phase,resource_id,unit,count(*)::int n,sum(units)::text units FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 GROUP BY 1,2,3 ORDER BY 1", [parent.tenantId, parent.parentReservation.id]);
+      record("acquisition-failure-session", { session: row, dispositions, charges, events: events.filter(item => !/^PHYSICAL_READ_/.test(item.kind)), requests, error: String(error.message).slice(0, 300) });
       throw error;
     }
     const checked = await invariants(before, acquired.sessionId);

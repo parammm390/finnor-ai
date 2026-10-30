@@ -344,7 +344,10 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
 }
 
 export interface AcquisitionOptions {
-  record?: Recorder; privateRoot: string; timeoutMs?: number; requestUnits?: number;
+  record?: Recorder; privateRoot: string; timeoutMs?: number;
+  /** Child allocation ceiling inside the original remaining (envelope 520 minus about 13 used by the compiler).
+   * A full two-target, two-role exploration of the fake portal charges about 150 requests, so 128 exhausts it. */
+  requestUnits?: number;
   /** Requested deadline cap in ms from now; the effective deadline never exceeds the original or the portal expiry. */
   deadlineCapMs?: number; idempotencyKey?: string;
   /** Refusal cases edit the otherwise valid owner request before it is sent. */
@@ -411,7 +414,7 @@ export async function submitInstitutionAcquisition(env: NativeEnvironment, paren
       [parent.tenantId, (parent.parentReservation as any).id])).rows[0];
     const requestEnvelope = (reservation?.envelopes as any[] | undefined)?.find(envelope => envelope.unit === "request");
     if (!requestEnvelope) throw Error("Z0_FIXTURE_ORIGINAL_RESERVATION_REQUEST_ENVELOPE_MISSING");
-    const resourceDemand = [{ resourceId: requestEnvelope.resourceId, unit: "request", amount: String(options.requestUnits ?? 128) }];
+    const resourceDemand = [{ resourceId: requestEnvelope.resourceId, unit: "request", amount: String(options.requestUnits ?? 480) }];
     const capMs = options.deadlineCapMs ?? 25 * 60000;
     const deadlineAt = new Date(Math.min(Date.parse(parent.deadlineAt), Date.parse(state.expiresAt) - 60000, Date.now() + capMs)).toISOString();
     const built: Record<string, any> = { root: { entityType: "pe_deal", entityId: parent.dealId }, workId: parent.workId, profileIds,
@@ -447,7 +450,7 @@ export async function driveAcquisitionToModelReady(env: NativeEnvironment, paren
   const sql = await admin(env);
   try {
     const terminal = new Set(["FAILED", "STALE", "BLOCKED", "CANCELLED", "UNKNOWN"]);
-    const row = await waitFor("MODEL_READY", options.timeoutMs ?? 600000, async () => {
+    const row = await waitFor("MODEL_READY", options.timeoutMs ?? 1200000, async () => {
       const current = (await sql.query("SELECT status,reason,generation,model_ref,check_ref FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parent.tenantId, sessionId])).rows[0];
       if (!current) return null;
       if (terminal.has(current.status)) throw Error(`Z0_FIXTURE_TERMINAL_SESSION_${current.status}:${current.reason ?? ""}`);
