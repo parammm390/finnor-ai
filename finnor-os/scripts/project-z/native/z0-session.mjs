@@ -322,30 +322,239 @@ if (process.env.FINNOR_Z0_MODE === "current") {
 }
 
 const killMode = process.env.FINNOR_Z0_MODE === "kill";
-const invariants = async (before, sessionId, portalDir = null) => {
-  const after = await witness(parent);
-  const [session] = await q("SELECT reservation_ref,original_parent_ref,deadline_at,status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parent.tenantId, sessionId]);
-  ensure(sha(session.reservation_ref) === sha(parent.parentReservation), "SESSION_RESERVATION_NOT_ORIGINAL");
-  ensure(Date.parse(session.deadline_at) <= Math.min(Date.parse(parent.originalDeadlineAt), Date.parse(parent.wallDeadlineAt)), "DEADLINE_EXTENDED");
+const invariants = async (before, sessionId, portalDir = null, owned = parent) => {
+  const after = await witness(owned);
+  const [session] = await q("SELECT reservation_ref,original_parent_ref,deadline_at,status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [owned.tenantId, sessionId]);
+  ensure(sha(session.reservation_ref) === sha(owned.parentReservation), "SESSION_RESERVATION_NOT_ORIGINAL");
+  ensure(Date.parse(session.deadline_at) <= Math.min(Date.parse(owned.originalDeadlineAt), Date.parse(owned.wallDeadlineAt)), "DEADLINE_EXTENDED");
   ensure(after.reservations.count === before.reservations.count && after.original.envelopes === before.original.envelopes && after.episode === before.episode, "NEW_PARENT_OR_ENVELOPE_CHANGED");
   ensure(after.domainActions === before.domainActions && after.peRequests === before.peRequests, `BUSINESS_EFFECT_CREATED_BY_ACQUISITION actions=${after.domainActions} peRequests=${after.peRequests}`);
   let portalWrites = null;
   if (portalDir) {
-    const wire = new Set((await q("SELECT body->'wire'->'identity'->>'requestId' id FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2", [parent.tenantId, sessionId])).map(row => row.id));
+    const wire = new Set((await q("SELECT body->'wire'->'identity'->>'requestId' id FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2", [owned.tenantId, sessionId])).map(row => row.id));
     const events = readFileSync(join(portalDir, "provider", "journal.ndjson"), "utf8").trim().split("\n").flatMap(line => JSON.parse(line).events ?? []);
     const writes = events.filter(event => /^(submission\.|approval\.committed)/.test(event.type));
     const unaccounted = writes.filter(event => !wire.has(event.requestId));
     ensure(unaccounted.length === 0, `PORTAL_WRITE_NOT_FROM_SESSION_REQUEST count=${unaccounted.length}`);
     portalWrites = { events: events.length, writes: writes.length, sessionRequests: wire.size };
   }
-  const charges = await q("SELECT phase,resource_id,unit,units::text FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 ORDER BY phase", [parent.tenantId, parent.parentReservation.id]);
-  const [envelope] = await q("SELECT e->>'resourceId' resource_id, (SELECT sum(v::numeric) FROM jsonb_array_elements_text(e->'quantities') v)::text limit_units FROM finnor_os.s5_reservations r, jsonb_array_elements(r.envelopes) e WHERE r.tenant_id=$1 AND r.reservation_id=$2 AND e->>'unit'='request'", [parent.tenantId, parent.parentReservation.id]);
+  const charges = await q("SELECT phase,resource_id,unit,units::text FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 ORDER BY phase", [owned.tenantId, owned.parentReservation.id]);
+  const [envelope] = await q("SELECT e->>'resourceId' resource_id, (SELECT sum(v::numeric) FROM jsonb_array_elements_text(e->'quantities') v)::text limit_units FROM finnor_os.s5_reservations r, jsonb_array_elements(r.envelopes) e WHERE r.tenant_id=$1 AND r.reservation_id=$2 AND e->>'unit'='request'", [owned.tenantId, owned.parentReservation.id]);
   const used = charges.filter(row => row.resource_id === envelope.resource_id && row.unit === "request").reduce((sum, row) => sum + BigInt(row.units), 0n);
   ensure(used <= BigInt(envelope.limit_units), `ORIGINAL_ENVELOPE_EXCEEDED used=${used} limit=${envelope.limit_units}`);
   return { session, charges, original: { resourceId: envelope.resource_id, limit: envelope.limit_units, used: used.toString() }, portalWrites, after };
 };
 const revokeMode = process.env.FINNOR_Z0_MODE === "revoke";
 const TERMINAL = ["MODEL_READY", "FAILED", "BLOCKED", "UNKNOWN", "STALE", "CANCELLED"];
+
+/**
+ * `boundaries` mode (failure model sections 15 and 15.1): revocation at CLAIM, SIGKILL at the CLAIM boundary with two
+ * concurrent explicit resumes, SIGKILL right after the durable S4 acceptance. Each case uses its own fresh original parent;
+ * the first parent is the untouched control. Only the owned worker process is stopped or killed.
+ */
+if (process.env.FINNOR_Z0_MODE === "boundaries") {
+  const readJournal = dir => { try { return readFileSync(join(dir, "provider", "journal.ndjson"), "utf8").trim().split("\n").filter(Boolean).flatMap(line => JSON.parse(line).events ?? []); } catch { return []; } };
+  const controlBefore = await witness(parent);
+  const sameOriginal = (a, b) => a.original.envelopes === b.original.envelopes && a.original.status === b.original.status && a.episode === b.episode;
+  const controlUnchanged = async () => { const now = await witness(parent); return now.sessions === controlBefore.sessions && now.charges.count === controlBefore.charges.count && sameOriginal(controlBefore, now) && now.peRequests === controlBefore.peRequests; };
+  const sessionRowOf = (p, id) => q("SELECT status,reason,generation,reservation_ref,original_parent_ref,deadline_at FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [p.tenantId, id]).then(rows => rows[0]);
+  const acceptanceCount = (p, id) => q("SELECT count(*)::int n, min(body->'detail'->'acceptanceRef'->>'id') ref FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 AND kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED'", [p.tenantId, id]).then(rows => rows[0]);
+  const requestCount = (p, id) => q("SELECT count(*)::int n FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2", [p.tenantId, id]).then(rows => rows[0].n);
+  const sessionJobs = (p, id) => q("SELECT id::text,status,attempts,claim_fence::text,left(coalesce(last_error,''),160) error FROM finnor_os.jobs WHERE tenant_id=$1 AND type='run_application_semantics_v1' AND payload->>'sessionId'=$2 ORDER BY created_at,id", [p.tenantId, id]);
+  const settle = async (p, id, ms) => { const end = Date.now() + ms; let row = null; for (;;) { row = await sessionRowOf(p, id); if (TERMINAL.includes(row?.status)) return row; if (Date.now() > end) return row; await sleep(2500); } };
+  const portalSendDuplicates = events => {
+    const seen = new Map();
+    for (const event of events.filter(item => /^(submission\.accepted|approval\.committed)$/.test(item.type))) seen.set(event.requestId + "|" + event.type, (seen.get(event.requestId + "|" + event.type) ?? 0) + 1);
+    return [...seen.entries()].filter(([, n]) => n > 1).map(([key]) => key);
+  };
+  const freshParent = (prefix, shape) => createOriginalInstitutionParent(env, { record, tag: prefix + randomUUID().slice(0, 5), shape });
+
+  await runCase("B-REVOKE-CLAIM", "Owner revocation of the application accounts between enqueue and worker claim stops the acquisition before any physical request", async () => {
+    ensure(worker, "OWNED_WORKER_REQUIRED");
+    const p = await freshParent("br", "partial-unresolved");
+    const before = await witness(p);
+    await worker.stop();
+    worker = null;
+    let submitted = null;
+    try {
+      submitted = await submitInstitutionAcquisition(env, p, { privateRoot, record }, owner);
+      ensure(submitted.response.status === 202, `ACQUIRE_NOT_ACCEPTED_${submitted.response.status}:${JSON.stringify(submitted.response.body).slice(0, 200)}`);
+      const sessionId = submitted.response.body.sessionId;
+      const queued = await sessionJobs(p, sessionId);
+      ensure(queued.length === 1 && queued[0].status === "queued" && queued[0].attempts === 0, "ACQUISITION_JOB_WAS_CLAIMED_BEFORE_THE_REVOCATION");
+      const revoked = await q("UPDATE finnor_os.application_accounts SET status='disabled' WHERE tenant_id=$1 AND application='x2_portal' AND status<>'disabled' AND account_key LIKE $2 RETURNING id::text", [p.tenantId, "%-" + p.tag + "-%"]);
+      ensure(revoked.length > 0, "NO_ACCOUNT_OF_THIS_ACQUISITION_WAS_REVOKED");
+      worker = await startWorker(30);
+      const final = await settle(p, sessionId, 300000);
+      const [acceptance, requests, after, jobs] = [await acceptanceCount(p, sessionId), await requestCount(p, sessionId), await witness(p), await sessionJobs(p, sessionId)];
+      const portalEvents = readJournal(submitted.handle.portal.dir);
+      const logins = portalEvents.filter(event => event.type === "session.created");
+      ensure(await controlUnchanged(), "UNRELATED_CONTROL_PARENT_CHANGED");
+      ensure(TERMINAL.includes(final?.status) && final.status !== "MODEL_READY", "REVOKED_SESSION_DID_NOT_STOP_" + final?.status);
+      ensure(acceptance.n === 0, "REVOKED_ACQUISITION_WAS_ACCEPTED");
+      ensure(requests === 0, `PHYSICAL_REQUEST_CREATED_AFTER_REVOCATION count=${requests}`);
+      ensure(logins.length === 0, `PORTAL_LOGIN_AFTER_REVOCATION count=${logins.length}`);
+      ensure(sameOriginal(before, after) && after.charges.count === before.charges.count, "REVOCATION_CHANGED_THE_ORIGINAL_BUDGET");
+      return { detail: { sessionId, revokedAccounts: revoked.length, final: { status: final.status, reason: final.reason }, jobs, portalEvents: portalEvents.map(event => event.type), before, after } };
+    } finally {
+      if (submitted) await submitted.handle.portal.stop();
+      if (!worker) worker = await startWorker(30);
+    }
+  });
+
+  await runCase("B-KILL-CLAIM", "SIGKILL at the worker claim boundary (job running, no physical request), quarantine, two concurrent explicit resumes", async () => {
+    ensure(worker, "OWNED_WORKER_REQUIRED");
+    const p = await freshParent("bk", "partial-unresolved");
+    const before = await witness(p);
+    const submitted = await submitInstitutionAcquisition(env, p, { privateRoot, record }, owner);
+    try {
+      ensure(submitted.response.status === 202, `ACQUIRE_NOT_ACCEPTED_${submitted.response.status}`);
+      const sessionId = submitted.response.body.sessionId;
+      let attempt = null, requestsAtKill = null, killed = null, pid = null;
+      for (let i = 0; i < 60000 && !killed; i++) {
+        const [row] = await q("SELECT j.id::text job_id,j.attempts,j.claim_fence::text claim_fence,a.id::text attempt_id,a.worker_id FROM finnor_os.jobs j JOIN finnor_os.job_delivery_attempts a ON a.job_id=j.id AND a.claim_token=j.claim_token WHERE j.tenant_id=$1 AND j.payload->>'sessionId'=$2 AND j.status='running' AND a.finished_at IS NULL", [p.tenantId, sessionId]);
+        if (row) {
+          attempt = row;
+          requestsAtKill = await requestCount(p, sessionId);
+          if (requestsAtKill > 0) break;
+          ensure(String(row.worker_id).endsWith(":" + worker.pid), "KILLED_PROCESS_IS_NOT_THE_QUEUE_OWNER");
+          pid = worker.pid;
+          worker.child.kill("SIGKILL");
+          killed = await worker.exited;
+          break;
+        }
+        if (TERMINAL.includes((await sessionRowOf(p, sessionId))?.status)) break;
+        await sleep(15);
+      }
+      if (!killed) {
+        await owner.operation("application-cancel", { root: submitted.request.root, workId: p.workId, sessionId }).catch(() => null);
+        return { outcome: "NOT_RUN", detail: { reason: "CLAIM_BOUNDARY_NOT_REACHED", claimObserved: Boolean(attempt), requestsWhenObserved: requestsAtKill, session: await sessionRowOf(p, sessionId) } };
+      }
+      ensure(killed.signal === "SIGKILL", "WORKER_EXIT_NOT_SIGKILL_" + killed.signal);
+      const requestsAfterKill = await requestCount(p, sessionId);
+      const afterKill = await sessionRowOf(p, sessionId);
+      worker = await startWorker(30);
+      let quarantine = null;
+      for (let i = 0; i < 180 && !quarantine; i++) {
+        const [row] = await q("SELECT j.status,j.attempts,j.claim_fence::text claim_fence,a.outcome,a.failure_kind FROM finnor_os.jobs j JOIN finnor_os.job_delivery_attempts a ON a.job_id=j.id AND a.id=$2 WHERE j.id=$1", [attempt.job_id, attempt.attempt_id]);
+        if (row?.status === "quarantined") quarantine = row; else await sleep(2500);
+      }
+      ensure(quarantine, "LOST_JOB_NOT_QUARANTINED_AFTER_LEASE_EXPIRY");
+      ensure(quarantine.outcome === "reconciliation_required" && quarantine.failure_kind === "lease_expired", `QUARANTINE_CLASSIFICATION_${quarantine.outcome}_${quarantine.failure_kind}`);
+      ensure(quarantine.attempts === attempt.attempts && quarantine.claim_fence === attempt.claim_fence, "QUARANTINE_CHANGED_ATTEMPT_OR_FENCE");
+      const jobsBeforeResume = await sessionJobs(p, sessionId);
+      const resumeBody = { root: submitted.request.root, workId: p.workId, sessionId };
+      const answers = await Promise.all([owner.operation("application-resume", resumeBody), owner.operation("application-resume", resumeBody)]);
+      const final = await settle(p, sessionId, 600000);
+      await sleep(8000);
+      const jobsAfter = await sessionJobs(p, sessionId);
+      const events = readJournal(submitted.handle.portal.dir);
+      const duplicates = portalSendDuplicates(events);
+      const acceptance = await acceptanceCount(p, sessionId);
+      const [rootRows] = await q("SELECT count(*)::int n FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND work_id=$2", [p.tenantId, p.workId]);
+      const dupObligations = await q("SELECT obligation_id,count(*)::int n FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2 AND status<>'DENIED' GROUP BY 1 HAVING count(*)>1", [p.tenantId, sessionId]);
+      const stillRunning = jobsAfter.filter(job => ["queued", "running"].includes(job.status));
+      const checked = await invariants(before, sessionId, submitted.handle.portal.dir, p);
+      ensure(await controlUnchanged(), "UNRELATED_CONTROL_PARENT_CHANGED");
+      ensure(answers.every(answer => answer.status === 202), `RESUME_NOT_ACCEPTED_${answers.map(answer => answer.status).join(",")}`);
+      ensure(JSON.stringify(final.reservation_ref) === JSON.stringify(afterKill.reservation_ref) && JSON.stringify(final.original_parent_ref) === JSON.stringify(afterKill.original_parent_ref)
+        && Date.parse(final.deadline_at) === Date.parse(afterKill.deadline_at), "RECOVERY_CHANGED_PARENT_RESERVATION_OR_DEADLINE");
+      ensure(duplicates.length === 0, "PORTAL_WRITE_EVENT_DUPLICATED_FOR_A_REQUEST:" + duplicates.join(","));
+      ensure(acceptance.n <= 1, "DUPLICATE_S4_ACCEPTANCE_" + acceptance.n);
+      ensure(rootRows.n === 1, "MORE_THAN_ONE_SESSION_FOR_THE_ORIGINAL_WORK_" + rootRows.n);
+      ensure(dupObligations.length === 0, "OBLIGATION_HAS_MORE_THAN_ONE_REQUEST_ROW");
+      ensure(TERMINAL.includes(final?.status) && stillRunning.length === 0, `RECOVERY_DID_NOT_SETTLE_${final?.status}_pendingJobs=${stillRunning.length}`);
+      return { detail: { sessionId, pid, exit: killed, boundary: { attemptWorkerId: attempt.worker_id, requestsWhenObserved: requestsAtKill, requestsAfterKill, claimFence: attempt.claim_fence },
+        afterKill: { status: afterKill.status, generation: afterKill.generation }, quarantine, jobsBeforeResume,
+        resumes: answers.map(answer => ({ status: answer.status, generation: answer.body?.generation ?? null, newAllowance: answer.body?.newAllowance, replayPossibleEffect: answer.body?.replayPossibleEffect })),
+        jobsAfter, generationAfter: final.generation, final: { status: final.status, reason: final.reason }, acceptanceEvents: acceptance.n, portalDuplicateSends: duplicates, before, ...checked } };
+    } finally {
+      await submitted.handle.portal.stop();
+      if (!worker) worker = await startWorker(30);
+    }
+  });
+
+  await runCase("B-KILL-ACCEPT", "SIGKILL immediately after the durable S4 acceptance on the gated parent; recovery neither repeats the acceptance nor double-charges the consumption", async () => {
+    ensure(worker, "OWNED_WORKER_REQUIRED");
+    const p = await freshParent("ba", "gated-two-supported-and-unresolved");
+    ensure(p.gated, "GATED_PARENT_REQUIRED");
+    const before = await witness(p);
+    const submitted = await submitInstitutionAcquisition(env, p, { privateRoot, record }, owner);
+    try {
+      ensure(submitted.response.status === 202, `ACQUIRE_NOT_ACCEPTED_${submitted.response.status}`);
+      const sessionId = submitted.response.body.sessionId;
+      const preparation = async () => (await q("SELECT count(*)::int n FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 AND phase='PREPARATION'", [p.tenantId, p.parentReservation.id]))[0].n;
+      const continuation = () => q("SELECT id::text,status,left(coalesce(last_error,''),160) error FROM finnor_os.jobs WHERE tenant_id=$1 AND type='run_x1_institution_continuation_v1' AND payload->>'programId'=$2 ORDER BY created_at,id", [p.tenantId, p.programId]);
+      let accepted = null, pid = null, killed = null;
+      for (let i = 0; i < 60000 && !accepted; i++) {
+        const acceptance = await acceptanceCount(p, sessionId);
+        if (acceptance.n >= 1) {
+          accepted = acceptance;
+          pid = worker.pid;
+          worker.child.kill("SIGKILL");
+          killed = await worker.exited;
+          break;
+        }
+        if (TERMINAL.includes((await sessionRowOf(p, sessionId))?.status)) break;
+        await sleep(15);
+      }
+      ensure(accepted, "ACCEPTANCE_NOT_OBSERVED_BEFORE_THE_SESSION_SETTLED");
+      ensure(killed.signal === "SIGKILL", "WORKER_EXIT_NOT_SIGKILL_" + killed.signal);
+      const atKill = { session: await sessionRowOf(p, sessionId), jobs: await sessionJobs(p, sessionId), continuation: await continuation(), preparation: await preparation(), acceptance: await acceptanceCount(p, sessionId) };
+      worker = await startWorker(30);
+      const resumed = [];
+      const pending = async () => [...await sessionJobs(p, sessionId), ...await continuation()].filter(job => ["queued", "running"].includes(job.status));
+      const end = Date.now() + 360000;
+      for (;;) {
+        await sleep(3000);
+        const rows = await sessionJobs(p, sessionId);
+        const quarantined = [...rows, ...await continuation()].filter(job => job.status === "quarantined");
+        if (quarantined.length && !resumed.length) {
+          // The kill may have stranded a delivery; the owner's own explicit resume is the only recovery path for quarantine.
+          const quarantinedSession = rows.some(job => job.status === "quarantined");
+          const response = quarantinedSession
+            ? await owner.operation("application-resume", { root: submitted.request.root, workId: p.workId, sessionId })
+            : await owner.operation("program-resume", { programId: p.programId });
+          resumed.push({ via: quarantinedSession ? "application-resume" : "program-resume", status: response.status });
+        }
+        if (!(await pending()).length && Date.now() - (end - 360000) > 40000) break;
+        if (Date.now() > end) break;
+      }
+      const after = { session: await sessionRowOf(p, sessionId), jobs: await sessionJobs(p, sessionId), continuation: await continuation(), preparation: await preparation(), acceptance: await acceptanceCount(p, sessionId) };
+      const [programme] = await q("SELECT status,failure FROM finnor_os.p1_requests WHERE tenant_id=$1 AND id=$2", [p.tenantId, p.programId]);
+      const [rootRows] = await q("SELECT count(*)::int n FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND work_id=$2", [p.tenantId, p.workId]);
+      const [head] = await q("SELECT body->'bounds'->>'deadlineAt' deadline FROM finnor_os.p1_programs WHERE tenant_id=$1 AND id=(SELECT head_id FROM finnor_os.p1_requests WHERE tenant_id=$1 AND id=$2)", [p.tenantId, p.programId]);
+      const events = readJournal(submitted.handle.portal.dir);
+      const duplicates = portalSendDuplicates(events);
+      const stillPending = await pending();
+      const checked = await invariants(before, sessionId, submitted.handle.portal.dir, p);
+      ensure(await controlUnchanged(), "UNRELATED_CONTROL_PARENT_CHANGED");
+      ensure(after.acceptance.n === 1 && after.acceptance.ref === atKill.acceptance.ref, `S4_ACCEPTANCE_REPEATED_OR_CHANGED n=${after.acceptance.n}`);
+      ensure(after.preparation <= atKill.preparation + 1, `PREPARATION_CHARGED_MORE_THAN_ONCE_${atKill.preparation}_TO_${after.preparation}`);
+      ensure(rootRows.n === 1, "SECOND_ROOT_SESSION_CREATED_" + rootRows.n);
+      ensure(duplicates.length === 0, "PORTAL_WRITE_EVENT_DUPLICATED_FOR_A_REQUEST:" + duplicates.join(","));
+      ensure(stillPending.length === 0, "JOBS_STILL_PENDING_AFTER_RECOVERY_WINDOW_" + stillPending.length);
+      ensure(!/fail/i.test(String(programme.status)) && !programme.failure, "ORIGINAL_PROGRAMME_FAILED_BY_THE_KILL_" + programme.status);
+      ensure(Date.parse(head.deadline) === Date.parse(p.programmeDeadlineAt), "ORIGINAL_DEADLINE_CHANGED");
+      return { detail: { sessionId, pid, exit: killed, atKill, resumed, after, programme, portalDuplicateSends: duplicates, before, ...checked } };
+    } finally {
+      await submitted.handle.portal.stop();
+      if (!worker) worker = await startWorker(30);
+    }
+  });
+
+  notRun("B-EXHAUSTED-FALLBACK", "Fallback under remaining resources when the original parent is exhausted (Z0-R44)", "cannot be produced without hand-written charges: the Work admits one root acquisition and over-demand is refused (P0-04, Z0_ORIGINAL_BUDGET_EXHAUSTED); the original continuation is observed in P0-11");
+  notRun("B-REVOKE-ACCEPT", "Revocation between checker verdict and S4 acceptance (Z0-R11-C02)", "needs a change committed inside one worker delivery between two statements; no owner hook, not built");
+  notRun("B-REVOKE-USE", "Revocation between acceptance and the original consumer (Z0-R11-C03)", "needs a change committed between S4 acceptance and the enqueued continuation reading it; no owner hook, not built");
+
+  const tallyBoundaries = results.reduce((acc, row) => ({ ...acc, [row.outcome]: (acc[row.outcome] ?? 0) + 1 }), {});
+  record("summary", { tally: tallyBoundaries, results, tenantId: parent.tenantId, parents: [parent.programId] });
+  await sql.end();
+  await worker?.stop();
+  chmodSync(workerLog, 0o600);
+  console.log(JSON.stringify({ event: "Z0_SESSION_DONE", mode: "boundaries", tally: tallyBoundaries }));
+  process.exit(tallyBoundaries.FAIL ? 1 : 0);
+}
 if (!killMode && !revokeMode) {
   await runCase("P0-10", "Acquisition under the original reservation reaches MODEL_READY and S4 acceptance", async () => {
     const before = await witness(parent);
