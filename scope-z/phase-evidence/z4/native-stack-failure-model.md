@@ -93,3 +93,30 @@ the pin is current wherever the product demands it.
 Rules for the fix: no edit of `enterprise-beliefs.ts`, `enterprise-interventions.ts` or the S3/S4 gates; no pin refreshed by hand; any re-fit is a
 real `/api/interventions/fit` call whose new model reference is the one named by the Work it serves; a Work whose model is stale at submit is
 reported as a product defect with the trace, never patched around. Expected values (the public-case finals) never depend on this stage.
+
+## H. Observed cause and the adopting intake (added after w4-seed-06)
+
+w4-seed-06 `world-trace.json` (view loaded at the pin's own validAt): digest equal to the fit pin after fit, S4 synthesis and S5 resource registration
+(394 references, `matchesFitPin: true`, `pinStatus: CURRENT`); after the first Z4 intake the digest changed and the only difference is ONE added reference
+`@finnor/db:canonical:work_entity_link:<id>:1:<hash>` (395 references, `pinStatus: INVALIDATED`). So G1 holds and G2..G5 do not. S1 counts a Work
+link on a pinned root as a new recorded fact, correctly and by design, and `intakeProofWork` always creates a new Work and links it to the model's root
+after `ownerSource` already demanded a current model. Every later Z4 step (`submitProof`, store recheck, consume) calls `ownerSource` again, so with the
+current intake no Work can ever be used with a model pinned on its own root: fit-before-link goes stale, link-before-fit needs a model reference that the
+intake definition (`ownerContract.modelRef` is inside `acceptedDefinition`) must already name.
+
+Smallest fix inside the Z4 owner (no S1/S3/S4 edit, no pin weakened): an optional `adoptWorkId` on `execution-proof-intake` that appends the typed
+objective input to an EXISTING original Work that already carries the canonical `about` link to the root, so the link exists before the model is fit and
+the intake adds no link. `adoptWorkId` is not part of the accepted definition, so plan and submit see the same definition as before.
+
+| # | Failure | Expected result | Oracle |
+|---|---|---|---|
+| H1 | Adopting a Work of another tenant or another principal | 404 `PE_ENTITY_NOT_FOUND` (foreign) or 422 `Z4_ADOPTED_WORK_NOT_ELIGIBLE` (same tenant, other creator); no input appended | `work_inputs` count for that Work unchanged |
+| H2 | Adopting a Work that has no `about` link to the request root | 422 `Z4_ADOPTED_WORK_NOT_ELIGIBLE`; no link is created to make it eligible | `work_entity_links` count unchanged |
+| H3 | Adopting a Work that already holds a typed Z4 input under another key or definition | 422 `Z4_ADOPTED_WORK_NOT_ELIGIBLE` | typed input count remains 1 |
+| H4 | Adopting a Work that already has a plan revision or is terminal (`completed`, `failed`, `cancelled`) | 422 `Z4_ADOPTED_WORK_NOT_ELIGIBLE` | plan revision count and status unchanged |
+| H5 | Exact-key replay of the same adoption | Same `workInputId`, `duplicate: true`, no second input, no new link | counts unchanged |
+| H6 | Same key replayed with a different definition | 422 `Z4_ADOPTED_INTAKE_DEFINITION_CONFLICT`; the first input is untouched | typed input digest unchanged |
+| H7 | The adoption itself changes the root's S1 view | It must not: the dependency digest after adoption equals the digest before it | `world-trace.json` entries `after-adopted-intake:*` all `matchesFitPin: true` |
+| H8 | Intake without `adoptWorkId` | Unchanged behaviour (creates and links a new Work). Its pin-staling effect is reported as a product limitation, not hidden | Source diff: that branch is byte-identical |
+| H9 | Adoption resets the deadline or budget | Not possible: deadline and one-hour rule are checked before any Work lookup, demand and budget are unchanged | Existing `Z4_ORIGINAL_ONE_HOUR_DEADLINE_REQUIRED` and S5 predicates |
+| H10 | OpenAPI/manifest staleness from the extra field | Reported to the coordinator for the single final restamp; not regenerated here | Report item |
