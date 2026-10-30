@@ -344,14 +344,27 @@ try {
   const installed = await step("stamp-installed-source", async () => {
     const git = args => {
       const run = spawnSync("git", ["-C", repository, ...args], { timeout: 120000, maxBuffer: 64 * 1024 * 1024 })
-      assert.equal(run.status, 0, "DECLARED_GIT_IDENTITY_REQUIRED")
+      assert.equal(run.status, 0, `DECLARED_GIT_IDENTITY_REQUIRED_${run.error?.code ?? run.signal ?? run.status}`)
       return run.stdout
     }
+    // The archive of this monorepo is far larger than any bound worth buffering, so it is hashed as it streams.
+    const archiveSha256 = () => new Promise((done, reject) => {
+      const hash = createHash("sha256")
+      const child = spawn("git", ["-C", repository, "archive", "HEAD"], { stdio: ["ignore", "pipe", "ignore"] })
+      const timer = setTimeout(() => child.kill("SIGKILL"), 120000)
+      child.stdout.on("data", chunk => hash.update(chunk))
+      child.once("error", error => { clearTimeout(timer); reject(error) })
+      child.once("close", (code, signal) => {
+        clearTimeout(timer)
+        if (code === 0) done(hash.digest("hex"))
+        else reject(new Error(`DECLARED_GIT_ARCHIVE_FAILED_${signal ?? code}`))
+      })
+    })
     const sourceCommit = git(["rev-parse", "HEAD"]).toString("utf8").trim()
     const sourceTree = git(["rev-parse", "HEAD^{tree}"]).toString("utf8").trim()
     // The declared delta over the integrated candidate base and the exact archived tree bytes.
     const integrationPatchSha256 = sha(git(["diff", "--binary", INTEGRATED_BASE, "HEAD"]))
-    const sourceArchiveSha256 = sha(git(["archive", "HEAD"]))
+    const sourceArchiveSha256 = await archiveSha256()
     const base = join(repository, "finnor-os/packages/private-equity/src/project-z/z1-shared-work")
     writeFileSync(join(base, "reconstruction-input.json"), JSON.stringify({ schema: "finnor.z1.reconstruction-input.v1",
       sourceCommit, sourceTree, integrationPatchSha256, sourceArchiveSha256 }, null, 2) + "\n", { mode: 0o600 })
