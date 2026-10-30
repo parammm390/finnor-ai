@@ -380,7 +380,7 @@ try {
         try {
           const api = await import("../../../packages/private-equity/src/project-z/z4-execution-proof/api.ts")
           diagnosis.inProcess = { outcome: "RETURNED", value: await api.submitProof(ctx, recoverOwner.request) }
-        } catch (error) { diagnosis.inProcess = { outcome: "THREW", message: String(error?.message ?? error).slice(0, 600), stack: String(error?.stack ?? "").split("\n").slice(0, 10) } }
+        } catch (error) { diagnosis.inProcess = { outcome: "THREW", message: String(error?.message ?? error).slice(0, 600), where: error?.where ?? null, detail: error?.detail ?? null, stack: String(error?.stack ?? "").split("\n").slice(0, 10) } }
         writeFileSync(join(evidence, "submit-diagnosis.json"), JSON.stringify(diagnosis, null, 2) + "\n", { mode: 0o600 })
       }
       const sessionBody = expectStatus(preSubmit, 202, "PRE_SUBMIT_OWNER_RECOVERY")
