@@ -2626,7 +2626,8 @@
         "properties": {
           "sessionId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           }
         },
         "required": [
@@ -2654,7 +2655,8 @@
         "properties": {
           "sessionId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           }
         },
         "required": [
@@ -2682,7 +2684,8 @@
         "properties": {
           "sessionId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "capsuleDigest": {
             "type": "string",
@@ -2744,7 +2747,8 @@
               },
               "entityId": {
                 "type": "string",
-                "format": "uuid"
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
               }
             },
             "required": [
@@ -2776,6 +2780,8 @@
                 "maximum": 8
               },
               "registers": {
+                "minItems": 1,
+                "maxItems": 8,
                 "type": "array",
                 "items": {
                   "type": "object",
@@ -2797,24 +2803,24 @@
                     "unit"
                   ],
                   "additionalProperties": false
-                },
-                "minItems": 1,
-                "maxItems": 8
+                }
               },
               "inputUnits": {
+                "minItems": 1,
+                "maxItems": 8,
                 "type": "array",
                 "items": {
                   "type": "string",
                   "pattern": "^[A-Za-z0-9_:/.-]{1,64}$"
-                },
-                "minItems": 1,
-                "maxItems": 8
+                }
               },
               "rounding": {
                 "type": "string",
                 "const": "EXACT_NO_CONVERSION"
               },
               "instructions": {
+                "minItems": 1,
+                "maxItems": 16,
                 "type": "array",
                 "items": {
                   "type": "object",
@@ -2978,9 +2984,7 @@
                     "b"
                   ],
                   "additionalProperties": false
-                },
-                "minItems": 1,
-                "maxItems": 16
+                }
               }
             },
             "required": [
@@ -2994,16 +2998,16 @@
             "additionalProperties": false
           },
           "initial": {
+            "minItems": 1,
+            "maxItems": 8,
             "type": "array",
             "items": {
               "type": "string",
               "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
-            },
-            "minItems": 1,
-            "maxItems": 8
+            }
           },
           "ownerContract": {
-            "anyOf": [
+            "oneOf": [
               {
                 "type": "object",
                 "properties": {
@@ -3039,16 +3043,18 @@
                     "additionalProperties": false
                   },
                   "periods": {
+                    "minItems": 1,
+                    "maxItems": 256,
                     "type": "array",
                     "items": {
                       "type": "integer",
                       "minimum": 0,
                       "maximum": 65535
-                    },
-                    "minItems": 1,
-                    "maxItems": 256
+                    }
                   },
                   "columns": {
+                    "minItems": 1,
+                    "maxItems": 8,
                     "type": "array",
                     "items": {
                       "type": "object",
@@ -3077,9 +3083,7 @@
                         "unit"
                       ],
                       "additionalProperties": false
-                    },
-                    "minItems": 1,
-                    "maxItems": 8
+                    }
                   },
                   "owner": {
                     "type": "string",
@@ -3087,6 +3091,9 @@
                   },
                   "query": {
                     "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
                     "additionalProperties": {}
                   },
                   "guard": {
@@ -3165,16 +3172,18 @@
                     "additionalProperties": false
                   },
                   "periods": {
+                    "minItems": 1,
+                    "maxItems": 256,
                     "type": "array",
                     "items": {
                       "type": "integer",
                       "minimum": 0,
                       "maximum": 65535
-                    },
-                    "minItems": 1,
-                    "maxItems": 256
+                    }
                   },
                   "columns": {
+                    "minItems": 1,
+                    "maxItems": 8,
                     "type": "array",
                     "items": {
                       "type": "object",
@@ -3203,9 +3212,7 @@
                         "unit"
                       ],
                       "additionalProperties": false
-                    },
-                    "minItems": 1,
-                    "maxItems": 8
+                    }
                   },
                   "owner": {
                     "type": "string",
@@ -3244,6 +3251,9 @@
                   },
                   "decision": {
                     "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
                     "additionalProperties": {}
                   },
                   "allocationRef": {
@@ -3331,9 +3341,12 @@
           },
           "deadlineAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
           },
           "resourceDemand": {
+            "minItems": 1,
+            "maxItems": 2,
             "type": "array",
             "items": {
               "type": "object",
@@ -3361,9 +3374,7 @@
                 "amount"
               ],
               "additionalProperties": false
-            },
-            "minItems": 1,
-            "maxItems": 2
+            }
           },
           "maxMemoryBytes": {
             "type": "integer",
@@ -3384,6 +3395,36 @@
             "type": "integer",
             "minimum": 1048576,
             "maximum": 67108864
+          },
+          "qualification": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.z4.public-qualification.v1"
+              },
+              "registrationSha256": {
+                "type": "string",
+                "const": "4479bce31a46945067d88b262bcb549040c20d91b2dc57e788e6b335bda4f163"
+              },
+              "caseId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "compilerFrozenAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              }
+            },
+            "required": [
+              "schema",
+              "registrationSha256",
+              "caseId",
+              "compilerFrozenAt"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
@@ -3447,7 +3488,8 @@
               },
               "entityId": {
                 "type": "string",
-                "format": "uuid"
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
               }
             },
             "required": [
@@ -3458,11 +3500,13 @@
           },
           "workId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "workInputId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "idempotencyKey": {
             "type": "string",
@@ -3487,6 +3531,8 @@
                 "maximum": 8
               },
               "registers": {
+                "minItems": 1,
+                "maxItems": 8,
                 "type": "array",
                 "items": {
                   "type": "object",
@@ -3508,24 +3554,24 @@
                     "unit"
                   ],
                   "additionalProperties": false
-                },
-                "minItems": 1,
-                "maxItems": 8
+                }
               },
               "inputUnits": {
+                "minItems": 1,
+                "maxItems": 8,
                 "type": "array",
                 "items": {
                   "type": "string",
                   "pattern": "^[A-Za-z0-9_:/.-]{1,64}$"
-                },
-                "minItems": 1,
-                "maxItems": 8
+                }
               },
               "rounding": {
                 "type": "string",
                 "const": "EXACT_NO_CONVERSION"
               },
               "instructions": {
+                "minItems": 1,
+                "maxItems": 16,
                 "type": "array",
                 "items": {
                   "type": "object",
@@ -3689,9 +3735,7 @@
                     "b"
                   ],
                   "additionalProperties": false
-                },
-                "minItems": 1,
-                "maxItems": 16
+                }
               }
             },
             "required": [
@@ -3705,16 +3749,16 @@
             "additionalProperties": false
           },
           "initial": {
+            "minItems": 1,
+            "maxItems": 8,
             "type": "array",
             "items": {
               "type": "string",
               "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
-            },
-            "minItems": 1,
-            "maxItems": 8
+            }
           },
           "ownerContract": {
-            "anyOf": [
+            "oneOf": [
               {
                 "type": "object",
                 "properties": {
@@ -3750,16 +3794,18 @@
                     "additionalProperties": false
                   },
                   "periods": {
+                    "minItems": 1,
+                    "maxItems": 256,
                     "type": "array",
                     "items": {
                       "type": "integer",
                       "minimum": 0,
                       "maximum": 65535
-                    },
-                    "minItems": 1,
-                    "maxItems": 256
+                    }
                   },
                   "columns": {
+                    "minItems": 1,
+                    "maxItems": 8,
                     "type": "array",
                     "items": {
                       "type": "object",
@@ -3788,9 +3834,7 @@
                         "unit"
                       ],
                       "additionalProperties": false
-                    },
-                    "minItems": 1,
-                    "maxItems": 8
+                    }
                   },
                   "owner": {
                     "type": "string",
@@ -3798,6 +3842,9 @@
                   },
                   "query": {
                     "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
                     "additionalProperties": {}
                   },
                   "guard": {
@@ -3876,16 +3923,18 @@
                     "additionalProperties": false
                   },
                   "periods": {
+                    "minItems": 1,
+                    "maxItems": 256,
                     "type": "array",
                     "items": {
                       "type": "integer",
                       "minimum": 0,
                       "maximum": 65535
-                    },
-                    "minItems": 1,
-                    "maxItems": 256
+                    }
                   },
                   "columns": {
+                    "minItems": 1,
+                    "maxItems": 8,
                     "type": "array",
                     "items": {
                       "type": "object",
@@ -3914,9 +3963,7 @@
                         "unit"
                       ],
                       "additionalProperties": false
-                    },
-                    "minItems": 1,
-                    "maxItems": 8
+                    }
                   },
                   "owner": {
                     "type": "string",
@@ -3955,6 +4002,9 @@
                   },
                   "decision": {
                     "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
                     "additionalProperties": {}
                   },
                   "allocationRef": {
@@ -4042,9 +4092,12 @@
           },
           "deadlineAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
           },
           "resourceDemand": {
+            "minItems": 1,
+            "maxItems": 2,
             "type": "array",
             "items": {
               "type": "object",
@@ -4072,9 +4125,7 @@
                 "amount"
               ],
               "additionalProperties": false
-            },
-            "minItems": 1,
-            "maxItems": 2
+            }
           },
           "maxMemoryBytes": {
             "type": "integer",
@@ -4095,6 +4146,36 @@
             "type": "integer",
             "minimum": 1048576,
             "maximum": 67108864
+          },
+          "qualification": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.z4.public-qualification.v1"
+              },
+              "registrationSha256": {
+                "type": "string",
+                "const": "4479bce31a46945067d88b262bcb549040c20d91b2dc57e788e6b335bda4f163"
+              },
+              "caseId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "compilerFrozenAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              }
+            },
+            "required": [
+              "schema",
+              "registrationSha256",
+              "caseId",
+              "compilerFrozenAt"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
@@ -4160,7 +4241,8 @@
               },
               "entityId": {
                 "type": "string",
-                "format": "uuid"
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
               }
             },
             "required": [
@@ -4171,11 +4253,13 @@
           },
           "workId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "workInputId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "workRevisionRef": {
             "type": "object",
@@ -4231,6 +4315,8 @@
                 "maximum": 8
               },
               "registers": {
+                "minItems": 1,
+                "maxItems": 8,
                 "type": "array",
                 "items": {
                   "type": "object",
@@ -4252,24 +4338,24 @@
                     "unit"
                   ],
                   "additionalProperties": false
-                },
-                "minItems": 1,
-                "maxItems": 8
+                }
               },
               "inputUnits": {
+                "minItems": 1,
+                "maxItems": 8,
                 "type": "array",
                 "items": {
                   "type": "string",
                   "pattern": "^[A-Za-z0-9_:/.-]{1,64}$"
-                },
-                "minItems": 1,
-                "maxItems": 8
+                }
               },
               "rounding": {
                 "type": "string",
                 "const": "EXACT_NO_CONVERSION"
               },
               "instructions": {
+                "minItems": 1,
+                "maxItems": 16,
                 "type": "array",
                 "items": {
                   "type": "object",
@@ -4433,9 +4519,7 @@
                     "b"
                   ],
                   "additionalProperties": false
-                },
-                "minItems": 1,
-                "maxItems": 16
+                }
               }
             },
             "required": [
@@ -4449,16 +4533,16 @@
             "additionalProperties": false
           },
           "initial": {
+            "minItems": 1,
+            "maxItems": 8,
             "type": "array",
             "items": {
               "type": "string",
               "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
-            },
-            "minItems": 1,
-            "maxItems": 8
+            }
           },
           "ownerContract": {
-            "anyOf": [
+            "oneOf": [
               {
                 "type": "object",
                 "properties": {
@@ -4494,16 +4578,18 @@
                     "additionalProperties": false
                   },
                   "periods": {
+                    "minItems": 1,
+                    "maxItems": 256,
                     "type": "array",
                     "items": {
                       "type": "integer",
                       "minimum": 0,
                       "maximum": 65535
-                    },
-                    "minItems": 1,
-                    "maxItems": 256
+                    }
                   },
                   "columns": {
+                    "minItems": 1,
+                    "maxItems": 8,
                     "type": "array",
                     "items": {
                       "type": "object",
@@ -4532,9 +4618,7 @@
                         "unit"
                       ],
                       "additionalProperties": false
-                    },
-                    "minItems": 1,
-                    "maxItems": 8
+                    }
                   },
                   "owner": {
                     "type": "string",
@@ -4542,6 +4626,9 @@
                   },
                   "query": {
                     "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
                     "additionalProperties": {}
                   },
                   "guard": {
@@ -4620,16 +4707,18 @@
                     "additionalProperties": false
                   },
                   "periods": {
+                    "minItems": 1,
+                    "maxItems": 256,
                     "type": "array",
                     "items": {
                       "type": "integer",
                       "minimum": 0,
                       "maximum": 65535
-                    },
-                    "minItems": 1,
-                    "maxItems": 256
+                    }
                   },
                   "columns": {
+                    "minItems": 1,
+                    "maxItems": 8,
                     "type": "array",
                     "items": {
                       "type": "object",
@@ -4658,9 +4747,7 @@
                         "unit"
                       ],
                       "additionalProperties": false
-                    },
-                    "minItems": 1,
-                    "maxItems": 8
+                    }
                   },
                   "owner": {
                     "type": "string",
@@ -4699,6 +4786,9 @@
                   },
                   "decision": {
                     "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
                     "additionalProperties": {}
                   },
                   "allocationRef": {
@@ -4786,9 +4876,12 @@
           },
           "deadlineAt": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
           },
           "resourceDemand": {
+            "minItems": 1,
+            "maxItems": 2,
             "type": "array",
             "items": {
               "type": "object",
@@ -4816,9 +4909,7 @@
                 "amount"
               ],
               "additionalProperties": false
-            },
-            "minItems": 1,
-            "maxItems": 2
+            }
           },
           "maxMemoryBytes": {
             "type": "integer",
@@ -4839,6 +4930,36 @@
             "type": "integer",
             "minimum": 1048576,
             "maximum": 67108864
+          },
+          "qualification": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.z4.public-qualification.v1"
+              },
+              "registrationSha256": {
+                "type": "string",
+                "const": "4479bce31a46945067d88b262bcb549040c20d91b2dc57e788e6b335bda4f163"
+              },
+              "caseId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "compilerFrozenAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              }
+            },
+            "required": [
+              "schema",
+              "registrationSha256",
+              "caseId",
+              "compilerFrozenAt"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [

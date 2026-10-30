@@ -88,7 +88,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/capability-evolution/src/lifecycle.ts",
-      "sha256": "6ca49b2a67fb625fb5f1f47b742ce08cc26d3c8b171605fbc7423670cdc100b7"
+      "sha256": "3e4629199db9d8290ba05ccda864d6609ba1137833bb55da6d779f5661bb2f2b"
     },
     {
       "path": "finnor-os/packages/capability-evolution/src/source-closure.ts",
@@ -140,7 +140,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "be99e973c245fb9e42e43f0959c54e4ac235f2784776c46f62bf93bce200c063"
+      "sha256": "6fbd9c034718d5f8586febc4d80454490bceb8a7f80251738aeef7bd7f544869"
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
@@ -152,19 +152,19 @@ export default {
     },
     {
       "path": "finnor-os/apps/worker/src/index.ts",
-      "sha256": "147aa059980b4bdb800527e6a9a93da677c92cb20359d000a9ed0d162fa39777"
+      "sha256": "cbe3bb6b3f2cd44a508d96e5ce82cc7c39cbeee757afd7fab978e9bab467bad3"
     },
     {
       "path": "finnor-os/apps/worker/src/queue.ts",
-      "sha256": "d7b9bcacad8f78ed92343e57ed31df8fd5bfcbff149cbbbb29c62361c8bd2082"
+      "sha256": "300510cd032cdb22c8123c7cf68d4e621bfb14390b1a6de0f78c8d93004a51c5"
     },
     {
       "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
-      "sha256": "0dec46803a98af52700832e83d01e138d643558a0717afbd185839810c6da9b8"
+      "sha256": "c33baee39bfe9d309588579520fd6d5d8118580a2884c68d50f0a78eecebe234"
     },
     {
       "path": "finnor-os/packages/db/compute-contract.ts",
-      "sha256": "d64e200aace11e62b81ea53563851bc80ac0ee43448862e8fbe5f1f59d18efa6"
+      "sha256": "ac3f2fda5ddc76666457c6af2bd0b2ce8611794a834190becc78ed4909f3e025"
     },
     {
       "path": "finnor-os/packages/db/compute-governor.ts",
@@ -172,7 +172,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "25edf0aa29c242f4b7d60eef3bd875adc19c5231703e7969ba0411479f831c73"
+      "sha256": "c11af9614100041f5d5dead20d4799b170d7c88e27f19b5a5b274884a51b2643"
     },
     {
       "path": "finnor-os/packages/db/migrations/0190_x5_experience_policy.sql",
@@ -180,7 +180,7 @@ export default {
     },
     {
       "path": "finnor-os/Dockerfile.worker",
-      "sha256": "c96be63d23a0d06bf5a3a04d027ce47ade6a0d52921b4462ab412e71485dfef9"
+      "sha256": "1506d75406e8d315bab685941b3daaa399c37ceb86671898670436da26a09c85"
     },
     {
       "path": "finnor-os/package-lock.json",
@@ -264,7 +264,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
-      "sha256": "aa33dcf657cdcb4ef85a059b51b52b646a93a11aabd9801e2436511b22d7ce43"
+      "sha256": "88a2b4819930bde9d23430d024ae724b10b5009ddce271f6b6312f90d428f77e"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
@@ -308,7 +308,7 @@ export default {
     },
     {
       "path": "src/lib/centropy/capability-manifest.generated.json",
-      "sha256": "ad69e07f9eb9bc59c8cebc6b813862a1c3aab671c5e3aae386d689f787c09bd9"
+      "sha256": "eff3db21525b903cc95ec8118bd84b5feb7d2cdf89954449095f3abb0a9324a9"
     },
     {
       "path": "finnor-os/scripts/x3/stamp-source.mts",
@@ -368,7 +368,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "sha256": "bcb7d797d03aa784ed46ecf53253382db13b6b1e75d4f9be1ef7dd8671721614"
+      "sha256": "4b9db733d648e0cf236eb9b8e6ded6b0c190119de700fef2caaab0c7d69e1d63"
     },
     {
       "path": "finnor-os/packages/epistemic-runtime/src/identification.ts",
@@ -444,7 +444,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/api/next.config.mjs",
-      "sha256": "e862207e53d1e67ebf3df8e8f6c29304a5c60179600cb5c671239e09414cf189"
+      "sha256": "f13a43d3a6f613f3dd584d4a1d8ed1efdce5ddcab7af680e674bc17528c6b318"
     },
     {
       "path": "finnor-os/packages/governed-execution/src/canonical.ts",
