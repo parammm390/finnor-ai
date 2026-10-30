@@ -201,7 +201,19 @@ try {
           equations: [{ variableId: "outcome", features: [{ kind: "CONSTANT" }, { kind: "EXPOSURE", id: "price", lag: 0 }, { kind: "EXPOSURE", id: "priceSecondary", lag: 0 }] }],
           counterparties: [] }],
         numerical: { bootstrapDraws: 64, blockLength: 4, seed: 20261002 } }
-      const fitted = expectStatus(await call(API, "/api/interventions/fit", ownerToken, { request }), 200, "S3_FIT")
+      const fitAnswer = await call(API, "/api/interventions/fit", ownerToken, { request })
+      if (fitAnswer.status !== 200) {
+        // The route maps every owner fault to one public code; the same call in this process names the first throw site.
+        const diagnosis = { httpStatus: fitAnswer.status, httpBody: fitAnswer.body }
+        try {
+          const beliefs = await import("../../../packages/private-equity/src/enterprise-beliefs.ts")
+          const view = await beliefs.loadEnterpriseBeliefView(ctx, { root })
+          diagnosis.beliefView = { coverage: view.coverage, pin: view.pin, keys: Object.keys(view) }
+          diagnosis.pinStatus = (await beliefs.validateBeliefViewPin(ctx, view.pin)).status
+        } catch (error) { diagnosis.beliefViewError = { code: error?.code, message: String(error?.message ?? error), stack: String(error?.stack ?? "").split("\n").slice(0, 8) } }
+        writeFileSync(join(evidence, "s3-fit-diagnosis.json"), JSON.stringify(diagnosis, null, 2) + "\n", { mode: 0o600 })
+      }
+      const fitted = expectStatus(fitAnswer, 200, "S3_FIT")
       if (fitted.status !== "FITTED") fail("S3_FIT_NOT_FITTED_" + JSON.stringify(fitted).slice(0, 400))
       writeFileSync(join(evidence, "s3-fit-summary.json"), JSON.stringify({ status: fitted.status, ref: fitted.model.ref, request, historyRowsPublicInputs: selection.map(item => ({ name: item.name, periods: item.periods, inputs: item.publicCase.request.inputs })) }, null, 2) + "\n", { mode: 0o600 })
       return { ref: fitted.model.ref, request, fitStartedAt, validUntil: Date.parse(request.validity.validUntil), series }
