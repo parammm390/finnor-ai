@@ -3,8 +3,7 @@
 import { createHash } from "node:crypto";
 import { readFile, readdir, readlink, stat, writeFile, mkdir } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { createRequire } from "node:module";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { inspectListeners } from "./listener-custody.mjs";
 
 export const sha = bytes => createHash("sha256").update(bytes).digest("hex");
@@ -144,6 +143,23 @@ export async function guardTarget() {
   return { target, fixture: fixtureValue, targetSha256: sha(bytes), identities, platformForwarders, root, installed, scenario };
 }
 
+function redact(value) {
+  let text = String(value);
+  for (const secret of [process.env.TEST_OWNER_PASSWORD, process.env.DATABASE_URL, process.env.FINNOR_Z1_WORKER_DATABASE_URL])
+    if (secret && secret.length >= 4) text = text.split(secret).join("<redacted>");
+  return text.replace(/\/\/[^\s/@:]+:[^\s/@]*@/g, "//<redacted>@").replace(/Bearer\s+\S+/gi, "Bearer <redacted>")
+    .replace(/eyJ[\w-]{8,}\.[\w-]+\.[\w-]*/g, "<redacted>");
+}
+// The raw text stays in a private file beside the report; the report only names the file (I2).
+async function writeDiagnostic(directory, error) {
+  try {
+    await privateJSON(resolve(directory, "diagnostic.private.json"), { schema: "finnor.z1.native-driver-diagnostic.v1",
+      name: redact(error?.name ?? typeof error), message: redact(error?.message ?? error).slice(0, 4000),
+      stack: redact(error?.stack ?? "").split("\n").slice(0, 24).join("\n").slice(0, 6000) });
+    return "diagnostic.private.json";
+  } catch { return null; }
+}
+
 const reportIndex = process.argv.indexOf("--report");
 const output = reportIndex >= 0 ? process.argv[reportIndex + 1] : null;
 need(output && isAbsolute(output), "ABSOLUTE_NEW_REPORT_DIRECTORY_REQUIRED");
@@ -161,9 +177,9 @@ try {
   report.nativeRuntimeDigest = guarded.installed.nativeRuntimeDigest; report.processIdentities = guarded.identities;
   report.platformForwarders = guarded.platformForwarders;
   await privateJSON(resolve(output, "doctor.json"), { ...report, status: "DOCTOR_PASSED_NETWORK_AND_DB_STILL_UNTOUCHED" });
-  const require = createRequire(resolve(root, "finnor-os/package.json"));
-  const { tsImport } = await import(require.resolve("tsx/esm/api"));
-  const { runNativeEpisode } = await tsImport(new URL("./native-e2e-run.mjs", import.meta.url).href, import.meta.url);
+  // The loader `node --import` uses (ESM and CommonJS hooks). `tsImport` cannot resolve the packages' `./x.js` specifiers.
+  await import(pathToFileURL(resolve(guarded.root, "finnor-os/node_modules/tsx/dist/loader.mjs")).href);
+  const { runNativeEpisode } = await import(new URL("./native-e2e-run.mjs", import.meta.url).href);
   await runNativeEpisode({ ...guarded, processIdentity, privateJSON, need, sha }, output, report);
   report.status = guarded.scenario === "ORIGINAL_EPISODE" ? "PASSED" : "PASSED_BOUNDED_NEGATIVE_ONLY";
 } catch (error) {
@@ -173,6 +189,7 @@ try {
     ? error.message : "NATIVE_PREREQUISITE_OR_OWNER_FLOW_FAILED_PRIVATE_DIAGNOSTIC_NOT_EXPORTED";
   // Only the refused listener rows (port, family, address) are attached; no driver or database text.
   if (Array.isArray(error?.detail) && error.detail.every(row => Number.isInteger(row?.port))) report.blockerDetail = error.detail;
+  report.blockerDiagnostic = await writeDiagnostic(output, error);
   process.exitCode = report.status === "NOT_RUN" ? 2 : 1;
 } finally {
   report.finishedAt = new Date().toISOString();

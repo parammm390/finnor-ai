@@ -102,7 +102,32 @@ authority, qualification, 100× or activation is claimed here or by the run.
   for declared variables used unqualified against a column of a table in the same
   statement found only the Z1 guard and the three Z0 bridge functions the Z3 commit
   already covers. Evidence: `fzv-int-out/native/w1-native-05/`.
-- `w1-native-06`: queued at the head carrying that fix.
+- `w1-native-06` (head cf1ba9a): FAILED_RETAINED at `stamp-installed-source` with
+  `DECLARED_GIT_IDENTITY_REQUIRED`, 10 s after the fixture was materialized (C12: the
+  buffered `git archive HEAD` exceeded the 64 MiB `spawnSync` buffer and the cause was not
+  named). Fixed in f9fac58. `w1-native-07` (head f9fac58) never reached the scenario: its
+  wrapper script exited 126 (`Argument list too long`) three seconds after the start, so it is
+  a retained harness failure and not a product result.
+- `w1-native-08` (head f9fac58): FAILED_RETAINED at `pin-target-manifest` with
+  `TARGET_LISTENER_MUST_BIND_LOOPBACK_ONLY` (A8: the sandbox platform mirrors every
+  listener on `169.254.0.21` through a root-owned `socat`). Fixed in e861c33 by classifying
+  rows instead of ignoring them; the manifest records the observed forwarders.
+- `w1-native-09` (head cbcec39): twelve session steps and the guard's doctor passed for the
+  first time (`doctor.json`, status `DOCTOR_PASSED_NETWORK_AND_DB_STILL_UNTOUCHED`), then
+  `guarded-native-episode` failed two seconds later with the generic blocker, no action,
+  no `native-doctor.json` and no request in the API or frontend logs. Diagnosis (failure
+  model I1): the driver loaded the episode module with tsx `tsImport`, which cannot resolve
+  `./protocol.js` from `governed-execution/src/adapter-contract.ts`; reproduced on the
+  remote checkout with no database. Before the next run the real episode module was run
+  against a restored copy of the retained `w1-native-09` database on a spare port, with the
+  frontend, API and Auth origins pointed at a closed port: the fixture schema, the
+  installed-schema catalog digest, the migration receipt, the worker-role identity, the
+  serial compute policies, the source custody checks and the Chromium launch with its
+  sandbox all passed and `native-doctor.json` was written; the run stopped at the first
+  navigation to the closed port, as designed. That is the first time the lines before the
+  login have run; the login, the mounted actions, the three physical kills and the rest of
+  the driver have still never run against a live stack. Fixed together with a private
+  `diagnostic.private.json` (I1, I2). Rerun is gated by the session's UTC-midnight guard.
 
 ## Known limits of this attempt
 
