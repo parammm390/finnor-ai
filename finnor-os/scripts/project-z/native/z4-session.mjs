@@ -321,7 +321,6 @@ try {
       planRevision: item.request.workRevisionRef.id, periods: item.periods }))
     result.negativeSupport = { cancelledWorkId: extras.cancelled.workId, overBudgetWorkId: extras.overBudget.workId }
     save()
-    if (stage === "seed") { result.status = "SEEDED_ONLY"; save(); process.exit(0) }
 
     // ---- case, expected and negative files; the ownerSourceDigest is an identity binding computed by the product owner ----
     const files = join(evidence, "preimages")
@@ -364,6 +363,20 @@ try {
       return { kind: spec.kind, operation: spec.operation, bodyFile: file.path, bodySha256: file.sha256,
         ...(spec.actor ? { credentialsEnvironmentVariable: envNames[spec.actor] } : {}), expectedStatus: spec.status, expectedPredicate: spec.predicate }
     })
+
+    if (stage === "seed") {
+      // Iteration aid only: the expectations above come from the product source; this records what the routes answer.
+      const tokens = { null: ownerToken, OWNER: ownerToken, FOREIGN: await bearerFor(actors.foreign.email, actors.foreign.password),
+        OTHER: await bearerFor(actors.other.email, actors.other.password) }
+      result.negativeProbe = []
+      for (const spec of negativeSpecs) {
+        const answer = await call(API, "/api/company-brain/" + spec.operation, tokens[spec.actor], spec.body)
+        const predicate = answer.body?.predicate ?? answer.body?.code ?? null
+        result.negativeProbe.push({ kind: spec.kind, operation: spec.operation, actor: spec.actor, expected: [spec.status, spec.predicate], observed: [answer.status, predicate],
+          matches: answer.status === spec.status && predicate === spec.predicate })
+      }
+      result.status = "SEEDED_ONLY"; save(); process.exit(0)
+    }
 
     // ---- target receipt and scope ----
     const identity = JSON.parse(readFileSync(join(repository, "finnor-os/packages/epistemic-runtime/native/z4-execution-proof/build-identity.json"), "utf8"))
