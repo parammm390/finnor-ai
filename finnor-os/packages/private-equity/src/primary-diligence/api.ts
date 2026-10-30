@@ -6,10 +6,11 @@ import {PeDomainError,type PeMutationContext,type PeWorldRootRef} from '../types
 import {actor,authorize,canonical,costReceipts,currentActor,currentFinding,event,exactWork,hash,newId,programme,putGovernance,reference,revisions,revokeGovernance,rightsBinding,tx,unavailable,type Programme} from './store';
 import {ownerBindings} from './governance';
 import {PrimaryConsumeSchema,consumePrimaryUnderwriting} from './consumer';
+import {selectPrimaryPlan} from './plan';
 import {reserveFixedPrimaryBudget} from '../allocation-store';
 import {resolveBilateralPredecessor} from '../bilateral-opportunities/handoff';
 
-export const PRIMARY_OPERATIONS=['primary-context','primary-open-work','primary-reserve-budget','primary-governance-put','primary-governance-revoke','primary-submit','primary-read','primary-advance','primary-cancel','primary-consume'] as const;
+export const PRIMARY_OPERATIONS=['primary-context','primary-open-work','primary-reserve-budget','primary-governance-put','primary-governance-revoke','primary-submit','primary-read','primary-advance','primary-cancel','primary-consume','primary-plan'] as const;
 const rooted=z.object({root:EvidenceRootSchema}).strict(),identified=z.object({programmeId:z.string().uuid()}).strict();
 export const PrimaryOperationSchemas={
  'primary-context':rooted,'primary-open-work':rooted.extend({instruction:z.string().min(1).max(2000),idempotencyKey:z.string().min(1).max(200),investigation:z.object({threadId:z.string().uuid(),expectedRevision:z.number().int().nonnegative()}).strict().optional()}).strict(),
@@ -17,7 +18,7 @@ export const PrimaryOperationSchemas={
  'primary-governance-put':z.object({root:EvidenceRootSchema,body:PrimaryGovernanceSchema,expectedRef:VReferenceSchema.nullable()}).strict(),
  'primary-governance-revoke':rooted.extend({ref:VReferenceSchema,reason:z.string().min(1).max(1000)}).strict(),
  'primary-submit':PrimaryIntakeSchema,'primary-read':identified,'primary-advance':PrimaryAdvanceSchema,'primary-cancel':identified,
- 'primary-consume':PrimaryConsumeSchema,
+ 'primary-consume':PrimaryConsumeSchema,'primary-plan':PrimaryIntakeSchema,
 } as const;
 export const programmeRef=(p:Programme)=>reference('V2',p.id,p.revision,{intakeDigest:p.intake_digest,startingEvidenceDigest:p.starting_digest});
 async function enqueue(ctx:PeMutationContext,p:Programme,c:import('pg').PoolClient){
@@ -125,6 +126,7 @@ export async function handlePrimaryOperation(ctx:PeMutationContext,operation:str
     const updated=await programme(ctx,p.id,c);await event(ctx,updated,'P7','LINKED_ADVANCE',{triggerRef:input.triggerRef,originalGrantRef:current.intake.budgetGrantRef,originalDeadline:bindings.mandate.stopping.deadline,releaseGranted:false},c);await enqueue(ctx,updated,c);
    });return {status:202,body:await readPrimary(ctx,p.id)};}
   if(operation==='primary-consume')return {status:200,body:await consumePrimaryUnderwriting(ctx,value)};
+  if(operation==='primary-plan')return {status:201,body:await selectPrimaryPlan(ctx,value)};
   return {status:404,body:{code:'NOT_FOUND'}};
  }catch(error){
   if(error instanceof PeDomainError&&error.code==='PE_ENTITY_NOT_FOUND')return {status:404,body:{code:'PE_ENTITY_NOT_FOUND',error:'Primary evidence is unavailable in the authenticated scope'}};

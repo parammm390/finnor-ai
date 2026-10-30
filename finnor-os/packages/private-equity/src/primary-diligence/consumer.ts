@@ -7,6 +7,7 @@ import type {PeMutationContext} from '../types';
 import {authorizeBeliefResources} from '../enterprise-beliefs';
 import {createUnderwritingRun} from '../underwriting-repository';
 import {actor,currentFinding,hash,reference,tx} from './store';
+import {wakePrimaryObjective} from './plan';
 export const PrimaryConsumeSchema=z.object({
  investmentCaseId:z.string().uuid(),modelVersionId:z.string().uuid(),worldAt:z.string().datetime({offset:true}),
  idempotencyKey:z.string().min(1).max(200),workId:z.string().uuid(),bindings:PrimaryUnderwritingInputsSchema,
@@ -78,5 +79,6 @@ export async function consumePrimaryUnderwriting(ctx:PeMutationContext,value:unk
  await authorizeBeliefResources(ctx,[{type:'work',id:input.workId},{type:'pe_investment_case',id:input.investmentCaseId}]);
  const run=await createUnderwritingRun(ctx,{investmentCaseId:input.investmentCaseId,modelVersionId:input.modelVersionId,worldAt:input.worldAt,idempotencyKey:input.idempotencyKey,workId:input.workId,primaryFindingInputs:input.bindings});
  await attachWorkEntity(ctx.auth.tenantId,input.workId,{entityType:'pe_investment_case',entityId:input.investmentCaseId,source:'V2:exact-primary-finding-underwriting-consumer'});
- return {...run,workId:input.workId};
+ // The consumer row is already durable. A refused wake leaves the original objective waiting and is reported, never rolled back.
+ return {...run,workId:input.workId,objectiveWake:await wakePrimaryObjective(ctx,input.workId)};
 }

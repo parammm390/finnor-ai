@@ -1298,6 +1298,54 @@ export async function schedulePreparedExecutionProofObjectiveTx(db:Db,params:{
  await scheduleIterationTx(db,loop,new Date());
 }
 
+/** Schedules the original goal check only after the owner's durable consumption rows exist for this Work's
+ * programme. Scheduling is not a completion observation; the typed reader re-derives currentness. */
+export async function schedulePreparedPrimaryDiligenceObjectiveTx(db:Db,params:{
+ tenantId:string;workId:string;planRevisionId:string;programmeId:string;definitionDigest:string;underwritingRunId:string;
+}):Promise<void>{
+ const [plan]=await db.select().from(workPlanRevisions).where(and(eq(workPlanRevisions.tenantId,params.tenantId),
+  eq(workPlanRevisions.workId,params.workId),eq(workPlanRevisions.id,params.planRevisionId))).limit(1);
+ if(!plan?.objectiveLoopId||plan.status!=='active'||!plan.workInputId)throw Error('R12_NATIVE_ACTIVE_OBJECTIVE_PLAN_REQUIRED');
+ await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${params.tenantId}
+  AND ${workObjectiveLoops.id}=${plan.objectiveLoopId} FOR NO KEY UPDATE`);
+ let [loop]=await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),
+  eq(workObjectiveLoops.id,plan.objectiveLoopId))).limit(1);
+ const deadline=(plan.constraintSet as {deadlineAt?:unknown})?.deadlineAt;
+ if(!loop||loop.workId!==params.workId||!loop.createdBy||!['waiting','continue'].includes(loop.state)||
+  loop.deadlineAt.getTime()<=Date.now()||typeof deadline!=='string'||Date.parse(deadline)!==loop.deadlineAt.getTime())
+  throw Error('R12_NATIVE_ORIGINAL_OBJECTIVE_FENCED');
+ const condition=parseObjectiveSuccessCondition(loop.successCondition);
+ if(condition.mode!=='all'||condition.criteria.length!==4||!condition.criteria.every(c=>c.kind==='canonical_query'
+  &&c.request.intent==='primary_diligence_v1'&&c.request.workId===params.workId)||
+  !Object.entries({status:'COMPLETE',current:true,definitionDigest:params.definitionDigest,nativeOwnerConsumed:true}).every(([key,expected])=>
+   condition.criteria.some(c=>c.kind==='canonical_query'&&c.assertion.path.join('.')==='data.'+key&&
+    c.assertion.operator==='eq'&&c.assertion.expected===expected)))throw Error('R12_NATIVE_ORIGINAL_SUCCESS_CONDITION_CHANGED');
+ const ready=await db.execute(sql`SELECT p.id FROM finnor_os.v2_programmes p
+  JOIN finnor_os.work_inputs i ON i.tenant_id=p.tenant_id AND i.work_id=p.work_id AND i.id=${plan.workInputId}::uuid
+  WHERE p.tenant_id=${params.tenantId}::uuid AND p.id=${params.programmeId}::uuid AND p.work_id=${params.workId}::uuid
+   AND p.principal_id=${loop.createdBy}::uuid AND p.work_input_id=i.id AND p.intake_digest=${params.definitionDigest}
+   AND p.status='COMPLETE' AND NOT p.invalidated AND p.cancellation_requested_at IS NULL
+   AND i.created_by=${loop.createdBy}::uuid
+   AND EXISTS(SELECT 1 FROM finnor_os.v2_findings f
+    JOIN finnor_os.v2_consumer_dependencies d ON d.tenant_id=f.tenant_id AND d.finding_id=f.id
+     AND d.consumer_type='underwriting_run' AND d.consumer_id=${params.underwritingRunId}::uuid
+    JOIN finnor_os.underwriting_runs r ON r.tenant_id=d.tenant_id AND r.id=d.consumer_id AND r.work_id=p.work_id
+    WHERE f.tenant_id=p.tenant_id AND f.principal_id=p.principal_id AND f.programme_id=p.id)
+   AND NOT EXISTS(SELECT 1 FROM finnor_os.work_inputs n WHERE n.tenant_id=i.tenant_id AND n.work_id=i.work_id
+    AND (n.created_at,n.id)>(i.created_at,i.id))`);
+ if(ready.rows.length!==1)throw Error('R12_NATIVE_TYPED_OWNER_CONSUMPTION_REQUIRED');
+ if(loop.state==='waiting'){
+  await transitionWorkTx(db,params.tenantId,params.workId,'executing','primary_diligence_consumption_ready',
+   {programmeId:params.programmeId,planRevisionId:plan.id,metadataOnly:true},{expectedWorkInputId:plan.workInputId});
+  [loop]=await db.update(workObjectiveLoops).set({state:'continue',revision:loop.revision+1,
+   reason:'Native owner consumed the independently established primary finding; verify the original canonical goal.',updatedAt:new Date()})
+   .where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.id,loop.id),
+    eq(workObjectiveLoops.state,'waiting'))).returning();
+ }
+ if(!loop)throw Error('R12_NATIVE_OBJECTIVE_FENCED');
+ await scheduleIterationTx(db,loop,new Date());
+}
+
 async function workerContext(tenantId: string, workId: string): Promise<{ ctx: TenantContext; work: typeof works.$inferSelect }> {
   return withTenant(tenantId, async (db) => {
     const [work] = await db.select().from(works).where(and(eq(works.tenantId, tenantId), eq(works.id, workId))).limit(1);
