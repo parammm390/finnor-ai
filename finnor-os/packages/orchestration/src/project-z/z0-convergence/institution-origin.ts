@@ -155,7 +155,12 @@ export async function assertStandaloneApplicationWork(ctx: PeMutationContext, wo
 export async function assertInstitutionApplicationOriginCurrent(ctx: PeMutationContext, origin: PreparedInstitutionOrigin,
   request: InstitutionalAcquireRequest, c: PoolClient, delivery?: Readonly<JobExecutionContext>) {
   if (!sameX2Ref(origin.ref, institutionOriginRef(origin.body))) x2Fault("Z0_ORIGINAL_INSTITUTION_BINDING_INTEGRITY");
-  const actual = await readOwnerOrigin(ctx, request, c, delivery);
+  // An execution child's request is an application assignment and carries no
+  // selector. The retained, digest-verified origin body is the owner selector.
+  const acquire: InstitutionalAcquireRequest = request.institutionalOrigin ? request
+    : { ...request, workId: origin.body.workId, root: origin.body.root, deadlineAt: origin.body.deadlineAt,
+      institutionalOrigin: origin.body.selector };
+  const actual = await readOwnerOrigin(ctx, acquire, c, delivery);
   if (!sameX2Ref(origin.ref, actual.ref)) x2Fault("Z0_ORIGINAL_INSTITUTION_BINDING_CHANGED");
   return actual;
 }
