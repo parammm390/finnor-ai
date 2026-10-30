@@ -63,6 +63,10 @@ if (profiles.has("z5")) {
     writeFileSync(join(z5Dir, name + ".key"), pair.privateKey.export({ type: "pkcs8", format: "pem" }), { flag: "wx", mode: 0o600 })
     z5Env[envName] = pair.publicKey.export({ type: "spki", format: "pem" }).toString()
   }
+  // The S6 check-dispatch route signs its current-owner assessments with this key; the scenario's protected broker
+  // policy pins only the public half, which it derives from the 0600 file.
+  writeFileSync(join(z5Dir, "owner-signer.pem"), generateKeyPairSync("ed25519").privateKey.export({ type: "pkcs8", format: "pem" }), { flag: "wx", mode: 0o600 })
+  z5Env.FINNOR_S6_CURRENT_OWNER_SIGNER = join(z5Dir, "owner-signer.pem")
   // The S3 fit route runs the pinned numerics inside the API process; the S3/S4 stores are shared with the
   // S8 lifecycle process and the scenario-owned worker through this private environment file.
   const z5Python = process.argv.find(arg => arg.startsWith("--z5-s3-python="))?.slice(15)
