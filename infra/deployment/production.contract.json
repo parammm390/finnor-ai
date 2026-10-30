@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "postz_z5_institution_linker.sql",
+    "requiredMigrationHead": "postz_zi_integrated_source_change_fences.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

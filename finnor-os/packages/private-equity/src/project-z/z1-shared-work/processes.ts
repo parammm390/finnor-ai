@@ -139,7 +139,8 @@ export async function runtimeIdentity(): Promise<{ digest: string; files: Array<
       new URL(`../../../../epistemic-runtime/src/${name}`, import.meta.url)),
     new URL('../../../../../scripts/project-z/z1/shared-schema.sql', import.meta.url),
     new URL('../../../../../scripts/project-z/z1/portfolio-stream.sql', import.meta.url),
-    ...['postz_z1_shared_work.sql', 'postz_z1_shared_work_portfolio_v2.sql', 'postz_z1_shared_work_portfolio_v3.sql'].map(name =>
+    ...['postz_z1_shared_work.sql', 'postz_z1_shared_work_portfolio_v2.sql', 'postz_z1_shared_work_portfolio_v3.sql',
+      'postz_zi_integrated_source_change_fences.sql'].map(name =>
       new URL(`../../../../db/migrations/${name}`, import.meta.url)),
   ];
   const files = await Promise.all(assets.map(async url => ({
