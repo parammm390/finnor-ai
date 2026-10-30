@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { spawn, spawnSync } from "node:child_process"
 import { createHash } from "node:crypto"
 import { createRequire } from "node:module"
-import { chmodSync, createWriteStream, existsSync, mkdirSync, readFileSync, realpathSync, statfsSync, writeFileSync } from "node:fs"
+import { chmodSync, createWriteStream, existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, statfsSync, writeFileSync } from "node:fs"
 import { dirname, isAbsolute, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { setTimeout as delay } from "node:timers/promises"
@@ -142,6 +142,17 @@ try {
   save()
   assert.match(process.version, /^v22\./, "NODE_22_REQUIRED")
   assert.ok(memory >= 4 * 1024 ** 3 && disk.bavail * disk.bsize >= 4 * 1024 ** 3, "UNCHANGED_RESOURCE_GUARD")
+  // z2-native: the locked installs skip package scripts, so the database package's own symlink hydration runs here.
+  const postgresPackage = join(backend, "node_modules/@embedded-postgres/linux-x64")
+  assert.ok(realpathSync(postgresPackage).startsWith(root + "/"), "Z2_DONOR_POSTGRES_REFUSED")
+  const manifest = JSON.parse(readFileSync(join(postgresPackage, "native/pg-symlinks.json"), "utf8"))
+  const hydrate = spawnSync(process.execPath, [join(postgresPackage, "scripts/hydrate-symlinks.js")],
+    { cwd: postgresPackage, env: { PATH: dirname(process.execPath) + ":/usr/bin:/bin" }, stdio: "ignore", timeout: 60000 })
+  assert.equal(hydrate.status, 0, "EMBEDDED_POSTGRES_HYDRATION_FAILED")
+  receipt.embeddedPostgresSymlinks = manifest.map(link => ({ name: link.target.split("/").slice(-1)[0], target: link.source.split("/").slice(-1)[0] }))
+  assert.ok(manifest.every(link => lstatSync(join(postgresPackage, link.target)).isSymbolicLink()), "EMBEDDED_POSTGRES_SYMLINK_MISSING")
+  save()
+  // END z2-native
   const target = join(evidence, "auth-toolchain")
   const install = start("install", "python3", ["-I", "-B", join(root, "scripts/project-z/install-isolated-auth.py"),
     "--target", target, ...(archive ? ["--archive", archive] : [])], "NOT_A_STATUS_PROCESS")
