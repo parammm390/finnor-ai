@@ -150,6 +150,10 @@ try {
 
     const begin = new Date(Math.floor(Date.now() / day) * day - 128 * day).toISOString()
     const refOf = (id, owner = "SUPPLIED") => ({ owner, id, version: "fixture-v1", contentDigest: sha(id) })
+    // Every original Work is created and linked to the root BEFORE the fit: S1 counts a Work link on a pinned root as a new recorded fact,
+    // so a link added after the fit would stale the model for every later submit. Z4 intake then adopts these Works by id.
+    const originalWorkNames = [...selection.map(item => item.name), "cancelled-original", "over-budget-original"]
+    const preWorks = {}
     const model = await step("s3-seed-and-fit", async () => {
       const ok = (await admin.query(`SELECT 1 FROM finnor_os.users u
         WHERE u.tenant_id=$1 AND u.id=$2 AND u.status='active' AND u.role='owner'
@@ -158,6 +162,14 @@ try {
       if (!ok) fail("Z4_EXISTING_CANONICAL_OWNER_AND_VERTICAL_REQUIRED")
       await admin.query(`INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,$3,'other')`,
         [root.entityId, tenantId, `z4-${runName}`])
+      for (const name of originalWorkNames) {
+        const received = await db.receiveWork({ tenantId, userId: principalId, channel: "console", idempotencyKey: randomUUID(),
+          instruction: `Original Work for an exact integer computation over the recorded history (${name}, ${runName})`,
+          activeContext: { focusedEntity: root } })
+        assert.equal(received.created, true, "ORIGINAL_WORK_NOT_CREATED_" + name)
+        preWorks[name] = received.workId
+      }
+      result.preWorks = preWorks; save()
       const sourceRow = await memory.createEvidenceSource(tenantId, { sourceKey: `z4:${runName}:history`, sourceType: "pe_document_claim", title: "Generated exact integer history" })
       const version = (await admin.query("SELECT gen_random_uuid()::text id")).rows[0].id
       await admin.query(`INSERT INTO finnor_os.evidence_source_versions(id,source_id,scope,tenant_id,version_number,content_hash,content,snapshot,as_of,retrieved_at,created_at)
@@ -317,9 +329,9 @@ try {
       maxMemoryBytes: 512 * 1024 * 1024, maxCpuSeconds: 300, maxAttempts: 3, maxRetainedBytes: 16 * 1024 * 1024 })
     async function createWork(tag, parts) {
       const intakeBody = baseRequest({ tag, ...parts })
-      const intake = expectStatus(await call(API, "/api/company-brain/execution-proof-intake", ownerToken, intakeBody), 200, "INTAKE_" + tag)
-      assert.match(intake.workId, /^[0-9a-f-]{36}$/)
-      await trace(`after-intake:${tag}`)
+      const intake = expectStatus(await call(API, "/api/company-brain/execution-proof-intake", ownerToken, { ...intakeBody, adoptWorkId: preWorks[tag] }), 200, "INTAKE_" + tag)
+      assert.equal(intake.workId, preWorks[tag], "INTAKE_DID_NOT_ADOPT_THE_ORIGINAL_WORK")
+      await trace(`after-adopted-intake:${tag}`)
       const planBody = { ...intakeBody, workId: intake.workId, workInputId: intake.workInputId }
       const plan = expectStatus(await call(API, "/api/company-brain/execution-proof-plan", ownerToken, planBody), 200, "PLAN_" + tag)
       await trace(`after-plan:${tag}`)
