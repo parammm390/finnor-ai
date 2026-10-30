@@ -26,6 +26,8 @@ export interface Z5DispatchOptions {
 
 export async function createZ5Ledger(tenant: string, principal: string, valuatorPrincipal: string, options: {
   directory: string; rightsRef: string; transportPath: string; transportPrivateKeyPem: string; dispatch?: Z5DispatchOptions;
+  /** Additional rights references accepted for S5 origins only (the X1 parent's capacity resources carry the authority revision). */
+  s5ExtraRightsRefs?: string[];
 }) {
   const root = options.directory;
   await mkdir(root, { recursive: true, mode: 0o700 });
@@ -44,12 +46,13 @@ export async function createZ5Ledger(tenant: string, principal: string, valuator
   const tokenOwners = ['S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'BUSINESS_OWNER', 'FINANCIAL_SOURCE', 'INDEPENDENT_VALUER', 'READER', 'S8_READER'] as const;
   const tokens: Record<string, string> = Object.fromEntries(tokenOwners.map(k => [k, randomUUID() + randomUUID()]));
   const dispatch = options.dispatch;
+  const rightsFor = (owner: string) => owner === 'S5' ? [rights, ...(options.s5ExtraRightsRefs ?? [])] : [rights];
   const protectedToken = randomUUID() + randomUUID();
   const owners: any[] = tokenOwners.map(owner => ({
     owner: owner === 'READER' ? 'S7' : owner === 'S8_READER' ? 'S8' : owner,
     tokenHash: byteHash(tokens[owner]!), append: !['READER', 'S8_READER'].includes(owner),
     tenantId: tenant, principalId: owner === 'INDEPENDENT_VALUER' ? valuatorPrincipal : principal,
-    rightsRefs: [rights], read: true, sealedAppend: false, sealedRead: false,
+    rightsRefs: rightsFor(owner), read: true, sealedAppend: false, sealedRead: false,
     ...(dispatch && owner === 'S6' ? { dispatch: true } : {}),
   }));
   if (dispatch) owners.push({ owner: 'S6', tokenHash: byteHash(protectedToken), append: true, read: true, sealedAppend: false, sealedRead: false,
@@ -124,7 +127,7 @@ export async function createZ5Ledger(tenant: string, principal: string, valuator
   for (const [semanticOwner, purpose, tokenKey] of routeDefinitions) {
     const tokenPath = join(root, tokenKey + '.token');
     await writeFile(tokenPath, tokens[tokenKey]!, { mode: 0o600 });
-    routes.push({ semanticOwner, tenantId: tenant, principalId: principal, purpose, rightsRefs: [rights],
+    routes.push({ semanticOwner, tenantId: tenant, principalId: principal, purpose, rightsRefs: rightsFor(semanticOwner),
       originKeys: [{ id: 'z5-origin', publicKey: originPub, validAfter, validUntil, revoked: false }],
       ...(purpose === 'OWNER' ? { originSigner: { keyId: 'z5-origin', path: originPath } } : {}),
       tokenPath, tokenSha256: byteHash(tokens[tokenKey]!),

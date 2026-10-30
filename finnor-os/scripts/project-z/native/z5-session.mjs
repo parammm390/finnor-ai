@@ -123,12 +123,16 @@ await runCase("Z5N-02", "Separate S6 ledger process and launcher-root-signed own
   const { createZ5Ledger } = await import("./z5-ledger.mts");
   const dispatchLib = S.dispatchLib = await import("./z5-dispatch.mts");
   S.valuator = randomUUID();
+  // The X1 parent's capacity resources carry `authority:<tenant>:<authority revision>`; the revision advances while the
+  // parents are created, so a bounded window of S5 references is declared up front (the ledger policy is signed once).
+  const [{ revision }] = await q("SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1", [S.tenantId]);
+  const s5ExtraRightsRefs = Array.from({ length: 96 }, (_, i) => `authority:${S.tenantId}:${Number(revision) + i}`);
   S.dispatch = await dispatchLib.startDispatchFixtures(join(privateRoot, "dispatch"), () => owner.call);
   const ownerPublicKeyPem = createPublicKey(createPrivateKey(readFileSync(join(privateRoot, "owner-signer.pem")))).export({ type: "spki", format: "pem" }).toString();
   const sources = ["enterprise-obligations.ts", "enterprise-allocation.ts", "enterprise-control.ts", "enterprise-beliefs.ts", "allocation-store.ts",
     "obligation-contracts.ts"].map(name => join(BACKEND, "packages/private-equity/src", name)).concat(join(BACKEND, "apps/api/app/api/obligations/[operation]/route.ts"));
   S.ledger = await createZ5Ledger(S.tenantId, S.ownerId, S.valuator, { directory: join(privateRoot, "ledger"),
-    rightsRef: RIGHTS, transportPath, transportPrivateKeyPem: readFileSync(join(privateRoot, "transport-root.key"), "utf8"),
+    rightsRef: RIGHTS, transportPath, transportPrivateKeyPem: readFileSync(join(privateRoot, "transport-root.key"), "utf8"), s5ExtraRightsRefs,
     dispatch: { ...S.dispatch.ledgerOptions, ownerPublicKeyPem, ownerSourcePaths: sources } });
   S.children.push(S.ledger.child());
   // The API, lifecycle, worker and driver children all read the launcher-fixed transport path.
