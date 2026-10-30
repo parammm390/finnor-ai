@@ -1,0 +1,1145 @@
+{
+  "frozenV1Sha256": "3992c3111ed0ba6fb700ae99095720780e713f7b55b1b9e938a6534004514d94",
+  "nativeOwner": "NOT_RUN",
+  "negativeDenominator": 12,
+  "negativeObligations": [
+    {
+      "expectedOriginalRefusals": [
+        "Z4_SIGNED64_RANGE"
+      ],
+      "expectedRefusals": [
+        "Z4_SIGNED64_RANGE",
+        "Z4_SIGNED64_OVERFLOW"
+      ],
+      "id": "negative-remaining",
+      "request": {
+        "binding": "0000000000000000000000000000000000000000000000000000000000000000",
+        "initial": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "inputs": [
+          [
+            "1",
+            "0",
+            "0"
+          ]
+        ],
+        "program": {
+          "inputCount": 3,
+          "inputUnits": [
+            "1",
+            "1",
+            "1"
+          ],
+          "instructions": [
+            {
+              "a": {
+                "reg": 0
+              },
+              "b": {
+                "input": 0
+              },
+              "dst": 0,
+              "op": "sub"
+            },
+            {
+              "a": {
+                "reg": 0
+              },
+              "b": {
+                "const": "-9223372036854775808"
+              },
+              "dst": 1,
+              "op": "add"
+            }
+          ],
+          "registers": [
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "bool",
+              "unit": "1"
+            }
+          ],
+          "rounding": "EXACT_NO_CONVERSION",
+          "schema": "finnor.z4.integer-program.v1"
+        }
+      }
+    },
+    {
+      "expectedOriginalRefusals": [
+        "Z4_SIGNED64_RANGE"
+      ],
+      "expectedRefusals": [
+        "Z4_SIGNED64_RANGE",
+        "Z4_SIGNED64_OVERFLOW"
+      ],
+      "id": "counter-above-bound",
+      "request": {
+        "binding": "0000000000000000000000000000000000000000000000000000000000000000",
+        "initial": [
+          "12",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "inputs": [
+          [
+            "1",
+            "0",
+            "0"
+          ]
+        ],
+        "program": {
+          "inputCount": 3,
+          "inputUnits": [
+            "1",
+            "1",
+            "1"
+          ],
+          "instructions": [
+            {
+              "a": {
+                "input": 0
+              },
+              "b": {
+                "const": "0"
+              },
+              "dst": 7,
+              "op": "eq"
+            },
+            {
+              "a": {
+                "reg": 0
+              },
+              "b": {
+                "const": "1"
+              },
+              "dst": 1,
+              "op": "add"
+            },
+            {
+              "a": {
+                "const": "0"
+              },
+              "b": {
+                "reg": 1
+              },
+              "c": {
+                "reg": 7
+              },
+              "dst": 0,
+              "op": "select"
+            },
+            {
+              "a": {
+                "const": "12"
+              },
+              "b": {
+                "reg": 0
+              },
+              "dst": 2,
+              "op": "sub"
+            },
+            {
+              "a": {
+                "reg": 2
+              },
+              "b": {
+                "const": "-9223372036854775808"
+              },
+              "dst": 3,
+              "op": "add"
+            },
+            {
+              "a": {
+                "reg": 0
+              },
+              "b": {
+                "const": "-9223372036854775808"
+              },
+              "dst": 4,
+              "op": "add"
+            }
+          ],
+          "registers": [
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "bool",
+              "unit": "1"
+            }
+          ],
+          "rounding": "EXACT_NO_CONVERSION",
+          "schema": "finnor.z4.integer-program.v1"
+        }
+      }
+    },
+    {
+      "expectedOriginalRefusals": [
+        "Z4_SIGNED64_RANGE"
+      ],
+      "expectedRefusals": [
+        "Z4_SIGNED64_RANGE",
+        "Z4_SIGNED64_OVERFLOW"
+      ],
+      "id": "overflow-add",
+      "request": {
+        "binding": "0000000000000000000000000000000000000000000000000000000000000000",
+        "initial": [
+          "9223372036854775807",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "inputs": [
+          [
+            "0",
+            "0",
+            "0"
+          ]
+        ],
+        "program": {
+          "inputCount": 3,
+          "inputUnits": [
+            "1",
+            "1",
+            "1"
+          ],
+          "instructions": [
+            {
+              "a": {
+                "reg": 0
+              },
+              "b": {
+                "const": "1"
+              },
+              "dst": 0,
+              "op": "add"
+            }
+          ],
+          "registers": [
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "bool",
+              "unit": "1"
+            }
+          ],
+          "rounding": "EXACT_NO_CONVERSION",
+          "schema": "finnor.z4.integer-program.v1"
+        }
+      }
+    },
+    {
+      "expectedOriginalRefusals": [
+        "Z4_SIGNED64_RANGE"
+      ],
+      "expectedRefusals": [
+        "Z4_SIGNED64_RANGE",
+        "Z4_SIGNED64_OVERFLOW"
+      ],
+      "id": "overflow-sub",
+      "request": {
+        "binding": "0000000000000000000000000000000000000000000000000000000000000000",
+        "initial": [
+          "-9223372036854775808",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "inputs": [
+          [
+            "0",
+            "0",
+            "0"
+          ]
+        ],
+        "program": {
+          "inputCount": 3,
+          "inputUnits": [
+            "1",
+            "1",
+            "1"
+          ],
+          "instructions": [
+            {
+              "a": {
+                "reg": 0
+              },
+              "b": {
+                "const": "1"
+              },
+              "dst": 0,
+              "op": "sub"
+            }
+          ],
+          "registers": [
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "bool",
+              "unit": "1"
+            }
+          ],
+          "rounding": "EXACT_NO_CONVERSION",
+          "schema": "finnor.z4.integer-program.v1"
+        }
+      }
+    },
+    {
+      "expectedOriginalRefusals": [
+        "Z4_SIGNED64_RANGE"
+      ],
+      "expectedRefusals": [
+        "Z4_SIGNED64_RANGE",
+        "Z4_SIGNED64_OVERFLOW"
+      ],
+      "id": "overflow-mul",
+      "request": {
+        "binding": "0000000000000000000000000000000000000000000000000000000000000000",
+        "initial": [
+          "4611686018427387904",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "inputs": [
+          [
+            "0",
+            "0",
+            "0"
+          ]
+        ],
+        "program": {
+          "inputCount": 3,
+          "inputUnits": [
+            "1",
+            "1",
+            "1"
+          ],
+          "instructions": [
+            {
+              "a": {
+                "reg": 0
+              },
+              "b": {
+                "const": "4"
+              },
+              "dst": 0,
+              "op": "mul"
+            }
+          ],
+          "registers": [
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "bool",
+              "unit": "1"
+            }
+          ],
+          "rounding": "EXACT_NO_CONVERSION",
+          "schema": "finnor.z4.integer-program.v1"
+        }
+      }
+    },
+    {
+      "expectedOriginalRefusals": [
+        "Z4_SIGNED64_RANGE"
+      ],
+      "expectedRefusals": [
+        "Z4_SIGNED64_RANGE",
+        "Z4_SIGNED64_OVERFLOW"
+      ],
+      "id": "absolute-i64-min-negative-obligation",
+      "request": {
+        "binding": "0000000000000000000000000000000000000000000000000000000000000000",
+        "initial": [
+          "-9223372036854775808",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "inputs": [
+          [
+            "0",
+            "0",
+            "0"
+          ]
+        ],
+        "program": {
+          "inputCount": 3,
+          "inputUnits": [
+            "1",
+            "1",
+            "1"
+          ],
+          "instructions": [
+            {
+              "a": {
+                "const": "0"
+              },
+              "b": {
+                "reg": 0
+              },
+              "dst": 0,
+              "op": "sub"
+            }
+          ],
+          "registers": [
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "bool",
+              "unit": "1"
+            }
+          ],
+          "rounding": "EXACT_NO_CONVERSION",
+          "schema": "finnor.z4.integer-program.v1"
+        }
+      }
+    },
+    {
+      "expectedOriginalRefusals": [
+        "Z4_SIGNED32_RANGE"
+      ],
+      "expectedRefusals": [
+        "Z4_SIGNED32_RANGE"
+      ],
+      "id": "input-i32-overflow",
+      "request": {
+        "binding": "0000000000000000000000000000000000000000000000000000000000000000",
+        "initial": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "inputs": [
+          [
+            "2147483648",
+            "0",
+            "0"
+          ]
+        ],
+        "program": {
+          "inputCount": 3,
+          "inputUnits": [
+            "1",
+            "1",
+            "1"
+          ],
+          "instructions": [
+            {
+              "a": {
+                "reg": 0
+              },
+              "b": {
+                "input": 0
+              },
+              "dst": 0,
+              "op": "add"
+            }
+          ],
+          "registers": [
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "bool",
+              "unit": "1"
+            }
+          ],
+          "rounding": "EXACT_NO_CONVERSION",
+          "schema": "finnor.z4.integer-program.v1"
+        }
+      }
+    },
+    {
+      "expectedOriginalRefusals": [
+        "Z4_INPUT_ARITY"
+      ],
+      "expectedRefusals": [
+        "Z4_INPUT_ARITY"
+      ],
+      "id": "input-arity",
+      "request": {
+        "binding": "0000000000000000000000000000000000000000000000000000000000000000",
+        "initial": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "inputs": [
+          [
+            "1",
+            "0"
+          ]
+        ],
+        "program": {
+          "inputCount": 3,
+          "inputUnits": [
+            "1",
+            "1",
+            "1"
+          ],
+          "instructions": [
+            {
+              "a": {
+                "reg": 0
+              },
+              "b": {
+                "input": 0
+              },
+              "dst": 0,
+              "op": "add"
+            }
+          ],
+          "registers": [
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "bool",
+              "unit": "1"
+            }
+          ],
+          "rounding": "EXACT_NO_CONVERSION",
+          "schema": "finnor.z4.integer-program.v1"
+        }
+      }
+    },
+    {
+      "expectedOriginalRefusals": [
+        "Z4_BOOLEAN_RANGE"
+      ],
+      "expectedRefusals": [
+        "Z4_BOOLEAN_RANGE"
+      ],
+      "id": "bool-state",
+      "request": {
+        "binding": "0000000000000000000000000000000000000000000000000000000000000000",
+        "initial": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "2"
+        ],
+        "inputs": [
+          [
+            "1",
+            "0",
+            "0"
+          ]
+        ],
+        "program": {
+          "inputCount": 3,
+          "inputUnits": [
+            "1",
+            "1",
+            "1"
+          ],
+          "instructions": [
+            {
+              "a": {
+                "reg": 0
+              },
+              "b": {
+                "input": 0
+              },
+              "dst": 0,
+              "op": "add"
+            }
+          ],
+          "registers": [
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "bool",
+              "unit": "1"
+            }
+          ],
+          "rounding": "EXACT_NO_CONVERSION",
+          "schema": "finnor.z4.integer-program.v1"
+        }
+      }
+    },
+    {
+      "expectedOriginalRefusals": [
+        "Z4_UNIT_MISMATCH"
+      ],
+      "expectedRefusals": [
+        "Z4_UNIT_MISMATCH"
+      ],
+      "id": "unit-mismatch",
+      "request": {
+        "binding": "0000000000000000000000000000000000000000000000000000000000000000",
+        "initial": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "inputs": [
+          [
+            "1",
+            "2",
+            "0"
+          ]
+        ],
+        "program": {
+          "inputCount": 3,
+          "inputUnits": [
+            "USD_cent",
+            "EUR_cent",
+            "1"
+          ],
+          "instructions": [
+            {
+              "a": {
+                "input": 0
+              },
+              "b": {
+                "const": "-2"
+              },
+              "dst": 0,
+              "op": "mul"
+            },
+            {
+              "a": {
+                "input": 1
+              },
+              "b": {
+                "const": "5"
+              },
+              "dst": 1,
+              "op": "mul"
+            },
+            {
+              "a": {
+                "reg": 0
+              },
+              "b": {
+                "reg": 1
+              },
+              "dst": 0,
+              "op": "add"
+            }
+          ],
+          "registers": [
+            {
+              "type": "i64",
+              "unit": "USD_cent"
+            },
+            {
+              "type": "i64",
+              "unit": "EUR_cent"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "bool",
+              "unit": "1"
+            }
+          ],
+          "rounding": "EXACT_NO_CONVERSION",
+          "schema": "finnor.z4.integer-program.v1"
+        }
+      }
+    },
+    {
+      "expectedOriginalRefusals": [
+        "Z4_RESULT_TYPE"
+      ],
+      "expectedRefusals": [
+        "Z4_RESULT_TYPE"
+      ],
+      "id": "result-type",
+      "request": {
+        "binding": "0000000000000000000000000000000000000000000000000000000000000000",
+        "initial": [
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "inputs": [
+          [
+            "1",
+            "2",
+            "0"
+          ]
+        ],
+        "program": {
+          "inputCount": 3,
+          "inputUnits": [
+            "1",
+            "1",
+            "1"
+          ],
+          "instructions": [
+            {
+              "a": {
+                "reg": 0
+              },
+              "b": {
+                "input": 0
+              },
+              "dst": 7,
+              "op": "add"
+            }
+          ],
+          "registers": [
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "bool",
+              "unit": "1"
+            }
+          ],
+          "rounding": "EXACT_NO_CONVERSION",
+          "schema": "finnor.z4.integer-program.v1"
+        }
+      }
+    },
+    {
+      "expectedOriginalSchemaPath": [
+        "program",
+        "instructions",
+        0,
+        "op"
+      ],
+      "expectedRefusals": [
+        "Z4_UNSUPPORTED_OPCODE"
+      ],
+      "id": "unsupported-opcode",
+      "request": {
+        "binding": "c66b99e2187f41260ed9ec523f2c9985430ac66cec90bb30e48b392633f75cb8",
+        "initial": [
+          "2",
+          "2",
+          "0",
+          "3",
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "inputs": [
+          [
+            "-6",
+            "-2",
+            "-3"
+          ]
+        ],
+        "program": {
+          "inputCount": 3,
+          "inputUnits": [
+            "USD_cent",
+            "USD_cent",
+            "1"
+          ],
+          "instructions": [
+            {
+              "a": {
+                "input": 0
+              },
+              "b": {
+                "const": "-2"
+              },
+              "dst": 0,
+              "op": "div"
+            },
+            {
+              "a": {
+                "input": 1
+              },
+              "b": {
+                "const": "5"
+              },
+              "dst": 1,
+              "op": "mul"
+            },
+            {
+              "a": {
+                "reg": 0
+              },
+              "b": {
+                "reg": 1
+              },
+              "dst": 0,
+              "op": "add"
+            }
+          ],
+          "registers": [
+            {
+              "type": "i64",
+              "unit": "USD_cent"
+            },
+            {
+              "type": "i64",
+              "unit": "USD_cent"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "i64",
+              "unit": "1"
+            },
+            {
+              "type": "bool",
+              "unit": "1"
+            }
+          ],
+          "rounding": "EXACT_NO_CONVERSION",
+          "schema": "finnor.z4.integer-program.v1"
+        }
+      }
+    }
+  ],
+  "positiveParentSha256": "4479bce31a46945067d88b262bcb549040c20d91b2dc57e788e6b335bda4f163",
+  "registeredBeforeNewProductPlumbing": true,
+  "schema": "finnor.z4.supplementary-negative-obligations.v4",
+  "unitObligationDigestEncoding": "UTF-8 sorted-key compact JSON plus exactly one LF",
+  "unitObligationPostimageSha256": "da2535c5991f17d4a43fa2a74ea5fdc68e9ba8e22b84142ad3e23765c26c2145",
+  "unitObligationPreimageSha256": "11827055ee9d11b293da1da43a7876bc561591ec04e63c761e91a99ce219ebcf",
+  "wholePhaseAccepted": false
+}

@@ -1,0 +1,40 @@
+{
+  "schema": "finnor.z4.toolchain-pins.v1",
+  "source": "Exact version package metadata read from the public npm registry",
+  "node": {
+    "name": "node-linux-x64",
+    "version": "22.23.4",
+    "resolved": "https://registry.npmjs.org/node-linux-x64/-/node-linux-x64-22.23.4.tgz",
+    "integrity": "sha512-Bi7VlP4LNQBy6W40tvqfXKPMGT9tnrs7pybiox7yqQMSiMagKuZyyIIb/pYM2dbtPlXyQnLif0ZtgyUIImQQkQ==",
+    "license": "MIT (includes Node and bundled third-party notices)"
+  },
+  "rust": {
+    "version": "1.92.0",
+    "target": "x86_64-unknown-linux-gnu",
+    "components": [
+      {
+        "component": "rustc",
+        "url": "https://static.rust-lang.org/dist/rustc-1.92.0-x86_64-unknown-linux-gnu.tar.xz",
+        "sha256": "78b2dd9c6b1fcd2621fa81c611cf5e2d6950690775038b585c64f364422886e0"
+      },
+      {
+        "component": "rust-std",
+        "url": "https://static.rust-lang.org/dist/rust-std-1.92.0-x86_64-unknown-linux-gnu.tar.xz",
+        "sha256": "5f106805ed86ebf8df287039e53a45cf974391ef4d088c2760776b05b8e48b5d"
+      },
+      {
+        "component": "cargo",
+        "url": "https://static.rust-lang.org/dist/cargo-1.92.0-x86_64-unknown-linux-gnu.tar.xz",
+        "sha256": "e5e12be2c7126a7036c8adf573078a28b92611f5767cc9bd0a6f7c83081df103"
+      }
+    ]
+  },
+  "npm": {
+    "name": "npm",
+    "version": "10.9.9",
+    "resolved": "https://registry.npmjs.org/npm/-/npm-10.9.9.tgz",
+    "integrity": "sha512-1g+6jLQvaIuB4zwvHL7yrXuXcWZwDsCtBX8bbWDqbvJSSr9nPiDDWTHNgwXR27iIcTTW7v3A57hDW9RYv2W4Yg==",
+    "selection": "Exact npm bundled by the selected official Node v22.23.4 tag; normal peer policy unchanged",
+    "license": "Artistic-2.0 (bundled dependency licenses retained)"
+  }
+}
