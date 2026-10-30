@@ -158,7 +158,9 @@ const invariants = async (before, sessionId, portalDir = null) => {
   ensure(used <= BigInt(envelope.limit_units), `ORIGINAL_ENVELOPE_EXCEEDED used=${used} limit=${envelope.limit_units}`);
   return { session, charges, original: { resourceId: envelope.resource_id, limit: envelope.limit_units, used: used.toString() }, portalWrites, after };
 };
-if (!killMode) {
+const revokeMode = process.env.FINNOR_Z0_MODE === "revoke";
+const TERMINAL = ["MODEL_READY", "FAILED", "BLOCKED", "UNKNOWN", "STALE", "CANCELLED"];
+if (!killMode && !revokeMode) {
   await runCase("P0-10", "Acquisition under the original reservation reaches MODEL_READY and S4 acceptance", async () => {
     const before = await witness(parent);
     try { acquired = await driveAcquisitionToModelReady(env, parent, { privateRoot, record }); }
@@ -173,6 +175,64 @@ if (!killMode) {
     }
     const checked = await invariants(before, acquired.sessionId, acquired.portal.dir);
     return { detail: { sessionId: acquired.sessionId, model: acquired.model, check: acquired.check, acceptance: acquired.acceptance, before, ...checked } };
+  });
+} else if (revokeMode) {
+  await runCase("P1-05", "Owner revocation of the application account during acquisition stops the acquisition and only it", async () => {
+    const before = await witness(parent);
+    const nativeState = async () => ({
+      programme: (await q("SELECT status,generation FROM finnor_os.p1_requests WHERE tenant_id=$1 AND id=$2", [parent.tenantId, parent.programId]))[0],
+      work: (await q("SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2", [parent.tenantId, parent.workId]))[0],
+      others: (await q("SELECT count(*)::int n, md5(coalesce(string_agg(id::text||status,'|' ORDER BY id),'')) digest FROM finnor_os.works WHERE tenant_id=$1 AND id<>$2", [parent.tenantId, parent.workId]))[0],
+    });
+    const nativeBefore = await nativeState();
+    const submitted = await submitInstitutionAcquisition(env, parent, { privateRoot, record }, owner);
+    ensure(submitted.response.status === 202, "ACQUIRE_NOT_ACCEPTED_" + submitted.response.status);
+    const sessionId = submitted.response.body.sessionId;
+    const sessionStatus = async () => (await q("SELECT status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parent.tenantId, sessionId]))[0];
+    const requestCount = async () => (await q("SELECT count(*)::int n FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2", [parent.tenantId, sessionId]))[0].n;
+    let reached = false;
+    for (let i = 0; i < 12000 && !reached; i++) {
+      if (TERMINAL.includes((await sessionStatus())?.status)) break;
+      if (await requestCount() >= 2) { reached = true; break; }
+      await sleep(50);
+    }
+    if (!reached) {
+      await submitted.handle.portal.stop();
+      return { outcome: "NOT_RUN", detail: { reason: "REVOCATION_RACE_NOT_REACHED", session: await sessionStatus() } };
+    }
+    const accounts = await q("UPDATE finnor_os.application_accounts SET status='disabled' WHERE tenant_id=$1 AND application='x2_portal' AND status<>'disabled' RETURNING id", [parent.tenantId]);
+    const [{ t0 }] = await q("SELECT clock_timestamp() t0");
+    const revokedAtMs = t0.getTime();
+    const requestsAtRevocation = await requestCount();
+    ensure(accounts.length > 0, "NO_APPLICATION_ACCOUNT_WAS_REVOKED");
+    let final = null;
+    for (let i = 0; i < 120; i++) {
+      final = await sessionStatus();
+      if (TERMINAL.includes(final?.status)) break;
+      await sleep(2500);
+    }
+    await sleep(10000);
+    final = await sessionStatus();
+    const journalPath = join(submitted.handle.portal.dir, "provider", "journal.ndjson");
+    const journal = readFileSync(journalPath, "utf8").trim().split("\n").flatMap(line => JSON.parse(line).events ?? []);
+    const portalAfter = journal.filter(event => Date.parse(event.at) > revokedAtMs);
+    const newSessions = portalAfter.filter(event => event.type === "session.created");
+    const rowsAfter = await q("SELECT id,status,possible_egress,observation_ref IS NOT NULL observed,created_at FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2 AND created_at>$3 ORDER BY created_at", [parent.tenantId, sessionId, t0]);
+    const ambiguous = await q("SELECT id,status,possible_egress,observation_ref IS NOT NULL observed FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2 AND possible_egress ORDER BY created_at", [parent.tenantId, sessionId]);
+    const [accepted] = await q("SELECT 1 FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 AND kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED' LIMIT 1", [parent.tenantId, sessionId]);
+    const [chargesAfter] = await q("SELECT count(*) FILTER (WHERE created_at>$3)::int after_revocation, count(*)::int total FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2", [parent.tenantId, parent.parentReservation.id, t0]).catch(() => [null]);
+    const nativeAfter = await nativeState();
+    await submitted.handle.portal.stop();
+    ensure(TERMINAL.includes(final?.status), "REVOKED_SESSION_DID_NOT_STOP_" + final?.status);
+    ensure(final.status !== "MODEL_READY" && !accepted, "REVOKED_ACQUISITION_COMPLETED");
+    ensure(rowsAfter.length === 0, `PHYSICAL_REQUEST_CREATED_AFTER_REVOCATION count=${rowsAfter.length}`);
+    ensure(newSessions.length === 0, `PORTAL_LOGIN_AFTER_REVOCATION count=${newSessions.length}`);
+    ensure(!ambiguous.some(row => row.status === "VERIFIED" && !row.observed), "AMBIGUOUS_REQUEST_RELABELLED_WITHOUT_OBSERVATION");
+    ensure(JSON.stringify(nativeAfter) === JSON.stringify(nativeBefore), "UNAFFECTED_WORK_OR_ORIGINAL_PROGRAMME_CHANGED");
+    const checked = await invariants(before, sessionId, submitted.handle.portal.dir);
+    return { detail: { sessionId, revokedAccounts: accounts.length, revokedAt: t0, requestsAtRevocation, final, rowsAfterRevocation: rowsAfter.length,
+      portalEventsAfterRevocation: portalAfter.map(event => event.type), portalLoginsAfterRevocation: newSessions.length, ambiguous, chargesAfter,
+      nativeBefore, nativeAfter, externalRevocationClaimed: false, before, ...checked } };
   });
 } else if (!ownedWorker) {
   notRun("P1-03", "SIGKILL of the worker during acquisition", "launcher was not started with --no-worker");
@@ -276,6 +336,7 @@ await runCase("P0-12", "Second acquisition for the same original Work cannot cre
 });
 
 await runCase("P1-01", "Duplicate delivery of the exact acquisition request returns the same session without new charge", async () => {
+  if (revokeMode) return { outcome: "NOT_RUN", detail: { reason: "revoke mode ends its only acquisition by owner revocation; run the default mode for duplicate delivery" } };
   ensure(acquired, "NO_ACQUISITION");
   const before = await witness(parent);
   const again = await owner.operation("application-acquire", acquired.request);
@@ -286,7 +347,10 @@ await runCase("P1-01", "Duplicate delivery of the exact acquisition request retu
 });
 
 await runCase("P1-02", "Cancel after MODEL_READY returns to the original (direct fallback) without a new allowance", async () => {
+  if (revokeMode) return { outcome: "NOT_RUN", detail: { reason: "revoke mode has no MODEL_READY session" } };
   ensure(acquired, "NO_ACQUISITION");
+  const [ready] = await q("SELECT status FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parent.tenantId, acquired.sessionId]);
+  if (ready?.status !== "MODEL_READY") return { outcome: "NOT_RUN", detail: { reason: "session is not MODEL_READY (it settled as " + ready?.status + ")" } };
   const before = await witness(parent);
   const cancelled = await owner.operation("application-cancel", { root: acquired.request.root, workId: parent.workId, sessionId: acquired.sessionId });
   await sleep(5000);
@@ -298,7 +362,7 @@ await runCase("P1-02", "Cancel after MODEL_READY returns to the original (direct
 
 if (!killMode) notRun("P1-03", "SIGKILL of the worker during acquisition, restart, bounded recovery", "kill mode run only (FINNOR_Z0_MODE=kill); the original Work admits one root application parent per tenant resource set");
 let second = null;
-notRun("P1-05", "Portal revocation / profile change race during acquisition", "not implemented in this scenario revision");
+if (!revokeMode) notRun("P1-05", "Owner revocation during acquisition", "revoke mode run only (FINNOR_Z0_MODE=revoke); it needs its own acquisition on a fresh original parent");
 for (const [id, title] of [["P2-01", "Mounted reload during acquisition"], ["P2-02", "Principal switch"], ["P2-03", "Token refresh and logout"], ["P2-04", "Offline during mounted acquisition"]])
   notRun(id, title, "mounted browser phase not implemented in this scenario revision");
 notRun("P3-01", "Wire z0/run-native-e2e.mjs", "that driver requires separately delivered authority and oracle; not wired");

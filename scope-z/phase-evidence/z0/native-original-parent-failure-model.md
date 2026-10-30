@@ -202,3 +202,21 @@ claim that must hold is narrower and stays independently checkable.
 | B2 | An exploration action is a real business write on the portal | Portal journal is the oracle (independent of the owner database): every portal write event (`submission.*`, `approval.committed`, `dispatch.accepted`) must be accounted for by a session request wire `requestId`; a write with no session request fails. |
 | B3 | Exploration action count is unbounded | The number of exploration actions must equal the number of session requests that have a `domain_action_id` link, and the portal journal count must match what the sandbox policy allows (recorded, not asserted to a constant). |
 | B4 | Count is compared before and after so a pre-existing row is masked | Before-acquisition count of unlinked actions is required to be 0 (P0-01) and the after count is compared to it, not to a literal. |
+
+## 9. Addendum: authority revocation race during acquisition (revoke mode, P1-05)
+
+Written before the case is implemented. The case runs in its own stack run
+(`FINNOR_Z0_MODE=revoke`) on a fresh original parent because the original Work
+admits one root application session and P0-10/P1-03 consume it. The owner
+revocation is the same owner-state change the X2 review gates use for the read
+boundary (`application_accounts.status='disabled'`, committed by the owner
+database), not an external provider revocation; no external revocation is claimed.
+
+| # | How it can fail or be faked | Independent expectation / oracle |
+|---|---|---|
+| R1 | Revocation lands before any physical interaction or after the session already finished | The update is issued only after the session has at least two PHYSICAL_READ_STARTED/request rows and while status is ACQUIRING/PLANNING; the commit time T0 is read from the database in the same statement. If the session is already MODEL_READY/terminal before the update the case is NOT_RUN `REVOCATION_RACE_NOT_REACHED`, never PASS. |
+| R2 | Acquisition keeps using revoked authority and completes | Final session status must not be MODEL_READY; no `S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED` event. |
+| R3 | A new physical interaction begins after T0 | No `application_semantics_requests` row of the session with `created_at` > T0; the portal journal (independent of the owner database) has no `session.created` event with `at` > T0 (requests already past the owner check may complete: only their completion events are tolerated, counted and recorded). |
+| R4 | The revocation is handled by cancelling or damaging the original | The original programme status, original reservation envelope/digest, episode digest and reservation count are unchanged; the original Work row is not cancelled/failed; rows of unrelated Works (seed Work) have an unchanged digest ("only affected work stops"). |
+| R5 | Settling hides uncertainty | A request in flight at T0 that has `possible_egress` and no observation stays `UNKNOWN`/ambiguous or reconciled through the independent observation; none is relabelled VERIFIED without observation_ref. |
+| R6 | Charges after revocation grow the allowance | S5 charges stay on the original reservation and sum <= the original envelope limit (`invariants` is reused); the count of charges after T0 is recorded. |
