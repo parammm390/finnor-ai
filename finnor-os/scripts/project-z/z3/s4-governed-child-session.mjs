@@ -295,7 +295,7 @@ if (!child) {
   });
 }
 
-notRun("G10", "Z3 writer + receipt reader over a real original Work (C-states through E-states)", "BLOCKED_B3: the Z3 native map must embed the application model revision, which exists only after the acquisition that requires the original Work input; Z0 A5 refuses an appended input");
+notRun("G10", "Z3 writer + receipt reader over a real original Work (C-states through E-states)", "SUPERSEDED: the Z3 writer and receipt reader are exercised over the real original Work with a late-bound ACCEPTED_ORIGIN_MODEL observer in the Z3 native session scenario (z3-session.mjs, Z01-Z07)");
 notRun("G11", "Physical SIGKILL boundaries, duplicate delivery, cancellation, revocation, exhausted-reservation fallback", "NOT_IMPLEMENTED_IN_THIS_SCENARIO: need the S8 consumer fixture and fault points; see report");
 
 const summary = { schema: "finnor.project-z.native.z3-s4-governed-child.v1", finishedAt: new Date().toISOString(), results,
