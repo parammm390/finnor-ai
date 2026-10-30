@@ -66,6 +66,8 @@ import {InteractionOperations,handleInteractionOperation,readInteractionBody} fr
 import {CoalitionOperations,handleCoalitionOperation} from '@finnor/private-equity/src/project-z/z2-coalitions/api';
 import {InteractionFault} from '@finnor/private-equity/src/interaction-synthesis/contracts';
 
+import {Z5_OPERATIONS,handleInstitutionLinkOperation,readInstitutionBody} from '@finnor/private-equity/src/project-z/z5-institution-linker/api';
+import {intakeInstitutionComposition} from '../../../../../../packages/orchestration/src/project-z/z5-institution-linker/intake';
 export const runtime = "nodejs";
 
 const UuidSchema = z.string().uuid();
@@ -225,6 +227,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ operati
         const result=await handleSharedWorkOperation({auth},route.operation,body);
         return response(result.body,result.status);
       }catch(error){const mapped=sharedWorkResponseError(error);return mapped?response(mapped.body,mapped.status):requestError(error);}
+    }
+    if((Z5_OPERATIONS as readonly string[]).includes(route.operation)){
+      const auth=await requireContext(req);
+      if(!auth.deliverySession||Date.parse(auth.deliverySession.expiresAt)<=Date.now())
+        return response({code:'Z5_REAL_AUTHENTICATED_OWNER_SESSION_REQUIRED'},401);
+      try{
+        const body=await readInstitutionBody(req);
+        const result=route.operation==='institution-link-submit'
+          ?await intakeInstitutionComposition(auth,body):await handleInstitutionLinkOperation({auth},route.operation,body);
+        return response(result.body,result.status);
+      }catch(error){
+        const code=error instanceof Error&&/^Z5_[A-Z0-9_]+$/.test(error.message)?error.message:'Z5_INVALID_BOUNDED_JSON';
+        return response({code,error:'The bounded original-owner request was refused'},/DEADLINE/.test(code)?408:/BOUND/.test(code)?413:400);
+      }
     }
     if(StrategicOperations.some(operation=>operation===route.operation)){
       const auth=await requireContext(req),body=await readStrategicBody(req);

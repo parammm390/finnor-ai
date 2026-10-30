@@ -72,11 +72,13 @@ import { startClassHealthServer } from "./class-health";
 import { startComputeTelemetry } from "./telemetry";
 import { installWorkerDrainSignals } from "./drain-signals";
 
+import {linkInstitutionComponentsJob} from '../../../packages/private-equity/src/project-z/z5-institution-linker/worker';
 export function createWorker(): JobQueue {
   const queue = new JobQueue();
   if (configureZ2ReplayWorker(queue,PRODUCTION_JOB_CONTRACTS.construct_interaction_protocol_v1)) return queue;
   queue.register('run_shared_work_program_v1',createSharedWorkJobHandler(),PRODUCTION_JOB_CONTRACTS.run_shared_work_program_v1);
   queue.register('consume_shared_work_projection_v1',createSharedWorkProjectionJobHandler(),PRODUCTION_JOB_CONTRACTS.consume_shared_work_projection_v1);
+  queue.register('link_institution_components_v1',linkInstitutionComponentsJob,PRODUCTION_JOB_CONTRACTS.link_institution_components_v1);
   queue.register('learn_strategic_response_model_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.learn_strategic_response_model_v1);
   queue.register('evaluate_strategic_response_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.evaluate_strategic_response_v1);
   queue.register('construct_interaction_protocol_v1',dispatchInteractionProtocolJob,PRODUCTION_JOB_CONTRACTS.construct_interaction_protocol_v1);

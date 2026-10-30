@@ -81,6 +81,7 @@ import {CONFIDENTIAL_OPERATION_SCHEMAS,CONFIDENTIAL_OPERATIONS} from "../package
 import {OPERATION_SCHEMAS as EXECUTION_PROOF_OPERATION_SCHEMAS,EXECUTION_PROOF_OPERATIONS} from "../packages/private-equity/src/project-z/z4-execution-proof/contracts";
 import {InteractionOperationSchemas,InteractionOperations} from "../packages/private-equity/src/interaction-synthesis/api";
 import {CoalitionOperationSchemas,CoalitionOperations} from "../packages/private-equity/src/project-z/z2-coalitions/api";
+import {Z5_OPERATIONS,Z5_SCHEMAS} from "../packages/private-equity/src/project-z/z5-institution-linker/contracts";
 import { ApplicationExpressionSchema } from "../packages/private-equity/src/enterprise-applications/contracts";
 import { M1_OPERATIONS, M1OperationSchemas } from "../packages/private-equity/src/decision-slice/handler";
 import { CapitalProgramV2Operations } from "@finnor/shared-types";
@@ -341,6 +342,7 @@ const applicationComponents={schemas:Object.fromEntries([
  ...Object.entries(EXECUTION_PROOF_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(InteractionOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(CoalitionOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
+ ...Object.entries(Z5_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ["X3Expression",applicationSchema((ApplicationExpressionSchema instanceof z.ZodLazy ? ApplicationExpressionSchema.unwrap() : ApplicationExpressionSchema))],
 ])};
 const secured = [{ bearerAuth: [] }];
@@ -1056,6 +1058,21 @@ for (const [operation, schema] of Object.entries(ClosingOperationSchemas)) {
     },
   } } });
 }
+
+(paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...Z5_OPERATIONS);
+for(const operation of Z5_OPERATIONS)Object.assign(paths,{["/api/company-brain/"+operation]:{post:{
+ security:secured,requestBody:{required:true,content:{"application/json":{schema:{$ref:"#/components/schemas/"+operation}}}},
+ responses:{"200":{description:"Exact current original Work, declared fixed-kernel contract, original S8 admission or retained failure. Not protected, production, financial efficacy or effect authority."},
+ "202":{description:"Same original Work accepted into the actual bounded native queue, not completion."},
+ "400":{description:"Strict bounded original-owner request rejected."},"401":{description:"Genuine owner bearer required before body IO."},
+ "403":{description:"Original rights, exact existing owner contract or ordinary disposable profile absent."},
+ "408":{description:"Bounded authenticated body deadline."},"409":{description:"Original live cut, source, rights, reservation, cumulative resources, admission or idempotency changed."},
+ "413":{description:"Input, retained bytes, episode or process bound."},"503":{description:"Pinned native checker, capacity or original S8 custody unavailable."}}
+}}});
+Object.assign(paths,{"/api/policies/composition-plan":{post:{security:secured,
+ requestBody:json(z.object({policyRef:ExperimentRefSchema,allocationRef:ExperimentRefSchema}).strict()),
+ responses:{"200":{description:"Original S4 immutable integration/replacement plan consumed the current conditional contract, retaining original S6 UNKNOWN and S5 liabilities. Not a new control choice or dispatch."},
+ "403":{description:"Genuine original owner required."},"409":{description:"Current S4/S5/S6/S8 source or original remaining planning allowance unavailable."}}}}});
 
 const document = {
   openapi: "3.1.0",

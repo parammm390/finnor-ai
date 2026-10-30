@@ -66,7 +66,7 @@ test("the Phase 8 production contract adds four independently required compute s
   assert.equal(worker.clusterName, "finnor-production")
   assert.equal(worker.serviceName, "finnor-worker")
   assert.equal(worker.sseGatewayUrl, "https://realtime.finnorai.com")
-  assert.equal(contract.release.requiredMigrationHead, "postz_z4_execution_proof.sql")
+  assert.equal(contract.release.requiredMigrationHead, "postz_z5_institution_linker.sql")
   assert.ok(!contract.release.mutationAuthorization.allowedOperations.includes("product-authority-update"))
   assert.ok(!contract.release.mutationAuthorization.allowedOperations.includes("epistemic-impact-activate"))
   assert.deepEqual(contract.release.requiredComponents, ["frontend", "api", "computeRealtime", "computeInteractive", "computeBackground", "computeHeavy", "supplierCanaryApp", "supplierCanaryAuth"])

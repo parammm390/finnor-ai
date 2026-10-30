@@ -610,6 +610,14 @@ export class CapabilityEvolution {
                         fault('S8_USE_IDENTITY_SUBSTITUTION');
                     await this.currentUse(use);
                 }
+                if(input.operation==='Z5_COMPOSITION_ADMIT'){
+                    this.role(a,'CONSUMER');this.scope(input.body);
+                    if(this.policy.domain!=='DISPOSABLE_TEST_AUTHORITY')fault('S8_Z5_ORDINARY_DOMAIN_ONLY',403);
+                    await CapabilityEvolution.sources(this.policy.sourcePins);
+                    const owner=await import('../../private-equity/src/project-z/z5-institution-linker/native-s8-owner');
+                    await owner.currentInstitutionFromOriginalS8({...this.policy,lifecyclePolicyDigest:digest(this.policy)},
+                        {...input.body,physical:undefined,nativeReference:prior.result.nativeReference});
+                }
                 await this.checkpoint(prior);
                 return prior.result;
             }
@@ -617,6 +625,18 @@ export class CapabilityEvolution {
             if (this.handedOff && input.operation !== 'READ') fault('S8_RUNTIME_RESPONSIBILITY_TRANSFERRED', 403);
             if (this.policy.responsibilityHandoff) await this.resolveResponsibilityHandoff();
             const b = input.body;
+            if(input.operation==='Z5_COMPOSITION_ADMIT'||input.operation==='Z5_COMPOSITION_CURRENT'){
+                this.role(a,'CONSUMER');this.scope(b);
+                if(this.policy.domain!=='DISPOSABLE_TEST_AUTHORITY')fault('S8_Z5_ORDINARY_DOMAIN_ONLY',403);
+                const owner=await import('../../private-equity/src/project-z/z5-institution-linker/native-s8-owner'),
+                    authority={...this.policy,lifecyclePolicyDigest:digest(this.policy)};
+                if(input.operation==='Z5_COMPOSITION_CURRENT')return owner.currentInstitutionFromOriginalS8(authority,b);
+                const assertion=await owner.evaluateInstitutionFromOriginalS8(authority,b),
+                    committed=await this.commitReference('z5-institution-composition-check',assertion),
+                    answer={assertion,nativeReference:committed.ref};
+                await this.persist({requestId:input.requestId,requestDigest,actorId:a.id,operation:input.operation,body:b,result:answer});
+                return answer;
+            }
             let result: any, journalOperation = input.operation;
             if(input.operation.startsWith('CONFIDENTIAL_')){
                 const port=await this.confidentialPort();
