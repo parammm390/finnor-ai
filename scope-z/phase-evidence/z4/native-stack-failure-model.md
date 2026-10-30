@@ -149,3 +149,19 @@ the only creation-time column is `accepted_at timestamptz NOT NULL DEFAULT clock
 | J3 | `listProofs` ordering uses a missing column | Ordered by `accepted_at DESC, id DESC` (deterministic tie-break) | Status/list read in the full stage returns sessions |
 | J4 | A masked refusal hides a SQL error again | The submit diagnosis already records PG `where`/`detail`; the postgres log is the second oracle | `submit-diagnosis.json` and `postgres.private.log` |
 | J5 | Committed job with a failed follow-up leaves a half-submitted session | A fresh run name is used; the retained run is not reused. The replayed in-process answer in the diagnosis confirms the idempotent submission path | `w4-seed-09` retained, next run `w4-seed-10` |
+
+## K. Currentness negative named a predicate that code order never reaches (w4-seed-10 negativeProbe)
+
+w4-seed-10 passed the seed stage; 10 of 11 negative probes matched. The deadline-reset probe (the over-budget Work resubmitted with a later
+`deadlineAt`) answered 422 `Z4_ORIGINAL_CURRENT_WORK_INPUT_REQUIRED`, not the registered `Z4_ORIGINAL_PLAN_OR_DEADLINE_CHANGED`. Source reading, not
+the observation, decides: `deadlineAt` is in `intakeSchema`, hence in `acceptedDefinition`; `workSnapshot` compares
+`sha(acceptedDefinition(request))` with the Work's current input digest before it loads the plan, so any deadline change is refused at the input check.
+The plan-deadline comparison is reachable only when the definition digest still matches but the plan's `constraint_set.deadlineAt` differs, which
+needs a plan revision the owner cannot make over HTTP. The product refusal is correct (a deadline reset is refused, no budget or reservation is
+touched); the expectation was wrong.
+
+| # | Failure | Expected result | Oracle |
+|---|---|---|---|
+| K1 | Later deadline on a Work with a bound input | 422 `Z4_ORIGINAL_CURRENT_WORK_INPUT_REQUIRED`, no session job, no S5 reservation | `negativeProbe` match plus job count for that Work unchanged |
+| K2 | Expectation edited only to match the observation | Not accepted: justification is the code order above; the product is unchanged | Source diff touches only the scenario expectation and its comment |
+| K3 | Currentness negative becomes vacuous | It must still be a refusal that changes nothing; the other deadline refusal (`Z4_ORIGINAL_ONE_HOUR_DEADLINE_REQUIRED`) stays covered by intake | Replay negative file 05 expectedPredicate |
