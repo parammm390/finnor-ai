@@ -497,3 +497,28 @@ export async function driveAcquisitionToModelReady(env: NativeEnvironment, paren
     return result;
   } finally { await sql.end(); }
 }
+
+export interface ForeignIdentity { tenantId: string; userId: string; email: string; password: string; sameTenantAsOwner: boolean }
+
+/**
+ * A second authenticated identity for refusal cases: a real Auth user created through the Auth admin API plus the
+ * tenant directory rows the product's own tenant-user path writes (users row matched by email; a new tenant is
+ * configured for the private-equity vertical exactly like the other owner e2e fixtures). `tenantId` omitted creates an
+ * unrelated tenant; naming the owner's tenant creates a different principal inside it.
+ */
+export async function createForeignIdentity(env: NativeEnvironment, options: { tenantId?: string } = {}): Promise<ForeignIdentity> {
+  const { db } = await owners(env);
+  const sql = await admin(env);
+  try {
+    const tag = randomUUID().slice(0, 8), email = `z0-foreign-${tag}@z0.example.test`, password = "Z0!" + randomUUID();
+    const created = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users`, { method: "POST",
+      headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY!, authorization: "Bearer " + env.SUPABASE_SERVICE_ROLE_KEY!, "content-type": "application/json" },
+      body: JSON.stringify({ email, password, email_confirm: true }), signal: AbortSignal.timeout(30000) });
+    if (created.status >= 300) throw Error("Z0_FIXTURE_FOREIGN_AUTH_USER_" + created.status);
+    const tenantId = options.tenantId ?? randomUUID(), userId = randomUUID();
+    if (!options.tenantId) await sql.query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,'Z0 unrelated firm')", [tenantId, randomUUID()]);
+    await sql.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name) VALUES($1,$2,$3,'owner','active','Z0 foreign principal')", [userId, tenantId, email]);
+    if (!options.tenantId) await db.configureTenantVertical({ tenantId, verticalKey: "private_equity", expectedVersion: 0, createdBy: userId, sourceSystem: "Z0:foreign" });
+    return { tenantId, userId, email, password, sameTenantAsOwner: Boolean(options.tenantId) };
+  } finally { await sql.end(); }
+}
