@@ -222,7 +222,8 @@ try {
       const fitted = expectStatus(fitAnswer, 200, "S3_FIT")
       if (fitted.status !== "FITTED") fail("S3_FIT_NOT_FITTED_" + JSON.stringify(fitted).slice(0, 400))
       writeFileSync(join(evidence, "s3-fit-summary.json"), JSON.stringify({ status: fitted.status, ref: fitted.model.ref, request, historyRowsPublicInputs: selection.map(item => ({ name: item.name, periods: item.periods, inputs: item.publicCase.request.inputs })) }, null, 2) + "\n", { mode: 0o600 })
-      return { ref: fitted.model.ref, request, fitStartedAt, validUntil: Date.parse(request.validity.validUntil), series }
+      return { ref: fitted.model.ref, request, fitStartedAt, validUntil: Date.parse(request.validity.validUntil), series,
+        pin: fitted.model.beliefBindings?.[0]?.pin ?? null }
     })
     const deadlineMs = model.fitStartedAt + 55 * 60000
     const deadlineAt = new Date(deadlineMs).toISOString()
@@ -301,10 +302,27 @@ try {
     }
     const works = await step("original-work-intake-and-plan", async () => {
       const made = []
-      for (const item of selection) {
-        const guard = { register: 0, unit: item.publicCase.request.program.registers[0].unit, minimum: item.publicCase.expectedFinal[0], maximum: item.publicCase.expectedFinal[0] }
-        const request = await createWork(item.name, { amount: "8", program: item.publicCase.request.program, initial: item.publicCase.request.initial, owner: item.owner, periods: item.periods, guard })
-        made.push({ ...item, request })
+      try {
+        for (const item of selection) {
+          const guard = { register: 0, unit: item.publicCase.request.program.registers[0].unit, minimum: item.publicCase.expectedFinal[0], maximum: item.publicCase.expectedFinal[0] }
+          const request = await createWork(item.name, { amount: "8", program: item.publicCase.request.program, initial: item.publicCase.request.initial, owner: item.owner, periods: item.periods, guard })
+          made.push({ ...item, request })
+        }
+      } catch (error) {
+        // The route maps owner faults to one public code; re-run the same currentness gates in-process to name the first one.
+        const diagnosis = { error: String(error?.message ?? error), completedWorks: made.map(item => item.name) }
+        try { diagnosis.modelValidation = await pe.validateEnterpriseInterventionModel(ctx, model.ref) }
+        catch (inner) { diagnosis.modelValidationError = String(inner?.message ?? inner) }
+        if (model.pin) try {
+          const beliefs = await import("../../../packages/private-equity/src/enterprise-beliefs.ts")
+          const pinCheck = await beliefs.validateBeliefViewPin(ctx, model.pin)
+          diagnosis.pinRevalidation = { status: pinCheck.status, reason: pinCheck.reason }
+          const view = await beliefs.loadEnterpriseBeliefView(ctx, { root })
+          diagnosis.freshView = { dependencyDigest: view.dependencyDigest, rightsRevision: view.rights?.revision, canonicalStatus: view.coverage.canonicalStatus }
+          diagnosis.fitPin = { dependencyDigest: model.pin.dependencyDigest, rightsRevision: model.pin.rightsRevision, validAt: model.pin.validAt }
+        } catch (inner) { diagnosis.pinError = String(inner?.message ?? inner) }
+        writeFileSync(join(evidence, "intake-diagnosis.json"), JSON.stringify(diagnosis, null, 2) + "\n", { mode: 0o600 })
+        throw error
       }
       return made
     })
