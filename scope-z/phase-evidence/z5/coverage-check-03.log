@@ -1,0 +1,12 @@
+{"schema":"finnor.z5.explicit-engineering-tooling.v1","pools":["/home/factory-user/repos/finnor-z-coordinator","/home/factory-user/repos/finnor-z-coordinator/finnor-os"],"borrowedThirdPartyTooling":["typescript"],"borrowedProjectSources":0,"installedZ5Proof":false}
+file:///home/factory-user/repos/finnor-z5/scripts/centropy/audit-capability-coverage.mjs:283
+  if (unresolvedDynamicCalls.length) throw new Error(`Mounted frontend operations lack finite route bindings: ${JSON.stringify(unresolvedDynamicCalls)}`)
+                                           ^
+
+Error: Mounted frontend operations lack finite route bindings: [{"file":"src/components/centropy/world/WorldExplorer.tsx","route":"company-brain/:ref","method":"POST","line":124,"binding":"Canonical API import and finite TypeScript expression; source evidence only"},{"file":"src/components/centropy/thread/PendingEffects.tsx","route":"actions/:ref/:ref","method":"POST","line":88,"binding":"Canonical API import and finite TypeScript expression; source evidence only"},{"file":"src/components/centropy/canvas/EconomicActionTheoryPanel.tsx","route":":ref","method":"POST","line":115,"binding":"Canonical API import and finite TypeScript expression; source evidence only"},{"file":"src/components/centropy/canvas/StrategicResponsePanel.tsx","route":"company-brain/:ref","method":"POST","line":117,"binding":"Canonical API import and finite TypeScript expression; source evidence only"},{"file":"src/components/centropy/canvas/InteractionProtocolPanel.tsx","route":"company-brain/:ref","method":"POST","line":144,"binding":"Canonical API import and finite TypeScript expression; source evidence only"}]
+    at file:///home/factory-user/repos/finnor-z5/scripts/centropy/audit-capability-coverage.mjs:283:44
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.23.4

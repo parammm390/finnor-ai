@@ -1,0 +1,14 @@
+{
+  "actualExit": 0,
+  "command": [
+    "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+    "/home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/reconstruct.mjs",
+    "--memory-headroom",
+    "graph"
+  ],
+  "expected": "ACTUAL_HEADROOM_ONLY_EXIT_0_OR_2",
+  "id": "memory-graph",
+  "stderr": "",
+  "stdout": "{\"state\":\"PASSED_MEMORY_HEADROOM_ONLY\",\"profile\":\"graph\",\"exit\":0,\"requiredAvailableBytes\":6442450944,\"actualAvailableBytes\":7086981120,\"installedZ5Proof\":false,\"databaseActions\":0,\"listenersStarted\":0,\"installsStarted\":0,\"sourceSha256\":\"88796fa666e99150af354d52105938e7e1361c5ab461f23b7013a8d86d7cb79b\"}\n",
+  "wallMs": 59.95143899053801
+}

@@ -1,0 +1,14 @@
+{
+  "id": "false-protected-admission",
+  "passed": true,
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "{\"checked\":false,\"checker\":\"z5-original-semantics-checker-v1\",\"executionAuthorityGranted\":false,\"reason\":\"CERTIFICATE_ENVELOPE_BINDING\",\"schema\":\"finnor.z5.independent-check.v1\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 48.535247000000254
+  },
+  "corruptionDigest": "e836e0fd8f9ef4579ec5ec6c3c87507b6d6da4b3d1651db549ecd0ccb26c2d53",
+  "expected": "INDEPENDENT_REJECTION"
+}

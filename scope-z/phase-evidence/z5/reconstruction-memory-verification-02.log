@@ -1,0 +1,8 @@
+{
+  "actualExit": 1,
+  "error": "GIT_WHITESPACE_CHECK_FAILED",
+  "errorType": "RuntimeError",
+  "schema": "finnor.z5.corrected-artifact-postcondition-verification.v1",
+  "scope": "RAW_PROCESS_BOUNDARY_NATIVE_FAILURE_HANDOFF_AND_WHITESPACE_CURRENT_SOURCE_INVENTORY_VERIFIED_SEPARATELY",
+  "wallMs": 225.29344299982768
+}

@@ -1,0 +1,20 @@
+{
+  "point": "AFTER_CLAIM",
+  "passed": true,
+  "result": {
+    "stopAt": "AFTER_CLAIM",
+    "mode": "",
+    "pid": 232816,
+    "exitCode": null,
+    "signal": "SIGKILL",
+    "stdout": "{\"stage\":\"AFTER_CLAIM\",\"pid\":232816,\"fence\":1,\"token\":\"e07ef2a1-82bf-4582-be3f-54a6661b397a\"}\n",
+    "stderr": "",
+    "physicallyKilled": true,
+    "reachedBoundary": true,
+    "timedOut": false
+  },
+  "durableJournalDigest": "50b081650dba45dbdc357e1fe8d1c8745ffef0eafafbcb9a1ba4c7096a7c9545",
+  "attempts": 1,
+  "spent": 1,
+  "fence": 1
+}

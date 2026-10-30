@@ -1,0 +1,20 @@
+{
+  "point": "AFTER_CERTIFICATE",
+  "passed": true,
+  "result": {
+    "stopAt": "AFTER_CERTIFICATE",
+    "mode": "",
+    "pid": 232828,
+    "exitCode": null,
+    "signal": "SIGKILL",
+    "stdout": "{\"stage\":\"AFTER_CERTIFICATE\",\"pid\":232828,\"fence\":2,\"token\":\"75bc5f7a-a776-4453-9ca8-a1429afe90b4\"}\n",
+    "stderr": "",
+    "physicallyKilled": true,
+    "reachedBoundary": true,
+    "timedOut": false
+  },
+  "durableJournalDigest": "1ba254b1540a1eafb91ceda6f65b3466793aa2f783f58bb7a267bca378f445dd",
+  "attempts": 2,
+  "spent": 2,
+  "fence": 2
+}

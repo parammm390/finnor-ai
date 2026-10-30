@@ -1,0 +1,14 @@
+{
+  "id": "false-maximality",
+  "passed": true,
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "{\"checked\":false,\"checker\":\"z5-original-semantics-checker-v1\",\"executionAuthorityGranted\":false,\"reason\":\"FALSE_MAXIMALITY_OR_INEVITABILITY\",\"schema\":\"finnor.z5.independent-check.v1\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 60.31857999999988
+  },
+  "corruptionDigest": "0b019d810c2bc317959af0d74d003ce53577a3d073bf31a1f2021290d3a26f56",
+  "expected": "INDEPENDENT_REJECTION"
+}

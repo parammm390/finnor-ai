@@ -1,0 +1,12 @@
+{
+  "schema": "finnor.z5.retained-failure.v1",
+  "run": "public-sweep-01-launch",
+  "exitCode": 1,
+  "stage": "PRE_FIXTURE_RUNNER_PATH_GUARD",
+  "predicate": "EXPLICIT_OWNED_EVIDENCE_DIRECTORY_REQUIRED",
+  "cause": "The JavaScript runner resolved five parents instead of four from its directory.",
+  "sourceLog": "/home/factory-user/.factory/artifacts/scripts/08db35bb-8bc7-480d-be0b-f5570f53c841/call_uDEQNOZqNgyuP90E2Uhd7ecJ.log",
+  "casesExecuted": 0,
+  "nativeActions": 0,
+  "correction": "Resolve the actual checkout, retaining the original output ownership guard."
+}

@@ -1,0 +1,2 @@
+{"guard": "ORIGINAL_PROCESS_MEMORY_UNDER_HEAVY_LOCK", "requiredBytes": 4294967296, "observedBytes": 6815600640, "passed": true}
+{"output":"/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/finite-boundary-after-01","state":"PASSED","cases":7,"failures":[],"producerExecutions":6,"checkerExecutions":7}

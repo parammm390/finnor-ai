@@ -1,0 +1,11 @@
+Warning: React version was set to "detect" in eslint-plugin-react settings, but the "react" package is not installed. Assuming latest React version for linting.
+
+/home/factory-user/repos/finnor-z5/src/components/centropy/world/InstitutionCompositionPanel.tsx
+  75:6  warning  React Hook useEffect has a missing dependency: 'scope'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/factory-user/repos/finnor-z5/src/components/centropy/world/WorldWorkRecord.tsx
+  59:6  warning  React Hook useEffect has a missing dependency: 'scope'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+✖ 2 problems (0 errors, 2 warnings)
+{"schema":"finnor.z5.proposed-source-lint.v1","files":3,"errors":0,"warnings":2,"patchSha256":"8bb5c37b3f95dcf3d71e6f061136c871a8a5b6fc3f7042d1b7becb3eabb75179","sharedFilesWritten":0,"installedProof":false}
+{"schema":"finnor.z5.explicit-engineering-tooling.v1","pools":["/home/factory-user/repos/finnor-z-coordinator","/home/factory-user/repos/finnor-z-coordinator/finnor-os"],"borrowedThirdPartyTooling":["eslint","eslint-config-next/core-web-vitals","next/babel"],"borrowedProjectSources":0,"installedZ5Proof":false}

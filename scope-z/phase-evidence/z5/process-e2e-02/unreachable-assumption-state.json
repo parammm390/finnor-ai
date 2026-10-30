@@ -1,0 +1,14 @@
+{
+  "id": "unreachable-assumption-state",
+  "passed": true,
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "{\"checked\":false,\"checker\":\"z5-original-semantics-checker-v1\",\"executionAuthorityGranted\":false,\"reason\":\"CONTEXT_OUTSIDE_ORIGINAL_OR_UNSAFE\",\"schema\":\"finnor.z5.independent-check.v1\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 61.80139400000007
+  },
+  "corruptionDigest": "7c6eceaba596cf9e31c762e59de41607a6b9a53d7d46dbc1a56d5dd35b1693fc",
+  "expected": "INDEPENDENT_REJECTION"
+}

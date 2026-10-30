@@ -1,0 +1,27 @@
+{
+  "id": "large-shared-domain-row-overflow",
+  "passed": false,
+  "inputDigest": "01bdb41cdb2cee2b314a58cea154e69345fa7549565709468c0cc408f78ece71",
+  "expected": {
+    "disposition": "INCOMPLETE",
+    "context": null,
+    "replacement": null,
+    "noncircular": false
+  },
+  "producer": {
+    "exitCode": 0,
+    "signal": null,
+    "stdout": "{\"schema\":\"finnor.z5.institution-composition-certificate.v1\",\"version\":\"z5-coupled-kernel-v1\",\"inputDigest\":\"01bdb41cdb2cee2b314a58cea154e69345fa7549565709468c0cc408f78ece71\",\"disposition\":\"INCOMPLETE\",\"reasons\":[\"FULL_TRANSLATION_ROW_BOUND_EXHAUSTED\"],\"context\":null,\"replacement\":null,\"originalCounterexample\":null,\"translation\":null,\"original\":{\"states\":0,\"transitions\":0,\"initial\":0},\"discharge\":{\"initial\":0,\"componentTransitions\":0,\"environmentTransitions\":0,\"noncircular\":false},\"correspondence\":\"EXACT_BOUNDED_LISTED_TYPED_KERNELS_NOT_ARBITRARY_TS_SQL_OR_PROVIDER\",\"executionAuthorityGranted\":false,\"protectedAdmission\":false,\"costs\":{\"operations\":17,\"wallMs\":2.6965079999999944,\"cpuUserMicros\":2427,\"cpuSystemMicros\":256,\"peakRssBytes\":82698240,\"money\":null,\"human\":null,\"status\":\"MATERIAL_COSTS_UNMETERED\",\"gaps\":[\"EXTRACTION_INTEGRATION_INSTALL_RECOVERY_AND_HUMAN_COSTS_NOT_MEASURED_HERE\",\"NO_EQUIPPED_OR_FINANCIAL_RESULT\"]}}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 129.46341700000005
+  },
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "",
+    "stderr": "Traceback (most recent call last):\n  File \"/home/factory-user/repos/finnor-z5/finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/checker.py\", line 520, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"/home/factory-user/repos/finnor-z5/finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/checker.py\", line 510, in main\n    result = check(request[\"input\"], request[\"certificate\"])\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/factory-user/repos/finnor-z5/finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/checker.py\", line 474, in check\n    translation = full_translation(m, bound)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/factory-user/repos/finnor-z5/finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/checker.py\", line 324, in full_translation\n    shared = list(product(*(c[\"values\"] for c in m[\"cells\"])))\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nMemoryError\n",
+    "bounded": false,
+    "wallMs": 499.9496980000001
+  }
+}

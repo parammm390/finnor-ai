@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/freeze-delivery.py", line 24, in <module>
+    raise RuntimeError("EXACT_COMMITTED_SOURCE_REQUIRED")
+RuntimeError: EXACT_COMMITTED_SOURCE_REQUIRED

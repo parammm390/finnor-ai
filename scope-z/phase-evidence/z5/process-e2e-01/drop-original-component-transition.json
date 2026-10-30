@@ -1,0 +1,14 @@
+{
+  "id": "drop-original-component-transition",
+  "passed": true,
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "{\"checked\":false,\"checker\":\"z5-original-semantics-checker-v1\",\"executionAuthorityGranted\":false,\"reason\":\"OMITTED_ORIGINAL_COMPONENT_TRANSITION\",\"schema\":\"finnor.z5.independent-check.v1\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 60.70193399999994
+  },
+  "corruptionDigest": "ea7e396e180845113750c6a082ca2176b59fdce174a64e843c8031bb66d1356f",
+  "expected": "INDEPENDENT_REJECTION"
+}

@@ -1,0 +1,20 @@
+{
+  "schema": "finnor.z5.guarded-native-e2e.v1",
+  "state": "NOT_RUN",
+  "currentPhaseAuthority": "NO_DB_AUTH_OR_LISTENER_AUTHORITY",
+  "actions": [],
+  "physicalInterruptions": [],
+  "databaseInitialization": 0,
+  "tenantsCreated": 0,
+  "usersCreated": 0,
+  "bypasses": 0,
+  "migrationsApplied": 0,
+  "grantsApplied": 0,
+  "listenersStarted": 0,
+  "signersCreated": 0,
+  "externalMutations": 0,
+  "productionActivation": false,
+  "protectedAdmission": false,
+  "blocker": "EXPLICIT_CURRENT_DISPOSABLE_DATABASE_AUTH_PROCESS_AND_EXISTING_OWNER_AUTHORITY_NOT_GRANTED",
+  "exit": 2
+}

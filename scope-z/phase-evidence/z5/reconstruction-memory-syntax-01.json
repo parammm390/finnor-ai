@@ -1,0 +1,46 @@
+{
+  "actualExit": 0,
+  "archives": 0,
+  "cases": [
+    {
+      "actualExit": 0,
+      "asset": "reconstruction-driver",
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "actualExit": 0,
+      "asset": "installUnderLock",
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "actualExit": 0,
+      "asset": "memoryUnderLock",
+      "stderr": "",
+      "stdout": ""
+    },
+    {
+      "actualExit": 0,
+      "asset": "extractor-python-ast-only",
+      "bytecodeWritten": false,
+      "executed": false
+    }
+  ],
+  "databaseActions": 0,
+  "embeddedSha256": {
+    "extractor": "d1a233917e7a989396f8809dd79eea8f743e348a7e504cd9815d96d935872024",
+    "installUnderLock": "789092dd69b7544c420b9f5d1031c356ad76df540911b06d9764eafc67099d5d",
+    "memoryUnderLock": "d1368e0b505d361363f60eae11abfcde28b1d9ae7acf9de32ca7620615a6eb34"
+  },
+  "extractorOrInstallerExecuted": false,
+  "installs": 0,
+  "maxSingleWaitedChildRssBytesNotCombinedPeak": 44855296,
+  "schema": "finnor.z5.reconstruction-memory-syntax.v1",
+  "selfPeakRssBytes": 17879040,
+  "sourceBytes": 16503,
+  "sourceSha256": "88796fa666e99150af354d52105938e7e1361c5ab461f23b7013a8d86d7cb79b",
+  "state": "PASSED",
+  "unmeteredModelHumanProviderMoneyCost": "UNKNOWN",
+  "wallMs": 132.13077500404324
+}

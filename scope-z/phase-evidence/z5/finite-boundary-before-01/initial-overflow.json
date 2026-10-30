@@ -1,0 +1,27 @@
+{
+  "id": "initial-overflow",
+  "passed": false,
+  "inputDigest": "2ff93b511a14fd791b9a842e8c2da973a1bdbd29ffe82b3cd2605f21d07604c8",
+  "expected": {
+    "disposition": "INCOMPLETE",
+    "context": null,
+    "replacement": null,
+    "noncircular": false
+  },
+  "producer": {
+    "exitCode": 0,
+    "signal": null,
+    "stdout": "{\"schema\":\"finnor.z5.institution-composition-certificate.v1\",\"version\":\"z5-coupled-kernel-v1\",\"inputDigest\":\"2ff93b511a14fd791b9a842e8c2da973a1bdbd29ffe82b3cd2605f21d07604c8\",\"disposition\":\"CHECKED_CANDIDATE\",\"reasons\":[],\"context\":{\"states\":[\"579ae14419e8b7ea9584fa6577125e47a4a4270cb9e7f0d1e275444a3fde2778\",\"a51f5eba1324b2368fd779d2de29863830a212e1b96f5d8a26cce181f466e6a3\"],\"initial\":[\"a51f5eba1324b2368fd779d2de29863830a212e1b96f5d8a26cce181f466e6a3\",\"579ae14419e8b7ea9584fa6577125e47a4a4270cb9e7f0d1e275444a3fde2778\"],\"edges\":[],\"ranks\":{\"579ae14419e8b7ea9584fa6577125e47a4a4270cb9e7f0d1e275444a3fde2778\":0,\"a51f5eba1324b2368fd779d2de29863830a212e1b96f5d8a26cce181f466e6a3\":0},\"semantics\":\"ALL_COMPONENT_STEPS_AND_REQUIRED_ENVIRONMENT_OFFERS_NO_INEVITABILITY\",\"conditionality\":\"Every represented environment preserves all original component steps and offers every retained environmental input. Scheduling may delay indefinitely. Public-observation-equivalent states have uniform offers.\",\"maximality\":\"NOT_CLAIMED_SOUND_SUBSET\"},\"replacement\":{\"status\":\"RETAIN_OLD\",\"component\":null,\"revision\":null,\"relation\":[],\"ranks\":{},\"bridge\":null,\"reasons\":[\"NO_CHECKED_SUPPLIED_REVISION_AND_ACTUAL_LIVE_BRIDGE\"],\"preorder\":\"SHARED_STATE_EXACT_STRONG_MAY_SIMULATION_MUST_AVAILABILITY_LEGAL_QUIESCENCE_NONBLOCKING_V1\"},\"originalCounterexample\":null,\"translation\":{\"rows\":4,\"digest\":\"b118e99732fe44a8cde21bd253beb8d22a407c0edfa6a12315f63df660f8597e\"},\"original\":{\"states\":2,\"transitions\":0,\"initial\":2},\"discharge\":{\"initial\":2,\"componentTransitions\":0,\"environmentTransitions\":0,\"noncircular\":true},\"correspondence\":\"EXACT_BOUNDED_LISTED_TYPED_KERNELS_NOT_ARBITRARY_TS_SQL_OR_PROVIDER\",\"executionAuthorityGranted\":false,\"protectedAdmission\":false,\"costs\":{\"operations\":21,\"wallMs\":3.530078000000003,\"cpuUserMicros\":3514,\"cpuSystemMicros\":0,\"peakRssBytes\":82706432,\"money\":null,\"human\":null,\"status\":\"MATERIAL_COSTS_UNMETERED\",\"gaps\":[\"EXTRACTION_INTEGRATION_INSTALL_RECOVERY_AND_HUMAN_COSTS_NOT_MEASURED_HERE\",\"NO_EQUIPPED_OR_FINANCIAL_RESULT\"]}}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 136.12649000000005
+  },
+  "checker": {
+    "exitCode": 0,
+    "signal": null,
+    "stdout": "{\"checked\":true,\"checker\":\"z5-original-semantics-checker-v1\",\"claimDigest\":\"21de16bece0b313de4a07818553b4cf811ea6328bdfd369ed51fcca81ba922f3\",\"disposition\":\"CHECKED_CANDIDATE\",\"executionAuthorityGranted\":false,\"inputDigest\":\"2ff93b511a14fd791b9a842e8c2da973a1bdbd29ffe82b3cd2605f21d07604c8\",\"operations\":6,\"protectedAdmission\":false,\"schema\":\"finnor.z5.independent-check.v1\",\"scope\":\"ORIGINAL_FINITE_TYPED_KERNEL_SEMANTICS_NOT_NATIVE_TS_SQL_OR_PROTECTED_CUSTODY\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 35.40905299999997
+  }
+}
