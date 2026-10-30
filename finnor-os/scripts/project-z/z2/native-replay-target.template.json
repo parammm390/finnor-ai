@@ -1,0 +1,33 @@
+{
+  "schema": "finnor.project-z.z2.native-replay-target.v1",
+  "authorization": {
+    "explicitDisposableExecution": false,
+    "noDatabaseInitialization": true,
+    "noGrantsOrProvisioning": true,
+    "noExternalOrFinancialEffects": true,
+    "realAuthOnly": true,
+    "ownedWorkerKillAndSameBuildRestart": false,
+    "exclusiveNativeReplayDatabase": false,
+    "consumeOriginalRemainingConstructionBudget": false,
+    "leaveOwnedWorkerStoppedAfterReplay": false,
+    "expiresAt": "1970-01-01T00:00:00.000Z"
+  },
+  "origin": "",
+  "apiOrigin": "",
+  "frontendAuthIssuer": "",
+  "apiAuthIssuer": "",
+  "sourceRoot": "",
+  "sourceSha256": {},
+  "buildReceiptPath": "",
+  "buildReceiptSha256": "",
+  "tenantId": "",
+  "database": {"environmentName": "", "host": "", "port": 0, "name": ""},
+  "worker": {"pid": 0, "startTicks": "", "cmdlineSha256": "", "coupledSupervisor": false},
+  "processes": {
+    "frontend": {"pid": 0, "startTicks": "", "cmdlineSha256": ""},
+    "api": {"pid": 0, "startTicks": "", "cmdlineSha256": ""}
+  },
+  "actors": [],
+  "cases": [],
+  "preexistingNegativeCases": []
+}
