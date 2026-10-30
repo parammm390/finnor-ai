@@ -131,3 +131,33 @@ containing inputs, steps, the O-* observations, step-by-step expected vs
 observed, exit codes, source commit, scenario sha256; private logs stay in
 `*.private.*` files at mode 0600. Failures are kept and cited; no run is
 re-labelled.
+
+## 6. Addendum after w0-native-05: child allocation sizing versus original remaining
+
+Observed in the retained database of `w0-native-05` (read-only copy, not the
+live stack): the acquisition session of P0-10 ended UNKNOWN
+`X2_EXPLORATION_RECONCILIATION_REQUIRED` because the independent disposition
+of the 14th exploration interaction was `UNKNOWN` with reason
+`Z0_ORIGINAL_BUDGET_EXHAUSTED`. The original request envelope is 520 and the
+original episode had used 13 before the acquisition, so the original was not
+exhausted; the acquisition child allocation requested by the fixture was
+`requestUnits` default 128 and `assertInheritedCharge` refused the 129th
+ACQUISITION charge (131 ACQUISITION charges were recorded, 128 of them after
+the acquisition started). The product behaved as designed: the child
+allocation is a ceiling inside the original remaining, and exhaustion during
+an ambiguous request retains UNKNOWN with the responsibilities.
+
+Ways this can be misdiagnosed or faked, and the independent expectation:
+
+| # | Wrong response | Expected |
+|---|---|---|
+| E1 | Change the expected session status to UNKNOWN or accept UNKNOWN as pass | MODEL_READY plus the S4 acceptance event is the oracle of P0-10; UNKNOWN stays a FAIL. |
+| E2 | Raise the original envelope or add a new reservation to make room | The original envelope digest, episode digest and reservation count are unchanged (witness `sameBudget`); only the child demand changes, and it must stay at most `original limit - original used` read from S5. |
+| E3 | Raise the child demand above the original remaining | Refused `Z0_ORIGINAL_BUDGET_EXHAUSTED` (P0-04 keeps demanding 2048 against 520 to prove it). |
+| E4 | Relax `assertInheritedCharge` | Not done; the P0-10 oracle is unchanged and the exhaustion code remains the refusal. |
+| E5 | The sizing needed for a full exploration is unknown | The run records per-phase charge totals; a pass requires `sum(charges) <= original limit` and every charge on the original reservation. |
+
+P0-04 verification: `remainingInstitutionBudget` rejects a ceiling above 2048
+with `Z0_ORIGINAL_RESOURCE_DOMAIN` and a ceiling above the remaining
+(520 - 13 = 507) with `Z0_ORIGINAL_BUDGET_EXHAUSTED`. The demand 2048 is not
+above 2048, so it must be refused with `Z0_ORIGINAL_BUDGET_EXHAUSTED`.
