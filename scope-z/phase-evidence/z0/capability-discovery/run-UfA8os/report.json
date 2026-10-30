@@ -1,0 +1,402 @@
+{
+  "schema": "finnor.capability-discovery-cli-contract/v1",
+  "startedAt": "2026-10-24T07:53:44.931Z",
+  "node": "v22.23.4",
+  "sourceBaseCommit": "0293c866a6e500cd0ad82f00b52db60ddb1c3a28",
+  "source": "/home/factory-user/repos/finnor-z-coordinator",
+  "snapshot": "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout",
+  "qualification": "Real generator/auditor CLI source-contract E2E only. Borrowed installed third-party dependencies and parent Git metadata, not a cold install, HTTP flow, product qualification or phase completion.",
+  "rerun": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node /home/factory-user/repos/finnor-z-coordinator/scripts/centropy/verify-capability-discovery.mjs --evidence-dir /home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery",
+  "environment": {
+    "inheritedNames": [
+      "PATH"
+    ],
+    "syntheticNames": [
+      "NODE_ENV",
+      "NODE_OPTIONS",
+      "TSX_DISABLE_CACHE"
+    ]
+  },
+  "cases": [
+    {
+      "name": "production canonical denominator and complete metadata",
+      "result": "PASS"
+    },
+    {
+      "name": "test registration matches production without credentials",
+      "result": "PASS"
+    },
+    {
+      "name": "planner repair does not change the HTTP catalogue",
+      "result": "PASS"
+    },
+    {
+      "name": "real manifest check is deterministic",
+      "result": "PASS"
+    },
+    {
+      "name": "real coverage generation succeeds on an unmodified manifest",
+      "result": "PASS"
+    },
+    {
+      "name": "coverage rejects omitted identity against canonical source",
+      "result": "PASS"
+    },
+    {
+      "name": "coverage rejects extra identity against canonical source",
+      "result": "PASS"
+    },
+    {
+      "name": "coverage rejects duplicate identity against canonical source",
+      "result": "PASS"
+    },
+    {
+      "name": "coverage rejects required references against canonical source",
+      "result": "PASS"
+    },
+    {
+      "name": "coverage rejects model proposability against canonical source",
+      "result": "PASS"
+    },
+    {
+      "name": "coverage rejects raw availability against canonical source",
+      "result": "PASS"
+    },
+    {
+      "name": "coverage rejects raw risk against canonical source",
+      "result": "PASS"
+    },
+    {
+      "name": "coverage rejects raw kind against canonical source",
+      "result": "PASS"
+    },
+    {
+      "name": "fresh canonical identity flows through real generation and coverage",
+      "result": "PASS"
+    },
+    {
+      "name": "changed canonical references flow through real generation",
+      "result": "PASS"
+    },
+    {
+      "name": "enumeration denies an ordinary network import",
+      "result": "PASS"
+    },
+    {
+      "name": "enumeration does not inherit provider credentials",
+      "result": "PASS"
+    },
+    {
+      "name": "coverage check succeeds after restoring all source and manifest mutations",
+      "result": "PASS"
+    }
+  ],
+  "commands": [
+    {
+      "label": "direct canonical registry (production)",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/oracle.cjs"
+      ],
+      "mode": "production",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/0.stdout.log",
+      "stderr": "commands/0.stderr.log"
+    },
+    {
+      "label": "generate production manifest",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/generate-capability-manifest.mjs"
+      ],
+      "mode": "production",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/1.stdout.log",
+      "stderr": "commands/1.stderr.log"
+    },
+    {
+      "label": "direct canonical registry (test)",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/oracle.cjs"
+      ],
+      "mode": "test",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/2.stdout.log",
+      "stderr": "commands/2.stderr.log"
+    },
+    {
+      "label": "generate test manifest",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/generate-capability-manifest.mjs"
+      ],
+      "mode": "test",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/3.stdout.log",
+      "stderr": "commands/3.stderr.log"
+    },
+    {
+      "label": "manifest --check",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/generate-capability-manifest.mjs",
+        "--check"
+      ],
+      "mode": "production",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/4.stdout.log",
+      "stderr": "commands/4.stderr.log"
+    },
+    {
+      "label": "coverage positive",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/audit-capability-coverage.mjs"
+      ],
+      "mode": "production",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/5.stdout.log",
+      "stderr": "commands/5.stderr.log"
+    },
+    {
+      "label": "coverage mutant: omitted identity",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/audit-capability-coverage.mjs"
+      ],
+      "mode": "production",
+      "status": 1,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/6.stdout.log",
+      "stderr": "commands/6.stderr.log"
+    },
+    {
+      "label": "coverage mutant: extra identity",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/audit-capability-coverage.mjs"
+      ],
+      "mode": "production",
+      "status": 1,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/7.stdout.log",
+      "stderr": "commands/7.stderr.log"
+    },
+    {
+      "label": "coverage mutant: duplicate identity",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/audit-capability-coverage.mjs"
+      ],
+      "mode": "production",
+      "status": 1,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/8.stdout.log",
+      "stderr": "commands/8.stderr.log"
+    },
+    {
+      "label": "coverage mutant: required references",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/audit-capability-coverage.mjs"
+      ],
+      "mode": "production",
+      "status": 1,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/9.stdout.log",
+      "stderr": "commands/9.stderr.log"
+    },
+    {
+      "label": "coverage mutant: model proposability",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/audit-capability-coverage.mjs"
+      ],
+      "mode": "production",
+      "status": 1,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/10.stdout.log",
+      "stderr": "commands/10.stderr.log"
+    },
+    {
+      "label": "coverage mutant: raw availability",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/audit-capability-coverage.mjs"
+      ],
+      "mode": "production",
+      "status": 1,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/11.stdout.log",
+      "stderr": "commands/11.stderr.log"
+    },
+    {
+      "label": "coverage mutant: raw risk",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/audit-capability-coverage.mjs"
+      ],
+      "mode": "production",
+      "status": 1,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/12.stdout.log",
+      "stderr": "commands/12.stderr.log"
+    },
+    {
+      "label": "coverage mutant: raw kind",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/audit-capability-coverage.mjs"
+      ],
+      "mode": "production",
+      "status": 1,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/13.stdout.log",
+      "stderr": "commands/13.stderr.log"
+    },
+    {
+      "label": "direct canonical registry (production)",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/oracle.cjs"
+      ],
+      "mode": "production",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/14.stdout.log",
+      "stderr": "commands/14.stderr.log"
+    },
+    {
+      "label": "generate after canonical addition",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/generate-capability-manifest.mjs"
+      ],
+      "mode": "production",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/15.stdout.log",
+      "stderr": "commands/15.stderr.log"
+    },
+    {
+      "label": "coverage after canonical addition",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/audit-capability-coverage.mjs"
+      ],
+      "mode": "production",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/16.stdout.log",
+      "stderr": "commands/16.stderr.log"
+    },
+    {
+      "label": "direct canonical registry (production)",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/oracle.cjs"
+      ],
+      "mode": "production",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/17.stdout.log",
+      "stderr": "commands/17.stderr.log"
+    },
+    {
+      "label": "generate after canonical reference change",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/generate-capability-manifest.mjs"
+      ],
+      "mode": "production",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/18.stdout.log",
+      "stderr": "commands/18.stderr.log"
+    },
+    {
+      "label": "generate with network import attempt",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/generate-capability-manifest.mjs"
+      ],
+      "mode": "production",
+      "status": 1,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/19.stdout.log",
+      "stderr": "commands/19.stderr.log"
+    },
+    {
+      "label": "generate with synthetic parent credentials",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/generate-capability-manifest.mjs"
+      ],
+      "mode": "production",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/20.stdout.log",
+      "stderr": "commands/20.stderr.log"
+    },
+    {
+      "label": "final coverage generation",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/audit-capability-coverage.mjs"
+      ],
+      "mode": "production",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/21.stdout.log",
+      "stderr": "commands/21.stderr.log"
+    },
+    {
+      "label": "final coverage --check",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/audit-capability-coverage.mjs",
+        "--check"
+      ],
+      "mode": "production",
+      "status": 0,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/22.stdout.log",
+      "stderr": "commands/22.stderr.log"
+    }
+  ],
+  "result": "PASS",
+  "sourceInventorySha256": "e71cb7e6617fce9a084edc35d545edf784431301cd3c33343f2283c5a329a188",
+  "completedAt": "2026-10-24T07:56:33.902Z",
+  "passed": 18,
+  "failed": 0
+}

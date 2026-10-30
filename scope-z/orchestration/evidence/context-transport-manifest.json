@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "finnor.project-z.context-transport.v1",
+  "preparedAt": "2026-10-24T07:33:02.356471+00:00",
+  "productLockSha256": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf",
+  "executionPackSha256": "4419731d2544d1c07fe275ec8071d5d783273942ca9947eda2ff6b4e2dffb9db",
+  "sourceCheckoutPrerequisite": {
+    "commit": "7bfdd2d3ab611c90f1355637858824ff1ba67f98",
+    "tree": "82caf48007bc826794650505ae76aba92d4f981b",
+    "containsPinnedGitObjects": true,
+    "note": "Actual original source checkout is required in addition to both archives; source snapshots do not replace the repository."
+  },
+  "members": [
+    {
+      "path": "scope-z/orchestration/evidence/project-z-execution-pack-1.0.0.tar.gz",
+      "bytes": 3570581,
+      "sha256": "c6c5868a077346e61f50dea1d4fe77682a8c6e70a658a8e863752fb59cd52703"
+    },
+    {
+      "path": "scope-z/orchestration/evidence/reconstruction-bootstrap-1.0.0.tar.gz",
+      "bytes": 17256,
+      "sha256": "659a086b3ec81192d777941b51861ebac029c71f0e654c5e74929f789b3a8ff3"
+    },
+    {
+      "path": "scope-z/orchestration/evidence/execution-pack-seal-receipt.json",
+      "bytes": 2409,
+      "sha256": "1dba5f42044c5f5aa6c2a6c03fbb33750a1fa41d79f4e0e1b6a409495a743bd9"
+    },
+    {
+      "path": "scope-z/orchestration/evidence/reconstruction-bootstrap-receipt.json",
+      "bytes": 1048,
+      "sha256": "3d92fb4b80dde38e8723c83c4f398b2af03866b3b210f18990cdba9d435e857b"
+    },
+    {
+      "path": "scope-z/orchestration/e2e_cold_reconstruction.py",
+      "bytes": 6241,
+      "sha256": "93907a247d296f2706b944b71d4a60f324b378fa7ecb954fea0958628e2e10d9"
+    },
+    {
+      "path": "scope-z/orchestration/cold-reconstruction.md",
+      "bytes": 3012,
+      "sha256": "53b70ec5c715b7fe41bf9688f37678569b6e4651d76fbf9091aa653dffbc53ab"
+    },
+    {
+      "path": "scope-z/orchestration/cold-reconstruction-failure-model.md",
+      "bytes": 1568,
+      "sha256": "a602d562fdcbe593b18514d2852abc082a9b9f6ba406e16bc5d895de2edbde6f"
+    },
+    {
+      "path": "scope-z/orchestration/evidence/cold-reconstruction-97a0feffbcd84d2baad9b6e6e63d5224/report.json",
+      "bytes": 2785,
+      "sha256": "a3a2361fe69a1d69366a2fdd451da5f2d16ff99a4791f70a693f318ab0d39637"
+    },
+    {
+      "path": "scope-z/orchestration/evidence/cold-reconstruction-97a0feffbcd84d2baad9b6e6e63d5224/missing-preimage.failure.json",
+      "bytes": 365,
+      "sha256": "9f882ce46bb85ace50fb1291d74bdbbe32e7a25f2695898a10bdefd8e8f683c7"
+    },
+    {
+      "path": "scope-z/orchestration/evidence/cold-reconstruction-2c252b89821a4b3788528832b44eb89b/report.json",
+      "bytes": 7123,
+      "sha256": "5a52fc1065159c4c30bfee27c9a1cf4ce597dec1b4b5c1c134387ae853a8e0bf"
+    }
+  ],
+  "mandatoryExtractionArchives": [
+    "scope-z/orchestration/evidence/project-z-execution-pack-1.0.0.tar.gz",
+    "scope-z/orchestration/evidence/reconstruction-bootstrap-1.0.0.tar.gz"
+  ],
+  "historicalPreimage": "Inactive original draft is separately supplied and its digest is already bound by the unchanged sealed prompt index.",
+  "coldOfflineReconstruction": "PASSED_REAL_ASSEMBLER_BUILDER_CONTROLLER_CLI_ON_NEW_TARGET",
+  "retainedFirstFailure": "scope-z/orchestration/evidence/cold-reconstruction-97a0feffbcd84d2baad9b6e6e63d5224/report.json",
+  "delivery": "NOT_DELIVERED",
+  "receiverReadReceipt": null,
+  "executionPhasesLaunched": 0,
+  "destinationModelContextCapacity": "NOT_EXERCISED; verify before sending complete seeds, never truncate",
+  "qualificationConferred": false
+}

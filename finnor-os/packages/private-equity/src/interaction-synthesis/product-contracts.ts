@@ -1,7 +1,7 @@
 import {z} from 'zod';
 import limits from './profile.json';
 import {ProblemSchema,RefSchema,Y3_VERSION,digest,type InteractionProblem,type InteractionCandidate,
- type ConstructionResult,type Check,type RuntimeIdentity,type Y3Ref} from './contracts';
+ type ConstructionResult,type Check,type RuntimeIdentity,type Y3Ref,type Party} from './contracts';
 import {RootSchema,QuantityValue} from '../economic-action-theory/contracts';
 
 export const LIMITS=Object.freeze(limits);
@@ -83,7 +83,7 @@ export interface InteractionTerms {
 export interface InteractionIntent {
  schema:'finnor.s4.interaction-effect-intent.v1';ref:Y3Ref;protocolRef:Y3Ref;termsRef:Y3Ref;runId:string;
  historyDigest:string;reservationRef:Y3Ref;reservationRevision:number;outcome:Outcome;matchingTerminalDigests:string[];
- actualActorActions:Array<{participant:'P0'|'P1';principalId:string;informationKey:string;actionId:string}>;
+ actualActorActions:Array<{participant:Party;principalId:string;informationKey:string;actionId:string}>;
  validUntil:string;externalEffects:false;executionAuthorityGranted:false;
 }
 export interface InteractionRun {
@@ -93,7 +93,7 @@ export interface InteractionRun {
 }
 export interface InteractionHistory {
  id:string;event_id:string;principal_id:string;kind:'OBSERVATION'|'ACTION';
- body:{participant:'P0'|'P1';principalId:string;informationKey?:string;actionId?:string;date?:number;key?:string;value?:string;
+ body:{participant:Party;principalId:string;informationKey?:string;actionId?:string;date?:number;key?:string;value?:string;
   classification?:z.infer<typeof ObserveSchema>['classification'];source?:SourceBinding;effective?:boolean;viewDigest?:string};
 }
 export interface ProgrammeBinding {

@@ -15,7 +15,10 @@ import { LiveInstitutionalControl } from "../controls/LiveInstitutionalControl"
 import type { PeWorldRootRef } from "../pe/contracts"
 import { canonicalRootFocus } from "./world-context"
 import { ConfidentialComputationPanel } from "./ConfidentialComputationPanel"
+import { ViabilityPanel } from "./ViabilityPanel"
+import { ExecutionProofPanel } from "../../../../finnor-os/packages/private-equity/src/project-z/z4-execution-proof/ExecutionProofPanel"
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
+import { SharedWorkPanel } from "../../../../finnor-os/packages/private-equity/src/project-z/z1-shared-work/work-panel"
 
 const label = (value: string) => value.replaceAll("_", " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase()
 const record = (value: unknown): Record<string, unknown> | null => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null
@@ -68,11 +71,14 @@ export function WorldWorkRecord({ workId, root, onChanged }: { workId: string; r
       {root ? <LiveInstitutionalControl root={root} focus={canonicalRootFocus(root)} workId={workId} label="This Work's canonical investment context" onChanged={onChanged} /> : null}
       <div className="ct-world-work__metrics"><div><span>Work</span><strong>{label(aggregate.work.status)}</strong></div><div><span>Verified effects</span><strong>{verified.length} / {aggregate.businessEffects.length}</strong></div><div><span>Finalized receipts</span><strong>{finalized.length} / {aggregate.receipts.length}</strong></div></div>
       <p className="ct-world-work__objective">{aggregate.work.initialInstruction}</p>
+      {root?.entityType === "pe_deal" ? <SharedWorkPanel key={`z1:${scope.key}`} root={{entityType:"pe_deal",entityId:root.entityId}} workId={workId} /> : null}
       <ClosingProgrammePanel key={workId} workId={workId} onChanged={onChanged} />
       {root ? <EconomicActionTheoryPanel key={`${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
       {root ? <StrategicResponsePanel key={`response:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
       {root ? <ConfidentialComputationPanel key={workId} root={root} workId={workId} /> : null}
+      {root ? <ExecutionProofPanel key={`proof:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} onChanged={onChanged} /> : null}
       {root ? <InteractionProtocolPanel key={`interaction:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
+      {root ? <ViabilityPanel key={`viability:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
       {summary(aggregate.work.finalOutcome) ? <p className="ct-world-work__outcome"><ShieldCheck size={16} /> {summary(aggregate.work.finalOutcome)}</p> : null}
       {aggregate.read?.complete === false ? <p className="ct-world-work__caveat">This bounded Work read is incomplete. The counts below cover only returned rows.</p> : null}
       <div className="ct-world-work__section"><h4>Recorded actions and verification</h4>{aggregate.actions.map((action) => {

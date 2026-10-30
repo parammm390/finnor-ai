@@ -1,5 +1,6 @@
 import type { JobExecutionContext } from "../../../../apps/worker/src/queue";
 import type { PoolClient } from "pg";
+import { assertInstitutionApplicationDeliveryCurrent, consumeInstitutionApplicationModels, recordInstitutionApplicationModelUse, institutionApplicationOwnerInputFromCanonicalAction } from "../../../orchestration/src/project-z/z0-convergence/institution-consumer";
 import type { PeMutationContext } from "../types";
 import { validateInstitutionDemand,chargeInstitutionDemand } from "../allocation-store";
 import { authorize, principal, sha, stable, tx } from "../evidence-execution/store";
@@ -130,6 +131,7 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
     phase:"RECOVERY",ordinal:claimed.continuationOrdinal,units:1});
   }
   resourceCharged=true;
+  await assertInstitutionApplicationDeliveryCurrent(ctx,claimed.id,execution);
   const cursor=head.deliveryCursor??0,chunk=executable.slice(cursor,cursor+institutionPlanBatchSize());
   if(!Number.isSafeInteger(cursor)||cursor<0||cursor>executable.length)
    throw Error("X1_SAVED_BATCH_CURSOR_INVALID");
@@ -168,6 +170,8 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
      actionId:id,priorStatus:existing.status,predicate:"X1_ORIGINAL_EFFECT_INTENT_CONFLICT_REQUIRES_DECISION"});
     continue;
    }
+   const priorApplicationInput=existing?institutionApplicationOwnerInputFromCanonicalAction(node,existing.authority_context):null;
+   if(existing?.status==="draft"&&priorApplicationInput?.modelUseRef)await recordInstitutionApplicationModelUse(ctx,claimed.id,execution,priorApplicationInput);
    if(existing&&existing.plan_revision_id!==q.plan_revision_id&&existing.status==="draft"){
     interventions.push({stableIdentity:node.stableIdentity,
      predicate:"X1_PRIOR_DRAFT_PLAN_SUPERSEDED_REQUIRES_DECISION",possibleEffect:false});
@@ -199,13 +203,20 @@ export async function continueInstitutionProgram(ctx: PeMutationContext, q: Inst
      throw Error('X1_EXACT_NATIVE_ACTION_NODE_REQUIRED');
     // The deterministic action ID makes uncertain delivery recoverable by the
     // native bridge. No self-supplied completion receipt is accepted.
+    const applicationInput=priorApplicationInput??await consumeInstitutionApplicationModels(ctx,claimed.id,execution,node);
+    const ownerPayload=applicationInput.node.action!.payload;
+    if(sha(ownerPayload)!==sha(planNode.groundedPayload))throw Error("Z0_NATIVE_FROZEN_OWNER_ARGUMENT_CHANGED");
     const { FinnorOrchestrator }=await import("../../../orchestration/src");
-    await new FinnorOrchestrator().draftKnownAction(node.operation,planNode.groundedPayload,q.tenant_id,{
+    await new FinnorOrchestrator().draftKnownAction(node.operation,ownerPayload,q.tenant_id,{
      source:"x1_checked_institution_duty",actionId:id,workId:q.work_id,initiatedBy:principal(ctx),
      authorityContext:{principal:principal(ctx),kind:"institution_duty",programId:q.id,
       compilerRequestId:q.request.institution.compilerRequestId??null,
-      stableIdentity:node.stableIdentity,workInputId:q.work_input_id},
+      stableIdentity:node.stableIdentity,workInputId:q.work_input_id,
+      applicationModelUseRef:applicationInput.modelUseRef,
+      applicationModelAcceptanceRef:applicationInput.acceptanceRef,
+      applicationModelInputDigest:applicationInput.modelUseRef?sha(applicationInput.node.action):null},
      planRevisionId:q.plan_revision_id,planNodeId:planNode.id,reviewBeforeExecution:false,
+     onActionPersisted:async()=>{await recordInstitutionApplicationModelUse(ctx,claimed.id,execution,applicationInput);},
     });
     activeRoots.add(expected.dealId);newlyDispatched++;
    }

@@ -1,0 +1,2943 @@
+{
+  "allSnapshotFiles": [
+    {
+      "bytes": 7712,
+      "gitBlob": "026e08b7ec750744a14a68a269583285d52a2c4e",
+      "kind": "repository-source-snapshot",
+      "origin": "AGENTS.md",
+      "path": "source-materials/repository/AGENTS.md",
+      "sha256": "bd0c248a21f2cb25b6634fb77827879877588048aff5fb444a58833e805a86da",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 3877,
+      "gitBlob": "eb883c631f1c0bae799c247d0519a416cf7f71c8",
+      "kind": "repository-source-snapshot",
+      "origin": "README.md",
+      "path": "source-materials/repository/README.md",
+      "sha256": "e451035b71be99e098f4c9da7ee594196bd1f7a4b16bb2caca7df96d12cfc2dd",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 4204,
+      "gitBlob": "f9471482f27ffe9720fc8c1229f9fef955f84a21",
+      "kind": "repository-source-snapshot",
+      "origin": "docs/centropy/capability-reachability-failure-modes.md",
+      "path": "source-materials/repository/docs/centropy/capability-reachability-failure-modes.md",
+      "sha256": "a55e60710568455b8e685858e5e167074391476307d83376d90ec271b53cf722",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 10155,
+      "gitBlob": "ceddc5172f387096d448e40b7144bd96458b728e",
+      "kind": "repository-source-snapshot",
+      "origin": "e2e/centropy-controlled-recovery.spec.ts",
+      "path": "source-materials/repository/e2e/centropy-controlled-recovery.spec.ts",
+      "sha256": "d53a79c178c6995911cc80921e18e75fd63af43f71fb4a347a47e3d8b0c64982",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 2857,
+      "gitBlob": "44e9c83168cc12efdc3b581998aedb1eceb1213a",
+      "kind": "repository-source-snapshot",
+      "origin": "e2e/centropy-owner-login.spec.ts",
+      "path": "source-materials/repository/e2e/centropy-owner-login.spec.ts",
+      "sha256": "cb4f13418dc5a46dc4da459f576919c67da606e8ab82ced4923b259177e5abd3",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 12494,
+      "gitBlob": "a7a566b0236d0fce86ea9a0410c5bd5e1ceaa8dc",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/Dockerfile.worker",
+      "path": "source-materials/repository/finnor-os/Dockerfile.worker",
+      "sha256": "bab32161586662b462edb7901c10144e72d1120d20844fdd366bb84d91302e53",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 3982,
+      "gitBlob": "a134ae9c8f5bf1cb310a21ecf5c5dd5f0ca886bf",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/README.md",
+      "path": "source-materials/repository/finnor-os/README.md",
+      "sha256": "8482d038572ab90e58af29ef5cf137aa6f636ac7c1504f9ae8d8e322789cc6c8",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 22066,
+      "gitBlob": "e22f4b99c1f6e2c6890470e3b660611f841ba572",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/apps/api/app/api/actions/route.ts",
+      "path": "source-materials/repository/finnor-os/apps/api/app/api/actions/route.ts",
+      "sha256": "64b9d4f65add1ebffd59523dd73da0d6564f27fe048b09493489d6012d318d22",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 26178,
+      "gitBlob": "4d6bd4d58ac0d98f0b4dfbb217a045ba35613843",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "path": "source-materials/repository/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "sha256": "0dec46803a98af52700832e83d01e138d643558a0717afbd185839810c6da9b8",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 5066,
+      "gitBlob": "8186e5059ecbcec555944be3c25c8ae0d7fb0f09",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/apps/api/app/api/queries/route.ts",
+      "path": "source-materials/repository/finnor-os/apps/api/app/api/queries/route.ts",
+      "sha256": "33084eb58a28ee7385843665672f3c727ddaaf4d1719fd804c2d63e96c3c13d6",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 1747,
+      "gitBlob": "1276b4e62711c87964f40d6815be1b7cc553199e",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/apps/api/app/api/works/[id]/execution/route.ts",
+      "path": "source-materials/repository/finnor-os/apps/api/app/api/works/[id]/execution/route.ts",
+      "sha256": "b3036d69ed9f6677ceb877539a2536b1d6a049db144df566ecbe483931cb0c0c",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 2370,
+      "gitBlob": "12cfa4208080807349700452ccbfd4472488ac46",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/apps/api/app/api/works/[id]/route.ts",
+      "path": "source-materials/repository/finnor-os/apps/api/app/api/works/[id]/route.ts",
+      "sha256": "bfafaa0c2f17712dc8aad8fbde375bce270beac500c18c8e1b4557785aecc9f8",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 21797,
+      "gitBlob": "5d39db6d2a064946c418323c0d83b0767b2e6e70",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/apps/worker/src/index.ts",
+      "path": "source-materials/repository/finnor-os/apps/worker/src/index.ts",
+      "sha256": "5cffd9239ccd0bcb7abd4f301cc52fe28ab2adc2d33e218248524290f7865cb9",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 38695,
+      "gitBlob": "03f30c0191db0670e5e416fc7c35a7cf91246e61",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/apps/worker/src/queue.ts",
+      "path": "source-materials/repository/finnor-os/apps/worker/src/queue.ts",
+      "sha256": "d7b9bcacad8f78ed92343e57ed31df8fd5bfcbff149cbbbb29c62361c8bd2082",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 5276,
+      "gitBlob": "d52b7a2121185debe054cef371fff5a33ce171cd",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/package.json",
+      "path": "source-materials/repository/finnor-os/package.json",
+      "sha256": "5109ef3fcddcea39a92153f756ee12532a5f66d144ba04fd8fc8260b66b90f1e",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 53922,
+      "gitBlob": "718cb533ddc688419996283c3d7d3d0fa33d74ca",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/authority/src/index.ts",
+      "path": "source-materials/repository/finnor-os/packages/authority/src/index.ts",
+      "sha256": "4399637b25c1c838ab4cfd4daf297e53aa95a01fca5fcf0d619d4413e9d5a9fb",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 87968,
+      "gitBlob": "4da6e7ff08a8d140d30d8422d28b2a1ab2ae4ca8",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/capability-evolution/src/lifecycle.ts",
+      "path": "source-materials/repository/finnor-os/packages/capability-evolution/src/lifecycle.ts",
+      "sha256": "5be80e1adfa07789a43153affdcc93cc5d701db1decd987522c5b4fdaac648af",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 150384,
+      "gitBlob": "1a140c147ca45d80faa63ba7b9df82d6215b61f6",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/db/index.ts",
+      "path": "source-materials/repository/finnor-os/packages/db/index.ts",
+      "sha256": "9fc9091d2073694b20915b8a192795be9693dd9c1b2a6e97a8b9bc71d064cbb8",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 9498,
+      "gitBlob": "906ebf348f561679c22ee17926022b6526db3228",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/db/migrate.ts",
+      "path": "source-materials/repository/finnor-os/packages/db/migrate.ts",
+      "sha256": "da1b30e000be4ed00b9bfbc6cb24a08eb81dd9c0164601d706c829440ee3084a",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 8738,
+      "gitBlob": "f249b3e7ab7972e1dbb6ab03376d4d054e7484ff",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/db/migrations/postx_y4_runtime_migration_order.sql",
+      "path": "source-materials/repository/finnor-os/packages/db/migrations/postx_y4_runtime_migration_order.sql",
+      "sha256": "f7f33acbed1f5d290fb4beee6ce9c8cdc8c09fd6037b60f83ce6f4a50d4637c7",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 470,
+      "gitBlob": "3bf016e3933e0d9f007d2dd861bae961d8252937",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/db/read-limits.ts",
+      "path": "source-materials/repository/finnor-os/packages/db/read-limits.ts",
+      "sha256": "c47e925d8c21e60ab575ad32f6467499ad94e95bf99a8b95bf74bc2491fc83f4",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 93660,
+      "gitBlob": "5534b3de0b3f3d5875baff3a9cd434b836d0d5d9",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "path": "source-materials/repository/finnor-os/packages/domain-plugins/private-equity/index.ts",
+      "sha256": "5e530d40f5381ae456e97bcd12f82d684ce4d59d1ae2c5c0620cba30ff70b566",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 11283,
+      "gitBlob": "73f25db6e975895de53dc53cbb47ad3ffe684f4f",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/epistemic-runtime/src/allocation-solver.py",
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/allocation-solver.py",
+      "sha256": "4a199da439c633a1da28eeae9bf1c0faa7ef813c67812732d3cd9f4102d9a653",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 3225,
+      "gitBlob": "b28f23f98a436084fe8394e6cd33cf13dc77d3a1",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/epistemic-runtime/src/certified-state-reduction/producer.ts",
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/certified-state-reduction/producer.ts",
+      "sha256": "75cfa0c84ee6ee574f5e8e8e65a60ee5bbe14ea3243e933b9e0718bf146b63f9",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 13611,
+      "gitBlob": "2edb18b93be52a611d43482d8240e0266fef82c9",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/epistemic-runtime/src/identification.ts",
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/identification.ts",
+      "sha256": "ca2309eceeed8e6af961f8020f6139af3f620a3298e1e7fcde55d5c2e2fd6229",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 19646,
+      "gitBlob": "2b7db24d19a2a97d94f98929eab704cad56f87ce",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/epistemic-runtime/src/intervention-numerics.py",
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/intervention-numerics.py",
+      "sha256": "ebbeeed0ae8ecd2e5e7224515d6b6bcd35be5c9f254661451fc8fc156442c1fb",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 171,
+      "gitBlob": "cfd8a617323a1d277086d4304f88cd756d1d95e0",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/epistemic-runtime/src/intervention-requirements.txt",
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/intervention-requirements.txt",
+      "sha256": "a80b57d7c6bdabec985f97d36b41e27d2bd497a8eba9e709a6fc88a91a2a9fe3",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 6865,
+      "gitBlob": "75a940f95026b918fb81b75f70fdcbe9faa42d3b",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/epistemic-runtime/src/policy-atlas/compiler.ts",
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/policy-atlas/compiler.ts",
+      "sha256": "b1922848fe70bc2d3b6f07569c0c0462fae6a940a827ca82d35edc4715cff5db",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 112,
+      "gitBlob": "cb33f51e6205911a5d7f4baada800caa31afa91a",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/epistemic-runtime/src/requirements-s5.txt",
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/requirements-s5.txt",
+      "sha256": "681063045c2010a80d204e5c12393af4f2acdcc45fb09b12d1bf8663175422b4",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 15642,
+      "gitBlob": "799a8aa8c911f4339d2d6020fff6ec8b77e53869",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/epistemic-runtime/src/solver-synthesis/producer.ts",
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/solver-synthesis/producer.ts",
+      "sha256": "4ccef81680857be65701e63f02abae7b6489e04b8d0f02d8cd1f3e1fa71580ab",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 6108,
+      "gitBlob": "e83de504f1e3293f45ccb6b622a014890692180f",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/epistemic-runtime/src/strategic-response/adapter.ts",
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/strategic-response/adapter.ts",
+      "sha256": "55a0fc8ea0c08ad888679d078b0e6a59bb3d9dcc9dd5bc66ee4940126fbece75",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 6033,
+      "gitBlob": "49dce014f16c8d33bf421dda287651515d56be64",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/epistemic-runtime/src/strategic-response/learner.ts",
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/strategic-response/learner.ts",
+      "sha256": "2e0c12e8511dc764a7fb4ab6e20a9e95d19b46216c84d660dec7eb53001cd57b",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 13916,
+      "gitBlob": "c87a34a03606a4a3fdd2deefb7496e1f070bfce2",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/compiler.ts",
+      "path": "source-materials/repository/finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/compiler.ts",
+      "sha256": "4011301e2bd5719a505c4641f6b9b4f68791fa0ccc23bf27e68ae0f3d528a1e7",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 7357,
+      "gitBlob": "af32c9bbe39c34c6a9cd6b97f47a4ae6f82a899a",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/governed-execution/native/linux-launcher.c",
+      "path": "source-materials/repository/finnor-os/packages/governed-execution/native/linux-launcher.c",
+      "sha256": "7a02833e1a06060f9112389813b989f7598903c0f85648444aa92d25d835a7b0",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 29139,
+      "gitBlob": "116cc26c3ca4c33b0bc03114375f52468e3e1589",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/governed-execution/src/dispatch-broker.ts",
+      "path": "source-materials/repository/finnor-os/packages/governed-execution/src/dispatch-broker.ts",
+      "sha256": "2dc70098c6fd5bdfc2a35d8bb96db344fb1617bf87e029eb3aeaa491624b216f",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 11168,
+      "gitBlob": "7ac8d491fe81ab2e68e6d1d7d3e4848475327956",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/governed-execution/src/executor-linux.ts",
+      "path": "source-materials/repository/finnor-os/packages/governed-execution/src/executor-linux.ts",
+      "sha256": "5c1efbb05f9cca16b0d8aef30d8ad9173cc4c81a5475348846fcbbaa23c2da62",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 8321,
+      "gitBlob": "cd18f2c21cf627ee66b0508cc57aa280a82fc8b8",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/governed-execution/src/executor.ts",
+      "path": "source-materials/repository/finnor-os/packages/governed-execution/src/executor.ts",
+      "sha256": "a19ba246f8c9f62640124ae7f2eb865c3326fc716d67aa34011a7b3e93efeeda",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 47412,
+      "gitBlob": "b9e87b168bc2b56d901f0b17da57f71771a1d0eb",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/governed-execution/src/ledger.ts",
+      "path": "source-materials/repository/finnor-os/packages/governed-execution/src/ledger.ts",
+      "sha256": "4d9f49968931acc6cf3e16b705d302444cb903246eb999c2f9c10c996c6f0db2",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 10817,
+      "gitBlob": "c3b8204b558d0c0cbeffb1305e31e5500370372f",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/governed-execution/src/request-verifier.ts",
+      "path": "source-materials/repository/finnor-os/packages/governed-execution/src/request-verifier.ts",
+      "sha256": "b098cc074a8afa4ceaa92244c66256d559515096252072f6b77ca5b365ae4ab7",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 88720,
+      "gitBlob": "2c53bd649fa7e4e5a0da7582db8b1f3928e01939",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/orchestration/src/compiler.ts",
+      "path": "source-materials/repository/finnor-os/packages/orchestration/src/compiler.ts",
+      "sha256": "7b3f1f1418cc9d98c1d9896deaed93498da460396fabb860d7128296ac859ca0",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 30796,
+      "gitBlob": "6c03b3a27d0891ba087c766b67c2e39a684ad53d",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/orchestration/src/fast-read-lane.ts",
+      "path": "source-materials/repository/finnor-os/packages/orchestration/src/fast-read-lane.ts",
+      "sha256": "401e5462dee247c4c0928eafc677a48e90fa720e5ac632cd29b605f5f7f2f298",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 108734,
+      "gitBlob": "e887a44c61ff4d70b96720cb95f967945a32d75b",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/orchestration/src/index.ts",
+      "path": "source-materials/repository/finnor-os/packages/orchestration/src/index.ts",
+      "sha256": "29b662df15cf1ece9f868cd2c7b113e4989264e5ecd45d6cd9bdd38f7801e458",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 3384,
+      "gitBlob": "26fb5a1592df0ef277dfac0f8d8cd4c25af2d067",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/orchestration/src/operational-query-runtime.ts",
+      "path": "source-materials/repository/finnor-os/packages/orchestration/src/operational-query-runtime.ts",
+      "sha256": "a932c6c75162aad6fa88cf8fd964b6fa65319f0d35673e68594e8c5d7ecab3a6",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 90688,
+      "gitBlob": "e021dc67bd262f801695d1bed8c206fb1bffe882",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/orchestration/src/planner.ts",
+      "path": "source-materials/repository/finnor-os/packages/orchestration/src/planner.ts",
+      "sha256": "7117e950530e42ba9a53492a9d403a6ef8dd1710106bcbd5d25fb2015f94767b",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 14943,
+      "gitBlob": "345728346545fce167cc227b29e6796496e28d97",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "path": "source-materials/repository/finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "sha256": "d41f4be6b7c38c1fee8556c6a8e1513b4f2350f31f87d582a9d44ca7c5c2ccaf",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 34427,
+      "gitBlob": "dc514bcb93ffba6de6cae70b82d05fc6083d7a98",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/planning/src/compiler.ts",
+      "path": "source-materials/repository/finnor-os/packages/planning/src/compiler.ts",
+      "sha256": "1ec0214588199fafea61237da84b82f06c0f4d4199406a2adfc544749d24ca6b",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 92299,
+      "gitBlob": "6705c05d8bbc965260aa89bdf1721aa54109f0ac",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/allocation-store.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/allocation-store.ts",
+      "sha256": "fce8b9f05af8e78dfd81939a3e7cdd572b72401f7b0e49ddaf56cf4244e760fe",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 26280,
+      "gitBlob": "dfef608d66f69d25b578b3b3031cf745f3305f85",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/application-semantics/api.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/api.ts",
+      "sha256": "daa82aa0f3e822afed38b0a729ad77c807807dd2706906b56f476485e1c10837",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 3334,
+      "gitBlob": "4c2568b259aa1312a5d3c9f58c1471e3a063e0bc",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/application-semantics/envelope.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/envelope.ts",
+      "sha256": "500b044ba6a06ee9ff2902178993f6ba40fb2a2d33e370e3eb2ecd3faf166bb9",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 17332,
+      "gitBlob": "4f65e281bfddd38aa28f61fbf2864b4f11c2b1b9",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/application-semantics/learner.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/learner.ts",
+      "sha256": "54711de6a3b9ae4292363cd2dff28f4911b7b4bbebeb39a16f1a75255a57541a",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 23816,
+      "gitBlob": "2dd520046b9b92a5a8faa2993630c9950442595f",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/application-semantics/validity.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/validity.ts",
+      "sha256": "e989524ee2afbb6fe201fe72cce13d792dbc64363bd4d102bcb758753bccf27e",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 18777,
+      "gitBlob": "1062410ad42c2d3db0745a48c690ae13f8e038ab",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/application-semantics/worker.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/worker.ts",
+      "sha256": "5af2f821ecca4078f6b759146713e6ad3cf054cc5d2b4532d2b77b4a197057c0",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 17405,
+      "gitBlob": "e4d0d929ac4b5d57af3abc8b1f91051b0b33bd43",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/bilateral-opportunities/api.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/bilateral-opportunities/api.ts",
+      "sha256": "e82f2502955ec04da26f1c1e5b80d0fecdd25e627f2b758f5fadf76db384469e",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 11550,
+      "gitBlob": "13bb25fe25f92765e4730eee89653cfe5187631d",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/branch-fabric/service.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/branch-fabric/service.ts",
+      "sha256": "6f7f8ca475eaf13bfe6df1cec3569b6491c468128534c18340c7c5f0eb4db595",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 42540,
+      "gitBlob": "00d2e22d198a8943fb3d520f4bf1e1b972069fc2",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/capital-formation/service.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/capital-formation/service.ts",
+      "sha256": "684aec3db2d83903b99f904b1aa22a174eba9f499beb44144f45fbba61f76552",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 24360,
+      "gitBlob": "7f153c0d360188694ba817b9c1241c334b1bd4d2",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/capital-program/r2-search.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/capital-program/r2-search.ts",
+      "sha256": "cc6898c3ee181f6c7114dbe9c4e6af191b8dc9825d264c8f6e9c67a35e8b522a",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 8708,
+      "gitBlob": "734c67f9b02456682030af237f261088ecca23d0",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/capital-program/r5-search.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/capital-program/r5-search.ts",
+      "sha256": "28f6bba93d5d7c2da943b4babd4644a932e5c8caca54e61b0f56079b1a6ca765",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 13415,
+      "gitBlob": "2243202d1faa2d088a04957364c860c450660a7f",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/capital-program/worker.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/capital-program/worker.ts",
+      "sha256": "d2db88cc463b3590d2dcb2a513c167856cb39740b54ee41828e19f1671193533",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 16938,
+      "gitBlob": "267e18c61eb7e09b614ceba43c15f4268b8c0dab",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/closing/api.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/closing/api.ts",
+      "sha256": "751351c3dbf2be142c30afbc77f9ee1362c2767afc5bdfbdadc0bea6fe49123f",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 20861,
+      "gitBlob": "57a16c938df2e19ac26b510b67e820ed17649f49",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/compute-search/worker.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/compute-search/worker.ts",
+      "sha256": "bf54da819e9467277c9ada3e22a3c16f52b3e66430765a473284afeca0f25e70",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 7934,
+      "gitBlob": "36b14058654cb59975b664845287b91a9a253f27",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/confidential-computation/owner-consumer.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/confidential-computation/owner-consumer.ts",
+      "sha256": "0cf549d158c5836081ba01fbded3dedc9147cdf686a7ec2a9dd679d8ada3d8ee",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 2800,
+      "gitBlob": "307c2298aa74f54060d1440ecaf50bf350863d8c",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/confidential-computation/profile.json",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/confidential-computation/profile.json",
+      "sha256": "5498dae72310e48d2d09be70710a91dba5c2624853b5dbdf5f36595a881c8502",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 41854,
+      "gitBlob": "3b5dfa7a1a46bef1857109fa3d1427bf75b16eac",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/counterexample-search/service.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/counterexample-search/service.ts",
+      "sha256": "fe27f1155fda79e7b0b218af1648d82930ab1938284015f77952f9cafcc08e73",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 23633,
+      "gitBlob": "7fd0e84ffeff1088b517b151826c1cae259627a8",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/decision-slice/service.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/decision-slice/service.ts",
+      "sha256": "4863004fe71833cf6c863acce3116a5a8911c8f8ef9e2a5bd5bf14cb1357594b",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 8933,
+      "gitBlob": "413f5697aecc431bc8bbca07464bb5a51613aec2",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/deliberation/api.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/deliberation/api.ts",
+      "sha256": "584ed8803679539d678dacf1ccc49baf30c60b60b243d9b8fbc6bb2a91bf8619",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 7564,
+      "gitBlob": "1c32b118273eb340c84ae14c090962bb6f1d083e",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/economic-action-theory/compiler.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/economic-action-theory/compiler.ts",
+      "sha256": "2ddbbcf33ca287ca6101eeaae3b51c30195db109017bc66c0c68ecb2ff7aa804",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 5088,
+      "gitBlob": "159d7861e86f3dc7c29b0d1f1b0b381214cb8ce4",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/economic-action-theory/programme-worker.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/economic-action-theory/programme-worker.ts",
+      "sha256": "99a816e1befa62db8dedad285cf22131e215c4daee669fd19e0272be8b8dd01f",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 11346,
+      "gitBlob": "002654f5651efbd2feb9fbb49d17516d9514c251",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/enterprise-applications/compiler.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-applications/compiler.ts",
+      "sha256": "1355f145f2e88ee1e7eb7a3d337f8caf4c3a2a5900067b0191d9ecbee1305947",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 15452,
+      "gitBlob": "46e3949a24bf499ee2132a99bcff8e8e65ada862",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/enterprise-beliefs.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-beliefs.ts",
+      "sha256": "5d3c7199c47feaa311c7f6d503b29d8f6bc9c76a2f4ee4c2397878098a050839",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 74023,
+      "gitBlob": "4fdb3660a8cb13f06b8cb2eb0a364fca939b03f7",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "sha256": "aa33dcf657cdcb4ef85a059b51b52b646a93a11aabd9801e2436511b22d7ce43",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 34122,
+      "gitBlob": "28275d37affa65a32135faa843bb0be517ddfdb4",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/enterprise-economic-attribution.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-economic-attribution.ts",
+      "sha256": "25ecec3156542ccee9817784cfb2b6f07da317ea97e349073a534990086803d6",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 19185,
+      "gitBlob": "58a7dc4910077a3c7b7f785faf68f62299169151",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/enterprise-experiments.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-experiments.ts",
+      "sha256": "d8cf9f62c9f89d517a51c2815bd97efd16884389f71c709f0d188da442372062",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 19660,
+      "gitBlob": "c149dc84728a91e8e5d8529441ceaadfd8d144fa",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/enterprise-interventions.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-interventions.ts",
+      "sha256": "2ade11d990db0eed59e81eefe206268d04a3f33fec73f90a36f2aaae390b41a0",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 37873,
+      "gitBlob": "0202f43027c0000908fb439af64acb823e5372b7",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/enterprise-obligations.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-obligations.ts",
+      "sha256": "90c80ae14f948b4474a006a440ae562a7c594f79a549391c213c25af3e8418dc",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 17060,
+      "gitBlob": "8a4afae68d7c7e13c018afe3d4b84defd160ba50",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/evidence-execution/worker.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/evidence-execution/worker.ts",
+      "sha256": "b16b3232ef916b2f3f946f63fb20fc3dff13fb5fcc2a3783d7c360df88dc213e",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 17046,
+      "gitBlob": "bd57496853d94a11698d399b4c48023afed2ffbe",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/institution-program/api.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/institution-program/api.ts",
+      "sha256": "bedb0e7443c51ff636f0ddfd1979373561cfa4ca298b378114302bfd1d2a2320",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 11143,
+      "gitBlob": "cff76b3b74488d25f47ad72524d495898a3429e3",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/institution-program/responsibility.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/institution-program/responsibility.ts",
+      "sha256": "388a0472110b9ea34243a788dc68743b7c8b3d1f6f118f858736cb1ca88327c6",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 10820,
+      "gitBlob": "ed8a052870fb801a187dc50001278693df95eaa3",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/interaction-synthesis/api.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/api.ts",
+      "sha256": "8449d112103fb6dce52d49c8a02a1ab8c7ad0eed57bdcb1ec31c47844cc535bc",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 32854,
+      "gitBlob": "b6326728e2772c10c0387cca2d9a0652f0c02360",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/interaction-synthesis/checker.py",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/checker.py",
+      "sha256": "66afc296879b355c895d3783fd95c08b87dd98f3ac3c14556343cfe1f9422d3f",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 8950,
+      "gitBlob": "c673e97ce93b8c107262f5891793f0756b1b8d56",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/interaction-synthesis/contracts.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/contracts.ts",
+      "sha256": "36166ca7032bab0e4a71121cb7ddbb6194ad98c78910b8077a0dc61a585e3b72",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 1679,
+      "gitBlob": "6eda8abd38f9b997e6202f24695a6f5dd51402c8",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/interaction-synthesis/exact.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/exact.ts",
+      "sha256": "04e9cd6e4dd3a835b1faf387691e4be5b5bb8bd4a496626e75130fb90637f257",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 8043,
+      "gitBlob": "888b5b4892bc2551ce7f15f0922b40bf20f8c8ac",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/interaction-synthesis/execution-guard.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/execution-guard.ts",
+      "sha256": "bcc475a2d4cbed33780d2b4f073c61fc4e507ac0f14ef6d48caeb10bf0cd9919",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 12121,
+      "gitBlob": "5c670755706279b27d5c11a8d8b072a2bb9c84fb",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/interaction-synthesis/game.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/game.ts",
+      "sha256": "7d7e261d0eb7f5f629b438afa3ef82a7e28a397c927994e2c0be9792748df216",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 7966,
+      "gitBlob": "19e593e2ebc0661fbef399d288f58447ab6c9174",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/interaction-synthesis/producer.py",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/producer.py",
+      "sha256": "b2ae080a77f54a5fa119bcd5c203f2f79bf4e3b203681ab7fcb5627d63b8b26b",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 8163,
+      "gitBlob": "738dd11c4fe375e3ae0d8c4ad70de0b46b80d34f",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/interaction-synthesis/product-contracts.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/product-contracts.ts",
+      "sha256": "7318049069cf40726bc3dbd835c782572faca9c0ff06c9283c6533e1218e91ac",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 1799,
+      "gitBlob": "df1477865abd0c0ef223a5a8507567d254def011",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/interaction-synthesis/product-runtime.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/product-runtime.ts",
+      "sha256": "65006eef28981541ca9654e952d7aa74564811e9471ade59cc6637d3630ffacf",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 5204,
+      "gitBlob": "c2878befa69d5168e0bd0ffd667f18b981a5df18",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/interaction-synthesis/reference.py",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/reference.py",
+      "sha256": "7c34efac5f7910b21379a78c78c959a0c96476bc9f1d1e23a51ecfabc568b279",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 16834,
+      "gitBlob": "b70019dc86517c74a3778a5e91974a3a27af1f21",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/interaction-synthesis/store.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/store.ts",
+      "sha256": "ccc859e86f243a99701849e78720eae4f0dc2242e2ab920b3a0a8c0fd01c8f95",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 12657,
+      "gitBlob": "d4993391e15e57bb04d7b5f0e0fe950ab3d59d4b",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/interaction-synthesis/worker.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/worker.ts",
+      "sha256": "8d74cba218860076880c14fb80c14e8850369e438b56ae55b615d7eb21756bfc",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 17655,
+      "gitBlob": "cbd75a5190136d2359cebe29021d254b5279046c",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/interface-synthesis/api.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/interface-synthesis/api.ts",
+      "sha256": "e90582bb03129b35de7528ea080a23b991c4d20f64435e95131cd6d7143589fc",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 38804,
+      "gitBlob": "3bb85a0937a56bc32a1da6d38e8e657f449c9df6",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/live-controls/service.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/live-controls/service.ts",
+      "sha256": "01472ac5024992822b7731d3ed315d3ff8cb1a882067db308177c52a5371bb63",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 19394,
+      "gitBlob": "04863be7a330292b5c546841d2329dee965a417b",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/live-recompilation/api.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/live-recompilation/api.ts",
+      "sha256": "dc2b3142f64524fcd435428e3618b8e42d414c845c6e1060d05bd94a24374c42",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 11558,
+      "gitBlob": "760813c6c86bd89f3cb8ea6b70a7ef67e47ce67f",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/live-recompilation/worker.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/live-recompilation/worker.ts",
+      "sha256": "5a9405bcad0fefb5493bc97723c967cc6f90d45ee81bc2e48178c836db97d8c2",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 7054,
+      "gitBlob": "4c8d606cb6aebf743d4e88529abcdfe2392676d2",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/policy-learning/consumer.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/policy-learning/consumer.ts",
+      "sha256": "c057840ee3512cb3de2ab650f0cab144d059310280d9a0cffb86f2274ec3e6a3",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 4026,
+      "gitBlob": "ad5a3a9392f3415f675a57670cbbf841a6dd92a6",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/policy-learning/controller.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/policy-learning/controller.ts",
+      "sha256": "253a86736adb215503475cb18945b531eaf4b4abb1d8df9ea6ad927ed755c508",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 18613,
+      "gitBlob": "715aa7b6008465e7dab56016c840182caf2987ab",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/primary-diligence/api.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/primary-diligence/api.ts",
+      "sha256": "e643914bb767869e371d39c9caf776bb1634ff670a751df2e2b165582f524d68",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 7104,
+      "gitBlob": "5237607349003efd9b4e22b4784bd13efd68a2b9",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/procedure-induction/worker.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/procedure-induction/worker.ts",
+      "sha256": "2da54cb1546e8f1a4b04228632f387ed4f226b24fe2126fc334247ae3fc2677d",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 9505,
+      "gitBlob": "19800a12d9f09fc5e7528297a532dae0cdd8c533",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/program-synthesis/compiler.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/program-synthesis/compiler.ts",
+      "sha256": "55bde5b6f55624fb141d28da15bbe599e8847777fc7fb8ec07ba82e483345402",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 1754,
+      "gitBlob": "5b086abc355c2af1dd97f3e81da73d055b1b47c0",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/program-synthesis/economic-native.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/program-synthesis/economic-native.ts",
+      "sha256": "a68c864b43c5c24e8a00ed8999522b06b3951afd58b656b1e78336a58905ed3d",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 19541,
+      "gitBlob": "f1d264b0a2f0ea92dbf4e4fba0dfb40258c31ce7",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/r3/worker.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/r3/worker.ts",
+      "sha256": "ef0e24005c7a60c388e0db5ddf305e28ad7c92b8af5fa03aee1d4dfd6547c98e",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 9341,
+      "gitBlob": "66cdfcead261c360da0075448ae1c96e4a9d5003",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/r4/worker.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/r4/worker.ts",
+      "sha256": "cf59cc129d36cdc5cfb6b593b5304e3341670d00b2f335e8ec666a6e5e40059c",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 4136,
+      "gitBlob": "0cbc9a320a6d832ec57f7a9e81d5247ef6177b3d",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/strategic-response/contracts.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/strategic-response/contracts.ts",
+      "sha256": "0aa0752e175f191da0b660c8e8e1c4134c090cc89e250df5d094e03f347387d7",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 11522,
+      "gitBlob": "55ca11809ebeceb59df3340bbff5d6f3ba8a2d4a",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/private-equity/src/system-identification/consumer.ts",
+      "path": "source-materials/repository/finnor-os/packages/private-equity/src/system-identification/consumer.ts",
+      "sha256": "5384552d6e36ec7b28cf835529bb1030b8e5bd35942797eedafc62dd95ebeb30",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 54408,
+      "gitBlob": "57141e31b0b795767b606df093724db0e6bd1a57",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/read-models/src/execution-projection.ts",
+      "path": "source-materials/repository/finnor-os/packages/read-models/src/execution-projection.ts",
+      "sha256": "c2d4317d8c2cfe539491a1a41a6c24544346451bef3adbd9ac5e45351e56f9f4",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 29938,
+      "gitBlob": "0e1eee1754b0803382e6b2fe922d112bb3a75e8f",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/shared-types/src/operational-queries.ts",
+      "path": "source-materials/repository/finnor-os/packages/shared-types/src/operational-queries.ts",
+      "sha256": "ebd417c6b3eceaf1be87a444f9e0aff8cca2291d1b63f34793f709291a243662",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 16134,
+      "gitBlob": "81f8d21988ba73b7e07a0c2d4a02cf57fe160e97",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/shared-types/src/retired-water.ts",
+      "path": "source-materials/repository/finnor-os/packages/shared-types/src/retired-water.ts",
+      "sha256": "67d262a9643f26828f8cce5bb83a9d33e0b58e7cf411037e4e2a217831240b9c",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 1791,
+      "gitBlob": "83167776e0f20660285442b66bddcd0fc3fdb660",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/source-custody/index.cjs",
+      "path": "source-materials/repository/finnor-os/packages/source-custody/index.cjs",
+      "sha256": "4284fa4774fc86352b1286ca5da0ac657bf9b5d0e73dc66aae331056353311b3",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 20841,
+      "gitBlob": "957d0a75b1eb7784ff25cc62a86a6a50a8f960d6",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/packages/tools/src/registry.ts",
+      "path": "source-materials/repository/finnor-os/packages/tools/src/registry.ts",
+      "sha256": "234edf523ed100d259ebe7b82bd827097a4549a8678b684028b027c1038c6b2a",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 4525,
+      "gitBlob": "2c91dc23e04563c22c02c5d2868ad1cb33d156e8",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/scripts/bundle-migrations.ts",
+      "path": "source-materials/repository/finnor-os/scripts/bundle-migrations.ts",
+      "sha256": "ca089b9ba1105c95172ffbf067711fdd86ec54026b1600af34ca2077576d9c1d",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 27046,
+      "gitBlob": "f612c8c4dfb95567db2b9e3dc1df972129015a9d",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/scripts/p7/run-native-e2e.mts",
+      "path": "source-materials/repository/finnor-os/scripts/p7/run-native-e2e.mts",
+      "sha256": "18f91354c009aee90e7f816ceccac9ef7112c5151da77c4ab871b5cd9947a8c8",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 47090,
+      "gitBlob": "0a99c780792de763fafcd0c5eeb33d231acb8396",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/scripts/y1/run-installed.mts",
+      "path": "source-materials/repository/finnor-os/scripts/y1/run-installed.mts",
+      "sha256": "800aa544fc5ac65ba691a25f72f65e933b94cd2be546405597a948eafac2869f",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 10911,
+      "gitBlob": "60d052fe6209b12fedb97ccf61d58342eb32d940",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/scripts/y3/run-math.mts",
+      "path": "source-materials/repository/finnor-os/scripts/y3/run-math.mts",
+      "sha256": "605983aa27da148239e7d43d8787a0c812981389c48d45a8c192df1adcdaa74a",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 2214,
+      "gitBlob": "beaff0a77b64c94619dc1270201388348da8bd47",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/scripts/y4/run-finite.py",
+      "path": "source-materials/repository/finnor-os/scripts/y4/run-finite.py",
+      "sha256": "5efcf008c3278ee639e0290d709581fb801679335a65081d542f67a58e8f1c5a",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 5435,
+      "gitBlob": "4f9c6f6afa9b57e52f8fa31807eeb6eedda931d3",
+      "kind": "repository-source-snapshot",
+      "origin": "finnor-os/vitest.config.ts",
+      "path": "source-materials/repository/finnor-os/vitest.config.ts",
+      "sha256": "84e7a5be6043186523f1185d16bbba6fc9a59485080faf3f19eb98c6751e80a6",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 7848,
+      "gitBlob": "d69b1c44ccb4c8dccf627404dea41ead15ed0d28",
+      "kind": "repository-source-snapshot",
+      "origin": "infra/deployment/production.contract.json",
+      "path": "source-materials/repository/infra/deployment/production.contract.json",
+      "sha256": "617b8597daad3d0cdea1052bdf0f6b995b28d47544fdafacab86c8366aac7992",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 4229,
+      "gitBlob": "7871dfccd823c97de6cb08a0d2c07bb135809cba",
+      "kind": "repository-source-snapshot",
+      "origin": "package.json",
+      "path": "source-materials/repository/package.json",
+      "sha256": "e8add0c30c1d3f211a011d672a4634b847a8f574b8ebf3928dd4acdb0e20c4b6",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 1675,
+      "gitBlob": "3cb2e2b4a7be36823537894dfd90f14025e36c57",
+      "kind": "repository-source-snapshot",
+      "origin": "playwright.config.ts",
+      "path": "source-materials/repository/playwright.config.ts",
+      "sha256": "854efb9b5e09cbc379ef18f399f4c1557b0dcbf48e1dde37e28648192075b013",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 836,
+      "gitBlob": "b3cb9784ba34609a431de2fb0bb194e6647f3a7e",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-1/README.md",
+      "path": "source-materials/repository/scope-1/README.md",
+      "sha256": "f2d79f6fcac0bce04acff17ebe12a2c6509d9193a03d5ee446decdaefbef997b",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 862,
+      "gitBlob": "d20c536024660fc6cfe7212ef6c0fc893494757c",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-2/README.md",
+      "path": "source-materials/repository/scope-2/README.md",
+      "sha256": "3eaa04dcf581d2bb6d74438e60d4fd58534a92e2663e21fa659b3bfc7d709fcb",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 834,
+      "gitBlob": "a302b90237cae007944a3a6143d524a0b4639b1c",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-3/README.md",
+      "path": "source-materials/repository/scope-3/README.md",
+      "sha256": "6a6c5daa40304e1544d117c09d646d87b898608f098ccf599152839e834a97ff",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 887,
+      "gitBlob": "7906cdc882766beb7e252b2cb17a442eadd58425",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-4/README.md",
+      "path": "source-materials/repository/scope-4/README.md",
+      "sha256": "658a8efca0d65851687d19c5bf7849fa3937b1d2825e1f61b9a2ada9494ff72e",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 807,
+      "gitBlob": "b4fbf119b54fa58793652a86a27867cb4ec2d37e",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-5/README.md",
+      "path": "source-materials/repository/scope-5/README.md",
+      "sha256": "5731a02322434383888101b901ab48f103146cd04592228c8cfbcdb21db96c61",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 21967,
+      "gitBlob": "36877070c9cae9a8f289c99c86e91c1d7516365d",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-6/completion-inventory.md",
+      "path": "source-materials/repository/scope-6/completion-inventory.md",
+      "sha256": "c45c2e5915fad5c8d0e8af2cfe9e1be76b866ef7b50ccbd830a6130a18305373",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 8175,
+      "gitBlob": "c1625515e1850764073fe1c59d28187a2d557763",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-6/scope-plan.md",
+      "path": "source-materials/repository/scope-6/scope-plan.md",
+      "sha256": "0bb3bd8f70253dce62695ce9a8daf30cac051d6e9ccd3e6bf6b60ec82deaed52",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 7345,
+      "gitBlob": "66fdb6a91ac240739c1832652eae8cb3bb46b46c",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-7/scope-plan.md",
+      "path": "source-materials/repository/scope-7/scope-plan.md",
+      "sha256": "3108f93f003b4a9ecc29d75093a574149f0f8326bcbfe89c4b732d3bd40ec6ed",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 79964,
+      "gitBlob": "36bcd08e2166ae5ee3a9998ab2a686ca0d33ffc9",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-frontier5/x1-institutional-programme-compiler/status.md",
+      "path": "source-materials/repository/scope-frontier5/x1-institutional-programme-compiler/status.md",
+      "sha256": "e211be07b2f28c358a24da1630166227e6691b0cbef500bc376237fb3c09da02",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 7102,
+      "gitBlob": "26049a77ec74b412133fd5154adaf1c1d3e945ed",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-frontier5/x2-software-semantics-compiler/checkpoint.md",
+      "path": "source-materials/repository/scope-frontier5/x2-software-semantics-compiler/checkpoint.md",
+      "sha256": "c01a3551bd2dab5ffefb34d60ed261d781f58bb33f42210a1db27c86edc4acd6",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 58451,
+      "gitBlob": "3a5ac9be57d738a935a4bfa3891dd878e29a7fcd",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-frontier5/x2-software-semantics-compiler/status.md",
+      "path": "source-materials/repository/scope-frontier5/x2-software-semantics-compiler/status.md",
+      "sha256": "905f0fd695cc6fa310fef5c8f93c83769a4fb5f10f6a4b9378ec5dcc364ff5d4",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 9348,
+      "gitBlob": "c58e7922c9f349ed3070cfb0998f0d99b4ad255a",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-postx/y1-economic-action-theory/README.md",
+      "path": "source-materials/repository/scope-postx/y1-economic-action-theory/README.md",
+      "sha256": "0d65453beb0dddbe8a89665c008bed72df036b54884ca9afc0ac22fad0951d2c",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 1923,
+      "gitBlob": "61d31c37d8a5c0243e5a409001d582f071113842",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-postx/y2-strategic-response-world-model/STATUS.md",
+      "path": "source-materials/repository/scope-postx/y2-strategic-response-world-model/STATUS.md",
+      "sha256": "02ae235df4d58c33c690a037cb8f4ce20a78ede451ca929af1ced93f600d2802",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 11786,
+      "gitBlob": "028235624c49a492e2b85588f8762fb43fe86415",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-postx/y3-dynamic-interaction-synthesizer/README.md",
+      "path": "source-materials/repository/scope-postx/y3-dynamic-interaction-synthesizer/README.md",
+      "sha256": "ffa9f65eccb4e3f8e3ecc090ea9593121cbd06d663050978fe9f607c66127d2a",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 3212,
+      "gitBlob": "035bebe96f95feb8d1526963100392e7bac50905",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-postx/y4-confidential-economic-compiler/backend-build-contract.md",
+      "path": "source-materials/repository/scope-postx/y4-confidential-economic-compiler/backend-build-contract.md",
+      "sha256": "663a7cf5fc017172fbb00ee206191291b5eeda2b14eb97f3cb295bc09b1ab30b",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 6868,
+      "gitBlob": "9a33336ef6eae2c53e4c2c592512dedf3198e1eb",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-postx/y4-confidential-economic-compiler/design.md",
+      "path": "source-materials/repository/scope-postx/y4-confidential-economic-compiler/design.md",
+      "sha256": "ec567ed30ca86c7e7aafc9e18bfbd77d32c381b2c79252f54515f6df68464124",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 4430,
+      "gitBlob": "c31c43d9441c6dddb89bd24da54d65b33906b905",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-postx/y4-confidential-economic-compiler/plan.md",
+      "path": "source-materials/repository/scope-postx/y4-confidential-economic-compiler/plan.md",
+      "sha256": "ded6e86e9bafc46a0a8a8a5bba7daf83db02f3ded35c5df9e8a3b324f2f6ea9b",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 9693,
+      "gitBlob": "8d1854034585162fe90f9dafa6de0b37d8347b37",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-postx/y4-confidential-economic-compiler/review-remediation.md",
+      "path": "source-materials/repository/scope-postx/y4-confidential-economic-compiler/review-remediation.md",
+      "sha256": "f4f5694164ad620964c80f57480e5f7207f28b72a1fbe6e19ebe1696200d32ef",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 8784,
+      "gitBlob": "fcf39e471e615e8e39f661b217a831502d03c0a1",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-x-phase/README.md",
+      "path": "source-materials/repository/scope-x-phase/README.md",
+      "sha256": "4606fdb53c35be2196d1df8c5f62a06d2a7b1934f2538e02f77183299b619bd2",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 7811,
+      "gitBlob": "300883bcf48b8ab4edf006c53617de6c7a73ff35",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-x-phase/architecture.md",
+      "path": "source-materials/repository/scope-x-phase/architecture.md",
+      "sha256": "5b5e625fde051cfaf7793352daaf07797b6596f192dcdc5890ee9102c80db97d",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 12825,
+      "gitBlob": "48b233461bcfccc5c3ad2e98ba281ffd77d5af35",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-x3/handoff.md",
+      "path": "source-materials/repository/scope-x3/handoff.md",
+      "sha256": "bd46ab444614bf0d97745b33f3692bb24f27160344ee1ddb7c5b373f8e4af414",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 7381,
+      "gitBlob": "20f3aef00046811dcd8b374ce2378e392afb2b86",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-x4/handoff.md",
+      "path": "source-materials/repository/scope-x4/handoff.md",
+      "sha256": "9efabb9a7f177d7b0f30413ce0a08ef0428e325b9db2eda4e32db8a44544a53a",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 4640,
+      "gitBlob": "b72feab0a9e4e26100934d4923ffd576cad116ca",
+      "kind": "repository-source-snapshot",
+      "origin": "scope-x5/handoff.md",
+      "path": "source-materials/repository/scope-x5/handoff.md",
+      "sha256": "92d35520c268a1992c2edf00bb23d982e3b91d663116aac138e07911d5a50e75",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 1467,
+      "kind": "repository-source-snapshot",
+      "origin": "scope-z/README.md",
+      "path": "source-materials/repository/scope-z/README.md",
+      "sha256": "90b9b40e2902f1ce37cc329f387940bb0e4975bf5c8a6695b9a46bae27dcbcb6",
+      "sourceStatus": "UNTRACKED_DOCUMENT_AT_CAPTURE_NOT_BASE_CODE"
+    },
+    {
+      "bytes": 2997,
+      "kind": "repository-source-snapshot",
+      "origin": "scope-z/orchestration/research-owners.seed.md",
+      "path": "source-materials/repository/scope-z/orchestration/research-owners.seed.md",
+      "sha256": "9b532d73291d3e94cccdd8ab3b2ade714770c106f2ead97f5a2eca04bdf9b3bf",
+      "sourceStatus": "UNTRACKED_DOCUMENT_AT_CAPTURE_NOT_BASE_CODE"
+    },
+    {
+      "bytes": 22898,
+      "gitBlob": "b41a79080429f7f024ec17c5033bcf0cc1aa498a",
+      "kind": "repository-source-snapshot",
+      "origin": "scripts/centropy/audit-capability-coverage.mjs",
+      "path": "source-materials/repository/scripts/centropy/audit-capability-coverage.mjs",
+      "sha256": "0f81d60febf1892ef434d0d2838f94133a6d4368c0d431373fc2d3f9a7a77921",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 27511,
+      "gitBlob": "f8602220e83aa7c2fe39016a9da50099dd146c75",
+      "kind": "repository-source-snapshot",
+      "origin": "scripts/centropy/generate-capability-manifest.mjs",
+      "path": "source-materials/repository/scripts/centropy/generate-capability-manifest.mjs",
+      "sha256": "9141e31d74a690a11d10ed0cb83cb94a7d1c9a738d39d0a1d4e55728e6e51eb8",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 1357,
+      "gitBlob": "943e1d9b7affd86762cf675a360fedf3dfd6ecd6",
+      "kind": "repository-source-snapshot",
+      "origin": "scripts/centropy/run-local-e2e.mjs",
+      "path": "source-materials/repository/scripts/centropy/run-local-e2e.mjs",
+      "sha256": "a1d38ffcb7273fda748421cab056eafc51df01578511865d6d6b85935b46256f",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 6379,
+      "gitBlob": "dd71167a3df920ee1b8fc79f8b85b9c12905cac3",
+      "kind": "repository-source-snapshot",
+      "origin": "scripts/centropy/start-certification-stack.mjs",
+      "path": "source-materials/repository/scripts/centropy/start-certification-stack.mjs",
+      "sha256": "985db4efcf04b6a9519b0743ea6da58a2c724f398a66aa56ca3465c77b98df22",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 1525,
+      "gitBlob": "1c45245aa4c72f0d732e5ed9948b25a1ba1ad9b5",
+      "kind": "repository-source-snapshot",
+      "origin": "scripts/generate-workspace-contract.mjs",
+      "path": "source-materials/repository/scripts/generate-workspace-contract.mjs",
+      "sha256": "42e795b6d45261b2eaa6840745744d3699f1d8b13d3cf4993c8435ca50c36ee4",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 11749,
+      "gitBlob": "d24f15c5e2cb90e1e2c0129cb886674620a2e758",
+      "kind": "repository-source-snapshot",
+      "origin": "src/app/api/centropy/[...path]/route.ts",
+      "path": "source-materials/repository/src/app/api/centropy/[...path]/route.ts",
+      "sha256": "f4595610db1279809e4566d7dd390d8d3ea880ac011f9a08c6bf487900ea87a8",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 11566,
+      "gitBlob": "035f15d82962707ec480d1753f433b13ad2a439d",
+      "kind": "repository-source-snapshot",
+      "origin": "src/components/centropy/lib/api.ts",
+      "path": "source-materials/repository/src/components/centropy/lib/api.ts",
+      "sha256": "5ef9ad627d1c655852274ab4b91930e8f94a3a7fdd828038eb8624cc16885626",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 10232,
+      "gitBlob": "516765c0aa77d2866101c15ff53736440ba4808e",
+      "kind": "repository-source-snapshot",
+      "origin": "src/components/centropy/world/WorldWorkRecord.tsx",
+      "path": "source-materials/repository/src/components/centropy/world/WorldWorkRecord.tsx",
+      "sha256": "06b7adb4a5ed940105c8af088e649da459dcde6fe0d48e0173896e0e841f6da5",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 585261,
+      "gitBlob": "6f197f10be59a6fbb3f2e364643c57405ee11560",
+      "kind": "repository-source-snapshot",
+      "origin": "src/lib/centropy/capability-manifest.generated.json",
+      "path": "source-materials/repository/src/lib/centropy/capability-manifest.generated.json",
+      "sha256": "3ff6d0b06d57e13d8412ae9160b5cc844da1d861478665f688d6cb863b2e5238",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 2287,
+      "gitBlob": "0603d5f238e984bcb978198514612e31e6c50a5a",
+      "kind": "repository-source-snapshot",
+      "origin": "src/lib/centropy/capability-manifest.ts",
+      "path": "source-materials/repository/src/lib/centropy/capability-manifest.ts",
+      "sha256": "02fa17dd0cd1d912c88dfc633922f32877bc26236debfd992838c4a5f49b545f",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    },
+    {
+      "bytes": 1560,
+      "gitBlob": "936b7ec0a242346d0d8a9d87b691659242a2ea67",
+      "kind": "repository-source-snapshot",
+      "origin": "vitest.config.ts",
+      "path": "source-materials/repository/vitest.config.ts",
+      "sha256": "46daa26520e7017a1f39ce8a971180fbde0faf59485f4c779fe6ba8205edde4c",
+      "sourceStatus": "TRACKED_PINNED_BASE"
+    }
+  ],
+  "historicalSourceInspection": "Original partial ranges remain in the full owner map; complete snapshot copying does not attest full inspection or execution",
+  "inlineFull": [
+    "locked PRD",
+    "common contracts",
+    "blueprint",
+    "own prompt",
+    "active annexes",
+    "all twelve skills and licenses",
+    "new verification skill",
+    "actual source excerpts",
+    "public family specifications",
+    "complete required earlier Z0 seed"
+  ],
+  "meaning": "Actual indexed files are delivered with the seed. Paths alone are not delivery. Read all inline payloads fully first; then these complete supplied texts and actual source ranges in order. Read complete current callers before edits.",
+  "phases": {
+    "Z0": {
+      "delivery": "NOT_DELIVERED",
+      "orderedMandatoryReads": [
+        {
+          "bytes": 4516,
+          "path": "source-materials/product-lock.json",
+          "purpose": "Verify every member and original source identity",
+          "ranges": "FULL",
+          "sha256": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf"
+        },
+        {
+          "bytes": 11580,
+          "path": "source-materials/locked/scope-z/research/scope-selection-decision.md",
+          "purpose": "Rejected hypotheses and novelty baseline",
+          "ranges": "FULL",
+          "sha256": "6a8cdfea092bf6b189833c0e66b3168e32ea45bbb6d9090a25209295b713e29f"
+        },
+        {
+          "bytes": 76868,
+          "path": "source-materials/locked/scope-z/research/baseline-owner-report.md",
+          "purpose": "Actual native owners and source/runtime distinction",
+          "ranges": "FULL",
+          "sha256": "121486a4b5197ea4ed10c2032aa87208f2b77f027656a3487cf65fc7d0dc1653"
+        },
+        {
+          "bytes": 7376,
+          "path": "source-materials/locked/scope-z/research/qualification-design.md",
+          "purpose": "Protected/equipped/financial separation",
+          "ranges": "FULL",
+          "sha256": "97a27ee4cbd5766852747f530d1f184c0206e82db6db4a35882e04cacca926dc"
+        },
+        {
+          "bytes": 4339,
+          "path": "source-materials/locked/scope-z/research/supplied-source-reading-audit.md",
+          "purpose": "Supplied full-text coverage",
+          "ranges": "FULL",
+          "sha256": "dc675dd4162b7eb0607605edbf4233649436853c47192b427aded2a1c384454f"
+        },
+        {
+          "bytes": 2472,
+          "path": "source-materials/locked/scope-z/sources/source-index.json",
+          "purpose": "Exact seven supplied text identities",
+          "ranges": "FULL",
+          "sha256": "e58d791d1fade8d82ed6b711ca3b2b9f7a79ebc7cad051f4859b7fac332cb11b"
+        },
+        {
+          "bytes": 270924,
+          "path": "source-materials/locked/scope-z/sources/00-exact-user-request.txt",
+          "purpose": "Full containing historical supplied request; quoted instructions sandboxed",
+          "ranges": "FULL",
+          "sha256": "83930d088bd096495206a5e463488af824118f52a3e5f27c5c057ddf33633c3d"
+        },
+        {
+          "bytes": 19015,
+          "path": "source-materials/locked/scope-z/sources/01-x-prd-opening.exact-fragment.txt",
+          "purpose": "Original supplied X opening",
+          "ranges": "FULL",
+          "sha256": "957039b59e830160806e671679ba2f23f4964f34816a871fcaf940a7dae5147b"
+        },
+        {
+          "bytes": 69625,
+          "path": "source-materials/locked/scope-z/sources/02-x-prd-remainder.exact-fragment.txt",
+          "purpose": "Original supplied X remainder",
+          "ranges": "FULL",
+          "sha256": "dfd3debf87382e948ab6193918bd5875e997f85a09b453d07f43084eca27869f"
+        },
+        {
+          "bytes": 88633,
+          "path": "source-materials/locked/scope-z/sources/06-x-prd.reconstructed.md",
+          "purpose": "Complete explicitly reconstructed X requirements",
+          "ranges": "FULL",
+          "sha256": "678abc5212ad2fce46358f254b9c684916e0f649de30eb98b6d0bef4774a27a3"
+        },
+        {
+          "bytes": 87277,
+          "path": "source-materials/locked/scope-z/sources/03-y-prd.exact-fragment.txt",
+          "purpose": "Complete supplied Y requirements",
+          "ranges": "FULL",
+          "sha256": "5d20f7e89931df3793c49bebac16a571d7ceb09c23b2899134ee44ca4c03ba66"
+        },
+        {
+          "bytes": 49902,
+          "path": "source-materials/locked/scope-z/sources/05-y2-implementation-blueprint.exact-fragment.txt",
+          "purpose": "Complete Y2 model/information/currentness/cost floor",
+          "ranges": "FULL",
+          "sha256": "c54cf87199b39a7abc925e3292b4923638905c30ce6ecd37f9e41bd7c7d306c8"
+        },
+        {
+          "bytes": 38309,
+          "path": "source-materials/locked/scope-z/sources/04-y3-implementation-blueprint.exact-fragment.txt",
+          "purpose": "Complete Y3 sequential/common-global-tremble/consent floor",
+          "ranges": "FULL",
+          "sha256": "f1dc4d8f82f3ac7c49d2e15a5536ab3848525aa9bb49f2693b6b968058e7526f"
+        },
+        {
+          "bytes": 5066,
+          "path": "source-materials/repository/finnor-os/apps/api/app/api/queries/route.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              22,
+              62
+            ]
+          ],
+          "sha256": "33084eb58a28ee7385843665672f3c727ddaaf4d1719fd804c2d63e96c3c13d6"
+        },
+        {
+          "bytes": 29938,
+          "path": "source-materials/repository/finnor-os/packages/shared-types/src/operational-queries.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              30,
+              39
+            ]
+          ],
+          "sha256": "ebd417c6b3eceaf1be87a444f9e0aff8cca2291d1b63f34793f709291a243662"
+        },
+        {
+          "bytes": 14943,
+          "path": "source-materials/repository/finnor-os/packages/orchestration/src/plugin-registry.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              149,
+              265
+            ]
+          ],
+          "sha256": "d41f4be6b7c38c1fee8556c6a8e1513b4f2350f31f87d582a9d44ca7c5c2ccaf"
+        },
+        {
+          "bytes": 26280,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/api.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              107,
+              139
+            ]
+          ],
+          "sha256": "daa82aa0f3e822afed38b0a729ad77c807807dd2706906b56f476485e1c10837"
+        },
+        {
+          "bytes": 3334,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/envelope.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              23,
+              41
+            ]
+          ],
+          "sha256": "500b044ba6a06ee9ff2902178993f6ba40fb2a2d33e370e3eb2ecd3faf166bb9"
+        },
+        {
+          "bytes": 30796,
+          "path": "source-materials/repository/finnor-os/packages/orchestration/src/fast-read-lane.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              1,
+              100
+            ]
+          ],
+          "sha256": "401e5462dee247c4c0928eafc677a48e90fa720e5ac632cd29b605f5f7f2f298"
+        },
+        {
+          "bytes": 27511,
+          "path": "source-materials/repository/scripts/centropy/generate-capability-manifest.mjs",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              1,
+              100
+            ]
+          ],
+          "sha256": "9141e31d74a690a11d10ed0cb83cb94a7d1c9a738d39d0a1d4e55728e6e51eb8"
+        },
+        {
+          "bytes": 22898,
+          "path": "source-materials/repository/scripts/centropy/audit-capability-coverage.mjs",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              1,
+              100
+            ]
+          ],
+          "sha256": "0f81d60febf1892ef434d0d2838f94133a6d4368c0d431373fc2d3f9a7a77921"
+        },
+        {
+          "bytes": 7712,
+          "path": "source-materials/repository/AGENTS.md",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "bd0c248a21f2cb25b6634fb77827879877588048aff5fb444a58833e805a86da"
+        },
+        {
+          "bytes": 4229,
+          "path": "source-materials/repository/package.json",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "e8add0c30c1d3f211a011d672a4634b847a8f574b8ebf3928dd4acdb0e20c4b6"
+        },
+        {
+          "bytes": 5276,
+          "path": "source-materials/repository/finnor-os/package.json",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "5109ef3fcddcea39a92153f756ee12532a5f66d144ba04fd8fc8260b66b90f1e"
+        },
+        {
+          "bytes": 1675,
+          "path": "source-materials/repository/playwright.config.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "854efb9b5e09cbc379ef18f399f4c1557b0dcbf48e1dde37e28648192075b013"
+        },
+        {
+          "bytes": 6379,
+          "path": "source-materials/repository/scripts/centropy/start-certification-stack.mjs",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "985db4efcf04b6a9519b0743ea6da58a2c724f398a66aa56ca3465c77b98df22"
+        },
+        {
+          "bytes": 1357,
+          "path": "source-materials/repository/scripts/centropy/run-local-e2e.mjs",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "a1d38ffcb7273fda748421cab056eafc51df01578511865d6d6b85935b46256f"
+        },
+        {
+          "bytes": 2857,
+          "path": "source-materials/repository/e2e/centropy-owner-login.spec.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "cb4f13418dc5a46dc4da459f576919c67da606e8ab82ced4923b259177e5abd3"
+        },
+        {
+          "bytes": 10155,
+          "path": "source-materials/repository/e2e/centropy-controlled-recovery.spec.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "d53a79c178c6995911cc80921e18e75fd63af43f71fb4a347a47e3d8b0c64982"
+        }
+      ],
+      "peerHandoffs": "NONE_OBSERVED",
+      "receiverReceipt": "NONE_OBSERVED",
+      "requiredEarlierFullSeeds": [],
+      "requiresOtherZEngine": false
+    },
+    "Z1": {
+      "delivery": "NOT_DELIVERED",
+      "orderedMandatoryReads": [
+        {
+          "bytes": 4516,
+          "path": "source-materials/product-lock.json",
+          "purpose": "Verify every member and original source identity",
+          "ranges": "FULL",
+          "sha256": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf"
+        },
+        {
+          "bytes": 11580,
+          "path": "source-materials/locked/scope-z/research/scope-selection-decision.md",
+          "purpose": "Rejected hypotheses and novelty baseline",
+          "ranges": "FULL",
+          "sha256": "6a8cdfea092bf6b189833c0e66b3168e32ea45bbb6d9090a25209295b713e29f"
+        },
+        {
+          "bytes": 76868,
+          "path": "source-materials/locked/scope-z/research/baseline-owner-report.md",
+          "purpose": "Actual native owners and source/runtime distinction",
+          "ranges": "FULL",
+          "sha256": "121486a4b5197ea4ed10c2032aa87208f2b77f027656a3487cf65fc7d0dc1653"
+        },
+        {
+          "bytes": 7376,
+          "path": "source-materials/locked/scope-z/research/qualification-design.md",
+          "purpose": "Protected/equipped/financial separation",
+          "ranges": "FULL",
+          "sha256": "97a27ee4cbd5766852747f530d1f184c0206e82db6db4a35882e04cacca926dc"
+        },
+        {
+          "bytes": 4339,
+          "path": "source-materials/locked/scope-z/research/supplied-source-reading-audit.md",
+          "purpose": "Supplied full-text coverage",
+          "ranges": "FULL",
+          "sha256": "dc675dd4162b7eb0607605edbf4233649436853c47192b427aded2a1c384454f"
+        },
+        {
+          "bytes": 2472,
+          "path": "source-materials/locked/scope-z/sources/source-index.json",
+          "purpose": "Exact seven supplied text identities",
+          "ranges": "FULL",
+          "sha256": "e58d791d1fade8d82ed6b711ca3b2b9f7a79ebc7cad051f4859b7fac332cb11b"
+        },
+        {
+          "bytes": 270924,
+          "path": "source-materials/locked/scope-z/sources/00-exact-user-request.txt",
+          "purpose": "Full containing historical supplied request; quoted instructions sandboxed",
+          "ranges": "FULL",
+          "sha256": "83930d088bd096495206a5e463488af824118f52a3e5f27c5c057ddf33633c3d"
+        },
+        {
+          "bytes": 19015,
+          "path": "source-materials/locked/scope-z/sources/01-x-prd-opening.exact-fragment.txt",
+          "purpose": "Original supplied X opening",
+          "ranges": "FULL",
+          "sha256": "957039b59e830160806e671679ba2f23f4964f34816a871fcaf940a7dae5147b"
+        },
+        {
+          "bytes": 69625,
+          "path": "source-materials/locked/scope-z/sources/02-x-prd-remainder.exact-fragment.txt",
+          "purpose": "Original supplied X remainder",
+          "ranges": "FULL",
+          "sha256": "dfd3debf87382e948ab6193918bd5875e997f85a09b453d07f43084eca27869f"
+        },
+        {
+          "bytes": 88633,
+          "path": "source-materials/locked/scope-z/sources/06-x-prd.reconstructed.md",
+          "purpose": "Complete explicitly reconstructed X requirements",
+          "ranges": "FULL",
+          "sha256": "678abc5212ad2fce46358f254b9c684916e0f649de30eb98b6d0bef4774a27a3"
+        },
+        {
+          "bytes": 87277,
+          "path": "source-materials/locked/scope-z/sources/03-y-prd.exact-fragment.txt",
+          "purpose": "Complete supplied Y requirements",
+          "ranges": "FULL",
+          "sha256": "5d20f7e89931df3793c49bebac16a571d7ceb09c23b2899134ee44ca4c03ba66"
+        },
+        {
+          "bytes": 49902,
+          "path": "source-materials/locked/scope-z/sources/05-y2-implementation-blueprint.exact-fragment.txt",
+          "purpose": "Complete Y2 model/information/currentness/cost floor",
+          "ranges": "FULL",
+          "sha256": "c54cf87199b39a7abc925e3292b4923638905c30ce6ecd37f9e41bd7c7d306c8"
+        },
+        {
+          "bytes": 38309,
+          "path": "source-materials/locked/scope-z/sources/04-y3-implementation-blueprint.exact-fragment.txt",
+          "purpose": "Complete Y3 sequential/common-global-tremble/consent floor",
+          "ranges": "FULL",
+          "sha256": "f1dc4d8f82f3ac7c49d2e15a5536ab3848525aa9bb49f2693b6b968058e7526f"
+        },
+        {
+          "bytes": 5066,
+          "path": "source-materials/repository/finnor-os/apps/api/app/api/queries/route.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              22,
+              62
+            ]
+          ],
+          "sha256": "33084eb58a28ee7385843665672f3c727ddaaf4d1719fd804c2d63e96c3c13d6"
+        },
+        {
+          "bytes": 29938,
+          "path": "source-materials/repository/finnor-os/packages/shared-types/src/operational-queries.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              30,
+              39
+            ]
+          ],
+          "sha256": "ebd417c6b3eceaf1be87a444f9e0aff8cca2291d1b63f34793f709291a243662"
+        },
+        {
+          "bytes": 14943,
+          "path": "source-materials/repository/finnor-os/packages/orchestration/src/plugin-registry.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              149,
+              265
+            ]
+          ],
+          "sha256": "d41f4be6b7c38c1fee8556c6a8e1513b4f2350f31f87d582a9d44ca7c5c2ccaf"
+        },
+        {
+          "bytes": 26280,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/api.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              107,
+              139
+            ]
+          ],
+          "sha256": "daa82aa0f3e822afed38b0a729ad77c807807dd2706906b56f476485e1c10837"
+        },
+        {
+          "bytes": 3334,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/envelope.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              23,
+              41
+            ]
+          ],
+          "sha256": "500b044ba6a06ee9ff2902178993f6ba40fb2a2d33e370e3eb2ecd3faf166bb9"
+        },
+        {
+          "bytes": 23633,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/decision-slice/service.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              1,
+              105
+            ]
+          ],
+          "sha256": "4863004fe71833cf6c863acce3116a5a8911c8f8ef9e2a5bd5bf14cb1357594b"
+        },
+        {
+          "bytes": 17060,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/evidence-execution/worker.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              1,
+              63
+            ]
+          ],
+          "sha256": "b16b3232ef916b2f3f946f63fb20fc3dff13fb5fcc2a3783d7c360df88dc213e"
+        },
+        {
+          "bytes": 92299,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/allocation-store.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              1,
+              105
+            ]
+          ],
+          "sha256": "fce8b9f05af8e78dfd81939a3e7cdd572b72401f7b0e49ddaf56cf4244e760fe"
+        },
+        {
+          "bytes": 7712,
+          "path": "source-materials/repository/AGENTS.md",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "bd0c248a21f2cb25b6634fb77827879877588048aff5fb444a58833e805a86da"
+        },
+        {
+          "bytes": 4229,
+          "path": "source-materials/repository/package.json",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "e8add0c30c1d3f211a011d672a4634b847a8f574b8ebf3928dd4acdb0e20c4b6"
+        },
+        {
+          "bytes": 5276,
+          "path": "source-materials/repository/finnor-os/package.json",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "5109ef3fcddcea39a92153f756ee12532a5f66d144ba04fd8fc8260b66b90f1e"
+        },
+        {
+          "bytes": 1675,
+          "path": "source-materials/repository/playwright.config.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "854efb9b5e09cbc379ef18f399f4c1557b0dcbf48e1dde37e28648192075b013"
+        },
+        {
+          "bytes": 6379,
+          "path": "source-materials/repository/scripts/centropy/start-certification-stack.mjs",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "985db4efcf04b6a9519b0743ea6da58a2c724f398a66aa56ca3465c77b98df22"
+        },
+        {
+          "bytes": 1357,
+          "path": "source-materials/repository/scripts/centropy/run-local-e2e.mjs",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "a1d38ffcb7273fda748421cab056eafc51df01578511865d6d6b85935b46256f"
+        },
+        {
+          "bytes": 2857,
+          "path": "source-materials/repository/e2e/centropy-owner-login.spec.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "cb4f13418dc5a46dc4da459f576919c67da606e8ab82ced4923b259177e5abd3"
+        },
+        {
+          "bytes": 10155,
+          "path": "source-materials/repository/e2e/centropy-controlled-recovery.spec.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "d53a79c178c6995911cc80921e18e75fd63af43f71fb4a347a47e3d8b0c64982"
+        }
+      ],
+      "peerHandoffs": "NONE_OBSERVED",
+      "receiverReceipt": "NONE_OBSERVED",
+      "requiredEarlierFullSeeds": [
+        "Z0"
+      ],
+      "requiresOtherZEngine": false
+    },
+    "Z2": {
+      "delivery": "NOT_DELIVERED",
+      "orderedMandatoryReads": [
+        {
+          "bytes": 4516,
+          "path": "source-materials/product-lock.json",
+          "purpose": "Verify every member and original source identity",
+          "ranges": "FULL",
+          "sha256": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf"
+        },
+        {
+          "bytes": 11580,
+          "path": "source-materials/locked/scope-z/research/scope-selection-decision.md",
+          "purpose": "Rejected hypotheses and novelty baseline",
+          "ranges": "FULL",
+          "sha256": "6a8cdfea092bf6b189833c0e66b3168e32ea45bbb6d9090a25209295b713e29f"
+        },
+        {
+          "bytes": 76868,
+          "path": "source-materials/locked/scope-z/research/baseline-owner-report.md",
+          "purpose": "Actual native owners and source/runtime distinction",
+          "ranges": "FULL",
+          "sha256": "121486a4b5197ea4ed10c2032aa87208f2b77f027656a3487cf65fc7d0dc1653"
+        },
+        {
+          "bytes": 7376,
+          "path": "source-materials/locked/scope-z/research/qualification-design.md",
+          "purpose": "Protected/equipped/financial separation",
+          "ranges": "FULL",
+          "sha256": "97a27ee4cbd5766852747f530d1f184c0206e82db6db4a35882e04cacca926dc"
+        },
+        {
+          "bytes": 4339,
+          "path": "source-materials/locked/scope-z/research/supplied-source-reading-audit.md",
+          "purpose": "Supplied full-text coverage",
+          "ranges": "FULL",
+          "sha256": "dc675dd4162b7eb0607605edbf4233649436853c47192b427aded2a1c384454f"
+        },
+        {
+          "bytes": 2472,
+          "path": "source-materials/locked/scope-z/sources/source-index.json",
+          "purpose": "Exact seven supplied text identities",
+          "ranges": "FULL",
+          "sha256": "e58d791d1fade8d82ed6b711ca3b2b9f7a79ebc7cad051f4859b7fac332cb11b"
+        },
+        {
+          "bytes": 270924,
+          "path": "source-materials/locked/scope-z/sources/00-exact-user-request.txt",
+          "purpose": "Full containing historical supplied request; quoted instructions sandboxed",
+          "ranges": "FULL",
+          "sha256": "83930d088bd096495206a5e463488af824118f52a3e5f27c5c057ddf33633c3d"
+        },
+        {
+          "bytes": 19015,
+          "path": "source-materials/locked/scope-z/sources/01-x-prd-opening.exact-fragment.txt",
+          "purpose": "Original supplied X opening",
+          "ranges": "FULL",
+          "sha256": "957039b59e830160806e671679ba2f23f4964f34816a871fcaf940a7dae5147b"
+        },
+        {
+          "bytes": 69625,
+          "path": "source-materials/locked/scope-z/sources/02-x-prd-remainder.exact-fragment.txt",
+          "purpose": "Original supplied X remainder",
+          "ranges": "FULL",
+          "sha256": "dfd3debf87382e948ab6193918bd5875e997f85a09b453d07f43084eca27869f"
+        },
+        {
+          "bytes": 88633,
+          "path": "source-materials/locked/scope-z/sources/06-x-prd.reconstructed.md",
+          "purpose": "Complete explicitly reconstructed X requirements",
+          "ranges": "FULL",
+          "sha256": "678abc5212ad2fce46358f254b9c684916e0f649de30eb98b6d0bef4774a27a3"
+        },
+        {
+          "bytes": 87277,
+          "path": "source-materials/locked/scope-z/sources/03-y-prd.exact-fragment.txt",
+          "purpose": "Complete supplied Y requirements",
+          "ranges": "FULL",
+          "sha256": "5d20f7e89931df3793c49bebac16a571d7ceb09c23b2899134ee44ca4c03ba66"
+        },
+        {
+          "bytes": 49902,
+          "path": "source-materials/locked/scope-z/sources/05-y2-implementation-blueprint.exact-fragment.txt",
+          "purpose": "Complete Y2 model/information/currentness/cost floor",
+          "ranges": "FULL",
+          "sha256": "c54cf87199b39a7abc925e3292b4923638905c30ce6ecd37f9e41bd7c7d306c8"
+        },
+        {
+          "bytes": 38309,
+          "path": "source-materials/locked/scope-z/sources/04-y3-implementation-blueprint.exact-fragment.txt",
+          "purpose": "Complete Y3 sequential/common-global-tremble/consent floor",
+          "ranges": "FULL",
+          "sha256": "f1dc4d8f82f3ac7c49d2e15a5536ab3848525aa9bb49f2693b6b968058e7526f"
+        },
+        {
+          "bytes": 5066,
+          "path": "source-materials/repository/finnor-os/apps/api/app/api/queries/route.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              22,
+              62
+            ]
+          ],
+          "sha256": "33084eb58a28ee7385843665672f3c727ddaaf4d1719fd804c2d63e96c3c13d6"
+        },
+        {
+          "bytes": 29938,
+          "path": "source-materials/repository/finnor-os/packages/shared-types/src/operational-queries.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              30,
+              39
+            ]
+          ],
+          "sha256": "ebd417c6b3eceaf1be87a444f9e0aff8cca2291d1b63f34793f709291a243662"
+        },
+        {
+          "bytes": 14943,
+          "path": "source-materials/repository/finnor-os/packages/orchestration/src/plugin-registry.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              149,
+              265
+            ]
+          ],
+          "sha256": "d41f4be6b7c38c1fee8556c6a8e1513b4f2350f31f87d582a9d44ca7c5c2ccaf"
+        },
+        {
+          "bytes": 26280,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/api.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              107,
+              139
+            ]
+          ],
+          "sha256": "daa82aa0f3e822afed38b0a729ad77c807807dd2706906b56f476485e1c10837"
+        },
+        {
+          "bytes": 3334,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/envelope.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              23,
+              41
+            ]
+          ],
+          "sha256": "500b044ba6a06ee9ff2902178993f6ba40fb2a2d33e370e3eb2ecd3faf166bb9"
+        },
+        {
+          "bytes": 12121,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/game.ts",
+          "purpose": "Full actual native Y3 floor and original information/operator checker",
+          "ranges": "FULL",
+          "sha256": "7d7e261d0eb7f5f629b438afa3ef82a7e28a397c927994e2c0be9792748df216"
+        },
+        {
+          "bytes": 32854,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/checker.py",
+          "purpose": "Full actual native Y3 floor and original information/operator checker",
+          "ranges": "FULL",
+          "sha256": "66afc296879b355c895d3783fd95c08b87dd98f3ac3c14556343cfe1f9422d3f"
+        },
+        {
+          "bytes": 8043,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/execution-guard.ts",
+          "purpose": "Full actual native Y3 floor and original information/operator checker",
+          "ranges": "FULL",
+          "sha256": "bcc475a2d4cbed33780d2b4f073c61fc4e507ac0f14ef6d48caeb10bf0cd9919"
+        },
+        {
+          "bytes": 4136,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/strategic-response/contracts.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              1,
+              43
+            ]
+          ],
+          "sha256": "0aa0752e175f191da0b660c8e8e1c4134c090cc89e250df5d094e03f347387d7"
+        },
+        {
+          "bytes": 7712,
+          "path": "source-materials/repository/AGENTS.md",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "bd0c248a21f2cb25b6634fb77827879877588048aff5fb444a58833e805a86da"
+        },
+        {
+          "bytes": 4229,
+          "path": "source-materials/repository/package.json",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "e8add0c30c1d3f211a011d672a4634b847a8f574b8ebf3928dd4acdb0e20c4b6"
+        },
+        {
+          "bytes": 5276,
+          "path": "source-materials/repository/finnor-os/package.json",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "5109ef3fcddcea39a92153f756ee12532a5f66d144ba04fd8fc8260b66b90f1e"
+        },
+        {
+          "bytes": 1675,
+          "path": "source-materials/repository/playwright.config.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "854efb9b5e09cbc379ef18f399f4c1557b0dcbf48e1dde37e28648192075b013"
+        },
+        {
+          "bytes": 6379,
+          "path": "source-materials/repository/scripts/centropy/start-certification-stack.mjs",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "985db4efcf04b6a9519b0743ea6da58a2c724f398a66aa56ca3465c77b98df22"
+        },
+        {
+          "bytes": 1357,
+          "path": "source-materials/repository/scripts/centropy/run-local-e2e.mjs",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "a1d38ffcb7273fda748421cab056eafc51df01578511865d6d6b85935b46256f"
+        },
+        {
+          "bytes": 2857,
+          "path": "source-materials/repository/e2e/centropy-owner-login.spec.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "cb4f13418dc5a46dc4da459f576919c67da606e8ab82ced4923b259177e5abd3"
+        },
+        {
+          "bytes": 10155,
+          "path": "source-materials/repository/e2e/centropy-controlled-recovery.spec.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "d53a79c178c6995911cc80921e18e75fd63af43f71fb4a347a47e3d8b0c64982"
+        },
+        {
+          "bytes": 5204,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/reference.py",
+          "purpose": "Full actual native Y3 floor and original information/operator checker",
+          "ranges": "FULL",
+          "sha256": "7c34efac5f7910b21379a78c78c959a0c96476bc9f1d1e23a51ecfabc568b279"
+        },
+        {
+          "bytes": 8950,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/contracts.ts",
+          "purpose": "Full actual native Y3 floor and original information/operator checker",
+          "ranges": "FULL",
+          "sha256": "36166ca7032bab0e4a71121cb7ddbb6194ad98c78910b8077a0dc61a585e3b72"
+        },
+        {
+          "bytes": 8163,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/product-contracts.ts",
+          "purpose": "Full actual native Y3 floor and original information/operator checker",
+          "ranges": "FULL",
+          "sha256": "7318049069cf40726bc3dbd835c782572faca9c0ff06c9283c6533e1218e91ac"
+        },
+        {
+          "bytes": 1799,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/interaction-synthesis/product-runtime.ts",
+          "purpose": "Full actual native Y3 floor and original information/operator checker",
+          "ranges": "FULL",
+          "sha256": "65006eef28981541ca9654e952d7aa74564811e9471ade59cc6637d3630ffacf"
+        }
+      ],
+      "peerHandoffs": "NONE_OBSERVED",
+      "receiverReceipt": "NONE_OBSERVED",
+      "requiredEarlierFullSeeds": [
+        "Z0"
+      ],
+      "requiresOtherZEngine": false
+    },
+    "Z3": {
+      "delivery": "NOT_DELIVERED",
+      "orderedMandatoryReads": [
+        {
+          "bytes": 4516,
+          "path": "source-materials/product-lock.json",
+          "purpose": "Verify every member and original source identity",
+          "ranges": "FULL",
+          "sha256": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf"
+        },
+        {
+          "bytes": 11580,
+          "path": "source-materials/locked/scope-z/research/scope-selection-decision.md",
+          "purpose": "Rejected hypotheses and novelty baseline",
+          "ranges": "FULL",
+          "sha256": "6a8cdfea092bf6b189833c0e66b3168e32ea45bbb6d9090a25209295b713e29f"
+        },
+        {
+          "bytes": 76868,
+          "path": "source-materials/locked/scope-z/research/baseline-owner-report.md",
+          "purpose": "Actual native owners and source/runtime distinction",
+          "ranges": "FULL",
+          "sha256": "121486a4b5197ea4ed10c2032aa87208f2b77f027656a3487cf65fc7d0dc1653"
+        },
+        {
+          "bytes": 7376,
+          "path": "source-materials/locked/scope-z/research/qualification-design.md",
+          "purpose": "Protected/equipped/financial separation",
+          "ranges": "FULL",
+          "sha256": "97a27ee4cbd5766852747f530d1f184c0206e82db6db4a35882e04cacca926dc"
+        },
+        {
+          "bytes": 4339,
+          "path": "source-materials/locked/scope-z/research/supplied-source-reading-audit.md",
+          "purpose": "Supplied full-text coverage",
+          "ranges": "FULL",
+          "sha256": "dc675dd4162b7eb0607605edbf4233649436853c47192b427aded2a1c384454f"
+        },
+        {
+          "bytes": 2472,
+          "path": "source-materials/locked/scope-z/sources/source-index.json",
+          "purpose": "Exact seven supplied text identities",
+          "ranges": "FULL",
+          "sha256": "e58d791d1fade8d82ed6b711ca3b2b9f7a79ebc7cad051f4859b7fac332cb11b"
+        },
+        {
+          "bytes": 270924,
+          "path": "source-materials/locked/scope-z/sources/00-exact-user-request.txt",
+          "purpose": "Full containing historical supplied request; quoted instructions sandboxed",
+          "ranges": "FULL",
+          "sha256": "83930d088bd096495206a5e463488af824118f52a3e5f27c5c057ddf33633c3d"
+        },
+        {
+          "bytes": 19015,
+          "path": "source-materials/locked/scope-z/sources/01-x-prd-opening.exact-fragment.txt",
+          "purpose": "Original supplied X opening",
+          "ranges": "FULL",
+          "sha256": "957039b59e830160806e671679ba2f23f4964f34816a871fcaf940a7dae5147b"
+        },
+        {
+          "bytes": 69625,
+          "path": "source-materials/locked/scope-z/sources/02-x-prd-remainder.exact-fragment.txt",
+          "purpose": "Original supplied X remainder",
+          "ranges": "FULL",
+          "sha256": "dfd3debf87382e948ab6193918bd5875e997f85a09b453d07f43084eca27869f"
+        },
+        {
+          "bytes": 88633,
+          "path": "source-materials/locked/scope-z/sources/06-x-prd.reconstructed.md",
+          "purpose": "Complete explicitly reconstructed X requirements",
+          "ranges": "FULL",
+          "sha256": "678abc5212ad2fce46358f254b9c684916e0f649de30eb98b6d0bef4774a27a3"
+        },
+        {
+          "bytes": 87277,
+          "path": "source-materials/locked/scope-z/sources/03-y-prd.exact-fragment.txt",
+          "purpose": "Complete supplied Y requirements",
+          "ranges": "FULL",
+          "sha256": "5d20f7e89931df3793c49bebac16a571d7ceb09c23b2899134ee44ca4c03ba66"
+        },
+        {
+          "bytes": 49902,
+          "path": "source-materials/locked/scope-z/sources/05-y2-implementation-blueprint.exact-fragment.txt",
+          "purpose": "Complete Y2 model/information/currentness/cost floor",
+          "ranges": "FULL",
+          "sha256": "c54cf87199b39a7abc925e3292b4923638905c30ce6ecd37f9e41bd7c7d306c8"
+        },
+        {
+          "bytes": 38309,
+          "path": "source-materials/locked/scope-z/sources/04-y3-implementation-blueprint.exact-fragment.txt",
+          "purpose": "Complete Y3 sequential/common-global-tremble/consent floor",
+          "ranges": "FULL",
+          "sha256": "f1dc4d8f82f3ac7c49d2e15a5536ab3848525aa9bb49f2693b6b968058e7526f"
+        },
+        {
+          "bytes": 5066,
+          "path": "source-materials/repository/finnor-os/apps/api/app/api/queries/route.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              22,
+              62
+            ]
+          ],
+          "sha256": "33084eb58a28ee7385843665672f3c727ddaaf4d1719fd804c2d63e96c3c13d6"
+        },
+        {
+          "bytes": 29938,
+          "path": "source-materials/repository/finnor-os/packages/shared-types/src/operational-queries.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              30,
+              39
+            ]
+          ],
+          "sha256": "ebd417c6b3eceaf1be87a444f9e0aff8cca2291d1b63f34793f709291a243662"
+        },
+        {
+          "bytes": 14943,
+          "path": "source-materials/repository/finnor-os/packages/orchestration/src/plugin-registry.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              149,
+              265
+            ]
+          ],
+          "sha256": "d41f4be6b7c38c1fee8556c6a8e1513b4f2350f31f87d582a9d44ca7c5c2ccaf"
+        },
+        {
+          "bytes": 26280,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/api.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              107,
+              139
+            ]
+          ],
+          "sha256": "daa82aa0f3e822afed38b0a729ad77c807807dd2706906b56f476485e1c10837"
+        },
+        {
+          "bytes": 3334,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/envelope.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              23,
+              41
+            ]
+          ],
+          "sha256": "500b044ba6a06ee9ff2902178993f6ba40fb2a2d33e370e3eb2ecd3faf166bb9"
+        },
+        {
+          "bytes": 74023,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-control.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              1,
+              115
+            ]
+          ],
+          "sha256": "aa33dcf657cdcb4ef85a059b51b52b646a93a11aabd9801e2436511b22d7ce43"
+        },
+        {
+          "bytes": 37873,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-obligations.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              1,
+              110
+            ]
+          ],
+          "sha256": "90c80ae14f948b4474a006a440ae562a7c594f79a549391c213c25af3e8418dc"
+        },
+        {
+          "bytes": 4026,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/policy-learning/controller.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              1,
+              52
+            ]
+          ],
+          "sha256": "253a86736adb215503475cb18945b531eaf4b4abb1d8df9ea6ad927ed755c508"
+        },
+        {
+          "bytes": 7712,
+          "path": "source-materials/repository/AGENTS.md",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "bd0c248a21f2cb25b6634fb77827879877588048aff5fb444a58833e805a86da"
+        },
+        {
+          "bytes": 4229,
+          "path": "source-materials/repository/package.json",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "e8add0c30c1d3f211a011d672a4634b847a8f574b8ebf3928dd4acdb0e20c4b6"
+        },
+        {
+          "bytes": 5276,
+          "path": "source-materials/repository/finnor-os/package.json",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "5109ef3fcddcea39a92153f756ee12532a5f66d144ba04fd8fc8260b66b90f1e"
+        },
+        {
+          "bytes": 1675,
+          "path": "source-materials/repository/playwright.config.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "854efb9b5e09cbc379ef18f399f4c1557b0dcbf48e1dde37e28648192075b013"
+        },
+        {
+          "bytes": 6379,
+          "path": "source-materials/repository/scripts/centropy/start-certification-stack.mjs",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "985db4efcf04b6a9519b0743ea6da58a2c724f398a66aa56ca3465c77b98df22"
+        },
+        {
+          "bytes": 1357,
+          "path": "source-materials/repository/scripts/centropy/run-local-e2e.mjs",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "a1d38ffcb7273fda748421cab056eafc51df01578511865d6d6b85935b46256f"
+        },
+        {
+          "bytes": 2857,
+          "path": "source-materials/repository/e2e/centropy-owner-login.spec.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "cb4f13418dc5a46dc4da459f576919c67da606e8ab82ced4923b259177e5abd3"
+        },
+        {
+          "bytes": 10155,
+          "path": "source-materials/repository/e2e/centropy-controlled-recovery.spec.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "d53a79c178c6995911cc80921e18e75fd63af43f71fb4a347a47e3d8b0c64982"
+        }
+      ],
+      "peerHandoffs": "NONE_OBSERVED",
+      "receiverReceipt": "NONE_OBSERVED",
+      "requiredEarlierFullSeeds": [
+        "Z0"
+      ],
+      "requiresOtherZEngine": false
+    },
+    "Z4": {
+      "delivery": "NOT_DELIVERED",
+      "orderedMandatoryReads": [
+        {
+          "bytes": 4516,
+          "path": "source-materials/product-lock.json",
+          "purpose": "Verify every member and original source identity",
+          "ranges": "FULL",
+          "sha256": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf"
+        },
+        {
+          "bytes": 11580,
+          "path": "source-materials/locked/scope-z/research/scope-selection-decision.md",
+          "purpose": "Rejected hypotheses and novelty baseline",
+          "ranges": "FULL",
+          "sha256": "6a8cdfea092bf6b189833c0e66b3168e32ea45bbb6d9090a25209295b713e29f"
+        },
+        {
+          "bytes": 76868,
+          "path": "source-materials/locked/scope-z/research/baseline-owner-report.md",
+          "purpose": "Actual native owners and source/runtime distinction",
+          "ranges": "FULL",
+          "sha256": "121486a4b5197ea4ed10c2032aa87208f2b77f027656a3487cf65fc7d0dc1653"
+        },
+        {
+          "bytes": 7376,
+          "path": "source-materials/locked/scope-z/research/qualification-design.md",
+          "purpose": "Protected/equipped/financial separation",
+          "ranges": "FULL",
+          "sha256": "97a27ee4cbd5766852747f530d1f184c0206e82db6db4a35882e04cacca926dc"
+        },
+        {
+          "bytes": 4339,
+          "path": "source-materials/locked/scope-z/research/supplied-source-reading-audit.md",
+          "purpose": "Supplied full-text coverage",
+          "ranges": "FULL",
+          "sha256": "dc675dd4162b7eb0607605edbf4233649436853c47192b427aded2a1c384454f"
+        },
+        {
+          "bytes": 2472,
+          "path": "source-materials/locked/scope-z/sources/source-index.json",
+          "purpose": "Exact seven supplied text identities",
+          "ranges": "FULL",
+          "sha256": "e58d791d1fade8d82ed6b711ca3b2b9f7a79ebc7cad051f4859b7fac332cb11b"
+        },
+        {
+          "bytes": 270924,
+          "path": "source-materials/locked/scope-z/sources/00-exact-user-request.txt",
+          "purpose": "Full containing historical supplied request; quoted instructions sandboxed",
+          "ranges": "FULL",
+          "sha256": "83930d088bd096495206a5e463488af824118f52a3e5f27c5c057ddf33633c3d"
+        },
+        {
+          "bytes": 19015,
+          "path": "source-materials/locked/scope-z/sources/01-x-prd-opening.exact-fragment.txt",
+          "purpose": "Original supplied X opening",
+          "ranges": "FULL",
+          "sha256": "957039b59e830160806e671679ba2f23f4964f34816a871fcaf940a7dae5147b"
+        },
+        {
+          "bytes": 69625,
+          "path": "source-materials/locked/scope-z/sources/02-x-prd-remainder.exact-fragment.txt",
+          "purpose": "Original supplied X remainder",
+          "ranges": "FULL",
+          "sha256": "dfd3debf87382e948ab6193918bd5875e997f85a09b453d07f43084eca27869f"
+        },
+        {
+          "bytes": 88633,
+          "path": "source-materials/locked/scope-z/sources/06-x-prd.reconstructed.md",
+          "purpose": "Complete explicitly reconstructed X requirements",
+          "ranges": "FULL",
+          "sha256": "678abc5212ad2fce46358f254b9c684916e0f649de30eb98b6d0bef4774a27a3"
+        },
+        {
+          "bytes": 87277,
+          "path": "source-materials/locked/scope-z/sources/03-y-prd.exact-fragment.txt",
+          "purpose": "Complete supplied Y requirements",
+          "ranges": "FULL",
+          "sha256": "5d20f7e89931df3793c49bebac16a571d7ceb09c23b2899134ee44ca4c03ba66"
+        },
+        {
+          "bytes": 49902,
+          "path": "source-materials/locked/scope-z/sources/05-y2-implementation-blueprint.exact-fragment.txt",
+          "purpose": "Complete Y2 model/information/currentness/cost floor",
+          "ranges": "FULL",
+          "sha256": "c54cf87199b39a7abc925e3292b4923638905c30ce6ecd37f9e41bd7c7d306c8"
+        },
+        {
+          "bytes": 38309,
+          "path": "source-materials/locked/scope-z/sources/04-y3-implementation-blueprint.exact-fragment.txt",
+          "purpose": "Complete Y3 sequential/common-global-tremble/consent floor",
+          "ranges": "FULL",
+          "sha256": "f1dc4d8f82f3ac7c49d2e15a5536ab3848525aa9bb49f2693b6b968058e7526f"
+        },
+        {
+          "bytes": 5066,
+          "path": "source-materials/repository/finnor-os/apps/api/app/api/queries/route.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              22,
+              62
+            ]
+          ],
+          "sha256": "33084eb58a28ee7385843665672f3c727ddaaf4d1719fd804c2d63e96c3c13d6"
+        },
+        {
+          "bytes": 29938,
+          "path": "source-materials/repository/finnor-os/packages/shared-types/src/operational-queries.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              30,
+              39
+            ]
+          ],
+          "sha256": "ebd417c6b3eceaf1be87a444f9e0aff8cca2291d1b63f34793f709291a243662"
+        },
+        {
+          "bytes": 14943,
+          "path": "source-materials/repository/finnor-os/packages/orchestration/src/plugin-registry.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              149,
+              265
+            ]
+          ],
+          "sha256": "d41f4be6b7c38c1fee8556c6a8e1513b4f2350f31f87d582a9d44ca7c5c2ccaf"
+        },
+        {
+          "bytes": 26280,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/api.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              107,
+              139
+            ]
+          ],
+          "sha256": "daa82aa0f3e822afed38b0a729ad77c807807dd2706906b56f476485e1c10837"
+        },
+        {
+          "bytes": 3334,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/envelope.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              23,
+              41
+            ]
+          ],
+          "sha256": "500b044ba6a06ee9ff2902178993f6ba40fb2a2d33e370e3eb2ecd3faf166bb9"
+        },
+        {
+          "bytes": 10817,
+          "path": "source-materials/repository/finnor-os/packages/governed-execution/src/request-verifier.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              1,
+              100
+            ]
+          ],
+          "sha256": "b098cc074a8afa4ceaa92244c66256d559515096252072f6b77ca5b365ae4ab7"
+        },
+        {
+          "bytes": 7934,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/confidential-computation/owner-consumer.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              1,
+              115
+            ]
+          ],
+          "sha256": "0cf549d158c5836081ba01fbded3dedc9147cdf686a7ec2a9dd679d8ada3d8ee"
+        },
+        {
+          "bytes": 1791,
+          "path": "source-materials/repository/finnor-os/packages/source-custody/index.cjs",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              1,
+              34
+            ]
+          ],
+          "sha256": "4284fa4774fc86352b1286ca5da0ac657bf9b5d0e73dc66aae331056353311b3"
+        },
+        {
+          "bytes": 7712,
+          "path": "source-materials/repository/AGENTS.md",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "bd0c248a21f2cb25b6634fb77827879877588048aff5fb444a58833e805a86da"
+        },
+        {
+          "bytes": 4229,
+          "path": "source-materials/repository/package.json",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "e8add0c30c1d3f211a011d672a4634b847a8f574b8ebf3928dd4acdb0e20c4b6"
+        },
+        {
+          "bytes": 5276,
+          "path": "source-materials/repository/finnor-os/package.json",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "5109ef3fcddcea39a92153f756ee12532a5f66d144ba04fd8fc8260b66b90f1e"
+        },
+        {
+          "bytes": 1675,
+          "path": "source-materials/repository/playwright.config.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "854efb9b5e09cbc379ef18f399f4c1557b0dcbf48e1dde37e28648192075b013"
+        },
+        {
+          "bytes": 6379,
+          "path": "source-materials/repository/scripts/centropy/start-certification-stack.mjs",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "985db4efcf04b6a9519b0743ea6da58a2c724f398a66aa56ca3465c77b98df22"
+        },
+        {
+          "bytes": 1357,
+          "path": "source-materials/repository/scripts/centropy/run-local-e2e.mjs",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "a1d38ffcb7273fda748421cab056eafc51df01578511865d6d6b85935b46256f"
+        },
+        {
+          "bytes": 2857,
+          "path": "source-materials/repository/e2e/centropy-owner-login.spec.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "cb4f13418dc5a46dc4da459f576919c67da606e8ab82ced4923b259177e5abd3"
+        },
+        {
+          "bytes": 10155,
+          "path": "source-materials/repository/e2e/centropy-controlled-recovery.spec.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "d53a79c178c6995911cc80921e18e75fd63af43f71fb4a347a47e3d8b0c64982"
+        }
+      ],
+      "peerHandoffs": "NONE_OBSERVED",
+      "receiverReceipt": "NONE_OBSERVED",
+      "requiredEarlierFullSeeds": [
+        "Z0"
+      ],
+      "requiresOtherZEngine": false
+    },
+    "Z5": {
+      "delivery": "NOT_DELIVERED",
+      "orderedMandatoryReads": [
+        {
+          "bytes": 4516,
+          "path": "source-materials/product-lock.json",
+          "purpose": "Verify every member and original source identity",
+          "ranges": "FULL",
+          "sha256": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf"
+        },
+        {
+          "bytes": 11580,
+          "path": "source-materials/locked/scope-z/research/scope-selection-decision.md",
+          "purpose": "Rejected hypotheses and novelty baseline",
+          "ranges": "FULL",
+          "sha256": "6a8cdfea092bf6b189833c0e66b3168e32ea45bbb6d9090a25209295b713e29f"
+        },
+        {
+          "bytes": 76868,
+          "path": "source-materials/locked/scope-z/research/baseline-owner-report.md",
+          "purpose": "Actual native owners and source/runtime distinction",
+          "ranges": "FULL",
+          "sha256": "121486a4b5197ea4ed10c2032aa87208f2b77f027656a3487cf65fc7d0dc1653"
+        },
+        {
+          "bytes": 7376,
+          "path": "source-materials/locked/scope-z/research/qualification-design.md",
+          "purpose": "Protected/equipped/financial separation",
+          "ranges": "FULL",
+          "sha256": "97a27ee4cbd5766852747f530d1f184c0206e82db6db4a35882e04cacca926dc"
+        },
+        {
+          "bytes": 4339,
+          "path": "source-materials/locked/scope-z/research/supplied-source-reading-audit.md",
+          "purpose": "Supplied full-text coverage",
+          "ranges": "FULL",
+          "sha256": "dc675dd4162b7eb0607605edbf4233649436853c47192b427aded2a1c384454f"
+        },
+        {
+          "bytes": 2472,
+          "path": "source-materials/locked/scope-z/sources/source-index.json",
+          "purpose": "Exact seven supplied text identities",
+          "ranges": "FULL",
+          "sha256": "e58d791d1fade8d82ed6b711ca3b2b9f7a79ebc7cad051f4859b7fac332cb11b"
+        },
+        {
+          "bytes": 270924,
+          "path": "source-materials/locked/scope-z/sources/00-exact-user-request.txt",
+          "purpose": "Full containing historical supplied request; quoted instructions sandboxed",
+          "ranges": "FULL",
+          "sha256": "83930d088bd096495206a5e463488af824118f52a3e5f27c5c057ddf33633c3d"
+        },
+        {
+          "bytes": 19015,
+          "path": "source-materials/locked/scope-z/sources/01-x-prd-opening.exact-fragment.txt",
+          "purpose": "Original supplied X opening",
+          "ranges": "FULL",
+          "sha256": "957039b59e830160806e671679ba2f23f4964f34816a871fcaf940a7dae5147b"
+        },
+        {
+          "bytes": 69625,
+          "path": "source-materials/locked/scope-z/sources/02-x-prd-remainder.exact-fragment.txt",
+          "purpose": "Original supplied X remainder",
+          "ranges": "FULL",
+          "sha256": "dfd3debf87382e948ab6193918bd5875e997f85a09b453d07f43084eca27869f"
+        },
+        {
+          "bytes": 88633,
+          "path": "source-materials/locked/scope-z/sources/06-x-prd.reconstructed.md",
+          "purpose": "Complete explicitly reconstructed X requirements",
+          "ranges": "FULL",
+          "sha256": "678abc5212ad2fce46358f254b9c684916e0f649de30eb98b6d0bef4774a27a3"
+        },
+        {
+          "bytes": 87277,
+          "path": "source-materials/locked/scope-z/sources/03-y-prd.exact-fragment.txt",
+          "purpose": "Complete supplied Y requirements",
+          "ranges": "FULL",
+          "sha256": "5d20f7e89931df3793c49bebac16a571d7ceb09c23b2899134ee44ca4c03ba66"
+        },
+        {
+          "bytes": 49902,
+          "path": "source-materials/locked/scope-z/sources/05-y2-implementation-blueprint.exact-fragment.txt",
+          "purpose": "Complete Y2 model/information/currentness/cost floor",
+          "ranges": "FULL",
+          "sha256": "c54cf87199b39a7abc925e3292b4923638905c30ce6ecd37f9e41bd7c7d306c8"
+        },
+        {
+          "bytes": 38309,
+          "path": "source-materials/locked/scope-z/sources/04-y3-implementation-blueprint.exact-fragment.txt",
+          "purpose": "Complete Y3 sequential/common-global-tremble/consent floor",
+          "ranges": "FULL",
+          "sha256": "f1dc4d8f82f3ac7c49d2e15a5536ab3848525aa9bb49f2693b6b968058e7526f"
+        },
+        {
+          "bytes": 5066,
+          "path": "source-materials/repository/finnor-os/apps/api/app/api/queries/route.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              22,
+              62
+            ]
+          ],
+          "sha256": "33084eb58a28ee7385843665672f3c727ddaaf4d1719fd804c2d63e96c3c13d6"
+        },
+        {
+          "bytes": 29938,
+          "path": "source-materials/repository/finnor-os/packages/shared-types/src/operational-queries.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              30,
+              39
+            ]
+          ],
+          "sha256": "ebd417c6b3eceaf1be87a444f9e0aff8cca2291d1b63f34793f709291a243662"
+        },
+        {
+          "bytes": 14943,
+          "path": "source-materials/repository/finnor-os/packages/orchestration/src/plugin-registry.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              149,
+              265
+            ]
+          ],
+          "sha256": "d41f4be6b7c38c1fee8556c6a8e1513b4f2350f31f87d582a9d44ca7c5c2ccaf"
+        },
+        {
+          "bytes": 26280,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/api.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              107,
+              139
+            ]
+          ],
+          "sha256": "daa82aa0f3e822afed38b0a729ad77c807807dd2706906b56f476485e1c10837"
+        },
+        {
+          "bytes": 3334,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/application-semantics/envelope.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              23,
+              41
+            ]
+          ],
+          "sha256": "500b044ba6a06ee9ff2902178993f6ba40fb2a2d33e370e3eb2ecd3faf166bb9"
+        },
+        {
+          "bytes": 17655,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/interface-synthesis/api.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              1,
+              115
+            ]
+          ],
+          "sha256": "e90582bb03129b35de7528ea080a23b991c4d20f64435e95131cd6d7143589fc"
+        },
+        {
+          "bytes": 37873,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/enterprise-obligations.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              1,
+              110
+            ]
+          ],
+          "sha256": "90c80ae14f948b4474a006a440ae562a7c594f79a549391c213c25af3e8418dc"
+        },
+        {
+          "bytes": 92299,
+          "path": "source-materials/repository/finnor-os/packages/private-equity/src/allocation-store.ts",
+          "purpose": "Actual source for this phase's owner/seam; excerpt also inline",
+          "ranges": [
+            [
+              1,
+              105
+            ]
+          ],
+          "sha256": "fce8b9f05af8e78dfd81939a3e7cdd572b72401f7b0e49ddaf56cf4244e760fe"
+        },
+        {
+          "bytes": 7712,
+          "path": "source-materials/repository/AGENTS.md",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "bd0c248a21f2cb25b6634fb77827879877588048aff5fb444a58833e805a86da"
+        },
+        {
+          "bytes": 4229,
+          "path": "source-materials/repository/package.json",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "e8add0c30c1d3f211a011d672a4634b847a8f574b8ebf3928dd4acdb0e20c4b6"
+        },
+        {
+          "bytes": 5276,
+          "path": "source-materials/repository/finnor-os/package.json",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "5109ef3fcddcea39a92153f756ee12532a5f66d144ba04fd8fc8260b66b90f1e"
+        },
+        {
+          "bytes": 1675,
+          "path": "source-materials/repository/playwright.config.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "854efb9b5e09cbc379ef18f399f4c1557b0dcbf48e1dde37e28648192075b013"
+        },
+        {
+          "bytes": 6379,
+          "path": "source-materials/repository/scripts/centropy/start-certification-stack.mjs",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "985db4efcf04b6a9519b0743ea6da58a2c724f398a66aa56ca3465c77b98df22"
+        },
+        {
+          "bytes": 1357,
+          "path": "source-materials/repository/scripts/centropy/run-local-e2e.mjs",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "a1d38ffcb7273fda748421cab056eafc51df01578511865d6d6b85935b46256f"
+        },
+        {
+          "bytes": 2857,
+          "path": "source-materials/repository/e2e/centropy-owner-login.spec.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "cb4f13418dc5a46dc4da459f576919c67da606e8ab82ced4923b259177e5abd3"
+        },
+        {
+          "bytes": 10155,
+          "path": "source-materials/repository/e2e/centropy-controlled-recovery.spec.ts",
+          "purpose": "Repository instructions, actual commands and verification limits",
+          "ranges": "FULL",
+          "sha256": "d53a79c178c6995911cc80921e18e75fd63af43f71fb4a347a47e3d8b0c64982"
+        }
+      ],
+      "peerHandoffs": "NONE_OBSERVED",
+      "receiverReceipt": "NONE_OBSERVED",
+      "requiredEarlierFullSeeds": [
+        "Z0"
+      ],
+      "requiresOtherZEngine": false
+    }
+  },
+  "schema": "finnor.project-z.mandatory-companion-reads.v1"
+}

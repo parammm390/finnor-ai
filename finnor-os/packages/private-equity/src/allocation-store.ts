@@ -11,6 +11,7 @@ import { canExerciseAuthorityTx, evaluateAuthorityTx, lockCurrentAuthorityTx, va
 import {planInstitutionDemandCharge,type InstitutionResourceDemand,type InstitutionChargeRequest} from './institution-program/resource-demand';
 import {validateBeliefViewPin} from './enterprise-beliefs';
 import {lockInstitutionSourceAuthority} from './institution-program/source-locks';
+import {originalPortfolioPopulation,Z1_PORTFOLIO} from '../../epistemic-runtime/src/project-z/z1-shared-work/portfolio-population';
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 const denied=()=>new AllocationContractError('PERMITTED_CONTEXT_UNAVAILABLE','Permitted S5 context is unavailable');
@@ -88,8 +89,10 @@ export interface AllocationSnapshot {resources:AllocationResource[];outstanding:
 async function snapshot(c:pg.PoolClient,tenantId:string):Promise<AllocationSnapshot>{
   if((await c.query('SELECT finnor_os.y4_allocation_context_complete() complete')).rows[0]?.complete!==true)
     throw new AllocationContractError('PERMITTED_CONTEXT_UNAVAILABLE','Current complete S5 context is unavailable');
+  const population=(await c.query('SELECT * FROM finnor_os.z1_s5_portfolio_population()')).rows[0];
+  if(!population)throw new AllocationContractError('PERMITTED_CONTEXT_UNAVAILABLE','Canonical S5 population is unavailable');
   const resources=(await c.query('SELECT r.body FROM finnor_os.s5_resources r JOIN finnor_os.s5_resource_heads h USING(tenant_id,resource_id,revision) WHERE r.tenant_id=$1 ORDER BY r.resource_id LIMIT 17',[tenantId])).rows.map(r=>r.body as AllocationResource);
-  const live=(await c.query('SELECT s.*,o.body,p.certificate FROM finnor_os.s5_reservations s JOIN finnor_os.s5_reservation_origins o USING(tenant_id,reservation_id) JOIN finnor_os.s5_proposals p ON p.tenant_id=s.tenant_id AND p.content_digest=s.allocation_digest WHERE s.tenant_id=$1 AND s.status<>\'RELEASED\' AND p.demand IS NULL ORDER BY s.reservation_id LIMIT 257',[tenantId])).rows;
+  const live=(await c.query('SELECT s.*,o.body,p.certificate FROM finnor_os.s5_reservations s JOIN finnor_os.s5_reservation_origins o USING(tenant_id,reservation_id) JOIN finnor_os.s5_proposals p ON p.tenant_id=s.tenant_id AND p.content_digest=s.allocation_digest WHERE s.tenant_id=$1 AND s.status<>\'RELEASED\' AND p.demand IS NULL AND p.problem->>\'schema\' IS DISTINCT FROM \'finnor.s5.z1-original-work-problem.v1\' ORDER BY s.reservation_id LIMIT 257',[tenantId])).rows;
   if(resources.length>16||live.length>256)throw new AllocationContractError('LIMIT_EXCEEDED','S5 registry/live commitment bound exceeded');
   const effectsByReservation=new Map<string,ExperimentRef[]>();
   if(live.length){
@@ -106,7 +109,13 @@ async function snapshot(c:pg.PoolClient,tenantId:string):Promise<AllocationSnaps
   for(const row of typed)outstanding.push({reservationRef:row.reservation_ref,
     demandRef:row.demand_ref,envelopes:row.envelopes,status:row.status,
     policyRefs:[],effectRefs:[]});
-  if(outstanding.length>256)throw new AllocationContractError('LIMIT_EXCEEDED','S5 shared occupation bound exceeded');
+  const shared=(await c.query('SELECT * FROM finnor_os.z1_s5_outstanding()')).rows;
+  if(shared.length>Z1_PORTFOLIO.originals)throw new AllocationContractError('LIMIT_EXCEEDED','S5 original occupation bound exceeded');
+  for(const row of shared)outstanding.push({reservationRef:row.reservation_ref,
+    certificateRef:row.certificate_ref,envelopes:row.envelopes,status:row.status,policyRefs:[],effectRefs:[]});
+  const actual=originalPortfolioPopulation(outstanding);
+  if(!actual.valid||actual.originals!==population.original_count||actual.other!==population.other_count)
+    throw new AllocationContractError('PERMITTED_CONTEXT_UNAVAILABLE','Complete canonical S5 population differs from opaque occupation');
   const value={resources,outstanding};bounded(value);return {...value,snapshotDigest:epistemicHash(value)};
 }
 export async function readAllocationSnapshot(ctx:PeMutationContext):Promise<AllocationSnapshot>{return locked(ctx,async c=>{
@@ -127,7 +136,7 @@ export async function reserveFixedPrimaryBudget(ctx:PeMutationContext,input:{
    if(!origin)throw denied();return {reservationRef:{owner:'S5',id:origin.ref.id,revision:origin.ref.version,contentDigest:origin.ref.contentDigest},certificateRef:{owner:'S5',id:origin.certificateRef.id,revision:origin.certificateRef.version,contentDigest:origin.certificateRef.contentDigest}};}
   if(!/^[1-9]\d{0,95}$/.test(input.maximumMicroUsd)||!/^[1-9]\d{0,95}$/.test(input.maximumCpuMicros)||input.resourceRefs.length!==2)throw new LedgerFault(422,'PRIMARY_FIXED_BUDGET_INVALID');
   const current=await snapshot(c,ctx.auth.tenantId),resources=input.resourceRefs.map(ref=>current.resources.find(r=>r.ref.id===ref.id&&r.ref.contentDigest===ref.contentDigest&&r.ref.version===ref.revision));
-  if(resources.some(r=>!r)||current.outstanding.length>=256)throw new LedgerFault(422,'PRIMARY_ORIGINAL_RESOURCES_UNAVAILABLE');
+  if(resources.some(r=>!r)||originalPortfolioPopulation(current.outstanding).other>=Z1_PORTFOLIO.other)throw new LedgerFault(422,'PRIMARY_ORIGINAL_RESOURCES_UNAVAILABLE');
   const actual=resources as AllocationResource[],cash=actual.find(r=>r.unit==='microUSD'&&r.resourceClass==='CASH'),cpu=actual.find(r=>r.unit==='cpu-microseconds'&&r.resourceClass==='COMPUTE');
   if(!cash||!cpu||actual.some(r=>r.revoked||!r.permittedRoots.some(root=>root.entityType===input.root.entityType&&root.entityId===input.root.entityId)||!['STOCK','CUMULATIVE_EXPENDITURE'].includes(r.kind)||Date.now()>=Date.parse(r.validUntil))||
    current.resources.some(r=>r.covenants.some(cv=>cv.terms.some(t=>actual.some(a=>a.resourceId===t.resourceId)))))throw new LedgerFault(422,'PRIMARY_FIXED_RESOURCE_DOMAIN_UNSUPPORTED');
@@ -353,8 +362,15 @@ export async function reserveInstitutionDemand(ctx:PeMutationContext,demand:Inst
  await authorize(ctx,client);
  return reserve(client);
 }
-export async function chargeInstitutionDemand(ctx:PeMutationContext,ref:ExperimentRef,request:InstitutionChargeRequest){
- return locked(ctx,async c=>{
+/** Same original S5 owner, optionally joined to a physical publisher's transaction. */
+export const INSTITUTION_TRANSACTION_BINDING='finnor.s5.existing-institution-transaction.v1' as const;
+async function institutionTransaction<T>(ctx:PeMutationContext,client:pg.PoolClient|undefined,fn:(c:pg.PoolClient)=>Promise<T>):Promise<T>{
+ if(!client)return locked(ctx,fn);
+ await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`s5-portfolio:${ctx.auth.tenantId}`]);
+ await authorize(ctx,client);return fn(client);
+}
+export async function chargeInstitutionDemand(ctx:PeMutationContext,ref:ExperimentRef,request:InstitutionChargeRequest,client?:pg.PoolClient){
+ return institutionTransaction(ctx,client,async c=>{
   const r=await institutionState(ctx,c,ref);
   if(!(await c.query<{allowed:boolean}>(
     'SELECT finnor_os.x1_s5_charge_authorized($1::jsonb,$2) AS allowed',
@@ -386,8 +402,8 @@ export async function chargeInstitutionDemand(ctx:PeMutationContext,ref:Experime
   return {charge:body,semanticReplay:false};
  });
 }
-export async function validateInstitutionDemand(ctx:PeMutationContext,ref:ExperimentRef){
- return locked(ctx,async c=>{
+export async function validateInstitutionDemand(ctx:PeMutationContext,ref:ExperimentRef,client?:pg.PoolClient){
+ return institutionTransaction(ctx,client,async c=>{
   const reservation=await institutionState(ctx,c,ref);
   try{
    const {currentness}=await currentInstitution(ctx,c,reservation);
@@ -507,7 +523,7 @@ export async function commitAllocationReservation(ctx:PeMutationContext,problem:
     const issued=await finiteStored(ctx,c,certificate.ref);if(!sameAllocationRef(issued.problem,problem)||!sameAllocationRef(issued.certificate,certificate))throw new AllocationContractError('INVALID_CANDIDATE','Candidate differs from persisted issuer');
     const current=await snapshot(c,ctx.auth.tenantId);
     if(current.snapshotDigest!==problem.snapshotDigest||Date.now()>=Date.parse(certificate.validUntil))throw new AllocationContractError('STALE_INPUT','Solved allocation snapshot expired or changed before commitment');
-    if(current.outstanding.length>=256)throw new AllocationContractError('LIMIT_EXCEEDED','Live commitment registry is full; reconciliation and release remain permitted');
+    if(originalPortfolioPopulation(current.outstanding).other>=Z1_PORTFOLIO.other)throw new AllocationContractError('LIMIT_EXCEEDED','Generic commitment registry is full; reconciliation and release remain permitted');
     const check=await recheck(current.resources,current.outstanding);if(!check.feasible||!sameAllocationRef(check,certificate.check))throw new AllocationContractError('INVALID_CANDIDATE','Independent current-state canonical check rejects allocation');
     await (await import('./confidential-computation/owner-consumer')).assertConfidentialAllocationCurrent(ctx,problem,c);
     await authorizeResources(ctx,c,current.resources);

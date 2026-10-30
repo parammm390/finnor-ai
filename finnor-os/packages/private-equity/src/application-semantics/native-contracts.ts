@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { InstitutionApplicationSelectorSchema } from "../../../orchestration/src/project-z/z0-convergence/semantics";
 import { EvidenceRootSchema } from "@finnor/shared-types";
 import {
   ApplicationStateSchema, ScopedApplicationIdentitySchema, X2RefSchema,
@@ -17,6 +18,7 @@ export const ApplicationAcquireSchema = z.object({
   targets: z.array(ScopedApplicationIdentitySchema).min(2).max(16),
   resourceDemand: z.array(ApplicationDemandSchema).min(1).max(2),
   deadlineAt: instant, idempotencyKey: key,
+  institutionalOrigin: InstitutionApplicationSelectorSchema.optional(),
 }).strict();
 export const ApplicationExecuteSchema = z.object({
   root: EvidenceRootSchema, workId: uuid, sessionId: uuid,

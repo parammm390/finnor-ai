@@ -3,8 +3,23 @@ import { dirname, join, relative, resolve } from "node:path"
 import { createHash } from "node:crypto"
 import { execFileSync } from "node:child_process"
 import { createRequire } from "node:module"
+import { isDeepStrictEqual } from "node:util"
+import { readCanonicalPlanner } from "./canonical-planner.mjs"
+import { readIsolatedCoverageSourceMetadata } from "../../finnor-os/scripts/project-z/z2/coverage-source-metadata.mjs"
 
 const root = resolve(import.meta.dirname, "../..")
+const isolatedSourceMetadata = readIsolatedCoverageSourceMetadata(root)
+// Z1 archives carry declared source identity without hidden parent Git objects.
+// Unlike the Z2 offline baseline index, these archives retain the proof files:
+// they are read below, not replaced with claimed executed observations.
+const declaredZ1Source = !isolatedSourceMetadata && !existsSync(join(root, ".git")) ? (() => {
+  const input = JSON.parse(readFileSync(join(root, "finnor-os/packages/private-equity/src/project-z/z1-shared-work/reconstruction-input.json"), "utf8"))
+  if (input.schema !== "finnor.z1.reconstruction-input.v1" ||
+    !/^[a-f0-9]{40}$/.test(input.sourceCommit) || !/^[a-f0-9]{40}$/.test(input.sourceTree) ||
+    !/^[a-f0-9]{64}$/.test(input.sourceArchiveSha256) || !/^[a-f0-9]{64}$/.test(input.integrationPatchSha256))
+    throw new Error("DECLARED_RECONSTRUCTION_SOURCE_IDENTITY_REQUIRED")
+  return input.sourceCommit
+})() : null
 const ts = createRequire(join(root, "package.json"))("typescript")
 const read = (path) => readFileSync(join(root, path), "utf8")
 const digest = (value) => createHash("sha256").update(value).digest("hex")
@@ -13,6 +28,27 @@ const manifestPath = "src/lib/centropy/capability-manifest.generated.json"
 const formPath = "src/lib/centropy/human-forms.generated.json"
 const manifest = JSON.parse(read(manifestPath))
 const forms = JSON.parse(read(formPath)).forms
+// The generated catalogue is not its own denominator. Reconstruct the actual
+// registry before the frontend audit, including unavailable and native entries.
+const canonicalPlanner = readCanonicalPlanner()
+const plannerRows = manifest.capabilities.filter(row => row.transport === "planner")
+const canonicalIdentities = canonicalPlanner.entries.map(entry => `planner.${entry.capability}`).sort()
+if (!isDeepStrictEqual(plannerRows.map(row => row.capabilityId).sort(), canonicalIdentities))
+  throw new Error("Canonical planner identities differ: missing, extra or duplicate capability")
+for (const entry of canonicalPlanner.entries) {
+  const row = plannerRows.find(candidate => candidate.capabilityId === `planner.${entry.capability}`)
+  const humanOnly = canonicalPlanner.humanOnly.includes(entry.capability)
+  const fields = {
+    planning: entry, requiredContext: entry.requiredReferences,
+    kind: entry.kind === "query" ? "read" : entry.kind === "action" ? "mutation" : entry.kind,
+    classification: entry.kind === "query" ? "READ" : entry.kind === "action" ? "MUTATION" : "CONTROL",
+    modelCallable: entry.modelProposable, agentProduct: entry.modelProposable && entry.available,
+    humanOnly, authorityClass: humanOnly ? "human_attestation" : entry.authorityRequirement,
+    effectClass: entry.effectClass, method: null, routePattern: null, routeDepth: 0,
+  }
+  for (const [field, value] of Object.entries(fields))
+    if (!isDeepStrictEqual(row[field], value)) throw new Error(`Canonical planner metadata differs: ${entry.capability}.${field}`)
+}
 const source = new Map()
 const entries = walk("src/app/centropy").filter((file) => /\/(page|layout)\.tsx$/.test(file))
 function visit(file) {
@@ -211,7 +247,10 @@ const capabilities = manifest.capabilities.map((capability) => {
   if (c.adminOnly || c.systemOnly) disposition = "RESTRICTED_SYSTEM_OR_ADMIN"
   else if (retained) disposition = ["objectives", "queries"].includes(c.routePattern) ? "INTENTIONAL_ALTERNATE_CANONICAL_INTAKE" : "INTENTIONAL_COMPATIBILITY"
   else if (callback) disposition = "PROVIDER_PROTOCOL_CALLBACK"
-  else if (c.transport === "planner") disposition = c.humanOnly ? "HUMAN_ONLY_CANONICAL_DECISION" : "CANONICAL_AGENT_CAPABILITY"
+  else if (c.transport === "planner") disposition = c.humanOnly ? "HUMAN_ONLY_CANONICAL_DECISION" :
+    !c.planning.available || c.planning.health === "unavailable" ? "UNAVAILABLE_CANONICAL_CAPABILITY" :
+      !c.planning.modelProposable ? "NATIVE_NON_MODEL_PROPOSABLE_CAPABILITY" :
+        c.planning.kind === "wait" || c.planning.kind === "check" ? "CANONICAL_RUNTIME_CONTROL" : "CANONICAL_AGENT_CAPABILITY"
   else if (direct.length) disposition = "ACTIVE_DIRECT_FRONTEND_PATH"
   else if (humanForms.length) disposition = "ACTIVE_TYPED_HUMAN_CONTROL"
   else { unmounted.push(c.capabilityId); disposition = "BACKEND_API_NO_MOUNTED_FRONTEND" }
@@ -223,7 +262,14 @@ const capabilities = manifest.capabilities.map((capability) => {
   return {
     ...c, disposition, actualRouteOrTool: c.transport === "http" ? `${c.method} /api/${c.routePattern}` : name,
     frontendSourceBindings: direct, humanForms: humanForms.map((form) => ({ id: form.id, group: form.group, generatedFrom: form.generatedFrom })), humanRoute,
-    agentPath: c.transport === "planner" ? { registry: c.source, modelCallable: c.modelCallable, executor: name.startsWith("query:") ? "canonical operational-query executor" : c.humanOnly ? "human initiation only; model planner rejects this capability" : "canonical plugin/Core action executor" } : null,
+    agentPath: c.transport === "planner" ? { registry: c.source, modelCallable: c.modelCallable,
+      available: c.planning.available, health: c.planning.health, kind: c.planning.kind,
+      executor: c.humanOnly ? "human initiation only; model planner rejects this capability" :
+        !c.planning.available || c.planning.health === "unavailable" ? "unavailable in canonical registry; no agent execution claimed" :
+          !c.planning.modelProposable ? "native owner only; not model-proposable" :
+            c.planning.kind === "query" ? "canonical operational-query executor" :
+              c.planning.kind === "wait" ? "canonical objective event wait" :
+                c.planning.kind === "check" ? "canonical objective success check" : "canonical plugin/Core action executor" } : null,
     authorityPath: { class: c.authorityClass, backendSource: c.source, frontendNeverAuthorizes: true }, verificationPath: { class: c.verificationClass, backendSource: c.source },
     presentation: { targets: c.presentationTargets, familyRendererSources: renderers, directRuntimeExecutionProvenByThisReport: false },
     tests: registeredTests, testEvidenceState: "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
@@ -233,11 +279,18 @@ const capabilities = manifest.capabilities.map((capability) => {
 })
 if (unclassified.length) throw new Error(`Unclassified capabilities: ${unclassified.join(", ")}`)
 const counts = Object.fromEntries([...new Set(capabilities.map((c) => c.disposition))].map((key) => [key, capabilities.filter((c) => c.disposition === key).length]))
-const proofFiles = walk("docs/centropy/evidence").filter((file) => /release-candidate-/.test(file) && /(proof|summary)\.json$/.test(file)).map((file) => {
+const proofFiles = isolatedSourceMetadata ? isolatedSourceMetadata.executedProofIndex : walk("docs/centropy/evidence").filter((file) => /release-candidate-/.test(file) && /(proof|summary)\.json$/.test(file)).map((file) => {
   const bytes = read(file), proof = JSON.parse(bytes)
   return { file, sha256: digest(bytes), result: proof.result ?? proof.status ?? null, capturedAt: proof.capturedAt ?? proof.verifiedAt ?? null, note: "Consult this proof's scope and limitations. A family proof does not certify every capability." }
 })
-const document = { schema: "centropy.capability-coverage-audit/v1", generatedAt: new Date().toISOString(), sourceBaseCommit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(), manifestSha256: digest(read(manifestPath)), formsSha256: digest(read(formPath)), method: "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.", counts: { total: capabilities.length, http: capabilities.filter((c) => c.transport === "http").length, planner: capabilities.filter((c) => c.transport === "planner").length, classified: capabilities.length, classificationCoveragePercent: 100, unclassified: 0, backendApiWithoutMountedFrontend: unmounted.length, dynamicFrontendCalls: dynamicFrontendCalls.length, unresolvedDynamicCalls: unresolvedDynamicCalls.length, disposition: counts }, unclassifiedCapabilities: [], backendApiWithoutMountedFrontend: unmounted, dynamicFrontendCalls, registeredDynamicCalls, unresolvedDynamicCalls, unconfirmedExportedHelpers: [...unusedHelpers].sort(), frontendImportGraph: { entries, files: [...source.keys()].sort(), hashes: [...source].map(([file, text]) => ({ file, sha256: digest(text) })) }, capabilities, executedProofIndex: proofFiles, limitations: ["Classification coverage is not a claim of 100% executed capability coverage", "Backend API without mounted frontend is an unverified path, not a proven malfunction", "Dynamic frontend call expressions cannot certify any named operation without explicit finite bindings", "Registered dynamic form/read expressions are qualified by their separate canonical registries; uncalled exported helpers are not mounted evidence", "Import reachability is file-level; a matched call does not prove its enclosing function executes, conditional eligibility, or a rendered control", "Provider protocol callbacks and real external publication require configured provider systems", "Retained compatibility routes are explicitly outside the active primary product"] }
+const document = {
+  canonicalPlanner: {
+    source: "finnor-os/packages/orchestration/src/plugin-registry.ts",
+    verticalKey: canonicalPlanner.verticalKey, count: canonicalPlanner.entries.length,
+    entriesSha256: digest(JSON.stringify(canonicalPlanner.entries)), fullMetadataMatched: true,
+    scope: "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission",
+  },
+  schema: "centropy.capability-coverage-audit/v1", generatedAt: new Date().toISOString(), sourceBaseCommit: isolatedSourceMetadata?.sourceBaseCommit ?? declaredZ1Source ?? execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(), manifestSha256: digest(read(manifestPath)), formsSha256: digest(read(formPath)), method: "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.", counts: { total: capabilities.length, http: capabilities.filter((c) => c.transport === "http").length, planner: capabilities.filter((c) => c.transport === "planner").length, classified: capabilities.length, classificationCoveragePercent: 100, unclassified: 0, backendApiWithoutMountedFrontend: unmounted.length, dynamicFrontendCalls: dynamicFrontendCalls.length, unresolvedDynamicCalls: unresolvedDynamicCalls.length, disposition: counts }, unclassifiedCapabilities: [], backendApiWithoutMountedFrontend: unmounted, dynamicFrontendCalls, registeredDynamicCalls, unresolvedDynamicCalls, unconfirmedExportedHelpers: [...unusedHelpers].sort(), frontendImportGraph: { entries, files: [...source.keys()].sort(), hashes: [...source].map(([file, text]) => ({ file, sha256: digest(text) })) }, capabilities, executedProofIndex: proofFiles, executedProofIndexMode: isolatedSourceMetadata ? "DECLARED_BASELINE_INDEX_NOT_REOBSERVED" : "CURRENT_FILES_READ", sourceBuildProvenance: isolatedSourceMetadata ? {metadataSha256:isolatedSourceMetadata.sha256,baselineCoverageSha256:isolatedSourceMetadata.baselineCoverageSha256,baselineIndexSourceCommit:isolatedSourceMetadata.baselineIndexSourceCommit,nativeOwnerExecuted:false,protectedAdmission:false} : null, limitations: ["Classification coverage is not a claim of 100% executed capability coverage", "Backend API without mounted frontend is an unverified path, not a proven malfunction", "Dynamic frontend call expressions cannot certify any named operation without explicit finite bindings", "Registered dynamic form/read expressions are qualified by their separate canonical registries; uncalled exported helpers are not mounted evidence", "Import reachability is file-level; a matched call does not prove its enclosing function executes, conditional eligibility, or a rendered control", "Provider protocol callbacks and real external publication require configured provider systems", "Retained compatibility routes are explicitly outside the active primary product"] }
 const output = "docs/centropy/capability-coverage.json"
 if (process.argv.includes("--check")) {
   if (unresolvedDynamicCalls.length) throw new Error(`Mounted frontend operations lack finite route bindings: ${JSON.stringify(unresolvedDynamicCalls)}`)

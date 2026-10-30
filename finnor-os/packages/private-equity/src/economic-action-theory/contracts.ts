@@ -20,8 +20,11 @@ export function fail(code:string,status=422):never {throw new EconomicFault(code
 /** Read deployment state at runtime. Next replaces literal NODE_ENV accesses
  * during emission, even when the installed API runs in a disposable harness. */
 export function ordinaryDisposableEconomicRuntime(){
- return process.env.FINNOR_Y1_PROFILE==='ordinary_disposable'&&process.env.FINNOR_ENVIRONMENT==='ordinary_disposable'&&
-  Reflect.get(process.env,'NODE_ENV')!=='production';
+ const convergedStaging=process.env.FINNOR_ENVIRONMENT==='staging'&&
+  process.env.FINNOR_Z2_CONVERGED_DEVELOPMENT==='1'&&process.env.FINNOR_Y3_PROFILE==='ordinary_disposable';
+ return process.env.FINNOR_Y1_PROFILE==='ordinary_disposable'&&
+  (process.env.FINNOR_ENVIRONMENT==='ordinary_disposable'||convergedStaging)&&
+  Reflect.get(process.env,'NODE_ENV')!=='production'&&process.env.VERCEL_ENV!=='production';
 }
 const id=z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,63}$/),hex=z.string().regex(/^[a-f0-9]{64}$/);
 export const QuantityValue=z.string().regex(/^-?(?:0|[1-9][0-9]{0,17})(?:\.[0-9]{0,5}[1-9])?$/).refine(v=>v!=='-0');

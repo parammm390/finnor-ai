@@ -1,0 +1,52 @@
+{
+  "schema": "finnor.capability-discovery-cli-contract/v1",
+  "startedAt": "2026-10-24T07:44:10.590Z",
+  "node": "v22.23.4",
+  "sourceBaseCommit": "0293c866a6e500cd0ad82f00b52db60ddb1c3a28",
+  "source": "/home/factory-user/repos/finnor-z-coordinator",
+  "snapshot": "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-6r9b7P/checkout",
+  "qualification": "Real generator/auditor CLI source-contract E2E only. Borrowed installed third-party dependencies and parent Git metadata, not a cold install, HTTP flow, product qualification or phase completion.",
+  "rerun": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node /home/factory-user/repos/finnor-z-coordinator/scripts/centropy/verify-capability-discovery.mjs --evidence-dir /home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery",
+  "environment": {
+    "inheritedNames": [
+      "PATH"
+    ],
+    "syntheticNames": [
+      "NODE_ENV",
+      "NODE_OPTIONS",
+      "TSX_DISABLE_CACHE"
+    ]
+  },
+  "cases": [
+    {
+      "name": "production canonical denominator and complete metadata",
+      "result": "FAIL",
+      "error": "direct canonical registry (production): /home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-6r9b7P/oracle.cjs:30\nif (attempts.length || actionCalls) throw new Error(\"Oracle observed forbidden effect attempts: \" + JSON.stringify({attempts, actionCalls}));\n                                    ^\n\nError: Oracle observed forbidden effect attempts: {\"attempts\":[{\"name\":\"net.createConnection\",\"stack\":\"Error: ORACLE_NETWORK_DENIED:net.createConnection\\n    at Object.createConnection (/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-6r9b7P/oracle.cjs:6:44)\\n    at /home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/client-D3mGB526.cjs:1:240\\n    at new Promise (<anonymous>)\\n    at connectToServer (/home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/client-D3mGB526.cjs:1:184)\\n    at Object.<anonymous> (/home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/client-D3mGB526.cjs:1:497)\\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\\n    at Object..js (node:internal/modules/cjs/loader:1913:10)\\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\\n    at Function._load (node:internal/modules/cjs/loader:1309:12)\\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\"}],\"actionCalls\":0}\n    at Object.<anonymous> (/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-6r9b7P/oracle.cjs:30:43)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Object.<anonymous> (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Function._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n\n\n1 !== 0\n"
+    },
+    {
+      "name": "contract setup or execution",
+      "result": "FAIL",
+      "error": "Production setup did not reach the manifest boundary"
+    }
+  ],
+  "commands": [
+    {
+      "label": "direct canonical registry (production)",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-6r9b7P/oracle.cjs"
+      ],
+      "mode": "production",
+      "status": 1,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/0.stdout.log",
+      "stderr": "commands/0.stderr.log"
+    }
+  ],
+  "result": "FAIL",
+  "sourceInventorySha256": "a0c921df6c6f5bd96750a7f9483c001fcbdd81a3034d39b300e86df8007430bb",
+  "completedAt": "2026-10-24T07:44:15.927Z",
+  "passed": 0,
+  "failed": 2
+}

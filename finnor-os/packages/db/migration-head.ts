@@ -4,4 +4,4 @@
  * Keep this beside the migrations so readiness and worker heartbeats cannot drift
  * by carrying independent literals.
  */
-export const CURRENT_MIGRATION_HEAD = "postx_y6_conversation_memory.sql";
+export const CURRENT_MIGRATION_HEAD = "postz_z4_execution_proof.sql";

@@ -1,13 +1,13 @@
 {
   "schema": "finnor.y3.economic-construction-profile.v1",
-  "id": "postx-y3-two-party-three-date-perfect-recall-v1",
+  "id": "postx-y3-two-to-four-party-three-date-perfect-recall-v2",
   "institution_and_participant_classes": ["PE_INSTITUTION", "INSTITUTIONAL_COUNTERPARTY"],
   "admitted_rights_and_atomic_effects": ["FIXED_Y1_OPERATOR_REFERENCES", "DISPOSABLE_S5_RESERVATION_RIGHT_TRANSITION"],
   "economic_operator_and_state_semantics": "IMMUTABLE_SUPPLIED_EXACT_FINITE_MODELS",
   "information_and_disclosure_constraints": "DERIVED_PERFECT_RECALL_PUBLIC_PROTOCOL_KEYS_MANDATORY_DISCLOSURE",
   "actor_model_and_identification_classes": "SUPPLIED_QUALIFIED_MODEL_SET_NO_INFERRED_PRIOR",
   "protocol_horizon_and_deviation_classes": {
-    "parties": 2,
+    "parties": [2, 4],
     "privateStateValues": [0, 1],
     "decisionDates": 3,
     "maxInformationSetsPerParty": 16,

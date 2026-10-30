@@ -1,0 +1,57 @@
+{
+  "schema_revision": 1,
+  "retained_at": "2026-10-24",
+  "source_message_id": "19f36319-7c16-4287-999b-921ce413ed88",
+  "source_kind": "User-supplied current-conversation text; no original binary attachment is claimed.",
+  "retention": "UTF-8 source text fragments retained by ApplyPatch with a final file newline. Hashes identify these stored bytes. X reconstructed copy joins its two fragments around the interleaved Y3 blueprint; original full text and fragments remain available.",
+  "files": [
+    {
+      "path": "scope-z/sources/00-exact-user-request.txt",
+      "sha256": "83930d088bd096495206a5e463488af824118f52a3e5f27c5c057ddf33633c3d"
+    },
+    {
+      "path": "scope-z/sources/01-x-prd-opening.exact-fragment.txt",
+      "sha256": "957039b59e830160806e671679ba2f23f4964f34816a871fcaf940a7dae5147b"
+    },
+    {
+      "path": "scope-z/sources/02-x-prd-remainder.exact-fragment.txt",
+      "sha256": "dfd3debf87382e948ab6193918bd5875e997f85a09b453d07f43084eca27869f"
+    },
+    {
+      "path": "scope-z/sources/03-y-prd.exact-fragment.txt",
+      "sha256": "5d20f7e89931df3793c49bebac16a571d7ceb09c23b2899134ee44ca4c03ba66"
+    },
+    {
+      "path": "scope-z/sources/04-y3-implementation-blueprint.exact-fragment.txt",
+      "sha256": "f1dc4d8f82f3ac7c49d2e15a5536ab3848525aa9bb49f2693b6b968058e7526f"
+    },
+    {
+      "path": "scope-z/sources/05-y2-implementation-blueprint.exact-fragment.txt",
+      "sha256": "c54cf87199b39a7abc925e3292b4923638905c30ce6ecd37f9e41bd7c7d306c8"
+    },
+    {
+      "path": "scope-z/sources/06-x-prd.reconstructed.md",
+      "sha256": "678abc5212ad2fce46358f254b9c684916e0f649de30eb98b6d0bef4774a27a3"
+    }
+  ],
+  "known_missing_reference": {
+    "name": "10-user-R1-prompt-blueprint.txt",
+    "required_sha256": "b0ba121afba847ef7108208688eb39c4270372f2260f894069f772c2e2ab6352",
+    "status": "BOUNDED_LOCATOR_SEARCH_EXHAUSTED_BYTES_NOT_RECOVERED",
+    "audit": "scope-z/research/blueprint-source-report.md; scope-z/research/source-and-coordination-followup.md",
+    "reopen_only_with_new_locator": true
+  },
+  "model_policy": {
+    "model": "gpt-6.1-sol",
+    "reasoningEffort": "max",
+    "main_session_setting_verified": true,
+    "new_session_flags_explicit": true,
+    "alternate_models_allowed": false
+  },
+  "baseline": {
+    "commit": "7bfdd2d3ab611c90f1355637858824ff1ba67f98",
+    "tree": "82caf48007bc826794650505ae76aba92d4f981b",
+    "initial_worktree_clean": true,
+    "qualification_claimed": false
+  }
+}

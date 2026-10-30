@@ -461,6 +461,36 @@ const chargeSchema = z.object({
   executionAuthorityGranted: z.literal(false),
   protectedReceipt: z.null(),
   ref: ApplicationReferenceSchema,
+  childLimit: unsignedInteger.optional(),
+  childUsedAfter: unsignedInteger.optional(),
+  recovery: z.boolean().optional(),
+}).strict()
+
+const institutionViewSchema = z.object({
+  schema: z.literal("finnor.z0.institution-application-view.v1"),
+  originRef: ApplicationReferenceSchema,
+  compilerRequestId: z.string().uuid(), programId: z.string().uuid(),
+  responsibilityIdentity: z.string().regex(/^x1-obligation:[a-f0-9]{64}$/),
+  originalWorkId: z.string().uuid(), originalWorkInputId: z.string().uuid(),
+  institutionalProgramRef: ApplicationReferenceSchema,
+  originalReservationRef: ApplicationReferenceSchema,
+  originalDeadlineAt: timestamp, wallDeadlineAt: timestamp, childDeadlineAt: timestamp,
+  programmeStatus: label, modelAcceptanceRef: ApplicationReferenceSchema.nullable(),
+  modelConsumedByOriginalP1: z.boolean(),
+  completionOwner: z.literal("ORIGINAL_P1_AND_INDEPENDENT_CANONICAL_OBSERVER"),
+  learnedModelCompletesResponsibility: z.literal(false), newAllowance: z.literal(false),
+  protectedAdmission: z.literal(false), executionAuthorityGranted: z.literal(false),
+  budget: z.object({
+    originalReservationRef: ApplicationReferenceSchema, status: label,
+    newReservation: z.literal(false), releaseGranted: z.literal(false),
+    originalDeadlineAt: timestamp, wallDeadlineAt: timestamp, childDeadlineAt: timestamp,
+    resources: z.array(z.object({
+      resourceId: label, unit: z.enum(["request", "seconds"]),
+      limit: unsignedInteger, used: unsignedInteger,
+      remaining: z.string().max(96).regex(/^-?(?:0|[1-9][0-9]*)$/), overdrawn: z.boolean(),
+    }).strict()).min(1).max(16),
+    monetaryCost: z.null(), monetaryCostStatus: z.literal("UNKNOWN"),
+  }).strict(),
 }).strict()
 
 const sessionSchema = z.object({
@@ -480,6 +510,7 @@ const sessionSchema = z.object({
   deadlineAt: timestamp,
   effects: z.array(effectSchema).max(64),
   charges: z.array(chargeSchema).max(2048),
+  institutional: institutionViewSchema.nullable().optional(),
   billing: z.literal("UNKNOWN"),
   resourceReleaseGranted: z.literal(false),
   generation: count.min(1),
@@ -560,6 +591,25 @@ export function parseApplicationProjection(value: unknown, expected: Application
 
   for (const session of data.sessions) {
     const { model, check, composition, freshAuthority } = session
+    const institution = session.institutional
+    if (institution && (institution.originalWorkId !== expected.workId
+      || session.id !== session.parentId || freshAuthority !== null
+      || institution.childDeadlineAt !== session.deadlineAt
+      || institution.budget.childDeadlineAt !== session.deadlineAt
+      || institution.budget.originalDeadlineAt !== institution.originalDeadlineAt
+      || institution.budget.wallDeadlineAt !== institution.wallDeadlineAt
+      || Date.parse(session.deadlineAt) > Date.parse(institution.originalDeadlineAt)
+      || Date.parse(session.deadlineAt) > Date.parse(institution.wallDeadlineAt)
+      || institution.modelConsumedByOriginalP1 && !institution.modelAcceptanceRef
+      || !applicationReferencesMatch(institution.originalReservationRef, institution.budget.originalReservationRef)
+      || model && (!model.envelope.institutional_program_ref
+        || !applicationReferencesMatch(model.envelope.institutional_program_ref, institution.institutionalProgramRef)
+        || !applicationReferencesMatch(model.envelope.resource_grant_ref, institution.originalReservationRef))
+      || institution.budget.resources.some(resource =>
+        BigInt(resource.limit) - BigInt(resource.used) !== BigInt(resource.remaining)
+        || resource.overdrawn !== (BigInt(resource.used) > BigInt(resource.limit))))) {
+      throw new ApplicationProjectionError()
+    }
     if (!model && (check || composition)) throw new ApplicationProjectionError()
     if (model) {
       if (model.scope.tenantId !== expected.tenantId || model.scope.principalId !== expected.principalId
@@ -639,7 +689,12 @@ export function parseApplicationProjection(value: unknown, expected: Application
         || !applicationReferencesMatch(charge.originalParentRef, session.originalParentRef)
         || (model && !applicationReferencesMatch(charge.reservationRef, model.envelope.resource_grant_ref))
         || charge.unit !== (charge.phase === "HUMAN" ? "seconds" : "request")
-        || BigInt(charge.usedAfter) > BigInt(charge.limit)) throw new ApplicationProjectionError()
+        || BigInt(charge.usedAfter) > BigInt(charge.limit)
+        || (charge.childLimit !== undefined || charge.childUsedAfter !== undefined || charge.recovery !== undefined)
+          && (!institution || charge.childLimit === undefined || charge.childUsedAfter === undefined || charge.recovery === undefined
+            || BigInt(charge.childUsedAfter) > BigInt(charge.childLimit)
+            || BigInt(charge.childLimit) > BigInt(charge.limit)
+            || charge.recovery && charge.phase !== "RECOVERY")) throw new ApplicationProjectionError()
     }
   }
   return data
@@ -824,6 +879,10 @@ export function parseApplicationStateInput(json: string, kind: "Goal" | "Paramet
   return parsed.data
 }
 
+const institutionSelectorSchema = z.object({
+  compilerRequestId: z.string().uuid(), programId: z.string().uuid(),
+  responsibilityIdentity: z.string().regex(/^x1-obligation:[a-f0-9]{64}$/),
+}).strict()
 const acquisitionRequestSchema = z.object({
   root: rootSchema, workId: z.string().uuid(),
   profileIds: z.array(z.string().uuid()).min(1).max(8),
@@ -833,6 +892,7 @@ const acquisitionRequestSchema = z.object({
     amount: z.string().regex(/^(?:0|[1-9][0-9]{0,3})$/),
   }).strict()).min(1).max(2),
   deadlineAt: timestamp, idempotencyKey: label,
+  institutionalOrigin: institutionSelectorSchema.optional(),
 }).strict()
 export type ApplicationAcquisitionRequest = z.infer<typeof acquisitionRequestSchema>
 export interface ApplicationAcquisitionDraft {
@@ -840,6 +900,7 @@ export interface ApplicationAcquisitionDraft {
   targetsJson: string
   resourceDemandJson: string
   deadlineAt: string
+  institutionalOriginJson?: string
 }
 export function buildApplicationAcquisitionRequest(
   scope: ApplicationSemanticsScope, draft: ApplicationAcquisitionDraft, idempotencyKey: string,
@@ -851,6 +912,9 @@ export function buildApplicationAcquisitionRequest(
     targets: parseApplicationJsonInput(draft.targetsJson, "Discovery targets", true),
     resourceDemand: parseApplicationJsonInput(draft.resourceDemandJson, "Original resource demand", true),
     deadlineAt: draft.deadlineAt, idempotencyKey,
+    ...(draft.institutionalOriginJson?.trim() ? {
+      institutionalOrigin: parseApplicationJsonInput(draft.institutionalOriginJson, "Original institution references"),
+    } : {}),
   })
   if (!parsed.success) throw new ApplicationInputError("Supply 1–8 profile UUIDs, 2–16 scoped targets, 1–2 exact resource demands and an ISO deadline with its offset.")
   const body = parsed.data

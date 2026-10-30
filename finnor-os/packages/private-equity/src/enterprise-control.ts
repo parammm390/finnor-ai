@@ -294,7 +294,7 @@ export async function recordEnterpriseControlAssessment(ctx:PeMutationContext,in
  return {event,humanBudgetDemand:input.humanSeconds,protectedReceipt:null,policyChanged:false,executionAuthorityGranted:false};
 }
 export interface R3ControlChoice {schema:'finnor.s4.r3-choice-request.v1';policyRef:ExperimentRef}
-type NumericControlChoice={policyRef:unknown;decision?:unknown;allocationRef?:unknown;measurements?:Array<{protocol?:unknown;events:unknown[]}>;confidentialGuard?:unknown};
+type NumericControlChoice={policyRef:unknown;decision?:unknown;allocationRef?:unknown;measurements?:Array<{protocol?:unknown;events:unknown[]}>;confidentialGuard?:unknown;executionProofGuard?:unknown};
 export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:R3ControlChoice):Promise<Awaited<ReturnType<typeof import('./r3/control').chooseR3ControlBranch>>>;
 export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:NumericControlChoice):Promise<ReturnType<typeof decideContingentPolicy>>;
 export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:R3ControlChoice|NumericControlChoice){
@@ -306,6 +306,7 @@ export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:
 }
 async function chooseNumericEnterpriseControlBranch(ctx:PeMutationContext,input:NumericControlChoice):Promise<ReturnType<typeof decideContingentPolicy>>{
  await (await import('./confidential-computation/owner-consumer')).assertConfidentialGuard(ctx,input.confidentialGuard);
+ await (await import('./project-z/z4-execution-proof/owner-consumer')).assertExecutionProofGuard(ctx,input.executionProofGuard,'S4',input,'BEFORE');
  const policy=await readEnterpriseContingentPolicy(ctx,input.policyRef),decision=parseControlDecision(input.decision);
  if(Date.parse(decision.knowledgeAt)>Date.now())throw new ControlContractError('INVALID_REQUEST','Future knowledge time cannot supply a current branch');
  // Reference observations are accepted only through the actual S2 realization
@@ -325,9 +326,11 @@ async function chooseNumericEnterpriseControlBranch(ctx:PeMutationContext,input:
  if(input.allocationRef)try{resolvedAllocation=await (await import('./enterprise-allocation')).resolveEnterprisePolicyAllocation(ctx,input.allocationRef,policy,decision.knowledgeAt);}catch(error){if(!(error instanceof AllocationContractError)||!['PERMITTED_CONTEXT_UNAVAILABLE','STALE_INPUT'].includes(error.code))throw error;resolvedAllocation=null;}
  const choice=decideContingentPolicy(policy,decision,resolvedAllocation);await saveArtifact(ctx,'choices',choice.ref.contentDigest,choice);await saveEvents(ctx,[prepareS4Experience(policy.mandate,'BRANCH_CHOICE',policy.ref.id,{choice,decision,
   ...(input.confidentialGuard!==undefined?{confidentialGuard:input.confidentialGuard}:{}),
+  ...(input.executionProofGuard!==undefined?{executionProofGuard:input.executionProofGuard}:{}),
   observationQualification:'S2_REFERENCE_TELEMETRY_OR_PERMITTED_S1_TEMPORAL_COARSENING_UNVERIFIED_ERROR',referenceChoiceNotExecuted:true},[policy.ref.id],decision.knowledgeAt)]);
  if(await current(ctx,policy))throw unavailable();
  await (await import('./confidential-computation/owner-consumer')).assertConfidentialGuard(ctx,input.confidentialGuard);
+ await (await import('./project-z/z4-execution-proof/owner-consumer')).assertExecutionProofGuard(ctx,input.executionProofGuard,'S4',input,'AFTER');
  return choice;
 }
 export async function prepareEnterpriseContingentHandoff(ctx:PeMutationContext,input:NumericControlChoice):Promise<ContingentChoiceHandoff>{
@@ -618,24 +621,56 @@ export async function prepareEnterpriseApplicationAcquisition(ctx:PeMutationCont
 /** S4 selects a composition from retained lawful state. P1 can invoke this seam,
  * but cannot supply a model, replace original evidence, or mint authority. */
 export async function composeEnterpriseApplicationOperations(ctx:PeMutationContext,input:{
- sessionId:string;initial:import('@finnor/shared-types').ApplicationSnapshot;
-}):Promise<import('@finnor/shared-types').CheckedApplicationComposition>{
+ sessionId:string;initial:import('@finnor/shared-types').ApplicationSnapshot;requiredFirstOperationId?:string;
+},client?:PoolClient):Promise<import('@finnor/shared-types').CheckedApplicationComposition>{
  const store=await import('./application-semantics/store'),contracts=await import('./application-semantics/contracts'),
   composition=await import('./application-semantics/composition');
- const row=await store.applicationSession(ctx,input.sessionId),request=(await import('./application-semantics/native-contracts')).ApplicationExecuteSchema.parse(row.request);
- await store.currentApplicationWork(ctx,row);
- const {model,check}=await store.currentApplicationModel(ctx,row);
+ const row=await store.applicationSession(ctx,input.sessionId,client),request=(await import('./application-semantics/native-contracts')).ApplicationExecuteSchema.parse(row.request);
+ await store.currentApplicationWork(ctx,row,client);
+ const {model,check}=await store.currentApplicationModel(ctx,row,client);
  const observedRef=contracts.x2Ref('COMPUTER','application-observation',input.initial);
- const observed=await store.applicationArtifact<import('@finnor/shared-types').ApplicationSnapshot>(ctx,observedRef);
+ const observed=await store.applicationArtifact<import('@finnor/shared-types').ApplicationSnapshot>(ctx,observedRef,client);
  if(contracts.x2Digest(observed)!==contracts.x2Digest(input.initial)||request.targetId!==observed.target.id)
   contracts.x2Fault('X2_S4_ORIGINAL_FRESH_OBSERVATION_REQUIRED');
  const profiles=await Promise.all(row.profile_ids.map(id=>store.nativeApplicationProfile(ctx,id)));
  const selected=composition.composeApplicationActions({model,check,initial:observed,goal:request.goal,parameters:request.parameters,
-  originalParentRef:row.original_parent_ref,deadlineAt:row.parent.deadlineAt,authorizedRoles:profiles.map(p=>p.profile.role)});
+  originalParentRef:row.original_parent_ref,deadlineAt:row.parent.deadlineAt,authorizedRoles:profiles.map(p=>p.profile.role),firstOperationId:input.requiredFirstOperationId});
  if(selected.disposition==='COMPOSED_WITH_REQUIRED_OBSERVATIONS')composition.assertApplicationComposition({composition:selected,model,check,initial:observed});
  const {ref,...body}=selected;
- await store.retainApplicationArtifact(ctx,ref,body,false,undefined,[row.parent.rightsRevision]);
+ await store.retainApplicationArtifact(ctx,ref,body,false,client,[row.parent.rightsRevision]);
  await store.applicationEvent(ctx,row,'S4_TYPED_OPERATION_COMPOSITION_SELECTED',{compositionRef:ref,modelRef:model.ref,checkRef:check.ref,
-  exploredNodes:selected.exploredNodes,disposition:selected.disposition,originalDeadline:row.parent.deadlineAt,executionAuthorityGranted:false});
+  exploredNodes:selected.exploredNodes,disposition:selected.disposition,originalDeadline:row.parent.deadlineAt,executionAuthorityGranted:false},client);
  return selected;
+}
+
+/** Mandatory versioned native map, not an optional caller-provided port. The
+ * owned implementation resolves every original C index to current S4 source. */
+export const Z3_GENERAL_OPERATION_BINDING='finnor.s4.z3-original-operation-binding.v2' as const;
+export async function resolveEnterpriseViabilityBindingsTx(ctx:PeMutationContext,
+ request:import('./project-z/z3-viability/general-owners').GeneralOwnerRequest,client:PoolClient){
+ return (await import('./project-z/z3-viability/general-owners')).resolveGeneralS4BindingsTx(ctx,request,client);
+}
+export async function observeEnterpriseViabilityStateTx(ctx:PeMutationContext,
+ request:import('./project-z/z3-viability/general-owners').GeneralOwnerRequest,observerId:string,
+ invocation:import('./project-z/z3-viability/general-owners').GeneralOwnerInvocation,client:PoolClient){
+ return (await import('./project-z/z3-viability/general-owners')).observeGeneralS4StateTx(ctx,request,observerId,invocation,client);
+}
+export async function dispatchEnterpriseViabilityOperationTx(ctx:PeMutationContext,
+ request:import('./project-z/z3-viability/general-owners').GeneralOwnerRequest,edgeIndex:number,
+ invocation:import('./project-z/z3-viability/general-owners').GeneralOwnerInvocation,client:PoolClient){
+ return (await import('./project-z/z3-viability/general-owners')).dispatchGeneralS4OperationTx(ctx,request,edgeIndex,invocation,client);
+}
+/** S4-owned entry for the first original-Work Z3 native profile. This is a
+ * finite observed prefix, not a verdict-only acknowledgement or effect grant. */
+export async function continueEnterpriseViabilityTx(ctx:PeMutationContext,sessionId:string,
+ claim:import('./project-z/z3-viability/contracts').ViabilityClaim,client:PoolClient,db:import('@finnor/db').Db){
+ return (await import('./project-z/z3-viability/consumer')).consumeCheckedViabilityTx(ctx,sessionId,claim,client,db);
+}
+/** Independently versioned executable-operation selection precheck. It refuses
+ * by name until the actual application owner can consume a retained selection. */
+export const Z3_EXECUTABLE_OPERATION_BINDING='finnor.s4.z3-original-executable-operation-binding.v1' as const;
+export async function selectEnterpriseViabilityExecutableOperationTx(ctx:PeMutationContext,
+ request:import('./project-z/z3-viability/general-owners').GeneralOwnerRequest,edgeIndex:number,
+ invocation:import('./project-z/z3-viability/general-owners').GeneralOwnerInvocation,client:PoolClient):Promise<never>{
+ return (await import('./project-z/z3-viability/general-owners')).selectGeneralExecutableOperationTx(ctx,request,edgeIndex,invocation,client);
 }

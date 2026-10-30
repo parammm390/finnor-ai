@@ -15,6 +15,89 @@ defaults:
   run:
     working-directory: finnor-os
 jobs:
+  project-z-owner-smoke:
+    name: Project Z real owner transport (not phase admission)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - run: npx --no-install playwright install --with-deps chromium
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/project-z-browsers
+      - name: Preserve declared read-only native asset mode
+        run: |
+          chmod 0500 finnor-os/packages/epistemic-runtime/native/z4-execution-proof/bin/z4-proof
+          chmod 0500 finnor-os/packages/epistemic-runtime/native/z4-execution-proof/bin/z4-field-falsifier
+      - name: Fresh real Auth, disposable DB, actual owner and mounted reload
+        env:
+          PROJECT_Z_NATIVE_NAME: project-z-ci-${{ github.run_id }}-${{ github.run_attempt }}
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/project-z-browsers
+        run: taskset -c 0,1 node scripts/project-z/run-native-ci.mjs --name="$PROJECT_Z_NATIVE_NAME" --evidence="$RUNNER_TEMP/project-z-owner" --browsers="$PLAYWRIGHT_BROWSERS_PATH"
+      - name: Retain sanitized transport result only
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: project-z-owner-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/project-z-owner/result.json
+          if-no-files-found: warn
+          retention-days: 7
+
+  project-z-public:
+    name: Project Z public original-semantics (${{ matrix.phase }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        phase: [z1, z2, z3, z4]
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Preserve declared read-only native asset mode
+        if: ${{ matrix.phase == 'z4' }}
+        run: |
+          chmod 0500 finnor-os/packages/epistemic-runtime/native/z4-execution-proof/bin/z4-proof
+          chmod 0500 finnor-os/packages/epistemic-runtime/native/z4-execution-proof/bin/z4-field-falsifier
+      - name: Run actual public processes without hosted credentials
+        env:
+          PROJECT_Z_PHASE: ${{ matrix.phase }}
+        run: taskset -c 0,1 node scripts/project-z/run-ci.mjs --phase="$PROJECT_Z_PHASE" --evidence="$RUNNER_TEMP/project-z-$PROJECT_Z_PHASE"
+      - name: Retain original inputs, actual outputs and process failures
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: project-z-public-${{ matrix.phase }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/project-z-${{ matrix.phase }}/**
+          if-no-files-found: warn
+          retention-days: 7
+
   production-artifacts:
     runs-on: ubuntu-latest
     timeout-minutes: 15

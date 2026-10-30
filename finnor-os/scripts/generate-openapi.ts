@@ -2,6 +2,9 @@ import { ExperimentRefSchema } from "@finnor/epistemic-runtime";
 import { CapabilityRequestSchema, PywhyAssessmentRequestSchema } from "../packages/orchestration/src/capabilities/contracts";
 import { NangoConnectInputSchema } from "../packages/orchestration/src/capabilities/nango-bindings";
 import { PlannerActivationRequestSchema } from "../packages/orchestration/src/capabilities/planner-activation";
+import { SharedWorkOperations, SharedWorkOperationSchemas } from "../packages/private-equity/src/project-z/z1-shared-work/api";
+import { VIABILITY_OPERATIONS, VIABILITY_OPERATION_SCHEMAS } from "../packages/private-equity/src/project-z/z3-viability/api";
+import { ExpressionSchema as SharedWorkExpressionSchema, PredicateSchema as SharedWorkPredicateSchema } from "../packages/epistemic-runtime/src/project-z/z1-shared-work/contracts";
 // OpenAPI is generated from the active Phase-5 boundary schemas only. Historical
 // Water webhook payloads are intentionally opaque quarantine receipts and never
 // regain an executable public schema here.
@@ -75,7 +78,9 @@ import {IDENTIFICATION_OPERATION_SCHEMAS,IDENTIFICATION_OPERATIONS} from "../pac
 import {EconomicOperationSchemas,EconomicOperations} from "../packages/private-equity/src/economic-action-theory/api";
 import {StrategicOperationSchemas,StrategicOperations} from "../packages/private-equity/src/strategic-response/api";
 import {CONFIDENTIAL_OPERATION_SCHEMAS,CONFIDENTIAL_OPERATIONS} from "../packages/private-equity/src/confidential-computation/api";
+import {OPERATION_SCHEMAS as EXECUTION_PROOF_OPERATION_SCHEMAS,EXECUTION_PROOF_OPERATIONS} from "../packages/private-equity/src/project-z/z4-execution-proof/contracts";
 import {InteractionOperationSchemas,InteractionOperations} from "../packages/private-equity/src/interaction-synthesis/api";
+import {CoalitionOperationSchemas,CoalitionOperations} from "../packages/private-equity/src/project-z/z2-coalitions/api";
 import { ApplicationExpressionSchema } from "../packages/private-equity/src/enterprise-applications/contracts";
 import { M1_OPERATIONS, M1OperationSchemas } from "../packages/private-equity/src/decision-slice/handler";
 import { CapitalProgramV2Operations } from "@finnor/shared-types";
@@ -309,9 +314,12 @@ const applicationSchema=(schema:z.core.$ZodType)=>{
  // supplies numeric exclusive bounds and null unions, unlike openApi3 (3.0).
  const converted=z.toJSONSchema(schema,{io:"input",target:"draft-07",reused:"inline",
   override:({zodSchema,jsonSchema})=>{
-   if(Object.is(zodSchema,ApplicationExpressionSchema)){
+   const ref=Object.is(zodSchema,ApplicationExpressionSchema)?"#/components/schemas/X3Expression":
+    Object.is(zodSchema,SharedWorkExpressionSchema)?"#/components/schemas/Z1Expression":
+    Object.is(zodSchema,SharedWorkPredicateSchema)?"#/components/schemas/Z1Predicate":null;
+   if(ref){
     for(const key of Object.keys(jsonSchema))delete jsonSchema[key];
-    jsonSchema.$ref="#/components/schemas/X3Expression";
+    jsonSchema.$ref=ref;
    }
   }});
  // These compatible keywords inherit the document's OpenAPI 3.1 dialect.
@@ -319,6 +327,10 @@ const applicationSchema=(schema:z.core.$ZodType)=>{
  return converted;
 };
 const applicationComponents={schemas:Object.fromEntries([
+ ...Object.entries(VIABILITY_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
+ ...Object.entries(SharedWorkOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
+ ["Z1Expression",applicationSchema((SharedWorkExpressionSchema instanceof z.ZodLazy ? SharedWorkExpressionSchema.unwrap() : SharedWorkExpressionSchema))],
+ ["Z1Predicate",applicationSchema((SharedWorkPredicateSchema instanceof z.ZodLazy ? SharedWorkPredicateSchema.unwrap() : SharedWorkPredicateSchema))],
  ["X2ApplicationCancel",applicationSchema(APPLICATION_SEMANTICS_OPERATION_SCHEMAS["application-cancel"])],
  ...Object.entries(APPLICATION_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(LEARNING_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
@@ -326,7 +338,9 @@ const applicationComponents={schemas:Object.fromEntries([
  ...Object.entries(EconomicOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(StrategicOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(CONFIDENTIAL_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
+ ...Object.entries(EXECUTION_PROOF_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(InteractionOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
+ ...Object.entries(CoalitionOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
  ["X3Expression",applicationSchema((ApplicationExpressionSchema instanceof z.ZodLazy ? ApplicationExpressionSchema.unwrap() : ApplicationExpressionSchema))],
 ])};
 const secured = [{ bearerAuth: [] }];
@@ -752,6 +766,31 @@ const paths = {
   },
 } satisfies Record<string, unknown>;
 
+(paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...VIABILITY_OPERATIONS);
+for(const operation of VIABILITY_OPERATIONS){
+ Object.assign(paths,{["/api/company-brain/"+operation]:{post:{
+  security:secured,requestBody:{required:true,content:{"application/json":{schema:{$ref:"#/components/schemas/"+operation}}}},
+  responses:{
+   "200":{description:"Scoped viability session read. Checker success does not establish native S4 consumption or protected admission."},
+   "202":{description:"Original Work synthesis or explicit recovery queued, not business completion."},
+   "400":{description:"Strict bounded data-only request required."},"401":{description:"Current signed bearer required."},
+   "404":{description:"Resource unavailable in the authenticated scope."},"422":{description:"Original owner prerequisite or viability predicate unpassed."}
+  }
+ }}});
+}
+(paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...SharedWorkOperations);
+for(const operation of SharedWorkOperations){
+ Object.assign(paths,{["/api/company-brain/"+operation]:{post:{
+  security:secured,requestBody:{required:true,content:{"application/json":{schema:{$ref:"#/components/schemas/"+operation}}}},
+  responses:{
+   "200":{description:"Current scoped original Work result, exact shared request, ordinary checked-derivation admission, retained costs or cancellation. Never business completion or effects."},
+   "400":{description:"Strict finite typed data-only request required."},"401":{description:"Current signed bearer required before reading the body."},
+   "403":{description:"Current original owner authority or explicit disposable profile unavailable."},
+   "409":{description:"Original identity, currentness, generation or idempotency conflict."},
+   "413":{description:"Bounded body exceeded."},"422":{description:"Exact original budget, independent checking or native prerequisite unavailable."}
+  }
+ }}});
+}
 paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum.push(...APPLICATION_OPERATIONS);
 (paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...APPLICATION_SEMANTICS_OPERATIONS.filter(operation=>operation!=="application-cancel"),...INSTITUTION_OPERATIONS);
 (paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...LEARNING_OPERATIONS);
@@ -770,8 +809,8 @@ for(const operation of StrategicOperations){
    "503":{description:"Pinned checker or runtime unavailable."}},
  }}});
 }
-(paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...InteractionOperations);
-for(const operation of InteractionOperations){
+(paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...InteractionOperations,...CoalitionOperations);
+for(const operation of [...InteractionOperations,...CoalitionOperations]){
  Object.assign(paths,{["/api/company-brain/"+operation]:{post:{
   security:secured,requestBody:{required:true,content:{"application/json":{schema:{$ref:"#/components/schemas/"+operation}}}},
   responses:{
@@ -804,6 +843,18 @@ for(const operation of EconomicOperations){
    "503":{description:"Pinned checker/runtime or native capacity unavailable."},
   },
  }}});
+}
+(paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...EXECUTION_PROOF_OPERATIONS);
+for(const operation of EXECUTION_PROOF_OPERATIONS){
+ Object.assign(paths,{["/api/company-brain/"+operation]:{post:{security:secured,
+  requestBody:{required:true,content:{"application/json":{schema:{$ref:"#/components/schemas/"+operation}}}},
+  responses:{"200":{description:"Current ordinary-disposable computation evidence or original native analytical guard use. No source truth, security, protected or effect admission."},
+   "202":{description:"Original durable proof job queued, not checked or completed."},
+   "400":{description:"Exact bounded typed contract refused."},"401":{description:"Current signed identity required."},
+   "404":{description:"Unavailable in the current tenant/principal/Work scope."},
+   "413":{description:"Bounded request or response exceeded."},
+   "422":{description:"Original semantics, source, rights, deadline, budget, claim, owner acknowledgement or separate admission premise unpassed."},
+   "503":{description:"Pinned native runtime or configured owner unavailable."}}}}});
 }
 (paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...CONFIDENTIAL_OPERATIONS);
 for(const operation of CONFIDENTIAL_OPERATIONS){

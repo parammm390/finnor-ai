@@ -1,0 +1,59 @@
+import { resolveTenantVertical } from "@finnor/db";
+import {
+  executePrivateEquityOperationalQuery,
+  isPrivateEquityOperationalQuery,
+} from "@finnor/private-equity/src/operational-queries";
+import { executeHarnessProgramQuery } from "@finnor/private-equity/src/program-synthesis/operational-query";
+import { executeEconomicProgrammeQuery } from "@finnor/private-equity/src/program-synthesis/economic-query";
+import {executeConfidentialComputationQuery} from "@finnor/private-equity/src/confidential-computation/operational-query";
+import {
+  executeOperationalQuery as executeCoreOperationalQuery,
+  type OperationalQueryOptions,
+} from "@finnor/read-models";
+import {
+  PRIVATE_EQUITY_VERTICAL,
+  PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
+  PROGRAM_OPERATIONAL_QUERY_INTENTS,
+  CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS,
+  assertExecutableVertical,
+  type CanonicalOperationalQueryRequest,
+  type CanonicalOperationalQueryIntent,
+  type OperationalQueryResultFor,
+} from "@finnor/shared-types";
+
+export const CORE_OPERATIONAL_QUERY_INTENTS = [
+  "work_list", "attention_queue", "agent_activity", "workforce_status", "company_context", "party_lookup", "party_context", "team_roster",
+] as const;
+
+const CORE = new Set<string>(CORE_OPERATIONAL_QUERY_INTENTS);
+const PE = new Set<string>(PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS);
+
+export function operationalQueryIntentsForVertical(verticalKey: string): CanonicalOperationalQueryIntent[] {
+  assertExecutableVertical(verticalKey);
+  return [
+    ...CORE_OPERATIONAL_QUERY_INTENTS,
+    ...(verticalKey === PRIVATE_EQUITY_VERTICAL ? [...PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,...PROGRAM_OPERATIONAL_QUERY_INTENTS,...CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS] : []),
+  ];
+}
+
+/** One tenant-aware dispatcher for the existing Operational Query Plane. It
+ * reveals no cross-vertical entity existence: an unavailable intent is rejected
+ * before its package-specific reader runs. */
+export async function executeTenantOperationalQuery<T extends CanonicalOperationalQueryRequest>(
+  tenantId: string,
+  request: T,
+  options: OperationalQueryOptions = {},
+): Promise<OperationalQueryResultFor<T>> {
+  const vertical = await resolveTenantVertical(tenantId);
+  const allowed = operationalQueryIntentsForVertical(vertical.verticalKey);
+  if (!allowed.includes(request.intent)) throw new Error("Operational query intent is unavailable for this tenant vertical");
+  if (request.intent === "harness_program_v1") return executeHarnessProgramQuery(tenantId, request, options) as Promise<OperationalQueryResultFor<T>>;
+  if (request.intent === "economic_programme_v1") return executeEconomicProgrammeQuery(tenantId, request, options) as Promise<OperationalQueryResultFor<T>>;
+  if(request.intent==="confidential_economic_computation_v1")return executeConfidentialComputationQuery(tenantId,request,options) as Promise<OperationalQueryResultFor<T>>;
+  if (PE.has(request.intent)) {
+    if (!isPrivateEquityOperationalQuery(request)) throw new Error("Invalid private-equity query contract");
+    return executePrivateEquityOperationalQuery(tenantId, request, options) as Promise<OperationalQueryResultFor<T>>;
+  }
+  if (!CORE.has(request.intent)) throw new Error("Unsupported operational query intent");
+  return executeCoreOperationalQuery(tenantId, request, { ...options, verticalKey: vertical.verticalKey }) as Promise<OperationalQueryResultFor<T>>;
+}

@@ -1,5 +1,6 @@
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { join, relative, resolve } from "node:path"
+import { readCanonicalPlanner } from "./canonical-planner.mjs"
 
 const project = resolve(import.meta.dirname, "../..")
 const apiRoot = join(project, "finnor-os/apps/api/app/api")
@@ -12,7 +13,6 @@ function files(directory) {
   })
 }
 
-function quoted(content) { return [...content.matchAll(/"([a-z][a-z0-9_-]+)"/g)].map((match) => match[1]) }
 function block(source, start, end) {
   const begin = source.indexOf(start)
   const finish = source.indexOf(end, begin + start.length)
@@ -23,6 +23,8 @@ function block(source, start, end) {
 const companyBrainSource = readFileSync(join(apiRoot, "company-brain/[operation]/route.ts"), "utf8")
 const r1Operations = registeredOperations("finnor-os/packages/private-equity/src/r1/api.ts", "R1_OPERATIONS")
 const r1Reads=new Set(["r1-read","r1-review","r1-projection","r1-history","r1-record"])
+const viabilityOperations = registeredOperations("finnor-os/packages/private-equity/src/project-z/z3-viability/contracts.ts", "Z3_OPERATIONS")
+if (!companyBrainSource.includes("VIABILITY_OPERATIONS")) throw new Error("Viability operations must be actually delegated")
 function registeredOperations(path, name) {
   const source = readFileSync(join(project, path), "utf8")
   const match = source.match(new RegExp(`export\\s+const\\s+${name}\\s*=\\s*(?:new\\s+Set\\s*\\(\\s*)?\\[([\\s\\S]*?)\\]`))
@@ -35,6 +37,7 @@ function registeredOperations(path, name) {
   return operations
 }
 const delegatedRegistries = [
+  ["SharedWorkOperations", "project-z/z1-shared-work/api.ts"],
   ["INSTITUTION_OPERATIONS", "institution-program/api.ts"],
   ["EVIDENCE_OPERATIONS", "evidence-execution/api.ts"],
   ["PRIMARY_OPERATIONS", "primary-diligence/api.ts"],
@@ -48,7 +51,9 @@ const delegatedRegistries = [
   ["EconomicOperations", "economic-action-theory/api.ts"],
   ["StrategicOperations", "strategic-response/contracts.ts"],
   ["CONFIDENTIAL_OPERATIONS", "confidential-computation/api.ts"],
+  ["EXECUTION_PROOF_OPERATIONS", "project-z/z4-execution-proof/contracts.ts"],
   ["InteractionOperations", "interaction-synthesis/api.ts"],
+  ["CoalitionOperations", "project-z/z2-coalitions/api.ts"],
   ["M1_OPERATIONS", "decision-slice/handler.ts"],
   ["CONTINUATION_OPERATIONS", "live-recompilation/api.ts"],
   ["PROCEDURE_OPERATIONS", "procedure-induction/api.ts"],
@@ -87,6 +92,7 @@ const coalitionOperations = new Map([
   ["obligations/coalition-prepare", "MUTATION"],
 ])
 const companyBrainOperations = [...new Set([
+  ...viabilityOperations,
   ...capitalOperations,...formationOperations,...m4Operations.keys(),
   ...[...companyBrainSource.matchAll(/case "([a-z-]+)":/g)].map((match) => match[1]),
   ...delegatedRegistries.flatMap(([name, file]) => {
@@ -96,6 +102,8 @@ const companyBrainOperations = [...new Set([
 ])]
 const closingOperations = registeredOperations("finnor-os/packages/private-equity/src/closing/api.ts", "CLOSING_OPERATIONS")
 const companyBrainReads = new Set([
+  "viability-read",
+  "z1-read-shared-work", "z1-project-original-work",
   "institution-read", "institution-status", "institution-witness", "institution-sources", "institution-inputs",
   "belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse",
   "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context",
@@ -120,6 +128,7 @@ const companyBrainReads = new Set([
   "economic-programme-read", "economic-reservation-read",
   "response-model-read", "response-model-list", "response-model-artifact", "response-model-compare", "response-use-read",
   "interaction-read", "interaction-list", "interaction-artifact", "interaction-compare", "interaction-local", "interaction-run-read",
+  "coalition-read",
 ])
 const elicitationOperations=registeredOperations("finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts","ELICITATION_OPERATIONS")
 const elicitationReads=new Set(["context","read","status","history"])
@@ -152,6 +161,13 @@ const atlasOperations = new Map([...block(atlasSource, "export const R7Operation
 if (!atlasOperations.size) throw new Error("Missing versioned R7 operation classes")
 
 const operationClasses = new Map()
+operationClasses.set("company-brain/z1-cancel-shared-work", "CONTROL")
+operationClasses.set("company-brain/viability-recover", "CONTROL")
+for (const operation of ["execution-proof-read", "execution-proof-list"])
+  operationClasses.set(`company-brain/${operation}`, "READ")
+operationClasses.set("company-brain/execution-proof-cancel", "CONTROL")
+for (const operation of ["execution-proof-intake", "execution-proof-plan", "execution-proof-submit", "execution-proof-audit", "execution-proof-consume"])
+  operationClasses.set(`company-brain/${operation}`, "MUTATION")
 for (const operation of ["response-model-cancel", "response-model-resume", "response-use-cancel", "response-use-resume"])
   operationClasses.set(`company-brain/${operation}`, "CONTROL")
 for (const [family, operations] of ownerLeafOperations) for (const operation of operations)
@@ -225,6 +241,7 @@ const denyPrefixes = [
 ]
 const restrictedOperations = new Set(["allocations/coalition-release", "obligations/coalition-consent"])
 const humanOnlyPatterns = [
+  /^company-brain\/z1-admit-shared-work$/,
   /^company-brain\/confidential-(?:consent|revoke|import-release)$/,
   /^company-brain\/interaction-(?:consent|observe|action)$/,
   /^elicitation-protocols\/(?:report|event|review|close|use)$/,
@@ -296,7 +313,10 @@ function routeEntry(method, path, source) {
     verificationClass: read ? "canonical_read" : "canonical_reread",
     presentationTargets: userProduct ? presentationTargets : [],
     invalidationTags: read ? [] : family==="elicitation-protocol"?["work","company-brain","elicitation-protocol"]:family==="branch-fabric"?["work","branch-fabric"]:
+      path.startsWith("company-brain/z1-")?["work","company-brain","authority","source"]:
+      path.startsWith("company-brain/viability-")?["work","company-brain"]:
       path.startsWith("company-brain/response-")?["work","company-brain"]:
+      path.startsWith("company-brain/execution-proof-")?["work","company-brain","authority","source"]:
       path.startsWith("company-brain/confidential-")?["work","company-brain","authority","source","underwriting"]:
       path.startsWith("company-brain/capital-formation-")?["work","company-brain","authority","source"]:
       path.startsWith("company-brain/capital-program-")||m4Operations.has(path.slice("company-brain/".length))?["work","company-brain"]:tags(family),
@@ -330,34 +350,29 @@ for (const file of files(apiRoot)) {
 }
 
 function registryEntries() {
-  const pe = readFileSync(join(project, "finnor-os/packages/domain-plugins/private-equity/index.ts"), "utf8")
-  const peActions = [...block(pe, "export const PRIVATE_EQUITY_ACTION_CONTRACTS", "].map(").matchAll(/\["([a-z_]+)"/g)].map((match) => match[1])
-  const universal = readFileSync(join(project, "finnor-os/packages/domain-plugins/universal-actions/index.ts"), "utf8")
-  const universalActions = quoted(block(universal, "const ACTION_TYPES:", "];"))
-  const querySource = readFileSync(join(project, "finnor-os/packages/shared-types/src/operational-queries.ts"), "utf8")
-  const queries = [...quoted(block(querySource, "export const CORE_OPERATIONAL_QUERY_INTENTS = [", "] as const")),
-    ...quoted(block(querySource, "export const PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS = [", "] as const")),
-    ...quoted(block(querySource, "export const PROGRAM_OPERATIONAL_QUERY_INTENTS = [", "] as const")),
-    ...quoted(block(querySource, "export const CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS = [", "] as const"))]
-  const registry = readFileSync(join(project, "finnor-os/packages/orchestration/src/plugin-registry.ts"), "utf8")
-  const humanOnly = quoted(block(registry, "export const HUMAN_ONLY_PLANNING_CAPABILITIES = [", "] as const"))
-  const humanOnlySet = new Set(humanOnly)
-  const registered = new Set([...peActions, ...universalActions])
-  const planner = (name, family, owner, modelCallable, humanOnly) => ({
-    capabilityId: `planner.${name}`, family, owner, transport: "planner", method: null, routePattern: null, routeDepth: 0,
-    classification: name.startsWith("query:") ? "READ" : "MUTATION", kind: name.startsWith("query:") ? "read" : "mutation",
-    userProduct: true, agentProduct: modelCallable, modelCallable, humanOnly, adminOnly: false, systemOnly: false,
-    requiredContext: name==="query:harness_program_v1"?["workId","programId"]:[], authorityClass: humanOnly ? "human_attestation" : name.startsWith("query:") ? "query" : "backend_policy",
-    effectClass: name.startsWith("query:") ? null : "planner_action", verificationClass: "backend_runtime",
-    presentationTargets: family === "private-equity" ? ["THREAD", "CANVAS", "WORLD"] : ["THREAD", "CANVAS"],
-    invalidationTags: [], timeoutClass: "RUNTIME", tests: [], source: "finnor-os/packages/orchestration/src/plugin-registry.ts",
+  const snapshot = readCanonicalPlanner()
+  const humanOnlySet = new Set(snapshot.humanOnly)
+  const privateEquitySet = new Set(snapshot.privateEquityActions)
+  return snapshot.entries.map(entry => {
+    const name = entry.capability, humanOnly = humanOnlySet.has(name)
+    const family = privateEquitySet.has(name) ? "private-equity" : humanOnly ? "human-attestation" :
+      entry.kind === "query" ? "operational-query" : entry.kind === "wait" || entry.kind === "check" ? "objective-runtime" :
+        snapshot.plugins[name] === "universal-actions" ? "universal-action" : "shared-action"
+    const owner = family === "private-equity" || humanOnly ? "@finnor/private-equity" :
+      snapshot.plugins[name] && snapshot.plugins[name] !== "clarification" ? `@finnor/plugin-${snapshot.plugins[name]}` : "@finnor/orchestration"
+    return {
+      capabilityId: `planner.${name}`, family, owner, transport: "planner", method: null, routePattern: null, routeDepth: 0,
+      classification: entry.kind === "query" ? "READ" : entry.kind === "action" ? "MUTATION" : "CONTROL",
+      kind: entry.kind === "query" ? "read" : entry.kind === "action" ? "mutation" : entry.kind,
+      userProduct: true, agentProduct: entry.modelProposable && entry.available, modelCallable: entry.modelProposable,
+      humanOnly, adminOnly: false, systemOnly: false,
+      requiredContext: entry.requiredReferences, authorityClass: humanOnly ? "human_attestation" : entry.authorityRequirement,
+      effectClass: entry.effectClass, verificationClass: "backend_runtime",
+      presentationTargets: family === "private-equity" ? ["THREAD", "CANVAS", "WORLD"] : ["THREAD", "CANVAS"],
+      invalidationTags: [], timeoutClass: "RUNTIME", tests: [], source: "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      planning: entry,
+    }
   })
-  return [
-    ...peActions.map((name) => planner(name, "private-equity", "@finnor/private-equity", !humanOnlySet.has(name), humanOnlySet.has(name))),
-    ...universalActions.map((name) => planner(name, "universal-action", "@finnor/plugin-universal-actions", true, false)),
-    ...queries.map((name) => planner(`query:${name}`, "operational-query", "@finnor/orchestration", true, false)),
-    ...humanOnly.filter((name) => !registered.has(name)).map((name) => planner(name, "human-attestation", "@finnor/private-equity", false, true)),
-  ]
 }
 
 const capabilities = [...routes, ...registryEntries()].sort((a, b) => a.capabilityId.localeCompare(b.capabilityId))
