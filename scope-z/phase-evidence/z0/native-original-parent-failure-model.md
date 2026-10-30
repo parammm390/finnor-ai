@@ -286,3 +286,30 @@ written to Work/programme tables):
 | D1-5 | Wrong Work, stale input, extra-envelope field, conflicting identity, missing owner all collapse to one 400 | Each reject is its own request with its own expected status class: wrong Work (random UUID and a real other Work of the tenant) 403/404; stale input (`workInputId` of an older/absent input: not a public field) 400; extra-envelope field (`tenantId` of the foreign tenant) 400; conflicting identity (the original Work with a `programId` that is not the original's, and the same `executionKey` reused with a different body) 4xx; missing owner (no `workId`) 4xx and anonymous 401. Each is also checked for D1-2. |
 | D1-6 | Fail-before-fix is claimed without a pre-repair observation | Z0-R02-C03: the pre-repair `parseRequestBody` is extracted verbatim from `git show c7e560c:finnor-os/apps/api/app/api/queries/route.ts` (pristine object, SHA recorded) and run with the real `validateOperationalQueryRequest` against the valid harness and confidential bodies; the result (workId stripped, generic validation failure) is the retained baseline. The HEAD parser is run on the same bodies. The HTTP observation of HEAD is the main case. |
 | D1-7 | A product change is made to turn a FAIL into a PASS | `apps/api/app/api/queries/route.ts` is a shared file. If D1-1 fails, the exact patch is requested from the coordinator with the failing run as evidence; any patched-tree verification run is labelled as an unmerged working-tree variant and never counted as the integrated result. |
+
+## 12. Addendum (Z0-N B): the eight G1 rejects and the standalone control
+
+Written before the cases are implemented. The plan (`z0/native-e2e-plan.mjs`) lists `G1_REJECT_*` with outcome
+`NO_NEW_LEARNED_OWNER_USE`, plus `X2_STANDALONE_REMAINS_LAWFUL`. Mapping to cases (existing = already observed in
+`w0-native-10`; new = `reject` mode of `z0-session.mjs`, `FINNOR_Z0_MODE=reject`, own stack run on a fresh parent):
+
+| G1 reject | Case | Predicate / oracle |
+|---|---|---|
+| NO_ORIGINAL_PARENT | existing P0-06 (forged selector), P0-07 (other programme); new P0-13: an ordinary Work (no X1 episode) carrying the real parent's selector | refused 4xx with a `Z0_`/X1-owner code; zero sessions for both Works; original charges/reservations/episode digest unchanged |
+| BUDGET_EXHAUSTED | existing P0-04 (demand above envelope), P0-05 (foreign resource), P0-12 (second acquisition) | as recorded; remaining units computed from `s5_governed_resource_charges`, not from the response |
+| DEADLINE_EXPIRED | existing P0-03 (extension past the original); new P0-14: `deadlineAt` already in the past | refused with `Z0_ORIGINAL_DEADLINE_EXHAUSTED_OR_EXTENDED`; zero sessions; state digest unchanged |
+| PENDING_LEARNING | new P0-15: a second, different acquisition while the first session is non-terminal | refused (`Z0_ORIGINAL_APPLICATION_SUBCOMPUTATION_PENDING` or the owner's equivalent); exactly one root session; the first session is then cancelled through the owner route and settles; reservation/envelope digests unchanged |
+| UNSUPPORTED_MODEL, INCOMPLETE_MODEL | observed by P0-11 only if the real consumer returns `P1_ORIGINAL_APPLICATION_DIRECT_FALLBACK` with a `Z0_MODEL_*` reason (the consumer's typed no-use of a model it cannot represent completely); otherwise NOT_RUN | no owner path makes the stock learner emit an unsupported or incomplete model against the disposable portal, and hand-writing a model artifact is forbidden (N1). The exact reason is reported; never relabelled |
+| PRIVATE_REPLAY | NOT_RUN unless the learner's own refusal is reachable: the fixture portal is disposable and has no private-source replay surface | exact reason reported |
+| S6_UNKNOWN | NOT_RUN unless a retained UNKNOWN obligation exists on the original Work: P1-03 resolved its lost request to VERIFIED by observation (w0-native-11) | no owner path creates an S6 UNKNOWN without a physically lost effect that the portal cannot observe; reported as such |
+| Standalone control | new P0-16: an ordinary Work with its own S5 resource, `application-acquire` with no `institutionalOrigin` | accepted (2xx); the session's `original_parent_ref.institutionalProgramRef` is null; its `reservation_ref` is NOT the X1 parent reservation; no `S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED` event; the X1 parent's reservation, envelope, charges and episode digests are unchanged (a standalone acceptance must not substitute for the institutional one) |
+
+Faking risks and oracles:
+
+| # | How it can be faked or go wrong | Independent expectation / oracle |
+|---|---|---|
+| S1 | The standalone Work is secretly an X1 Work, or reuses the parent's reservation | The ordinary Work has no `x1_compiler_episodes` row; its resource id differs from the parent's resources; the session reservation id differs from the parent reservation id (O-DB) |
+| S2 | The refusal is caused by an unrelated defect (missing portal profile, wrong root) rather than by the X1 parent rule | Each refusal carries the product's own code; the standalone control with the same portal profiles, root and deadline is accepted, so profiles/root are not the cause |
+| S3 | A refusal changed state | witness before/after: sessions, charges, reservations, original envelope, episode digest, `pe_requests`, domain actions |
+| S4b | PENDING_LEARNING passes because the first session already ended | The second request is sent only while the first session row is non-terminal (read from the database immediately before sending); otherwise NOT_RUN `PENDING_WINDOW_NOT_REACHED` |
+| S5b | A standalone session is left running and interferes with later cases | It is driven to a terminal status or cancelled; the case is not PASS until the session is terminal and the portal stopped |
