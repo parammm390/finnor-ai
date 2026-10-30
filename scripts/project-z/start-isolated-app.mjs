@@ -43,7 +43,7 @@ appUrl.password = "finnor_app"
 const adminEnv = { ...isolated, RAYON_NUM_THREADS: "2", TSX_DISABLE_CACHE: "1" }
 // Opt-in phase profiles reach only the application processes, never migrate/seed.
 const profiles = new Set(process.argv.filter(arg => arg.startsWith("--profile=")).flatMap(arg => arg.slice(10).split(",")))
-assert.ok([...profiles].every(profile => ["z1", "z2", "x1", "z3", "z4", "x2", "z0", "z5"].includes(profile)), "Unknown launcher profile")
+assert.ok([...profiles].every(profile => ["z1", "z2", "x1", "z3", "z4", "x2", "z0", "z5", "v2"].includes(profile)), "Unknown launcher profile")
 // The Z3 runtime pins the producer bundle by digest itself; only its location is supplied here.
 const z3Producer = process.argv.find(arg => arg.startsWith("--z3-producer="))?.slice(14)
 assert.ok(!profiles.has("z3") || (z3Producer && isAbsolute(z3Producer) && realpathSync(z3Producer) === z3Producer),
@@ -118,6 +118,17 @@ if (profiles.has("z5")) {
     FINNOR_S6_OWNER_TRANSPORT_CONFIG: join(z5Dir, "transport.json"), FINNOR_Z5_S8_CONSUMER_CONFIG: join(z5Dir, "s8-consumer.json") })
 }
 // END z5-native
+// BEGIN r12 v2 profile
+// The V2 primary-diligence owner code is development-only: it needs its profile flag and a private 0700 directory
+// of 0600 source credential files (named by credentialRef). Nothing here carries a credential or any live authority.
+const v2Dir = join(state, "v2-private")
+const v2Env = {}
+if (profiles.has("v2")) {
+  mkdirSync(v2Dir, { mode: 0o700, recursive: true })
+  chmodSync(v2Dir, 0o700)
+  Object.assign(v2Env, { FINNOR_V2_PROFILE: "ordinary_disposable", FINNOR_PRIMARY_CREDENTIAL_DIRECTORY: v2Dir })
+}
+// END r12 v2 profile
 const profileEnv = {
   ...(profiles.has("z1") ? { FINNOR_Z1_PROFILE: "ordinary_disposable", P3_GOVERNORS: "1" } : {}),
   // BEGIN z1 S3/S4 owner chain environment
@@ -138,6 +149,7 @@ const profileEnv = {
     NODE_EXTRA_CA_CERTS: authTlsReceipt.certificateFile } : {}),
   // END
   ...z5Env, // z5-native
+  ...v2Env, // r12 v2 profile
 }
 const appEnv = { ...adminEnv, ...profileEnv, DATABASE_URL: appUrl.toString(), CENTROPY_E2E_DB_ADMIN_URL: adminUrl.toString() }
 assert.equal(appEnv.FINNOR_ENVIRONMENT, x2Profile || profiles.has("z4") ? "staging" : "ordinary_disposable", "PROFILE_ENVIRONMENT_MISMATCH")
