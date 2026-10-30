@@ -120,3 +120,14 @@ the intake adds no link. `adoptWorkId` is not part of the accepted definition, s
 | H8 | Intake without `adoptWorkId` | Unchanged behaviour (creates and links a new Work). Its pin-staling effect is reported as a product limitation, not hidden | Source diff: that branch is byte-identical |
 | H9 | Adoption resets the deadline or budget | Not possible: deadline and one-hour rule are checked before any Work lookup, demand and budget are unchanged | Existing `Z4_ORIGINAL_ONE_HOUR_DEADLINE_REQUIRED` and S5 predicates |
 | H10 | OpenAPI/manifest staleness from the extra field | Reported to the coordinator for the single final restamp; not regenerated here | Report item |
+
+## I. First original submission refused (w4-seed-07, `Z4_PREDICATE_UNPASSED` with no named predicate)
+
+After the adopting intake all six Works kept a CURRENT pin (every `after-adopted-intake:*` and `after-plan:*` trace entry `matchesFitPin: true`). The
+pre-submission of the owner-recovery Work then answered 422 `Z4_PREDICATE_UNPASSED`. The route only names a predicate that is an uppercase token, so the
+failing site is masked. Candidate sites in `submitProof` (none may be bypassed): I1 `authorize` rights; I2 `workSnapshot` (plan, latest input, deadline,
+objective, status); I3 `ownerSource` (S3 model currentness, S4 policy `readEnterpriseContingentPolicy`, mandate/model/episode binding, history period
+availability, exact-integer range); I4 `obligations`; I5 `reserveApplicationParent` (S5 resource horizon, validity, beliefPins, demand versus availability,
+rights reference); I6 retained-byte budget; I7 an error whose message is not an uppercase token (a raw library error such as a SQL or Zod message).
+Oracle: the same `submitProof` call made in-process by the scenario with the same authenticated context; the thrown message and first stack frames name
+the site. This is a diagnostic read, it is recorded as evidence and never used to pass the stage.
