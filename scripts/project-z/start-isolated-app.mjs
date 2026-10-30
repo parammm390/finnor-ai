@@ -220,7 +220,8 @@ async function buildProduction() {
   }
   receipt.productionBuild.stage = "BUILT"
   save()
-  return { apiNext, frontendNext, serverEnv: { ...appEnv, NODE_ENV: "production", FINNOR_BUILD_ID: buildId } }
+  return { apiNext, frontendNext, buildId, serverEnv: { ...appEnv, NODE_ENV: "production", FINNOR_BUILD_ID: buildId },
+    spawned: { api: [apiNext, "start", "-H", "127.0.0.1", "-p", "3101"], frontend: [frontendNext, "start", "-H", "127.0.0.1", "-p", "3001"] } }
 }
 // END
 save()
@@ -292,9 +293,9 @@ try {
   save()
   // BEGIN production build and start
   const production = productionBuild ? await buildProduction() : null
-  const api = production ? child("api", [production.apiNext, "start", "-H", "127.0.0.1", "-p", "3101"], join(backend, "apps/api"), production.serverEnv)
+  const api = production ? child("api", production.spawned.api, join(backend, "apps/api"), production.serverEnv)
     : child("api", [join(backend, "node_modules/next/dist/bin/next"), "dev", "-H", "127.0.0.1", "-p", "3101"], join(backend, "apps/api"), appEnv)
-  const frontend = production ? child("frontend", [production.frontendNext, "start", "-H", "127.0.0.1", "-p", "3001"], root, production.serverEnv)
+  const frontend = production ? child("frontend", production.spawned.frontend, root, production.serverEnv)
     : child("frontend", [join(root, "node_modules/next/dist/bin/next"), "dev", "--webpack", "-H", "127.0.0.1", "-p", "3001"], root, appEnv)
   // END
   const worker = ownsWorker ? null : child("worker", ["--import", require.resolve("tsx"), join(backend, "apps/worker/src/index.ts")], backend, workerEnv)
@@ -311,9 +312,13 @@ try {
     for (const [label, port] of [["frontend", 3001], ["api", 3101]]) {
       const listener = execFileSync("ss", ["-ltnpH", `sport = :${port}`], { encoding: "utf8" }).match(/pid=(\d+)/)
       assert.ok(listener, "PRODUCTION_LISTENER_NOT_OBSERVED")
-      const argv = readFileSync(`/proc/${listener[1]}/cmdline`, "utf8").split("\0").filter(Boolean)
-      assert.ok(argv.includes("start") && !argv.includes("dev"), "PRODUCTION_LISTENER_MUST_BE_NEXT_START")
-      receipt.productionBuild[label] = { ...receipt.productionBuild[label], listenerPid: Number(listener[1]), listenerArgv: argv.map(value => value.replace(root, "<repo>")) }
+      // The server renames its process title, so the spawned argv and the process environment are the evidence.
+      const pid = Number(listener[1])
+      const environment = readFileSync(`/proc/${pid}/environ`, "utf8").split("\0")
+      assert.equal(pid, receipt.pids[label], "PRODUCTION_LISTENER_MUST_BE_THE_SPAWNED_NEXT_START")
+      assert.ok(environment.includes("NODE_ENV=production") && environment.includes(`FINNOR_BUILD_ID=${production.buildId}`), "PRODUCTION_LISTENER_ENVIRONMENT_REQUIRED")
+      receipt.productionBuild[label] = { ...receipt.productionBuild[label], listenerPid: pid, spawnedArgv: [...production.spawned[label]].map(value => value.replace(root, "<repo>")),
+        processTitle: readFileSync(`/proc/${pid}/cmdline`, "utf8").split("\0")[0] }
     }
     receipt.productionBuild.stage = "SERVING_NEXT_START"
   }

@@ -72,7 +72,8 @@ try {
     const bytes = readFileSync(file)
     check(`${label}-build-id-matches-launcher-pin`, builds[label]?.buildIdFile === file && builds[label]?.buildIdSha256 === sha(bytes)
       && bytes.toString("utf8") === builds.buildId, { sha256: sha(bytes) })
-    check(`${label}-listener-is-next-start`, builds[label]?.listenerArgv?.includes("start") && !builds[label]?.listenerArgv?.includes("dev"))
+    check(`${label}-listener-is-the-spawned-next-start`, builds[label]?.spawnedArgv?.includes("start") && !builds[label]?.spawnedArgv?.includes("dev")
+      && Number.isInteger(builds[label]?.listenerPid))
   }
   check("frontend-bundle-inlines-the-https-auth-origin", builds.frontend?.authOriginInlined === tls.origin)
 
