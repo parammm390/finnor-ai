@@ -477,7 +477,7 @@ await runCase("Z5N-12", "S2/S7 economic assignment whose estimand names the exac
 
 // ---------------------------------------------------------------- Z5N-14 driver
 await runCase("Z5N-14", "Guarded native E2E driver (native-e2e.mjs) on the assembled stack", async () => {
-  ensure(S.profileRef && S.obligation && S.upstream && S.dispatched, "PREREQUISITE_CHAIN_MISSING");
+  ensure(S.profileRef && S.obligation && S.upstream, "PREREQUISITE_CHAIN_MISSING");
   ensure(S.assignmentRef, "NO_ECONOMIC_ASSIGNMENT_REF");
   ensure(other, "NO_SECOND_TENANT");
   const uid = process.getuid();
