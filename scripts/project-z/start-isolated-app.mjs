@@ -48,6 +48,7 @@ assert.ok([...profiles].every(profile => ["z1", "z2", "x1", "z3"].includes(profi
 const z3Producer = process.argv.find(arg => arg.startsWith("--z3-producer="))?.slice(14)
 assert.ok(!profiles.has("z3") || (z3Producer && isAbsolute(z3Producer) && realpathSync(z3Producer) === z3Producer),
   "Z3 producer bundle path required")
+const ownsWorker = process.argv.includes("--no-worker")
 const profileEnv = {
   ...(profiles.has("z1") ? { FINNOR_Z1_PROFILE: "ordinary_disposable", P3_GOVERNORS: "1" } : {}),
   ...(profiles.has("z2") ? { FINNOR_Z2_DISPOSABLE_E2E: "1", FINNOR_Z2_CONVERGED_DEVELOPMENT: "1",
@@ -191,13 +192,18 @@ try {
   receipt.workerDatabaseRole = "finnor_worker"
   const workerEnv = { ...appEnv, DATABASE_URL: workerUrl.toString() }
   receipt.environmentFile = `native-environment-${attempt}.private.json`
-  writeFileSync(join(state, receipt.environmentFile), JSON.stringify(appEnv) + "\n", { flag: "wx", mode: 0o600 })
+  // A scenario that must kill and restart the worker at durable boundaries owns
+  // the worker lifecycle itself. It reads the worker role connection from the
+  // private file only; the application processes never receive it.
+  writeFileSync(join(state, receipt.environmentFile), JSON.stringify(ownsWorker
+    ? { ...appEnv, FINNOR_WORKER_DATABASE_URL: workerUrl.toString() } : appEnv) + "\n", { flag: "wx", mode: 0o600 })
+  receipt.workerLifecycle = ownsWorker ? "OWNED_BY_SCENARIO_NOT_STARTED_BY_LAUNCHER" : "STOCK_WORKER_STARTED_BY_LAUNCHER"
   receipt.stage = "LOOPBACK_SERVERS"
   save()
   const api = child("api", [join(backend, "node_modules/next/dist/bin/next"), "dev", "-H", "127.0.0.1", "-p", "3101"], join(backend, "apps/api"), appEnv)
   const frontend = child("frontend", [join(root, "node_modules/next/dist/bin/next"), "dev", "--webpack", "-H", "127.0.0.1", "-p", "3001"], root, appEnv)
-  const worker = child("worker", ["--import", require.resolve("tsx"), join(backend, "apps/worker/src/index.ts")], backend, workerEnv)
-  for (const proc of [api, frontend, worker]) {
+  const worker = ownsWorker ? null : child("worker", ["--import", require.resolve("tsx"), join(backend, "apps/worker/src/index.ts")], backend, workerEnv)
+  for (const proc of [api, frontend, ...(worker ? [worker] : [])]) {
     proc.once("exit", () => { if (!stopping) void stop(1, "OWNED_APPLICATION_PROCESS_EXITED") })
     proc.once("error", () => { if (!stopping) void stop(1, "OWNED_APPLICATION_PROCESS_START_FAILED") })
   }
