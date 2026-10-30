@@ -1,6 +1,7 @@
 import type {AllocationCheck,AllocationEnvelope,AllocationOutstandingCommitment,AllocationResource,CanonicalAllocationProblem} from "@finnor/shared-types";
 import {ExperimentRational,ER_ZERO} from "./experiment-numerics";
 import {allocationDerivedQuantity as quantity,allocationDecimal as decimal,sameAllocationRef,AllocationContractError} from "./allocation-contracts";
+import {originalPortfolioPopulation} from "./project-z/z1-shared-work/portfolio-population";
 
 export type AllocationSchedule=Map<string,ExperimentRational[]>;
 export interface CanonicalResourceScheduleInput {
@@ -16,7 +17,7 @@ export function verifyCanonicalResourceSchedules(input:CanonicalResourceSchedule
  const {resources,outstanding,paths}=input,h=input.horizon.periods;
  if(!paths.length||paths.length>64||new Set(paths.map(path=>path.id)).size!==paths.length||
   !resources.length||resources.length>16||new Set(resources.map(resource=>resource.resourceId)).size!==resources.length||
-  outstanding.length>256||!Number.isInteger(h)||h<1||h>24||!Number.isFinite(Date.parse(input.knowledgeAt)))
+  !originalPortfolioPopulation(outstanding).valid||!Number.isInteger(h)||h<1||h>24||!Number.isFinite(Date.parse(input.knowledgeAt)))
   throw new AllocationContractError("LIMIT_EXCEEDED","Canonical resource-path domain is incomplete or outside its bound");
  const named=new Map(resources.map(resource=>[resource.resourceId,resource]));
  const covenants=new Map(resources.flatMap(resource=>resource.covenants).map(covenant=>[covenant.id,covenant]));

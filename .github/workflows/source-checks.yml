@@ -52,6 +52,7 @@ jobs:
           npm run release:truth
           npm run test:release
           node --test scripts/release/ci-process.e2e.test.mjs
+          node scripts/release/project-z-ci.e2e.mjs
       - name: Retain governance evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a

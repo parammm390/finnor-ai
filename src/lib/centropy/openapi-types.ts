@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 466a0147bd8fc949b0ee4b438591c5a82891127a0471a85b8e2fef31bcf2791d.
+// Generated from finnor-os/openapi.json, SHA-256 50177dc820bb623e80f836caab3744a92dafc593ccec76338c95c0a1185713f0.
 export interface paths {
     "/api/live-controls": {
         parameters: {
@@ -2828,7 +2828,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff" | "application-submit" | "application-maintain" | "application-command" | "application-read" | "application-record" | "application-list" | "application-history" | "application-asset" | "application-cancel" | "application-rollback" | "application-impact" | "application-upload" | "application-prepare-effect" | "application-s8-propose" | "application-admission" | "application-acquire" | "application-execute" | "application-projection" | "application-resume" | "institution-submit" | "institution-revise" | "institution-read" | "institution-status" | "institution-cancel" | "institution-resume" | "institution-witness" | "institution-sources" | "institution-inputs" | "institution-mandate" | "institution-register-source" | "institution-consent" | "learning-consent" | "learning-revoke-consent" | "learning-experience" | "learning-submit" | "learning-read" | "learning-list" | "learning-execute" | "learning-evaluate" | "learning-cancel" | "learning-invalidate" | "learning-retry" | "learning-rollback" | "learning-s8-propose" | "learning-admission" | "learning-register-assignment" | "learning-retrain" | "identification-targets" | "identification-consent" | "identification-revoke-consent" | "identification-submit" | "identification-read" | "identification-list" | "identification-history" | "identification-experiment" | "identification-replicate" | "identification-use" | "identification-cancel" | "identification-invalidate" | "identification-retry" | "identification-s8-propose" | "identification-admission" | "economic-theory-submit" | "economic-theory-read" | "economic-theory-list" | "economic-theory-admit" | "economic-theory-resume" | "economic-theory-cancel" | "economic-theory-artifact" | "economic-theory-compare" | "economic-programme-create" | "economic-programme-run" | "economic-programme-read" | "economic-programme-reconcile" | "economic-reservation-create" | "economic-reservation-read" | "response-model-submit" | "response-model-list" | "response-model-read" | "response-model-admit" | "response-model-resume" | "response-model-cancel" | "response-model-artifact" | "response-model-compare" | "response-forecast" | "response-programme" | "response-use-read" | "response-use-resume" | "response-use-cancel" | "interaction-submit" | "interaction-read" | "interaction-list" | "interaction-admit" | "interaction-resume" | "interaction-cancel" | "interaction-artifact" | "interaction-compare" | "interaction-terms" | "interaction-local" | "interaction-consent" | "interaction-start" | "interaction-run-read" | "interaction-observe" | "interaction-action" | "interaction-materialize" | "interaction-run" | "interaction-reconcile" | "confidential-intake" | "confidential-source-handle" | "confidential-plan" | "confidential-submit" | "confidential-read" | "confidential-list" | "confidential-consent" | "confidential-revoke" | "confidential-prepare" | "confidential-commit" | "confidential-import-release" | "confidential-cancel" | "confidential-invalidate" | "confidential-retry" | "confidential-reconcile" | "confidential-underwriting" | "confidential-control-choice" | "confidential-allocation" | "confidential-obligation" | "confidential-s8-propose" | "confidential-s8-current";
+                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff" | "viability-submit" | "viability-read" | "viability-recover" | "z1-reserve-original-budget" | "z1-submit-shared-work" | "z1-read-shared-work" | "z1-admit-shared-work" | "z1-project-original-work" | "z1-cancel-shared-work" | "application-submit" | "application-maintain" | "application-command" | "application-read" | "application-record" | "application-list" | "application-history" | "application-asset" | "application-cancel" | "application-rollback" | "application-impact" | "application-upload" | "application-prepare-effect" | "application-s8-propose" | "application-admission" | "application-acquire" | "application-execute" | "application-projection" | "application-resume" | "institution-submit" | "institution-revise" | "institution-read" | "institution-status" | "institution-cancel" | "institution-resume" | "institution-witness" | "institution-sources" | "institution-inputs" | "institution-mandate" | "institution-register-source" | "institution-consent" | "learning-consent" | "learning-revoke-consent" | "learning-experience" | "learning-submit" | "learning-read" | "learning-list" | "learning-execute" | "learning-evaluate" | "learning-cancel" | "learning-invalidate" | "learning-retry" | "learning-rollback" | "learning-s8-propose" | "learning-admission" | "learning-register-assignment" | "learning-retrain" | "identification-targets" | "identification-consent" | "identification-revoke-consent" | "identification-submit" | "identification-read" | "identification-list" | "identification-history" | "identification-experiment" | "identification-replicate" | "identification-use" | "identification-cancel" | "identification-invalidate" | "identification-retry" | "identification-s8-propose" | "identification-admission" | "economic-theory-submit" | "economic-theory-read" | "economic-theory-list" | "economic-theory-admit" | "economic-theory-resume" | "economic-theory-cancel" | "economic-theory-artifact" | "economic-theory-compare" | "economic-programme-create" | "economic-programme-run" | "economic-programme-read" | "economic-programme-reconcile" | "economic-reservation-create" | "economic-reservation-read" | "response-model-submit" | "response-model-list" | "response-model-read" | "response-model-admit" | "response-model-resume" | "response-model-cancel" | "response-model-artifact" | "response-model-compare" | "response-forecast" | "response-programme" | "response-use-read" | "response-use-resume" | "response-use-cancel" | "interaction-submit" | "interaction-read" | "interaction-list" | "interaction-admit" | "interaction-resume" | "interaction-cancel" | "interaction-artifact" | "interaction-compare" | "interaction-terms" | "interaction-local" | "interaction-consent" | "interaction-start" | "interaction-run-read" | "interaction-observe" | "interaction-action" | "interaction-materialize" | "interaction-run" | "interaction-reconcile" | "coalition-submit" | "coalition-read" | "execution-proof-intake" | "execution-proof-plan" | "execution-proof-submit" | "execution-proof-read" | "execution-proof-list" | "execution-proof-audit" | "execution-proof-consume" | "execution-proof-cancel" | "confidential-intake" | "confidential-source-handle" | "confidential-plan" | "confidential-submit" | "confidential-read" | "confidential-list" | "confidential-consent" | "confidential-revoke" | "confidential-prepare" | "confidential-commit" | "confidential-import-release" | "confidential-cancel" | "confidential-invalidate" | "confidential-retry" | "confidential-reconcile" | "confidential-underwriting" | "confidential-control-choice" | "confidential-allocation" | "confidential-obligation" | "confidential-s8-propose" | "confidential-s8-current";
                 };
                 cookie?: never;
             };
@@ -10107,6 +10107,696 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/company-brain/viability-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["viability-submit"];
+                };
+            };
+            responses: {
+                /** @description Scoped viability session read. Checker success does not establish native S4 consumption or protected admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original Work synthesis or explicit recovery queued, not business completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only request required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Resource unavailable in the authenticated scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner prerequisite or viability predicate unpassed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/viability-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["viability-read"];
+                };
+            };
+            responses: {
+                /** @description Scoped viability session read. Checker success does not establish native S4 consumption or protected admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original Work synthesis or explicit recovery queued, not business completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only request required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Resource unavailable in the authenticated scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner prerequisite or viability predicate unpassed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/viability-recover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["viability-recover"];
+                };
+            };
+            responses: {
+                /** @description Scoped viability session read. Checker success does not establish native S4 consumption or protected admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original Work synthesis or explicit recovery queued, not business completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded data-only request required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Resource unavailable in the authenticated scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner prerequisite or viability predicate unpassed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/z1-reserve-original-budget": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["z1-reserve-original-budget"];
+                };
+            };
+            responses: {
+                /** @description Current scoped original Work result, exact shared request, ordinary checked-derivation admission, retained costs or cancellation. Never business completion or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict finite typed data-only request required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required before reading the body. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current original owner authority or explicit disposable profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original identity, currentness, generation or idempotency conflict. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded body exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact original budget, independent checking or native prerequisite unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/z1-submit-shared-work": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["z1-submit-shared-work"];
+                };
+            };
+            responses: {
+                /** @description Current scoped original Work result, exact shared request, ordinary checked-derivation admission, retained costs or cancellation. Never business completion or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict finite typed data-only request required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required before reading the body. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current original owner authority or explicit disposable profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original identity, currentness, generation or idempotency conflict. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded body exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact original budget, independent checking or native prerequisite unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/z1-read-shared-work": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["z1-read-shared-work"];
+                };
+            };
+            responses: {
+                /** @description Current scoped original Work result, exact shared request, ordinary checked-derivation admission, retained costs or cancellation. Never business completion or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict finite typed data-only request required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required before reading the body. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current original owner authority or explicit disposable profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original identity, currentness, generation or idempotency conflict. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded body exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact original budget, independent checking or native prerequisite unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/z1-admit-shared-work": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["z1-admit-shared-work"];
+                };
+            };
+            responses: {
+                /** @description Current scoped original Work result, exact shared request, ordinary checked-derivation admission, retained costs or cancellation. Never business completion or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict finite typed data-only request required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required before reading the body. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current original owner authority or explicit disposable profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original identity, currentness, generation or idempotency conflict. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded body exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact original budget, independent checking or native prerequisite unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/z1-project-original-work": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["z1-project-original-work"];
+                };
+            };
+            responses: {
+                /** @description Current scoped original Work result, exact shared request, ordinary checked-derivation admission, retained costs or cancellation. Never business completion or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict finite typed data-only request required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required before reading the body. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current original owner authority or explicit disposable profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original identity, currentness, generation or idempotency conflict. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded body exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact original budget, independent checking or native prerequisite unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/z1-cancel-shared-work": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["z1-cancel-shared-work"];
+                };
+            };
+            responses: {
+                /** @description Current scoped original Work result, exact shared request, ordinary checked-derivation admission, retained costs or cancellation. Never business completion or effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict finite typed data-only request required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required before reading the body. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current original owner authority or explicit disposable profile unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original identity, currentness, generation or idempotency conflict. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded body exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact original budget, independent checking or native prerequisite unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/company-brain/response-model-submit": {
         parameters: {
             query?: never;
@@ -13424,6 +14114,220 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/company-brain/coalition-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["coalition-submit"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/coalition-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["coalition-read"];
+                };
+            };
+            responses: {
+                /** @description Exact Work and participant-local dynamic protocol, development admission, terms, consent or retained native responsibility. No protected qualification or financial efficacy. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original bounded construction or guarded native programme accepted. Not completion. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict data-only contract required. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current canonical participant rights or disposable profile missing. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable or unauthorized exact participant, Work or root. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded authenticated body deadline exceeded. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original history, terms, resource revision or idempotency changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Frozen request bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact mathematical, consent, source or native owner prerequisite failed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/company-brain/economic-theory-submit": {
         parameters: {
             query?: never;
@@ -14908,6 +15812,694 @@ export interface paths {
                     content?: never;
                 };
                 /** @description Pinned checker/runtime or native capacity unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/execution-proof-intake": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["execution-proof-intake"];
+                };
+            };
+            responses: {
+                /** @description Current ordinary-disposable computation evidence or original native analytical guard use. No source truth, security, protected or effect admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable proof job queued, not checked or completed. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact bounded typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed identity required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in the current tenant/principal/Work scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded request or response exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original semantics, source, rights, deadline, budget, claim, owner acknowledgement or separate admission premise unpassed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned native runtime or configured owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/execution-proof-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["execution-proof-plan"];
+                };
+            };
+            responses: {
+                /** @description Current ordinary-disposable computation evidence or original native analytical guard use. No source truth, security, protected or effect admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable proof job queued, not checked or completed. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact bounded typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed identity required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in the current tenant/principal/Work scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded request or response exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original semantics, source, rights, deadline, budget, claim, owner acknowledgement or separate admission premise unpassed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned native runtime or configured owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/execution-proof-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["execution-proof-submit"];
+                };
+            };
+            responses: {
+                /** @description Current ordinary-disposable computation evidence or original native analytical guard use. No source truth, security, protected or effect admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable proof job queued, not checked or completed. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact bounded typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed identity required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in the current tenant/principal/Work scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded request or response exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original semantics, source, rights, deadline, budget, claim, owner acknowledgement or separate admission premise unpassed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned native runtime or configured owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/execution-proof-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["execution-proof-read"];
+                };
+            };
+            responses: {
+                /** @description Current ordinary-disposable computation evidence or original native analytical guard use. No source truth, security, protected or effect admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable proof job queued, not checked or completed. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact bounded typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed identity required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in the current tenant/principal/Work scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded request or response exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original semantics, source, rights, deadline, budget, claim, owner acknowledgement or separate admission premise unpassed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned native runtime or configured owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/execution-proof-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["execution-proof-list"];
+                };
+            };
+            responses: {
+                /** @description Current ordinary-disposable computation evidence or original native analytical guard use. No source truth, security, protected or effect admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable proof job queued, not checked or completed. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact bounded typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed identity required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in the current tenant/principal/Work scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded request or response exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original semantics, source, rights, deadline, budget, claim, owner acknowledgement or separate admission premise unpassed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned native runtime or configured owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/execution-proof-audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["execution-proof-audit"];
+                };
+            };
+            responses: {
+                /** @description Current ordinary-disposable computation evidence or original native analytical guard use. No source truth, security, protected or effect admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable proof job queued, not checked or completed. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact bounded typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed identity required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in the current tenant/principal/Work scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded request or response exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original semantics, source, rights, deadline, budget, claim, owner acknowledgement or separate admission premise unpassed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned native runtime or configured owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/execution-proof-consume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["execution-proof-consume"];
+                };
+            };
+            responses: {
+                /** @description Current ordinary-disposable computation evidence or original native analytical guard use. No source truth, security, protected or effect admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable proof job queued, not checked or completed. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact bounded typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed identity required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in the current tenant/principal/Work scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded request or response exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original semantics, source, rights, deadline, budget, claim, owner acknowledgement or separate admission premise unpassed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned native runtime or configured owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/execution-proof-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["execution-proof-cancel"];
+                };
+            };
+            responses: {
+                /** @description Current ordinary-disposable computation evidence or original native analytical guard use. No source truth, security, protected or effect admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original durable proof job queued, not checked or completed. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact bounded typed contract refused. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed identity required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable in the current tenant/principal/Work scope. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bounded request or response exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original semantics, source, rights, deadline, budget, claim, owner acknowledgement or separate admission premise unpassed. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Pinned native runtime or configured owner unavailable. */
                 503: {
                     headers: {
                         [name: string]: unknown;
@@ -35598,6 +37190,13 @@ export interface paths {
                         /** Format: date-time */
                         deadlineAt: string;
                         idempotencyKey: string;
+                        institutionalOrigin?: {
+                            /** Format: uuid */
+                            compilerRequestId: string;
+                            /** Format: uuid */
+                            programId: string;
+                            responsibilityIdentity: string;
+                        };
                     };
                 };
             };
@@ -42930,6 +44529,356 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        "viability-submit": {
+            /** Format: uuid */
+            workId: string;
+            arena?: unknown;
+            originalParentId?: string;
+            sourceRevision?: string;
+            mandateDigest?: string;
+            observationDigest?: string;
+            resourceDigest?: string;
+            /** Format: date-time */
+            deadlineAt?: string;
+            reservationRef?: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            } | null;
+            idempotencyKey: string;
+        };
+        "viability-read": {
+            /** Format: uuid */
+            sessionId?: string;
+            /** Format: uuid */
+            workId?: string;
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            } | null;
+        };
+        "viability-recover": {
+            /** Format: uuid */
+            sessionId: string;
+            idempotencyKey: string;
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            } | null;
+        };
+        "z1-reserve-original-budget": {
+            root: {
+                /** @constant */
+                entityType: "pe_deal";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+            idempotencyKey: string;
+            /** Format: date-time */
+            deadlineAt: string;
+            maximumTicks: number;
+            maximumCpuMicros: number;
+            maximumRetainedBytes: number;
+            maximumMemoryBytes: number;
+            resources: {
+                logical: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                cpu: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                storage: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                memory: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+            };
+        };
+        "z1-submit-shared-work": {
+            root: {
+                /** @constant */
+                entityType: "pe_deal";
+                /** Format: uuid */
+                entityId: string;
+            };
+            idempotencyKey: string;
+            works: {
+                /** Format: uuid */
+                workId: string;
+                declaration: {
+                    /** Format: uuid */
+                    sourceId: string;
+                    /** Format: uuid */
+                    versionId: string;
+                    contentDigest: string;
+                };
+            }[];
+            limits: {
+                maxTicks: number;
+                maxBytes: number;
+            };
+            previous?: {
+                /** Format: uuid */
+                requestId: string;
+                generation: number;
+                changes: {
+                    sourceChanges?: {
+                        sourceId: string;
+                        fromRevision: string;
+                        toRevision: string;
+                        insert: {
+                            [key: string]: string | boolean;
+                        }[];
+                        retract: {
+                            [key: string]: string | boolean;
+                        }[];
+                        revoked?: boolean;
+                    }[];
+                    workEdits?: {
+                        workId: string;
+                        expectedProgrammeRevision: string;
+                        replacement: {
+                            id: string;
+                            partition: {
+                                tenantId: string;
+                                principalId: string;
+                                permittedUse: string;
+                                rightsRevision: string;
+                                /** @enum {string} */
+                                classification: "PUBLIC" | "INTERNAL" | "CONFIDENTIAL" | "RESTRICTED";
+                            };
+                            inputRef: string;
+                            programmeRevision: string;
+                            objectiveRevision: string;
+                            termsRevision: string;
+                            modelRevision: string;
+                            unitsRevision: string;
+                            codeRevision: string;
+                            checkerRevision: string;
+                            programme: {
+                                nodes: ({
+                                    id: string;
+                                    /** @constant */
+                                    op: "source";
+                                    sourceId: string;
+                                } | {
+                                    id: string;
+                                    /** @constant */
+                                    op: "filter";
+                                    input: string;
+                                    predicate: components["schemas"]["Z1Predicate"];
+                                } | {
+                                    id: string;
+                                    /** @constant */
+                                    op: "project";
+                                    input: string;
+                                    fields: {
+                                        [key: string]: components["schemas"]["Z1Expression"];
+                                    };
+                                    /** @enum {string} */
+                                    semantics: "bag" | "set";
+                                } | {
+                                    id: string;
+                                    /** @constant */
+                                    op: "join";
+                                    left: string;
+                                    right: string;
+                                    on: {
+                                        left: string;
+                                        right: string;
+                                    }[];
+                                    rightPrefix: string;
+                                } | {
+                                    id: string;
+                                    /** @constant */
+                                    op: "union";
+                                    inputs: string[];
+                                    /** @enum {string} */
+                                    semantics: "bag" | "set";
+                                } | {
+                                    id: string;
+                                    /** @constant */
+                                    op: "sum";
+                                    input: string;
+                                    keys: string[];
+                                    values: {
+                                        [key: string]: components["schemas"]["Z1Expression"];
+                                    };
+                                    /** @constant */
+                                    empty: "zero";
+                                } | {
+                                    id: string;
+                                    /** @constant */
+                                    op: "select";
+                                    input: string;
+                                    order: {
+                                        field: string;
+                                        /** @enum {string} */
+                                        direction: "asc" | "desc";
+                                    }[];
+                                    limit: number;
+                                    /** @constant */
+                                    ties: "CANONICAL_ROW";
+                                })[];
+                                output: string;
+                            };
+                            parameters: {
+                                [key: string]: {
+                                    type: {
+                                        /** @enum {string} */
+                                        kind: "integer" | "rational";
+                                        unit: string;
+                                        currency: string | null;
+                                    } | {
+                                        /** @constant */
+                                        kind: "text";
+                                    } | {
+                                        /** @constant */
+                                        kind: "boolean";
+                                    };
+                                    value: string | boolean;
+                                };
+                            };
+                            resources: {
+                                mandateRef: string;
+                                assignmentRef: string;
+                                parentReservationRef: string;
+                                remainingBudgetRef: string;
+                                /** Format: date-time */
+                                originalDeadline: string;
+                                remainingTicks: string;
+                            };
+                            unresolvedObligationRefs: string[];
+                            withdrawn: boolean;
+                        };
+                    }[];
+                    withdrawWorkIds?: string[];
+                };
+            };
+        };
+        "z1-read-shared-work": {
+            root: {
+                /** @constant */
+                entityType: "pe_deal";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            requestId: string;
+            /**
+             * @default SUMMARY
+             * @enum {string}
+             */
+            view: "SUMMARY" | "ORIGINAL_REQUEST" | "PUBLICATION" | "TRACE";
+            /** @default 0 */
+            afterEventId: string;
+        };
+        "z1-admit-shared-work": {
+            root: {
+                /** @constant */
+                entityType: "pe_deal";
+                /** Format: uuid */
+                entityId: string;
+            };
+            publication: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+        };
+        "z1-project-original-work": {
+            root: {
+                /** @constant */
+                entityType: "pe_deal";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+        };
+        "z1-cancel-shared-work": {
+            root: {
+                /** @constant */
+                entityType: "pe_deal";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            requestId: string;
+            expectedGeneration: number;
+        };
+        Z1Expression: {
+            /** @constant */
+            op: "field";
+            name: string;
+        } | {
+            /** @constant */
+            op: "param";
+            name: string;
+        } | {
+            /** @constant */
+            op: "literal";
+            type: {
+                /** @enum {string} */
+                kind: "integer" | "rational";
+                unit: string;
+                currency: string | null;
+            } | {
+                /** @constant */
+                kind: "text";
+            } | {
+                /** @constant */
+                kind: "boolean";
+            };
+            value: string | boolean;
+        } | {
+            /** @enum {string} */
+            op: "add" | "sub" | "mul" | "div";
+            left: components["schemas"]["Z1Expression"];
+            right: components["schemas"]["Z1Expression"];
+        } | {
+            /** @constant */
+            op: "round";
+            value: components["schemas"]["Z1Expression"];
+            places: number;
+            /** @enum {string} */
+            mode: "HALF_EVEN" | "HALF_AWAY" | "FLOOR" | "CEILING" | "TRUNCATE";
+        };
+        Z1Predicate: {
+            /** @enum {string} */
+            op: "eq" | "ne" | "lt" | "le" | "gt" | "ge";
+            left: components["schemas"]["Z1Expression"];
+            right: components["schemas"]["Z1Expression"];
+        } | {
+            /** @enum {string} */
+            op: "and" | "or";
+            args: components["schemas"]["Z1Predicate"][];
+        } | {
+            /** @constant */
+            op: "not";
+            arg: components["schemas"]["Z1Predicate"];
+        };
         X2ApplicationCancel: {
             root: {
                 /** @enum {string} */
@@ -45885,6 +47834,435 @@ export interface components {
                 contentDigest: string;
             };
         };
+        "execution-proof-intake": {
+            /** @constant */
+            schema: "finnor.z4.submit.v1";
+            /** @constant */
+            mode: "ordinary_disposable";
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            idempotencyKey: string;
+            purpose: string;
+            program: {
+                /** @constant */
+                schema: "finnor.z4.integer-program.v1";
+                inputCount: number;
+                registers: {
+                    /** @enum {string} */
+                    type: "i64" | "bool";
+                    unit: string;
+                }[];
+                inputUnits: string[];
+                /** @constant */
+                rounding: "EXACT_NO_CONVERSION";
+                instructions: {
+                    /** @enum {string} */
+                    op: "add" | "sub" | "mul" | "lt" | "eq" | "select";
+                    dst: number;
+                    a: {
+                        reg: number;
+                    } | {
+                        input: number;
+                    } | {
+                        const: string;
+                    };
+                    b: {
+                        reg: number;
+                    } | {
+                        input: number;
+                    } | {
+                        const: string;
+                    };
+                    c?: {
+                        reg: number;
+                    } | {
+                        input: number;
+                    } | {
+                        const: string;
+                    };
+                }[];
+            };
+            initial: string[];
+            ownerContract: {
+                modelRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                periods: number[];
+                columns: {
+                    /** @enum {string} */
+                    kind: "STATE" | "EXPOSURE";
+                    variableId: string;
+                    unit: string;
+                }[];
+                /** @constant */
+                owner: "S3";
+                query: {
+                    [key: string]: unknown;
+                };
+                guard: {
+                    register: number;
+                    unit: string;
+                    minimum: string;
+                    maximum: string;
+                };
+            } | {
+                modelRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                periods: number[];
+                columns: {
+                    /** @enum {string} */
+                    kind: "STATE" | "EXPOSURE";
+                    variableId: string;
+                    unit: string;
+                }[];
+                /** @constant */
+                owner: "S4";
+                policyRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                decision: {
+                    [key: string]: unknown;
+                };
+                allocationRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                } | null;
+                guard: {
+                    register: number;
+                    unit: string;
+                    minimum: string;
+                    maximum: string;
+                };
+            };
+            /** Format: date-time */
+            deadlineAt: string;
+            resourceDemand: {
+                resourceId: string;
+                /** @enum {string} */
+                unit: "request" | "seconds";
+                amount: string;
+            }[];
+            maxMemoryBytes: number;
+            maxCpuSeconds: number;
+            maxAttempts: number;
+            maxRetainedBytes: number;
+        };
+        "execution-proof-plan": {
+            /** @constant */
+            schema: "finnor.z4.submit.v1";
+            /** @constant */
+            mode: "ordinary_disposable";
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+            /** Format: uuid */
+            workInputId: string;
+            idempotencyKey: string;
+            purpose: string;
+            program: {
+                /** @constant */
+                schema: "finnor.z4.integer-program.v1";
+                inputCount: number;
+                registers: {
+                    /** @enum {string} */
+                    type: "i64" | "bool";
+                    unit: string;
+                }[];
+                inputUnits: string[];
+                /** @constant */
+                rounding: "EXACT_NO_CONVERSION";
+                instructions: {
+                    /** @enum {string} */
+                    op: "add" | "sub" | "mul" | "lt" | "eq" | "select";
+                    dst: number;
+                    a: {
+                        reg: number;
+                    } | {
+                        input: number;
+                    } | {
+                        const: string;
+                    };
+                    b: {
+                        reg: number;
+                    } | {
+                        input: number;
+                    } | {
+                        const: string;
+                    };
+                    c?: {
+                        reg: number;
+                    } | {
+                        input: number;
+                    } | {
+                        const: string;
+                    };
+                }[];
+            };
+            initial: string[];
+            ownerContract: {
+                modelRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                periods: number[];
+                columns: {
+                    /** @enum {string} */
+                    kind: "STATE" | "EXPOSURE";
+                    variableId: string;
+                    unit: string;
+                }[];
+                /** @constant */
+                owner: "S3";
+                query: {
+                    [key: string]: unknown;
+                };
+                guard: {
+                    register: number;
+                    unit: string;
+                    minimum: string;
+                    maximum: string;
+                };
+            } | {
+                modelRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                periods: number[];
+                columns: {
+                    /** @enum {string} */
+                    kind: "STATE" | "EXPOSURE";
+                    variableId: string;
+                    unit: string;
+                }[];
+                /** @constant */
+                owner: "S4";
+                policyRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                decision: {
+                    [key: string]: unknown;
+                };
+                allocationRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                } | null;
+                guard: {
+                    register: number;
+                    unit: string;
+                    minimum: string;
+                    maximum: string;
+                };
+            };
+            /** Format: date-time */
+            deadlineAt: string;
+            resourceDemand: {
+                resourceId: string;
+                /** @enum {string} */
+                unit: "request" | "seconds";
+                amount: string;
+            }[];
+            maxMemoryBytes: number;
+            maxCpuSeconds: number;
+            maxAttempts: number;
+            maxRetainedBytes: number;
+        };
+        "execution-proof-submit": {
+            /** @constant */
+            schema: "finnor.z4.submit.v1";
+            /** @constant */
+            mode: "ordinary_disposable";
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+            /** Format: uuid */
+            workInputId: string;
+            workRevisionRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+            idempotencyKey: string;
+            purpose: string;
+            program: {
+                /** @constant */
+                schema: "finnor.z4.integer-program.v1";
+                inputCount: number;
+                registers: {
+                    /** @enum {string} */
+                    type: "i64" | "bool";
+                    unit: string;
+                }[];
+                inputUnits: string[];
+                /** @constant */
+                rounding: "EXACT_NO_CONVERSION";
+                instructions: {
+                    /** @enum {string} */
+                    op: "add" | "sub" | "mul" | "lt" | "eq" | "select";
+                    dst: number;
+                    a: {
+                        reg: number;
+                    } | {
+                        input: number;
+                    } | {
+                        const: string;
+                    };
+                    b: {
+                        reg: number;
+                    } | {
+                        input: number;
+                    } | {
+                        const: string;
+                    };
+                    c?: {
+                        reg: number;
+                    } | {
+                        input: number;
+                    } | {
+                        const: string;
+                    };
+                }[];
+            };
+            initial: string[];
+            ownerContract: {
+                modelRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                periods: number[];
+                columns: {
+                    /** @enum {string} */
+                    kind: "STATE" | "EXPOSURE";
+                    variableId: string;
+                    unit: string;
+                }[];
+                /** @constant */
+                owner: "S3";
+                query: {
+                    [key: string]: unknown;
+                };
+                guard: {
+                    register: number;
+                    unit: string;
+                    minimum: string;
+                    maximum: string;
+                };
+            } | {
+                modelRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                periods: number[];
+                columns: {
+                    /** @enum {string} */
+                    kind: "STATE" | "EXPOSURE";
+                    variableId: string;
+                    unit: string;
+                }[];
+                /** @constant */
+                owner: "S4";
+                policyRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                decision: {
+                    [key: string]: unknown;
+                };
+                allocationRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                } | null;
+                guard: {
+                    register: number;
+                    unit: string;
+                    minimum: string;
+                    maximum: string;
+                };
+            };
+            /** Format: date-time */
+            deadlineAt: string;
+            resourceDemand: {
+                resourceId: string;
+                /** @enum {string} */
+                unit: "request" | "seconds";
+                amount: string;
+            }[];
+            maxMemoryBytes: number;
+            maxCpuSeconds: number;
+            maxAttempts: number;
+            maxRetainedBytes: number;
+        };
+        "execution-proof-read": {
+            /** Format: uuid */
+            sessionId: string;
+        };
+        "execution-proof-list": {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+        };
+        "execution-proof-audit": {
+            /** Format: uuid */
+            sessionId: string;
+        };
+        "execution-proof-consume": {
+            /** Format: uuid */
+            sessionId: string;
+            capsuleDigest: string;
+            idempotencyKey: string;
+        };
+        "execution-proof-cancel": {
+            /** Format: uuid */
+            sessionId: string;
+        };
         "interaction-submit": {
             /** @constant */
             schema: "finnor.interaction-request.v1";
@@ -45901,60 +48279,32 @@ export interface components {
                 schema: "finnor.interaction-problem.v1";
                 id: string;
                 title: string;
-                participants: [
-                    {
-                        /** @constant */
-                        id: "P0";
-                        /** Format: uuid */
-                        principalId: string;
-                        outsideOption: {
-                            value: string | null;
-                            basis: {
-                                unit: string;
-                                currency: string | null;
-                                timeBasis: string;
+                participants: {
+                    /** @enum {string} */
+                    id: "P0" | "P1" | "P2" | "P3";
+                    /** Format: uuid */
+                    principalId: string;
+                    outsideOption: {
+                        value: string | null;
+                        basis: {
+                            unit: string;
+                            currency: string | null;
+                            timeBasis: string;
+                            owner: string;
+                            /** @constant */
+                            rounding: "EXACT";
+                            /** @enum {string} */
+                            sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                            sourceRef: {
                                 owner: string;
-                                /** @constant */
-                                rounding: "EXACT";
-                                /** @enum {string} */
-                                sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
-                                sourceRef: {
-                                    owner: string;
-                                    id: string;
-                                    version: string;
-                                    contentDigest: string;
-                                };
+                                id: string;
+                                version: string;
+                                contentDigest: string;
                             };
-                            unknownReason?: string;
                         };
-                    },
-                    {
-                        /** @constant */
-                        id: "P1";
-                        /** Format: uuid */
-                        principalId: string;
-                        outsideOption: {
-                            value: string | null;
-                            basis: {
-                                unit: string;
-                                currency: string | null;
-                                timeBasis: string;
-                                owner: string;
-                                /** @constant */
-                                rounding: "EXACT";
-                                /** @enum {string} */
-                                sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
-                                sourceRef: {
-                                    owner: string;
-                                    id: string;
-                                    version: string;
-                                    contentDigest: string;
-                                };
-                            };
-                            unknownReason?: string;
-                        };
-                    }
-                ];
+                        unknownReason?: string;
+                    };
+                }[];
                 dates: [
                     string,
                     string,
@@ -45973,40 +48323,22 @@ export interface components {
                     contentDigest: string;
                 }[];
                 quantityBasis: {
-                    utilities: [
-                        {
-                            unit: string;
-                            currency: string | null;
-                            timeBasis: string;
+                    utilities: {
+                        unit: string;
+                        currency: string | null;
+                        timeBasis: string;
+                        owner: string;
+                        /** @constant */
+                        rounding: "EXACT";
+                        /** @enum {string} */
+                        sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                        sourceRef: {
                             owner: string;
-                            /** @constant */
-                            rounding: "EXACT";
-                            /** @enum {string} */
-                            sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
-                            sourceRef: {
-                                owner: string;
-                                id: string;
-                                version: string;
-                                contentDigest: string;
-                            };
-                        },
-                        {
-                            unit: string;
-                            currency: string | null;
-                            timeBasis: string;
-                            owner: string;
-                            /** @constant */
-                            rounding: "EXACT";
-                            /** @enum {string} */
-                            sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
-                            sourceRef: {
-                                owner: string;
-                                id: string;
-                                version: string;
-                                contentDigest: string;
-                            };
-                        }
-                    ];
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    }[];
                     ownerValue: {
                         unit: string;
                         currency: string | null;
@@ -46025,96 +48357,52 @@ export interface components {
                     };
                 };
                 financialLimits: {
-                    absolutePayments: [
-                        {
-                            value: string | null;
-                            basis: {
-                                unit: string;
-                                currency: string | null;
-                                timeBasis: string;
+                    absolutePayments: {
+                        value: string | null;
+                        basis: {
+                            unit: string;
+                            currency: string | null;
+                            timeBasis: string;
+                            owner: string;
+                            /** @constant */
+                            rounding: "EXACT";
+                            /** @enum {string} */
+                            sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                            sourceRef: {
                                 owner: string;
-                                /** @constant */
-                                rounding: "EXACT";
-                                /** @enum {string} */
-                                sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
-                                sourceRef: {
-                                    owner: string;
-                                    id: string;
-                                    version: string;
-                                    contentDigest: string;
-                                };
+                                id: string;
+                                version: string;
+                                contentDigest: string;
                             };
-                            unknownReason?: string;
-                        },
-                        {
-                            value: string | null;
-                            basis: {
-                                unit: string;
-                                currency: string | null;
-                                timeBasis: string;
+                        };
+                        unknownReason?: string;
+                    }[];
+                    liabilities: {
+                        value: string | null;
+                        basis: {
+                            unit: string;
+                            currency: string | null;
+                            timeBasis: string;
+                            owner: string;
+                            /** @constant */
+                            rounding: "EXACT";
+                            /** @enum {string} */
+                            sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                            sourceRef: {
                                 owner: string;
-                                /** @constant */
-                                rounding: "EXACT";
-                                /** @enum {string} */
-                                sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
-                                sourceRef: {
-                                    owner: string;
-                                    id: string;
-                                    version: string;
-                                    contentDigest: string;
-                                };
+                                id: string;
+                                version: string;
+                                contentDigest: string;
                             };
-                            unknownReason?: string;
-                        }
-                    ];
-                    liabilities: [
-                        {
-                            value: string | null;
-                            basis: {
-                                unit: string;
-                                currency: string | null;
-                                timeBasis: string;
-                                owner: string;
-                                /** @constant */
-                                rounding: "EXACT";
-                                /** @enum {string} */
-                                sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
-                                sourceRef: {
-                                    owner: string;
-                                    id: string;
-                                    version: string;
-                                    contentDigest: string;
-                                };
-                            };
-                            unknownReason?: string;
-                        },
-                        {
-                            value: string | null;
-                            basis: {
-                                unit: string;
-                                currency: string | null;
-                                timeBasis: string;
-                                owner: string;
-                                /** @constant */
-                                rounding: "EXACT";
-                                /** @enum {string} */
-                                sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
-                                sourceRef: {
-                                    owner: string;
-                                    id: string;
-                                    version: string;
-                                    contentDigest: string;
-                                };
-                            };
-                            unknownReason?: string;
-                        }
-                    ];
+                        };
+                        unknownReason?: string;
+                    }[];
                     /** @constant */
                     semantics: "SIGNED_NODE_SNAPSHOTS_NO_IMPLICIT_NETTING_OR_UTILITY_CONVERSION";
                 };
                 observationRules: {
                     key: string;
-                    allowedRecipients: ("P0" | "P1" | "PUBLIC")[];
+                    allowedRecipients: ("P0" | "P1" | "P2" | "P3" | "PUBLIC")[];
                     mandatoryByDate: (0 | 1 | 2) | null;
                     /** @enum {string} */
                     classification: "SOURCED_FACT" | "AUTHENTICATED_ASSERTION" | "MODEL_RELATIVE_STATEMENT" | "UNRESOLVED_CLAIM";
@@ -46144,26 +48432,17 @@ export interface components {
                         id: string;
                         /** @enum {number} */
                         date: 0 | 1 | 2;
-                        state: [
-                            0 | 1,
-                            0 | 1
-                        ];
+                        state: (0 | 1)[];
                         observations: {
                             key: string;
                             value: string;
-                            recipients: ("P0" | "P1" | "PUBLIC")[];
+                            recipients: ("P0" | "P1" | "P2" | "P3" | "PUBLIC")[];
                         }[];
                         resources: {
                             [key: string]: string;
                         };
-                        payments: [
-                            string,
-                            string
-                        ];
-                        liabilities: [
-                            string,
-                            string
-                        ];
+                        payments: string[];
+                        liabilities: string[];
                         /** @constant */
                         kind: "CHANCE";
                         /** @enum {string} */
@@ -46187,30 +48466,21 @@ export interface components {
                         id: string;
                         /** @enum {number} */
                         date: 0 | 1 | 2;
-                        state: [
-                            0 | 1,
-                            0 | 1
-                        ];
+                        state: (0 | 1)[];
                         observations: {
                             key: string;
                             value: string;
-                            recipients: ("P0" | "P1" | "PUBLIC")[];
+                            recipients: ("P0" | "P1" | "P2" | "P3" | "PUBLIC")[];
                         }[];
                         resources: {
                             [key: string]: string;
                         };
-                        payments: [
-                            string,
-                            string
-                        ];
-                        liabilities: [
-                            string,
-                            string
-                        ];
+                        payments: string[];
+                        liabilities: string[];
                         /** @constant */
                         kind: "DECISION";
                         /** @enum {string} */
-                        participant: "P0" | "P1";
+                        participant: "P0" | "P1" | "P2" | "P3";
                         edges: {
                             actionId: string;
                             next: string;
@@ -46220,26 +48490,17 @@ export interface components {
                         id: string;
                         /** @enum {number} */
                         date: 0 | 1 | 2;
-                        state: [
-                            0 | 1,
-                            0 | 1
-                        ];
+                        state: (0 | 1)[];
                         observations: {
                             key: string;
                             value: string;
-                            recipients: ("P0" | "P1" | "PUBLIC")[];
+                            recipients: ("P0" | "P1" | "P2" | "P3" | "PUBLIC")[];
                         }[];
                         resources: {
                             [key: string]: string;
                         };
-                        payments: [
-                            string,
-                            string
-                        ];
-                        liabilities: [
-                            string,
-                            string
-                        ];
+                        payments: string[];
+                        liabilities: string[];
                         /** @constant */
                         kind: "PROTOCOL";
                         controlId: string;
@@ -46251,32 +48512,20 @@ export interface components {
                         id: string;
                         /** @enum {number} */
                         date: 0 | 1 | 2;
-                        state: [
-                            0 | 1,
-                            0 | 1
-                        ];
+                        state: (0 | 1)[];
                         observations: {
                             key: string;
                             value: string;
-                            recipients: ("P0" | "P1" | "PUBLIC")[];
+                            recipients: ("P0" | "P1" | "P2" | "P3" | "PUBLIC")[];
                         }[];
                         resources: {
                             [key: string]: string;
                         };
-                        payments: [
-                            string,
-                            string
-                        ];
-                        liabilities: [
-                            string,
-                            string
-                        ];
+                        payments: string[];
+                        liabilities: string[];
                         /** @constant */
                         kind: "TERMINAL";
-                        payoff: [
-                            string | null,
-                            string | null
-                        ];
+                        payoff: (string | null)[];
                         ownerValue: string | null;
                     })[];
                 }[];
@@ -46519,6 +48768,381 @@ export interface components {
         "interaction-reconcile": {
             /** Format: uuid */
             runId: string;
+        };
+        "coalition-submit": {
+            /** @constant */
+            schema: "finnor.interaction-request.v1";
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+            problem: {
+                /** @constant */
+                schema: "finnor.interaction-problem.v1";
+                id: string;
+                title: string;
+                participants: {
+                    /** @enum {string} */
+                    id: "P0" | "P1" | "P2" | "P3";
+                    /** Format: uuid */
+                    principalId: string;
+                    outsideOption: {
+                        value: string | null;
+                        basis: {
+                            unit: string;
+                            currency: string | null;
+                            timeBasis: string;
+                            owner: string;
+                            /** @constant */
+                            rounding: "EXACT";
+                            /** @enum {string} */
+                            sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                            sourceRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                        };
+                        unknownReason?: string;
+                    };
+                }[];
+                dates: [
+                    string,
+                    string,
+                    string
+                ];
+                fixedOperatorRefs: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                }[];
+                actorModelRefs: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                }[];
+                quantityBasis: {
+                    utilities: {
+                        unit: string;
+                        currency: string | null;
+                        timeBasis: string;
+                        owner: string;
+                        /** @constant */
+                        rounding: "EXACT";
+                        /** @enum {string} */
+                        sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                        sourceRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    }[];
+                    ownerValue: {
+                        unit: string;
+                        currency: string | null;
+                        timeBasis: string;
+                        owner: string;
+                        /** @constant */
+                        rounding: "EXACT";
+                        /** @enum {string} */
+                        sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                        sourceRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    };
+                };
+                financialLimits: {
+                    absolutePayments: {
+                        value: string | null;
+                        basis: {
+                            unit: string;
+                            currency: string | null;
+                            timeBasis: string;
+                            owner: string;
+                            /** @constant */
+                            rounding: "EXACT";
+                            /** @enum {string} */
+                            sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                            sourceRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                        };
+                        unknownReason?: string;
+                    }[];
+                    liabilities: {
+                        value: string | null;
+                        basis: {
+                            unit: string;
+                            currency: string | null;
+                            timeBasis: string;
+                            owner: string;
+                            /** @constant */
+                            rounding: "EXACT";
+                            /** @enum {string} */
+                            sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                            sourceRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                        };
+                        unknownReason?: string;
+                    }[];
+                    /** @constant */
+                    semantics: "SIGNED_NODE_SNAPSHOTS_NO_IMPLICIT_NETTING_OR_UTILITY_CONVERSION";
+                };
+                observationRules: {
+                    key: string;
+                    allowedRecipients: ("P0" | "P1" | "P2" | "P3" | "PUBLIC")[];
+                    mandatoryByDate: (0 | 1 | 2) | null;
+                    /** @enum {string} */
+                    classification: "SOURCED_FACT" | "AUTHENTICATED_ASSERTION" | "MODEL_RELATIVE_STATEMENT" | "UNRESOLVED_CLAIM";
+                    sourceRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                }[];
+                controls: {
+                    id: string;
+                    /** @enum {string} */
+                    kind: "DISCLOSURE" | "COMMUNICATION" | "COMMITMENT_TIMING";
+                    options: string[];
+                }[];
+                models: {
+                    id: string;
+                    qualificationRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    root: string;
+                    nodes: ({
+                        id: string;
+                        /** @enum {number} */
+                        date: 0 | 1 | 2;
+                        state: (0 | 1)[];
+                        observations: {
+                            key: string;
+                            value: string;
+                            recipients: ("P0" | "P1" | "P2" | "P3" | "PUBLIC")[];
+                        }[];
+                        resources: {
+                            [key: string]: string;
+                        };
+                        payments: string[];
+                        liabilities: string[];
+                        /** @constant */
+                        kind: "CHANCE";
+                        /** @enum {string} */
+                        chanceRole: "PRIOR" | "TRANSITION" | "SIGNAL";
+                        probabilityBasis: {
+                            population: string;
+                            conditioning: string;
+                            identificationRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                        };
+                        edges: {
+                            actionId: string;
+                            next: string;
+                            probability: string | null;
+                        }[];
+                    } | {
+                        id: string;
+                        /** @enum {number} */
+                        date: 0 | 1 | 2;
+                        state: (0 | 1)[];
+                        observations: {
+                            key: string;
+                            value: string;
+                            recipients: ("P0" | "P1" | "P2" | "P3" | "PUBLIC")[];
+                        }[];
+                        resources: {
+                            [key: string]: string;
+                        };
+                        payments: string[];
+                        liabilities: string[];
+                        /** @constant */
+                        kind: "DECISION";
+                        /** @enum {string} */
+                        participant: "P0" | "P1" | "P2" | "P3";
+                        edges: {
+                            actionId: string;
+                            next: string;
+                        }[];
+                        informationSet?: string;
+                    } | {
+                        id: string;
+                        /** @enum {number} */
+                        date: 0 | 1 | 2;
+                        state: (0 | 1)[];
+                        observations: {
+                            key: string;
+                            value: string;
+                            recipients: ("P0" | "P1" | "P2" | "P3" | "PUBLIC")[];
+                        }[];
+                        resources: {
+                            [key: string]: string;
+                        };
+                        payments: string[];
+                        liabilities: string[];
+                        /** @constant */
+                        kind: "PROTOCOL";
+                        controlId: string;
+                        edges: {
+                            actionId: string;
+                            next: string;
+                        }[];
+                    } | {
+                        id: string;
+                        /** @enum {number} */
+                        date: 0 | 1 | 2;
+                        state: (0 | 1)[];
+                        observations: {
+                            key: string;
+                            value: string;
+                            recipients: ("P0" | "P1" | "P2" | "P3" | "PUBLIC")[];
+                        }[];
+                        resources: {
+                            [key: string]: string;
+                        };
+                        payments: string[];
+                        liabilities: string[];
+                        /** @constant */
+                        kind: "TERMINAL";
+                        payoff: (string | null)[];
+                        ownerValue: string | null;
+                    })[];
+                }[];
+                resourceLimits: {
+                    [key: string]: {
+                        value: string | null;
+                        basis: {
+                            unit: string;
+                            currency: string | null;
+                            timeBasis: string;
+                            owner: string;
+                            /** @constant */
+                            rounding: "EXACT";
+                            /** @enum {string} */
+                            sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                            sourceRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                        };
+                        unknownReason?: string;
+                    };
+                };
+                goal: {
+                    minimumOwnerValue: {
+                        value: string | null;
+                        basis: {
+                            unit: string;
+                            currency: string | null;
+                            timeBasis: string;
+                            owner: string;
+                            /** @constant */
+                            rounding: "EXACT";
+                            /** @enum {string} */
+                            sourceStatus: "SUPPLIED_MODEL" | "CANONICAL_OBSERVATION" | "UNKNOWN";
+                            sourceRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                        };
+                        unknownReason?: string;
+                    };
+                    requireNontrivial: boolean;
+                };
+            };
+            lowering: {
+                /** @constant */
+                schema: "finnor.y3.fixed-y1-lowering.v1";
+                /** Format: uuid */
+                theoryId: string;
+                theoryRef: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+                outcomes: ({
+                    modelId: string;
+                    terminalNodeId: string;
+                    terminalDigest: string;
+                    before: {
+                        [key: string]: string;
+                    };
+                    after: {
+                        [key: string]: string;
+                    };
+                    /** @constant */
+                    kind: "NO_EFFECT";
+                } | {
+                    modelId: string;
+                    terminalNodeId: string;
+                    terminalDigest: string;
+                    before: {
+                        [key: string]: string;
+                    };
+                    after: {
+                        [key: string]: string;
+                    };
+                    /** @constant */
+                    kind: "RIGHT_TRANSITION";
+                    operatorId: string;
+                    parameters: {
+                        [key: string]: string;
+                    };
+                })[];
+            };
+            sources: {
+                /** Format: uuid */
+                sourceId: string;
+                /** Format: uuid */
+                versionId: string;
+                contentDigest: string;
+                claimKey: string;
+                ref: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                };
+            }[];
+            idempotencyKey: string;
+            /** Format: uuid */
+            parentProtocolId?: string;
+        };
+        "coalition-read": {
+            /** Format: uuid */
+            protocolId: string;
         };
         X3Expression: {
             /** @constant */

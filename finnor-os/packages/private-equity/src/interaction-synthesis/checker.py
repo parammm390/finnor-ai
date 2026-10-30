@@ -112,7 +112,9 @@ def schema(problem):
     obj(problem, ("schema", "id", "title", "participants", "dates", "fixedOperatorRefs", "actorModelRefs", "quantityBasis", "financialLimits", "observationRules", "controls", "models", "resourceLimits", "goal"))
     need(problem["schema"] == "finnor.interaction-problem.v1", "Y3_SCHEMA")
     identifier(problem["id"]); text(problem["title"])
-    need(type(problem["participants"]) is list and len(problem["participants"]) == 2, "Y3_PARTIES")
+    need(type(problem["participants"]) is list and 2 <= len(problem["participants"]) <= 4, "Y3_PARTIES")
+    n_parties = len(problem["participants"])
+    parties = tuple("P"+str(i) for i in range(n_parties))
     for i, participant in enumerate(problem["participants"]):
         obj(participant, ("id", "principalId", "outsideOption"))
         need(participant["id"] == "P" + str(i), "Y3_PARTY_ID")
@@ -134,7 +136,7 @@ def schema(problem):
         for r in problem[key]:
             reference(r)
     obj(problem["quantityBasis"], ("utilities", "ownerValue"))
-    need(type(problem["quantityBasis"]["utilities"]) is list and len(problem["quantityBasis"]["utilities"]) == 2, "Y3_UTILITY_BASES")
+    need(type(problem["quantityBasis"]["utilities"]) is list and len(problem["quantityBasis"]["utilities"]) == n_parties, "Y3_UTILITY_BASES")
     for b in problem["quantityBasis"]["utilities"] + [problem["quantityBasis"]["ownerValue"]]:
         basis(b)
         if b["sourceStatus"] == "UNKNOWN":
@@ -143,7 +145,7 @@ def schema(problem):
     obj(limits, ("absolutePayments", "liabilities", "semantics"))
     need(limits["semantics"] == "SIGNED_NODE_SNAPSHOTS_NO_IMPLICIT_NETTING_OR_UTILITY_CONVERSION", "Y3_FINANCIAL_SEMANTICS")
     for field in ("absolutePayments", "liabilities"):
-        need(type(limits[field]) is list and len(limits[field]) == 2, "Y3_FINANCIAL_LIMIT_PAIR")
+        need(type(limits[field]) is list and len(limits[field]) == n_parties, "Y3_FINANCIAL_LIMIT_PAIR")
         for value in limits[field]:
             need(known_quantity(value) >= 0, "Y3_NEGATIVE_FINANCIAL_LIMIT")
     for i, p in enumerate(problem["participants"]):
@@ -161,7 +163,7 @@ def schema(problem):
     for rule in problem["observationRules"]:
         obj(rule, ("key", "allowedRecipients", "mandatoryByDate", "classification", "sourceRef"))
         identifier(rule["key"])
-        need(type(rule["allowedRecipients"]) is list and 1 <= len(rule["allowedRecipients"]) <= 3 and all(r in ("P0", "P1", "PUBLIC") for r in rule["allowedRecipients"]), "Y3_RECIPIENTS")
+        need(type(rule["allowedRecipients"]) is list and 1 <= len(rule["allowedRecipients"]) <= n_parties+1 and all(r in (*parties, "PUBLIC") for r in rule["allowedRecipients"]), "Y3_RECIPIENTS")
         unique(rule["allowedRecipients"], "Y3_DUPLICATE_RECIPIENT")
         need(rule["mandatoryByDate"] is None or type(rule["mandatoryByDate"]) is int and rule["mandatoryByDate"] in (0, 1, 2), "Y3_MANDATORY_DATE")
         need(rule["classification"] in ("SOURCED_FACT", "AUTHENTICATED_ASSERTION", "MODEL_RELATIVE_STATEMENT", "UNRESOLVED_CLAIM"), "Y3_CLAIM_CLASS")
@@ -190,30 +192,30 @@ def schema(problem):
             obj(n, common + extra[n["kind"]], ("informationSet",) if n["kind"] == "DECISION" else ())
             identifier(n["id"])
             need(type(n["date"]) is int and n["date"] in (0, 1, 2), "Y3_NODE_DATE")
-            need(type(n["state"]) is list and len(n["state"]) == 2 and all(type(x) is int and x in (0, 1) for x in n["state"]), "Y3_PRIVATE_STATE")
+            need(type(n["state"]) is list and len(n["state"]) == n_parties and all(type(x) is int and x in (0, 1) for x in n["state"]), "Y3_PRIVATE_STATE")
             need(type(n["observations"]) is list and len(n["observations"]) <= PROFILE["maxObservationsPerNode"], "Y3_OBSERVATION_BOUND")
             for o in n["observations"]:
                 obj(o, ("key", "value", "recipients")); identifier(o["key"])
                 need(type(o["value"]) is str and len(o["value"]) <= 4096, "Y3_OBSERVATION_VALUE")
                 need(o["key"] in rules, "Y3_UNDECLARED_OBSERVATION")
-                need(type(o["recipients"]) is list and 1 <= len(o["recipients"]) <= 3, "Y3_RECIPIENTS")
+                need(type(o["recipients"]) is list and 1 <= len(o["recipients"]) <= n_parties+1, "Y3_RECIPIENTS")
                 unique(o["recipients"], "Y3_DUPLICATE_RECIPIENT")
                 need(all(r in rules[o["key"]]["allowedRecipients"] for r in o["recipients"]), "Y3_UNLAWFUL_RECIPIENT")
             need(type(n["resources"]) is dict and len(n["resources"]) <= 128, "Y3_RESOURCE_BOUND")
             for k, v in n["resources"].items():
                 identifier(k); rat(v)
             for field in ("payments", "liabilities"):
-                need(type(n[field]) is list and len(n[field]) == 2, "Y3_QUANTITY_PAIR")
+                need(type(n[field]) is list and len(n[field]) == n_parties, "Y3_QUANTITY_PAIR")
                 for v in n[field]:
                     rat(v)
             if n["kind"] == "TERMINAL":
-                need(type(n["payoff"]) is list and len(n["payoff"]) == 2, "Y3_PAYOFF_PAIR")
+                need(type(n["payoff"]) is list and len(n["payoff"]) == n_parties, "Y3_PAYOFF_PAIR")
                 for v in n["payoff"] + [n["ownerValue"]]:
                     if v is not None:
                         rat(v)
                 continue
             if n["kind"] == "DECISION":
-                need(n["participant"] in ("P0", "P1"), "Y3_PARTY_ID")
+                need(n["participant"] in parties, "Y3_PARTY_ID")
                 if "informationSet" in n:
                     identifier(n["informationSet"])
             if n["kind"] == "PROTOCOL":
@@ -281,7 +283,7 @@ def compile_original(problem, model, policy):
             token = {"date": n["date"], "key": o["key"], "value": o["value"], "visibility": "PUBLIC" if "PUBLIC" in o["recipients"] else "PRIVATE"}
             if "PUBLIC" in o["recipients"]:
                 public.append(token)
-            for i in (0, 1):
+            for i in range(len(problem["participants"])):
                 if "P" + str(i) in o["recipients"] or "PUBLIC" in o["recipients"]:
                     obs[i].append(token)
             sent.setdefault(o["key"], set()).update(o["recipients"])
@@ -289,7 +291,7 @@ def compile_original(problem, model, policy):
             need(resource_name in problem["resourceLimits"], "Y3_UNDECLARED_RESOURCE")
             need(0 <= rat(value) <= known_quantity(problem["resourceLimits"][resource_name]), "Y3_ALL_HISTORY_RESOURCE_LIMIT")
         need(all(rat(v) >= 0 for v in n["liabilities"]), "Y3_NEGATIVE_LIABILITY")
-        for i in (0, 1):
+        for i in range(len(problem["participants"])):
             need(abs(rat(n["payments"][i])) <= known_quantity(problem["financialLimits"]["absolutePayments"][i])
                  and rat(n["liabilities"][i]) <= known_quantity(problem["financialLimits"]["liabilities"][i]),
                  "Y3_ALL_HISTORY_FINANCIAL_LIMIT")
@@ -332,8 +334,8 @@ def compile_original(problem, model, policy):
                 next_recall[i].append({"informationKey": key, "actionId": e["actionId"]})
             s["edges"].append((e["actionId"], e["next"], p))
             visit(e["next"], obs, public, next_recall, sent, chance * p, depth + 1)
-    visit(model["root"], [[], []], [], [[], []], {}, Q(1), 0)
-    for participant in ("P0", "P1"):
+    visit(model["root"], [[] for _ in problem["participants"]], [], [[] for _ in problem["participants"]], {}, Q(1), 0)
+    for participant in (p["id"] for p in problem["participants"]):
         if sum(i["participant"] == participant for i in infos.values()) > PROFILE["protocol_horizon_and_deviation_classes"]["maxInformationSetsPerParty"]:
             raise Gap("Y3_INFORMATION_SET_BOUND")
     return {"modelId": model["id"], "root": model["root"], "nodes": nodes, "infos": infos, "sequence": sequence, "used": used}
@@ -503,16 +505,25 @@ def inspect(problem, candidate):
                 out["globalBeliefConsistency"] = False
                 raise
             cases = [best_continuation(game, strategy, k, beliefs[k]) for k in game["infos"]]
-            values = {p: evaluator(game, strategy, p)(game["root"]) for p in ("P0", "P1", "OWNER")}
+            values = {p: evaluator(game, strategy, p)(game["root"]) for p in (*[p["id"] for p in problem["participants"]], "OWNER")}
             objectives.append(values["OWNER"]); all_cases += cases
-            model_reports.append({"modelId": game["modelId"], "limit": limit, "continuations": cases, "expectedUtilities": [str(values["P0"]), str(values["P1"])], "ownerValue": str(values["OWNER"])})
+            model_reports.append({"modelId": game["modelId"], "limit": limit, "continuations": cases, "expectedUtilities": [str(values[p["id"]]) for p in problem["participants"]], "ownerValue": str(values["OWNER"])})
+        joint_trembles = {}
+        for certificate in candidate["models"]:
+            for key, row in certificate["trembles"].items():
+                zero_rates = {action: (rate["order"], rat(rate["coefficient"]))
+                              for action, rate in row.items() if rat(strategy[key][action]) == 0}
+                if key in joint_trembles and joint_trembles[key] != zero_rates:
+                    out["globalBeliefConsistency"] = False
+                    raise Rejected("Y3_GLOBAL_COMMON_TREMBLE_CONFLICT")
+                joint_trembles[key] = zero_rates
         out.update(models=model_reports, globalBeliefConsistency=True, fullDeviationCoverage=True)
         maximum = max((rat(c["gain"]) for c in all_cases), default=Q(0))
         out["maxRegret"] = str(maximum)
         if maximum > 0:
             out["counterstrategy"] = max(all_cases, key=lambda c: rat(c["gain"]))
             raise Rejected("Y3_PROFITABLE_FULL_CONTINUATION")
-        out["participationValid"] = all(rat(report["expectedUtilities"][i]) >= known_quantity(problem["participants"][i]["outsideOption"]) for report in model_reports for i in (0, 1))
+        out["participationValid"] = all(rat(report["expectedUtilities"][i]) >= known_quantity(problem["participants"][i]["outsideOption"]) for report in model_reports for i in range(len(problem["participants"])))
         need(out["participationValid"], "Y3_OUTSIDE_OPTION_NOT_MET")
         actual_nontrivial = nontrivial(problem, games)
         out["nontrivial"] = actual_nontrivial

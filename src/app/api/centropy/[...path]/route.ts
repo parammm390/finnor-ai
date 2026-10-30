@@ -129,8 +129,32 @@ async function doForward(
   };
   try {
     if (method === "POST" || method === "PUT" || method === "DELETE") {
-      const body = await req.text();
-      if (body.length > 2_000_000) return proxyError("Request body too large", 413);
+      let body: string;
+      if (segments.length === 2 && segments[0] === "company-brain" && [
+        "z1-reserve-original-budget","z1-submit-shared-work","z1-read-shared-work",
+        "z1-admit-shared-work","z1-project-original-work","z1-cancel-shared-work",
+      ].includes(segments[1]!)) {
+        const maximum = 134217728, reader = req.body?.getReader();
+        if (!reader) return proxyError("JSON request body required", 400);
+        const chunks: Uint8Array[] = []; let bytes = 0;
+        const deadline = new AbortController(), timer = setTimeout(() => deadline.abort(), 5000);
+        const expired = new Promise<never>((_resolve,reject) => deadline.signal.addEventListener("abort",() => {
+          void reader.cancel().catch(() => undefined); reject(new Error("Z1 body deadline"));
+        },{once:true}));
+        try {
+          for (;;) {
+            const chunk = await Promise.race([reader.read(),expired]); if (chunk.done) break;
+            bytes += chunk.value.byteLength;
+            if (bytes > maximum) return proxyError("Request body too large", 413);
+            chunks.push(chunk.value);
+          }
+          body = new TextDecoder("utf-8",{fatal:true}).decode(Buffer.concat(chunks));
+        } catch { return proxyError("Bounded JSON body unavailable", 400); }
+        finally { clearTimeout(timer); await reader.cancel().catch(() => undefined); reader.releaseLock(); }
+      } else {
+        body = await req.text();
+        if (body.length > 2_000_000) return proxyError("Request body too large", 413);
+      }
       try { JSON.parse(body.length > 0 ? body : "{}"); } catch { return proxyError("Invalid JSON body", 400); }
       init.body = body.length > 0 ? body : "{}";
     }

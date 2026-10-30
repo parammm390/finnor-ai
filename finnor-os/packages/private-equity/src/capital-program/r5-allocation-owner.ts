@@ -13,6 +13,7 @@ import {checkCoalitionAllocationPoint} from "./r5-allocation";
 import {m3Hash} from "./v2-contracts";
 import {authorizeBeliefResources} from "../enterprise-beliefs";
 import {coalitionPartyRoot} from "./r5-owners";
+import {originalPortfolioPopulation,Z1_PORTFOLIO} from "../../../epistemic-runtime/src/project-z/z1-shared-work/portfolio-population";
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 const denied=()=>new AllocationContractError("PERMITTED_CONTEXT_UNAVAILABLE","Permitted coalition S5 context is unavailable");
@@ -114,7 +115,7 @@ export async function clearEnterpriseCoalitionAllocation(ctx:PeMutationContext,i
   const snapshot=await allocationSnapshotInTransaction(c,ctx.auth.tenantId);
   if(snapshot.snapshotDigest!==selection.resourceSnapshotDigest)
    throw new AllocationContractError("STALE_INPUT","Original complete S5 snapshot changed before joint reservation");
-  if(snapshot.outstanding.length>=256)throw new AllocationContractError("LIMIT_EXCEEDED","Canonical live commitment bound exceeded");
+  if(originalPortfolioPopulation(snapshot.outstanding).other>=Z1_PORTFOLIO.other)throw new AllocationContractError("LIMIT_EXCEEDED","Canonical generic commitment bound exceeded");
   const check=checkCoalitionAllocationPoint(selection,policy.mandate,snapshot);
   if(!check.feasible)throw new AllocationContractError("INVALID_CANDIDATE",check.reasons.join(";"));
   const problemBody:Omit<CoalitionAllocationProblem,"ref">={schema:"finnor.s5.coalition-allocation-problem.v1",

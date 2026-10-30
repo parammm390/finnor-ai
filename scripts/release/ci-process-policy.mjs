@@ -32,6 +32,17 @@ export function verifyCiProcess(root) {
   const ci = workflows["ci.yml"] ?? ""
   const pr = workflows["pr-verdict.yml"] ?? ""
   const production = workflows["production-release.yml"] ?? ""
+  const projectZ = workflowJob(ci, "project-z-public")
+  const projectZOwner = workflowJob(ci, "project-z-owner-smoke")
+  require(projectZOwner.includes("node scripts/project-z/run-native-ci.mjs")
+    && projectZOwner.length > 0 && !/^ {4}if:/m.test(projectZOwner)
+    && !/AUTH_DEV_BYPASS/.test(projectZOwner),
+    "Project Z real owner transport must be required, isolated and without auth bypass")
+  require(projectZ.includes("node scripts/project-z/run-ci.mjs")
+    && projectZ.includes("phase: [z1, z2, z3, z4]") && projectZ.includes("fail-fast: false"),
+    "Project Z must execute every declared independent public phase process")
+  require(projectZ.length > 0 && !/^ {4}if:/m.test(projectZ),
+    "Project Z required backend/release check must not be optional")
   for (const file of ["ci.yml", "security.yml", "marketing-ci.yml", "source-checks.yml", "release-readiness.yml"]) {
     require(!/^  (?:push|pull_request):/m.test(workflows[file] ?? ""), `${file}: reusable checks must have one caller, not a duplicate Git trigger`)
   }

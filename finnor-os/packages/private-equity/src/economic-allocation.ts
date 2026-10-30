@@ -12,6 +12,7 @@ import {economicSemanticModuleTx} from './program-synthesis/economic-module';
 import {principal,developmentOnly,chargeOwnerStorageTx} from './economic-action-theory/store';
 import {RefSchema,QuantityValue,digest,reference,same,fail,type EconomicRef,type State,type EconomicProblem} from './economic-action-theory/contracts';
 import {exact,decimal,safe} from './economic-action-theory/finite';
+import {originalPortfolioPopulation,Z1_PORTFOLIO} from '../../epistemic-runtime/src/project-z/z1-shared-work/portfolio-population';
 export const EconomicReservationSchema=z.object({theoryId:z.string().uuid(),initialState:z.record(QuantityValue),
  bindings:z.array(z.object({quantityId:z.string(),resourceRef:RefSchema}).strict()).min(1).max(6),
  idempotencyKey:z.string().min(1).max(128)}).strict();
@@ -77,7 +78,7 @@ export async function reserveEconomicRights(ctx:PeMutationContext,raw:unknown){
   if(!safe(problem,input.initialState)||input.bindings.length!==problem.quantities.length||
    new Set(input.bindings.map(b=>b.quantityId)).size!==input.bindings.length)fail('S5_ECONOMIC_EXACT_STATE_BINDINGS');
   const snapshot=await allocationSnapshotInTransaction(c,ctx.auth.tenantId),resources:AllocationResource[]=[],bindings:Array<{quantityId:string;resourceId:string}>=[];
-  if(snapshot.outstanding.length>=256)fail('S5_ECONOMIC_PORTFOLIO_BOUND');
+  if(originalPortfolioPopulation(snapshot.outstanding).other>=Z1_PORTFOLIO.other)fail('S5_ECONOMIC_PORTFOLIO_BOUND');
   for(const quantity of problem.quantities){
    const binding=input.bindings.find(b=>b.quantityId===quantity.id),resource=snapshot.resources.find(r=>same(r.ref,binding?.resourceRef));
    if(!resource||resource.ownerRef.id!==principal(ctx)||resource.kind!=='STOCK'||resource.revoked||resource.covenants.length||

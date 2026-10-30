@@ -2,7 +2,9 @@
 // Supabase and monitoring endpoints vary, so connect-src accepts HTTPS/WSS origins.
 // The page routes and higher-risk embedding directives remain first-party only.
 const DEVELOPMENT_AUTH_ORIGIN = (() => {
-  if (process.env.NODE_ENV !== "development") return ""
+  if (process.env.NODE_ENV !== "development" && process.env.FINNOR_X1_FRONTEND_INSTALL !== "1" &&
+    !(process.env.FINNOR_Z1_INSTALLED_DEVELOPMENT === "1" &&
+    process.env.FINNOR_ENVIRONMENT === "ordinary_disposable" && process.env.FINNOR_Z1_PROFILE === "ordinary_disposable")) return ""
   try {
     const url = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || "")
     if (url.protocol !== "http:" || !["127.0.0.1", "localhost"].includes(url.hostname) ||
@@ -62,16 +64,16 @@ const nextConfig = {
     config.cache = { type: "memory", maxGenerations: 1 }
     return config
   },
-  ...(process.env.FINNOR_X1_FRONTEND_INSTALL === "1" ? {
+  ...((process.env.FINNOR_X1_FRONTEND_INSTALL === "1" || process.env.FINNOR_Z1_FRONTEND_INSTALL === "1") ? {
     output: "standalone",
     outputFileTracingRoot: dependencyRoot,
-    distDir: ".next-x1-install",
+    distDir: process.env.FINNOR_Z1_FRONTEND_INSTALL === "1" ? ".next-z1-install" : ".next-x1-install",
   } : {}),
   turbopack: { root: dependencyRoot },
   // Disposable authenticated sessions use fresh local origins. Persisting each
   // development compilation grows a cache that these sessions cannot reuse.
   experimental: { turbopackFileSystemCacheForDev: false,
-    ...(process.env.FINNOR_X1_FRONTEND_INSTALL === "1" ? {
+    ...((process.env.FINNOR_X1_FRONTEND_INSTALL === "1" || process.env.FINNOR_Z1_FRONTEND_INSTALL === "1") ? {
       cpus: 1, webpackMemoryOptimizations: true, preloadEntriesOnStart: false,
     } : {}),
   },

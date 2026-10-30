@@ -130,6 +130,8 @@ function boundedPositive(value: string | undefined, fallback: number, max: numbe
   return Number.isSafeInteger(parsed) && parsed >= 1 && parsed <= max ? parsed : fallback;
 }
 
+export const SCOPED_JOB_CLAIM_VERSION = "original-job-scope-v1" as const;
+
 export class JobQueue {
   private handlers = new Map<string, RegisteredHandler>();
   private authorityCheckedAt = 0;
@@ -145,7 +147,11 @@ export class JobQueue {
     readonly leaseSeconds = Math.max(process.env.NODE_ENV === "test" ? 3 : 30, Number(process.env.WORKER_JOB_LEASE_SECONDS ?? 300)),
     readonly workloadClass: WorkloadClass | null = process.env.FINNOR_WORKLOAD_CLASS
       ? parseWorkloadClass(process.env.FINNOR_WORKLOAD_CLASS) : null,
+    readonly claimScope?: Readonly<{tenantId:string;jobId:string}>,
   ) {
+    if(claimScope&&(process.env.FINNOR_ENVIRONMENT!=="staging"||workloadClass===null||
+      ![claimScope.tenantId,claimScope.jobId].every(id=>/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(id))))
+      throw new Error("SCOPED_REPLAY_REQUIRES_EXACT_STAGING_TENANT_JOB_AND_CLASS");
     this.tenantInflightLimit = boundedPositive(process.env.FINNOR_TENANT_INFLIGHT_LIMIT,
       workloadClass ? DEFAULT_TENANT_INFLIGHT[workloadClass] : 8, 32);
     this.priorityAgingSeconds = boundedPositive(process.env.FINNOR_PRIORITY_AGING_SECONDS,
@@ -233,8 +239,9 @@ export class JobQueue {
         `SELECT id FROM jobs
           WHERE type=ANY($1::text[]) AND status IN ('queued','running','failed','dead_letter')
             AND ($2::text IS NULL OR workload_class=$2)
+            ${this.claimScope?'AND tenant_id=$3::uuid AND id=$4::uuid':''}
           ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 100`,
-        [RETIRED_WATER_JOB_TYPES, this.workloadClass],
+        [RETIRED_WATER_JOB_TYPES, this.workloadClass,...(this.claimScope?[this.claimScope.tenantId,this.claimScope.jobId]:[])],
       );
       const retiredIds = retired.rows.map((row) => row.id);
       if (retiredIds.length) {
@@ -261,9 +268,10 @@ export class JobQueue {
           WHERE status='running'
             AND ($1::text IS NULL OR workload_class=$1)
             AND coalesce(lease_expires_at,started_at+($2::int || ' seconds')::interval)<=now()
+            ${this.claimScope?'AND tenant_id=$3::uuid AND id=$4::uuid':''}
           ORDER BY lease_expires_at NULLS LAST,id
           FOR UPDATE SKIP LOCKED LIMIT 100`,
-        [this.workloadClass, leaseSeconds],
+        [this.workloadClass, leaseSeconds,...(this.claimScope?[this.claimScope.tenantId,this.claimScope.jobId]:[])],
       );
       const ids = candidates.rows.map((row) => row.id);
       if (ids.length === 0) {
@@ -376,8 +384,10 @@ export class JobQueue {
         const compatibilityJson = JSON.stringify(compatibility);
         const { rows } = this.workloadClass
           ? await client.query(
-            CLASS_CLAIM_SQL,
-            [compatibilityJson, this.workloadClass, this.priorityAgingSeconds, this.tenantInflightLimit],
+            this.claimScope?CLASS_CLAIM_SQL.replace("WHERE eligible.workload_class=$2",
+              "WHERE eligible.tenant_id=$5::uuid AND eligible.id=$6::uuid AND eligible.workload_class=$2"):CLASS_CLAIM_SQL,
+            [compatibilityJson, this.workloadClass, this.priorityAgingSeconds, this.tenantInflightLimit,
+              ...(this.claimScope?[this.claimScope.tenantId,this.claimScope.jobId]:[])],
           )
           : await client.query(
             `SELECT id,tenant_id AS "tenantId",type,payload,attempts,
@@ -497,8 +507,9 @@ export class JobQueue {
     const renewLease = async (): Promise<void> => {
       const result = await getPool().query(
         `WITH renewed AS (
-           UPDATE jobs SET lease_expires_at=now()+($5 || ' seconds')::interval,lease_heartbeat_at=now()
+           UPDATE jobs SET lease_expires_at=clock_timestamp()+($5 || ' seconds')::interval,lease_heartbeat_at=clock_timestamp()
             WHERE id=$1 AND status='running' AND lease_owner=$2 AND claim_token=$3 AND claim_fence=$4
+              AND lease_expires_at>clock_timestamp()
             RETURNING id
          )
          UPDATE job_delivery_attempts SET heartbeat_at=now()
@@ -544,6 +555,7 @@ export class JobQueue {
            UPDATE jobs SET status='completed',completed_at=now(),started_at=NULL,
                            lease_owner=NULL,lease_expires_at=NULL,lease_heartbeat_at=NULL,claim_token=NULL
             WHERE id=$1 AND status='running' AND lease_owner=$2 AND claim_token=$3 AND claim_fence=$4
+              AND lease_expires_at>clock_timestamp()
             RETURNING id
          )
          UPDATE job_delivery_attempts SET outcome='completed',finished_at=clock_timestamp(),heartbeat_at=clock_timestamp()
