@@ -165,3 +165,17 @@ touched); the expectation was wrong.
 | K1 | Later deadline on a Work with a bound input | 422 `Z4_ORIGINAL_CURRENT_WORK_INPUT_REQUIRED`, no session job, no S5 reservation | `negativeProbe` match plus job count for that Work unchanged |
 | K2 | Expectation edited only to match the observation | Not accepted: justification is the code order above; the product is unchanged | Source diff touches only the scenario expectation and its comment |
 | K3 | Currentness negative becomes vacuous | It must still be a refusal that changes nothing; the other deadline refusal (`Z4_ORIGINAL_ONE_HOUR_DEADLINE_REQUIRED`) stays covered by intake | Replay negative file 05 expectedPredicate |
+
+## L. Production build refused because a development build directory is left in the worktree (w4-full-01)
+
+w4-full-01 (full stage, `--production-build`) stopped 15 s after start with launcher failure `PRODUCTION_BUILD_DIRECTORY_MUST_NOT_PRE_EXIST`
+(`native-app-state.json`, stage `LOOPBACK_SERVERS`, productionBuild `NOT_BUILT`); the scenario never ran, no grant was requested. Cause: the
+disposable development servers of the earlier seed runs (dev-mode Next) leave `.next` (`.next/dev`) and `finnor-os/apps/api/.next` in the worktree, both
+git-ignored generated output. The launcher guard exists so a production BUILD_ID can never be a stale or foreign one, and must not be weakened.
+
+| # | Failure | Expected result | Oracle |
+|---|---|---|---|
+| L1 | Stale development output present before a production build | Launcher refuses (this run); the guard stays as is | `failureCode` in `native-app-state.json` |
+| L2 | Clearing the directories deletes something that is not generated | Only the two ignored `.next` directories of this private worktree are moved aside, byte-for-byte, to the evidence directory; nothing is deleted | `git status` clean; moved directories listed in the report |
+| L3 | A production run reuses a seed-run build | Not possible: the next run builds from an empty directory and writes `pz-<head12>-<run>` BUILD_ID | BUILD_ID files in the full-stage receipt |
+| L4 | Seed-stage and full-stage run alternately again | The same preflight is required whenever a dev-mode run precedes a production run; recorded as a rerun step | RERUN section |
