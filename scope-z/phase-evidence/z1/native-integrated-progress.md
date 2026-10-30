@@ -90,7 +90,19 @@ authority, qualification, 100× or activation is claimed here or by the run.
   (`enterprise-allocation.ts:119`, `allocation-contracts.ts:128`). Failure model C8-C10;
   fixed in b4ca52e (compute resources registered after the S6 obligation; the clearing
   status and reasons are retained). Evidence: `fzv-int-out/native/w1-native-04/`.
-- `w1-native-05` (head b4ca52e): queued behind the five successor workers' jobs.
+- `w1-native-05` (head b4ca52e): FAILED_RETAINED in 2 minutes at `s3-s4-s5-owner-chain` with
+  `S5_CLEAR_STATUS_500`. With C8 closed the clearing reached an S5 reservation write for
+  the first time. API log: `POST /api/allocations/clear 500`, `column reference "body" is
+  ambiguous`; PostgreSQL log names `z1_s5_writer_guard()` line 7 on
+  `INSERT INTO finnor_os.s5_reservation_origins`. A PL/pgSQL variable named `body` collides
+  with the column of the same name read in the same statement (failure model C11). The Z3
+  native run had independently hit the same class in the Z0 bridge functions. Fixed with
+  `#variable_conflict use_variable` in the identical text the Z3 branch carries
+  (cherry-pick of 00e106d, e188c99). A static read of every `postz_*` plpgsql function
+  for declared variables used unqualified against a column of a table in the same
+  statement found only the Z1 guard and the three Z0 bridge functions the Z3 commit
+  already covers. Evidence: `fzv-int-out/native/w1-native-05/`.
+- `w1-native-06`: queued at the head carrying that fix.
 
 ## Known limits of this attempt
 
