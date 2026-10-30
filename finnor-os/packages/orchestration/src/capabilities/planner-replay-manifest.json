@@ -60,13 +60,13 @@
     },
     {
       "file": "package-lock.json",
-      "bytes": 263184,
-      "sha256": "b8dd13667bab0344a32337562003cd8cad43324f4a110919e88473fd7f6bfa3e"
+      "bytes": 263182,
+      "sha256": "7596466caba41cd0ed73ca711cfa246767bdbc8f13ee4c85a859794d9e77ae15"
     },
     {
       "file": "package.json",
-      "bytes": 5469,
-      "sha256": "087168f38a0f0afc5054f96e5dea8a61359cd3f2dd0e1a9bc358f43b2f744c10"
+      "bytes": 5468,
+      "sha256": "d5bec3916ad8a92953d1071333c101506f6cce19eecfcd2b13f7bc290c499278"
     },
     {
       "file": "packages/artifacts/package.json",
@@ -405,8 +405,8 @@
     },
     {
       "file": "packages/db/compute-contract.ts",
-      "bytes": 18986,
-      "sha256": "19d624f854e1206574b0f92d7a311d38bdc2b7c51ba5f0f04e8953530ff1a71a"
+      "bytes": 19234,
+      "sha256": "d64e200aace11e62b81ea53563851bc80ac0ee43448862e8fbe5f1f59d18efa6"
     },
     {
       "file": "packages/db/compute-control.ts",
@@ -417,6 +417,11 @@
       "file": "packages/db/compute-governor.ts",
       "bytes": 10781,
       "sha256": "59f6079bb8a28731b63e9f2c1cf3b9703d067d1df40eb9eeb84956694aca48d7"
+    },
+    {
+      "file": "packages/db/conversation-memory.ts",
+      "bytes": 10633,
+      "sha256": "9d7cebdde60697ac79d3c5be30c145858bd83820566ac1d765f6fa8c09137c40"
     },
     {
       "file": "packages/db/event-fabric.ts",
@@ -440,13 +445,13 @@
     },
     {
       "file": "packages/db/index.ts",
-      "bytes": 150384,
-      "sha256": "9fc9091d2073694b20915b8a192795be9693dd9c1b2a6e97a8b9bc71d064cbb8"
+      "bytes": 151457,
+      "sha256": "7f4df1d179b9faffbf72d8f934e0a7eb1387c6d79a002c878c4be581f3b4076b"
     },
     {
       "file": "packages/db/migration-head.ts",
-      "bytes": 297,
-      "sha256": "ee06f87c37e038ec8a983f96e3fbd344d1bdb51b8897d565451dc9be1dfe5ce2"
+      "bytes": 277,
+      "sha256": "25edf0aa29c242f4b7d60eef3bd875adc19c5231703e7969ba0411479f831c73"
     },
     {
       "file": "packages/db/migrations/0150_portfolio_resource_clearing.sql",
@@ -475,8 +480,8 @@
     },
     {
       "file": "packages/db/schema.ts",
-      "bytes": 321842,
-      "sha256": "ddd1cfecce81fd24102d908e7eaa0a6c57ab400044fafd3b8b2f8a99bc944858"
+      "bytes": 323933,
+      "sha256": "f522bfdbd261bf9ea1a290d19340e62aa945c140a7abcfaf773bb7128e7554df"
     },
     {
       "file": "packages/document-ir/package.json",
@@ -1119,14 +1124,29 @@
       "sha256": "7b3f1f1418cc9d98c1d9896deaed93498da460396fabb860d7128296ac859ca0"
     },
     {
+      "file": "packages/orchestration/src/conversation-intent.ts",
+      "bytes": 1666,
+      "sha256": "581f6244bc48e5303efe4de1ae6049bcd5364b2c5674332cb24342fc19d2e27a"
+    },
+    {
       "file": "packages/orchestration/src/conversation-kernel.ts",
-      "bytes": 16521,
-      "sha256": "c60f4ef4b6699112af957999621e24a28b6b85d7486e72b53c1c47c8fd559728"
+      "bytes": 17818,
+      "sha256": "297585426756fb65152b9ba285d91dfe285d4c2d2edb3a38f9aaed9611c79b7c"
+    },
+    {
+      "file": "packages/orchestration/src/conversation-memory.ts",
+      "bytes": 25260,
+      "sha256": "bcf861e7e2766c80ac5a9fc17c16cc9e986f6797ca9e94fa0a358d1ef7ccff2a"
+    },
+    {
+      "file": "packages/orchestration/src/conversation-prompt.ts",
+      "bytes": 7284,
+      "sha256": "4671316eabba3a4261037bdcca9b14223e380cfa5092554876e1ff921cf65d8e"
     },
     {
       "file": "packages/orchestration/src/conversation.ts",
-      "bytes": 8804,
-      "sha256": "e22a5d1ac140585473c4cfb0381109ccaf98d4ddfce01db0d8586a5b1ee5c903"
+      "bytes": 9059,
+      "sha256": "2595202ed13ed63e58ac1c3b5b88571d4fae7984ded649f82b15f55bec98f8d9"
     },
     {
       "file": "packages/orchestration/src/critic.ts",
@@ -1190,13 +1210,13 @@
     },
     {
       "file": "packages/orchestration/src/index.ts",
-      "bytes": 108734,
-      "sha256": "29b662df15cf1ece9f868cd2c7b113e4989264e5ecd45d6cd9bdd38f7801e458"
+      "bytes": 109186,
+      "sha256": "ecf964927e724d85226c32f6a045a9311bff3ddcf105c3751f7d142815430302"
     },
     {
       "file": "packages/orchestration/src/instruction-routing.ts",
-      "bytes": 7464,
-      "sha256": "719e40b63542c6ae30cbbd66240b9d266e680c9cb4ebedac8a0b64b38a5096f5"
+      "bytes": 7587,
+      "sha256": "bf5ba624957d4d30a16984119c4d637310772797db133cd217294c438a3cb6af"
     },
     {
       "file": "packages/orchestration/src/instruction-trace.ts",
@@ -1235,8 +1255,8 @@
     },
     {
       "file": "packages/orchestration/src/objective-loop.ts",
-      "bytes": 225961,
-      "sha256": "b06def7a131cc3f1bc74e5662ba0f49e2aab090f937bd05a7859aff39a576d92"
+      "bytes": 226984,
+      "sha256": "11478bacff1d6307ee187e9ec90352424d6de60f446ff5c49cca97ea1ecd57c5"
     },
     {
       "file": "packages/orchestration/src/objective-success.ts",
@@ -1290,8 +1310,8 @@
     },
     {
       "file": "packages/orchestration/src/planner.ts",
-      "bytes": 91349,
-      "sha256": "eb943580a19c07de16f0f8ad8ee4bac5908ca679b9bd9920196d67da9bd0f040"
+      "bytes": 91482,
+      "sha256": "e9c3cd8c754760ef2a65e0f8a054a663fb0cd7d335ffa539a69a8b6b3e2006ff"
     },
     {
       "file": "packages/orchestration/src/planning-health.ts",
@@ -2016,7 +2036,7 @@
     {
       "file": "packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
       "bytes": 8649,
-      "sha256": "c24b628441ad4f80f38e81633589d976cb402114db4d7915b0b43491aab48178"
+      "sha256": "be99e973c245fb9e42e43f0959c54e4ac235f2784776c46f62bf93bce200c063"
     },
     {
       "file": "packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2386,7 +2406,7 @@
     {
       "file": "packages/private-equity/src/policy-learning/source-manifest.generated.ts",
       "bytes": 13612,
-      "sha256": "7c4aa84bf187d4cc447eb65f6d00abe5c3a566ce0c77c691c19f6e6e5382b820"
+      "sha256": "bcb7d797d03aa784ed46ecf53253382db13b6b1e75d4f9be1ef7dd8671721614"
     },
     {
       "file": "packages/private-equity/src/policy-learning/source-paths.ts",
@@ -2726,7 +2746,7 @@
     {
       "file": "packages/private-equity/src/system-identification/source-manifest.generated.ts",
       "bytes": 19556,
-      "sha256": "b7f1945893bc8598c843cef6034922a0a8587d2e70662d91a1d3bdd6ea9a5fc5"
+      "sha256": "990739393acaf26efd7237b9742164b6209c33503d36ece083a5ae5022a1758c"
     },
     {
       "file": "packages/private-equity/src/system-identification/source-paths.ts",
@@ -3025,8 +3045,13 @@
     },
     {
       "file": "packages/shared-types/src/conversation-context.ts",
-      "bytes": 3218,
-      "sha256": "d072774c26080f2786bd03a41275faf5cd8a6e902ca7beedb237b0fd163c1a31"
+      "bytes": 3677,
+      "sha256": "1d37c3d0057f2b0174cf1e3177df8d94895ee7c9389c78b6cb4ff6bf8deedf1b"
+    },
+    {
+      "file": "packages/shared-types/src/conversation-memory.ts",
+      "bytes": 1852,
+      "sha256": "a6c03e14843b1753a96dd8f100f24129b9887477522b15f1d5d000ab4fb9b91d"
     },
     {
       "file": "packages/shared-types/src/decision-proof.ts",
@@ -3090,8 +3115,8 @@
     },
     {
       "file": "packages/shared-types/src/index.ts",
-      "bytes": 17355,
-      "sha256": "5af96a7210c3d03f880119c3fdadd0068ab60f494ac509d431ccae934512da1b"
+      "bytes": 17394,
+      "sha256": "f05e06d158c73e4d256032415bbefbf10407583c3cbe73938b7df5cc41fb6c37"
     },
     {
       "file": "packages/shared-types/src/interventions.ts",
@@ -3190,8 +3215,8 @@
     },
     {
       "file": "packages/tools/package.json",
-      "bytes": 2322,
-      "sha256": "685c233dca5bbe639848c2c4b2a2d9b383698e3d6ae14c312f0c1bebee649159"
+      "bytes": 2479,
+      "sha256": "f07d866207163805ec22d67fa8905737a4e6af47bb76066477f7bd129afa12ba"
     },
     {
       "file": "packages/tools/src/backup-storage-github.ts",
@@ -3290,8 +3315,8 @@
     },
     {
       "file": "packages/tools/src/llm.ts",
-      "bytes": 46266,
-      "sha256": "3b1957423d5b16200f87aa4babfd2ea5fd581da7db4ba7773305bc68464c45fc"
+      "bytes": 47988,
+      "sha256": "63f4c1098dd0e38a7e2162e5b5a3b942101d7b4a9b297a81985e88fb67f0a562"
     },
     {
       "file": "packages/tools/src/logger.ts",
@@ -3302,6 +3327,11 @@
       "file": "packages/tools/src/mcp-client.ts",
       "bytes": 2196,
       "sha256": "1eee783d2cb657d8741e9ef84542f4038395058787a907c3fd6780a1b79aaea0"
+    },
+    {
+      "file": "packages/tools/src/model-context.ts",
+      "bytes": 8607,
+      "sha256": "70452cf02f21706c71ffcb64140ae242addb44cb12465280992386aa1fca6aa9"
     },
     {
       "file": "packages/tools/src/nango.ts",

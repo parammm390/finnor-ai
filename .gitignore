@@ -65,3 +65,6 @@ vercel_output.txt
 # Local capability verification runtimes and model cache
 /finnor-os/.capability-models
 /finnor-os/.capability-venv
+
+# Synthetic memory verification transcripts and provider evidence.
+/memory-evidence/

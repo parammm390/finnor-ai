@@ -1,4 +1,5 @@
 import type { CanonicalEntityRef } from "./company-graph";
+import type { ConversationMemoryBinding, ConversationMemoryCheckpoint } from "./conversation-memory";
 
 export type EmployeeConversationRole = "user" | "assistant";
 export type EmployeeConversationChannel = "voice" | "text" | "console";
@@ -90,4 +91,11 @@ export interface EmployeeConversationContext {
   personalMemories: EmployeePersonalMemory[];
   zepFacts: Array<{ fact: string; source: string; createdAt?: string }>;
   resolution: ConversationReferenceResolution;
+  memory?: {
+    binding: ConversationMemoryBinding;
+    timezone: string;
+    checkpoint: ConversationMemoryCheckpoint | null;
+    sourceCoverage: { fromSequence: number; throughSequence: number; missingRanges: Array<{ from: number; through: number }> };
+    retrieval: { mode: "lexical" | "model_expanded"; messageIds: string[]; degraded: boolean };
+  };
 }

@@ -423,3 +423,4 @@ export * from './capital-program';
 export * from './certified-state-reduction';
 export * from "./decision-proof";
 export * from './capital-formation';
+export * from "./conversation-memory";

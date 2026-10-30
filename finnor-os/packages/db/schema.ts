@@ -3,6 +3,7 @@
 
 import {
   pgSchema,
+  type PgTableExtraConfigValue,
   uuid,
   text,
   timestamp,
@@ -1308,6 +1309,7 @@ export const employeeConversationMessages = pgTable(
   (t) => [
     unique("employee_conversation_messages_tenant_id_owner_key").on(t.tenantId, t.id, t.ownerEmployeeId),
     unique("employee_conversation_messages_thread_sequence_key").on(t.threadId, t.sequence),
+    uniqueIndex("employee_conversation_user_work_input").on(t.workInputId).where(sql`${t.role}='user' AND ${t.workInputId} IS NOT NULL`),
     unique("employee_conversation_messages_thread_idempotency_key").on(t.threadId, t.idempotencyKey),
     index("employee_conversation_messages_owner_created_idx").on(t.tenantId, t.ownerEmployeeId, t.createdAt),
     index("employee_conversation_messages_thread_created_idx").on(t.threadId, t.createdAt),
@@ -1333,6 +1335,32 @@ export const employeeConversationMessages = pgTable(
     }),
   ],
 );
+
+export const employeeConversationCheckpoints = pgTable("employee_conversation_checkpoints", {
+  id: uuid("id").primaryKey(),
+  tenantId: uuid("tenant_id").notNull(),
+  ownerEmployeeId: uuid("owner_employee_id").notNull(),
+  threadId: uuid("thread_id").notNull(),
+  parentId: uuid("parent_id"),
+  fromSequence: integer("from_sequence").notNull(),
+  throughSequence: integer("through_sequence").notNull(),
+  sourceDigest: text("source_digest").notNull(),
+  state: jsonb("state").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(sql`clock_timestamp()`),
+}, (t): PgTableExtraConfigValue[] => [
+  unique("conversation_checkpoints_scope_key").on(t.tenantId, t.id, t.ownerEmployeeId, t.threadId),
+  unique("conversation_checkpoints_cut_key").on(t.tenantId, t.ownerEmployeeId, t.threadId, t.throughSequence),
+  index("employee_conversation_checkpoints_cut").on(t.tenantId, t.ownerEmployeeId, t.threadId, t.throughSequence.desc()),
+  foreignKey({ columns: [t.tenantId, t.threadId, t.ownerEmployeeId],
+    foreignColumns: [employeeConversationThreads.tenantId, employeeConversationThreads.id, employeeConversationThreads.ownerEmployeeId],
+    name: "conversation_checkpoints_thread_fkey" }).onDelete("cascade"),
+  foreignKey({ columns: [t.tenantId, t.parentId, t.ownerEmployeeId, t.threadId],
+    foreignColumns: [employeeConversationCheckpoints.tenantId, employeeConversationCheckpoints.id, employeeConversationCheckpoints.ownerEmployeeId, employeeConversationCheckpoints.threadId],
+    name: "conversation_checkpoints_parent_fkey" }),
+  check("conversation_checkpoints_sequence_check", sql`${t.fromSequence}>0 AND ${t.throughSequence}>=${t.fromSequence}`),
+  check("conversation_checkpoints_digest_check", sql`${t.sourceDigest} ~ '^[a-f0-9]{64}$'`),
+  check("conversation_checkpoints_state_check", sql`jsonb_typeof(${t.state})='object' AND octet_length(${t.state}::text)<=2097152`),
+]);
 
 // Only explicit human-authored facts are eligible for this table. Runtime code
 // supersedes an active subject row instead of silently overwriting history.

@@ -1,3 +1,6 @@
+import { hydrateConversationMemory, scheduleConversationCompaction } from "./conversation-memory";
+import { isReadOnlyConversationQuestion } from "./conversation-intent";
+import { logWithTrace } from "@finnor/tools";
 import {
   appendEmployeeConversationMessage,
   createEmployeeConversationThread,
@@ -151,6 +154,8 @@ export async function prepareEmployeeConversationTurn(params: {
   transportSessionId?: string;
   originTransportKey?: string;
   activeContext?: Record<string, unknown>;
+  workId?: string;
+  workInputId?: string;
 }): Promise<PreparedEmployeeConversationTurn> {
   const employeeId = await resolveCanonicalHumanPrincipal(params.ctx);
   const existing = params.threadId
@@ -176,6 +181,8 @@ export async function prepareEmployeeConversationTurn(params: {
     channel: params.channel,
     originalText: params.instruction,
     instructionId: params.instructionId,
+    workId: params.workId,
+    workInputId: params.workInputId,
     idempotencyKey: `user:${params.idempotencyKey ?? params.instructionId}`,
     transportSessionId: params.transportSessionId,
     transportProvenance: {
@@ -198,6 +205,7 @@ export async function prepareEmployeeConversationTurn(params: {
     ownerEmployeeId: employeeId,
     threadId: thread.id,
     messageLimit: 40,
+    throughSequence: appended.message.sequence,
   });
   if (!loaded) throw new Error("conversation_thread_not_found");
 
@@ -210,6 +218,7 @@ export async function prepareEmployeeConversationTurn(params: {
       query: expression.name,
       threadId: thread.id,
       limit: 10,
+      throughSequence: appended.message.sequence,
     });
     for (const row of rows) if (!history.some((candidate) => candidate.id === row.id)) history.push(row);
   }
@@ -225,6 +234,7 @@ export async function prepareEmployeeConversationTurn(params: {
     return ref ? [ref] : [];
   });
   const carried = loaded.thread.activeReferences.flatMap((value) => {
+    if (typeof value.mentionedAtSequence !== "number" || value.mentionedAtSequence >= appended.message.sequence) return [];
     const ref = validReference(value, "thread");
     return ref ? [ref] : [];
   });
@@ -236,7 +246,7 @@ export async function prepareEmployeeConversationTurn(params: {
     const resolution = await resolveParty(
       params.ctx.tenantId,
       { query: expression.organization ? `${expression.name} ${expression.organization}` : expression.name },
-      { requesterEmployeeId: employeeId, workId: loaded.thread.activeWorkId ?? undefined },
+      { requesterEmployeeId: employeeId, workId: params.workId },
     );
     const candidates = resolution.candidates.map((candidate): ConversationReference => {
       const ref = partyRefToCanonicalEntityRef(candidate.ref);
@@ -264,7 +274,7 @@ export async function prepareEmployeeConversationTurn(params: {
     [...new Map(rows.map((row) => [key(row), row])).values()];
   const selected = unique([...explicit, ...resolvedParties]);
   const candidates = unique([...explicit, ...partyCandidates, ...carried]);
-  const consequential = CONSEQUENTIAL.test(params.instruction);
+  const consequential = CONSEQUENTIAL.test(params.instruction) && !isReadOnlyConversationQuestion(params.instruction);
 
   if (PRONOUN.test(params.instruction) && explicit.length === 0) {
     if (carried.length === 1) selected.push(carried[0]!);
@@ -316,6 +326,7 @@ export async function prepareEmployeeConversationTurn(params: {
     tenantId: params.ctx.tenantId,
     ownerEmployeeId: employeeId,
     threadId: thread.id,
+    throughSequence: appended.message.sequence,
     activeReferences: activeReferences as unknown as Array<Record<string, unknown>>,
     unresolvedReferences: unresolved.map((expression) => ({
       expression,
@@ -339,11 +350,12 @@ export async function prepareEmployeeConversationTurn(params: {
     tenantId: params.ctx.tenantId,
     ownerEmployeeId: employeeId,
     threadId: thread.id,
-    messageLimit: 30,
+    messageLimit: 200,
+    throughSequence: appended.message.sequence,
   });
   if (!refreshed) throw new Error("conversation_thread_not_found");
 
-  return {
+  const prepared: PreparedEmployeeConversationTurn = {
     threadId: thread.id,
     employeeId,
     userMessage: {
@@ -371,6 +383,13 @@ export async function prepareEmployeeConversationTurn(params: {
       resolution,
     },
   };
+  prepared.context = await hydrateConversationMemory({ tenantId: params.ctx.tenantId, input: prepared.userMessage, context: prepared.context });
+  try {
+    await scheduleConversationCompaction({ tenantId: params.ctx.tenantId, ownerEmployeeId: employeeId, threadId: thread.id, throughSequence: appended.message.sequence });
+  } catch (error) {
+    logWithTrace({ tenantId: params.ctx.tenantId, threadId: thread.id }).warn({ errorKind: error instanceof Error ? error.name : "unknown" }, "Conversation compaction scheduling failed; original source retained");
+  }
+  return prepared;
 }
 
 export async function linkEmployeeConversationTurnToWork(params: {

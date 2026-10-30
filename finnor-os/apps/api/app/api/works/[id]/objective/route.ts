@@ -1,8 +1,8 @@
-import { receiveWork, WorkTransitionConflictError, workAggregate } from "@finnor/db";
+import { latestWorkInput, receiveWork, WorkTransitionConflictError, workAggregate } from "@finnor/db";
 import { ControlObjectiveSchema } from "@finnor/policy-schema";
 import { errorResponse, requireContext } from "../../../../../lib/auth";
 import { getOrchestrator } from "../../../../../lib/orchestrator";
-import { parseObjectiveSuccessCondition } from "@finnor/orchestration";
+import { loadWorkInputConversation, parseObjectiveSuccessCondition, prepareEmployeeConversationTurn } from "@finnor/orchestration";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
   try {
@@ -23,7 +23,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const parsed = ControlObjectiveSchema.safeParse(await req.json().catch(() => ({})));
     if (!parsed.success) return Response.json({ error: parsed.error.issues.map((issue) => issue.message).join("; ") }, { status: 400 });
     if (parsed.data.command === "redirect") {
-      await receiveWork({
+      const priorInput = await latestWorkInput(ctx.tenantId, id);
+      const priorConversation = priorInput ? await loadWorkInputConversation({ ctx, workId: id, workInputId: priorInput.id }) : null;
+      const accepted = await receiveWork({
         tenantId: ctx.tenantId,
         instruction: parsed.data.objective,
         channel: parsed.data.channel,
@@ -32,6 +34,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         userId: ctx.userId,
         idempotencyKey: parsed.data.idempotencyKey,
         authorityContext: { employeeId: ctx.employeeId ?? null, revision: ctx.authorityRevision ?? null, roles: ctx.authorityRoles ?? [], principal: ctx.userId },
+      });
+      if (priorConversation) await prepareEmployeeConversationTurn({
+        ctx, threadId: priorConversation.thread.id, instruction: parsed.data.objective,
+        instructionId: accepted.instructionId, idempotencyKey: parsed.data.idempotencyKey,
+        channel: parsed.data.channel, workId: accepted.workId, workInputId: accepted.workInputId,
       });
     }
     const objective = await getOrchestrator().controlObjective({

@@ -82,7 +82,7 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
   function runtimeFor(root: PeWorldRootRef) {
     // This protocol fixture must select an actual advertised read. It cannot
     // compensate for a missing planner binding by manufacturing the request.
-    const provider: LLMProvider = { name: "world-scope-proposal-fixture", async complete(options) {
+    const provider: LLMProvider = { name: "world-scope-proposal-fixture", contextWindowTokens: 131072, async complete(options) {
       const input = JSON.parse(options.user);
       const request = input.snapshot.availableReads.map((item: { request: Record<string, unknown> }) => item.request)
         .find((item: { intent?: string; root?: PeWorldRootRef }) => item.intent === "pe_world_state" && item.root?.entityType === root.entityType && item.root.entityId === root.entityId);

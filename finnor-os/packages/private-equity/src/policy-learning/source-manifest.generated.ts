@@ -140,7 +140,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "c24b628441ad4f80f38e81633589d976cb402114db4d7915b0b43491aab48178"
+      "sha256": "be99e973c245fb9e42e43f0959c54e4ac235f2784776c46f62bf93bce200c063"
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
@@ -152,7 +152,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/worker/src/index.ts",
-      "sha256": "ebd22314cb5680d13057e83ecd3723abb30e9529b13d6d75cd540e397a084fda"
+      "sha256": "147aa059980b4bdb800527e6a9a93da677c92cb20359d000a9ed0d162fa39777"
     },
     {
       "path": "finnor-os/apps/worker/src/queue.ts",
@@ -164,7 +164,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/compute-contract.ts",
-      "sha256": "19d624f854e1206574b0f92d7a311d38bdc2b7c51ba5f0f04e8953530ff1a71a"
+      "sha256": "d64e200aace11e62b81ea53563851bc80ac0ee43448862e8fbe5f1f59d18efa6"
     },
     {
       "path": "finnor-os/packages/db/compute-governor.ts",
@@ -172,7 +172,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "ee06f87c37e038ec8a983f96e3fbd344d1bdb51b8897d565451dc9be1dfe5ce2"
+      "sha256": "25edf0aa29c242f4b7d60eef3bd875adc19c5231703e7969ba0411479f831c73"
     },
     {
       "path": "finnor-os/packages/db/migrations/0190_x5_experience_policy.sql",
@@ -184,7 +184,7 @@ export default {
     },
     {
       "path": "finnor-os/package-lock.json",
-      "sha256": "b8dd13667bab0344a32337562003cd8cad43324f4a110919e88473fd7f6bfa3e"
+      "sha256": "7596466caba41cd0ed73ca711cfa246767bdbc8f13ee4c85a859794d9e77ae15"
     },
     {
       "path": "package-lock.json",
@@ -236,7 +236,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/shared-types/src/index.ts",
-      "sha256": "5af96a7210c3d03f880119c3fdadd0068ab60f494ac509d431ccae934512da1b"
+      "sha256": "f05e06d158c73e4d256032415bbefbf10407583c3cbe73938b7df5cc41fb6c37"
     },
     {
       "path": "finnor-os/packages/shared-types/src/primary-diligence.ts",
@@ -284,7 +284,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/index.ts",
-      "sha256": "9fc9091d2073694b20915b8a192795be9693dd9c1b2a6e97a8b9bc71d064cbb8"
+      "sha256": "7f4df1d179b9faffbf72d8f934e0a7eb1387c6d79a002c878c4be581f3b4076b"
     },
     {
       "path": "finnor-os/packages/security/src/auth.ts",

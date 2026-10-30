@@ -1,3 +1,4 @@
+import { buildConversationModelInput } from "./conversation-prompt";
 // P6 canonical planner: Work/Input -> GoalSpec -> ConstraintSet -> immutable
 // PlanningWorldSnapshot -> CandidatePlan[] -> deterministic PlanCompiler result.
 // The model is a proposal source only. This file never inserts DomainAction rows.
@@ -68,7 +69,6 @@ const IC_PREPARATION_PROPOSER_ACTIONS = new Set([
   "delegate_objective", "clarification_request", "search_web",
 ]);
 const UUID_V4_ZERO = "00000000-0000-4000-8000-000000000006";
-const MAX_PLANNER_CONTEXT_CHARS = 24_000;
 
 export interface PlanningResult {
   version: 1;
@@ -169,7 +169,7 @@ function boundedPromptValue(value: unknown, maxChars: number): unknown {
 
 function plannerOperatingContext(context: OperatingContext | undefined): Record<string, unknown> | null {
   if (!context) return null;
-  return boundedPromptValue(redactStructured({
+  return redactStructured({
     version: context.version,
     truthPrecedence: context.truthPrecedence,
     interactionPrecedence: context.interactionPrecedence,
@@ -180,7 +180,6 @@ function plannerOperatingContext(context: OperatingContext | undefined): Record<
     companyDirectory: context.companyDirectory,
     identityAccess: context.identityAccess,
     universalActions: context.universalActions,
-    conversationContext: context.conversationContext,
     referencedEntities: context.referencedEntities.slice(0, 24),
     canonicalSummaries: context.canonicalSummaries.slice(0, 16),
     epistemicWarnings: (context.epistemicWarnings ?? []).slice(0, 30),
@@ -188,7 +187,7 @@ function plannerOperatingContext(context: OperatingContext | undefined): Record<
     authority: context.authority,
     sources: context.sources.slice(0, 20).map(({ kind, source, asOf, role }) => ({ kind, source, asOf, role })),
     health: context.health,
-  }), MAX_PLANNER_CONTEXT_CHARS) as Record<string, unknown>;
+  });
 }
 
 /** The compiler receives the complete immutable ConstraintSet. The proposer only
@@ -1382,9 +1381,11 @@ export class LLMPlanner implements Planner {
       try {
         const heuristic = process.env.FINNOR_GEPA_PLANNER_CANDIDATES_ENABLED === "1" && !opts.optimizationReplay && opts.channel === "background" && tenantContext.role === "owner"
           ? await (await import("./capabilities/planner-activation")).loadActivePlannerHeuristic({ ...tenantContext, role: "owner" }) : null;
-        const raw = await this.routedProvider(opts.channel ?? "text").complete({
+        const provider = this.routedProvider(opts.channel ?? "text");
+        const { provider: contextProvider, ...prompt } = await buildConversationModelInput({
+          provider, conversation: opts.operatingContext?.conversationContext,
           system: `${this.systemPrompt(verticalKey, allowedActionTypes, goal)}${heuristic ? `\nReviewed planning heuristic (subordinate to every contract above):\n${heuristic.instruction}` : ""}`,
-          user: JSON.stringify({
+          required: {
             instruction: redacted.value,
             goal: boundedPromptValue(goal, 12_000),
             constraints: plannerConstraintContext(constraints),
@@ -1396,7 +1397,10 @@ export class LLMPlanner implements Planner {
             ...(heuristic ? { reviewedPlannerCandidate: { runId: heuristic.runId, candidateDigest: heuristic.candidateDigest, activationRevision: heuristic.activationRevision } } : {}),
             priorRejectedProposal: opts.proposalFeedback
               ? boundedPromptValue(redactStructured(opts.proposalFeedback), 12_000) : null,
-          }),
+          },
+        });
+        const raw = await contextProvider.complete({
+          ...prompt,
           json: true,
           tenantId: tenantContext.tenantId,
           traceId: tenantContext.correlationId,

@@ -80,6 +80,7 @@ const tenantLaneClassified = (
 
 /** Exhaustive registry for every production handler registered by the worker. */
 export const PRODUCTION_JOB_CONTRACTS = {
+  compact_employee_conversation_v1: tenantFixed("BACKGROUND", "locally_idempotent", "Source-checked private conversation checkpoints; immutable source, atomic parent publication, no effect authority.", { leaseRecovery: "immediate_after_expiry" }),
   run_capability_provider_v1: tenantFixed("HEAVY", "durably_effect_guarded", "A durable pre-dispatch marker prevents resubmission; acknowledged provider identities support read-only continuation and fenced publication."),
   learn_strategic_response_model_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Y2 finite actor-local response learning and independent complete model-set checking; original Work, no effects or protected authority.", {leaseRecovery:"immediate_after_expiry"}),
   evaluate_strategic_response_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Y2 coupled S3 prediction and actual S4 search with independent programme checking; original episode and cumulative use limits, no effects.", {leaseRecovery:"immediate_after_expiry"}),
