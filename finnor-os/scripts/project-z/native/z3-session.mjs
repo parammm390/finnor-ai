@@ -193,14 +193,16 @@ const executeInput = async () => {
   return { root, workId: parent.workId, sessionId: acquired.sessionId, executionProfileId: acquired.profileIds[0], targetId: target.recordId,
     goal: { phase: "APPROVED", reporting: quantity }, parameters: { [[...names][0]]: quantity }, idempotencyKey: "z3-native-" + randomUUID() };
 };
-const viability = async (operation, body) => owner.operation(operation, { ...body, root });
+// SubmitSchema is strict and selects only by Work and idempotency key; read and recover carry the root.
+const viability = async (operation, body) => owner.operation(operation, operation === "viability-submit" ? body : { ...body, root });
 const sessions = () => q("SELECT id,status,reason,s4_consumed,generation,candidate_digest,check_digest FROM finnor_os.z3_viability_sessions WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at", [parent.tenantId, parent.workId]);
 const before = await witness();
 record("witness-before", before);
 
 await runCase("Z02", "Z3 submit before any governed child exists is refused by the late-bound owner and creates no Z3 session", async () => {
   const response = await viability("viability-submit", { workId: parent.workId, idempotencyKey: "z3-early-" + randomUUID() });
-  ensure(response.status >= 400, "EARLY_SUBMIT_NOT_REFUSED:" + response.status);
+  ensure(response.status === 422 && response.body?.code === "VIABILITY_PREDICATE_UNPASSED" && /^Z3_/.test(response.body?.predicate ?? ""),
+    "EARLY_SUBMIT_NOT_REFUSED_BY_A_TYPED_Z3_PREDICATE:" + response.status + ":" + JSON.stringify(response.body).slice(0, 300));
   ensure((await sessions()).length === 0, "EARLY_SUBMIT_CREATED_SESSION");
   return { detail: { status: response.status, body: response.body } };
 });

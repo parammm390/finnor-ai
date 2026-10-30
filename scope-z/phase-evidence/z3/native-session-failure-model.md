@@ -110,6 +110,12 @@ non-COMPOSITION charge, no `domain_actions` row, no child request/wire, no selec
 digests unchanged until the Z3 writer selects. The scenario asserts exactly that and records the per-phase charges.
 The product behavior is not changed.
 
+N19 Driver input rejected by the strict submit schema. OBSERVED in run w3-z3s-01: `viability-submit` with a `root`
+field answered 400 `VIABILITY_SCHEMA_INVALID` (SubmitSchema is strict and selects only by Work and idempotency key).
+Z04 FAIL was a driver defect, not product behavior. It also exposed a false PASS: Z02 accepted any status >= 400,
+so the same schema refusal satisfied "refused before the governed child". Z02 now requires the typed 422
+`VIABILITY_PREDICATE_UNPASSED` with a `Z3_*` predicate, so only a Z3 owner refusal can pass it.
+
 ## Scope limits recorded up front (not silently narrowed later)
 
 - The map is a controlled recurring cycle over the first canonical steps of the portal composition
