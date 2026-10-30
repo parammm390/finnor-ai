@@ -31,9 +31,12 @@ authority, qualification, 100× or activation is claimed here or by the run.
    four S5 compute allocation resources (logical/cpu/storage/memory).
 4. Real S3 fit → S4 synthesize → S5 resource/clear → S4 handoff over authenticated
    loopback HTTP on 3101, via `createUpstreamFixtureSupport` in existing mode
-   (root = the phase-9 external organization; admin client sets
-   `app.test_vertical_mode='explicit'`; pinned `FINNOR_S3_PYTHON` generates the
-   reference rows). The fit/synthesize stores come from the launcher.
+   (root = a fresh active `external_organizations` row in the same tenant; the
+   seeded phase-9 organization world has PARTIAL canonical coverage, which the S3
+   fit gate refuses — observed by the Z4 worker's retained `w4-seed-01/02`
+   attempts; admin client sets `app.test_vertical_mode='explicit'`; pinned
+   `FINNOR_S3_PYTHON` generates the reference rows). The fit/synthesize stores
+   come from the launcher.
 5. One unresolved S6 obligation bound to Work 3 through
    `prepareEnterpriseDurableObligation(..., { workId })` in the scenario process
    (the HTTP prepare route takes no workId), verified in `domain_actions`,
@@ -54,10 +57,15 @@ authority, qualification, 100× or activation is claimed here or by the run.
 
 ## Runs (remote verify host, one stack at a time)
 
-- `w1-native-01`: first attempt at `86fb6ab`, queued on the stack lock.
-  Evidence: `fzv-int-out/native/w1-native-01/` and
-  `fzv-int-out/native/w1-native-01/scenario-01/z1-native-e2e-report-01/`.
-  Rerun: new immutable name only (e.g. `w1-native-02`), same command shape:
+- `w1-native-01`: never started. Killed while still queued (before any evidence or
+  state directory existed) because the chain root was revised after the Z4
+  worker's retained `w4-seed-02` diagnosis showed the S3 fit gate refusing the
+  seeded phase-9 organization's PARTIAL-coverage world. No processes, evidence or
+  database were created under this name.
+- `w1-native-02`: first real attempt, at the amended session commit.
+  Evidence: `fzv-int-out/native/w1-native-02/` and its
+  `scenario-01/z1-native-e2e-report-01/`.
+  Rerun shape (new immutable name each attempt):
   `native-run.sh <name> z1 finnor-os/scripts/project-z/native/z1-session.mjs
   --no-worker --budget-ms=7200000 --forward-env=PLAYWRIGHT_BROWSERS_PATH`
   with `PLAYWRIGHT_BROWSERS_PATH=/home/factory-user/repos/fzv-browsers` and the

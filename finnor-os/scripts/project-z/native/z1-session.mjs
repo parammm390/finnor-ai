@@ -7,7 +7,7 @@
 // guarded native driver. No credential, token or credentialed URL is recorded;
 // this admits no phase by itself.
 import assert from "node:assert/strict"
-import { createHash } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto"
 import { spawn, spawnSync } from "node:child_process"
 import { createRequire } from "node:module"
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
@@ -227,11 +227,19 @@ try {
       writeFileSync(path, JSON.stringify(value, null, 2) + "\n", { mode: 0o600 })
     }
     const begin = new Date(Math.floor(Date.now() / day) * day - 128 * day).toISOString()
+    // The S3 fit gate revalidates the world belief pin and requires COMPLETE canonical
+    // coverage (enterprise-beliefs.ts). The seeded phase-9 world carries PARTIAL
+    // coverage (unversioned core documents and decision receipts), which is exactly
+    // what the Z4 worker's retained w4-seed-01/02 attempts observed. The chain
+    // therefore roots at a fresh organization whose world contains only this
+    // fixture's own evidence, the same shape the S5/S6 owner suites prove.
+    const chainRoot = { entityType: "external_organization", entityId: randomUUID() }
+    await admin.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,$4,'other')",
+      [chainRoot.entityId, tenantId, `z1-${runName}-chain`, `Z1 S5 chain root ${runName}`])
     const support = upstream.createUpstreamFixtureSupport({ admin: () => admin,
       generatedRows: JSON.parse(generated.stdout).rows, begin, day, fixtures: {}, api: makeOwnerApi(ownerToken), artifact })
     const owner = await support.fixture(episodeId, 2, [{ id: "cash", unit: "USD", capacity: 100, totalLimit: 100 }],
-      { existing: { tenant: tenantId, principal: principalId,
-        root: { entityType: "external_organization", entityId: TARGET_ORGANIZATION } }, expiryMs: 5400000 })
+      { existing: { tenant: tenantId, principal: principalId, root: chainRoot }, expiryMs: 5400000 })
     const policy = await support.policy(owner, "z1obligation", { cash: 25 })
     await support.resource(owner, "cash", "USD", "STOCK", ["100", "100", "100"])
     const cleared = expectStatus(await apiCall("/api/allocations/clear", ownerToken,
@@ -242,7 +250,7 @@ try {
         decision: support.decision(owner, cleared.certificate.ref) }), 200, "S4_HANDOFF")
     assert.ok(handoff.preparationRef && handoff.allocationRef && handoff.consumptionRef && handoff.intervention,
       "S4_HANDOFF_REFERENCES_REQUIRED")
-    return { modelRef: owner.model.ref, policyRef: policy.ref, allocationRef: cleared.certificate.ref,
+    return { chainRoot, modelRef: owner.model.ref, policyRef: policy.ref, allocationRef: cleared.certificate.ref,
       preparationRef: handoff.preparationRef, consumptionRef: handoff.consumptionRef, handoffInterventionDigest: sha(JSON.stringify(handoff.intervention)) }
   })
   result.chain = chain
