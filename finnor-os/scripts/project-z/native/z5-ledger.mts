@@ -1,7 +1,8 @@
 /** Z5 disposable S6 ledger process with the owner-transport routes the Z5 chain needs
  * (S2/S5/S6/S7/S8 plus BUSINESS_OWNER publication). Adapted from scripts/s7/ledger-fixture.mts;
- * unlike that fixture the token set is returned and an S6 route pair is included, because the
- * Z5 owner reads S6 obligation execution handoffs through this same transport. */
+ * unlike that fixture the token set is returned and an S6 OWNER route is included, because the
+ * Z5 owner reads S6 obligation execution handoffs through this same transport (the transport
+ * grammar allows CONSUMER routes only for S7 and S8). */
 import { createHash, generateKeyPairSync, randomUUID, sign } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
@@ -30,11 +31,11 @@ export async function createZ5Ledger(tenant: string, principal: string, valuator
   const pub = signer.publicKey.export({ type: 'spki', format: 'pem' }).toString();
   const reviewPub = reviewer.publicKey.export({ type: 'spki', format: 'pem' }).toString();
   const rights = options.rightsRef;
-  const tokenOwners = ['S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'BUSINESS_OWNER', 'FINANCIAL_SOURCE', 'INDEPENDENT_VALUER', 'READER', 'S8_READER', 'S6_READER'] as const;
+  const tokenOwners = ['S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'BUSINESS_OWNER', 'FINANCIAL_SOURCE', 'INDEPENDENT_VALUER', 'READER', 'S8_READER'] as const;
   const tokens: Record<string, string> = Object.fromEntries(tokenOwners.map(k => [k, randomUUID() + randomUUID()]));
   const owners = tokenOwners.map(owner => ({
-    owner: owner === 'READER' ? 'S7' : owner === 'S8_READER' ? 'S8' : owner === 'S6_READER' ? 'S6' : owner,
-    tokenHash: byteHash(tokens[owner]!), append: !['READER', 'S8_READER', 'S6_READER'].includes(owner),
+    owner: owner === 'READER' ? 'S7' : owner === 'S8_READER' ? 'S8' : owner,
+    tokenHash: byteHash(tokens[owner]!), append: !['READER', 'S8_READER'].includes(owner),
     tenantId: tenant, principalId: owner === 'INDEPENDENT_VALUER' ? valuatorPrincipal : principal,
     rightsRefs: [rights], read: true, sealedAppend: false, sealedRead: false,
   }));
@@ -85,7 +86,7 @@ export async function createZ5Ledger(tenant: string, principal: string, valuator
   await writeFile(originPath, origin.privateKey.export({ type: 'pkcs8', format: 'pem' }), { mode: 0o600 });
   const validAfter = new Date(Date.now() - 60000).toISOString(), validUntil = new Date(Date.now() + 3600000).toISOString();
   const routeDefinitions: Array<[string, string, string]> = [
-    ['S2', 'OWNER', 'S2'], ['S5', 'OWNER', 'S5'], ['S6', 'OWNER', 'S6'], ['S6', 'CONSUMER', 'S6_READER'],
+    ['S2', 'OWNER', 'S2'], ['S5', 'OWNER', 'S5'], ['S6', 'OWNER', 'S6'],
     ['S7', 'OWNER', 'S7'], ['S7', 'CONSUMER', 'READER'], ['S8', 'OWNER', 'S8'], ['S8', 'CONSUMER', 'S8_READER'],
   ];
   const routes = [];

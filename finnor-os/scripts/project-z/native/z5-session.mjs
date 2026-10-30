@@ -209,8 +209,11 @@ await runCase("Z5N-07", "Real S3 fit, S4 policy, S5 clearing and handoff over HT
   const day = 86400000, begin = new Date(Math.floor(Date.now() / day) * day - 128 * day).toISOString();
   const support = createUpstreamFixtureSupport({ admin: () => sql, generatedRows: JSON.parse(generated.stdout).rows, begin, day, fixtures: {}, api,
     artifact: async (name, value) => record("upstream-" + name.replace(/[^A-Za-z0-9]+/g, "-"), value) });
-  let [organization] = await q("SELECT id FROM finnor_os.external_organizations WHERE tenant_id=$1 AND active ORDER BY created_at LIMIT 1", [S.tenantId]);
-  ensure(organization, "NO_ACTIVE_EXTERNAL_ORGANIZATION");
+  // The S3 fit gate requires COMPLETE canonical coverage; the seeded phase-9 organization world is PARTIAL
+  // by design, so the chain roots at a fresh organization whose world holds only this fixture's evidence.
+  const organization = { id: randomUUID() };
+  await q("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,$4,'other')",
+    [organization.id, S.tenantId, `z5-${RUN}-chain`, `Z5 S5 chain root ${RUN}`]);
   const f = await support.fixture("z5-" + randomUUID().slice(0, 8), 2, [{ id: "cash", unit: "USD", capacity: 100, totalLimit: 100 }],
     { existing: { tenant: S.tenantId, principal: S.ownerId, root: { entityType: "external_organization", entityId: organization.id } },
       expiresAt: parent().originalDeadlineAt, exposureUnit: "USD:minor:RECORDED_MINOR" });
