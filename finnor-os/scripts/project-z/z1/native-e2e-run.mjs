@@ -181,9 +181,12 @@ export async function runNativeEpisode(guarded, output, report) {
     report.actions.push({ index: report.actions.length, at: new Date().toISOString(), ...action });
     await privateJSON(resolve(output, `action-${String(report.actions.length).padStart(3, "0")}.json`), report.actions.at(-1));
   };
+  // `next dev` compiles a route when it is first requested, on a host that also runs the database, Auth and both servers.
+  // Only waits that can be first requests use this bound; every other wait and every assertion is unchanged.
+  const FIRST_REQUEST_BOUND_MS = 180000;
   async function post(operation, body, statuses = [200], credential = bearer) {
     const response = await page.request.post(new URL(`/api/centropy/company-brain/${operation}`, target.frontend).href,
-      { data: body, headers: credential ? { authorization: credential } : {}, timeout: 65000 });
+      { data: body, headers: credential ? { authorization: credential } : {}, timeout: FIRST_REQUEST_BOUND_MS });
     need(statuses.includes(response.status()), "AUTHENTICATED_NATIVE_HTTP_EXPECTATION_FAILED");
     need(/no-store/.test(response.headers()["cache-control"] ?? ""), "PRIVATE_NATIVE_RESPONSE_MUST_NOT_BE_CACHED");
     const value = await response.json();
@@ -194,12 +197,12 @@ export async function runNativeEpisode(guarded, output, report) {
     url.searchParams.set("root", JSON.stringify(fixture.root)); url.searchParams.set("workId", workId);
     url.searchParams.set("object", JSON.stringify({ namespace: "core", owner: "@finnor/db", type: "work", id: workId }));
     await page.goto(url.href); const panel = page.locator(`[data-z1-work-id="${workId}"]`);
-    await expect(panel).toBeVisible({ timeout: 30000 }); return panel;
+    await expect(panel).toBeVisible({ timeout: FIRST_REQUEST_BOUND_MS }); return panel;
   }
   async function uiWrite(workId, operation, body) {
     const panel = await mount(workId);
     const pending = page.waitForResponse(response => response.request().method() === "POST" &&
-      new URL(response.url()).pathname === `/api/centropy/company-brain/${operation}`, { timeout: 65000 });
+      new URL(response.url()).pathname === `/api/centropy/company-brain/${operation}`, { timeout: FIRST_REQUEST_BOUND_MS });
     void pending.catch(() => {});
     if (["z1-reserve-original-budget", "z1-submit-shared-work"].includes(operation)) {
       const details = panel.locator("details").filter({ has: page.getByLabel("Canonical Z1 intake JSON") });
@@ -391,7 +394,7 @@ export async function runNativeEpisode(guarded, output, report) {
       networkDenied++; return route.abort("blockedbyclient");
     });
     await context.routeWebSocket("**/*", socket => { networkDenied++; socket.close(); });
-    page = await context.newPage(); page.setDefaultTimeout(30000);
+    page = await context.newPage(); page.setDefaultTimeout(30000); page.setDefaultNavigationTimeout(FIRST_REQUEST_BOUND_MS);
     await page.goto(new URL("/centropy/login", target.frontend).href);
     await expect(page.getByRole("heading", { name: "Sign in to CENTROPY", exact: true })).toBeVisible();
     await page.getByLabel("Email", { exact: true }).fill(process.env.TEST_OWNER_EMAIL);
