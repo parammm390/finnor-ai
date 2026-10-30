@@ -1,0 +1,101 @@
+-- Z3 ViabilityStrategy native persistence. Owned tables only: no new Work,
+-- reservation, effect, admission, evidence or authority owner is created, and
+-- the S4/S5/S6/S7 owners keep their authority. The session row binds the
+-- original Work input, authority revision, runtime code digest and deadline;
+-- terminal verdicts, published candidates, observed checks and recorded
+-- consumption cannot be rewritten.
+-- Applies after postz_z0_institution_application_bridge.sql by the canonical
+-- bytewise filename order and becomes the release migration head.
+CREATE TABLE finnor_os.z3_viability_sessions(
+ tenant_id uuid NOT NULL,id uuid NOT NULL,principal_id uuid NOT NULL,
+ work_id uuid NOT NULL,work_input_id uuid NOT NULL,
+ original_parent_id text NOT NULL CHECK(char_length(original_parent_id) BETWEEN 1 AND 256),
+ arena_digest text NOT NULL CHECK(arena_digest~'^[a-f0-9]{64}$'),
+ binding_digest text NOT NULL CHECK(binding_digest~'^[a-f0-9]{64}$'),
+ arena jsonb NOT NULL CHECK(octet_length(arena::text)<=2097152),
+ binding jsonb NOT NULL CHECK(octet_length(binding::text)<=65536),
+ reservation_ref jsonb,
+ status text NOT NULL DEFAULT 'INTAKE'
+  CHECK(status IN('INTAKE','PRODUCING','CHECKING','VIABLE','UNREALIZABLE','UNKNOWN','STALE','FAILED')),
+ reason text,
+ generation integer NOT NULL DEFAULT 1 CHECK(generation>0),
+ active_claim_token text,active_claim_fence bigint CHECK(active_claim_fence>0),
+ checkpoint jsonb NOT NULL DEFAULT '[]'::jsonb CHECK(octet_length(checkpoint::text)<=65536),
+ candidate jsonb CHECK(octet_length(candidate::text)<=12582912),
+ candidate_digest text CHECK(candidate_digest IS NULL OR candidate_digest~'^[a-f0-9]{64}$'),
+ check_receipt jsonb CHECK(octet_length(check_receipt::text)<=2097152),
+ check_digest text CHECK(check_digest IS NULL OR check_digest~'^[a-f0-9]{64}$'),
+ s4_consumed boolean NOT NULL DEFAULT false,
+ obligation_refs jsonb NOT NULL DEFAULT '[]'::jsonb CHECK(octet_length(obligation_refs::text)<=131072),
+ deadline_at timestamptz NOT NULL,
+ created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+ updated_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+ PRIMARY KEY(tenant_id,id),
+ FOREIGN KEY(tenant_id,principal_id) REFERENCES finnor_os.users(tenant_id,id),
+ FOREIGN KEY(tenant_id,work_id) REFERENCES finnor_os.works(tenant_id,id),
+ FOREIGN KEY(tenant_id,work_input_id) REFERENCES finnor_os.work_inputs(tenant_id,id)
+);
+CREATE INDEX z3_viability_session_work ON finnor_os.z3_viability_sessions(tenant_id,principal_id,work_id,created_at DESC,id DESC);
+CREATE TABLE finnor_os.z3_viability_requests(
+ tenant_id uuid NOT NULL,principal_id uuid NOT NULL,idempotency_key text NOT NULL,
+ request_digest text NOT NULL CHECK(request_digest~'^[a-f0-9]{64}$'),
+ session_id uuid NOT NULL,created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+ PRIMARY KEY(tenant_id,principal_id,idempotency_key),
+ FOREIGN KEY(tenant_id,principal_id) REFERENCES finnor_os.users(tenant_id,id),
+ FOREIGN KEY(tenant_id,session_id) REFERENCES finnor_os.z3_viability_sessions(tenant_id,id)
+);
+CREATE TABLE finnor_os.z3_viability_events(
+ tenant_id uuid NOT NULL,id bigint GENERATED ALWAYS AS IDENTITY,principal_id uuid NOT NULL,
+ session_id uuid NOT NULL,kind text NOT NULL,
+ body jsonb NOT NULL CHECK(octet_length(body::text)<=131072),
+ created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+ PRIMARY KEY(tenant_id,id),
+ FOREIGN KEY(tenant_id,principal_id) REFERENCES finnor_os.users(tenant_id,id),
+ FOREIGN KEY(tenant_id,session_id) REFERENCES finnor_os.z3_viability_sessions(tenant_id,id)
+);
+CREATE INDEX z3_viability_event_session ON finnor_os.z3_viability_events(tenant_id,session_id,created_at,id);
+CREATE TABLE finnor_os.z3_viability_artifacts(
+ tenant_id uuid NOT NULL,principal_id uuid NOT NULL,artifact_id text NOT NULL,
+ kind text NOT NULL CHECK(kind IN('candidate','check','run-manifest')),
+ digest text NOT NULL CHECK(digest~'^[a-f0-9]{64}$'),
+ body jsonb NOT NULL CHECK(octet_length(body::text)<=12582912),
+ created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+ PRIMARY KEY(tenant_id,artifact_id),
+ FOREIGN KEY(tenant_id,principal_id) REFERENCES finnor_os.users(tenant_id,id)
+);
+CREATE FUNCTION finnor_os.z3_session_progress() RETURNS trigger LANGUAGE plpgsql SET search_path=pg_catalog,finnor_os AS $$
+BEGIN
+ IF TG_OP='DELETE' THEN RAISE EXCEPTION 'Z3 original viability responsibility is retained'; END IF;
+ IF to_jsonb(NEW)-ARRAY['status','reason','generation','active_claim_token','active_claim_fence','checkpoint','candidate','candidate_digest','check_receipt','check_digest','s4_consumed','updated_at']
+  IS DISTINCT FROM to_jsonb(OLD)-ARRAY['status','reason','generation','active_claim_token','active_claim_fence','checkpoint','candidate','candidate_digest','check_receipt','check_digest','s4_consumed','updated_at']
+ THEN RAISE EXCEPTION 'Z3 original Work, arena, binding, reservation and obligation preimages cannot change'; END IF;
+ IF NEW.generation<OLD.generation THEN RAISE EXCEPTION 'Z3 session generation cannot reset'; END IF;
+ IF OLD.active_claim_fence IS NOT NULL AND (NEW.active_claim_fence IS NULL OR NEW.active_claim_fence<OLD.active_claim_fence)
+ THEN RAISE EXCEPTION 'Z3 claim fence cannot retreat'; END IF;
+ IF OLD.candidate IS NOT NULL AND (NEW.candidate IS DISTINCT FROM OLD.candidate OR NEW.candidate_digest IS DISTINCT FROM OLD.candidate_digest)
+ THEN RAISE EXCEPTION 'Z3 published candidate is immutable'; END IF;
+ IF OLD.check_receipt IS NOT NULL AND (NEW.check_receipt IS DISTINCT FROM OLD.check_receipt OR NEW.check_digest IS DISTINCT FROM OLD.check_digest)
+ THEN RAISE EXCEPTION 'Z3 observed independent check is immutable'; END IF;
+ IF OLD.s4_consumed AND NOT NEW.s4_consumed THEN RAISE EXCEPTION 'Z3 recorded consumption cannot be erased'; END IF;
+ IF OLD.status IN('VIABLE','UNREALIZABLE','STALE','FAILED') AND NEW.status<>OLD.status
+ THEN RAISE EXCEPTION 'Z3 terminal or stale verdict cannot change'; END IF;
+ RETURN NEW;
+END $$;
+REVOKE ALL ON FUNCTION finnor_os.z3_session_progress() FROM PUBLIC;
+CREATE TRIGGER z3_session_progress BEFORE UPDATE OR DELETE ON finnor_os.z3_viability_sessions FOR EACH ROW EXECUTE FUNCTION finnor_os.z3_session_progress();
+DO $$ DECLARE t text; BEGIN
+ FOREACH t IN ARRAY ARRAY['z3_viability_sessions','z3_viability_requests','z3_viability_events','z3_viability_artifacts'] LOOP
+  EXECUTE format('ALTER TABLE finnor_os.%I ENABLE ROW LEVEL SECURITY',t);
+  EXECUTE format('ALTER TABLE finnor_os.%I FORCE ROW LEVEL SECURITY',t);
+  EXECUTE format('CREATE POLICY z3_scope ON finnor_os.%I USING(tenant_id=finnor_os.request_tenant_id() AND principal_id=nullif(current_setting(''app.user_id'',true),'''')::uuid) WITH CHECK(tenant_id=finnor_os.request_tenant_id() AND principal_id=nullif(current_setting(''app.user_id'',true),'''')::uuid)',t);
+  EXECUTE format('GRANT SELECT,INSERT ON finnor_os.%I TO finnor_app',t);
+  IF t='z3_viability_sessions' THEN EXECUTE format('GRANT UPDATE ON finnor_os.%I TO finnor_app',t);
+  ELSE EXECUTE format('CREATE TRIGGER z3_immutable BEFORE UPDATE OR DELETE ON finnor_os.%I FOR EACH ROW EXECUTE FUNCTION finnor_os.s5_immutable_record()',t); END IF;
+ END LOOP;
+END $$;
+GRANT USAGE,SELECT ON SEQUENCE finnor_os.z3_viability_events_id_seq TO finnor_app;
+INSERT INTO finnor_os.compute_job_type_policies(job_type,default_class,allowed_classes,classification_rule,tenant_scope,obligation_kind,policy_revision,rationale)
+ VALUES('run_z3_viability_synthesis_v1','INTERACTIVE',ARRAY['INTERACTIVE'],'fixed','tenant','required',1,
+ 'Z3 bounded public GR(1) viability synthesis with a separate independent checker process under the original Work, reservation and deadline; killed deliveries reconcile through durable claim fences, never automatic replay.'),
+ ('run_z3_viability_recovery_v1','INTERACTIVE',ARRAY['INTERACTIVE'],'fixed','tenant','required',1,
+ 'Z3 explicit owner recovery replaying durable checkpoints only; a strictly higher session fence, no effect replay, no new authority and no budget renewal.');
