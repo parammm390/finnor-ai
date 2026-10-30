@@ -30,3 +30,10 @@ Evidence stays on the remote under `/home/factory-user/repos/fzv-int-out/`. Pack
 
 - install-01 (commit 7aa6238): all 48 steps passed; engineeringStatus FAILED only because my public-env inlining gate also required NEXT_PUBLIC_OS_API_URL in client chunks, but that variable is server-only (proxy prefers FINNOR_OS_API_URL). SUPABASE_URL/ANON_KEY were inlined correctly. Fix: drop the server-only variable from --public-env; no installer code change. Evidence retained at fzv-z2-pack-w2/install-01.
 - Added finnor-os/scripts/project-z/native/: z2-auth.mjs (https issuer via GOTRUE_JWT_ISSUER), z2-app.mjs (next start + NODE_ENV=test + receipt build ids), z2-stack.mjs (pack-root runner, TLS front, scenario-owned worker), z2-fixtures.mjs, z2-expected.py (independent hand profile via original-oracle game reader), z2-session.mjs (users, fixtures, drain, owned replay worker, target, driver).
+
+## Update 5: successor session (HEAD 3c0180d)
+
+- Installs: w2-install-03 and w2-install-04 each passed all 48 steps (engineeringStatus PASSED). install-04 was built from 3e72da5; its pack predates the mixture qualificationRef fix (3c0180d), so w2-install-05 is built from 3c0180d for the final run. Pack for install-03 was removed after install-04 passed (evidence and PACK_REMOVED.txt kept).
+- Stack runs: dev runs w2-dev-01..04 failed on harness defects (G4, G5, scenario directory, plpgsql ambiguity fixed by merging the integrated tip). w2-native-01 (install-04 pack, no overlay) reached negative-fixtures: all four case fixtures (claim/checkpoint/artifact/partial) were created through the real API; `negative-fixtures` failed with 422 `Y3_QUALIFIED_SUPPLIED_MODEL_BINDING` (G6).
+- Driver stages (browser login, kill/restart per boundary, allowance exhaustion, six negatives, mounted Work, oracle comparison) have not run yet.
+- Next: w2-install-05 then w2-native-02 on the unmodified install-05 pack.
