@@ -202,7 +202,7 @@ const mixtureModel = (modelRef, principal, peer) => {
       }
     }
   }
-  mixture.root = "unverified-prior"; mixture.nodes = nodes;
+  mixture.root = "unverified-prior"; mixture.nodes = nodes; mixture.qualificationRef = modelRef;
   return mixture;
 };
 
