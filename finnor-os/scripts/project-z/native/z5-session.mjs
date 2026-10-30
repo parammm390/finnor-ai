@@ -102,7 +102,6 @@ const { canonical, digest } = kernel;
 const s8digest = (await import("../../../packages/capability-evolution/src/contracts.ts")).digest;
 const s8ByteDigest = (await import("../../../packages/capability-evolution/src/contracts.ts")).byteDigest;
 const transportPath = join(privateRoot, "transport.json");
-const transportKey = createPrivateKey(readFileSync(join(privateRoot, "transport-root.key")));
 const consumerKey = createPrivateKey(readFileSync(join(privateRoot, "consumer-root.key")));
 const edSignCanonical = (key, value) => edSign(null, Buffer.from(canonical(value)), key).toString("base64");
 
@@ -291,7 +290,12 @@ await runCase("Z5N-11", "S8 fixed-component profile and per-component admissions
   const contract = structuredClone(frozen);
   contract.domain = "ORDINARY_DEVELOPMENT";
   for (const c of [...contract.components, ...contract.replacementCandidates]) {
-    c.correspondence = { ...c.correspondence, admission: "NATIVE_S8_CURRENT_DECLARED_CONTRACT", implementationDigest: digest(c.transitions) };
+    c.correspondence = { ...c.correspondence, admission: "NATIVE_S8_CURRENT_DECLARED_CONTRACT" };
+  }
+  // Digests are computed on the exact parsed shape the owner re-parses at registration time.
+  const parsedContract = kernel.parseInput(contract);
+  for (const c of [...parsedContract.components, ...parsedContract.replacementCandidates]) {
+    c.correspondence.implementationDigest = digest(c.transitions);
   }
   const { authorize } = await import("../../../packages/private-equity/src/owner-context.ts");
   const rightsRevision = String((await authorize(ownerCtx(), S.root, [{ type: "work", id: parent().workId }])).revision);
@@ -306,7 +310,7 @@ await runCase("Z5N-11", "S8 fixed-component profile and per-component admissions
     envelopes: digest(facts.envelopes), rights: rightsRevision };
   const validUntil = parent().originalDeadlineAt;
   const profile = { schema: "finnor.s8.fixed-institution-components.v1", domain: "ORDINARY_DEVELOPMENT", tenantId: S.tenantId, principalId: S.ownerId,
-    workId: parent().workId, root: S.root, validUntil, rightsRevision, contract, componentAdmissionRefs: [],
+    workId: parent().workId, root: S.root, validUntil, rightsRevision, contract: parsedContract, componentAdmissionRefs: [],
     sourceDependencies: [{ key: "z5:native:fixed-profile", revision: 0, nodeIds: [], digest: null }],
     nativeLocals: [
       { component: "S4", owner: "S4_PREPARATION", states: { PREPARED: "done" } },
@@ -327,7 +331,7 @@ await runCase("Z5N-11", "S8 fixed-component profile and per-component admissions
     const { content: _content, ...descriptor } = reference;
     return descriptor;
   };
-  const components = [...contract.components, ...contract.replacementCandidates];
+  const components = [...parsedContract.components, ...parsedContract.replacementCandidates];
   for (const [index, component] of components.entries()) {
     profile.componentAdmissionRefs.push(await publish("z5-admission-" + index + "-" + randomUUID().slice(0, 8), {
       schema: "finnor.s8.fixed-component-admission.v1", domain: "ORDINARY_DEVELOPMENT", tenantId: S.tenantId, principalId: S.ownerId,
@@ -336,10 +340,9 @@ await runCase("Z5N-11", "S8 fixed-component profile and per-component admissions
   }
   const profileRef = await publish("z5-profile-" + randomUUID().slice(0, 8), profile);
   S.profileRef = profileRef; S.profile = profile;
-  const registered = await owner.operation("institution-contract-register", { root: S.root, workId: parent().workId, sourceRef: profileRef }).catch(() => null);
   const direct = await owner.call("/api/centropy/company-brain/institution-contract-register", { root: S.root, workId: parent().workId, sourceRef: profileRef });
   ensure(direct.status === 200, "PROFILE_REGISTER_" + direct.status + ":" + JSON.stringify(direct.body).slice(0, 500));
-  return { detail: { profileRef, facts: profileFacts, register: direct.body, firstAttempt: registered?.status } };
+  return { detail: { profileRef, facts: profileFacts, register: direct.body } };
 });
 
 // ---------------------------------------------------------------- Z5N-12 economic assignment (S7)
