@@ -26,7 +26,9 @@ SUFFIXES = {".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".json
 MARKDOWN = {"AGENTS.md", "README.md", "THIRD_PARTY_NOTICES.md", "LICENSE.md", "LICENCE.md"}
 EXPLICIT = {"scope-r/r3-incentive-rule-synthesis/verification-plan.json",
             "docs/centropy/capability-coverage.json",
-            "finnor-os/scripts/project-z/z2/NATIVE-REPLAY.md"}
+            "finnor-os/scripts/project-z/z2/NATIVE-REPLAY.md",
+            # z2-native: the stack's owner seed (scripts/seed-phase9-e2e.ts) reads this one binary template
+            "finnor-os/tests/artifact-corpus/centropy-ic-local-template.pptx"}
 
 
 def relative_path(value):
