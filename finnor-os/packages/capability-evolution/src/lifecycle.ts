@@ -28,7 +28,7 @@ const PolicySchema = z.object({ schema: z.literal('finnor.s8.lifecycle-policy.v1
 // Only the additive scientific sibling needs the larger closure. The financial
 // allocation RevisionBodySchema and parseRevision remain unchanged at 128 pins.
 const LifecyclePolicySchema=PolicySchema.extend({
-    sourcePins:PolicySchema.shape.sourcePins.max(256),
+    sourcePins:z.array(z.object({path:Text,sha256:z.string().regex(/^[a-f0-9]{64}$/)}).strict()).min(1).max(256),
     applicationSemantics:ApplicationPortConfigurationSchema.optional(),
     institutionCompiler:z.object({
         profileDigest:z.string().regex(/^[a-f0-9]{64}$/),
