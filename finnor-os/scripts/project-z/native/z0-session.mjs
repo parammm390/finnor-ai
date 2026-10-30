@@ -544,6 +544,57 @@ for (const [id, title] of [["P2-01", "Mounted reload during acquisition"], ["P2-
   notRun(id, title, "mounted browser phase not implemented in this scenario revision");
 notRun("P3-01", "Wire z0/run-native-e2e.mjs", "that driver requires separately delivered authority and oracle; not wired");
 
+/**
+ * Accounting read-back and meter receipt (failure model section 13). The authenticated API view and the database are
+ * two independent readings of the same S5 charges; the receipt lists every cost with its provenance and every meter gap.
+ */
+await runCase("P0-20", "S5/S6/S7 original accounting read back through the API and the database; meter receipt emitted", async () => {
+  const [root] = await q("SELECT id::text,status,reason,request->'root' root,deadline_at FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND work_id=$2 AND id=parent_id ORDER BY created_at LIMIT 1", [parent.tenantId, parent.workId]);
+  if (!root) return { outcome: "NOT_RUN", detail: { reason: "no root application session exists on the original Work in this mode" } };
+  const findKey = (value, key) => {
+    if (!value || typeof value !== "object") return null;
+    if (value[key] && typeof value[key] === "object") return value[key];
+    for (const item of Object.values(value)) { const hit = findKey(item, key); if (hit) return hit; }
+    return null;
+  };
+  const projection = await owner.operation("application-projection", { root: root.root, workId: parent.workId });
+  const apiBudget = projection.status === 200 ? findKey(projection.body, "budget") : null;
+  const [reservation] = await q("SELECT reservation_id,status,envelopes,revision FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND reservation_id=$2", [parent.tenantId, parent.parentReservation.id]);
+  const charges = await q("SELECT charge_key,phase,resource_id,unit,units::text units,body->'costs' costs,body->>'qualification' qualification FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 ORDER BY created_at,charge_key", [parent.tenantId, parent.parentReservation.id]);
+  const totals = reservation.envelopes.map(envelope => {
+    const limit = envelope.quantities.reduce((sum, value) => sum + BigInt(value), 0n);
+    const used = charges.filter(row => row.resource_id === envelope.resourceId && row.unit === envelope.unit).reduce((sum, row) => sum + BigInt(row.units), 0n);
+    return { resourceId: envelope.resourceId, unit: envelope.unit, limit: limit.toString(), used: used.toString(), remaining: (limit - used).toString(), overdrawn: used > limit };
+  });
+  const consumption = await q("SELECT status,count(*)::int n FROM finnor_os.s5_consumption_states WHERE tenant_id=$1 GROUP BY 1 ORDER BY 1", [parent.tenantId]);
+  const reservations = await q("SELECT status,count(*)::int n FROM finnor_os.s5_reservations WHERE tenant_id=$1 GROUP BY 1 ORDER BY 1", [parent.tenantId]);
+  const s7 = await q("SELECT kind,count(*)::int n FROM finnor_os.s7_economic_records WHERE tenant_id=$1 GROUP BY 1 ORDER BY 1", [parent.tenantId]);
+  const requests = await q("SELECT status,possible_egress,observation_ref IS NOT NULL observed,count(*)::int n FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id IN (SELECT id FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND work_id=$2) GROUP BY 1,2,3 ORDER BY 1,2,3", [parent.tenantId, parent.workId]);
+  const attempts = await q("SELECT j.type,a.outcome,a.failure_kind,extract(epoch FROM (a.finished_at-a.started_at))::numeric(12,3)::text seconds FROM finnor_os.job_delivery_attempts a JOIN finnor_os.jobs j ON j.id=a.job_id WHERE j.tenant_id=$1 AND (j.payload->>'sessionId'=$2 OR j.payload->>'programId'=$3) ORDER BY a.started_at", [parent.tenantId, root.id, parent.programId]);
+  const unknownObligations = consumption.filter(row => row.status === "UNKNOWN_OUTCOME");
+  const gaps = [];
+  if (!apiBudget) gaps.push("API_BUDGET_PROJECTION_UNAVAILABLE");
+  if (apiBudget?.monetaryCostStatus === "UNKNOWN" || apiBudget?.monetaryCost === null) gaps.push("MONEY_UNKNOWN_NO_BILLING_METER");
+  if (charges.some(row => row.costs?.status === "UNMETERED")) gaps.push("S5_CHARGES_ARE_CONSERVATIVE_OCCUPATION_UNMETERED_NOT_BILLING");
+  if (!s7.some(row => ["COST", "COMPUTE"].includes(row.kind))) gaps.push("NO_S7_COST_OR_COMPUTE_RECORD_FOR_THE_ORIGINAL_WORK");
+  gaps.push("WORKER_CPU_MEMORY_AND_PROVIDER_COSTS_NOT_OBSERVED (only queue delivery wall-clock is measured)");
+  const receipt = { schema: "finnor.project-z.z0-meter-receipt.v1", originalWorkId: parent.workId, programId: parent.programId, parentReservation: parent.parentReservation,
+    sessionId: root.id, sessionStatus: root.status, apiBudget: apiBudget ? { ...apiBudget } : null, databaseAccounting: { reservation: { status: reservation.status, revision: reservation.revision }, totals, chargeCount: charges.length },
+    charges: charges.map(row => ({ chargeKey: row.charge_key, phase: row.phase, resourceId: row.resource_id, unit: row.unit, units: row.units, costs: row.costs, qualification: row.qualification, provenance: "s5_governed_resource_charges" })),
+    consumptionStates: consumption, reservationsByStatus: reservations, s7Records: s7, physicalInteractions: requests, deliveryAttempts: attempts.map(row => ({ ...row, provenance: "job_delivery_attempts (queue owner)" })),
+    unknownS6Obligations: unknownObligations, meterGaps: gaps, money: "UNKNOWN", releaseSufficient: false };
+  record("meter-receipt", receipt);
+  ensure(apiBudget, "API_ACCOUNTING_PROJECTION_UNAVAILABLE_" + projection.status);
+  ensure(apiBudget.newReservation === false && apiBudget.releaseGranted === false, "PROJECTION_REPORTS_NEW_RESERVATION_OR_RELEASE");
+  ensure(JSON.stringify(apiBudget.originalReservationRef) === JSON.stringify(parent.parentReservation), "PROJECTION_NOT_THE_ORIGINAL_RESERVATION");
+  for (const line of totals) {
+    const api = apiBudget.resources?.find(item => item.resourceId === line.resourceId && item.unit === line.unit);
+    ensure(api && api.limit === line.limit && api.used === line.used && api.remaining === line.remaining, `API_DB_ACCOUNTING_DIFFER_${line.resourceId}`);
+    ensure(!line.overdrawn, "ORIGINAL_RESOURCE_OVERDRAWN_" + line.resourceId);
+  }
+  return { detail: { totals, gaps, charges: charges.length } };
+});
+
 const tally = results.reduce((acc, row) => ({ ...acc, [row.outcome]: (acc[row.outcome] ?? 0) + 1 }), {});
 record("summary", { tally, results, tenantId: parent.tenantId, parents: [parent.programId, second?.programId ?? null] });
 await sql.end();
