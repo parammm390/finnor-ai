@@ -12,14 +12,14 @@ const viewSchema=z.object({
  sessionId:id,workId:id,workInputId:id,status:z.string(),currentness:z.enum(['CURRENT','STALE']),reason:z.string().nullable(),
  originalDeadline:z.string().datetime({offset:true}),privateOutputsWithheld:z.boolean(),
  remainingBudget:z.object({cpuReservedSeconds:z.number(),cpuLimitSeconds:z.number(),retainedBytes:z.number(),retainedByteLimit:z.number()}),
- capsule:z.object({digest,envelope:z.record(z.unknown()),statement:z.object({
+ capsule:z.object({digest,envelope:z.record(z.string(),z.unknown()),statement:z.object({
   finalState:z.array(z.string()).max(8),steps:z.number(),program:z.object({registers:z.array(z.object({unit:z.string()})).max(8)}),
  }),artifact:z.object({proofBytes:z.number(),parameterHash:digest,planHash:digest}),
  verification:z.object({mode:z.literal('ORIGINAL_RELATION_AND_INPUT_COMMITMENT_THEN_PINNED_PROOF'),
   originalExecutionReplayed:z.literal(false),inputRows:z.number().int().min(1).max(256)}),
  verifier:z.object({binarySha256:digest,sourceDigest:digest})}).nullable(),
  delivery:z.object({state:z.string(),acks:z.array(z.string()),owner:z.string()}).nullable(),
- qualifications:z.record(z.string()),failure:z.string().nullable(),executionAuthorityGranted:z.literal(false),
+ qualifications:z.record(z.string(),z.string()),failure:z.string().nullable(),executionAuthorityGranted:z.literal(false),
  currentObligations:z.object({unknown:z.boolean(),refs:z.array(z.object({id:z.string(),status:z.string()})).max(128)}),
  costs:z.object({eligibleReuseN:z.number(),money:z.null(),humanSeconds:z.null(),aggregateRSS:z.null(),
   unknownAttemptCosts:z.number(),observedAnalyticalDeliveries:z.number()}),

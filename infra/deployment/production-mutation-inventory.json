@@ -261,6 +261,7 @@
         "scripts/release/vercel-auth.e2e.test.mjs",
         "scripts/release/worker-image-layout.e2e.test.mjs",
         "scripts/release/production-artifact.e2e.mjs",
+    "scripts/release/project-z-ci.e2e.mjs",
         "scripts/release/api-build-context.e2e.test.mjs",
         "scripts/release/api-artifact.e2e.test.mjs",
         "scripts/release/run-capability-ui-e2e.mjs",
@@ -304,7 +305,8 @@
         "infra/aws/finnor-model-runtime.yaml",
         "infra/deployment/production.contract.json",
         "infra/deployment/production-database-admission-policy.json",
-        "infra/deployment/vercel-build-settings.json"
+        "infra/deployment/vercel-build-settings.json",
+        "infra/deployment/project-z-verification-toolchain.json"
       ],
       "classification": "READ_ONLY",
       "state": "DECLARATIVE_SOURCE_ONLY",

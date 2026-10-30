@@ -75,7 +75,7 @@ async function assertNativeMemoryTx(ctx: PeMutationContext, c: PoolClient, row: 
   requireZ1(maximum >= parentHighWater + Math.max(childUpper, reserveChild ? 2684354560 + 67108864 : 0),
     'Z1_ORIGINAL_SHARED_MEMORY_ENVELOPE_EXHAUSTED', 'INCOMPLETE');
   return { maximum, parentHighWater, childUpper, trueAggregatePeak: 'UNKNOWN',
-    scope: 'CONSERVATIVE_WORKER_LIFETIME_HIGH_WATER_PLUS_MAX_SEQUENTIAL_WAIT4_CHILD_AND_SUPERVISOR' };
+    scope: 'CONSERVATIVE_WORKER_LIFETIME_PEAK_RSS_PLUS_MAX_SEQUENTIAL_WAIT4_CHILD_AND_SUPERVISOR' };
 }
 
 /** The registered worker always uses these concrete canonical bindings. */
