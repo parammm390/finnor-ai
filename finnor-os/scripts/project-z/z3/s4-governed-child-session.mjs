@@ -113,11 +113,12 @@ const witness = async () => {
   const [charges] = await q("SELECT count(*)::int n, coalesce(sum(units),0)::text units FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2", [parent.tenantId, parent.parentReservation.id]);
   const [actions] = await q("SELECT count(*)::int n FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2", [parent.tenantId, parent.workId]);
   const [consumptions] = await q("SELECT count(*)::int n FROM finnor_os.s5_consumptions WHERE tenant_id=$1", [parent.tenantId]);
+  const phases = await q("SELECT phase,count(*)::int n,coalesce(sum(units),0)::text units FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 GROUP BY phase ORDER BY phase", [parent.tenantId, parent.parentReservation.id]);
   const [requests] = await q("SELECT count(*)::int n FROM finnor_os.application_semantics_requests r JOIN finnor_os.application_semantics_sessions s ON s.tenant_id=r.tenant_id AND s.id=r.session_id WHERE r.tenant_id=$1 AND s.work_id=$2", [parent.tenantId, parent.workId]);
   const [work] = await q("SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2", [parent.tenantId, parent.workId]);
   const [episode] = await q("SELECT md5(original_deadline::text||wall_deadline::text||parent_reservation::text||parent_demand::text) d FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND id=$2", [parent.tenantId, parent.episodeId]);
   const portal = (await portalStore.snapshot(acquired.portal.dir)).state;
-  return { reservation: reservation?.d, charges, domainActions: actions.n, s5Consumptions: consumptions.n, requests: requests.n, workStatus: work.status,
+  return { reservation: reservation?.d, charges, chargesByPhase: phases, domainActions: actions.n, s5Consumptions: consumptions.n, requests: requests.n, workStatus: work.status,
     episode: episode.d, portalRecords: sha(portal.records) };
 };
 const objective = () => JSON.parse(readFileSync(join(acquired.portal.dir, "held-out-objective.json"), "utf8"));
@@ -196,7 +197,7 @@ if (!child) {
   });
 
   let parked = null, parkedWitness = null;
-  await runCase("G06", "Governed child composes then parks in PLANNING with no S5 debit, S6 effect or wire (D4/C14)", async () => {
+  await runCase("G06", "Governed child composes under governed original reads, then parks in PLANNING with no execution debit, S6 effect or wire (D4/C14)", async () => {
     parked = await waitFor("CHILD_PARKED", 600000, async () => {
       const [row] = await q(`SELECT s.status,s.reason,s.composition_ref,(SELECT count(*)::int FROM finnor_os.application_semantics_events e WHERE e.tenant_id=s.tenant_id AND e.session_id=s.id AND e.kind='Z3_GOVERNED_CHILD_PARKED_FOR_SELECTION') parked
         FROM finnor_os.application_semantics_sessions s WHERE s.tenant_id=$1 AND s.id=$2`, [parent.tenantId, child.id]);
@@ -207,7 +208,12 @@ if (!child) {
     parkedWitness = await witness();
     const [own] = await q("SELECT (SELECT count(*)::int FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2) requests,(SELECT count(*)::int FROM finnor_os.z3_application_selections WHERE tenant_id=$1 AND session_id=$2) selections", [parent.tenantId, child.id]);
     ensure(own.requests === 0 && own.selections === 0, "CHILD_ACTED_WITHOUT_SELECTION");
-    ensure(parkedWitness.charges.n === before.charges.n && parkedWitness.s5Consumptions === before.s5Consumptions && parkedWitness.domainActions === before.domainActions, "S5_S6_ROWS_CHANGED_BY_PARKED_CHILD");
+    // Composition reads the application through governed original reads, which the original reservation charges under
+    // phase COMPOSITION; every other phase, the S6 effect rows and the reservation itself must be exactly unchanged.
+    const outside = witness => JSON.stringify(witness.chargesByPhase.filter(row => row.phase !== "COMPOSITION"));
+    ensure(outside(parkedWitness) === outside(before), "NON_COMPOSITION_S5_CHARGES_CHANGED_BY_PARKED_CHILD");
+    ensure(parkedWitness.domainActions === before.domainActions, "S6_ROWS_CHANGED_BY_PARKED_CHILD");
+    ensure(parkedWitness.reservation === before.reservation && parkedWitness.episode === before.episode, "ORIGINAL_RESERVATION_OR_EPISODE_CHANGED_BY_PARKED_CHILD");
     ensure(parkedWitness.workStatus !== "completed", "ORIGINAL_WORK_COMPLETED_BY_CHILD");
     // Recorded so a Z3 native map can name the model's typed operations and the canonical steps.
     const [composed] = await q("SELECT body FROM finnor_os.application_semantics_artifacts WHERE tenant_id=$1 AND artifact_id=$2", [parent.tenantId, parked.composition_ref.id]);

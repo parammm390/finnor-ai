@@ -80,9 +80,9 @@ process.env.AUTH_DEV_BYPASS = "0";
 /* ---- the Z3 native map (the original Work instruction) ---- */
 const LATE_BOUND_REVISION = { owner: "S4", id: "z3-late-bound-origin-model", version: "late-bound-v1",
   contentDigest: "33e3a8208acc6c82599a6c45f1f09c269e1f67c1cb361df645942c91c8988095" };
-// Operation ids and semantic revision of the disposable portal's learned model
-// (recorded by the model-and-composition-shape evidence of w3-gov-05).
-const OPERATIONS = { draft: { id: "api.draft", semanticRevision: "1" }, validate: { id: "api.validate", semanticRevision: "1" } };
+// Model operation ids are `<descriptor id>.<first 16 hex of x2Digest({role})>`; the editor digest is run-independent
+// (observed in w3-gov-07: api.draft.341b4342bc094cce, api.validate.341b4342bc094cce, approver api.approve.d46a2b0d5f03a280).
+const OPERATIONS = { draft: { id: "api.draft.341b4342bc094cce", semanticRevision: "1" }, validate: { id: "api.validate.341b4342bc094cce", semanticRevision: "1" } };
 const predicate = values => ({ observerId: "portal", revision: LATE_BOUND_REVISION, values });
 const unit = (id, owner, observation) => ({ id, owner, observation, safe: true, remaining: 0, unknown: [] });
 function buildMap() {

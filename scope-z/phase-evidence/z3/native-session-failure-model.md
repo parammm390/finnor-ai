@@ -101,6 +101,15 @@ allocation (still inside the original remaining) and wait up to 20 minutes for M
 and sizing were found independently by the Z0 worker (run w0-native-05, commit c7c41ec on its branch); the Z3
 scenarios pass the values as options and do not edit the Z0-owned fixture default.
 
+N18 Parked governed child "makes no S5 debit". OBSERVED in run w3-gov-07 (G06 FAIL, `S5_S6_ROWS_CHANGED_BY_PARKED_CHILD`)
+and confirmed from the retained database: before parking the child composes the canonical steps through governed
+original reads (context, record and documentation reads at the portal), and the original reservation charges them
+under phase COMPOSITION (13 units, no new reservation, no S6 effect row, no child request row, no selection).
+Case C14/D4 premise "no S5 debit" was too strong; the guarded property is: no EXECUTION-phase or any
+non-COMPOSITION charge, no `domain_actions` row, no child request/wire, no selection, reservation and episode
+digests unchanged until the Z3 writer selects. The scenario asserts exactly that and records the per-phase charges.
+The product behavior is not changed.
+
 ## Scope limits recorded up front (not silently narrowed later)
 
 - The map is a controlled recurring cycle over the first canonical steps of the portal composition
