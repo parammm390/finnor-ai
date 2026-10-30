@@ -26,7 +26,9 @@ SUFFIXES = {".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".json
 MARKDOWN = {"AGENTS.md", "README.md", "THIRD_PARTY_NOTICES.md", "LICENSE.md", "LICENCE.md"}
 EXPLICIT = {"scope-r/r3-incentive-rule-synthesis/verification-plan.json",
             "docs/centropy/capability-coverage.json",
-            "finnor-os/scripts/project-z/z2/NATIVE-REPLAY.md"}
+            "finnor-os/scripts/project-z/z2/NATIVE-REPLAY.md",
+            # z2-native: the stack's owner seed (scripts/seed-phase9-e2e.ts) reads this one binary template
+            "finnor-os/tests/artifact-corpus/centropy-ic-local-template.pptx"}
 
 
 def relative_path(value):
@@ -58,15 +60,103 @@ def unique_object(pairs):
     return result
 
 
+# BEGIN z2-native integrated-commit mode
+# Separate mode for a coordinator-integrated candidate that is a plain git commit. It reads git objects only
+# (`git archive`), never the worktree, and keeps the same selection and credential exclusions as the modes above.
+FORBIDDEN_PARTS = (".next", ".next-x1-install", ".next-z1-install", ".centropy-certification", ".git")
+
+
+def integrated_commit(args):
+    assert Path(args.repo).is_absolute() and Path(args.output).is_absolute() and args.external_root and \
+        Path(args.external_root).is_absolute(), "Z2_ABSOLUTE_SOURCE_PATHS_REQUIRED"
+    assert args.manifest_sha256 is None, "Z2_MANIFEST_HASH_WITHOUT_MANIFEST"
+    repo, out, root = Path(args.repo).resolve(), Path(args.output).resolve(), Path(args.external_root).resolve()
+    out.relative_to(root)
+    assert not out.exists(), "Z2_NEW_RECONSTRUCTION_DIRECTORY_REQUIRED"
+    try:
+        out.relative_to(repo)
+        raise AssertionError("Z2_EXTERNAL_PACK_MUST_BE_OUTSIDE_THE_WORKTREE")
+    except ValueError:
+        pass
+    commit = subprocess.run(["git", "-C", str(repo), "rev-parse", args.git_commit+"^{commit}"],
+                            capture_output=True, text=True, check=True).stdout.strip()
+    tree_id = subprocess.run(["git", "-C", str(repo), "rev-parse", commit+"^{tree}"],
+                             capture_output=True, text=True, check=True).stdout.strip()
+    assert re.fullmatch(r"[a-f0-9]{40}", commit) and re.fullmatch(r"[a-f0-9]{40}", tree_id)
+    listing = subprocess.run(["git", "-C", str(repo), "ls-tree", "-r", "-z", "--full-tree", commit],
+                             capture_output=True, check=True).stdout.split(b"\0")
+    expected = {}
+    for row in listing:
+        if not row:
+            continue
+        meta, _, name = row.partition(b"\t")
+        mode_text, kind, blob = meta.decode().split()
+        path = relative_path(name.decode())
+        if selected(path):
+            assert kind == "blob" and mode_text in ("100644", "100755"), "Z2_SELECTED_SOURCE_MUST_BE_REGULAR_BLOB: "+str(path)
+            expected[str(path)] = (blob, 0o755 if mode_text == "100755" else 0o644)
+    for name in EXPLICIT:
+        assert name in expected, "Z2_EXPLICIT_SOURCE_MISSING: "+name
+    tree = out/"tree"
+    tree.mkdir(parents=True)
+    inventory, source_modes = {}, {}
+    archive = subprocess.Popen(["git", "-C", str(repo), "archive", "--format=tar", commit], stdout=subprocess.PIPE)
+    import tarfile
+    with tarfile.open(fileobj=archive.stdout, mode="r|") as tar:
+        for member in tar:
+            if not member.isfile():
+                assert not (member.issym() or member.islnk()) or not selected(Path(member.name)), "Z2_SELECTED_SOURCE_LINK"
+                continue
+            path = relative_path(member.name)
+            if not selected(path):
+                continue
+            assert not any(part in FORBIDDEN_PARTS for part in path.parts), "Z2_FORBIDDEN_SOURCE_PART: "+str(path)
+            blob, mode = expected[str(path)]
+            data = tar.extractfile(member).read()
+            assert hashlib.sha1(b"blob "+str(len(data)).encode()+b"\0"+data).hexdigest() == blob, "Z2_ARCHIVE_BLOB_MISMATCH: "+str(path)
+            target = tree/path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(data)
+            target.chmod(mode)
+            inventory[str(path)], source_modes[str(path)] = hashlib.sha256(data).hexdigest(), mode
+    assert archive.wait() == 0
+    assert set(inventory) == set(expected), "Z2_ARCHIVE_SELECTION_MISMATCH"
+    coverage_path = tree/"docs/centropy/capability-coverage.json"
+    coverage = json.loads(coverage_path.read_text())
+    metadata = {"schema": "finnor.project-z.z2.isolated-source-build.v1", "sourceBaseCommit": commit,
+                "baselineCoverageSha256": sha(coverage_path), "baselineIndexSourceCommit": coverage["sourceBaseCommit"],
+                "executedProofIndex": coverage["executedProofIndex"], "reobservedOriginalProofs": False,
+                "nativeOwnerExecuted": False, "protectedAdmission": False}
+    metadata_path = tree/".z2-source-build.json"
+    metadata_path.write_text(json.dumps(metadata, sort_keys=True, indent=2)+"\n")
+    body = {"schema": "finnor.project-z.z2.integrated-source-reconstruction.v1", "sourceRoot": str(repo),
+            "tree": str(tree), "mode": "INTEGRATED_GIT_COMMIT_ARCHIVE", "integratedCommit": commit,
+            "integratedTree": tree_id, "sourcePreimages": inventory, "sourceModes": source_modes,
+            "sharedPreimagesVerified": True, "worktreeBytesRead": False, "dependencyInstall": "NOT_RUN",
+            "rootMarkdownAllowlist": sorted(MARKDOWN), "credentialMetadataExcluded": True,
+            "historicalOwnerProofDocumentsExcluded": True,
+            "generatedBuildInputs": {".z2-source-build.json": sha(metadata_path)},
+            "authenticatedOwner": "NOT_RUN", "protectedAdmission": False}
+    (out/"source-receipt.json").write_text(json.dumps(body, sort_keys=True, indent=2)+"\n")
+    print(json.dumps({"tree": str(tree), "files": len(inventory)+1, "mode": body["mode"],
+                      "commit": commit, "gitTree": tree_id}))
+# END z2-native integrated-commit mode
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo", required=True)
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--patch-dir")
     mode.add_argument("--integrated-manifest")
+    mode.add_argument("--git-commit", help="integrated candidate commit; requires --external-root")
+    parser.add_argument("--external-root", help="new pack parent outside the worktree (integrated-commit mode only)")
     parser.add_argument("--manifest-sha256")
     parser.add_argument("--output", required=True)
     args = parser.parse_args()
+    if args.git_commit:
+        return integrated_commit(args)
+    assert not args.external_root, "Z2_EXTERNAL_ROOT_ONLY_FOR_GIT_COMMIT_MODE"
     assert all(Path(v).is_absolute() for v in (args.repo, args.output,
                args.patch_dir or args.integrated_manifest)), "Z2_ABSOLUTE_SOURCE_PATHS_REQUIRED"
     repo, out = (Path(v).resolve() for v in (args.repo, args.output))
