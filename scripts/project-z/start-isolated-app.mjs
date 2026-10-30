@@ -58,6 +58,13 @@ const productionBuild = process.argv.includes("--production-build")
 const s3Python = option("s3-python")
 assert.ok(!("NODE_TLS_REJECT_UNAUTHORIZED" in process.env), "NODE_TLS_REJECT_UNAUTHORIZED_REFUSED")
 assert.ok(!profiles.has("z4") || (s3Python && isAbsolute(s3Python) && existsSync(s3Python)), "Z4_PROFILE_REQUIRES_S3_PYTHON")
+// BEGIN z1 S3/S4 owner chain (the unresolved S6 obligation Z1 must preserve needs real upstream owners)
+const z1Chain = profiles.has("z1") && s3Python !== undefined
+assert.ok(!z1Chain || (isAbsolute(s3Python) && existsSync(s3Python)), "Z1_CHAIN_REQUIRES_EXISTING_ABSOLUTE_S3_PYTHON")
+// A longer native episode (three physical kills, seven stages) needs more than the 30 minute default; bounded either way.
+const setupBudgetMs = Number(option("budget-ms") ?? (productionBuild ? 3000000 : 1800000))
+assert.ok(Number.isInteger(setupBudgetMs) && setupBudgetMs >= 600000 && setupBudgetMs <= 7200000, "SETUP_BUDGET_OUT_OF_RANGE")
+// END
 let authTlsReceipt
 if (authTlsOrigin) {
   assert.ok(authTlsCertificate && authTlsState && isAbsolute(authTlsCertificate) && isAbsolute(authTlsState), "AUTH_TLS_ARGUMENTS_REQUIRED")
@@ -71,7 +78,7 @@ if (authTlsOrigin) {
 } else {
   assert.ok(!authTlsCertificate && !authTlsState, "AUTH_TLS_ORIGIN_REQUIRED")
 }
-const z4Stores = profiles.has("z4") ? ["models", "policies", "capsules"].map(name => {
+const z4Stores = profiles.has("z4") || z1Chain ? ["models", "policies", "capsules"].map(name => {
   const directory = join(state, "z4-stores", name)
   mkdirSync(directory, { recursive: true, mode: 0o700 })
   return directory
@@ -79,6 +86,9 @@ const z4Stores = profiles.has("z4") ? ["models", "policies", "capsules"].map(nam
 // END
 const profileEnv = {
   ...(profiles.has("z1") ? { FINNOR_Z1_PROFILE: "ordinary_disposable", P3_GOVERNORS: "1" } : {}),
+  // BEGIN z1 S3/S4 owner chain environment
+  ...(z1Chain ? { FINNOR_S3_MODEL_STORE: z4Stores[0], FINNOR_S4_POLICY_STORE: z4Stores[1], FINNOR_S3_PYTHON: s3Python } : {}),
+  // END
   ...(profiles.has("z2") ? { FINNOR_Z2_DISPOSABLE_E2E: "1", FINNOR_Z2_CONVERGED_DEVELOPMENT: "1",
     FINNOR_Y1_PROFILE: "ordinary_disposable", FINNOR_Y3_PROFILE: "ordinary_disposable" } : {}),
   ...(profiles.has("x1") ? { FINNOR_P4_PROFILE: "ordinary_disposable" } : {}),
@@ -135,7 +145,7 @@ async function stop(code, reason) {
 }
 process.once("SIGINT", () => void stop(0, "OPERATOR_STOP"))
 process.once("SIGTERM", () => void stop(0, "OPERATOR_STOP"))
-setTimeout(() => void stop(1, "ORDINARY_SETUP_RUNTIME_BUDGET_EXPIRED"), productionBuild ? 3000000 : 1800000).unref()
+setTimeout(() => void stop(1, "ORDINARY_SETUP_RUNTIME_BUDGET_EXPIRED"), setupBudgetMs).unref()
 async function step(label, script) {
   receipt.stage = label
   save()

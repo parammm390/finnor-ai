@@ -6,6 +6,7 @@ import { resolve } from "node:path";
 import { readFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
+import pg from "pg";
 import { z } from "zod";
 import { getPool, withTenantTransaction } from "../../../packages/db/index.ts";
 import { appendEvidenceVersionTx } from "../../../packages/memory/src/evidence.ts";
@@ -67,6 +68,7 @@ async function pythonOriginal(payload, root, need) {
 
 export async function runNativeEpisode(guarded, output, report) {
   const { target, root, installed, need, privateJSON, sha, processIdentity, scenario } = guarded;
+  let queuePool;
   try {
   const fixture = fixtureSchema.parse(guarded.fixture), ids = fixture.works.map(item => item.work.id);
   need(fixture.stages.map(stage => stage.name).join(",") === "INITIAL,INSERT,RETRACT,OBJECTIVE_EDIT,WITHDRAW,REACTIVATE,REVOKE" &&
@@ -87,7 +89,7 @@ export async function runNativeEpisode(guarded, output, report) {
     "COORDINATOR_NATIVE_JOB_CONTRACT_NOT_INSTALLED");
   need(target.authorization.noOtherWorkers === true && target.authorization.realDisposableAuthProject === true &&
     /^[a-f0-9]{64}$/.test(target.schemaCatalogSha256 ?? "") && /^[a-f0-9]{64}$/.test(target.browserExecutableSha256 ?? "") &&
-    /^[0-9]{4}[a-z]?_[a-z0-9_]+\.sql$/.test(target.appliedMigration ?? "") &&
+    /^(?:[0-9]{4}[a-z]?|post[a-z])_[a-z0-9_]+\.sql$/.test(target.appliedMigration ?? "") &&
     target.nativeSchemaSha256 === sha(await readFile(new URL("./shared-schema.sql", import.meta.url))),
     "EXPLICIT_INSTALLED_SCHEMA_BROWSER_AND_EXCLUSIVE_WORKER_CUSTODY_REQUIRED");
   const runtime = await runtimeIdentity(); need(runtime.digest === installed.nativeRuntimeDigest, "CURRENT_NATIVE_BUILD_REQUIRED");
@@ -109,12 +111,30 @@ export async function runNativeEpisode(guarded, output, report) {
   need(catalog.length >= 10 && digest(catalog) === target.schemaCatalogSha256, "EXACT_INSTALLED_NATIVE_SCHEMA_CATALOG_REQUIRED");
   need((await getPool().query("SELECT name FROM finnor_os._migrations WHERE name=$1", [target.appliedMigration])).rowCount === 1,
     "COORDINATOR_APPLIED_SCHEMA_RECEIPT_REQUIRED");
-  const assertQueueOwned = async () => {
-    const rows = (await getPool().query(`SELECT id,type,tenant_id,payload->>'principalId' principal,
+  // Row security shows the application role only the current request tenant's jobs, so a queue census or a worker on
+  // that role is blind. The separate worker role (migration 0171) is the only one that sees the whole queue.
+  queuePool = new pg.Pool({ connectionString: process.env.FINNOR_Z1_WORKER_DATABASE_URL, max: 2, connectionTimeoutMillis: 10000 });
+  const queueIdentity = (await queuePool.query(`SELECT current_database() name,current_user role,
+    (SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname=current_user) elevated,
+    pg_has_role($1::name,current_user,'MEMBER') application_is_member`, [target.database.role])).rows[0];
+  need(queueIdentity.name === target.database.name && queueIdentity.role === target.database.workerRole &&
+    queueIdentity.role !== dbIdentity.role && queueIdentity.elevated === false && queueIdentity.application_is_member === false,
+  "SEPARATE_NONPRIVILEGED_WORKER_DATABASE_ROLE_REQUIRED");
+  const assertQueueOwned = async (positiveControl = false) => {
+    const rows = (await queuePool.query(`SELECT id,type,tenant_id,payload->>'principalId' principal,
       payload->>'requestId' request_id FROM finnor_os.jobs
       WHERE status IN('queued','running','failed','dead_letter') ORDER BY id LIMIT $1`, [ids.length + 2])).rows;
     need(rows.length <= ids.length + 1 && rows.every(row => jobTypes.includes(row.type) && row.tenant_id === fixture.tenantId &&
       row.principal === fixture.principalId && row.request_id === report.requestId), "EXCLUSIVE_OWN_NATIVE_QUEUE_REQUIRED");
+    if (!positiveControl) return null;
+    // An empty census proves nothing unless it can see the episode's own jobs: it must equal the tenant-scoped view.
+    const own = await scoped(async c => (await c.query(`SELECT id FROM finnor_os.jobs WHERE tenant_id=$1
+      AND payload->>'requestId'=$2 AND status IN('queued','running','failed','dead_letter') ORDER BY id`,
+    [fixture.tenantId, report.requestId])).rows.map(row => row.id), true);
+    need(own.length > 0 && isSame(own, rows.map(row => row.id)), "NATIVE_QUEUE_CENSUS_MUST_SEE_THE_EPISODE_JOBS_IT_REPORTS");
+    const applicationRoleUnscopedJobs = await getPool().query("SELECT count(*)::int n FROM finnor_os.jobs")
+      .then(result => result.rows[0].n, () => null);
+    return { censusRole: queueIdentity.role, censusJobs: rows.length, tenantScopedJobs: own.length, applicationRoleUnscopedJobs };
   };
   await assertQueueOwned();
   const policies = (await getPool().query("SELECT job_type,default_class,classification_rule,tenant_scope FROM finnor_os.compute_job_type_policies WHERE job_type=ANY($1::text[]) ORDER BY job_type", [jobTypes])).rows;
@@ -155,6 +175,7 @@ export async function runNativeEpisode(guarded, output, report) {
 
   let browser, context, page, bearer = null, networkDenied = 0;
   const workers = new Set(), physical = [], staleClaims = [];
+  let queueControl = null;
   const identity = await processIdentity(process.pid);
   const audit = async action => {
     report.actions.push({ index: report.actions.length, at: new Date().toISOString(), ...action });
@@ -263,14 +284,15 @@ export async function runNativeEpisode(guarded, output, report) {
       priorPin: previous.pin, pin: result.pin, declarationDigest: digest(declaration) }); return result.pin;
   }
   async function worker(boundary = null, expectLogicalRefusal = false, recoverTerminalOnly = false) {
-    await assertQueueOwned();
+    const control = await assertQueueOwned(queueControl === null);
+    if (control) { queueControl = control; await audit({ kind: "NATIVE_QUEUE_CENSUS_POSITIVE_CONTROL", ...control }); }
     const workerWallMs = ids.length > 192 ? 590000 : 120000;
     const nonce = randomBytes(32).toString("hex"), loader = resolve(root, "finnor-os/node_modules/tsx/dist/loader.mjs");
     const child = spawn(process.execPath, ["--max-old-space-size=1536", "--import", loader,
       fileURLToPath(new URL("./native-worker.mjs", import.meta.url))], { cwd: resolve(root, "finnor-os"),
       env: { PATH: process.env.PATH, LANG: "C.UTF-8", NODE_ENV: "development", PYTHONDONTWRITEBYTECODE: "1",
         TSX_DISABLE_CACHE: "1", TSX_TSCONFIG_PATH: resolve(root, "finnor-os/tsconfig.json"),
-        DATABASE_URL: process.env.DATABASE_URL, PGAPPNAME: "z1-owned-native-proof",
+        DATABASE_URL: process.env.FINNOR_Z1_WORKER_DATABASE_URL, PGAPPNAME: "z1-owned-native-proof",
         FINNOR_Z1_NATIVE_AUTHORIZED: "DISPOSABLE_ORIGINAL_Z1_EPISODE_ONLY",
         FINNOR_ENVIRONMENT: process.env.FINNOR_ENVIRONMENT, FINNOR_Z1_PROFILE: "ordinary_disposable", P3_GOVERNORS: "1",
         FINNOR_Z1_ORIGINAL_WORK_COUNT: String(ids.length),
@@ -328,7 +350,7 @@ export async function runNativeEpisode(guarded, output, report) {
             [fixture.tenantId, fixture.principalId, report.requestId])).rows[0]), true);
           if (logicalRefusalObserved) { child.send({ kind: "STOP" }); break; }
         }
-        const pending = (await getPool().query(`SELECT count(*)::int n FROM finnor_os.jobs
+        const pending = (await queuePool.query(`SELECT count(*)::int n FROM finnor_os.jobs
           WHERE tenant_id=$1 AND type=ANY($2::text[]) AND payload->>'requestId'=$3
           AND ((NOT $4::boolean AND status<>'completed') OR ($4::boolean AND status IN('queued','running')))`,
         [fixture.tenantId, jobTypes, report.requestId, recoverTerminalOnly])).rows[0].n;
@@ -661,5 +683,5 @@ export async function runNativeEpisode(guarded, output, report) {
     }
     await context?.close().catch(() => {}); await browser?.close().catch(() => {});
   }
-  } finally { await getPool().end(); }
+  } finally { await Promise.all([getPool().end(), queuePool?.end()]); }
 }
