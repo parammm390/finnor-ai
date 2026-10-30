@@ -1431,7 +1431,7 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
   let businessRequest: OperationalQueryRequest;
   const success = parseObjectiveSuccessCondition(loop.successCondition);
   const harnessOnly = success.criteria.every(c=>c.kind==="canonical_query"
-    &&(c.request.intent==="harness_program_v1"||c.request.intent==="confidential_economic_computation_v1"||c.request.intent==="execution_proof_capsule_v1")&&c.request.workId===workId);
+    &&(c.request.intent==="harness_program_v1"||c.request.intent==="confidential_economic_computation_v1"||c.request.intent==="execution_proof_capsule_v1"||c.request.intent==="primary_diligence_v1")&&c.request.workId===workId);
   const harnessRequest = harnessOnly && success.criteria[0]?.kind==="canonical_query" ? success.criteria[0].request : null;
   if (harnessRequest) {
     // Analytical programme objectives have a registered current owner reader;
@@ -3170,7 +3170,7 @@ export class ObjectiveLoopRuntime {
           workId: params.workId,
           userId: ctx.userId,
           employeeId: ctx.employeeId,
-          ...(["harness_program_v1","confidential_economic_computation_v1","execution_proof_capsule_v1"].includes(validated.request.intent) ? {workInputId:active?.workInputId??undefined} : {}),
+          ...(["harness_program_v1","confidential_economic_computation_v1","execution_proof_capsule_v1","primary_diligence_v1"].includes(validated.request.intent) ? {workInputId:active?.workInputId??undefined} : {}),
           executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:decision-query`,
         });
         const executionId = result.execution?.id ?? null;

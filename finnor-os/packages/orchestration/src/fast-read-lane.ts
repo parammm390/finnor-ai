@@ -275,6 +275,11 @@ export function validateOperationalQueryRequest(
       return {success:false,error:"Execution proof query requires the exact Work ID; principal and input come from the native controller"};
     return {success:true,request:value as unknown as OperationalQueryRequest};
   }
+  if(intent==="primary_diligence_v1"){
+    if(Object.keys(value!).some(key=>!["intent","workId"].includes(key))||typeof value?.workId!=="string"||!UUID.test(value.workId))
+      return {success:false,error:"Primary diligence query requires the exact Work ID; principal and input come from the native controller"};
+    return {success:true,request:value as unknown as OperationalQueryRequest};
+  }
   if(intent==="confidential_economic_computation_v1"){
     if(Object.keys(value!).some(key=>!["intent","workId"].includes(key))||typeof value?.workId!=="string"||!UUID.test(value.workId))
       return {success:false,error:"Confidential query requires the exact Work ID; principal and input come from the native controller"};

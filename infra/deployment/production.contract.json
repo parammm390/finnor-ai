@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "postz_zi_z3_s4_executable_selection.sql",
+    "requiredMigrationHead": "postz_zi_zr12_primary_diligence_query_intent.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",
