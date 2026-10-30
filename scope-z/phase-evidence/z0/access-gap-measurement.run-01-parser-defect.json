@@ -1,0 +1,1376 @@
+{
+  "schema": "finnor.z0.access-gap-measurement/v1",
+  "sourceHead": "06965d450ec58456863f8c435b71fa71bba2a279",
+  "rule": "see script header; preregistered before the first run",
+  "inputs": {
+    "finnor-os/packages/db/compute-contract.ts": "ac3f2fda5ddc76666457c6af2bd0b2ce8611794a834190becc78ed4909f3e025",
+    "finnor-os/apps/worker/src/index.ts": "cbe3bb6b3f2cd44a508d96e5ce82cc7c39cbeee757afd7fab978e9bab467bad3",
+    "docs/centropy/capability-coverage.json": "cccbe3e185be5274949bcd0b45bc8ecef9c04121305baf5944563269ac750616",
+    "finnor-os/packages/orchestration/src/operational-query-runtime.ts": "5a2086d26e17ead25bc11c7b7de2b5724672aeb418be6d1b1ad561e68cd6d179",
+    "finnor-os/packages/orchestration/src/objective-loop.ts": "309331e05738f0e59bae709fcb9d91832945524fd463d2fa648ff8f8280b588c",
+    "finnor-os/packages/orchestration/src/objective-success.ts": "eb8b6b4aec0f322e4306455b57cda24328d7a64bd59d6169fac2b6ddcc068d53",
+    "finnor-os/packages/shared-types/src/operational-queries.ts": "10c30217cbab27beb83fa134f411725c8e6e40fe0e94d76b8d5310d686d9299c",
+    "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts": "c33baee39bfe9d309588579520fd6d5d8118580a2884c68d50f0a78eecebe234"
+  },
+  "familySourceManifestSha256": "b3c8f1783a5ac332cab539c962a0fbc00c16d79065ac298cffa13207a556a79d",
+  "counts": {
+    "productionJobTypes": 75,
+    "registeredJobTypes": 75,
+    "unregisteredProductionJobTypes": [],
+    "familiesMeasured": 37,
+    "familiesWithWorker": 9,
+    "eligible": 1,
+    "accessGap": 1,
+    "httpCapabilitiesInGapFamilies": 26,
+    "gapOperationsInGapFamilies": 12,
+    "totalCoverageGapRows": 95,
+    "companyBrainOperationsAmbiguous": 11,
+    "companyBrainOperationsUnresolved": 7
+  },
+  "selected": {
+    "family": "r7",
+    "jobs": [
+      "run_decision_atlas_v1"
+    ],
+    "gapSize": 12,
+    "sourceLines": 1232
+  },
+  "ranking": [
+    {
+      "family": "r7",
+      "gapSize": 12,
+      "sourceLines": 1232,
+      "jobs": [
+        "run_decision_atlas_v1"
+      ]
+    }
+  ],
+  "families": [
+    {
+      "family": "application-semantics",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": true,
+      "O": true,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 1,
+      "httpOperations": 4,
+      "sourceLines": 6221,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/application-semantics/checker.ts"
+        ],
+        "consumers": [
+          "packages/private-equity/src/application-semantics/allocation.ts:applicationConsumptionInTransaction",
+          "packages/private-equity/src/application-semantics/governed.ts:beginSelectionConsumption"
+        ],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/x2/build-installed.mjs",
+          "scripts/x2/inspect-native-discovery.mts",
+          "scripts/x2/native-review-gates.mts",
+          "scripts/x2/native-s8-fixture.mts"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.application-resume"
+        ]
+      }
+    },
+    {
+      "family": "bilateral-opportunities",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": true,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 5,
+      "httpOperations": 11,
+      "sourceLines": 1769,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/bilateral-opportunities/checker-service.mts"
+        ],
+        "consumers": [],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/v1/run-local.mts"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.bilateral-context",
+          "http.post.company-brain.bilateral-governance-put",
+          "http.post.company-brain.bilateral-governance-revoke",
+          "http.post.company-brain.bilateral-observe",
+          "http.post.company-brain.bilateral-reserve-budget"
+        ]
+      }
+    },
+    {
+      "family": "branch-fabric",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": true,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 1,
+      "httpOperations": 12,
+      "sourceLines": 2595,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/branch-fabric/checker.ts"
+        ],
+        "consumers": [],
+        "fixtures": [
+          "scripts/p1/run-program-e2e.mts",
+          "scripts/p3/checker-worker.mts",
+          "scripts/p3/completion-episode.mts",
+          "scripts/p3/completion-generation.mts",
+          "scripts/p3/completion-resources.mts"
+        ],
+        "gapOperations": [
+          "http.post.branches.read"
+        ]
+      }
+    },
+    {
+      "family": "capital-formation",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": true,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 5,
+      "httpOperations": 9,
+      "sourceLines": 1906,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/capital-formation/independent-checker.mjs",
+          "packages/private-equity/src/capital-formation/store.ts"
+        ],
+        "consumers": [],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/v4/boundary-proof.mts",
+          "scripts/v4/browser-proof.mts",
+          "scripts/v4/original-work-proof.mts",
+          "scripts/v4/owner-fixture.mts"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.capital-formation-draw-handoff",
+          "http.post.company-brain.capital-formation-event",
+          "http.post.company-brain.capital-formation-list",
+          "http.post.company-brain.capital-formation-profiles",
+          "http.post.company-brain.capital-formation-proposal"
+        ]
+      }
+    },
+    {
+      "family": "capital-program",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": false,
+      "O": true,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 14,
+      "httpOperations": 30,
+      "sourceLines": 4382,
+      "evidence": {
+        "checkers": [],
+        "consumers": [
+          "packages/private-equity/src/capital-program/r5-allocation-owner.ts:consumeEnterpriseCoalitionAllocation",
+          "http.post.allocations.coalition-consume",
+          "http.post.allocations.consume",
+          "http.post.allocations.consume-mechanism"
+        ],
+        "fixtures": [
+          "scripts/completion-b/lifecycle-controls.mts",
+          "scripts/completion-b/m3-heartbeat.mts",
+          "scripts/completion-b/run-e2e.mts",
+          "scripts/m3/run-native-e2e.mts",
+          "scripts/m3/run-owner-e2e.mts"
+        ],
+        "gapOperations": [
+          "http.post.allocations.assessment",
+          "http.post.allocations.clear",
+          "http.post.allocations.clear-mechanism",
+          "http.post.allocations.consume",
+          "http.post.allocations.consume-mechanism",
+          "http.post.allocations.read",
+          "http.post.allocations.reconcile",
+          "http.post.allocations.release",
+          "http.post.allocations.resource",
+          "http.post.allocations.resources",
+          "http.post.allocations.settle",
+          "http.post.allocations.validate",
+          "http.post.company-brain.capital-program-list",
+          "http.post.company-brain.capital-program-ports"
+        ]
+      }
+    },
+    {
+      "family": "closing",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": false,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 1,
+      "sourceLines": 1246,
+      "evidence": {
+        "checkers": [],
+        "consumers": [],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/v1/controlled-source.mts",
+          "scripts/v1/signed-loi-handoff-e2e.mts",
+          "scripts/v3/checker-probes.mts"
+        ],
+        "gapOperations": []
+      }
+    },
+    {
+      "family": "compute-search",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": false,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 1,
+      "httpOperations": 4,
+      "sourceLines": 751,
+      "evidence": {
+        "checkers": [],
+        "consumers": [],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/m2/run-e2e.mts",
+          "scripts/p2/calibrate-development.mts",
+          "scripts/p2/child-worker.mts",
+          "scripts/p2/run-e2e.mts"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.compute-search-read"
+        ]
+      }
+    },
+    {
+      "family": "confidential-computation",
+      "jobs": [
+        "run_confidential_economic_computation_v1"
+      ],
+      "projectZ": false,
+      "W": true,
+      "K": false,
+      "O": true,
+      "F": true,
+      "Q": true,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 6,
+      "httpOperations": 21,
+      "sourceLines": 1662,
+      "evidence": {
+        "checkers": [],
+        "consumers": [
+          "packages/private-equity/src/confidential-computation/consumer.ts:consumeConfidentialUnderwriting",
+          "packages/private-equity/src/confidential-computation/contracts.ts:ControlConsumeSchema",
+          "packages/private-equity/src/confidential-computation/contracts.ts:AllocationConsumeSchema",
+          "packages/private-equity/src/confidential-computation/contracts.ts:ObligationConsumeSchema"
+        ],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/y4/owner-episode.mts",
+          "scripts/y4/product-lifecycle.mts",
+          "scripts/y4/product-transport.mts",
+          "scripts/y4/recovery-episode.mts"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.confidential-allocation",
+          "http.post.company-brain.confidential-control-choice",
+          "http.post.company-brain.confidential-invalidate",
+          "http.post.company-brain.confidential-obligation",
+          "http.post.company-brain.confidential-s8-current",
+          "http.post.company-brain.confidential-s8-propose"
+        ]
+      }
+    },
+    {
+      "family": "counterexample-search",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": true,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 2,
+      "httpOperations": 10,
+      "sourceLines": 2019,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/counterexample-search/checker.ts"
+        ],
+        "consumers": [],
+        "fixtures": [
+          "scripts/completion-b/run-e2e.mts",
+          "scripts/generate-openapi.ts",
+          "scripts/m4/boundary-challenges.mts",
+          "scripts/m4/liability-challenges.mts",
+          "scripts/m4/partial-challenges.mts"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.counterexample-currentness",
+          "http.post.company-brain.counterexample-retention-purge"
+        ]
+      }
+    },
+    {
+      "family": "decision-slice",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": true,
+      "O": true,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 5,
+      "httpOperations": 12,
+      "sourceLines": 1551,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/decision-slice/checker.ts"
+        ],
+        "consumers": [
+          "packages/private-equity/src/decision-slice/consumer.ts:consumeDecisionSlice",
+          "http.post.company-brain.decision-slice-consume"
+        ],
+        "fixtures": [
+          "scripts/frontier5/x1/installed-contract-cases.mjs",
+          "scripts/generate-openapi.ts",
+          "scripts/m1/run-e2e.mts",
+          "scripts/m3/owner-construction.mts",
+          "scripts/m3/run-install-e2e.mts"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.belief-view",
+          "http.post.company-brain.decision-slice-cancel",
+          "http.post.company-brain.decision-slice-changes",
+          "http.post.company-brain.decision-slice-read",
+          "http.post.company-brain.decision-slice-recompile"
+        ]
+      }
+    },
+    {
+      "family": "deliberation",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": false,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 4,
+      "httpOperations": 9,
+      "sourceLines": 637,
+      "evidence": {
+        "checkers": [],
+        "consumers": [],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/r3/run-owner-e2e.mts"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.deliberation-calibrate",
+          "http.post.company-brain.deliberation-evidence-read",
+          "http.post.company-brain.deliberation-module-read",
+          "http.post.company-brain.deliberation-read"
+        ]
+      }
+    },
+    {
+      "family": "economic-action-theory",
+      "jobs": [
+        "construct_economic_action_theory_v1",
+        "run_economic_programme_v1"
+      ],
+      "projectZ": false,
+      "W": true,
+      "K": true,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 12,
+      "sourceLines": 1058,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/economic-action-theory/process.ts"
+        ],
+        "consumers": [],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/y1/browser-checks.mts",
+          "scripts/y1/build-constructor.mts",
+          "scripts/y1/build-runtime.mts",
+          "scripts/y1/business-fixtures.mts"
+        ],
+        "gapOperations": []
+      }
+    },
+    {
+      "family": "enterprise-applications",
+      "jobs": [
+        "build_enterprise_application_v1"
+      ],
+      "projectZ": false,
+      "W": true,
+      "K": true,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 14,
+      "sourceLines": 2725,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/enterprise-applications/checker.ts"
+        ],
+        "consumers": [],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/x3/business-fixtures.mts",
+          "scripts/x3/check-controls.mts",
+          "scripts/x3/stamp-source.mts",
+          "scripts/x3/worker-once.mts"
+        ],
+        "gapOperations": []
+      }
+    },
+    {
+      "family": "evidence-execution",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": false,
+      "O": true,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 1,
+      "httpOperations": 6,
+      "sourceLines": 666,
+      "evidence": {
+        "checkers": [],
+        "consumers": [
+          "packages/private-equity/src/evidence-execution/consumer.ts:EvidenceConsumeRequestSchema",
+          "packages/private-equity/src/evidence-execution/consumer.ts:consumeEvidenceUnderwriting",
+          "http.post.company-brain.evidence-consume"
+        ],
+        "fixtures": [
+          "scripts/frontier5/x1/native-diagnostic-worker.mts",
+          "scripts/generate-openapi.ts",
+          "scripts/m1/run-e2e.mts",
+          "scripts/m2/run-e2e.mts",
+          "scripts/m2/stories.mts"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.evidence-consume"
+        ]
+      }
+    },
+    {
+      "family": "institution-program",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": true,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 2,
+      "httpOperations": 12,
+      "sourceLines": 5306,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/institution-program/checker-process.ts",
+          "packages/private-equity/src/institution-program/checker-raw.ts",
+          "packages/private-equity/src/institution-program/checker.ts"
+        ],
+        "consumers": [],
+        "fixtures": [
+          "scripts/frontier5/x1/admission-finish-cases.mts",
+          "scripts/frontier5/x1/checker-command.mts",
+          "scripts/frontier5/x1/creation-native-cases.mts",
+          "scripts/frontier5/x1/eslint.config.mjs",
+          "scripts/frontier5/x1/installed-contract-cases.mjs"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.institution-status",
+          "http.post.company-brain.institution-witness"
+        ]
+      }
+    },
+    {
+      "family": "institution-qualification",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": false,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 0,
+      "sourceLines": 388,
+      "evidence": {
+        "checkers": [],
+        "consumers": [],
+        "fixtures": [
+          "scripts/frontier5/x1/qualification-admin.mts",
+          "scripts/frontier5/x1/qualification-cases.mts",
+          "scripts/frontier5/x1/qualification-full-population-cases.mjs",
+          "scripts/frontier5/x1/qualification-observation-collection.mts",
+          "scripts/frontier5/x1/qualification-population-owner-exercise.mts"
+        ],
+        "gapOperations": []
+      }
+    },
+    {
+      "family": "interaction-synthesis",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": true,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 18,
+      "sourceLines": 1706,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/interaction-synthesis/process.ts",
+          "packages/private-equity/src/interaction-synthesis/product-runtime.ts"
+        ],
+        "consumers": [],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/y3/browser-checks.mts",
+          "scripts/y3/build-runtime.mts",
+          "scripts/y3/business-fixtures.mts",
+          "scripts/y3/harness.mts"
+        ],
+        "gapOperations": []
+      }
+    },
+    {
+      "family": "interface-synthesis",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": false,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 4,
+      "httpOperations": 11,
+      "sourceLines": 1036,
+      "evidence": {
+        "checkers": [],
+        "consumers": [],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/p3/interface-worker.mts",
+          "scripts/p5/physical-worker.mts",
+          "scripts/p5/run-acquisition-e2e.mts",
+          "scripts/p5/run-native-e2e.mts"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.interface-catalogue",
+          "http.post.company-brain.interface-invoke",
+          "http.post.company-brain.interface-ports",
+          "http.post.company-brain.interface-read"
+        ]
+      }
+    },
+    {
+      "family": "live-controls",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": false,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 1,
+      "sourceLines": 1661,
+      "evidence": {
+        "checkers": [],
+        "consumers": [],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/v5/owner-campaign.mts"
+        ],
+        "gapOperations": []
+      }
+    },
+    {
+      "family": "live-recompilation",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": false,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 1,
+      "httpOperations": 3,
+      "sourceLines": 818,
+      "evidence": {
+        "checkers": [],
+        "consumers": [],
+        "fixtures": [
+          "scripts/frontier5/x1/eslint.config.mjs",
+          "scripts/generate-openapi.ts",
+          "scripts/p7/native-submission-child.mts",
+          "scripts/p7/run-native-e2e.mts",
+          "scripts/r1/child-worker.mts"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.continuation-read"
+        ]
+      }
+    },
+    {
+      "family": "policy-learning",
+      "jobs": [
+        "compile_learned_policy_v1"
+      ],
+      "projectZ": false,
+      "W": true,
+      "K": false,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 16,
+      "sourceLines": 1949,
+      "evidence": {
+        "checkers": [],
+        "consumers": [],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/x5/stamp-source.mts",
+          "scripts/x5/worker-loop.mts",
+          "scripts/x5/worker-once.mts"
+        ],
+        "gapOperations": []
+      }
+    },
+    {
+      "family": "primary-diligence",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": true,
+      "O": true,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 5,
+      "httpOperations": 10,
+      "sourceLines": 1691,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/primary-diligence/checker.mts",
+          "packages/private-equity/src/primary-diligence/native.ts",
+          "packages/private-equity/src/primary-diligence/store.ts"
+        ],
+        "consumers": [
+          "packages/private-equity/src/primary-diligence/consumer.ts:PrimaryConsumeSchema",
+          "packages/private-equity/src/primary-diligence/consumer.ts:bindPrimaryConsumerDependencies",
+          "packages/private-equity/src/primary-diligence/consumer.ts:consumePrimaryUnderwriting",
+          "http.post.company-brain.primary-consume"
+        ],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/v2/run-local.mts"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.primary-consume",
+          "http.post.company-brain.primary-context",
+          "http.post.company-brain.primary-governance-put",
+          "http.post.company-brain.primary-governance-revoke",
+          "http.post.company-brain.primary-reserve-budget"
+        ]
+      }
+    },
+    {
+      "family": "procedure-induction",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": false,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 6,
+      "httpOperations": 11,
+      "sourceLines": 1244,
+      "evidence": {
+        "checkers": [],
+        "consumers": [],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/p6/browser-fixture.mts",
+          "scripts/p6/readback-child.mts",
+          "scripts/p6/run-native-e2e.mts",
+          "scripts/p6/worker-child.mts"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.procedure-admission-request",
+          "http.post.company-brain.procedure-component",
+          "http.post.company-brain.procedure-costs",
+          "http.post.company-brain.procedure-experience",
+          "http.post.company-brain.procedure-induction-cancel",
+          "http.post.company-brain.procedure-interface"
+        ]
+      }
+    },
+    {
+      "family": "program-synthesis",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": true,
+      "O": false,
+      "F": true,
+      "Q": true,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 3,
+      "httpOperations": 10,
+      "sourceLines": 2580,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/program-synthesis/checker.ts"
+        ],
+        "consumers": [],
+        "fixtures": [
+          "scripts/frontier5/x1/eslint.config.mjs",
+          "scripts/frontier5/x1/request-observation-cases.mts",
+          "scripts/frontier5/x1/responsibility-finish-cases.mts",
+          "scripts/frontier5/x1/verify.mjs",
+          "scripts/generate-openapi.ts"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.program-interface-module",
+          "http.post.company-brain.program-module",
+          "http.post.company-brain.program-ports"
+        ]
+      }
+    },
+    {
+      "family": "project-z/z1-shared-work",
+      "jobs": [],
+      "projectZ": true,
+      "W": false,
+      "K": true,
+      "O": true,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 6,
+      "sourceLines": 2340,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/project-z/z1-shared-work/admission.ts",
+          "packages/private-equity/src/project-z/z1-shared-work/processes.ts"
+        ],
+        "consumers": [
+          "packages/private-equity/src/project-z/z1-shared-work/native-contracts.ts:ConsumerSchema",
+          "packages/private-equity/src/project-z/z1-shared-work/owner.ts:consumeSharedWorkProjection",
+          "packages/private-equity/src/project-z/z1-shared-work/owner.ts:consumeSharedWorkProjectionTx",
+          "packages/private-equity/src/project-z/z1-shared-work/owners.ts:consumeOriginalOwnerTx"
+        ],
+        "fixtures": [
+          "scripts/generate-openapi.ts"
+        ],
+        "gapOperations": []
+      }
+    },
+    {
+      "family": "project-z/z2-coalitions",
+      "jobs": [
+        "construct_interaction_protocol_v1"
+      ],
+      "projectZ": true,
+      "W": true,
+      "K": true,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 1,
+      "httpOperations": 2,
+      "sourceLines": 779,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/project-z/z2-coalitions/guard.ts"
+        ],
+        "consumers": [],
+        "fixtures": [
+          "scripts/generate-openapi.ts"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.coalition-read"
+        ]
+      }
+    },
+    {
+      "family": "project-z/z3-viability",
+      "jobs": [],
+      "projectZ": true,
+      "W": false,
+      "K": true,
+      "O": true,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 3,
+      "sourceLines": 3535,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/project-z/z3-viability/assets.ts"
+        ],
+        "consumers": [
+          "packages/private-equity/src/project-z/z3-viability/consumer.ts:consumeCheckedViabilityTx",
+          "packages/private-equity/src/project-z/z3-viability/general-consumer.ts:consumeGeneralViabilityTx",
+          "packages/private-equity/src/project-z/z3-viability/general-transition.ts:consumedOwnerObservation"
+        ],
+        "fixtures": [
+          "scripts/generate-openapi.ts"
+        ],
+        "gapOperations": []
+      }
+    },
+    {
+      "family": "project-z/z4-execution-proof",
+      "jobs": [],
+      "projectZ": true,
+      "W": false,
+      "K": false,
+      "O": true,
+      "F": true,
+      "Q": true,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 8,
+      "sourceLines": 1528,
+      "evidence": {
+        "checkers": [],
+        "consumers": [
+          "packages/private-equity/src/project-z/z4-execution-proof/contracts.ts:consumeSchema",
+          "packages/private-equity/src/project-z/z4-execution-proof/owner-consumer.ts:consumeProof",
+          "http.post.company-brain.execution-proof-consume"
+        ],
+        "fixtures": [
+          "scripts/generate-openapi.ts"
+        ],
+        "gapOperations": []
+      }
+    },
+    {
+      "family": "project-z/z5-institution-linker",
+      "jobs": [
+        "link_institution_components_v1"
+      ],
+      "projectZ": true,
+      "W": true,
+      "K": true,
+      "O": true,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 1,
+      "httpOperations": 8,
+      "sourceLines": 1678,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/project-z/z5-institution-linker/artifact.ts",
+          "packages/private-equity/src/project-z/z5-institution-linker/consumer.ts",
+          "packages/private-equity/src/project-z/z5-institution-linker/native-s8-owner.ts",
+          "packages/private-equity/src/project-z/z5-institution-linker/process.ts"
+        ],
+        "consumers": [
+          "packages/private-equity/src/project-z/z5-institution-linker/consumer.ts:recordCompositionHandoffConsumed",
+          "packages/private-equity/src/project-z/z5-institution-linker/consumer.ts:recordCompositionPlanConsumed"
+        ],
+        "fixtures": [
+          "scripts/generate-openapi.ts"
+        ],
+        "gapOperations": [
+          "http.post.company-brain.institution-link-read"
+        ]
+      }
+    },
+    {
+      "family": "r1",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": false,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 0,
+      "sourceLines": 676,
+      "evidence": {
+        "checkers": [],
+        "consumers": [],
+        "fixtures": [
+          "scripts/r1/child-worker.mts",
+          "scripts/r1/run-lifecycle.mts",
+          "scripts/r1/run-owners.mts",
+          "scripts/r1/run-retained-accounting.mjs"
+        ],
+        "gapOperations": []
+      }
+    },
+    {
+      "family": "r3",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": false,
+      "O": true,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 1,
+      "sourceLines": 1478,
+      "evidence": {
+        "checkers": [],
+        "consumers": [
+          "packages/private-equity/src/r3/allocation.ts:consumeR3Allocation"
+        ],
+        "fixtures": [
+          "scripts/r3/run-owner-e2e.mts"
+        ],
+        "gapOperations": []
+      }
+    },
+    {
+      "family": "r4",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": true,
+      "O": true,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 8,
+      "sourceLines": 1097,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/r4/store.ts"
+        ],
+        "consumers": [
+          "packages/private-equity/src/r4/api.ts:consume",
+          "packages/private-equity/src/r4/contracts.ts:ConsumeSchema",
+          "packages/private-equity/src/r4/owners.ts:scientificConsumers",
+          "http.post.identification-plans.consume"
+        ],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/r4/run-integrated.mts"
+        ],
+        "gapOperations": []
+      }
+    },
+    {
+      "family": "r6",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": false,
+      "O": false,
+      "F": false,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 0,
+      "sourceLines": 45,
+      "evidence": {
+        "checkers": [],
+        "consumers": [],
+        "fixtures": [],
+        "gapOperations": []
+      }
+    },
+    {
+      "family": "r7",
+      "jobs": [
+        "run_decision_atlas_v1"
+      ],
+      "projectZ": false,
+      "W": true,
+      "K": true,
+      "O": true,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": true,
+      "gap": true,
+      "gapSize": 12,
+      "httpOperations": 26,
+      "sourceLines": 1232,
+      "evidence": {
+        "checkers": [
+          "packages/private-equity/src/r7/runtime.ts"
+        ],
+        "consumers": [
+          "packages/private-equity/src/r7/selection.ts:consumeEnterpriseExactAllocation",
+          "http.post.allocations.coalition-consume",
+          "http.post.allocations.consume",
+          "http.post.allocations.consume-mechanism"
+        ],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/r7/cost.mts",
+          "scripts/r7/run-owner.mts",
+          "scripts/r7/serial-projection.mjs",
+          "scripts/r7/worker-once.mts"
+        ],
+        "gapOperations": [
+          "http.post.allocations.assessment",
+          "http.post.allocations.clear",
+          "http.post.allocations.clear-mechanism",
+          "http.post.allocations.consume",
+          "http.post.allocations.consume-mechanism",
+          "http.post.allocations.read",
+          "http.post.allocations.reconcile",
+          "http.post.allocations.release",
+          "http.post.allocations.resource",
+          "http.post.allocations.resources",
+          "http.post.allocations.settle",
+          "http.post.allocations.validate"
+        ]
+      }
+    },
+    {
+      "family": "r8",
+      "jobs": [],
+      "projectZ": false,
+      "W": false,
+      "K": false,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 0,
+      "sourceLines": 1012,
+      "evidence": {
+        "checkers": [],
+        "consumers": [],
+        "fixtures": [
+          "scripts/r8/run-capsule.mts",
+          "scripts/r8/run-owner.mts",
+          "scripts/r8/solver-review.mts",
+          "scripts/r8/worker-entry.mts"
+        ],
+        "gapOperations": []
+      }
+    },
+    {
+      "family": "strategic-response",
+      "jobs": [
+        "evaluate_strategic_response_v1",
+        "learn_strategic_response_model_v1"
+      ],
+      "projectZ": false,
+      "W": true,
+      "K": false,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 13,
+      "sourceLines": 603,
+      "evidence": {
+        "checkers": [],
+        "consumers": [],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/y2/run-installed.mts",
+          "scripts/y2/seal-local.mts"
+        ],
+        "gapOperations": []
+      }
+    },
+    {
+      "family": "system-identification",
+      "jobs": [
+        "identify_digital_system_v1"
+      ],
+      "projectZ": false,
+      "W": true,
+      "K": false,
+      "O": false,
+      "F": true,
+      "Q": false,
+      "P": false,
+      "eligible": false,
+      "gap": false,
+      "gapSize": 0,
+      "httpOperations": 15,
+      "sourceLines": 2460,
+      "evidence": {
+        "checkers": [],
+        "consumers": [],
+        "fixtures": [
+          "scripts/generate-openapi.ts",
+          "scripts/x4/audit-source.mts",
+          "scripts/x4/recovery-proofs.mts",
+          "scripts/x4/run-installed.mts",
+          "scripts/x4/run-matrix.mts"
+        ],
+        "gapOperations": []
+      }
+    }
+  ],
+  "ambiguous": [
+    {
+      "capabilityId": "http.post.company-brain.application-cancel",
+      "families": [
+        "application-semantics",
+        "enterprise-applications"
+      ]
+    },
+    {
+      "capabilityId": "http.post.company-brain.compute-search-projection",
+      "families": [
+        "compute-search",
+        "deliberation"
+      ]
+    },
+    {
+      "capabilityId": "http.post.company-brain.compute-search-submit",
+      "families": [
+        "compute-search",
+        "deliberation",
+        "program-synthesis"
+      ]
+    },
+    {
+      "capabilityId": "http.post.company-brain.context",
+      "families": [
+        "application-semantics",
+        "branch-fabric",
+        "decision-slice",
+        "r3"
+      ]
+    },
+    {
+      "capabilityId": "http.post.company-brain.economic-programme-reconcile",
+      "families": [
+        "economic-action-theory",
+        "interaction-synthesis"
+      ]
+    },
+    {
+      "capabilityId": "http.post.company-brain.economic-programme-run",
+      "families": [
+        "economic-action-theory",
+        "interaction-synthesis"
+      ]
+    },
+    {
+      "capabilityId": "http.post.company-brain.evidence-read",
+      "families": [
+        "decision-slice",
+        "evidence-execution"
+      ]
+    },
+    {
+      "capabilityId": "http.post.company-brain.object",
+      "families": [
+        "application-semantics",
+        "branch-fabric",
+        "capital-formation",
+        "capital-program",
+        "closing",
+        "compute-search",
+        "confidential-computation",
+        "counterexample-search",
+        "deliberation",
+        "economic-action-theory",
+        "enterprise-applications",
+        "evidence-execution",
+        "institution-program",
+        "interaction-synthesis",
+        "interface-synthesis",
+        "live-controls",
+        "policy-learning",
+        "primary-diligence",
+        "procedure-induction",
+        "program-synthesis",
+        "project-z/z1-shared-work",
+        "project-z/z3-viability",
+        "project-z/z4-execution-proof",
+        "r1",
+        "r4",
+        "r8",
+        "system-identification"
+      ]
+    },
+    {
+      "capabilityId": "http.post.company-brain.program-cancel",
+      "families": [
+        "institution-program",
+        "program-synthesis"
+      ]
+    },
+    {
+      "capabilityId": "http.post.company-brain.program-resume",
+      "families": [
+        "institution-program",
+        "program-synthesis"
+      ]
+    },
+    {
+      "capabilityId": "http.post.company-brain.search",
+      "families": [
+        "application-semantics",
+        "program-synthesis"
+      ]
+    }
+  ],
+  "unresolved": [
+    "http.post.company-brain.available-actions",
+    "http.post.company-brain.belief-pin",
+    "http.post.company-brain.decision-lineage",
+    "http.post.company-brain.evidence-lineage",
+    "http.post.company-brain.opportunity-promote",
+    "http.post.company-brain.provenance",
+    "http.post.company-brain.traverse"
+  ],
+  "limits": [
+    "Static analysis: a job registered through a handler that is not imported by name in worker index.ts is reported as unregistered.",
+    "Operation-to-family resolution uses the quoted operation literal inside packages/private-equity/src; unresolved or ambiguous rows are listed, never guessed.",
+    "O (consumption) is detected from exported *consum* functions and *consume* operations; a family that consumes under another name is reported as not O.",
+    "Reachability by ordinary Work through the typed query plane is Q/P; a mounted panel alone does not count (research/z0-convergence-proposal.md)."
+  ]
+}
