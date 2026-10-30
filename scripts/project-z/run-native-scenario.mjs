@@ -48,6 +48,11 @@ assert.ok(!authTls || forwarded.every(key => !/^(NODE_TLS|NODE_EXTRA|SSL_|OPENSS
 const z4Profile = (profiles ?? "").split(",").includes("z4")
 const s3Python = process.env.FINNOR_S3_PYTHON
 assert.ok(!z4Profile || (s3Python && isAbsolute(s3Python)), "Z4_PROFILE_REQUIRES_ABSOLUTE_FINNOR_S3_PYTHON")
+// z1 takes the same pinned interpreter only when the caller supplies it, for the S3/S4 owner chain.
+const z1Chain = (profiles ?? "").split(",").includes("z1") && s3Python !== undefined
+assert.ok(!z1Chain || isAbsolute(s3Python), "Z1_CHAIN_REQUIRES_ABSOLUTE_FINNOR_S3_PYTHON")
+const budgetMs = option("budget-ms")
+assert.ok(budgetMs === undefined || /^[0-9]{6,7}$/.test(budgetMs), "BUDGET_MS_MUST_BE_A_BOUNDED_INTEGER")
 // END
 mkdirSync(evidence, { mode: 0o700 })
 const baseEnv = { PATH: dirname(process.execPath) + ":/usr/bin:/bin", HOME: evidence, TMPDIR: evidence,
@@ -176,7 +181,8 @@ try {
     ...(profiles ? ["--profile=" + profiles] : []), ...(z3Producer ? ["--z3-producer=" + z3Producer] : []),
     ...(noWorker ? ["--no-worker"] : []),
     ...(authTls ? ["--auth-tls-origin=" + receipt.authTls.origin, "--auth-tls-cert=" + tlsCertificate, "--auth-tls-state=" + tlsState] : []),
-    ...(productionBuild ? ["--production-build"] : []), ...(z4Profile ? ["--s3-python=" + s3Python] : [])],
+    ...(productionBuild ? ["--production-build"] : []), ...(z4Profile || z1Chain ? ["--s3-python=" + s3Python] : []),
+    ...(budgetMs ? ["--budget-ms=" + budgetMs] : [])],
     "READY_REAL_AUTHENTICATED_NATIVE_TARGET")
   assert.ok(await bounded(app.ready, productionBuild ? 3000000 : 1200000), "REAL_APPLICATION_READY_REQUIRED")
   receipt.stage = hold ? "HELD_READY" : "SCENARIOS"
