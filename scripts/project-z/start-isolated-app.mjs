@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { createHash } from "node:crypto"
 import { spawn } from "node:child_process"
 import { createRequire } from "node:module"
-import { createWriteStream, existsSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs"
+import { chmodSync, createWriteStream, existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs"
 import { dirname, isAbsolute, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { setTimeout as delay } from "node:timers/promises"
@@ -43,21 +43,33 @@ appUrl.password = "finnor_app"
 const adminEnv = { ...isolated, RAYON_NUM_THREADS: "2", TSX_DISABLE_CACHE: "1" }
 // Opt-in phase profiles reach only the application processes, never migrate/seed.
 const profiles = new Set(process.argv.filter(arg => arg.startsWith("--profile=")).flatMap(arg => arg.slice(10).split(",")))
-assert.ok([...profiles].every(profile => ["z1", "z2", "x1", "z3"].includes(profile)), "Unknown launcher profile")
+assert.ok([...profiles].every(profile => ["z1", "z2", "x1", "z3", "x2", "z0"].includes(profile)), "Unknown launcher profile")
 // The Z3 runtime pins the producer bundle by digest itself; only its location is supplied here.
 const z3Producer = process.argv.find(arg => arg.startsWith("--z3-producer="))?.slice(14)
 assert.ok(!profiles.has("z3") || (z3Producer && isAbsolute(z3Producer) && realpathSync(z3Producer) === z3Producer),
   "Z3 producer bundle path required")
 const ownsWorker = process.argv.includes("--no-worker")
+// X2 refuses every environment except explicit isolated staging with its own disposable profile
+// name, and reads disposable application credentials only from this launcher-owned private root.
+// z0 is x1 + x2: the original X1 institution parent and the X2 application computation share one stack.
+const x2Profile = profiles.has("x2") || profiles.has("z0")
+const x2SecretRoot = join(state, "x2-secrets")
 const profileEnv = {
   ...(profiles.has("z1") ? { FINNOR_Z1_PROFILE: "ordinary_disposable", P3_GOVERNORS: "1" } : {}),
   ...(profiles.has("z2") ? { FINNOR_Z2_DISPOSABLE_E2E: "1", FINNOR_Z2_CONVERGED_DEVELOPMENT: "1",
     FINNOR_Y1_PROFILE: "ordinary_disposable", FINNOR_Y3_PROFILE: "ordinary_disposable" } : {}),
-  ...(profiles.has("x1") ? { FINNOR_P4_PROFILE: "ordinary_disposable" } : {}),
+  ...(profiles.has("x1") || profiles.has("z0") ? { FINNOR_P4_PROFILE: "ordinary_disposable" } : {}),
+  ...(x2Profile ? { FINNOR_ENVIRONMENT: "staging", FINNOR_X2_PROFILE: "ordinary_disposable",
+    FINNOR_X2_SOURCE_ROOT: root, FINNOR_X2_DISPOSABLE_SECRET_ROOT: x2SecretRoot } : {}),
   ...(profiles.has("z3") ? { FINNOR_Z3_PRODUCER_BUNDLE: z3Producer,
     FINNOR_Z3_CHECKER_SOURCE: join(backend, "packages/epistemic-runtime/src/project-z/z3-viability/checker.py") } : {}),
 }
 const appEnv = { ...adminEnv, ...profileEnv, DATABASE_URL: appUrl.toString(), CENTROPY_E2E_DB_ADMIN_URL: adminUrl.toString() }
+assert.equal(appEnv.FINNOR_ENVIRONMENT, x2Profile ? "staging" : "ordinary_disposable", "PROFILE_ENVIRONMENT_MISMATCH")
+if (x2Profile) {
+  mkdirSync(x2SecretRoot, { mode: 0o700, recursive: true })
+  chmodSync(x2SecretRoot, 0o700)
+}
 const receipt = {
   schema: "finnor.project-z.isolated-native-app.v1", status: "STARTING", stage: "MIGRATION",
   startedAt: new Date().toISOString(), sourceRoot: root, state,
@@ -163,6 +175,12 @@ try {
     assert.equal(binding.rows[0].employee_status, "active", "REAL_TEST_OWNER_MUST_BE_ACTIVE")
     receipt.ownerBinding = { userId: binding.rows[0].user_id, tenantId: binding.rows[0].tenant_id,
       role: binding.rows[0].user_role, authorityRevision: binding.rows[0].authority_revision }
+    if (x2Profile) {
+      // Secret custody requires 0700 directories owned by the process uid at both levels.
+      const tenantSecrets = join(x2SecretRoot, binding.rows[0].tenant_id)
+      mkdirSync(tenantSecrets, { mode: 0o700, recursive: true })
+      chmodSync(tenantSecrets, 0o700)
+    }
   } finally { await pool.end() }
   receipt.stage = "WORKER_DATABASE_ROLE"
   save()
