@@ -15,6 +15,13 @@ for (const [type, handler] of [[producer, createSharedWorkJobHandler()], [consum
   if (!contract) throw Error("COORDINATOR_NATIVE_JOB_CONTRACT_NOT_INSTALLED");
   queue.register(type, handler, contract);
 }
+// Only the driver's private failure snapshot keeps this text, after the driver's own redaction (I3).
+function describe(error) {
+  let text = `${error?.name ?? typeof error}: ${error?.message ?? error}\n${String(error?.stack ?? "").split("\n").slice(1, 13).join("\n")}`;
+  const secret = process.env.DATABASE_URL;
+  if (secret && secret.length >= 4) text = text.split(secret).join("<redacted>");
+  return text.replace(/\/\/[^\s/@:]+:[^\s/@]*@/g, "//<redacted>@").slice(0, 4000);
+}
 let stopped = false;
 process.on("message", message => { if (message?.kind === "STOP") stopped = true; });
 process.on("disconnect", () => { stopped = true; });
@@ -25,8 +32,10 @@ try {
   for (let tick = 0; !stopped && tick < Math.max(192, 4 * (originalCount + 1)) && Date.now() < deadline; tick++) {
     if (!await queue.tick()) await new Promise(resolve => setTimeout(resolve, 250));
   }
-} catch {
-  process.send?.({ kind: "FAILED", code: "BOUNDED_NATIVE_QUEUE_WORKER_FAILED", pid: process.pid });
+} catch (error) {
+  const detail = describe(error);
+  process.stderr.write(`${detail}\n`);
+  process.send?.({ kind: "FAILED", code: "BOUNDED_NATIVE_QUEUE_WORKER_FAILED", pid: process.pid, detail });
   process.exitCode = 1;
 } finally {
   await getPool().end();

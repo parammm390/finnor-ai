@@ -180,7 +180,7 @@ try {
   // The loader `node --import` uses (ESM and CommonJS hooks). `tsImport` cannot resolve the packages' `./x.js` specifiers.
   await import(pathToFileURL(resolve(guarded.root, "finnor-os/node_modules/tsx/dist/loader.mjs")).href);
   const { runNativeEpisode } = await import(new URL("./native-e2e-run.mjs", import.meta.url).href);
-  await runNativeEpisode({ ...guarded, processIdentity, privateJSON, need, sha }, output, report);
+  await runNativeEpisode({ ...guarded, processIdentity, privateJSON, need, sha, redact }, output, report);
   report.status = guarded.scenario === "ORIGINAL_EPISODE" ? "PASSED" : "PASSED_BOUNDED_NEGATIVE_ONLY";
 } catch (error) {
   report.status = report.mutationsStarted ? "FAILED" : "NOT_RUN";

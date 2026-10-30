@@ -3,7 +3,7 @@
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
-import { readFile } from "node:fs/promises";
+import { readFile, chmod } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import pg from "pg";
@@ -67,7 +67,7 @@ async function pythonOriginal(payload, root, need) {
 }
 
 export async function runNativeEpisode(guarded, output, report) {
-  const { target, root, installed, need, privateJSON, sha, processIdentity, scenario } = guarded;
+  const { target, root, installed, need, privateJSON, sha, processIdentity, scenario, redact } = guarded;
   let queuePool;
   try {
   const fixture = fixtureSchema.parse(guarded.fixture), ids = fixture.works.map(item => item.work.id);
@@ -176,6 +176,14 @@ export async function runNativeEpisode(guarded, output, report) {
   let browser, context, page, bearer = null, networkDenied = 0;
   const workers = new Set(), physical = [], staleClaims = [];
   let queueControl = null;
+  // Failure evidence (I3): bounded, redacted, private and read-only. It never replaces the error that caused it.
+  const workerRecords = [], rings = { consoleErrors: [], pageErrors: [], responses: [] };
+  const ring = (name, entry) => { rings[name].push(entry); if (rings[name].length > 32) rings[name].shift(); };
+  const scrub = value => typeof value === "string" ? redact(value) : value instanceof Date ? value.toISOString() :
+    Array.isArray(value) ? value.slice(0, 64).map(scrub) : value && typeof value === "object" ?
+      Object.fromEntries(Object.entries(value).slice(0, 64).map(([key, item]) => [key, scrub(item)])) : value;
+  const within = (promise, milliseconds = 8000) => Promise.race([promise,
+    wait(milliseconds).then(() => { throw Error("FAILURE_SNAPSHOT_STEP_TIMED_OUT"); })]);
   const identity = await processIdentity(process.pid);
   const audit = async action => {
     report.actions.push({ index: report.actions.length, at: new Date().toISOString(), ...action });
@@ -187,8 +195,12 @@ export async function runNativeEpisode(guarded, output, report) {
   async function post(operation, body, statuses = [200], credential = bearer) {
     const response = await page.request.post(new URL(`/api/centropy/company-brain/${operation}`, target.frontend).href,
       { data: body, headers: credential ? { authorization: credential } : {}, timeout: FIRST_REQUEST_BOUND_MS });
-    need(statuses.includes(response.status()), "AUTHENTICATED_NATIVE_HTTP_EXPECTATION_FAILED");
-    need(/no-store/.test(response.headers()["cache-control"] ?? ""), "PRIVATE_NATIVE_RESPONSE_MUST_NOT_BE_CACHED");
+    const accepted = statuses.includes(response.status()), uncached = /no-store/.test(response.headers()["cache-control"] ?? "");
+    if (!accepted || !uncached) ring("responses", { via: "page.request", method: "POST", path: `/api/centropy/company-brain/${operation}`,
+      status: response.status(), expected: statuses, cacheControl: response.headers()["cache-control"] ?? null,
+      bodyHead: redact(await response.text().catch(() => "")).slice(0, 512) });
+    need(accepted, "AUTHENTICATED_NATIVE_HTTP_EXPECTATION_FAILED");
+    need(uncached, "PRIVATE_NATIVE_RESPONSE_MUST_NOT_BE_CACHED");
     const value = await response.json();
     return { status: response.status(), body: value };
   }
@@ -213,6 +225,10 @@ export async function runNativeEpisode(guarded, output, report) {
     } else await panel.getByRole("button", { name: operation === "z1-admit-shared-work" ?
       "Admit checked derivation for original owner use" : "Cancel request, retain costs and obligations", exact: true }).click();
     const response = await pending;
+    if (!(response.status() === 200 && /no-store/.test(response.headers()["cache-control"] ?? "")))
+      ring("responses", { via: "mounted action", method: "POST", path: `/api/centropy/company-brain/${operation}`,
+        status: response.status(), cacheControl: response.headers()["cache-control"] ?? null,
+        bodyHead: redact(await response.text().catch(() => "")).slice(0, 512) });
     need(response.status() === 200 && /no-store/.test(response.headers()["cache-control"] ?? ""), "MOUNTED_NATIVE_WRITE_FAILED");
     const result = await response.json(); await audit({ kind: "AUTHENTICATED_MOUNTED_ACTION", operation, workId,
       inputDigest: digest(body), responseDigest: digest(result), status: response.status() }); return result;
@@ -286,6 +302,45 @@ export async function runNativeEpisode(guarded, output, report) {
     await audit({ kind: "CANONICAL_EXISTING_PUBLIC_S1_APPEND", sourceId, property,
       priorPin: previous.pin, pin: result.pin, declarationDigest: digest(declaration) }); return result.pin;
   }
+  async function writeFailureSnapshot() {
+    try {
+      const own = [fixture.tenantId, fixture.principalId, report.requestId];
+      const database = report.requestId ? await within(scoped(async c => {
+        await c.query("SET LOCAL statement_timeout=10000");
+        const rows = async (text, values) => (await c.query(text, values)).rows;
+        return {
+          request: (await rows(`SELECT id,generation,status,attempts_used,wall_used_ms,wall_reserved_ms,event_count,
+            checkpoint IS NOT NULL has_checkpoint,publication IS NOT NULL has_publication FROM finnor_os.z1_requests
+            WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`, own))[0] ?? null,
+          latestEvents: await rows(`SELECT id::text,left(event_key,200) event_key,left(body->>'kind',200) kind,created_at
+            FROM finnor_os.z1_events WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3 ORDER BY id DESC LIMIT 64`, own),
+          attempts: await rows(`SELECT id,generation,status,costs_unknown,reserved_wall_ms,created_at FROM finnor_os.z1_attempts
+            WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3 ORDER BY created_at DESC,id LIMIT 64`, own),
+          jobs: await rows(`SELECT id,type,status,attempts,max_attempts,left(last_error,2000) last_error FROM finnor_os.jobs
+            WHERE tenant_id=$1 AND type=ANY($2::text[]) AND payload->>'requestId'=$3 ORDER BY id LIMIT 64`,
+          [fixture.tenantId, jobTypes, report.requestId]),
+        };
+      }, true), 15000).catch(error => ({ unavailable: String(error?.message ?? error).slice(0, 500) })) : null;
+      let browserEvidence = null;
+      if (page) {
+        browserEvidence = { rings, path: null, title: null, visibleTextHead: null, screenshot: null };
+        try { browserEvidence.path = new URL(page.url()).pathname; } catch { /* evidence only */ }
+        try { browserEvidence.title = String(await within(page.title())).slice(0, 200); } catch { /* evidence only */ }
+        try { browserEvidence.visibleTextHead = String(await within(page.evaluate(() => document.body?.innerText ?? ""))).slice(0, 2048); }
+        catch { /* evidence only */ }
+        try {
+          const file = resolve(output, "failure-page.private.png");
+          await within(page.screenshot({ path: file, animations: "disabled", timeout: 8000 }), 12000);
+          await chmod(file, 0o600); browserEvidence.screenshot = "failure-page.private.png";
+        } catch { /* evidence only */ }
+      }
+      await privateJSON(resolve(output, "failure-snapshot.private.json"), scrub({
+        schema: "finnor.z1.native-failure-snapshot.v1", capturedAt: new Date().toISOString(), requestId: report.requestId ?? null,
+        mutationsStarted: report.mutationsStarted === true, actionsRecorded: report.actions.length, database,
+        workers: workerRecords, browser: browserEvidence }));
+      report.failureSnapshot = "failure-snapshot.private.json";
+    } catch { /* The original failure is what the driver reports. */ }
+  }
   async function worker(boundary = null, expectLogicalRefusal = false, recoverTerminalOnly = false) {
     const control = await assertQueueOwned(queueControl === null);
     if (control) { queueControl = control; await audit({ kind: "NATIVE_QUEUE_CENSUS_POSITIVE_CONTROL", ...control }); }
@@ -304,14 +359,21 @@ export async function runNativeEpisode(guarded, output, report) {
         FINNOR_Z1_RECOVERY_REQUEST: report.requestId },
       stdio: ["ignore", "pipe", "pipe", "ipc"] });
     workers.add(child);
+    const record = { boundary, pid: child.pid, exit: null, failed: null, stdoutTail: "", stderrTail: "" };
+    workerRecords.push(record); if (workerRecords.length > 24) workerRecords.shift();
+    const tail = (name, chunk) => { record[name] = (record[name] + chunk.toString("utf8")).slice(-8192); };
     let diagnosticBytes = 0, killed = false, owned, failure = null, capturedClaim, crashSnapshot, logicalRefusalObserved = false;
     const exited = new Promise((resolveExit, reject) => {
       const timer = setTimeout(() => { failure = "OWNED_NATIVE_WORKER_BOUND"; child.kill("SIGKILL"); }, workerWallMs + 5000);
-      child.stdout.on("data", chunk => { diagnosticBytes += chunk.length; if (diagnosticBytes > 1048576) child.kill("SIGKILL"); });
-      child.stderr.on("data", chunk => { diagnosticBytes += chunk.length; if (diagnosticBytes > 1048576) child.kill("SIGKILL"); });
-      child.on("error", () => { failure = "OWNED_NATIVE_WORKER_LAUNCH_FAILED"; });
+      child.stdout.on("data", chunk => { tail("stdoutTail", chunk); diagnosticBytes += chunk.length; if (diagnosticBytes > 1048576) child.kill("SIGKILL"); });
+      child.stderr.on("data", chunk => { tail("stderrTail", chunk); diagnosticBytes += chunk.length; if (diagnosticBytes > 1048576) child.kill("SIGKILL"); });
+      child.on("error", error => { record.failed = { code: "LAUNCH", detail: String(error?.code ?? error?.message ?? error).slice(0, 200) };
+        failure = "OWNED_NATIVE_WORKER_LAUNCH_FAILED"; });
       child.on("message", message => {
-        if (message?.kind === "FAILED") { failure = "OWNED_NATIVE_QUEUE_FLOW_FAILED"; return; }
+        if (message?.kind === "FAILED") {
+          record.failed = { code: String(message.code ?? "").slice(0, 200), detail: String(message.detail ?? "").slice(0, 4000) };
+          failure = "OWNED_NATIVE_QUEUE_FLOW_FAILED"; return;
+        }
         if (message?.schema !== "finnor.z1.owned-physical-boundary.v1") return;
         void (async () => {
           need(boundary && message.boundary === boundary && message.nonce === nonce && message.pid === child.pid &&
@@ -333,10 +395,13 @@ export async function runNativeEpisode(guarded, output, report) {
           crashSnapshot = await snapshot();
           need(isSame(owned, await processIdentity(child.pid)), "OWNED_NATIVE_WORKER_IDENTITY_CHANGED_BEFORE_SIGNAL");
           killed = child.kill("SIGKILL"); need(killed, "OWNED_NATIVE_WORKER_NOT_SIGNALED");
-        })().catch(() => { failure = "OWNED_NATIVE_RECOVERY_OBSERVATION_FAILED"; child.kill("SIGKILL"); });
+        })().catch(error => {
+          record.failed = { code: "RECOVERY_OBSERVATION", detail: String(error?.message ?? error).slice(0, 500) };
+          failure = "OWNED_NATIVE_RECOVERY_OBSERVATION_FAILED"; child.kill("SIGKILL");
+        });
       });
       child.once("close", (code, signal) => {
-        clearTimeout(timer); workers.delete(child);
+        clearTimeout(timer); workers.delete(child); record.exit = { code, signal };
         if (failure || boundary && (!killed || signal !== "SIGKILL")) reject(Error(failure ?? "PHYSICAL_NATIVE_SIGKILL_NOT_OBSERVED"));
         else resolveExit({ pid: child.pid, identity: owned ?? null, code, signal, diagnosticBytes, killed, boundary });
       });
@@ -395,6 +460,26 @@ export async function runNativeEpisode(guarded, output, report) {
     });
     await context.routeWebSocket("**/*", socket => { networkDenied++; socket.close(); });
     page = await context.newPage(); page.setDefaultTimeout(30000); page.setDefaultNavigationTimeout(FIRST_REQUEST_BOUND_MS);
+    // Evidence only (I3): these listeners append to bounded rings and never throw or touch the page.
+    const declaredOrigins = new Set([target.frontend, target.api, target.authOrigin].map(value => new URL(value).origin));
+    page.on("console", message => { if (message.type() === "error") ring("consoleErrors", { text: redact(message.text()).slice(0, 512) }); });
+    page.on("pageerror", error => ring("pageErrors", { text: redact(error?.message ?? error).slice(0, 512) }));
+    page.on("response", response => {
+      try {
+        const url = new URL(response.url());
+        if (response.status() < 400 || !declaredOrigins.has(url.origin)) return;
+        const entry = { via: "page", method: response.request().method(), path: url.pathname, status: response.status(), bodyHead: null };
+        ring("responses", entry);
+        response.text().then(text => { entry.bodyHead = redact(text).slice(0, 512); }, () => {});
+      } catch { /* evidence only */ }
+    });
+    page.on("requestfailed", request => {
+      try {
+        const url = new URL(request.url());
+        if (declaredOrigins.has(url.origin)) ring("responses", { via: "page", method: request.method(), path: url.pathname, status: null,
+          failure: String(request.failure()?.errorText ?? "").slice(0, 200) });
+      } catch { /* evidence only */ }
+    });
     await page.goto(new URL("/centropy/login", target.frontend).href);
     await expect(page.getByRole("heading", { name: "Sign in to CENTROPY", exact: true })).toBeVisible();
     await page.getByLabel("Email", { exact: true }).fill(process.env.TEST_OWNER_EMAIL);
@@ -671,6 +756,9 @@ export async function runNativeEpisode(guarded, output, report) {
     report.physicalNativeRecovery = physical.length === 3 ? "PASSED" : "FAILED";
     report.originalWorkIds = ids; report.physicalExits = physical;
     await audit({ kind: "ROOT_AND_SESSION_CLEAR_CANCELLATION_AND_REAL_STALE_CLAIM_REFUSAL", originalWorkIds: ids });
+  } catch (error) {
+    await writeFailureSnapshot();
+    throw error;
   } finally {
     // Never stop a declared target listener, other worker, database or fixture.
     for (const child of workers) {
