@@ -313,3 +313,20 @@ Faking risks and oracles:
 | S3 | A refusal changed state | witness before/after: sessions, charges, reservations, original envelope, episode digest, `pe_requests`, domain actions |
 | S4b | PENDING_LEARNING passes because the first session already ended | The second request is sent only while the first session row is non-terminal (read from the database immediately before sending); otherwise NOT_RUN `PENDING_WINDOW_NOT_REACHED` |
 | S5b | A standalone session is left running and interferes with later cases | It is driven to a terminal status or cancelled; the case is not PASS until the session is terminal and the portal stopped |
+
+## 13. Addendum (Z0-N F): original accounting read-back and the meter receipt (P0-20)
+
+Written before the case is implemented. There is no existing receipt schema for Z0 meters (`grep -ri meter` finds only
+capital-formation human-meter code and Z2 replay code), so `finnor.project-z.z0-meter-receipt.v1` is defined here:
+original Work/programme/parent reservation, the authenticated API budget view, the database accounting, every S5 charge
+with its `costs` field and provenance, consumption/reservation status counts, S7 record counts by kind, physical
+interaction counts, queue delivery wall-clock, retained UNKNOWN S5 consumptions, and the list of meter gaps.
+
+| # | How it can be faked or go wrong | Independent expectation / oracle |
+|---|---|---|
+| F1 | The API view is trusted as the accounting | The case compares it with an independent database reading (`s5_reservations.envelopes`, `s5_governed_resource_charges` sums) for every resource line: limit, used, remaining must be equal. A missing API projection is FAIL, not NOT_RUN, when a root session exists. |
+| F2 | A renewal or release hides as accounting | `newReservation=false`, `releaseGranted=false`, `originalReservationRef` equal to the parent's reference, no resource line overdrawn. |
+| F3 | Money is invented | `monetaryCost` must be null / `UNKNOWN`; S5 charge `costs.status` must be `UNMETERED` (the code's own conservative-occupation qualification); both are listed as meter gaps, never converted to a number. |
+| F4 | A physical cost is reported without a meter | Only queue delivery wall-clock (`job_delivery_attempts` start/finish) is a measurement; CPU, memory and provider cost are listed as unobserved gaps; S7 COST/COMPUTE records for the Work are counted and, when absent, listed as a gap. |
+| F5 | UNKNOWN is dropped | S5 consumption states with `UNKNOWN_OUTCOME` are listed in the receipt; the receipt never relabels them. |
+| F6 | The case passes with no session | NOT_RUN `no root application session exists on the original Work in this mode` is the only allowed skip. |
