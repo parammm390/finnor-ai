@@ -209,6 +209,16 @@ if (!child) {
     ensure(own.requests === 0 && own.selections === 0, "CHILD_ACTED_WITHOUT_SELECTION");
     ensure(parkedWitness.charges.n === before.charges.n && parkedWitness.s5Consumptions === before.s5Consumptions && parkedWitness.domainActions === before.domainActions, "S5_S6_ROWS_CHANGED_BY_PARKED_CHILD");
     ensure(parkedWitness.workStatus !== "completed", "ORIGINAL_WORK_COMPLETED_BY_CHILD");
+    // Recorded so a Z3 native map can name the model's typed operations and the canonical steps.
+    const [composed] = await q("SELECT body FROM finnor_os.application_semantics_artifacts WHERE tenant_id=$1 AND artifact_id=$2", [parent.tenantId, parked.composition_ref.id]);
+    const [modelBody] = await q("SELECT body FROM finnor_os.application_semantics_artifacts WHERE tenant_id=$1 AND artifact_id=$2", [parent.tenantId, acquired.model.ref.id]);
+    record("model-and-composition-shape", {
+      operations: (modelBody?.body?.operations ?? []).map(item => ({ id: item.id, semanticRevision: item.semanticRevision, parameters: (item.parameters ?? []).map(p => ({ name: p.name, kind: p.kind })) })),
+      stateSchema: (modelBody?.body?.stateSchema ?? []).map(field => ({ path: field.path, kind: field.kind, nullable: field.nullable })),
+      supportedDomain: modelBody?.body?.envelope?.supportedDomain ?? null,
+      compositionDisposition: composed?.body?.disposition ?? null,
+      compositionSteps: (composed?.body?.steps ?? []).map(step => ({ id: step.id, operationId: step.operationId, kind: step.kind ?? null })),
+    });
     return { detail: { parked, own, witnessBefore: before, witnessParked: parkedWitness, portalRecordsUnchangedSinceBefore: parkedWitness.portalRecords === before.portalRecords } };
   });
 
