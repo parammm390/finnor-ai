@@ -220,3 +220,39 @@ database), not an external provider revocation; no external revocation is claime
 | R4 | The revocation is handled by cancelling or damaging the original | The original programme status, original reservation envelope/digest, episode digest and reservation count are unchanged; the original Work row is not cancelled/failed; rows of unrelated Works (seed Work) have an unchanged digest ("only affected work stops"). |
 | R5 | Settling hides uncertainty | A request in flight at T0 that has `possible_egress` and no observation stays `UNKNOWN`/ambiguous or reconciled through the independent observation; none is relabelled VERIFIED without observation_ref. |
 | R6 | Charges after revocation grow the allowance | S5 charges stay on the original reservation and sum <= the original envelope limit (`invariants` is reused); the count of charges after T0 is recorded. |
+
+## 10. Addendum (Z0-N A): an original parent that holds an executable duty undispatched (P0-11)
+
+Written before the fixture shape or the case is implemented. Source facts (read, not assumed):
+
+- `institution-origin.ts` `assertOriginalInstitutionOwnerIdle` refuses an acquisition while any `run_harness_program_v1` or
+  `run_x1_institution_continuation_v1` job of the programme is queued/running/quarantined. The original must be quiescent.
+- `institution-continuation.ts`: a pass ends with a scheduled poll job unless `supportedComplete || deadlineExpired ||
+  interventions.length>0`; with an intervention the status is PARTIAL and no wake is scheduled. A node whose action is
+  absent (unresolved duty) is STOPped in the initial pass (`institution.ts` 263-271, `owners.ts` 37) and becomes a
+  persisted intervention, so a programme that contains one unresolved duty is quiescent PARTIAL after every pass.
+- A pass dispatches duties per Deal one at a time (`activeRoots`): an executable duty is skipped while another duty of the
+  same Deal has a `pending`/`executing`/`approved` action. `consumeInstitutionApplicationModels` runs only at the moment an
+  executable duty is first dispatched (`!existing`), and only for the duty named by the origin selector.
+- With the default policy (no confirmation) a supported duty executes at once, so no executable duty survives until
+  acceptance. With `requiresConfirmation=true` for the operation the first dispatched duty is `pending` approval.
+
+Lawful shape (all owner code, nothing written to owner tables): one unresolved duty (intervention, so no poll) and two
+supported `create_deal_request` duties A and B on the same Deal, operation policy `requiresConfirmation=true`. The first
+pass drafts A (pending approval, holds the Deal) and skips B. The programme is quiescent PARTIAL with B executable and
+undispatched. The acquisition selects B. After S4 acceptance the enqueued continuation skips B again while A is pending. The
+real owner approval of A (`POST /api/actions/:id/confirm` with the reviewed `expectedEffectHash`) and the owner
+`program-resume` operation then let the next pass dispatch B through `consumeInstitutionApplicationModels`.
+
+| # | How it can be faked or go wrong | Independent expectation / oracle |
+|---|---|---|
+| N1 | Insert the B action, trace or acceptance rows by hand | Forbidden: every row comes from owner code or the HTTP API. The oracle reads the B domain action only by the deterministic id the programme node carries and requires its `created_at` after the S4 acceptance event time. |
+| N2 | B was dispatched before the acquisition (so nothing is consumed) | At the cut: A has a domain action `pending`, B has none, no live job, programme PARTIAL. Otherwise FAIL `PARENT_SHAPE_NOT_REACHED`. |
+| N3 | A second compile or second root supplies the duty after acceptance | Reservation count, original envelope digest and episode digest unchanged (`sameBudget`); one compiler request for the Work. |
+| N4 | A fresh budget pays for the consumption | The PREPARATION charge for B's stable identity exists in `s5_governed_resource_charges` on the ORIGINAL reservation; its ref equals the `chargeRef` of the trace; total charges <= original envelope. |
+| N5 | "Consumed" is read from the AVAILABLE trace only | PASS needs the canonical action row: `authority_context.applicationModelUseRef`, `applicationModelAcceptanceRef` (equal to the acceptance of this session) and `applicationModelInputDigest`, plus events MATERIALIZED and CONSUMED naming that action. |
+| N6 | A fallback is relabelled consumption | `P1_ORIGINAL_APPLICATION_DIRECT_FALLBACK` with its reason is a recorded outcome of "returns to the original" (P0-11a). "Useful learned argument" (P0-11b) is PASS only for MATERIALIZED+CONSUMED; the fallback reason is reported verbatim as the NOT_RUN/FAIL predicate of P0-11b. |
+| N7 | The approval is forced by an owner-table update | Only the HTTP confirm route with the semantic hash read from `business_effects`; the case records the HTTP status and the action status transitions. |
+| N8 | The final business result is claimed from the action status | Independent read: `pe_requests` row with the deterministic id on the Deal, and `business_effects.status='verified'`; the payload fields are compared with values derived from the fixture inputs (request text, due date, deal, workstream, recipient), not from the node. |
+| N9 | Deadline or assignment moved | Programme head `bounds.deadlineAt`, the node deadline and the session deadline are not later than the values captured at the cut. |
+| N10 | The two-duty shape is not accepted by the owner (e.g. approval refused for the owner principal) | The exact HTTP status/body is recorded and the case ends FAIL or NOT_RUN with that predicate; no product weakening. |
