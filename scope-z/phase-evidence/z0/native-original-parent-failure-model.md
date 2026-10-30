@@ -330,3 +330,34 @@ interaction counts, queue delivery wall-clock, retained UNKNOWN S5 consumptions,
 | F4 | A physical cost is reported without a meter | Only queue delivery wall-clock (`job_delivery_attempts` start/finish) is a measurement; CPU, memory and provider cost are listed as unobserved gaps; S7 COST/COMPUTE records for the Work are counted and, when absent, listed as a gap. |
 | F5 | UNKNOWN is dropped | S5 consumption states with `UNKNOWN_OUTCOME` are listed in the receipt; the receipt never relabels them. |
 | F6 | The case passes with no session | NOT_RUN `no root application session exists on the original Work in this mode` is the only allowed skip. |
+
+## 14. Addendum (Z0-N E): currentness matrix, INTAKE and CLAIM stages (`FINNOR_Z0_MODE=current`)
+
+Written before the cases are implemented. The closed plan is 4 stages (INTAKE, CLAIM, USE, DISPATCH) x 7 dependencies
+(RIGHTS, SOURCE, TERMS, CODE, CHECKER, CONSUMER, PARENT) = 28 obligations, plus currentness at checker acceptance and at
+artifact publication. Source facts: `readOwnerOrigin` (institution-origin.ts) re-reads the compiler, episode, programme,
+active plan, checked artifact, duty population and calls `assertInstitutionCompilerCurrent` and `assertProgramCurrent` at
+acquire time AND at every delivery (`assertInstitutionApplicationOriginCurrent`). `assertInstitutionCompilerCurrent`
+(institution-program/store.ts) fences: installed X1 compiler method identity, canonical owner cut, rights revision and
+operation revision, exact Work input digest, compiler revision superseded, source grant revoked or superseded, responsible
+principals and source scopes. It binds no X2 learner, checker or Z0 consumer source identity (grep for digest bindings in
+application-semantics and z0-convergence finds only the X1 `checkerRevision`).
+
+Feasible honest cases and the real owner path used for each change:
+
+| Dependency | Change (owner path, nothing hand-written for X1/S5/P1/S4/S6) | Expected fence |
+|---|---|---|
+| SOURCE | `appendDocumentVersion` of the original CRM export document + `institution-register-source` (a new grant version of the same source supersedes the old one) | `X1_SOURCE_GRANT_REVOKED_OR_SUPERSEDED` or the origin binding refusal |
+| PARENT | `institution-revise` (a new compiler revision of the same Work) | `X1_COMPILER_REVISION_SUPERSEDED` / `Z0_ORIGINAL_INSTITUTION_BINDING_CHANGED` |
+| TERMS | `POST /api/workforce/profiles` with the same key and narrower terms | whichever fence the owner has; if none, the case is FAIL `CHANGED_DEPENDENCY_NOT_FENCED` (never PASS) |
+| RIGHTS | disposable `employee_roles` row; the product trigger `bump_authority_revision` raises `authority_states.revision` (the only direct SQL, a disposable role definition, not an X1/S5/P1/S4/S6 row) | rights/operation revision binding |
+| CODE, CHECKER, CONSUMER | none | NOT_RUN: no owner read binds those source identities; a source-byte edit of the running product would not exercise a fence |
+
+| # | How it can be faked or go wrong | Independent expectation / oracle |
+|---|---|---|
+| E1 | The refusal is caused by something other than the changed dependency | Each case uses its own fresh parent and changes exactly one dependency; the untouched control parent (the first parent of the run) keeps its original envelope digest, episode digest, charges and session count (`sameOriginal`), which also shows the refusal does not spread to unrelated Work |
+| E2 | INTAKE "refusal" is a generic 4xx that never reached the owner | PASS needs a 4xx and zero application sessions for the Work; the body and code are recorded; an accepted acquisition (202) is cancelled and recorded FAIL `CHANGED_DEPENDENCY_NOT_FENCED_ACQUISITION_ACCEPTED` |
+| E3 | CLAIM case changes the dependency after the worker already claimed | The owned worker is stopped first; the acquisition job is read as `queued` with `attempts=0` after the 202; only then the dependency changes and the worker restarts, so the first claim happens after the change. Otherwise FAIL `ACQUISITION_JOB_WAS_CLAIMED_BEFORE_THE_CHANGE` |
+| E4 | The stopped claim leaves a partial effect | PASS needs a terminal non-MODEL_READY session, zero `S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED` events, zero `application_semantics_requests` rows for the session (no physical interaction), unchanged original envelope/episode digests and charge count |
+| E5 | A stage is claimed without being exercised | USE and DISPATCH need a completed acquisition per case and an interleaving harness between acceptance and the consumer (USE) or between materialisation and the business row (DISPATCH); they are NOT_RUN with that reason, not simulated. Checker-acceptance and artifact-publication currentness are NOT_RUN: no owner hook exists between those steps inside a delivery |
+| E6 | `institution-revise` legitimately changes owner state and trips the original-only oracle | The oracle compares only the original reservation envelope/status, the original episode digest and the original charge count; a legitimate supersession that changes the original reservation status is recorded as FAIL with the observed values for analysis, not tuned away |
