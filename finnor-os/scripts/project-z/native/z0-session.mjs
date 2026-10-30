@@ -112,7 +112,7 @@ await refusal({ id: "03", title: "Deadline extension beyond the original deadlin
   { mutate: request => ({ ...request, deadlineAt: new Date(Date.parse(parent.deadlineAt) + 10 * 60000).toISOString() }) },
   ["Z0_ORIGINAL_DEADLINE_EXHAUSTED_OR_EXTENDED"]);
 await refusal({ id: "04", title: "Demand above the original reservation envelope is refused" },
-  { requestUnits: 9999 }, ["Z0_ORIGINAL_RESERVATION_EXHAUSTED", "Z0_ORIGINAL_DEMAND", "S5_"]);
+  { requestUnits: 2048 }, ["Z0_ORIGINAL_BUDGET_EXHAUSTED", "Z0_ORIGINAL_RESERVATION_EXHAUSTED"]);
 await refusal({ id: "05", title: "Demand against a resource outside the original reservation is refused" },
   { mutate: request => ({ ...request, resourceDemand: request.resourceDemand.map(line => ({ ...line, resourceId: "z0-foreign-" + randomUUID().slice(0, 6) })) }) },
   ["Z0_ORIGINAL", "RESOURCE"]);
@@ -149,7 +149,9 @@ if (!killMode) {
     try { acquired = await driveAcquisitionToModelReady(env, parent, { privateRoot, record }); }
     catch (error) {
       const row = (await q("SELECT id,status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC LIMIT 1", [parent.tenantId, parent.workId]))[0] ?? null;
-      record("acquisition-failure-session", { session: row, error: String(error.message).slice(0, 300) });
+      const events = row ? await q("SELECT kind,left(body::text,900) body FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 ORDER BY created_at,event_id", [parent.tenantId, row.id]) : [];
+      const requests = row ? await q("SELECT node_id,status,reason,possible_egress,left(body::text,500) body FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2 ORDER BY created_at", [parent.tenantId, row.id]) : [];
+      record("acquisition-failure-session", { session: row, events, requests, error: String(error.message).slice(0, 300) });
       throw error;
     }
     const checked = await invariants(before, acquired.sessionId);
