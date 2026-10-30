@@ -116,6 +116,23 @@ Z04 FAIL was a driver defect, not product behavior. It also exposed a false PASS
 so the same schema refusal satisfied "refused before the governed child". Z02 now requires the typed 422
 `VIABILITY_PREDICATE_UNPASSED` with a `Z3_*` predicate, so only a Z3 owner refusal can pass it.
 
+N20 Self-deadlock of the original-owner binding for an APPLICATION_SNAPSHOT observer. OBSERVED in run w3-z3s-02
+(Z04 FAIL: `viability-submit` 422 `VIABILITY_TRANSITION_NOT_CONFIRMED` after 15.9 s; the generic predicate means the
+error was not a Z3NativeFault). The retained Postgres log shows two `canceling statement due to statement timeout`
+errors on `insert into finnor_os.authority_decisions`, blocked in `pg_advisory_xact_lock('v3-material-cut:<tenant>')`
+(the V3 statement fence on authority tables). Cause: the submit transaction already holds that lock (the S5 snapshot
+`authorize` inserts an authority decision on the transaction client) and `applicationContext` then calls
+`nativeApplicationProfile` for each profile (two, one per role); that function resolves the profile on its OWN pooled
+connections and inserts an authority decision, which waits for the lock held by the caller until statement timeout.
+Z3 maps without an application observer never reached this path. The same nested call exists in
+`composeEnterpriseApplicationOperations`. Guarded property: no Z3 transaction waits on its own locks through a second
+connection. Fix: the profiles are resolved BEFORE the Z3 transaction opens (separate connections, no lock held) and
+`nativeApplicationProfile` returns that retained result inside the Z3 scope; an id that was not prefetched fails closed
+with a typed fault instead of opening a nested connection. The retained-authority binding-digest, role, grant and
+target checks still run inside the transaction on the prefetched profile. Residual risk: the profile is read up to one
+transaction earlier than the checks that consume it; a revocation in that window is caught by the next fenced
+boundary, not by this one.
+
 ## Scope limits recorded up front (not silently narrowed later)
 
 - The map is a controlled recurring cycle over the first canonical steps of the portal composition

@@ -13,6 +13,7 @@ import { resolveApplicationOperationProfile } from "@finnor/security";
 import type { PeMutationContext, PeWorldRootRef } from "../types";
 import { authorize, principal, schemaIdentity, tx, unavailable } from "../evidence-execution/store";
 import { enqueueOwnerDeliveryInTransaction } from "../../../governed-execution/src/owner-delivery-store";
+import { prefetchedProfile, profileScopeKey } from "./profile-scope";
 import type { AuthorizedApplicationProfile, OriginalApplicationParent } from "./ports";
 import type { ApplicationAcquireRequest, ApplicationExecuteRequest } from "./native-contracts";
 import { applicationRuntimeIdentity, parseApplicationCheck, parseApplicationModel, sameX2Ref, x2ByteDigest, x2Digest, x2Fault, x2Ref } from "./contracts";
@@ -190,6 +191,12 @@ export async function currentApplicationWork(ctx: PeMutationContext, row: Applic
   }
 }
 export async function nativeApplicationProfile(ctx: PeMutationContext, id: string): Promise<NativeApplicationProfile> {
+  const retained = prefetchedProfile<NativeApplicationProfile>(profileScopeKey(ctx.auth.tenantId, principal(ctx), id));
+  if (retained === undefined) x2Fault("X2_APPLICATION_PROFILE_NOT_PREFETCHED");
+  if (retained) {
+    if (!retained.ok) throw retained.error;
+    return retained.value;
+  }
   const selected = await tx(ctx, async (c) => (await c.query<{
     auth_profile_ref: string; application: string; connection_revision: number; updated_at: Date;
     private_binding: Record<string, unknown>;

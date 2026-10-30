@@ -26,6 +26,7 @@ import { Z3_COMPUTE_SCHEMA, Z3_PRODUCE_JOB, Z3_RECOVER_JOB, Z3NativeFault,
 import { assertViabilityJobLeaseTx } from "./delivery";
 import { resolveViabilityNativeOrigin, chargeViabilityDelivery, type NativeOrigin } from "./native-origin";
 import { viabilityRuntimeIdentity } from "./runtime";
+import { withApplicationProfiles } from "./application-profiles";
 import type { ViabilityBuildIdentity } from "./assets";
 import type { ViabilityChildObservation } from "./process";
 import type { ViabilityCursor } from "./consumer";
@@ -169,8 +170,13 @@ async function assertViabilityRequestRoom(ctx: PeMutationContext, workId: string
   if (count === undefined || count >= 256) z3Fault("Z3_REQUEST_HISTORY_BOUND");
 }
 
+/** Transactions that resolve the native origin hold the tenant material-cut
+ * lock, so application profiles are resolved before they open. */
+const viabilityTx = <T>(ctx: PeMutationContext, workId: string, fn: (c: PoolClient, db: Db) => Promise<T>) =>
+  withApplicationProfiles(ctx, workId, () => tx(ctx, fn));
+
 export async function createViabilitySession(ctx: PeMutationContext, input: SubmitInput) {
-  return tx(ctx, async (c) => {
+  return viabilityTx(ctx, input.workId, async (c) => {
     const origin = await resolveViabilityNativeOrigin(ctx, input.workId, c);
     await authorizeOwner(ctx, c);
     await authorizeWork(ctx, input.workId, c);
@@ -291,7 +297,7 @@ export async function createViabilitySession(ctx: PeMutationContext, input: Subm
 export async function adoptViabilityClaim(ctx: PeMutationContext, row: ViabilitySessionRow,
   delivery: ViabilityDelivery): Promise<ViabilitySessionRow> {
   const execution = delivery.physical;
-  return tx(ctx, async (c) => {
+  return viabilityTx(ctx, row.work_id, async (c) => {
     const origin = await resolveViabilityNativeOrigin(ctx, row.work_id, c);
     await authorizeOwner(ctx, c);
     await assertViabilityJobLeaseTx(ctx, row, delivery, c);
@@ -350,7 +356,7 @@ export async function assertViabilityClaimTx(ctx: PeMutationContext, row: Viabil
 export async function withViabilityClaim<T>(ctx: PeMutationContext, row: ViabilitySessionRow,
   claim: ViabilityClaim, fn: (current: ViabilitySessionRow, origin: NativeOrigin,
     c: PoolClient, db: Db) => Promise<T>): Promise<T> {
-  return tx(ctx, async (c, db) => {
+  return viabilityTx(ctx, row.work_id, async (c, db) => {
     const origin = await resolveViabilityNativeOrigin(ctx, row.work_id, c);
     const current = await assertViabilityClaimTx(ctx, row, claim, c);
     await authorizeOwner(ctx, c);
@@ -535,7 +541,8 @@ export type ViabilityS4Consumer = (ctx: PeMutationContext, sessionId: string, cl
   c: PoolClient, db: Db) => Promise<unknown>;
 
 export async function requestViabilityRecovery(ctx: PeMutationContext, input: RecoverInput) {
-  return tx(ctx, async (c) => {
+  const known = await viabilitySession(ctx, input.sessionId);
+  return viabilityTx(ctx, known.work_id, async (c) => {
     const initial = await viabilitySession(ctx, input.sessionId, c);
     const origin = await resolveViabilityNativeOrigin(ctx, initial.work_id, c);
     await authorizeOwner(ctx, c);
@@ -622,7 +629,7 @@ export async function readViabilityPublic(ctx: PeMutationContext, input: ReadInp
   try {
     // Existing native owners take currentness locks and retain S1 decisions.
     // Do not incorrectly call those owners inside a SQL READ ONLY transaction.
-    const current = await tx(ctx, async (c) => {
+    const current = await viabilityTx(ctx, row.work_id, async (c) => {
       const origin = await resolveViabilityNativeOrigin(ctx, row.work_id, c);
       const loaded = await viabilitySession(ctx, row.id, c, true);
       await authorizeOwner(ctx, c);
