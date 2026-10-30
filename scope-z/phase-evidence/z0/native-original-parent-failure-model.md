@@ -256,3 +256,33 @@ real owner approval of A (`POST /api/actions/:id/confirm` with the reviewed `exp
 | N8 | The final business result is claimed from the action status | Independent read: `pe_requests` row with the deterministic id on the Deal, and `business_effects.status='verified'`; the payload fields are compared with values derived from the fixture inputs (request text, due date, deal, workstream, recipient), not from the node. |
 | N9 | Deadline or assignment moved | Programme head `bounds.deadlineAt`, the node deadline and the session deadline are not later than the values captured at the cut. |
 | N10 | The two-duty shape is not accepted by the owner (e.g. approval refused for the owner principal) | The exact HTTP status/body is recorded and the case ends FAIL or NOT_RUN with that predicate; no product weakening. |
+
+## 11. Addendum (Z0-N D): D1 identity at the authenticated `POST /api/queries` boundary
+
+Written before the session script is implemented. Source facts (read, not assumed):
+
+- Pristine base (`c7e560c`): `parseRequestBody` removes `workId`/`idempotencyKey`/`executionKey` (ENVELOPE_KEYS) before
+  `validateOperationalQueryRequest`, restoring `workId` only for `economic_programme_v1`. The shared query types require
+  `workId` for `harness_program_v1` and `confidential_economic_computation_v1`, so those parse as a generic 400.
+- Integrated source (HEAD): the same parser first answers `NATIVE_ORIGINAL_WORK_OWNER_REQUIRED` (400) for
+  `harness_program_v1`, `confidential_economic_computation_v1` and `execution_proof_capsule_v1`; `economic_programme_v1`
+  reaches `handleOperationalQuery` -> `observeOriginalWork` (native observation, no `receiveWork`).
+  So the integrated route may refuse the two forms the task expects to reach their readers. This is a hypothesis to be
+  observed, not assumed: the first run records the actual status and body for every form.
+- The original parent Work carries a `query:harness_program_v1` capability grant and its `p1_requests` row is a valid
+  `programId` for `harness_program_v1`. No economic programme or confidential computation exists on that Work.
+- There is no public field that names a work input; the only envelope fields are `workId`, `idempotencyKey`, `executionKey`.
+
+Cases (all through real Auth bearer tokens over HTTP; identities: owner, a second principal inside the owner tenant, and
+an unrelated tenant with its own owner, all created through the Auth admin API plus the tenant directory rows; nothing is
+written to Work/programme tables):
+
+| # | How it can be faked or go wrong | Independent expectation / oracle |
+|---|---|---|
+| D1-1 | "Positive" is a 2xx that is not the reader's answer, or the envelope parser's refusal is counted as a pass | Positive PASS requires status 2xx, `workId` equal the original, `workInputId` equal the latest `work_inputs.id` read from the database, `result.execution.workId/workInputId` the same, and `result.data` carrying the programme id asked for. A 4xx `NATIVE_ORIGINAL_WORK_OWNER_REQUIRED` or a generic validation 400 is FAIL with that body, never relabelled. |
+| D1-2 | A positive creates a new Work or appends a steering input | `works` count of the tenant and `work_inputs` count of the original Work are read before and after every request; both must be unchanged (positives and rejects). |
+| D1-3 | The economic and confidential positives are claimed without a programme | No economic programme or confidential computation can be created on this fixture within this session (an economic programme needs an accepted Y1 theory, an economic reservation and canonical operator observations; a confidential computation needs the Y4 lifecycle). Those two positives are NOT_RUN with that exact reason. What is recorded instead: the reader's typed answer to a request naming a programme/Work that does not have one (reader reached, no Work created). |
+| D1-4 | Foreign tenant or principal is refused only because the token is bad | Both identities first read `/api/me` (200, their own tenant). Foreign tenant and foreign principal then send the byte-identical valid harness request; the oracle is a 4xx with no body field naming the original programme, Work input, deal, reservation or institution (leak scan over the stripped response text against values read from the database that the client did not send). A same-tenant second principal that is answered 2xx is FAIL `CROSS_PRINCIPAL_READ_ALLOWED` only if the Work is bound to a principal; the observed status is always recorded. |
+| D1-5 | Wrong Work, stale input, extra-envelope field, conflicting identity, missing owner all collapse to one 400 | Each reject is its own request with its own expected status class: wrong Work (random UUID and a real other Work of the tenant) 403/404; stale input (`workInputId` of an older/absent input: not a public field) 400; extra-envelope field (`tenantId` of the foreign tenant) 400; conflicting identity (the original Work with a `programId` that is not the original's, and the same `executionKey` reused with a different body) 4xx; missing owner (no `workId`) 4xx and anonymous 401. Each is also checked for D1-2. |
+| D1-6 | Fail-before-fix is claimed without a pre-repair observation | Z0-R02-C03: the pre-repair `parseRequestBody` is extracted verbatim from `git show c7e560c:finnor-os/apps/api/app/api/queries/route.ts` (pristine object, SHA recorded) and run with the real `validateOperationalQueryRequest` against the valid harness and confidential bodies; the result (workId stripped, generic validation failure) is the retained baseline. The HEAD parser is run on the same bodies. The HTTP observation of HEAD is the main case. |
+| D1-7 | A product change is made to turn a FAIL into a PASS | `apps/api/app/api/queries/route.ts` is a shared file. If D1-1 fails, the exact patch is requested from the coordinator with the failing run as evidence; any patched-tree verification run is labelled as an unmerged working-tree variant and never counted as the integrated result. |
