@@ -5,6 +5,7 @@
 
 CREATE FUNCTION finnor_os.z0_s5_application_frame(p_ref jsonb,p_decision uuid,p_recovery boolean)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
+#variable_conflict use_variable
 DECLARE t uuid:=finnor_os.request_tenant_id();
  u uuid:=nullif(current_setting('app.user_id',true),'')::uuid;
  cert jsonb; origin jsonb; parent jsonb; parent_status text; parent_envelopes jsonb;
@@ -186,6 +187,7 @@ REVOKE ALL ON FUNCTION finnor_os.z0_s5_application_frame(jsonb,uuid,boolean) FRO
 
 CREATE FUNCTION finnor_os.z0_s5_application_consumption(p_body jsonb,p_decision uuid)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
+#variable_conflict use_variable
 DECLARE t uuid:=finnor_os.request_tenant_id(); u uuid:=nullif(current_setting('app.user_id',true),'')::uuid;
  frame jsonb; cert jsonb; parent jsonb; prior jsonb;
 BEGIN
@@ -244,6 +246,7 @@ REVOKE ALL ON FUNCTION finnor_os.z0_s5_application_consumption(jsonb,uuid) FROM 
 
 CREATE FUNCTION finnor_os.z0_s5_application_charge(p_body jsonb,p_decision uuid)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
+#variable_conflict use_variable
 DECLARE t uuid:=finnor_os.request_tenant_id(); u uuid:=nullif(current_setting('app.user_id',true),'')::uuid;
  frame jsonb; cert jsonb; parent jsonb; prior jsonb; co jsonb; original_limit numeric; child_limit numeric;
  original_used numeric; child_used numeric; recovery boolean;
@@ -310,6 +313,7 @@ REVOKE ALL ON FUNCTION finnor_os.z0_s5_application_charge(jsonb,uuid) FROM PUBLI
 
 CREATE FUNCTION finnor_os.z0_s5_application_effect_state(p_obligation text,p_stage text)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
+#variable_conflict use_variable
 DECLARE t uuid:=finnor_os.request_tenant_id(); u uuid:=nullif(current_setting('app.user_id',true),'')::uuid;
  obligation jsonb; co jsonb; frame jsonb; effect_id uuid; effect_hash text; effect_status text;
  request_status text; possible boolean; revision integer;
