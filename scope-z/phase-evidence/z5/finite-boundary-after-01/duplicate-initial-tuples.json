@@ -1,0 +1,27 @@
+{
+  "id": "duplicate-initial-tuples",
+  "passed": true,
+  "inputDigest": "9c11678c6404c71a614b75a031640693d9e0676b9c421eb2ba3e5ff793fa477f",
+  "expected": {
+    "disposition": "CHECKED_CANDIDATE",
+    "originalStates": 1,
+    "initialObligations": 3,
+    "translationRows": 4
+  },
+  "producer": {
+    "exitCode": 0,
+    "signal": null,
+    "stdout": "{\"schema\":\"finnor.z5.institution-composition-certificate.v1\",\"version\":\"z5-coupled-kernel-v1\",\"inputDigest\":\"9c11678c6404c71a614b75a031640693d9e0676b9c421eb2ba3e5ff793fa477f\",\"disposition\":\"CHECKED_CANDIDATE\",\"reasons\":[],\"context\":{\"states\":[\"a51f5eba1324b2368fd779d2de29863830a212e1b96f5d8a26cce181f466e6a3\"],\"initial\":[\"a51f5eba1324b2368fd779d2de29863830a212e1b96f5d8a26cce181f466e6a3\",\"a51f5eba1324b2368fd779d2de29863830a212e1b96f5d8a26cce181f466e6a3\",\"a51f5eba1324b2368fd779d2de29863830a212e1b96f5d8a26cce181f466e6a3\"],\"edges\":[],\"ranks\":{\"a51f5eba1324b2368fd779d2de29863830a212e1b96f5d8a26cce181f466e6a3\":0},\"semantics\":\"ALL_COMPONENT_STEPS_AND_REQUIRED_ENVIRONMENT_OFFERS_NO_INEVITABILITY\",\"conditionality\":\"Every represented environment preserves all original component steps and offers every retained environmental input. Scheduling may delay indefinitely. Public-observation-equivalent states have uniform offers.\",\"maximality\":\"NOT_CLAIMED_SOUND_SUBSET\"},\"replacement\":{\"status\":\"RETAIN_OLD\",\"component\":null,\"revision\":null,\"relation\":[],\"ranks\":{},\"bridge\":null,\"reasons\":[\"NO_CHECKED_SUPPLIED_REVISION_AND_ACTUAL_LIVE_BRIDGE\"],\"preorder\":\"SHARED_STATE_EXACT_STRONG_MAY_SIMULATION_MUST_AVAILABILITY_LEGAL_QUIESCENCE_NONBLOCKING_V1\"},\"originalCounterexample\":null,\"translation\":{\"rows\":4,\"digest\":\"b118e99732fe44a8cde21bd253beb8d22a407c0edfa6a12315f63df660f8597e\"},\"original\":{\"states\":1,\"transitions\":0,\"initial\":3},\"discharge\":{\"initial\":3,\"componentTransitions\":0,\"environmentTransitions\":0,\"noncircular\":true},\"correspondence\":\"EXACT_BOUNDED_LISTED_TYPED_KERNELS_NOT_ARBITRARY_TS_SQL_OR_PROVIDER\",\"executionAuthorityGranted\":false,\"protectedAdmission\":false,\"costs\":{\"operations\":20,\"wallMs\":3.254219000000006,\"cpuUserMicros\":3240,\"cpuSystemMicros\":0,\"peakRssBytes\":82702336,\"money\":null,\"human\":null,\"status\":\"MATERIAL_COSTS_UNMETERED\",\"gaps\":[\"EXTRACTION_INTEGRATION_INSTALL_RECOVERY_AND_HUMAN_COSTS_NOT_MEASURED_HERE\",\"NO_EQUIPPED_OR_FINANCIAL_RESULT\"]}}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 116.82720899999998
+  },
+  "checker": {
+    "exitCode": 0,
+    "signal": null,
+    "stdout": "{\"checked\":true,\"checker\":\"z5-original-semantics-checker-v1\",\"claimDigest\":\"33ccafeb07b543ae8383c3410c0ebc42e33768ea8b5052108c0619c95fa86794\",\"disposition\":\"CHECKED_CANDIDATE\",\"executionAuthorityGranted\":false,\"inputDigest\":\"9c11678c6404c71a614b75a031640693d9e0676b9c421eb2ba3e5ff793fa477f\",\"operations\":5,\"protectedAdmission\":false,\"schema\":\"finnor.z5.independent-check.v1\",\"scope\":\"ORIGINAL_FINITE_TYPED_KERNEL_SEMANTICS_NOT_NATIVE_TS_SQL_OR_PROTECTED_CUSTODY\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 35.09474799999998
+  }
+}

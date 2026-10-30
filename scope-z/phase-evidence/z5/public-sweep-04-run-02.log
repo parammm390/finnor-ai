@@ -1,0 +1,2 @@
+{"output":"/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/public-sweep-04","state":"PASSED","cases":256,"positiveAccepted":188,"denominator":188,"failures":[]}
+{"commandReturnCode": 0, "timing": "/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/public-sweep-04-timing-02.json", "wallMsIncludingLockWaitAndStartup": 300782.535776998}

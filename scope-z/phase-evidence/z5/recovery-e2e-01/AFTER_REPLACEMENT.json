@@ -1,0 +1,20 @@
+{
+  "point": "AFTER_REPLACEMENT",
+  "passed": true,
+  "result": {
+    "stopAt": "AFTER_REPLACEMENT",
+    "mode": "",
+    "pid": 232848,
+    "exitCode": null,
+    "signal": "SIGKILL",
+    "stdout": "{\"stage\":\"AFTER_REPLACEMENT\",\"pid\":232848,\"fence\":3,\"token\":\"a6097a90-dda3-431b-8191-e5f7fa8ec22d\"}\n",
+    "stderr": "",
+    "physicallyKilled": true,
+    "reachedBoundary": true,
+    "timedOut": false
+  },
+  "durableJournalDigest": "24d4f0fd75f534a2d931d2f51f7af9eb581e17187597fc3a121e15c43846393e",
+  "attempts": 3,
+  "spent": 3,
+  "fence": 3
+}

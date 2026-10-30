@@ -1,0 +1,83 @@
+{
+  "schema": "finnor.z5.finite-boundary-contract.v1",
+  "scope": "DIAGNOSED_PROCESS_BOUNDARIES_NOT_NEW_POPULATION_OR_NATIVE_QUALIFICATION",
+  "cases": [
+    {
+      "id": "initial-exact-limit",
+      "inputDigest": "9f8a3e73f4219ab7d86d95569e81bd3c2e0e250bab15b40be3eb01516c02931d",
+      "expected": {
+        "disposition": "CHECKED_CANDIDATE",
+        "originalStates": 2,
+        "initialObligations": 2,
+        "translationRows": 4
+      },
+      "checkerAccepts": true
+    },
+    {
+      "id": "initial-overflow",
+      "inputDigest": "2ff93b511a14fd791b9a842e8c2da973a1bdbd29ffe82b3cd2605f21d07604c8",
+      "expected": {
+        "disposition": "INCOMPLETE",
+        "context": null,
+        "replacement": null,
+        "noncircular": false
+      },
+      "checkerAccepts": true
+    },
+    {
+      "id": "duplicate-initial-tuples",
+      "inputDigest": "9c11678c6404c71a614b75a031640693d9e0676b9c421eb2ba3e5ff793fa477f",
+      "expected": {
+        "disposition": "CHECKED_CANDIDATE",
+        "originalStates": 1,
+        "initialObligations": 3,
+        "translationRows": 4
+      },
+      "checkerAccepts": true
+    },
+    {
+      "id": "large-shared-domain-row-overflow",
+      "inputDigest": "01bdb41cdb2cee2b314a58cea154e69345fa7549565709468c0cc408f78ece71",
+      "expected": {
+        "disposition": "INCOMPLETE",
+        "context": null,
+        "replacement": null,
+        "noncircular": false
+      },
+      "checkerAccepts": true
+    },
+    {
+      "id": "translation-exact-limit",
+      "inputDigest": "10ffa5a53480e7a2aa9f94890c19fdf299afacfc1cae9885b8299f627405bcb4",
+      "expected": {
+        "disposition": "CHECKED_CANDIDATE",
+        "originalStates": 2,
+        "initialObligations": 2,
+        "translationRows": 4
+      },
+      "checkerAccepts": true
+    },
+    {
+      "id": "translation-one-row-overflow",
+      "inputDigest": "82a2dd82c37b009c065f16645168ee2316ef0c83fde37402cfa33ab7a7fcb75f",
+      "expected": {
+        "disposition": "INCOMPLETE",
+        "context": null,
+        "replacement": null,
+        "noncircular": false
+      },
+      "checkerAccepts": true
+    },
+    {
+      "id": "rebound-over-budget-positive",
+      "inputDigest": "2ff93b511a14fd791b9a842e8c2da973a1bdbd29ffe82b3cd2605f21d07604c8",
+      "expected": "INDEPENDENT_REJECTION_OF_REBOUND_POSITIVE",
+      "checkerAccepts": false
+    }
+  ],
+  "expectedValueProvenance": {
+    "smallTranslationRows": "2 components * 2 full local tuples * 1 shared valuation = 4",
+    "largeSharedValuations": "32^8 = 1099511627776, enumerated only until the declared row cap",
+    "productBound": "Distinct original states count immediately; duplicate tuples retain all initial obligations"
+  }
+}

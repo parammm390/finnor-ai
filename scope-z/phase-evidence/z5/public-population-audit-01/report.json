@@ -1,0 +1,4017 @@
+{
+  "schema": "finnor.z5.public-population-audit.v1",
+  "state": "AUDIT_COMPLETED",
+  "scope": "POST_CODE_STATIC_ORIGINAL_INPUT_IDENTITY_NOT_NATIVE_OR_PROTECTED",
+  "startedAt": "2026-10-25T07:54:52.254Z",
+  "finishedAt": "2026-10-25T07:54:52.527Z",
+  "elapsedMs": 240.74762099999998,
+  "node": "v22.23.4",
+  "sourceFiles": {
+    "finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/kernel.ts": "d663a2505f06c338922a1018c7026152fd74ee392eb3a903c19bf7346b9b4de5",
+    "finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/checker.py": "f30a37f198cda1cb72fecab5b1a17846900e3db623326953a6865b21debc6887",
+    "finnor-os/scripts/project-z/z5/offline-e2e.mjs": "978a8b5b92b1fa68f3493827ac512b2f81c63793312a6d36623cd4a7a76c31ec"
+  },
+  "populationAudit": {
+    "schema": "finnor.z5.frozen-population-identity.v1",
+    "timing": "POST_CODE_STATIC_AUDIT_NOT_A_NEW_SEMANTIC_CAMPAIGN",
+    "canonicalization": "Recursive UTF-16 lexical object-key order; array order and every input field preserved; JSON.stringify scalar escaping; UTF-8 SHA-256",
+    "comparisonBoundary": "Equal digests identify exact canonical input duplicates; unequal digests do not establish semantic or structural diversity",
+    "registrationSha256": "74c0d1b3f02e53e3c011f4cf5f976dd62378e04d2fd56b389973078cf6b2f42e",
+    "lockedFamilyDefinitionsSha256": "6af201d06d54d33245dabb1addb0f8f72acd75c9f7a9fc50716e8e1d72a17222",
+    "historicalRegistrationDeclaredProductCodeWritten": false,
+    "registeredCases": 256,
+    "registeredFamilyLabels": 32,
+    "registeredUsefulPositives": 188,
+    "uniqueOriginalInputs": 84,
+    "repeatedOriginalInputSlots": 172,
+    "exactDuplicateGroups": [
+      {
+        "inputSha256": "7b6d6aa4e5f62d0c55ec78e99955f0facf4acd1e9dc94a4bb50b869ea5fda559",
+        "cases": [
+          "F01-01",
+          "F01-02",
+          "F01-03",
+          "F01-04",
+          "F01-05",
+          "F01-06",
+          "F02-01",
+          "F02-02",
+          "F02-03",
+          "F02-04",
+          "F02-05",
+          "F02-06"
+        ],
+        "familyIds": [
+          "F01",
+          "F02"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "92250d78f262d23cfaf2850036bdfe19e5131e52004464b11910e52ac620c754",
+        "cases": [
+          "F01-07",
+          "F01-08",
+          "F02-07",
+          "F02-08"
+        ],
+        "familyIds": [
+          "F01",
+          "F02"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_INFEASIBLE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "ab723bdd91938eb61d54fef661d23e35cc84eaddef1b93d4d43b57dc31e32948",
+        "cases": [
+          "F03-01",
+          "F03-02",
+          "F03-03",
+          "F03-04",
+          "F03-05",
+          "F03-06"
+        ],
+        "familyIds": [
+          "F03"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "aefaacef69cdf3f3cb9bacc815f3072fd57a86aa0018623ba7dfa18e42e76556",
+        "cases": [
+          "F03-07",
+          "F03-08"
+        ],
+        "familyIds": [
+          "F03"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_INFEASIBLE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "4d494b58fe190000bff997edb5b6efb689a862360145b9835b23eda67f7a2000",
+        "cases": [
+          "F04-01",
+          "F04-05"
+        ],
+        "familyIds": [
+          "F04"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "6158c16af850225ef5b05417caff12081cfe3741c64291c9a917755e55ae2952",
+        "cases": [
+          "F04-02",
+          "F04-06"
+        ],
+        "familyIds": [
+          "F04"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "1c94887cb66b9d1ad7c3023706adcad78e00c799a0c33342677d396a65a4fb94",
+        "cases": [
+          "F05-01",
+          "F05-04"
+        ],
+        "familyIds": [
+          "F05"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "aa57a1aedcbcf4fdbf523a105c8269f5caf6c32ba1d112c83494d2945afaf7e8",
+        "cases": [
+          "F05-02",
+          "F05-05"
+        ],
+        "familyIds": [
+          "F05"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "b9210b3e8d0841a67c296ee2064742e8b47af8ab71edc420db7559bc9613b0ed",
+        "cases": [
+          "F05-03",
+          "F05-06"
+        ],
+        "familyIds": [
+          "F05"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "04bf2c339f935ba5ef96adbfd4e899e10e759cbca089dad251986aeb6bd0b07e",
+        "cases": [
+          "F06-01",
+          "F06-04"
+        ],
+        "familyIds": [
+          "F06"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "271982d9be2a540d4f07156c6d1dc47f2985c5519da44c4ac79bfdbb8bc1e2ac",
+        "cases": [
+          "F06-02",
+          "F06-05"
+        ],
+        "familyIds": [
+          "F06"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "88e17c1ff17801434f10e84686cff9097525c0f68b4531d21a0569f429eb1766",
+        "cases": [
+          "F06-03",
+          "F06-06"
+        ],
+        "familyIds": [
+          "F06"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "e1608e8e27e1e11059e254fbf036a23f994c1c9827258818672d702d1fb83d73",
+        "cases": [
+          "F07-01",
+          "F07-04"
+        ],
+        "familyIds": [
+          "F07"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "02faa3cb0a3881e1b17df6f4cf342a43ee373a699a92080328b81b38fe6476b2",
+        "cases": [
+          "F07-02",
+          "F07-05"
+        ],
+        "familyIds": [
+          "F07"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "4955acd8fc475312fa49e7d2f1862ccb46f83f09fb8ab13a478863e1d0338a2c",
+        "cases": [
+          "F07-03",
+          "F07-06"
+        ],
+        "familyIds": [
+          "F07"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "768db32523398bb761967c9e8d07474006bc84810737ac664f476982fc5032c2",
+        "cases": [
+          "F08-01",
+          "F08-04"
+        ],
+        "familyIds": [
+          "F08"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "f82f51fb2e4843219b6998e97d618364a675f36d93d8f5959fd7903f641a62b1",
+        "cases": [
+          "F08-02",
+          "F08-05"
+        ],
+        "familyIds": [
+          "F08"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "2fad9ffbfd7d474a6415a4a5b92faa4847af1de094b3bab235f4052571e47652",
+        "cases": [
+          "F08-03",
+          "F08-06"
+        ],
+        "familyIds": [
+          "F08"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "7c9dd65c552b2d22552ef6e82e0ba1d4b9b861c92de504160f462a2cbe930fab",
+        "cases": [
+          "F09-01",
+          "F09-02",
+          "F09-03",
+          "F09-04",
+          "F09-05",
+          "F09-06",
+          "F09-07",
+          "F09-08",
+          "F10-07",
+          "F10-08"
+        ],
+        "familyIds": [
+          "F09",
+          "F10"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_INFEASIBLE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "bbd5904a45107fe90b7398fe88c39261e2b138840488aed0b6666bd082f08973",
+        "cases": [
+          "F10-01",
+          "F10-02",
+          "F10-03",
+          "F10-04",
+          "F10-05",
+          "F10-06"
+        ],
+        "familyIds": [
+          "F10"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "2ea768572185b7bb1a7d19a53e45289c00ae645d15ebf3911b5f8448cc84617c",
+        "cases": [
+          "F13-01",
+          "F13-02",
+          "F13-03",
+          "F13-04",
+          "F13-05",
+          "F13-06",
+          "F14-01",
+          "F14-02",
+          "F14-03",
+          "F14-04",
+          "F14-05",
+          "F14-06",
+          "F14-07",
+          "F14-08"
+        ],
+        "familyIds": [
+          "F13",
+          "F14"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "3f566f32ca83c7359014670faffcbcc734a434377f9dda1f3695c77dc3ae0866",
+        "cases": [
+          "F13-07",
+          "F13-08"
+        ],
+        "familyIds": [
+          "F13"
+        ],
+        "expectedOutcomes": [
+          [
+            "UNSUPPORTED",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "86cdda667046fdbfe5b0a377ca05806ea8abe4e511bc5daf6da588754cc41f18",
+        "cases": [
+          "F15-01",
+          "F15-02",
+          "F15-03",
+          "F15-04",
+          "F15-05",
+          "F15-06"
+        ],
+        "familyIds": [
+          "F15"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "731e28f4fc194a30984947a8b7fcf215cfc0975ba6b6d0c15384f86202704e74",
+        "cases": [
+          "F15-07",
+          "F15-08"
+        ],
+        "familyIds": [
+          "F15"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_INFEASIBLE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "1585f675333ea69ffc41fd5cb184921789e17327bc57b0cf083ace09e358b86c",
+        "cases": [
+          "F16-01",
+          "F16-02",
+          "F16-03",
+          "F16-04",
+          "F16-05",
+          "F16-06"
+        ],
+        "familyIds": [
+          "F16"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "ab8ad01f67fcebcb1967d501b8ff0129f5fce2f97cd81e0b8261a3980501585c",
+        "cases": [
+          "F16-07",
+          "F16-08"
+        ],
+        "familyIds": [
+          "F16"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_INFEASIBLE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "cases": [
+          "F17-01",
+          "F17-02",
+          "F17-03",
+          "F17-04",
+          "F17-05",
+          "F17-06",
+          "F21-01",
+          "F21-03",
+          "F21-05",
+          "F22-01",
+          "F22-02",
+          "F22-03",
+          "F22-04",
+          "F22-05",
+          "F22-06"
+        ],
+        "familyIds": [
+          "F17",
+          "F21",
+          "F22"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "ea1b223f2bca7547d130e8e458d4063a96df3478107952e2f22a6e9a145a2fb6",
+        "cases": [
+          "F17-07",
+          "F17-08",
+          "F21-07"
+        ],
+        "familyIds": [
+          "F17",
+          "F21"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_INFEASIBLE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "fa76993e475eca81395da29d097709b9c2a061a1305622c7856faab44a14df5e",
+        "cases": [
+          "F18-01",
+          "F18-02",
+          "F18-03",
+          "F18-04",
+          "F18-05",
+          "F18-06"
+        ],
+        "familyIds": [
+          "F18"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "c1e505bf92553030f1d6b9822ba7512bc7906ad8a417a825dc6e69534df4e8ec",
+        "cases": [
+          "F18-07",
+          "F18-08"
+        ],
+        "familyIds": [
+          "F18"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_INFEASIBLE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "4dfb9b02f7a01d0fac2aa9cdf40ea02222b0c59a9a0f692955686c8bea60e46d",
+        "cases": [
+          "F19-01",
+          "F19-02",
+          "F19-03",
+          "F19-04",
+          "F19-05",
+          "F19-06"
+        ],
+        "familyIds": [
+          "F19"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "4e1b3467e636539c5a2e126f9cfd0445c72677b5277cbf93c3ecf4ad275f5d7e",
+        "cases": [
+          "F19-07",
+          "F19-08"
+        ],
+        "familyIds": [
+          "F19"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_INFEASIBLE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "430d57e94c81d2d27dd7c8b6e67a0afd0468908060f3117f46254b5edc2b57fe",
+        "cases": [
+          "F20-01",
+          "F20-02",
+          "F20-03",
+          "F20-04",
+          "F20-05",
+          "F20-06"
+        ],
+        "familyIds": [
+          "F20"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "a43e555e18cff1d04a94991d53efc91b30085a5b233daf699825728672655077",
+        "cases": [
+          "F20-07",
+          "F20-08"
+        ],
+        "familyIds": [
+          "F20"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_INFEASIBLE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "d348f6edafae3e96d37e8786aeb4f0fff2518bf5e531d2796987dc13f6f26d35",
+        "cases": [
+          "F21-02",
+          "F21-04",
+          "F21-06"
+        ],
+        "familyIds": [
+          "F21"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "3d5d1e212fc4c7fe812b3647a5aac4ed9ea0d91ae1f42668c0358c318feece7b",
+        "cases": [
+          "F22-07",
+          "F22-08"
+        ],
+        "familyIds": [
+          "F22"
+        ],
+        "expectedOutcomes": [
+          [
+            "UNSUPPORTED",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "7881aa720850a6a866abbd229cff2cd0a494692165038821c2ee87271f48ddda",
+        "cases": [
+          "F23-01",
+          "F23-02",
+          "F23-03",
+          "F23-04",
+          "F23-05",
+          "F23-06",
+          "F25-01",
+          "F25-02",
+          "F25-03",
+          "F25-04",
+          "F25-05",
+          "F25-06"
+        ],
+        "familyIds": [
+          "F23",
+          "F25"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "8fe1c6ce51ebbbcb19400a8eeb4780f04bfe4f25dcd6b695fc498a4bf5232cc7",
+        "cases": [
+          "F23-07",
+          "F23-08"
+        ],
+        "familyIds": [
+          "F23"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_INFEASIBLE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "675ac0747eebec6564315e32e1a9276ad89cded06a4b4bf376c8427e42aedd89",
+        "cases": [
+          "F24-01",
+          "F24-02",
+          "F24-03",
+          "F24-04",
+          "F24-05",
+          "F24-06"
+        ],
+        "familyIds": [
+          "F24"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "14359aaf81867ef91beee2c6029160a8eabbc511269b4d78c0844f3e120723e7",
+        "cases": [
+          "F24-07",
+          "F24-08"
+        ],
+        "familyIds": [
+          "F24"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_INFEASIBLE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "540a1fbdbaf0c6d1dddb70e63bf52919124c44e581f7dce7cc40e83d17662745",
+        "cases": [
+          "F25-07",
+          "F25-08"
+        ],
+        "familyIds": [
+          "F25"
+        ],
+        "expectedOutcomes": [
+          [
+            "UNSUPPORTED",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "cb61b48020000747d335af22f940a67ad14413a68b99e369ecc876e98176fb37",
+        "cases": [
+          "F26-01",
+          "F26-02",
+          "F26-03",
+          "F26-04",
+          "F26-05",
+          "F26-06"
+        ],
+        "familyIds": [
+          "F26"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "00d7a83ec8af0d4d03ed8da239c4884231227d5e85c84e0530fb82251c086355",
+        "cases": [
+          "F26-07",
+          "F26-08"
+        ],
+        "familyIds": [
+          "F26"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_INFEASIBLE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "8c67eb280fcdbc14ce441e04ef0218d9cd583d3ef744925a14bcdf98bbe4b675",
+        "cases": [
+          "F27-01",
+          "F27-02",
+          "F27-03",
+          "F27-04",
+          "F27-05",
+          "F27-06"
+        ],
+        "familyIds": [
+          "F27"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "ba4d4d25cc7349d22890c9348db8adce35a7cd20ad3148446f35625cb4eebd99",
+        "cases": [
+          "F27-07",
+          "F27-08"
+        ],
+        "familyIds": [
+          "F27"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_INFEASIBLE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "382067f1a577c692a8efac73af6de4281ac46ede7fd982dec14d0fe64ae9c14e",
+        "cases": [
+          "F28-01",
+          "F28-06"
+        ],
+        "familyIds": [
+          "F28"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "545f7f5a39982fe65981018779be1fa6a8131834e40be26a03f504e195e6a5b4",
+        "cases": [
+          "F29-01",
+          "F29-02",
+          "F29-03",
+          "F29-04",
+          "F29-05",
+          "F29-06",
+          "F29-07",
+          "F29-08"
+        ],
+        "familyIds": [
+          "F29"
+        ],
+        "expectedOutcomes": [
+          [
+            "UNSUPPORTED",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "cases": [
+          "F30-01",
+          "F30-02",
+          "F30-03",
+          "F30-04",
+          "F30-05",
+          "F30-06",
+          "F31-01",
+          "F31-02",
+          "F31-03",
+          "F31-04",
+          "F31-05",
+          "F31-06",
+          "F32-01",
+          "F32-02",
+          "F32-03",
+          "F32-04",
+          "F32-05",
+          "F32-06"
+        ],
+        "familyIds": [
+          "F30",
+          "F31",
+          "F32"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            "BRIDGED"
+          ]
+        ]
+      },
+      {
+        "inputSha256": "004493aabf6b8c3d10705e5ae540efd0e6771812ef2e028ece8eea35581ec907",
+        "cases": [
+          "F30-07",
+          "F30-08",
+          "F31-07",
+          "F31-08",
+          "F32-07",
+          "F32-08"
+        ],
+        "familyIds": [
+          "F30",
+          "F31",
+          "F32"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            "RETAIN_OLD"
+          ]
+        ]
+      }
+    ],
+    "crossLabelDuplicateGroups": [
+      {
+        "inputSha256": "7b6d6aa4e5f62d0c55ec78e99955f0facf4acd1e9dc94a4bb50b869ea5fda559",
+        "cases": [
+          "F01-01",
+          "F01-02",
+          "F01-03",
+          "F01-04",
+          "F01-05",
+          "F01-06",
+          "F02-01",
+          "F02-02",
+          "F02-03",
+          "F02-04",
+          "F02-05",
+          "F02-06"
+        ],
+        "familyIds": [
+          "F01",
+          "F02"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "92250d78f262d23cfaf2850036bdfe19e5131e52004464b11910e52ac620c754",
+        "cases": [
+          "F01-07",
+          "F01-08",
+          "F02-07",
+          "F02-08"
+        ],
+        "familyIds": [
+          "F01",
+          "F02"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_INFEASIBLE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "7c9dd65c552b2d22552ef6e82e0ba1d4b9b861c92de504160f462a2cbe930fab",
+        "cases": [
+          "F09-01",
+          "F09-02",
+          "F09-03",
+          "F09-04",
+          "F09-05",
+          "F09-06",
+          "F09-07",
+          "F09-08",
+          "F10-07",
+          "F10-08"
+        ],
+        "familyIds": [
+          "F09",
+          "F10"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_INFEASIBLE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "2ea768572185b7bb1a7d19a53e45289c00ae645d15ebf3911b5f8448cc84617c",
+        "cases": [
+          "F13-01",
+          "F13-02",
+          "F13-03",
+          "F13-04",
+          "F13-05",
+          "F13-06",
+          "F14-01",
+          "F14-02",
+          "F14-03",
+          "F14-04",
+          "F14-05",
+          "F14-06",
+          "F14-07",
+          "F14-08"
+        ],
+        "familyIds": [
+          "F13",
+          "F14"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "cases": [
+          "F17-01",
+          "F17-02",
+          "F17-03",
+          "F17-04",
+          "F17-05",
+          "F17-06",
+          "F21-01",
+          "F21-03",
+          "F21-05",
+          "F22-01",
+          "F22-02",
+          "F22-03",
+          "F22-04",
+          "F22-05",
+          "F22-06"
+        ],
+        "familyIds": [
+          "F17",
+          "F21",
+          "F22"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "ea1b223f2bca7547d130e8e458d4063a96df3478107952e2f22a6e9a145a2fb6",
+        "cases": [
+          "F17-07",
+          "F17-08",
+          "F21-07"
+        ],
+        "familyIds": [
+          "F17",
+          "F21"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_INFEASIBLE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "7881aa720850a6a866abbd229cff2cd0a494692165038821c2ee87271f48ddda",
+        "cases": [
+          "F23-01",
+          "F23-02",
+          "F23-03",
+          "F23-04",
+          "F23-05",
+          "F23-06",
+          "F25-01",
+          "F25-02",
+          "F25-03",
+          "F25-04",
+          "F25-05",
+          "F25-06"
+        ],
+        "familyIds": [
+          "F23",
+          "F25"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            null
+          ]
+        ]
+      },
+      {
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "cases": [
+          "F30-01",
+          "F30-02",
+          "F30-03",
+          "F30-04",
+          "F30-05",
+          "F30-06",
+          "F31-01",
+          "F31-02",
+          "F31-03",
+          "F31-04",
+          "F31-05",
+          "F31-06",
+          "F32-01",
+          "F32-02",
+          "F32-03",
+          "F32-04",
+          "F32-05",
+          "F32-06"
+        ],
+        "familyIds": [
+          "F30",
+          "F31",
+          "F32"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            "BRIDGED"
+          ]
+        ]
+      },
+      {
+        "inputSha256": "004493aabf6b8c3d10705e5ae540efd0e6771812ef2e028ece8eea35581ec907",
+        "cases": [
+          "F30-07",
+          "F30-08",
+          "F31-07",
+          "F31-08",
+          "F32-07",
+          "F32-08"
+        ],
+        "familyIds": [
+          "F30",
+          "F31",
+          "F32"
+        ],
+        "expectedOutcomes": [
+          [
+            "CHECKED_CANDIDATE",
+            "RETAIN_OLD"
+          ]
+        ]
+      }
+    ],
+    "conflictingExpectedOutcomeGroups": [],
+    "familiesWithEightDistinctInputs": 2,
+    "structuralFamilyQualification": "NOT_ESTABLISHED",
+    "independentlyFreshPopulation": "NOT_ESTABLISHED",
+    "protectedAdmission": false,
+    "originalCasesChanged": 0,
+    "newSemanticCaseExecutions": 0,
+    "bytesRead": 1021465,
+    "wallMs": 228.612869,
+    "perFamily": [
+      {
+        "familyId": "F01",
+        "family": "Three-stage fixed proposal-reservation-dispatch pipeline with delayed reconciliation output",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F02",
+        "family": "Terms publisher racing a reservation reader and a delayed provider callback",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F03",
+        "family": "Two individually admitted dispatch components sharing one exposure cell",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F04",
+        "family": "Ring of fixed components with a circular input/output dependency",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 6,
+        "repeatedOriginalInputSlots": 2,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F05",
+        "family": "Fork/join institution requiring both original approval branches before dispatch",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 5,
+        "repeatedOriginalInputSlots": 3,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F06",
+        "family": "Diamond composition whose branches share one original reservation identity",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 5,
+        "repeatedOriginalInputSlots": 3,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F07",
+        "family": "Star composition of several consumers competing for one finite capital cell",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 5,
+        "repeatedOriginalInputSlots": 3,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F08",
+        "family": "Two otherwise disconnected component groups coupled by one shared source revision",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 5,
+        "repeatedOriginalInputSlots": 3,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F09",
+        "family": "Two fixed components acquiring shared locks in opposite admitted orders",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 1,
+        "repeatedOriginalInputSlots": 7,
+        "registeredUsefulPositives": 0
+      },
+      {
+        "familyId": "F10",
+        "family": "Lock hierarchy composition with a well-founded original acquisition order",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F11",
+        "family": "Correlated-world interfaces referring to one common finite world cell",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 8,
+        "repeatedOriginalInputSlots": 0,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F12",
+        "family": "Two independent world cells with a separate explicitly admitted coupling constraint",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 8,
+        "repeatedOriginalInputSlots": 0,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F13",
+        "family": "Private-message channel connecting components whose public observations are insufficient",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F14",
+        "family": "Mandatory public-disclosure component preceding a private local continuation",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 1,
+        "repeatedOriginalInputSlots": 7,
+        "registeredUsefulPositives": 8
+      },
+      {
+        "familyId": "F15",
+        "family": "Calendar-gated component coupled to reservation expiry and delayed callback state",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F16",
+        "family": "UNKNOWN-observation component whose legal quiescence retains capacity",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F17",
+        "family": "Must-output component composed with a context that may legally refuse the matching input",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F18",
+        "family": "May-output component with several lawful continuation choices in its context language",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F19",
+        "family": "Atomic multi-cell update composed with an interleaving observer contract",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F20",
+        "family": "Two separate atomic updates exposing an admitted intermediate shared state",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F21",
+        "family": "Rendezvous ports versus buffered fixed ports with explicit finite queue state",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 4,
+        "repeatedOriginalInputSlots": 4,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F22",
+        "family": "Port-renaming compatibility among supplied admitted interface revisions",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F23",
+        "family": "Nonblocking context language requiring an original completion-enabling input",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F24",
+        "family": "Nonempty sound context subset excluding an independently represented compatible environment",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F25",
+        "family": "Maximally-permissive finite context language checked against exhaustive small contexts",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F26",
+        "family": "Mutual assumptions with a real inductive initial/transition discharge",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F27",
+        "family": "Actual initial-state family containing both compatible and incompatible component tuples",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F28",
+        "family": "Exact bounded typed transition kernels with independently translated original ports/state",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 7,
+        "repeatedOriginalInputSlots": 1,
+        "registeredUsefulPositives": 6
+      },
+      {
+        "familyId": "F29",
+        "family": "Unqualified broad TypeScript component adjacent to a qualified kernel in a partial claim",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 1,
+        "repeatedOriginalInputSlots": 7,
+        "registeredUsefulPositives": 0
+      },
+      {
+        "familyId": "F30",
+        "family": "Live replacement with an outstanding old-revision provider callback",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 8
+      },
+      {
+        "familyId": "F31",
+        "family": "Live replacement with an existing reservation and unresolved S6 obligation",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 8
+      },
+      {
+        "familyId": "F32",
+        "family": "Several supplied compatible revisions with different context sizes and a checked old-component fallback",
+        "registeredCases": 8,
+        "uniqueOriginalInputs": 2,
+        "repeatedOriginalInputSlots": 6,
+        "registeredUsefulPositives": 8
+      }
+    ],
+    "cases": [
+      {
+        "id": "F01-01",
+        "familyId": "F01",
+        "family": "Three-stage fixed proposal-reservation-dispatch pipeline with delayed reconciliation output",
+        "fixtureSha256": "1324c403ef2b371d2cc1468ff441cab0c9a121a96b389345049d907bea02c42d",
+        "inputSha256": "7b6d6aa4e5f62d0c55ec78e99955f0facf4acd1e9dc94a4bb50b869ea5fda559",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F01-02",
+        "familyId": "F01",
+        "family": "Three-stage fixed proposal-reservation-dispatch pipeline with delayed reconciliation output",
+        "fixtureSha256": "bfa30f1a8966b38251193de2b0736bd8077f1ed33acbc18387212045e4dc2c0f",
+        "inputSha256": "7b6d6aa4e5f62d0c55ec78e99955f0facf4acd1e9dc94a4bb50b869ea5fda559",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F01-03",
+        "familyId": "F01",
+        "family": "Three-stage fixed proposal-reservation-dispatch pipeline with delayed reconciliation output",
+        "fixtureSha256": "6da33eab0af158e64fbbe96b82d9adc5d29b849880dc9f244944095349dfc6b9",
+        "inputSha256": "7b6d6aa4e5f62d0c55ec78e99955f0facf4acd1e9dc94a4bb50b869ea5fda559",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F01-04",
+        "familyId": "F01",
+        "family": "Three-stage fixed proposal-reservation-dispatch pipeline with delayed reconciliation output",
+        "fixtureSha256": "e6e6cdf493400ebf1682dc87ad3028b56d66b66e09e1c663da215ca92994958e",
+        "inputSha256": "7b6d6aa4e5f62d0c55ec78e99955f0facf4acd1e9dc94a4bb50b869ea5fda559",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F01-05",
+        "familyId": "F01",
+        "family": "Three-stage fixed proposal-reservation-dispatch pipeline with delayed reconciliation output",
+        "fixtureSha256": "57b96d063f4f96528e5d51ef5f227ff7a92d4544031530d22df3f16640ae76a1",
+        "inputSha256": "7b6d6aa4e5f62d0c55ec78e99955f0facf4acd1e9dc94a4bb50b869ea5fda559",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F01-06",
+        "familyId": "F01",
+        "family": "Three-stage fixed proposal-reservation-dispatch pipeline with delayed reconciliation output",
+        "fixtureSha256": "5b756a8360c1ee28b3da2bb54c9e91aa3e225b36b8289c2adca86227b57e6fd3",
+        "inputSha256": "7b6d6aa4e5f62d0c55ec78e99955f0facf4acd1e9dc94a4bb50b869ea5fda559",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F01-07",
+        "familyId": "F01",
+        "family": "Three-stage fixed proposal-reservation-dispatch pipeline with delayed reconciliation output",
+        "fixtureSha256": "1d929858a92b0c5f43c647b80c4694ba12db5150cf7e53f2d23d245c100e6ef4",
+        "inputSha256": "92250d78f262d23cfaf2850036bdfe19e5131e52004464b11910e52ac620c754",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F01-08",
+        "familyId": "F01",
+        "family": "Three-stage fixed proposal-reservation-dispatch pipeline with delayed reconciliation output",
+        "fixtureSha256": "369d89a64b8c5e1493e7634bb2ed3c68b4924639c40bba7cad5c3f728c155502",
+        "inputSha256": "92250d78f262d23cfaf2850036bdfe19e5131e52004464b11910e52ac620c754",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F02-01",
+        "familyId": "F02",
+        "family": "Terms publisher racing a reservation reader and a delayed provider callback",
+        "fixtureSha256": "daa4016c4b0534aa85550f79c265682826b0ecd081873e74109de7f184c23334",
+        "inputSha256": "7b6d6aa4e5f62d0c55ec78e99955f0facf4acd1e9dc94a4bb50b869ea5fda559",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F02-02",
+        "familyId": "F02",
+        "family": "Terms publisher racing a reservation reader and a delayed provider callback",
+        "fixtureSha256": "fdbe0d81d1addfc6f1a462732d2bf7fa19875eaa16976aa557eee630cb383108",
+        "inputSha256": "7b6d6aa4e5f62d0c55ec78e99955f0facf4acd1e9dc94a4bb50b869ea5fda559",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F02-03",
+        "familyId": "F02",
+        "family": "Terms publisher racing a reservation reader and a delayed provider callback",
+        "fixtureSha256": "c92d0bb0de83a3753222ff01d2c3877d3a7004fd238b1dbc0b581246c6a66ae7",
+        "inputSha256": "7b6d6aa4e5f62d0c55ec78e99955f0facf4acd1e9dc94a4bb50b869ea5fda559",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F02-04",
+        "familyId": "F02",
+        "family": "Terms publisher racing a reservation reader and a delayed provider callback",
+        "fixtureSha256": "b19349324d0f5f287426f4dd40ebfbc8fb16e18a1c2e31c9c363677f7abfb7ef",
+        "inputSha256": "7b6d6aa4e5f62d0c55ec78e99955f0facf4acd1e9dc94a4bb50b869ea5fda559",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F02-05",
+        "familyId": "F02",
+        "family": "Terms publisher racing a reservation reader and a delayed provider callback",
+        "fixtureSha256": "5a9ce00e5b0d1a7c8f4b4c31410e15ae0e1e2dd0713750bb3e281d49fe7624f1",
+        "inputSha256": "7b6d6aa4e5f62d0c55ec78e99955f0facf4acd1e9dc94a4bb50b869ea5fda559",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F02-06",
+        "familyId": "F02",
+        "family": "Terms publisher racing a reservation reader and a delayed provider callback",
+        "fixtureSha256": "503a4c77b2feb410c7c724e1881b73368070c687df6bb3ec69e8a9b3eb17951b",
+        "inputSha256": "7b6d6aa4e5f62d0c55ec78e99955f0facf4acd1e9dc94a4bb50b869ea5fda559",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F02-07",
+        "familyId": "F02",
+        "family": "Terms publisher racing a reservation reader and a delayed provider callback",
+        "fixtureSha256": "f9a748203c443196fed5cba76438f897c7daf5fd4ec54f1cde39a468f363fdae",
+        "inputSha256": "92250d78f262d23cfaf2850036bdfe19e5131e52004464b11910e52ac620c754",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F02-08",
+        "familyId": "F02",
+        "family": "Terms publisher racing a reservation reader and a delayed provider callback",
+        "fixtureSha256": "5beeb9ba6d6c1c9bfca686bdb3ec074cab76fffc56267a08e5b94d57f25b4f62",
+        "inputSha256": "92250d78f262d23cfaf2850036bdfe19e5131e52004464b11910e52ac620c754",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F03-01",
+        "familyId": "F03",
+        "family": "Two individually admitted dispatch components sharing one exposure cell",
+        "fixtureSha256": "1b24aaae28799232eb81408a9d3343202af6165b7b681a92b63473128097d476",
+        "inputSha256": "ab723bdd91938eb61d54fef661d23e35cc84eaddef1b93d4d43b57dc31e32948",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F03-02",
+        "familyId": "F03",
+        "family": "Two individually admitted dispatch components sharing one exposure cell",
+        "fixtureSha256": "18ee0a8e2f4714a4b6e6d3e5f333bf416ae6bd7646420366a9361165c49f68f9",
+        "inputSha256": "ab723bdd91938eb61d54fef661d23e35cc84eaddef1b93d4d43b57dc31e32948",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F03-03",
+        "familyId": "F03",
+        "family": "Two individually admitted dispatch components sharing one exposure cell",
+        "fixtureSha256": "3a294bc67226a50b0bff5adf72627af0d46b34bcc126b3942f91011907a3a3f1",
+        "inputSha256": "ab723bdd91938eb61d54fef661d23e35cc84eaddef1b93d4d43b57dc31e32948",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F03-04",
+        "familyId": "F03",
+        "family": "Two individually admitted dispatch components sharing one exposure cell",
+        "fixtureSha256": "133b63d17c23f9f84638648aedeae741a3e8922531e61776a2d61591b917f79e",
+        "inputSha256": "ab723bdd91938eb61d54fef661d23e35cc84eaddef1b93d4d43b57dc31e32948",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F03-05",
+        "familyId": "F03",
+        "family": "Two individually admitted dispatch components sharing one exposure cell",
+        "fixtureSha256": "e35a61a5db368d7ae36293228db8c31197d7db0aef6573cfa96b6c3f981835a5",
+        "inputSha256": "ab723bdd91938eb61d54fef661d23e35cc84eaddef1b93d4d43b57dc31e32948",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F03-06",
+        "familyId": "F03",
+        "family": "Two individually admitted dispatch components sharing one exposure cell",
+        "fixtureSha256": "927bb46a5a5762a735795a8927ba67f617ee5b2242a5aef052ec434b109ee94e",
+        "inputSha256": "ab723bdd91938eb61d54fef661d23e35cc84eaddef1b93d4d43b57dc31e32948",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F03-07",
+        "familyId": "F03",
+        "family": "Two individually admitted dispatch components sharing one exposure cell",
+        "fixtureSha256": "492d8511824612a13e97abbf0e6a265375b0f34d283abdfde5cab467370ec38f",
+        "inputSha256": "aefaacef69cdf3f3cb9bacc815f3072fd57a86aa0018623ba7dfa18e42e76556",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F03-08",
+        "familyId": "F03",
+        "family": "Two individually admitted dispatch components sharing one exposure cell",
+        "fixtureSha256": "b2677154ddfe075eb6a158c0b1b30ebaee6701077ba0c7aeb957261dc43b47d2",
+        "inputSha256": "aefaacef69cdf3f3cb9bacc815f3072fd57a86aa0018623ba7dfa18e42e76556",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F04-01",
+        "familyId": "F04",
+        "family": "Ring of fixed components with a circular input/output dependency",
+        "fixtureSha256": "bd5362ad5f50839a8e701ee5b120e07820c6535db693ca5cb3c8139580906429",
+        "inputSha256": "4d494b58fe190000bff997edb5b6efb689a862360145b9835b23eda67f7a2000",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F04-02",
+        "familyId": "F04",
+        "family": "Ring of fixed components with a circular input/output dependency",
+        "fixtureSha256": "85050e54b3328116df9da7f47e3719d4a1f8be97528cc8ec6cba074fd19c7fbc",
+        "inputSha256": "6158c16af850225ef5b05417caff12081cfe3741c64291c9a917755e55ae2952",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F04-03",
+        "familyId": "F04",
+        "family": "Ring of fixed components with a circular input/output dependency",
+        "fixtureSha256": "d46d1f592473e0f06c312e64df58ed6e646aafafa9733f1fd803c9f9bde02ce1",
+        "inputSha256": "2b8a416cc21f7366d6fc7c92b8753e4644e64153e2b55c857c238f309d7fca62",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F04-04",
+        "familyId": "F04",
+        "family": "Ring of fixed components with a circular input/output dependency",
+        "fixtureSha256": "376ed5ec160c0fafe7462c0a6118c82ad5583f68400b9f2a1c38beec99bd903c",
+        "inputSha256": "9d5e9b3a73e6531a4d0a82bd35059303b3ee4cd943f09206e57b34a1fd029f22",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F04-05",
+        "familyId": "F04",
+        "family": "Ring of fixed components with a circular input/output dependency",
+        "fixtureSha256": "ab91464c0d883941c282af809e9444ee9af8362b0600e5913e6d767afa51c2b0",
+        "inputSha256": "4d494b58fe190000bff997edb5b6efb689a862360145b9835b23eda67f7a2000",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F04-06",
+        "familyId": "F04",
+        "family": "Ring of fixed components with a circular input/output dependency",
+        "fixtureSha256": "dd048d74a6fbe4baf3738c3007562050110c633a55fca381249487735edffc05",
+        "inputSha256": "6158c16af850225ef5b05417caff12081cfe3741c64291c9a917755e55ae2952",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F04-07",
+        "familyId": "F04",
+        "family": "Ring of fixed components with a circular input/output dependency",
+        "fixtureSha256": "1a003a16ab1e84df20cb6a6c82b5083850d5ed6a6c507131fa76c05e55a23052",
+        "inputSha256": "6c48af8440f43e9dac6e5779aa3782249e6d330a19eba10334356937650a79b6",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F04-08",
+        "familyId": "F04",
+        "family": "Ring of fixed components with a circular input/output dependency",
+        "fixtureSha256": "7f7661913db526e62db991efdb342c6a6033c00e5e235bc8d732f02228890e7a",
+        "inputSha256": "6a5e8af239bc3fd04571a3cf5d96bdde049e113b96d2b58d46a8109c9295cc2d",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F05-01",
+        "familyId": "F05",
+        "family": "Fork/join institution requiring both original approval branches before dispatch",
+        "fixtureSha256": "4756dc26c6f7c7218644510352dd63baf5cee1b99659f179c5fca5aee03b419b",
+        "inputSha256": "1c94887cb66b9d1ad7c3023706adcad78e00c799a0c33342677d396a65a4fb94",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F05-02",
+        "familyId": "F05",
+        "family": "Fork/join institution requiring both original approval branches before dispatch",
+        "fixtureSha256": "eb0ed79954721fdd932c92824eed7054fd20e64931e549233b429fd72bb0ea40",
+        "inputSha256": "aa57a1aedcbcf4fdbf523a105c8269f5caf6c32ba1d112c83494d2945afaf7e8",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F05-03",
+        "familyId": "F05",
+        "family": "Fork/join institution requiring both original approval branches before dispatch",
+        "fixtureSha256": "805034029b4f881d450336f8f67039193cf72e739b5f87058ac9d32af821722d",
+        "inputSha256": "b9210b3e8d0841a67c296ee2064742e8b47af8ab71edc420db7559bc9613b0ed",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F05-04",
+        "familyId": "F05",
+        "family": "Fork/join institution requiring both original approval branches before dispatch",
+        "fixtureSha256": "209bbf0e1fd63df8a315f7106481b322668eaeb8af70d3cf092db79efd2a66a6",
+        "inputSha256": "1c94887cb66b9d1ad7c3023706adcad78e00c799a0c33342677d396a65a4fb94",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F05-05",
+        "familyId": "F05",
+        "family": "Fork/join institution requiring both original approval branches before dispatch",
+        "fixtureSha256": "711551d5a3be3077313b20aab3f27c87915eccf6a0e54a451e870b4edf232733",
+        "inputSha256": "aa57a1aedcbcf4fdbf523a105c8269f5caf6c32ba1d112c83494d2945afaf7e8",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F05-06",
+        "familyId": "F05",
+        "family": "Fork/join institution requiring both original approval branches before dispatch",
+        "fixtureSha256": "3331f9c69c7f569a6c975565f65137d32cc47d48e5734340c62eec1661e716aa",
+        "inputSha256": "b9210b3e8d0841a67c296ee2064742e8b47af8ab71edc420db7559bc9613b0ed",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F05-07",
+        "familyId": "F05",
+        "family": "Fork/join institution requiring both original approval branches before dispatch",
+        "fixtureSha256": "27ca5c33c04c67acd6b01be6d1655d7eb2d314866169223f3a8f869da893f9f5",
+        "inputSha256": "2e66fe857bb92048cb927b9895d8d834b73ebf0a3fc9cc49fa6c93cbe2894a09",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F05-08",
+        "familyId": "F05",
+        "family": "Fork/join institution requiring both original approval branches before dispatch",
+        "fixtureSha256": "f735dd91034a1bdbd3e3bbeb48d585f239b4d9aad44acf1c7717a637c962846c",
+        "inputSha256": "976bebce37b9bfd82ab8b01f5c054d5eddc8e4a9222ea31f71d6bd0f31eefba4",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F06-01",
+        "familyId": "F06",
+        "family": "Diamond composition whose branches share one original reservation identity",
+        "fixtureSha256": "80bce0e9f75847480d27e5c6f7824cfd3f9840d4c775a8c2c98e9ed07511d99a",
+        "inputSha256": "04bf2c339f935ba5ef96adbfd4e899e10e759cbca089dad251986aeb6bd0b07e",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F06-02",
+        "familyId": "F06",
+        "family": "Diamond composition whose branches share one original reservation identity",
+        "fixtureSha256": "65ca25a0a33b2f45fefe309ec90311b3cbe2192e0786880b064bf9f61493c700",
+        "inputSha256": "271982d9be2a540d4f07156c6d1dc47f2985c5519da44c4ac79bfdbb8bc1e2ac",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F06-03",
+        "familyId": "F06",
+        "family": "Diamond composition whose branches share one original reservation identity",
+        "fixtureSha256": "7055c9ab67ca34fcef6a83b84122fbfeedb61f317da79bd8b22aca4d59e4d64d",
+        "inputSha256": "88e17c1ff17801434f10e84686cff9097525c0f68b4531d21a0569f429eb1766",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F06-04",
+        "familyId": "F06",
+        "family": "Diamond composition whose branches share one original reservation identity",
+        "fixtureSha256": "c10e4376e277fc0a12f38845bd02fb6a85beaaa1f5f9105ac4c938a161372bed",
+        "inputSha256": "04bf2c339f935ba5ef96adbfd4e899e10e759cbca089dad251986aeb6bd0b07e",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F06-05",
+        "familyId": "F06",
+        "family": "Diamond composition whose branches share one original reservation identity",
+        "fixtureSha256": "39f9c954d28f9d8a329d1f32a1ab5a031f52a8fc9a74d7020053d40301c56a20",
+        "inputSha256": "271982d9be2a540d4f07156c6d1dc47f2985c5519da44c4ac79bfdbb8bc1e2ac",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F06-06",
+        "familyId": "F06",
+        "family": "Diamond composition whose branches share one original reservation identity",
+        "fixtureSha256": "5ec132417a5b92e3b25362066b54bd9bcfcd797a01de26f422abbd95a2eb5efe",
+        "inputSha256": "88e17c1ff17801434f10e84686cff9097525c0f68b4531d21a0569f429eb1766",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F06-07",
+        "familyId": "F06",
+        "family": "Diamond composition whose branches share one original reservation identity",
+        "fixtureSha256": "06c063b4dc233844ea8a9ac0ace1b927cfb4cd4e3e4fc8e1cc51a8921fb2bf30",
+        "inputSha256": "e4907b41d15f80f9d76aac6980626aa76ef2102030a234b7ecf01db9fc4c1f98",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F06-08",
+        "familyId": "F06",
+        "family": "Diamond composition whose branches share one original reservation identity",
+        "fixtureSha256": "b3b2a8a735e30d6bc30cc5d1b71c2b2b8564882a2461060760d80aaca303c541",
+        "inputSha256": "e33a930df7422b9ae7fcdba08f430e8d3c35d29cca3cb09fce0234354ea403fc",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F07-01",
+        "familyId": "F07",
+        "family": "Star composition of several consumers competing for one finite capital cell",
+        "fixtureSha256": "9b59b8718b677c4e33c308bebefe1251c96be39823c82b52ee0be151b0e319ba",
+        "inputSha256": "e1608e8e27e1e11059e254fbf036a23f994c1c9827258818672d702d1fb83d73",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F07-02",
+        "familyId": "F07",
+        "family": "Star composition of several consumers competing for one finite capital cell",
+        "fixtureSha256": "9e83b1b72f1195c2cdb649bfd53484a8b67c8a5f098453c83bdd2aa274f617b1",
+        "inputSha256": "02faa3cb0a3881e1b17df6f4cf342a43ee373a699a92080328b81b38fe6476b2",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F07-03",
+        "familyId": "F07",
+        "family": "Star composition of several consumers competing for one finite capital cell",
+        "fixtureSha256": "99722906320e6cfb6cef288473491041afc8506849326f584e9a916ab20de1be",
+        "inputSha256": "4955acd8fc475312fa49e7d2f1862ccb46f83f09fb8ab13a478863e1d0338a2c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F07-04",
+        "familyId": "F07",
+        "family": "Star composition of several consumers competing for one finite capital cell",
+        "fixtureSha256": "e461bea761e1b3a3aa26bdaed5d070985480a8204287a650bd7275bfda664997",
+        "inputSha256": "e1608e8e27e1e11059e254fbf036a23f994c1c9827258818672d702d1fb83d73",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F07-05",
+        "familyId": "F07",
+        "family": "Star composition of several consumers competing for one finite capital cell",
+        "fixtureSha256": "c3882cd4194d067f813b549ae89471a429f17e8b4fb17c274c22a022863b04c7",
+        "inputSha256": "02faa3cb0a3881e1b17df6f4cf342a43ee373a699a92080328b81b38fe6476b2",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F07-06",
+        "familyId": "F07",
+        "family": "Star composition of several consumers competing for one finite capital cell",
+        "fixtureSha256": "ff31eb4cf6b6bf9a0559c50916fba43cf2538275e0a263260e5245db7620a4db",
+        "inputSha256": "4955acd8fc475312fa49e7d2f1862ccb46f83f09fb8ab13a478863e1d0338a2c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F07-07",
+        "familyId": "F07",
+        "family": "Star composition of several consumers competing for one finite capital cell",
+        "fixtureSha256": "3e56f187433822fadb1768ecde6601379e44fc6abd81ba60e2e61b167233efbf",
+        "inputSha256": "9d9b2d895d8614103fc37cf797242a18e850b79b313874f837100a92644930e8",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F07-08",
+        "familyId": "F07",
+        "family": "Star composition of several consumers competing for one finite capital cell",
+        "fixtureSha256": "340337177e2a99aa7f5336f265247932c7ca5effb3b0071a1dfcbd7aa6541b5b",
+        "inputSha256": "69b8ffc4df2498456b0d87480358a318636fbd374b1392c80772d6d700ccae3f",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F08-01",
+        "familyId": "F08",
+        "family": "Two otherwise disconnected component groups coupled by one shared source revision",
+        "fixtureSha256": "1f90ddc5cc09e2fada7d2bbc82c700c1c7beac255294a3cafd770cebd730fa6b",
+        "inputSha256": "768db32523398bb761967c9e8d07474006bc84810737ac664f476982fc5032c2",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F08-02",
+        "familyId": "F08",
+        "family": "Two otherwise disconnected component groups coupled by one shared source revision",
+        "fixtureSha256": "5dcde7fe530f41468f3f53bbf54512bae04f60c6ef91dc508d87b0d53d5b7445",
+        "inputSha256": "f82f51fb2e4843219b6998e97d618364a675f36d93d8f5959fd7903f641a62b1",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F08-03",
+        "familyId": "F08",
+        "family": "Two otherwise disconnected component groups coupled by one shared source revision",
+        "fixtureSha256": "e34b3d50dd2c315064759cc54c130f8979923611c80ada7c630247c2b7f269f4",
+        "inputSha256": "2fad9ffbfd7d474a6415a4a5b92faa4847af1de094b3bab235f4052571e47652",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F08-04",
+        "familyId": "F08",
+        "family": "Two otherwise disconnected component groups coupled by one shared source revision",
+        "fixtureSha256": "4dfd064ed967de51fd71040a9de25cb3a4f26fca26a97bcaad005d32a4228dbf",
+        "inputSha256": "768db32523398bb761967c9e8d07474006bc84810737ac664f476982fc5032c2",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F08-05",
+        "familyId": "F08",
+        "family": "Two otherwise disconnected component groups coupled by one shared source revision",
+        "fixtureSha256": "fbac20d04d334d9c2606329b082ca9a565e5d8a694bf8ba772208d266e9a853e",
+        "inputSha256": "f82f51fb2e4843219b6998e97d618364a675f36d93d8f5959fd7903f641a62b1",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F08-06",
+        "familyId": "F08",
+        "family": "Two otherwise disconnected component groups coupled by one shared source revision",
+        "fixtureSha256": "3710ac0d98d20ce92ef48e8cdbfbf0b7d41a2208d3e978dc3918f02e92aaa24a",
+        "inputSha256": "2fad9ffbfd7d474a6415a4a5b92faa4847af1de094b3bab235f4052571e47652",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F08-07",
+        "familyId": "F08",
+        "family": "Two otherwise disconnected component groups coupled by one shared source revision",
+        "fixtureSha256": "ad1b181d82ce88e8df7cfcad29a2e6ca67580888333ae61f8feb1e06fdbbea3e",
+        "inputSha256": "1d16991a7d8ea3dfe4c4f7fd8d33daf5222bc84708cae8d612f222ab1a094c59",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F08-08",
+        "familyId": "F08",
+        "family": "Two otherwise disconnected component groups coupled by one shared source revision",
+        "fixtureSha256": "1ba3d415efeb0be62c9a161dbd8063da9d1f597da8e1de0e7a4e2bd6d1b07ba1",
+        "inputSha256": "1db4c53f41756e713bdbcb8b317e46b0abb276d1e5904067cc998441b31e82d6",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F09-01",
+        "familyId": "F09",
+        "family": "Two fixed components acquiring shared locks in opposite admitted orders",
+        "fixtureSha256": "d090ff99d4de588f33096573e4bd168dee66c9f48ab88a99a354e9f694bc4aeb",
+        "inputSha256": "7c9dd65c552b2d22552ef6e82e0ba1d4b9b861c92de504160f462a2cbe930fab",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F09-02",
+        "familyId": "F09",
+        "family": "Two fixed components acquiring shared locks in opposite admitted orders",
+        "fixtureSha256": "69464f19d5781c727f081a90592affc5d10ca8b91920f3f4ccf8751b1cde040d",
+        "inputSha256": "7c9dd65c552b2d22552ef6e82e0ba1d4b9b861c92de504160f462a2cbe930fab",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F09-03",
+        "familyId": "F09",
+        "family": "Two fixed components acquiring shared locks in opposite admitted orders",
+        "fixtureSha256": "87d9c5af73c603febc5322c06d03fc6d91166195ed70bb8f883fef64eee2477b",
+        "inputSha256": "7c9dd65c552b2d22552ef6e82e0ba1d4b9b861c92de504160f462a2cbe930fab",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F09-04",
+        "familyId": "F09",
+        "family": "Two fixed components acquiring shared locks in opposite admitted orders",
+        "fixtureSha256": "442486137e36ddee2d30d83619522f1c86cd5d8f6f5c6af73a157ab25718a280",
+        "inputSha256": "7c9dd65c552b2d22552ef6e82e0ba1d4b9b861c92de504160f462a2cbe930fab",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F09-05",
+        "familyId": "F09",
+        "family": "Two fixed components acquiring shared locks in opposite admitted orders",
+        "fixtureSha256": "e04d1f4b2e1ae3dc8cfc58a61633f9c8afb9b89d612c6a07952eb211fa8c6f26",
+        "inputSha256": "7c9dd65c552b2d22552ef6e82e0ba1d4b9b861c92de504160f462a2cbe930fab",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F09-06",
+        "familyId": "F09",
+        "family": "Two fixed components acquiring shared locks in opposite admitted orders",
+        "fixtureSha256": "2cf0986b7bc81ba08ec97536b39f94b2a660d2fdc500f27a0e188a2ec8b2e98e",
+        "inputSha256": "7c9dd65c552b2d22552ef6e82e0ba1d4b9b861c92de504160f462a2cbe930fab",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F09-07",
+        "familyId": "F09",
+        "family": "Two fixed components acquiring shared locks in opposite admitted orders",
+        "fixtureSha256": "53190b663033f51e5d686aec95d0cac4e498d40be7d05b092f516fc28e649edb",
+        "inputSha256": "7c9dd65c552b2d22552ef6e82e0ba1d4b9b861c92de504160f462a2cbe930fab",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F09-08",
+        "familyId": "F09",
+        "family": "Two fixed components acquiring shared locks in opposite admitted orders",
+        "fixtureSha256": "89196f4260c9f56a347845ec78d70c633ae276ca5d279277d47cb794c22aa8bc",
+        "inputSha256": "7c9dd65c552b2d22552ef6e82e0ba1d4b9b861c92de504160f462a2cbe930fab",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F10-01",
+        "familyId": "F10",
+        "family": "Lock hierarchy composition with a well-founded original acquisition order",
+        "fixtureSha256": "3448739fdca86f2c1722dbfc32f3c9fe01ce3dba8668096f31843ebdddcb9fcf",
+        "inputSha256": "bbd5904a45107fe90b7398fe88c39261e2b138840488aed0b6666bd082f08973",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F10-02",
+        "familyId": "F10",
+        "family": "Lock hierarchy composition with a well-founded original acquisition order",
+        "fixtureSha256": "9179553ec24f6b7285dd43566a59bc601f2e4ff4b560fa96ad0c251bb85f5ebe",
+        "inputSha256": "bbd5904a45107fe90b7398fe88c39261e2b138840488aed0b6666bd082f08973",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F10-03",
+        "familyId": "F10",
+        "family": "Lock hierarchy composition with a well-founded original acquisition order",
+        "fixtureSha256": "d9f3c983742307e41da267d6fd6214a3cfcaeb1d2c87ed180699ff51e12552d7",
+        "inputSha256": "bbd5904a45107fe90b7398fe88c39261e2b138840488aed0b6666bd082f08973",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F10-04",
+        "familyId": "F10",
+        "family": "Lock hierarchy composition with a well-founded original acquisition order",
+        "fixtureSha256": "09f9f222d1f5a5e0949c0d7ae9dac9aa0f650caa1b90127a9028c9578bb7ec7d",
+        "inputSha256": "bbd5904a45107fe90b7398fe88c39261e2b138840488aed0b6666bd082f08973",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F10-05",
+        "familyId": "F10",
+        "family": "Lock hierarchy composition with a well-founded original acquisition order",
+        "fixtureSha256": "07c71a98334219f2b3294d21a0fdfedf1ff258312126f9ce3fc3b2a1b69f6bc7",
+        "inputSha256": "bbd5904a45107fe90b7398fe88c39261e2b138840488aed0b6666bd082f08973",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F10-06",
+        "familyId": "F10",
+        "family": "Lock hierarchy composition with a well-founded original acquisition order",
+        "fixtureSha256": "69d68ba5a33d1c026fb98e19c70d0c45a6bb3086290446dce703d65b15bd1d0f",
+        "inputSha256": "bbd5904a45107fe90b7398fe88c39261e2b138840488aed0b6666bd082f08973",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F10-07",
+        "familyId": "F10",
+        "family": "Lock hierarchy composition with a well-founded original acquisition order",
+        "fixtureSha256": "bde52721d41ea5b1b56a42edb90837b3b53786f3f22003846a23e26eb36019bc",
+        "inputSha256": "7c9dd65c552b2d22552ef6e82e0ba1d4b9b861c92de504160f462a2cbe930fab",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F10-08",
+        "familyId": "F10",
+        "family": "Lock hierarchy composition with a well-founded original acquisition order",
+        "fixtureSha256": "a13be6d08b74018d9f9cf85336d584f046bd1252f1e55a0e7cbd19126dae0ace",
+        "inputSha256": "7c9dd65c552b2d22552ef6e82e0ba1d4b9b861c92de504160f462a2cbe930fab",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F11-01",
+        "familyId": "F11",
+        "family": "Correlated-world interfaces referring to one common finite world cell",
+        "fixtureSha256": "81932af890cc0ba9afc1738220e9214d9c9b06b0df4205499943c52072b8e257",
+        "inputSha256": "aa6d68d1712740acd1936562467fbcbcfb454668b09ce2f84bde62359b9fabf1",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F11-02",
+        "familyId": "F11",
+        "family": "Correlated-world interfaces referring to one common finite world cell",
+        "fixtureSha256": "46e3771c5f748c31ddd9c370aff87f390c24aa2c4109c3fa065618fbcbbd071f",
+        "inputSha256": "192f026ee9251a89a7ef36a1eb6eb4eab787d2f68f500de054c2d3e58d192ff4",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F11-03",
+        "familyId": "F11",
+        "family": "Correlated-world interfaces referring to one common finite world cell",
+        "fixtureSha256": "390b4cff937f409f362d423cca1840344ddd8f023bb0ffe5aac90b62686b51df",
+        "inputSha256": "64ef2a7902ccc32f30167d3fd1a0f4be31e810c3eb949a4d82e80c3f474d2311",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F11-04",
+        "familyId": "F11",
+        "family": "Correlated-world interfaces referring to one common finite world cell",
+        "fixtureSha256": "cfa1f566e9ef46a8789e718bb5eaf9a18640fd7e56421d4db0cfe394f954b876",
+        "inputSha256": "3aab8fce4bcf07af446aac5c5c37ec5bdfa7c90655f12cb09fa775ffd18fa4fc",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F11-05",
+        "familyId": "F11",
+        "family": "Correlated-world interfaces referring to one common finite world cell",
+        "fixtureSha256": "b025a08441354536d854ee56e8b9d73338a3f0d79763054eb15f73e1d45d5f8f",
+        "inputSha256": "9ece77382c655f60b12e3846986e86f41eb31ff5c97314520c4f709ed6e76e4f",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F11-06",
+        "familyId": "F11",
+        "family": "Correlated-world interfaces referring to one common finite world cell",
+        "fixtureSha256": "1f55885d898836e5e94636d185b19b2bf07cc692fd7b2880fbb2f7b912b20a51",
+        "inputSha256": "11d57d132444ee159d97bd058ccfa4271e549f6e7d48c2d17bf9effaec9245a6",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F11-07",
+        "familyId": "F11",
+        "family": "Correlated-world interfaces referring to one common finite world cell",
+        "fixtureSha256": "7eb6aeec3b1e41ae2c316d61bf7d6229e59bbdddbd35253522460941b732da15",
+        "inputSha256": "e4ccb3d0661d6dcefdebea95d5f1558440b92fc901761ca533e7f6a9b49c521e",
+        "expected": "UNSUPPORTED",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F11-08",
+        "familyId": "F11",
+        "family": "Correlated-world interfaces referring to one common finite world cell",
+        "fixtureSha256": "23627a5f172f20a65a88a0eca8c5f69327805861f546625c9f8e97e0d4ab3660",
+        "inputSha256": "c07077ee59c0e9c27a2c3a457c725c41b6579f2237d531bae8bd073b63b65a44",
+        "expected": "UNSUPPORTED",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F12-01",
+        "familyId": "F12",
+        "family": "Two independent world cells with a separate explicitly admitted coupling constraint",
+        "fixtureSha256": "27a89e3491f90635a466f93b6baca83b3ba49d28c179ed6ed404aa807838f628",
+        "inputSha256": "87a6713175f9300dc7fc05281deb1dc4245ce93c6ad4297d016360087c38aaf3",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F12-02",
+        "familyId": "F12",
+        "family": "Two independent world cells with a separate explicitly admitted coupling constraint",
+        "fixtureSha256": "e4d9cc988a3cd2531dc36d0b6d4ebf1ac50a39145430ccbf1aea474d778e8eaa",
+        "inputSha256": "ca8e3e12a3edd3c95f5bb90a9865ed948505f3de24c7551a5d3a2a634a6542f1",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F12-03",
+        "familyId": "F12",
+        "family": "Two independent world cells with a separate explicitly admitted coupling constraint",
+        "fixtureSha256": "75adea0f4bdb7fb309f13a90e3ef898faac0dbd9a84110d9c48c01ce26f3d716",
+        "inputSha256": "b6a108fa012ea73a6577a2a80d58d736de47a73e7c8536a74b1bbb36180f30f3",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F12-04",
+        "familyId": "F12",
+        "family": "Two independent world cells with a separate explicitly admitted coupling constraint",
+        "fixtureSha256": "6465333e97de23c017dcc124799b3f5fbeab7761fda07e47503ce82eb0d7d0ae",
+        "inputSha256": "5256d1fdaddcb7b5c0fc2b003b513bdc1177e923d5e074d778b26b1612e51e45",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F12-05",
+        "familyId": "F12",
+        "family": "Two independent world cells with a separate explicitly admitted coupling constraint",
+        "fixtureSha256": "88371d3b54085b33bae0be9221ed951dda35675b6f29dfe1e15b50c993dc2126",
+        "inputSha256": "854fa243027dc0cbaf1e1ed09c65634558e84d77d8789006ee24cf381b5abcd7",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F12-06",
+        "familyId": "F12",
+        "family": "Two independent world cells with a separate explicitly admitted coupling constraint",
+        "fixtureSha256": "57573ccba2263e6320b939e8fdf8f976b1c1139e7b9eeed4c26a77e3aa40cda3",
+        "inputSha256": "f08c72f6d5c7880f1a756dddf8fcb9825551f1a38f9fe25d25f76598fd2ce3de",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F12-07",
+        "familyId": "F12",
+        "family": "Two independent world cells with a separate explicitly admitted coupling constraint",
+        "fixtureSha256": "8543b304acd2f08f3187e8953b2a81043c4487d21631dd17db17be5777648919",
+        "inputSha256": "439854f17fbfe97b3e1731886ce8c45fe3acf0190a74822d0acc76829cb4aa73",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F12-08",
+        "familyId": "F12",
+        "family": "Two independent world cells with a separate explicitly admitted coupling constraint",
+        "fixtureSha256": "78fcc5ea3ccb45304f3cfaf8f6690d310600ea8e3303b9fa0a6d7a820a98eaee",
+        "inputSha256": "3358c52539595d51502e31151aaaadfbe290fb50dba8699dbdbc69deeaeac90a",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F13-01",
+        "familyId": "F13",
+        "family": "Private-message channel connecting components whose public observations are insufficient",
+        "fixtureSha256": "aad94b831c072df09f28741d8e4fd0e700eeb99656b119e7f97201ec34757077",
+        "inputSha256": "2ea768572185b7bb1a7d19a53e45289c00ae645d15ebf3911b5f8448cc84617c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F13-02",
+        "familyId": "F13",
+        "family": "Private-message channel connecting components whose public observations are insufficient",
+        "fixtureSha256": "dfaa1cc70211b8f64633ef63e5b6d6ee06282a0ab0fecb525be940895512a83e",
+        "inputSha256": "2ea768572185b7bb1a7d19a53e45289c00ae645d15ebf3911b5f8448cc84617c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F13-03",
+        "familyId": "F13",
+        "family": "Private-message channel connecting components whose public observations are insufficient",
+        "fixtureSha256": "6c1bc4b8c7b379d5c17a19add6ffcbf4c21ce62e8bbdccfd53f96a3d5fe0e063",
+        "inputSha256": "2ea768572185b7bb1a7d19a53e45289c00ae645d15ebf3911b5f8448cc84617c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F13-04",
+        "familyId": "F13",
+        "family": "Private-message channel connecting components whose public observations are insufficient",
+        "fixtureSha256": "f1f3c951b78a9abe3c512a67948969f4e157a07a20f03b1c4feb2353bfb57520",
+        "inputSha256": "2ea768572185b7bb1a7d19a53e45289c00ae645d15ebf3911b5f8448cc84617c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F13-05",
+        "familyId": "F13",
+        "family": "Private-message channel connecting components whose public observations are insufficient",
+        "fixtureSha256": "88bd3db71580ededcec3a48c380d35f1484f69330b12cee124ef914515bcbb5e",
+        "inputSha256": "2ea768572185b7bb1a7d19a53e45289c00ae645d15ebf3911b5f8448cc84617c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F13-06",
+        "familyId": "F13",
+        "family": "Private-message channel connecting components whose public observations are insufficient",
+        "fixtureSha256": "c82f60244e5979a3a74261349f7947fdbe54b82fa10eade07467be5b906765cf",
+        "inputSha256": "2ea768572185b7bb1a7d19a53e45289c00ae645d15ebf3911b5f8448cc84617c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F13-07",
+        "familyId": "F13",
+        "family": "Private-message channel connecting components whose public observations are insufficient",
+        "fixtureSha256": "6cd07aa6d926c7a231dc8588e94bfff775c686678aed95c4cbbbc5c79b3c69bc",
+        "inputSha256": "3f566f32ca83c7359014670faffcbcc734a434377f9dda1f3695c77dc3ae0866",
+        "expected": "UNSUPPORTED",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F13-08",
+        "familyId": "F13",
+        "family": "Private-message channel connecting components whose public observations are insufficient",
+        "fixtureSha256": "d0c9a599857f4a21159464fc3db50da2aa06007cf6b0056f1403a704ca1ec9dc",
+        "inputSha256": "3f566f32ca83c7359014670faffcbcc734a434377f9dda1f3695c77dc3ae0866",
+        "expected": "UNSUPPORTED",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F14-01",
+        "familyId": "F14",
+        "family": "Mandatory public-disclosure component preceding a private local continuation",
+        "fixtureSha256": "e422ac7a922096ccb3ed8bbfc1425091b7d49549b04919b929aa8fc93a2bc3cc",
+        "inputSha256": "2ea768572185b7bb1a7d19a53e45289c00ae645d15ebf3911b5f8448cc84617c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F14-02",
+        "familyId": "F14",
+        "family": "Mandatory public-disclosure component preceding a private local continuation",
+        "fixtureSha256": "1537147cd80ce277701364c2caea62e793237a2b514239b5b6aa8739f7b77d5b",
+        "inputSha256": "2ea768572185b7bb1a7d19a53e45289c00ae645d15ebf3911b5f8448cc84617c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F14-03",
+        "familyId": "F14",
+        "family": "Mandatory public-disclosure component preceding a private local continuation",
+        "fixtureSha256": "e530fa202d4b32ab6790905bac75d99afa6714ab2cb71698f065553284dcb1b0",
+        "inputSha256": "2ea768572185b7bb1a7d19a53e45289c00ae645d15ebf3911b5f8448cc84617c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F14-04",
+        "familyId": "F14",
+        "family": "Mandatory public-disclosure component preceding a private local continuation",
+        "fixtureSha256": "ffb7a087c559f353e58c55a2df8663dde0f1964603c99b858337368d7af2b31f",
+        "inputSha256": "2ea768572185b7bb1a7d19a53e45289c00ae645d15ebf3911b5f8448cc84617c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F14-05",
+        "familyId": "F14",
+        "family": "Mandatory public-disclosure component preceding a private local continuation",
+        "fixtureSha256": "339f0e926d8ddaae937efe1486d18f7994386fae1178cf5c9d6786ea4baf0126",
+        "inputSha256": "2ea768572185b7bb1a7d19a53e45289c00ae645d15ebf3911b5f8448cc84617c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F14-06",
+        "familyId": "F14",
+        "family": "Mandatory public-disclosure component preceding a private local continuation",
+        "fixtureSha256": "86b128b7dfc7be9c57ea460a860b27c1a8bb206839ac746de8894bb1ab8b749e",
+        "inputSha256": "2ea768572185b7bb1a7d19a53e45289c00ae645d15ebf3911b5f8448cc84617c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F14-07",
+        "familyId": "F14",
+        "family": "Mandatory public-disclosure component preceding a private local continuation",
+        "fixtureSha256": "527839ce5069de7c387392b8f74b067fa35d422531c6e4d24a7972974c83cbb9",
+        "inputSha256": "2ea768572185b7bb1a7d19a53e45289c00ae645d15ebf3911b5f8448cc84617c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F14-08",
+        "familyId": "F14",
+        "family": "Mandatory public-disclosure component preceding a private local continuation",
+        "fixtureSha256": "f82edc7d70d0c0e63f984de761ec585aedce9e21b55dd0672ccaecdfbe1c4adf",
+        "inputSha256": "2ea768572185b7bb1a7d19a53e45289c00ae645d15ebf3911b5f8448cc84617c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F15-01",
+        "familyId": "F15",
+        "family": "Calendar-gated component coupled to reservation expiry and delayed callback state",
+        "fixtureSha256": "67fc91a17b0bf335d02997acd35549403d5d8c8062409b6860ca6baa1176303f",
+        "inputSha256": "86cdda667046fdbfe5b0a377ca05806ea8abe4e511bc5daf6da588754cc41f18",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F15-02",
+        "familyId": "F15",
+        "family": "Calendar-gated component coupled to reservation expiry and delayed callback state",
+        "fixtureSha256": "a6dd81bf7c30dc52b6d1841f74704659dcf30fed97158efb872175c37c6de3f9",
+        "inputSha256": "86cdda667046fdbfe5b0a377ca05806ea8abe4e511bc5daf6da588754cc41f18",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F15-03",
+        "familyId": "F15",
+        "family": "Calendar-gated component coupled to reservation expiry and delayed callback state",
+        "fixtureSha256": "ae2b754dee25027ce4a3d30d5e0af75c493b00f9d14e2e059fde58e6678efb8b",
+        "inputSha256": "86cdda667046fdbfe5b0a377ca05806ea8abe4e511bc5daf6da588754cc41f18",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F15-04",
+        "familyId": "F15",
+        "family": "Calendar-gated component coupled to reservation expiry and delayed callback state",
+        "fixtureSha256": "71ea9d765a3913c45f2a79a223cbcff0e94bfead19bfa70fbc8363d5b4e5a729",
+        "inputSha256": "86cdda667046fdbfe5b0a377ca05806ea8abe4e511bc5daf6da588754cc41f18",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F15-05",
+        "familyId": "F15",
+        "family": "Calendar-gated component coupled to reservation expiry and delayed callback state",
+        "fixtureSha256": "a99e061be41ea22be0eb1ac738d4846a85dc48ba55b9f7a3ddcb80695f81963e",
+        "inputSha256": "86cdda667046fdbfe5b0a377ca05806ea8abe4e511bc5daf6da588754cc41f18",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F15-06",
+        "familyId": "F15",
+        "family": "Calendar-gated component coupled to reservation expiry and delayed callback state",
+        "fixtureSha256": "fe921291db2d6b20872470e89050e973a3af36dde55487bcf2831872bfb54d85",
+        "inputSha256": "86cdda667046fdbfe5b0a377ca05806ea8abe4e511bc5daf6da588754cc41f18",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F15-07",
+        "familyId": "F15",
+        "family": "Calendar-gated component coupled to reservation expiry and delayed callback state",
+        "fixtureSha256": "06d9d7ac3c09e05675bfeb05d5d2fcb8bfbb579980ef1b4116e8cef68483295e",
+        "inputSha256": "731e28f4fc194a30984947a8b7fcf215cfc0975ba6b6d0c15384f86202704e74",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F15-08",
+        "familyId": "F15",
+        "family": "Calendar-gated component coupled to reservation expiry and delayed callback state",
+        "fixtureSha256": "0c87875346ae281cf8c6819ac4ad6ad3f585a4ff8f90f38e001e9b61731d0128",
+        "inputSha256": "731e28f4fc194a30984947a8b7fcf215cfc0975ba6b6d0c15384f86202704e74",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F16-01",
+        "familyId": "F16",
+        "family": "UNKNOWN-observation component whose legal quiescence retains capacity",
+        "fixtureSha256": "6d819e5cae5ad10c680d52e246c23d4b898d7db74bef278f14559e6bf5ca06fb",
+        "inputSha256": "1585f675333ea69ffc41fd5cb184921789e17327bc57b0cf083ace09e358b86c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F16-02",
+        "familyId": "F16",
+        "family": "UNKNOWN-observation component whose legal quiescence retains capacity",
+        "fixtureSha256": "c6f81acc3d7f0b01f3506d3dee8451e3da303438844d5702c45ef37d040a7198",
+        "inputSha256": "1585f675333ea69ffc41fd5cb184921789e17327bc57b0cf083ace09e358b86c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F16-03",
+        "familyId": "F16",
+        "family": "UNKNOWN-observation component whose legal quiescence retains capacity",
+        "fixtureSha256": "5628ff6a01cb28014f0722403e24ff48201666416231d3efd417ec6ab5fcd31c",
+        "inputSha256": "1585f675333ea69ffc41fd5cb184921789e17327bc57b0cf083ace09e358b86c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F16-04",
+        "familyId": "F16",
+        "family": "UNKNOWN-observation component whose legal quiescence retains capacity",
+        "fixtureSha256": "53346ced0792ddee0ae5f8307812c113fe1548d6cdd06681f0d12825d2fb33b4",
+        "inputSha256": "1585f675333ea69ffc41fd5cb184921789e17327bc57b0cf083ace09e358b86c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F16-05",
+        "familyId": "F16",
+        "family": "UNKNOWN-observation component whose legal quiescence retains capacity",
+        "fixtureSha256": "bd3a13d570215152399557b74b78fc656176435190c573acac9994eb386f451d",
+        "inputSha256": "1585f675333ea69ffc41fd5cb184921789e17327bc57b0cf083ace09e358b86c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F16-06",
+        "familyId": "F16",
+        "family": "UNKNOWN-observation component whose legal quiescence retains capacity",
+        "fixtureSha256": "3b5710bfdeeed8b7a067f3ac5dbd3a90a97511595ea3b168d77dca91e2f68fc6",
+        "inputSha256": "1585f675333ea69ffc41fd5cb184921789e17327bc57b0cf083ace09e358b86c",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F16-07",
+        "familyId": "F16",
+        "family": "UNKNOWN-observation component whose legal quiescence retains capacity",
+        "fixtureSha256": "693c4552426b7060ee16b58d666f46e286c7dc810511d5ff65d4ef14976771d5",
+        "inputSha256": "ab8ad01f67fcebcb1967d501b8ff0129f5fce2f97cd81e0b8261a3980501585c",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F16-08",
+        "familyId": "F16",
+        "family": "UNKNOWN-observation component whose legal quiescence retains capacity",
+        "fixtureSha256": "f92a22a6618898f8a7674e234d1725996a95a52c4337bf441515c27cd20c1f36",
+        "inputSha256": "ab8ad01f67fcebcb1967d501b8ff0129f5fce2f97cd81e0b8261a3980501585c",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F17-01",
+        "familyId": "F17",
+        "family": "Must-output component composed with a context that may legally refuse the matching input",
+        "fixtureSha256": "719538d1b0c7803ec4014d7b36b2475823417db4f3385c468a07b2fd836076a0",
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F17-02",
+        "familyId": "F17",
+        "family": "Must-output component composed with a context that may legally refuse the matching input",
+        "fixtureSha256": "8c074a620a097be25aec14864949cef5419bcc0460abb32cee3d36c7303e894d",
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F17-03",
+        "familyId": "F17",
+        "family": "Must-output component composed with a context that may legally refuse the matching input",
+        "fixtureSha256": "bb1730545f4f797b71b10700ee8fae47ede6b6b2a59de755437db7e6cad8c95c",
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F17-04",
+        "familyId": "F17",
+        "family": "Must-output component composed with a context that may legally refuse the matching input",
+        "fixtureSha256": "84812de64bbbca22d0c110711bc1579a7bb87cff7639bc70fd93fe8fe21b3757",
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F17-05",
+        "familyId": "F17",
+        "family": "Must-output component composed with a context that may legally refuse the matching input",
+        "fixtureSha256": "d59bdae128051efb2879ea19af459863a2b5459666c9578fe3260948f75cdb03",
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F17-06",
+        "familyId": "F17",
+        "family": "Must-output component composed with a context that may legally refuse the matching input",
+        "fixtureSha256": "fcd13d80854343cf09dce7a9b280374863de9d0c877e38058128e5b24bff3292",
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F17-07",
+        "familyId": "F17",
+        "family": "Must-output component composed with a context that may legally refuse the matching input",
+        "fixtureSha256": "62ed8748b6c5070d074dfebceeb323e5973088184d7329800afd3b1155453aee",
+        "inputSha256": "ea1b223f2bca7547d130e8e458d4063a96df3478107952e2f22a6e9a145a2fb6",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F17-08",
+        "familyId": "F17",
+        "family": "Must-output component composed with a context that may legally refuse the matching input",
+        "fixtureSha256": "8475dc43713165f857aed86d5efeedcc50f6173762e5dae15f3f279965f59a7a",
+        "inputSha256": "ea1b223f2bca7547d130e8e458d4063a96df3478107952e2f22a6e9a145a2fb6",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F18-01",
+        "familyId": "F18",
+        "family": "May-output component with several lawful continuation choices in its context language",
+        "fixtureSha256": "49bbd417e64005d4b0f27029d90990ca413b23495bb3f9872d563cae334f20c3",
+        "inputSha256": "fa76993e475eca81395da29d097709b9c2a061a1305622c7856faab44a14df5e",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F18-02",
+        "familyId": "F18",
+        "family": "May-output component with several lawful continuation choices in its context language",
+        "fixtureSha256": "9f1a1866e3099c80ddd9a4d8e087ca37d14eb862d4cbd8a5af1f1f237bb14abb",
+        "inputSha256": "fa76993e475eca81395da29d097709b9c2a061a1305622c7856faab44a14df5e",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F18-03",
+        "familyId": "F18",
+        "family": "May-output component with several lawful continuation choices in its context language",
+        "fixtureSha256": "36627ba3ac15624e682a70d6c13e3c07278b71ec8370a2d5f7eebd4de429ef96",
+        "inputSha256": "fa76993e475eca81395da29d097709b9c2a061a1305622c7856faab44a14df5e",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F18-04",
+        "familyId": "F18",
+        "family": "May-output component with several lawful continuation choices in its context language",
+        "fixtureSha256": "d0facca181a164d246955aab90d8225e706f23ee66dbaddabc88e1ccbcbfbfe1",
+        "inputSha256": "fa76993e475eca81395da29d097709b9c2a061a1305622c7856faab44a14df5e",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F18-05",
+        "familyId": "F18",
+        "family": "May-output component with several lawful continuation choices in its context language",
+        "fixtureSha256": "074aaf61ac67d5902adf4be5235fc22e410bdb53b963f4491f21d4823f0efda5",
+        "inputSha256": "fa76993e475eca81395da29d097709b9c2a061a1305622c7856faab44a14df5e",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F18-06",
+        "familyId": "F18",
+        "family": "May-output component with several lawful continuation choices in its context language",
+        "fixtureSha256": "a24ba0150a1f1727188fd09c32f10b70155fc25150809389bea8f8692daae5f1",
+        "inputSha256": "fa76993e475eca81395da29d097709b9c2a061a1305622c7856faab44a14df5e",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F18-07",
+        "familyId": "F18",
+        "family": "May-output component with several lawful continuation choices in its context language",
+        "fixtureSha256": "74091b44d4cf55f8c1842c9739a09924a6dbbbeb24697fd64f83e516d01fca12",
+        "inputSha256": "c1e505bf92553030f1d6b9822ba7512bc7906ad8a417a825dc6e69534df4e8ec",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F18-08",
+        "familyId": "F18",
+        "family": "May-output component with several lawful continuation choices in its context language",
+        "fixtureSha256": "76dd9c466569a3839be48d60aa9beb1c9f67f01cf3922e62432d8c106f611067",
+        "inputSha256": "c1e505bf92553030f1d6b9822ba7512bc7906ad8a417a825dc6e69534df4e8ec",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F19-01",
+        "familyId": "F19",
+        "family": "Atomic multi-cell update composed with an interleaving observer contract",
+        "fixtureSha256": "02a026288863a04094acec0fa64820a1c5860b87e364845e8e77d65aa542f417",
+        "inputSha256": "4dfb9b02f7a01d0fac2aa9cdf40ea02222b0c59a9a0f692955686c8bea60e46d",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F19-02",
+        "familyId": "F19",
+        "family": "Atomic multi-cell update composed with an interleaving observer contract",
+        "fixtureSha256": "e4db63285559c968da98f8d130f6ad64136f0189f83f7847440ba79f43ca088a",
+        "inputSha256": "4dfb9b02f7a01d0fac2aa9cdf40ea02222b0c59a9a0f692955686c8bea60e46d",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F19-03",
+        "familyId": "F19",
+        "family": "Atomic multi-cell update composed with an interleaving observer contract",
+        "fixtureSha256": "3bbd83f85d0598026b733a0b56a00415357cccfd79afe44d5c766746a5e6e231",
+        "inputSha256": "4dfb9b02f7a01d0fac2aa9cdf40ea02222b0c59a9a0f692955686c8bea60e46d",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F19-04",
+        "familyId": "F19",
+        "family": "Atomic multi-cell update composed with an interleaving observer contract",
+        "fixtureSha256": "e285aa3942701a04df3a812d9ed546222817cad3b6f4a8adcaf9d55b2cf88d63",
+        "inputSha256": "4dfb9b02f7a01d0fac2aa9cdf40ea02222b0c59a9a0f692955686c8bea60e46d",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F19-05",
+        "familyId": "F19",
+        "family": "Atomic multi-cell update composed with an interleaving observer contract",
+        "fixtureSha256": "c313cbf393a805cbe0c23eaa35e8c19f2b9aeb82a16f90ea21a69ab2074f493c",
+        "inputSha256": "4dfb9b02f7a01d0fac2aa9cdf40ea02222b0c59a9a0f692955686c8bea60e46d",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F19-06",
+        "familyId": "F19",
+        "family": "Atomic multi-cell update composed with an interleaving observer contract",
+        "fixtureSha256": "2355026e5b1fd028eacd9a81a44dffb0eddd996f932e3849f6e9a40bd5cb493c",
+        "inputSha256": "4dfb9b02f7a01d0fac2aa9cdf40ea02222b0c59a9a0f692955686c8bea60e46d",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F19-07",
+        "familyId": "F19",
+        "family": "Atomic multi-cell update composed with an interleaving observer contract",
+        "fixtureSha256": "d0bf613590ebdce20bd8c6b80085b4d0cd5af9822cfe1a3351822fb10049ab9e",
+        "inputSha256": "4e1b3467e636539c5a2e126f9cfd0445c72677b5277cbf93c3ecf4ad275f5d7e",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F19-08",
+        "familyId": "F19",
+        "family": "Atomic multi-cell update composed with an interleaving observer contract",
+        "fixtureSha256": "86870e58dc4e75a1ec8742840903376e9f7fb3674fcfe8588097297955143b34",
+        "inputSha256": "4e1b3467e636539c5a2e126f9cfd0445c72677b5277cbf93c3ecf4ad275f5d7e",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F20-01",
+        "familyId": "F20",
+        "family": "Two separate atomic updates exposing an admitted intermediate shared state",
+        "fixtureSha256": "4ad677e8762d42983dbcfb9ba1efd8be676c51f61d7a135b70d2743683586c8d",
+        "inputSha256": "430d57e94c81d2d27dd7c8b6e67a0afd0468908060f3117f46254b5edc2b57fe",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F20-02",
+        "familyId": "F20",
+        "family": "Two separate atomic updates exposing an admitted intermediate shared state",
+        "fixtureSha256": "89308c3a0e5af756aec862a1c7a0a64fbc556c2b0cd3499c11a191b36270e538",
+        "inputSha256": "430d57e94c81d2d27dd7c8b6e67a0afd0468908060f3117f46254b5edc2b57fe",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F20-03",
+        "familyId": "F20",
+        "family": "Two separate atomic updates exposing an admitted intermediate shared state",
+        "fixtureSha256": "e18a95d97bb09d92f9211165b9f79a49f5302740b693382b49778ac6f300a923",
+        "inputSha256": "430d57e94c81d2d27dd7c8b6e67a0afd0468908060f3117f46254b5edc2b57fe",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F20-04",
+        "familyId": "F20",
+        "family": "Two separate atomic updates exposing an admitted intermediate shared state",
+        "fixtureSha256": "2f473103b02eed8c08994aee598ad4eaddec101bf48aded07b9c0321c330bd02",
+        "inputSha256": "430d57e94c81d2d27dd7c8b6e67a0afd0468908060f3117f46254b5edc2b57fe",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F20-05",
+        "familyId": "F20",
+        "family": "Two separate atomic updates exposing an admitted intermediate shared state",
+        "fixtureSha256": "a43ba0accfb10f1ddd8e29773ab923d099040ed119f975b3ba0447ab0a8a40dd",
+        "inputSha256": "430d57e94c81d2d27dd7c8b6e67a0afd0468908060f3117f46254b5edc2b57fe",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F20-06",
+        "familyId": "F20",
+        "family": "Two separate atomic updates exposing an admitted intermediate shared state",
+        "fixtureSha256": "249005e0be490b5dd59183d27febb5c588885de5bfbdab066e7bd71a56214bc7",
+        "inputSha256": "430d57e94c81d2d27dd7c8b6e67a0afd0468908060f3117f46254b5edc2b57fe",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F20-07",
+        "familyId": "F20",
+        "family": "Two separate atomic updates exposing an admitted intermediate shared state",
+        "fixtureSha256": "20baf16d0554f8e8bbf116703b62aa37de116356610db4c2ed63b0b5c06a217f",
+        "inputSha256": "a43e555e18cff1d04a94991d53efc91b30085a5b233daf699825728672655077",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F20-08",
+        "familyId": "F20",
+        "family": "Two separate atomic updates exposing an admitted intermediate shared state",
+        "fixtureSha256": "b56e70d0dbe995ca376bbbe6d38d6a00f245f7172a62a31fbd235665231e0697",
+        "inputSha256": "a43e555e18cff1d04a94991d53efc91b30085a5b233daf699825728672655077",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F21-01",
+        "familyId": "F21",
+        "family": "Rendezvous ports versus buffered fixed ports with explicit finite queue state",
+        "fixtureSha256": "102ae0d56d48ba5655fd9af0ac42bd4410a9f521bc1814430923ae5c4767f603",
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F21-02",
+        "familyId": "F21",
+        "family": "Rendezvous ports versus buffered fixed ports with explicit finite queue state",
+        "fixtureSha256": "22c3bfa3015cccc19fff770caf357ec6a43e6de18434aba2ffc71869c71b2cf6",
+        "inputSha256": "d348f6edafae3e96d37e8786aeb4f0fff2518bf5e531d2796987dc13f6f26d35",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F21-03",
+        "familyId": "F21",
+        "family": "Rendezvous ports versus buffered fixed ports with explicit finite queue state",
+        "fixtureSha256": "a4232ba83ca9b3a1fc967bb7629a3bddda2fddc1f5b974dedd6778b67432558a",
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F21-04",
+        "familyId": "F21",
+        "family": "Rendezvous ports versus buffered fixed ports with explicit finite queue state",
+        "fixtureSha256": "36fc0b0ba7f454bee5d34a3c49287e5f4c867840c4ecbb35c3411865370d39d8",
+        "inputSha256": "d348f6edafae3e96d37e8786aeb4f0fff2518bf5e531d2796987dc13f6f26d35",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F21-05",
+        "familyId": "F21",
+        "family": "Rendezvous ports versus buffered fixed ports with explicit finite queue state",
+        "fixtureSha256": "42992af77d53bba6380a65ec41e3ed6273c7489e24f811854b218254738465a4",
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F21-06",
+        "familyId": "F21",
+        "family": "Rendezvous ports versus buffered fixed ports with explicit finite queue state",
+        "fixtureSha256": "3ce08f29f88a5b1a8ab620ed0604823ae129210ec2891f974c6f53363936bc2c",
+        "inputSha256": "d348f6edafae3e96d37e8786aeb4f0fff2518bf5e531d2796987dc13f6f26d35",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F21-07",
+        "familyId": "F21",
+        "family": "Rendezvous ports versus buffered fixed ports with explicit finite queue state",
+        "fixtureSha256": "359e3aa35bd4d9d189ef0a15e28b9b94ebe2011e2d67eeb92ac223eebd4ccadf",
+        "inputSha256": "ea1b223f2bca7547d130e8e458d4063a96df3478107952e2f22a6e9a145a2fb6",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F21-08",
+        "familyId": "F21",
+        "family": "Rendezvous ports versus buffered fixed ports with explicit finite queue state",
+        "fixtureSha256": "841cb84d356978de306c2c0a115a7ac554a70098261df5d64162ce9abc59cbf9",
+        "inputSha256": "8d939338b6cc1d71213a7bda44e2cf41f24203b5d37e36bc2bef1cbb67e2dc1d",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F22-01",
+        "familyId": "F22",
+        "family": "Port-renaming compatibility among supplied admitted interface revisions",
+        "fixtureSha256": "ab86f737cfb56bc65adf40dc0a5970b7148ca888a9f8ed584d7b9bee6a0996e0",
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F22-02",
+        "familyId": "F22",
+        "family": "Port-renaming compatibility among supplied admitted interface revisions",
+        "fixtureSha256": "969e3a2522b3241e456c63e4cae32e92ea48b71b4694188cbe08cfe982dbf51d",
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F22-03",
+        "familyId": "F22",
+        "family": "Port-renaming compatibility among supplied admitted interface revisions",
+        "fixtureSha256": "edb6439877ea44c5f517b501cd0cf1715d7cb2230ce120e5af764cfa4cedfa57",
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F22-04",
+        "familyId": "F22",
+        "family": "Port-renaming compatibility among supplied admitted interface revisions",
+        "fixtureSha256": "585061e21e4476ccfd785182b88098c08f0f573c794e79a1ce92d5f3b2af64dd",
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F22-05",
+        "familyId": "F22",
+        "family": "Port-renaming compatibility among supplied admitted interface revisions",
+        "fixtureSha256": "97569d2e95cc210644e06476dd22c39b3e88d76f5e13206e03c4c1fc45a9642c",
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F22-06",
+        "familyId": "F22",
+        "family": "Port-renaming compatibility among supplied admitted interface revisions",
+        "fixtureSha256": "6c9b088a6848ee2e60cb42ed510de3c6ad14a8054a0eedfee8ce55d7f3c60571",
+        "inputSha256": "350e639575aa6bc8a7277295048944281cf503a5f33b8c59087f9d47b1576a17",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F22-07",
+        "familyId": "F22",
+        "family": "Port-renaming compatibility among supplied admitted interface revisions",
+        "fixtureSha256": "b410ccc9f975091fd09b67cffc485e763cd87928a019feadeec93fcf20e6e66e",
+        "inputSha256": "3d5d1e212fc4c7fe812b3647a5aac4ed9ea0d91ae1f42668c0358c318feece7b",
+        "expected": "UNSUPPORTED",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F22-08",
+        "familyId": "F22",
+        "family": "Port-renaming compatibility among supplied admitted interface revisions",
+        "fixtureSha256": "21c89e0453bd6604bd88d67daaa1234eb6b41b6a14e79747118c40506f14e6aa",
+        "inputSha256": "3d5d1e212fc4c7fe812b3647a5aac4ed9ea0d91ae1f42668c0358c318feece7b",
+        "expected": "UNSUPPORTED",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F23-01",
+        "familyId": "F23",
+        "family": "Nonblocking context language requiring an original completion-enabling input",
+        "fixtureSha256": "6190310b1e453342f491476c699f6b3d29b07befb122e9235bcfe102c613b931",
+        "inputSha256": "7881aa720850a6a866abbd229cff2cd0a494692165038821c2ee87271f48ddda",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F23-02",
+        "familyId": "F23",
+        "family": "Nonblocking context language requiring an original completion-enabling input",
+        "fixtureSha256": "4c07293c9a15f55f0eb22c20418085345f108fbcaefc24f2a271c82e0a56c599",
+        "inputSha256": "7881aa720850a6a866abbd229cff2cd0a494692165038821c2ee87271f48ddda",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F23-03",
+        "familyId": "F23",
+        "family": "Nonblocking context language requiring an original completion-enabling input",
+        "fixtureSha256": "a188890aabf44d1b2f15636bba18613a6d7bb48e94662709028d817ccab78ea6",
+        "inputSha256": "7881aa720850a6a866abbd229cff2cd0a494692165038821c2ee87271f48ddda",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F23-04",
+        "familyId": "F23",
+        "family": "Nonblocking context language requiring an original completion-enabling input",
+        "fixtureSha256": "d5a99ca2d5fc2d7cc0054b5f8a500322a7906878be2a2fc82fbe10a061cd57de",
+        "inputSha256": "7881aa720850a6a866abbd229cff2cd0a494692165038821c2ee87271f48ddda",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F23-05",
+        "familyId": "F23",
+        "family": "Nonblocking context language requiring an original completion-enabling input",
+        "fixtureSha256": "b7bc3121c9f397c1050b724f8ab022272e4efd32503c1a6c61284c150023d261",
+        "inputSha256": "7881aa720850a6a866abbd229cff2cd0a494692165038821c2ee87271f48ddda",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F23-06",
+        "familyId": "F23",
+        "family": "Nonblocking context language requiring an original completion-enabling input",
+        "fixtureSha256": "0c5210a65beda44159ea545cdd722502befe899b394565122dd8cb27c6c6ed7e",
+        "inputSha256": "7881aa720850a6a866abbd229cff2cd0a494692165038821c2ee87271f48ddda",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F23-07",
+        "familyId": "F23",
+        "family": "Nonblocking context language requiring an original completion-enabling input",
+        "fixtureSha256": "8fa90187bb947b06f949aa95d208bfa991a233b37bf2f2b4a32b3c4459908bf5",
+        "inputSha256": "8fe1c6ce51ebbbcb19400a8eeb4780f04bfe4f25dcd6b695fc498a4bf5232cc7",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F23-08",
+        "familyId": "F23",
+        "family": "Nonblocking context language requiring an original completion-enabling input",
+        "fixtureSha256": "6582b24fba914db1316eae004aa5e125e642b69e58507ffd51e78ceea546b40f",
+        "inputSha256": "8fe1c6ce51ebbbcb19400a8eeb4780f04bfe4f25dcd6b695fc498a4bf5232cc7",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F24-01",
+        "familyId": "F24",
+        "family": "Nonempty sound context subset excluding an independently represented compatible environment",
+        "fixtureSha256": "75a79cebecc9fc242effa756c2a696c4c7d1418f9135e66f00fe69da85c126ad",
+        "inputSha256": "675ac0747eebec6564315e32e1a9276ad89cded06a4b4bf376c8427e42aedd89",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F24-02",
+        "familyId": "F24",
+        "family": "Nonempty sound context subset excluding an independently represented compatible environment",
+        "fixtureSha256": "fefc9f71f11e5acb150c4ac271c9b9fca1e52dc3de794e9b866da898a064c1ed",
+        "inputSha256": "675ac0747eebec6564315e32e1a9276ad89cded06a4b4bf376c8427e42aedd89",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F24-03",
+        "familyId": "F24",
+        "family": "Nonempty sound context subset excluding an independently represented compatible environment",
+        "fixtureSha256": "21b6d3a9dfdf7a6ce67025ed3c08b09f49020d540029f3a6a900d7c979f86cfb",
+        "inputSha256": "675ac0747eebec6564315e32e1a9276ad89cded06a4b4bf376c8427e42aedd89",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F24-04",
+        "familyId": "F24",
+        "family": "Nonempty sound context subset excluding an independently represented compatible environment",
+        "fixtureSha256": "1e104fff23863def5a9d84db6221a967d2ec455f3dff41e4e6b1ea4b5f01ca7d",
+        "inputSha256": "675ac0747eebec6564315e32e1a9276ad89cded06a4b4bf376c8427e42aedd89",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F24-05",
+        "familyId": "F24",
+        "family": "Nonempty sound context subset excluding an independently represented compatible environment",
+        "fixtureSha256": "52d60d155b47b1aa88083796b3c4b9c4531af5fde117cd88b0eeb32d1b348f56",
+        "inputSha256": "675ac0747eebec6564315e32e1a9276ad89cded06a4b4bf376c8427e42aedd89",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F24-06",
+        "familyId": "F24",
+        "family": "Nonempty sound context subset excluding an independently represented compatible environment",
+        "fixtureSha256": "91d3d1dee1b4488b6ef3a343cb2b27707fd19c59f4244c2a41bd9939eafb7287",
+        "inputSha256": "675ac0747eebec6564315e32e1a9276ad89cded06a4b4bf376c8427e42aedd89",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F24-07",
+        "familyId": "F24",
+        "family": "Nonempty sound context subset excluding an independently represented compatible environment",
+        "fixtureSha256": "63ca4da7b34215915aa065e2d3efcc7bd4350cbe68186b5c715844974e48549a",
+        "inputSha256": "14359aaf81867ef91beee2c6029160a8eabbc511269b4d78c0844f3e120723e7",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F24-08",
+        "familyId": "F24",
+        "family": "Nonempty sound context subset excluding an independently represented compatible environment",
+        "fixtureSha256": "46d4aaa71144c5c1ee980aa328ea9f9d1239f55a2f35af8f0d2f89a46adbdcfa",
+        "inputSha256": "14359aaf81867ef91beee2c6029160a8eabbc511269b4d78c0844f3e120723e7",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F25-01",
+        "familyId": "F25",
+        "family": "Maximally-permissive finite context language checked against exhaustive small contexts",
+        "fixtureSha256": "d2885fee4886d10f24348db2250d0fa5ed574a0850e868a2d36ff25af56f3d72",
+        "inputSha256": "7881aa720850a6a866abbd229cff2cd0a494692165038821c2ee87271f48ddda",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F25-02",
+        "familyId": "F25",
+        "family": "Maximally-permissive finite context language checked against exhaustive small contexts",
+        "fixtureSha256": "ffe7877005935c786c81c2c9e1e05ab74f20e681cbd7eff9855292f348784076",
+        "inputSha256": "7881aa720850a6a866abbd229cff2cd0a494692165038821c2ee87271f48ddda",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F25-03",
+        "familyId": "F25",
+        "family": "Maximally-permissive finite context language checked against exhaustive small contexts",
+        "fixtureSha256": "9d963d53eec0770e17640fbd34e9e0693ff9435ca8bbd745babc5837fde4edec",
+        "inputSha256": "7881aa720850a6a866abbd229cff2cd0a494692165038821c2ee87271f48ddda",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F25-04",
+        "familyId": "F25",
+        "family": "Maximally-permissive finite context language checked against exhaustive small contexts",
+        "fixtureSha256": "b4d5c26a8113ea280f3e3a1d3ef6419fc9ad36824c7f33b9ca6db4c04f6ce4cf",
+        "inputSha256": "7881aa720850a6a866abbd229cff2cd0a494692165038821c2ee87271f48ddda",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F25-05",
+        "familyId": "F25",
+        "family": "Maximally-permissive finite context language checked against exhaustive small contexts",
+        "fixtureSha256": "27c5fab23327b841217e57da430f62dfdfe977fbfa9d772a494a8a62ce555158",
+        "inputSha256": "7881aa720850a6a866abbd229cff2cd0a494692165038821c2ee87271f48ddda",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F25-06",
+        "familyId": "F25",
+        "family": "Maximally-permissive finite context language checked against exhaustive small contexts",
+        "fixtureSha256": "8d4b787148cd56f0037fa8eb2ada80923cc6e5ba9b7fea66b0255bafdfd7e59e",
+        "inputSha256": "7881aa720850a6a866abbd229cff2cd0a494692165038821c2ee87271f48ddda",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F25-07",
+        "familyId": "F25",
+        "family": "Maximally-permissive finite context language checked against exhaustive small contexts",
+        "fixtureSha256": "9ade7056eb965863b4d7ac6f7a5b7cae239d572fe4732209229219c74b782952",
+        "inputSha256": "540a1fbdbaf0c6d1dddb70e63bf52919124c44e581f7dce7cc40e83d17662745",
+        "expected": "UNSUPPORTED",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F25-08",
+        "familyId": "F25",
+        "family": "Maximally-permissive finite context language checked against exhaustive small contexts",
+        "fixtureSha256": "8e27a1cccf24ebde6ca80ea5c1b25f122aaaee9e74fae95aab70d79cbe5abc81",
+        "inputSha256": "540a1fbdbaf0c6d1dddb70e63bf52919124c44e581f7dce7cc40e83d17662745",
+        "expected": "UNSUPPORTED",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F26-01",
+        "familyId": "F26",
+        "family": "Mutual assumptions with a real inductive initial/transition discharge",
+        "fixtureSha256": "ccabe9f9e729996b78c6530d372e4b34600d9722d18e5e51066a6c208d7c1f46",
+        "inputSha256": "cb61b48020000747d335af22f940a67ad14413a68b99e369ecc876e98176fb37",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F26-02",
+        "familyId": "F26",
+        "family": "Mutual assumptions with a real inductive initial/transition discharge",
+        "fixtureSha256": "a8160eda1aae01736986c03b1b4b0a781966451a6bcf42384d899c05c33b7db0",
+        "inputSha256": "cb61b48020000747d335af22f940a67ad14413a68b99e369ecc876e98176fb37",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F26-03",
+        "familyId": "F26",
+        "family": "Mutual assumptions with a real inductive initial/transition discharge",
+        "fixtureSha256": "9889996490def2350e4f007d7f4b8588440d4cc5e8e025fbedb7fddeaec56533",
+        "inputSha256": "cb61b48020000747d335af22f940a67ad14413a68b99e369ecc876e98176fb37",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F26-04",
+        "familyId": "F26",
+        "family": "Mutual assumptions with a real inductive initial/transition discharge",
+        "fixtureSha256": "c2c54fcf13121367853e049f7f6cc6c3162acf490c27acdec71d802d31d4c521",
+        "inputSha256": "cb61b48020000747d335af22f940a67ad14413a68b99e369ecc876e98176fb37",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F26-05",
+        "familyId": "F26",
+        "family": "Mutual assumptions with a real inductive initial/transition discharge",
+        "fixtureSha256": "28c108afd1e3b646f3975eaff4677d34735b4bdc43452b79326d67de34750b8b",
+        "inputSha256": "cb61b48020000747d335af22f940a67ad14413a68b99e369ecc876e98176fb37",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F26-06",
+        "familyId": "F26",
+        "family": "Mutual assumptions with a real inductive initial/transition discharge",
+        "fixtureSha256": "989030e4060ba228044479416651a4fb207554ee6b0f8777a52c34e5ea13bbf0",
+        "inputSha256": "cb61b48020000747d335af22f940a67ad14413a68b99e369ecc876e98176fb37",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F26-07",
+        "familyId": "F26",
+        "family": "Mutual assumptions with a real inductive initial/transition discharge",
+        "fixtureSha256": "ad50cbd07954bb225c1449e63cff505a2f817b4a84425db0c161d32e18bbe350",
+        "inputSha256": "00d7a83ec8af0d4d03ed8da239c4884231227d5e85c84e0530fb82251c086355",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F26-08",
+        "familyId": "F26",
+        "family": "Mutual assumptions with a real inductive initial/transition discharge",
+        "fixtureSha256": "78fb625f1908ff583ba920ec3534bea4d9277d4e3675c6082f6f140cd6ff3c90",
+        "inputSha256": "00d7a83ec8af0d4d03ed8da239c4884231227d5e85c84e0530fb82251c086355",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F27-01",
+        "familyId": "F27",
+        "family": "Actual initial-state family containing both compatible and incompatible component tuples",
+        "fixtureSha256": "376d7e6de6e5abc2a78b93fb484000bcbd07ec2ffc615bac815c18e47624526d",
+        "inputSha256": "8c67eb280fcdbc14ce441e04ef0218d9cd583d3ef744925a14bcdf98bbe4b675",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F27-02",
+        "familyId": "F27",
+        "family": "Actual initial-state family containing both compatible and incompatible component tuples",
+        "fixtureSha256": "a130014729532330151bd5b3a64cf7430cdba15f294df20a822933b8493b1166",
+        "inputSha256": "8c67eb280fcdbc14ce441e04ef0218d9cd583d3ef744925a14bcdf98bbe4b675",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F27-03",
+        "familyId": "F27",
+        "family": "Actual initial-state family containing both compatible and incompatible component tuples",
+        "fixtureSha256": "636c0d2c9dc78665f2a89332f0625cdeec2156846126a53f3c24fca8be5436eb",
+        "inputSha256": "8c67eb280fcdbc14ce441e04ef0218d9cd583d3ef744925a14bcdf98bbe4b675",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F27-04",
+        "familyId": "F27",
+        "family": "Actual initial-state family containing both compatible and incompatible component tuples",
+        "fixtureSha256": "3e7e369ce924783fd2666537e259ca9514e5828898abafac9228d0a4c44b03de",
+        "inputSha256": "8c67eb280fcdbc14ce441e04ef0218d9cd583d3ef744925a14bcdf98bbe4b675",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F27-05",
+        "familyId": "F27",
+        "family": "Actual initial-state family containing both compatible and incompatible component tuples",
+        "fixtureSha256": "80e60bc23956bc4ebc3f5e6ee276a39d6137d97695429ea5a6f954d6a0192be1",
+        "inputSha256": "8c67eb280fcdbc14ce441e04ef0218d9cd583d3ef744925a14bcdf98bbe4b675",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F27-06",
+        "familyId": "F27",
+        "family": "Actual initial-state family containing both compatible and incompatible component tuples",
+        "fixtureSha256": "8524184e675983ee6d12d3f5bd74b776adaa22087993ab331ac86dad91bcc0b3",
+        "inputSha256": "8c67eb280fcdbc14ce441e04ef0218d9cd583d3ef744925a14bcdf98bbe4b675",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F27-07",
+        "familyId": "F27",
+        "family": "Actual initial-state family containing both compatible and incompatible component tuples",
+        "fixtureSha256": "b3194861a70548ae8d26c24a2512460b309f5f0c27afce8c2b98a4ce5e082344",
+        "inputSha256": "ba4d4d25cc7349d22890c9348db8adce35a7cd20ad3148446f35625cb4eebd99",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F27-08",
+        "familyId": "F27",
+        "family": "Actual initial-state family containing both compatible and incompatible component tuples",
+        "fixtureSha256": "9d60b81e8ad9d5d139d984bc2fc3179033c7b4687a480eeca94bb13e7d74389d",
+        "inputSha256": "ba4d4d25cc7349d22890c9348db8adce35a7cd20ad3148446f35625cb4eebd99",
+        "expected": "CHECKED_INFEASIBLE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F28-01",
+        "familyId": "F28",
+        "family": "Exact bounded typed transition kernels with independently translated original ports/state",
+        "fixtureSha256": "41ea76ee284896712538cd6c05c4b6722fa9e27c0b9c1b4047a1bf203cfed0df",
+        "inputSha256": "382067f1a577c692a8efac73af6de4281ac46ede7fd982dec14d0fe64ae9c14e",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F28-02",
+        "familyId": "F28",
+        "family": "Exact bounded typed transition kernels with independently translated original ports/state",
+        "fixtureSha256": "7dc16fb948f1389aa5298efee8effff08aeee08faa59603af2de76910606bbf5",
+        "inputSha256": "02fef44bd42ad17951788e99d2feb5d785674e3bb14699fe1ed4367fe085673a",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F28-03",
+        "familyId": "F28",
+        "family": "Exact bounded typed transition kernels with independently translated original ports/state",
+        "fixtureSha256": "5f3cf2f332748e791b5e7d4c6b531bc7063e7a65e650bd1e19471dc61225a523",
+        "inputSha256": "c7e4d23a1a064b8d00d9bb30e590ccbd7bbb14eb2aa1db86fcf94aa1877aebbd",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F28-04",
+        "familyId": "F28",
+        "family": "Exact bounded typed transition kernels with independently translated original ports/state",
+        "fixtureSha256": "8a0b26df0135ccfeae9749258a82bf8982f0222cc71c0f9a93a17f327096572a",
+        "inputSha256": "7a303674be058d3c54d89c9838b72bc8a2e61a570c8d806f702515683ec94c62",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F28-05",
+        "familyId": "F28",
+        "family": "Exact bounded typed transition kernels with independently translated original ports/state",
+        "fixtureSha256": "237ea532ba0f49a09a33b059967a97e0d7eb2cde3093fd33b63f29cf66b2f524",
+        "inputSha256": "6c0ea16cd3b8b34e24ed4e0736225cdfa8f0a9225e9b595b17948d60431bcc9d",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F28-06",
+        "familyId": "F28",
+        "family": "Exact bounded typed transition kernels with independently translated original ports/state",
+        "fixtureSha256": "b00a15c6b5e4896c037cff9e1a5e011a3456d4d3695d115dbb4c053b6aead14e",
+        "inputSha256": "382067f1a577c692a8efac73af6de4281ac46ede7fd982dec14d0fe64ae9c14e",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": null,
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F28-07",
+        "familyId": "F28",
+        "family": "Exact bounded typed transition kernels with independently translated original ports/state",
+        "fixtureSha256": "a6d3d83ead5e0629930bfcfe1262726182abf3aa1dd4b6d0fe7c412f5cb57c75",
+        "inputSha256": "701c87738f7e879fe418e56fa0e9f8baa9277071d564ad21209410688a882bf8",
+        "expected": "INCOMPLETE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F28-08",
+        "familyId": "F28",
+        "family": "Exact bounded typed transition kernels with independently translated original ports/state",
+        "fixtureSha256": "d3c4c6c12a57babc049c04d0b116d733eca2c441c1df252736d0276ab23d52c4",
+        "inputSha256": "0ece0b0d14a6a72967d0738223239e168a70190b9c893688e09dbdce91ec6edf",
+        "expected": "INCOMPLETE",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F29-01",
+        "familyId": "F29",
+        "family": "Unqualified broad TypeScript component adjacent to a qualified kernel in a partial claim",
+        "fixtureSha256": "64c7e308f37422d1aa6e93d252f7ab286d086b934992bc16235725ac4be96846",
+        "inputSha256": "545f7f5a39982fe65981018779be1fa6a8131834e40be26a03f504e195e6a5b4",
+        "expected": "UNSUPPORTED",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F29-02",
+        "familyId": "F29",
+        "family": "Unqualified broad TypeScript component adjacent to a qualified kernel in a partial claim",
+        "fixtureSha256": "9cc24bafa547a5c94c57e2c59288ac39c2dfb525c70b07a02d3a60b9c1f5ba4b",
+        "inputSha256": "545f7f5a39982fe65981018779be1fa6a8131834e40be26a03f504e195e6a5b4",
+        "expected": "UNSUPPORTED",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F29-03",
+        "familyId": "F29",
+        "family": "Unqualified broad TypeScript component adjacent to a qualified kernel in a partial claim",
+        "fixtureSha256": "dd18fe036199020ff501253b052d23a283f184de5192abb3e9940747ba58599f",
+        "inputSha256": "545f7f5a39982fe65981018779be1fa6a8131834e40be26a03f504e195e6a5b4",
+        "expected": "UNSUPPORTED",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F29-04",
+        "familyId": "F29",
+        "family": "Unqualified broad TypeScript component adjacent to a qualified kernel in a partial claim",
+        "fixtureSha256": "89fee50532a6f70df854fd4e1f2aed152a76ce02086e4916b48ac10892b6fb6f",
+        "inputSha256": "545f7f5a39982fe65981018779be1fa6a8131834e40be26a03f504e195e6a5b4",
+        "expected": "UNSUPPORTED",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F29-05",
+        "familyId": "F29",
+        "family": "Unqualified broad TypeScript component adjacent to a qualified kernel in a partial claim",
+        "fixtureSha256": "e500a82b4e06f6577b541ca29a6742fb465a859398405c438cdf86ff26e81342",
+        "inputSha256": "545f7f5a39982fe65981018779be1fa6a8131834e40be26a03f504e195e6a5b4",
+        "expected": "UNSUPPORTED",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F29-06",
+        "familyId": "F29",
+        "family": "Unqualified broad TypeScript component adjacent to a qualified kernel in a partial claim",
+        "fixtureSha256": "b160f9bc10fbfda4ec7459df4b3e2c08c8a649ac610b47acdb2ab747a5965823",
+        "inputSha256": "545f7f5a39982fe65981018779be1fa6a8131834e40be26a03f504e195e6a5b4",
+        "expected": "UNSUPPORTED",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F29-07",
+        "familyId": "F29",
+        "family": "Unqualified broad TypeScript component adjacent to a qualified kernel in a partial claim",
+        "fixtureSha256": "e3bc61db36f51a7c0bf3df3d402564e67473c1f4f415f326b8e717d9b2f25f41",
+        "inputSha256": "545f7f5a39982fe65981018779be1fa6a8131834e40be26a03f504e195e6a5b4",
+        "expected": "UNSUPPORTED",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F29-08",
+        "familyId": "F29",
+        "family": "Unqualified broad TypeScript component adjacent to a qualified kernel in a partial claim",
+        "fixtureSha256": "9cd873a372cc242f3cdf422ae6b9702d97aa0309eb211cb551120e592911df44",
+        "inputSha256": "545f7f5a39982fe65981018779be1fa6a8131834e40be26a03f504e195e6a5b4",
+        "expected": "UNSUPPORTED",
+        "replacement": null,
+        "usefulSupportedPositive": false
+      },
+      {
+        "id": "F30-01",
+        "familyId": "F30",
+        "family": "Live replacement with an outstanding old-revision provider callback",
+        "fixtureSha256": "f77181dd66789b8b097463a29cfe24f3269d6fe93665b80978aed031677e62af",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F30-02",
+        "familyId": "F30",
+        "family": "Live replacement with an outstanding old-revision provider callback",
+        "fixtureSha256": "fd73e992cef0ad725ec434a17d7eacf55f0e87b36adb20561cdb0a15fb9ffbe0",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F30-03",
+        "familyId": "F30",
+        "family": "Live replacement with an outstanding old-revision provider callback",
+        "fixtureSha256": "935adb731ff714c1c960de8c53abf166e795d7367b06799c4225760a68eded8e",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F30-04",
+        "familyId": "F30",
+        "family": "Live replacement with an outstanding old-revision provider callback",
+        "fixtureSha256": "a145fb5639af484b76b3471fc70a50a0360ad58ee4b464d03593c721c396c073",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F30-05",
+        "familyId": "F30",
+        "family": "Live replacement with an outstanding old-revision provider callback",
+        "fixtureSha256": "b35399f25e1d3fff8241b8e26227a6b87736f0f36197ffdb30327b391a824198",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F30-06",
+        "familyId": "F30",
+        "family": "Live replacement with an outstanding old-revision provider callback",
+        "fixtureSha256": "105162c66707de54c6d8a1b56f643a67a4d83cb7b92975bc3465adbfa77f0ce5",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F30-07",
+        "familyId": "F30",
+        "family": "Live replacement with an outstanding old-revision provider callback",
+        "fixtureSha256": "5fdfee19b9297e65a7077b8adc1264849603e9a401c67e3583f8a6eaf96da6a7",
+        "inputSha256": "004493aabf6b8c3d10705e5ae540efd0e6771812ef2e028ece8eea35581ec907",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "RETAIN_OLD",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F30-08",
+        "familyId": "F30",
+        "family": "Live replacement with an outstanding old-revision provider callback",
+        "fixtureSha256": "ef500f8fbb87426850ba7c5549d85ff7e6f9536e1a32d5e377bf20f29048f2cd",
+        "inputSha256": "004493aabf6b8c3d10705e5ae540efd0e6771812ef2e028ece8eea35581ec907",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "RETAIN_OLD",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F31-01",
+        "familyId": "F31",
+        "family": "Live replacement with an existing reservation and unresolved S6 obligation",
+        "fixtureSha256": "1c09497f4945ebb2cd60c1e7e771611f29593183abcff9ccc79a86ce5a2ceff4",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F31-02",
+        "familyId": "F31",
+        "family": "Live replacement with an existing reservation and unresolved S6 obligation",
+        "fixtureSha256": "aa4ea1e6a3a12577155068b2688e8c0b4666aa30353ea17de35a35d5e1c6c76a",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F31-03",
+        "familyId": "F31",
+        "family": "Live replacement with an existing reservation and unresolved S6 obligation",
+        "fixtureSha256": "aa2500ebf85e21ef69194be1d6e8428f163c37e5f7afeb6039f81fc7c12ee0a6",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F31-04",
+        "familyId": "F31",
+        "family": "Live replacement with an existing reservation and unresolved S6 obligation",
+        "fixtureSha256": "54c38a58c777dc42fa45de2401b10f4d633aa4edbfef30fe165f2fdf5822144f",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F31-05",
+        "familyId": "F31",
+        "family": "Live replacement with an existing reservation and unresolved S6 obligation",
+        "fixtureSha256": "82083e917ed9c2e71f6c364feed81f4d6b744ef8267c1cc93eb878bf480b885c",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F31-06",
+        "familyId": "F31",
+        "family": "Live replacement with an existing reservation and unresolved S6 obligation",
+        "fixtureSha256": "815c6189f7960b1015c3b952186c998697c4ee9449187f365598e3279b099c9c",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F31-07",
+        "familyId": "F31",
+        "family": "Live replacement with an existing reservation and unresolved S6 obligation",
+        "fixtureSha256": "116bc493d5d271c1300ca9bb3d01e5fe0cfdaf026a6a84b69d9cbf95f95e1fd1",
+        "inputSha256": "004493aabf6b8c3d10705e5ae540efd0e6771812ef2e028ece8eea35581ec907",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "RETAIN_OLD",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F31-08",
+        "familyId": "F31",
+        "family": "Live replacement with an existing reservation and unresolved S6 obligation",
+        "fixtureSha256": "f92f4bddfccd60a9f73a4fce1867af369f2a6349225d44140ff10e616e5f48ae",
+        "inputSha256": "004493aabf6b8c3d10705e5ae540efd0e6771812ef2e028ece8eea35581ec907",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "RETAIN_OLD",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F32-01",
+        "familyId": "F32",
+        "family": "Several supplied compatible revisions with different context sizes and a checked old-component fallback",
+        "fixtureSha256": "cff205b813b0d172632daf7b030601567ece0083484da2124b372b1717cb1a9e",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F32-02",
+        "familyId": "F32",
+        "family": "Several supplied compatible revisions with different context sizes and a checked old-component fallback",
+        "fixtureSha256": "048970f3aeaaab1a2c0b3e7df838c2e2a3cd459832e1bb0cf8acd72b2d52b3a6",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F32-03",
+        "familyId": "F32",
+        "family": "Several supplied compatible revisions with different context sizes and a checked old-component fallback",
+        "fixtureSha256": "58c95d43ead1369957e5ccbdd5293875af066ca220ce704ab89435b891bc52b9",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F32-04",
+        "familyId": "F32",
+        "family": "Several supplied compatible revisions with different context sizes and a checked old-component fallback",
+        "fixtureSha256": "7eae8433a2ddddc9560432d40a9ec66dfa167a50861ef3460e7d947175eff467",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F32-05",
+        "familyId": "F32",
+        "family": "Several supplied compatible revisions with different context sizes and a checked old-component fallback",
+        "fixtureSha256": "198fa8afd29d79a22801b8bc5977448fab942eca20027035c02244572ce0c3c2",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F32-06",
+        "familyId": "F32",
+        "family": "Several supplied compatible revisions with different context sizes and a checked old-component fallback",
+        "fixtureSha256": "adfe65f56436d0bece670f8ef7dd6eb178f66ac537eaf31f645d45ab83194295",
+        "inputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "BRIDGED",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F32-07",
+        "familyId": "F32",
+        "family": "Several supplied compatible revisions with different context sizes and a checked old-component fallback",
+        "fixtureSha256": "3dd4a18d7a05e9cb3937d408a9da077bdf31b81e9a0bce4b24a294718f6176cd",
+        "inputSha256": "004493aabf6b8c3d10705e5ae540efd0e6771812ef2e028ece8eea35581ec907",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "RETAIN_OLD",
+        "usefulSupportedPositive": true
+      },
+      {
+        "id": "F32-08",
+        "familyId": "F32",
+        "family": "Several supplied compatible revisions with different context sizes and a checked old-component fallback",
+        "fixtureSha256": "00c53c2708235f56d0632bf790b5aa2f3e65c593f54951101e8f5f738bd4de9d",
+        "inputSha256": "004493aabf6b8c3d10705e5ae540efd0e6771812ef2e028ece8eea35581ec907",
+        "expected": "CHECKED_CANDIDATE",
+        "replacement": "RETAIN_OLD",
+        "usefulSupportedPositive": true
+      }
+    ]
+  },
+  "producerExecutions": 0,
+  "checkerExecutions": 0,
+  "databaseActions": 0,
+  "listeners": 0,
+  "protectedAdmission": false
+}

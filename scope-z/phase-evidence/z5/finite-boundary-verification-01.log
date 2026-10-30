@@ -1,0 +1,90 @@
+{
+  "actualExit": 0,
+  "afterActualExit": 0,
+  "afterCases": 7,
+  "allOtherPriorMembersAndFailedLogsUnchanged": true,
+  "archivesCreated": 0,
+  "authActions": 0,
+  "backendDiagnostics": 0,
+  "backendExit": 0,
+  "backendSourceFiles": 4471,
+  "beforeActualExit": 1,
+  "beforeAfterContractAndInputsByteIdentical": true,
+  "beforeFailures": [
+    "initial-overflow",
+    "large-shared-domain-row-overflow",
+    "rebound-over-budget-positive"
+  ],
+  "changedPriorMembers": [
+    "finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/checker.py",
+    "finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/kernel.ts",
+    "scope-z/phase-evidence/z5/BLOCKED-CHECKPOINT.md",
+    "scope-z/phase-evidence/z5/costs-and-frontier.md",
+    "scope-z/phase-evidence/z5/engineering-handoff.md",
+    "scope-z/phase-evidence/z5/read-audit.md",
+    "scope-z/phase-evidence/z5/reconstruction/README.md"
+  ],
+  "currentCodeDigest": "f894c1b2299be223a907b22e77cd24ecf6e886f6de56c8f6bb2f02544f387f58",
+  "currentCodeMembers": 37,
+  "databaseActions": 0,
+  "engineeringHandoff": "UNACCEPTED",
+  "existingProcessCases": 41,
+  "existingProcessExit": 0,
+  "furtherCommitAttempts": 0,
+  "gitWhitespaceExits": {
+    "reviewedStage": 0,
+    "worktree": 0
+  },
+  "indexMembers": 7127,
+  "journalIncludedUnchangedHashOnly": true,
+  "listeners": 0,
+  "modelHumanProviderMoneyAndUnmeteredStorageCost": "UNKNOWN",
+  "nativeTargetVerified": false,
+  "newCheckerExecutionsIncludingFailedRun": 32,
+  "newProducerExecutionsIncludingFailedRun": 14,
+  "newPublicSweepExecutions": 0,
+  "newRawProducerCheckerExitRecords": 46,
+  "originalInitialBoundOverflowFixtureIds": [],
+  "originalResourcesAndS6Unknown": "RETAINED_NO_NEW_NATIVE_IDS_ALLOWANCE_REFUND_SETTLEMENT",
+  "priorCheckpoint09Immutable": true,
+  "priorPhysicalMembersVerified": 7134,
+  "protectedOrInstalledQualification": "NOT_RUN",
+  "publicFixtureScanScope": "STATIC_IMPACT_COUNTS_NOT_CURRENT_SOURCE_SEMANTIC_SWEEP",
+  "reportSha256": {
+    "backend-types-13.log": "c3dee7ebf43ae4904d127dcb238545cb5bad1e2978347762241b2ba87546af02",
+    "finite-boundary-01.md": "c53b0e3be7c11c47795e14083de429d8cb7a4c70da2d489626f1c37cbd7c4cba",
+    "finite-boundary-after-01/report.json": "851db5b7eb63d804b6d1fa5332786b51ef63e76b8ba283f6c1b7031b6ab0b9cc",
+    "finite-boundary-before-01/report.json": "3b17e4a8ee730aad2ff109a036b4b32325d071aa3df12c57eb1e5963ea062b18",
+    "process-e2e-04/report.json": "17d4a2883d46994aa2746ac2ab8a8b4b142de8dc72c12359d3f206833313c4a9"
+  },
+  "retryConsumed": true,
+  "reviewedIndexRowsSha256": "aa9065d56dc1a823daa319e5c3e7315283be2078014e3a2490c3b468fb46ea07",
+  "schema": "finnor.z5.finite-boundary-artifact-verification.v1",
+  "selectedOwnedStagedPaths": 2541,
+  "sharedSourceWrites": 0,
+  "slotReleased": false,
+  "sourceMarkdownFilesChecked": 221,
+  "state": "VERIFIED",
+  "timingReceipts": {
+    "backend-types-13-timing.json": {
+      "actualExit": 0,
+      "sha256": "816b945143643af488b72e0a1c1193c45ee88aad479c6410e45daf4044a1421c"
+    },
+    "finite-boundary-after-01-timing.json": {
+      "actualExit": 0,
+      "sha256": "91317683fcdd3058777be6fccc4e506abf53f47a752310f934761acf542635fc"
+    },
+    "finite-boundary-before-01-timing.json": {
+      "actualExit": 1,
+      "sha256": "0f6f98ea396833936a104dc16dd59826d0935504058a9edbc42930733c315ca0"
+    },
+    "process-e2e-04-timing.json": {
+      "actualExit": 0,
+      "sha256": "3c67ea227c2e1bd24752e70837c092a12370efe9fcbce63de8355f05aae6d8cb"
+    }
+  },
+  "unchangedFrozenFixtureMembers": 256,
+  "unchangedPriorImplementationFiles": 34,
+  "wallMs": 3719.144557006075,
+  "whitespaceFindings": []
+}

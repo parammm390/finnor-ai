@@ -1,0 +1,21 @@
+{
+  "state": "AUTHORIZED_LOCAL_INSPECTION_COMPLETE_ORIGINAL_PRESERVED",
+  "path": "/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/recovery-e2e-01/journal.json",
+  "sha256": "35b1edeff9cb49f95e2994f28f55866f3bd9422b865b9dbc458b8276f534ae0f",
+  "bytes": 26971,
+  "tokenIsUuidV4": true,
+  "schemaIsLocalFileOnly": true,
+  "bindingDeclaresNoAuthenticatedRole": true,
+  "bindingDeclaresNoNativeRights": true,
+  "bindingDeclaresOfflineOnlyTenant": true,
+  "recordedWorkerDigestMatchesCurrentFile": true,
+  "currentJournalMatchesBlockedIndexBlob": true,
+  "generator": "finnor-os/scripts/project-z/z5/journal-worker.mjs: randomUUID() local physical-fence claim",
+  "nativeCredentialClaim": false,
+  "rawValuesDisclosed": false,
+  "fileChangedByThisInspection": false,
+  "redactionPerformed": false,
+  "commitRetried": false,
+  "shieldBypassed": false,
+  "findingScope": "Synthetic offline evidence inspected; this is not an assertion that Shield has accepted the file."
+}

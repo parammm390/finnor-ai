@@ -1,0 +1,15 @@
+{
+  "id": "rebound-over-budget-positive",
+  "inputDigest": "2ff93b511a14fd791b9a842e8c2da973a1bdbd29ffe82b3cd2605f21d07604c8",
+  "corruptionDigest": "de5a3f9ef03883e64fb703d989f1025bddc92545dfa427c026b2e8ded6b7bb85",
+  "expected": "INDEPENDENT_REJECTION_OF_REBOUND_POSITIVE",
+  "passed": false,
+  "checker": {
+    "exitCode": 0,
+    "signal": null,
+    "stdout": "{\"checked\":true,\"checker\":\"z5-original-semantics-checker-v1\",\"claimDigest\":\"21de16bece0b313de4a07818553b4cf811ea6328bdfd369ed51fcca81ba922f3\",\"disposition\":\"CHECKED_CANDIDATE\",\"executionAuthorityGranted\":false,\"inputDigest\":\"2ff93b511a14fd791b9a842e8c2da973a1bdbd29ffe82b3cd2605f21d07604c8\",\"operations\":6,\"protectedAdmission\":false,\"schema\":\"finnor.z5.independent-check.v1\",\"scope\":\"ORIGINAL_FINITE_TYPED_KERNEL_SEMANTICS_NOT_NATIVE_TS_SQL_OR_PROTECTED_CUSTODY\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 36.557940000000144
+  }
+}

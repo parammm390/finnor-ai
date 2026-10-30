@@ -1,0 +1,12 @@
+file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/e2e-tools.mjs:13
+    throw Error("EXPLICIT_FRESH_OWNED_EVIDENCE_DIRECTORY_REQUIRED");
+          ^
+
+Error: EXPLICIT_FRESH_OWNED_EVIDENCE_DIRECTORY_REQUIRED
+    at evidenceDirectory (file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/e2e-tools.mjs:13:11)
+    at file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/native-e2e.mjs:10:22
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.23.4

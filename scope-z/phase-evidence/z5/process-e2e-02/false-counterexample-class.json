@@ -1,0 +1,14 @@
+{
+  "id": "false-counterexample-class",
+  "passed": true,
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "{\"checked\":false,\"checker\":\"z5-original-semantics-checker-v1\",\"executionAuthorityGranted\":false,\"reason\":\"FALSE_ORIGINAL_COUNTEREXAMPLE_CLASS\",\"schema\":\"finnor.z5.independent-check.v1\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 58.55098900000007
+  },
+  "corruptionDigest": "ec0b198b9f047d7511d25eefed22af885c781b535cf0bf8311881978fe026c98",
+  "expected": "INDEPENDENT_REJECTION"
+}

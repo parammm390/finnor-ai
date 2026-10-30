@@ -1,0 +1,29 @@
+{
+  "actualExit": 1,
+  "command": [
+    "/usr/bin/flock",
+    "-w",
+    "240",
+    "/home/factory-user/repos/finnor-z-shared-heavy.lock",
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "-c",
+    "import hashlib,json,os,pathlib,subprocess,sys,time\nnode,driver,output=sys.argv[1:]\nmemory={line.split(':',1)[0]:int(line.split(':',1)[1].strip().split()[0])*1024 for line in pathlib.Path('/proc/meminfo').read_text().splitlines()}\navailable=memory['MemAvailable']\nrows=[]\nif available>=4*1024**3:\n for profile in ['process','graph']:\n  started=time.monotonic()\n  result=subprocess.run([node,driver,'--memory-headroom',profile],capture_output=True,text=True,timeout=20,check=False)\n  rows.append({'profile':profile,'expected':'READ_ONLY_MEASURED_MEMORY_HEADROOM_REPORT_EXIT_0_OR_2','passed':False,'actualExit':result.returncode,'stdout':result.stdout,'stderr':result.stderr,'wallMs':(time.monotonic()-started)*1000})\nreport={'schema':'finnor.z5.reconstruction-memory-before.v1','state':'FAILED_MISSING_MEMORY_GUARD_DIAGNOSTIC' if rows else 'BLOCKED_ORIGINAL_PROCESS_MEMORY_GUARD','actualExit':1 if rows else 2,'sourceSha256':hashlib.sha256(pathlib.Path(driver).read_bytes()).hexdigest(),'availableMemoryUnderLockBytes':available,'originalProcessFloorBytes':4*1024**3,'cases':rows,'databaseActions':0,'authActions':0,'listeners':0,'installs':0,'archives':0}\nwith open(output,'x') as stream:\n os.chmod(output,0o600)\n json.dump(report,stream,indent=2,sort_keys=True);stream.write('\\n')\nprint(json.dumps({'state':report['state'],'actualExit':report['actualExit'],'caseExits':[row['actualExit'] for row in rows],'sourceSha256':report['sourceSha256']}))\nsys.exit(report['actualExit'])\n",
+    "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+    "/home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/reconstruct.mjs",
+    "/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/reconstruction-memory-before-01.json"
+  ],
+  "commitAttempts": 0,
+  "databaseAuthOrListenerActions": 0,
+  "failureModelSha256": "c02180ee4f0e77a95e527d0ec7dc1985a745e85792d8c993199cea215bf63fd8",
+  "maxSingleWaitedDescendantRssBytesNotCombinedPeak": 49598464,
+  "modelHumanProviderMoneyCost": "UNKNOWN",
+  "reportPath": "/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/reconstruction-memory-before-01.json",
+  "reportSha256": "354845883bc184bf4131c439d84cf7001bfc3576bfb55b6bf22f8bcae9fa1b84",
+  "reviewedIndexRowsSha256": "aa9065d56dc1a823daa319e5c3e7315283be2078014e3a2490c3b468fb46ea07",
+  "scope": "PRE_CORRECTION_REAL_MEMORY_DIAGNOSTIC_REFUSALS",
+  "waitedDescendantSystemSeconds": 0.03261599999999999,
+  "waitedDescendantUserSeconds": 0.115877,
+  "wallMsIncludingLock": 165.08337900449988
+}

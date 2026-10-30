@@ -1,0 +1,45 @@
+Warning: React version was set to "detect" in eslint-plugin-react settings, but the "react" package is not installed. Assuming latest React version for linting.
+
+/home/factory-user/repos/finnor-z5/src/components/centropy/canvas/BranchRehearsalPanel.tsx
+  50:53  warning  The ref value 'generation.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'generation.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+/home/factory-user/repos/finnor-z5/src/components/centropy/canvas/DecisionAtlasReview.tsx
+  75:35  warning  The ref value 'epoch.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'epoch.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+  76:5   warning  React Hook useEffect has a missing dependency: 'currentBuild'. Either include it or remove the dependency array                                                                                                                                            react-hooks/exhaustive-deps
+
+/home/factory-user/repos/finnor-z5/src/components/centropy/canvas/ElicitationProtocolReview.tsx
+  78:44  warning  The ref value 'epoch.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'epoch.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+/home/factory-user/repos/finnor-z5/src/components/centropy/canvas/ProcedureInductionPanel.tsx
+  48:4   warning  React Hook useCallback has a missing dependency: 'root'. Either include it or remove the dependency array                                                                                                                                                  react-hooks/exhaustive-deps
+  53:20  warning  The ref value 'epoch.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'epoch.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+/home/factory-user/repos/finnor-z5/src/components/centropy/canvas/use-canvas-sources.ts
+  49:6  warning  React Hook useEffect has a missing dependency: 'scope'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  63:6  warning  React Hook useEffect has a missing dependency: 'scope'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  77:6  warning  React Hook useEffect has a missing dependency: 'scope'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  91:6  warning  React Hook useEffect has a missing dependency: 'scope'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/factory-user/repos/finnor-z5/src/components/centropy/pe/use-pe-data.ts
+  110:6  warning  React Hook useEffect has a missing dependency: 'scope'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/factory-user/repos/finnor-z5/src/components/centropy/thread/use-investigation.ts
+  54:6  warning  React Hook useCallback has a missing dependency: 'scope'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  84:6  warning  React Hook useCallback has a missing dependency: 'scope'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/factory-user/repos/finnor-z5/src/components/centropy/world/ConfidentialComputationPanel.tsx
+  67:4  warning  React Hook useCallback has a missing dependency: 'requestScope'. Either include it or remove the dependency array                                                                                                                                         react-hooks/exhaustive-deps
+  71:4  warning  React Hook useEffect has a missing dependency: 'workId'. Either include it or remove the dependency array. If 'setOperation' needs the current value of 'workId', you can also switch to useReducer instead of useState and read 'workId' in the reducer  react-hooks/exhaustive-deps
+
+/home/factory-user/repos/finnor-z5/src/components/centropy/world/InstitutionCompositionPanel.tsx
+  75:6  warning  React Hook useEffect has a missing dependency: 'scope'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/factory-user/repos/finnor-z5/src/components/centropy/world/WorldWorkRecord.tsx
+  58:6  warning  React Hook useEffect has a missing dependency: 'scope'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/factory-user/repos/finnor-z5/src/components/centropy/world/WorldWorkRecord.tsx
+  59:6  warning  React Hook useEffect has a missing dependency: 'scope'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+✖ 18 problems (0 errors, 18 warnings)
+{"schema":"finnor.z5.proposed-source-lint.v1","files":300,"errors":0,"warnings":18,"patchSha256":"18fe740b7bdc1075d5e62a1e7828c1559b1736be70181d97b800d060e48fea55","sharedFilesWritten":0,"installedProof":false}
+{"schema":"finnor.z5.explicit-engineering-tooling.v1","pools":["/home/factory-user/repos/finnor-z-coordinator","/home/factory-user/repos/finnor-z-coordinator/finnor-os"],"borrowedThirdPartyTooling":["eslint","eslint-config-next/core-web-vitals","next/babel"],"borrowedProjectSources":0,"installedZ5Proof":false}

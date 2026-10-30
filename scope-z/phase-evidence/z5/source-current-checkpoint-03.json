@@ -1,0 +1,303 @@
+{
+  "actualHead": "9f3edfd3b4c6758832c53139da0773218062191e",
+  "actualHeadTree": "2dc4d5bc13d22853cf4dc9feb5f6ac7fbf6bb9c9",
+  "baseCheckpoint": {
+    "deltaRule": "Start from base members keyed by path; remove membersRemoved; replace membersChanged and insert membersAdded; sort by path. SHA256 compact sorted-key UTF8 JSON of the complete resulting row array.",
+    "immutable": true,
+    "path": "scope-z/phase-evidence/z5/source-current-checkpoint-02.json",
+    "sha256": "9c39cf41875a37631f5017b5d1af5cf44b6b4a6ad4b5b7def54e67cb239cb533"
+  },
+  "blockers": [
+    {
+      "authorityNeeded": "Explicit user request to fix the flagged file or user review; no inferred permission",
+      "file": "scope-z/phase-evidence/z5/recovery-e2e-01/journal.json",
+      "kind": "SHIELD_COMMIT_DENIAL",
+      "retryAttempted": false,
+      "unchanged": true
+    },
+    {
+      "guardLowered": false,
+      "kind": "INSTALLATION_HEADROOM",
+      "observedFreeBytes": 975097856,
+      "requiredFreeBytes": 8589934592
+    },
+    {
+      "kind": "COORDINATOR_SHARED_INTEGRATION",
+      "migrationNameAssigned": false,
+      "request": "05",
+      "sharedWrites": 0
+    },
+    {
+      "databaseAuthOrListenerAuthority": false,
+      "kind": "NATIVE_AUTHORITY_AND_CUSTODY",
+      "positiveRuntime": "NOT_RUN",
+      "protectedOrFinancialQualification": "NOT_RUN"
+    }
+  ],
+  "branch": "factory/project-z5-institution-linker",
+  "build": {
+    "applicationBuilds": [
+      {
+        "id": null,
+        "path": ".next/BUILD_ID"
+      },
+      {
+        "id": null,
+        "path": "finnor-os/apps/api/.next/BUILD_ID"
+      }
+    ],
+    "coldExtractionReplay": "NOT_RUN",
+    "deliveryReceipt": null,
+    "installation": "NOT_RUN",
+    "installedNativeIdentity": null,
+    "sourceArchive": null
+  },
+  "changedCodeSinceDeniedIndex": [
+    "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/api.ts",
+    "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/schema.sql",
+    "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/service.ts",
+    "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/store.ts",
+    "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/worker.ts",
+    "finnor-os/scripts/project-z/z5/freeze-delivery.py",
+    "finnor-os/scripts/project-z/z5/native-e2e.mjs",
+    "finnor-os/scripts/project-z/z5/reconstruct.mjs"
+  ],
+  "checks": {
+    "backend10": {
+      "borrowedThirdPartyDeclarations": true,
+      "checkedSourceFiles": 4471,
+      "compilerSha256": "3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675",
+      "compilerVersion": "5.9.3",
+      "diagnostics": 0,
+      "exit": 0,
+      "foreignProjectSources": 0,
+      "heapMiB": 4096,
+      "installedZ5Proof": false,
+      "log": "scope-z/phase-evidence/z5/backend-types-10.log",
+      "maxRssBytes": 3408019456,
+      "ownSourceDigest": "151d8ed95299d8f9fd3394020f3558bf44371d7514d182eaff7376b7043d9cfe",
+      "ownSourceFiles": 1485,
+      "rootFiles": 1459,
+      "scriptElapsedSeconds": 70.9,
+      "sharedHeavyLock": "/home/factory-user/repos/finnor-z-shared-heavy.lock",
+      "wallMs": 69437.93478299999
+    },
+    "reusedSourceBoundChecks": {
+      "affectedLint05": 0,
+      "baselineLint03": 0,
+      "checkpoint": "scope-z/phase-evidence/z5/source-current-checkpoint-02.json",
+      "diagnostics01": 0,
+      "frontend05": 0,
+      "localFileRecovery01": 0,
+      "nativeGuard05": 2,
+      "nativeGuardActions": [],
+      "nativeGuardExitExpected": true,
+      "nativeRuntimeCoverageOfNewCorrection": false,
+      "packCheck02": 0,
+      "processE2E02": 0,
+      "publicSweep03": 0,
+      "reason": "UI/shared postimages, SQL, Python/MJS, kernel/checker and public process drivers are byte unchanged; the full backend graph is rerun for the worker-only change.",
+      "sqlParse02": 0,
+      "syntax05": 0,
+      "workspaceManifestCoverageClientForms": 0
+    },
+    "whitespace": {
+      "exit": 0,
+      "scope": "Corrected worker diff; dedicated checkpoint verification separately checks the final owned diff."
+    }
+  },
+  "correction": {
+    "failureModel": "scope-z/phase-evidence/z5/preclaim-exhaustion-failure-model-01.md",
+    "nativeRuntime": "NOT_RUN",
+    "postCodeUnitCampaignAdded": false,
+    "scope": "Only worker.ts changed since checkpoint 02. Exact episode quota failure before local registration now uses the authenticated original prepaid terminal fence. Other preclaim errors, including native capacity deferral, retain original identity."
+  },
+  "createdAt": "2026-10-25T07:24:41.575360+00:00",
+  "currentWorktreeFingerprint": {
+    "algorithm": "Git SHA1 tree algorithm, validated against actual HEAD and preserved index; full metadata membership SHA256 uses sorted-key compact JSON",
+    "algorithmValidatedAgainstActualHeadAndIndex": true,
+    "bytes": 186407629,
+    "computedTreeSha1": "96888acd4805b48eb2ba3e4b5e9b2a92f4346994",
+    "gitObjectsWritten": false,
+    "isCommitOrArchive": false,
+    "members": 6456,
+    "membershipSha256": "cc26dc88e196eba7c863e958f163774d353cb3ee5b16b970c34f825f65bf44a5",
+    "paths": "All indexed project files plus regular/link files under the five owned phase prefixes; checkpoint 02 is now an explicit member; excludes this derived checkpoint and unrelated untracked user launch files.",
+    "snapshotFileExcludedForSelfReference": "scope-z/phase-evidence/z5/source-current-checkpoint-03.json"
+  },
+  "deniedIndex": {
+    "commitRetryAttempted": false,
+    "computedTreeSha1": "0c96857122aee354f07073c00c67da91609a64e4",
+    "currentImplementationMatchesDeniedIndex": false,
+    "flaggedJournalMatchesIndexedBlob": true,
+    "historicalCheckpointSha256": "2f93c405698b212fd4a0f9a49b8519905ec8ebd577de3c63a8d8821016eea416",
+    "members": 6414,
+    "preserved": true,
+    "restagedSinceDenial": false,
+    "stagedOwnedAdditions": 1828
+  },
+  "finalSourceCommit": null,
+  "gate": {
+    "coordinatorGateWritten": false,
+    "engineeringHandoff": "UNACCEPTED",
+    "equippedIncrement": "NOT_RUN",
+    "financial100x": "NOT_RUN",
+    "installedNative": "NOT_RUN",
+    "internalSoftware": "IN_PROGRESS",
+    "operational100x": "NOT_RUN",
+    "productionActivation": false,
+    "protectedAdmission": "NOT_RUN",
+    "slotReleased": false
+  },
+  "integration": {
+    "applied": false,
+    "manifest": "scope-z/phase-evidence/z5/integration/request-05/manifest.json",
+    "manifestSha256": "0b8b818e0bce653bd8cff8867a09aec834efed108e35f84383c1d1a869735aa6",
+    "migration": {
+      "assignedMigrationName": null,
+      "body": "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/schema.sql",
+      "coordinatorMustAssignOrderHeadAndRegenerateBundle": true,
+      "currentPreimages": {
+        "finnor-os/packages/db/migrate.ts": "da1b30e000be4ed00b9bfbc6cb24a08eb81dd9c0164601d706c829440ee3084a",
+        "finnor-os/packages/db/migration-head.ts": "a77a030c1cb2505d73be3a4b7ac1c4ce2b5f2dbc5bc500d79b1a914bff8a889c",
+        "finnor-os/packages/db/migrations-bundle.ts": "0fc4f9ef10acf5d44e9f6f9f26cf329ee20075debe53657d152b4fd03b5a1263"
+      },
+      "sha256": "b461945e729aeee02c90eec947c9b45db1fc5b7fdebb2d808587dcfd151fd71c",
+      "sqlExecuted": false
+    },
+    "patchSha256": "8bb5c37b3f95dcf3d71e6f061136c871a8a5b6fc3f7042d1b7becb3eabb75179",
+    "sharedPaths": 11
+  },
+  "limitations": [
+    "Current source and fingerprints do not replace required committed archive/cold replay.",
+    "Terminal capacity edges, native RLS observations, permit handoff and reconstruction process-group behavior have source checks, not positive native/runtime proof.",
+    "Full coupled finite product; sound context subset only; nonblocking finite-path existence only.",
+    "Public cases are builder controlled; original failures and flagged journal are retained without edits."
+  ],
+  "membersAdded": [
+    {
+      "bytes": 1627,
+      "gitBlob": "ac549371b3351b993e5baabba591962daace8552",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/backend-types-10.log",
+      "sha256": "eefa09e79710acd2cd6dddac0e7dc576f5a9e8a0fb454c31c645f17b884ba831"
+    },
+    {
+      "bytes": 3020,
+      "gitBlob": "03813098d25e03b6c40fbbb8bcc94bee3f3e9717",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/preclaim-exhaustion-failure-model-01.md",
+      "sha256": "3c5f76f3199d5d1084fb920647544127b775dc180a26af05e29a9ad46cfdbc79"
+    },
+    {
+      "bytes": 1818772,
+      "gitBlob": "06c81a8213afa48c2fef17329bb211c20fe65cee",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/source-current-checkpoint-02.json",
+      "sha256": "9c39cf41875a37631f5017b5d1af5cf44b6b4a6ad4b5b7def54e67cb239cb533"
+    }
+  ],
+  "membersChanged": [
+    {
+      "bytes": 15866,
+      "gitBlob": "2be10cefc955744660fc40553c63f33acb7429e9",
+      "mode": "100644",
+      "path": "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/worker.ts",
+      "sha256": "fb7560a067774d919d26d32ae8eaa5f794bd63540fd67d33286a0c507aa737f3"
+    },
+    {
+      "bytes": 8218,
+      "gitBlob": "8827b90fd2afba2f016ff6a5385b7ec2c5c9c97d",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/BLOCKED-CHECKPOINT.md",
+      "sha256": "245f6b6178761a55998221aae47ba16d5fdfa01079db917783578d4613c2a6b5"
+    },
+    {
+      "bytes": 5359,
+      "gitBlob": "f83c5281db419371f357393b548b3675c7c28d89",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/costs-and-frontier.md",
+      "sha256": "ec4f0730e9bfe1e106f93407679c494d435fa59d415bb83965c30637ed46d3e2"
+    },
+    {
+      "bytes": 4338,
+      "gitBlob": "bc9e166b5764acd6c85c48bdc9264c28389ab992",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/coverage.md",
+      "sha256": "78f12b6f0f389791c740ff3907d02943394f151b88956259462d3deeff3785c8"
+    },
+    {
+      "bytes": 9671,
+      "gitBlob": "585ba700b5927c949d9aac9e576e3a3971620287",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/engineering-handoff.md",
+      "sha256": "ba2e42bbe7dabe977883be8d7faf1dd85554cae4087c6e692ac2ecda21a73215"
+    },
+    {
+      "bytes": 9461,
+      "gitBlob": "cad891908537daa9e5046f52d4325b4b1b3dc56a",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/shared-request.md",
+      "sha256": "cd77b49b0c54769ade8e7e722786dc5e5088a96c04d3b8b85f2d6e50eee0ebc3"
+    },
+    {
+      "bytes": 10430,
+      "gitBlob": "28e179b51be4801170f5f0d243f1d6001843553b",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/read-audit.md",
+      "sha256": "cda2d07c45fbb550ea578ae270773012a34bcbd7b82a2e7196ac41c25640e410"
+    },
+    {
+      "bytes": 5708,
+      "gitBlob": "e6ef6d7f9728184c4c85c23d15c166d37c4b964c",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/validation.md",
+      "sha256": "e09b5311cf0d7773c3ed0a241efd301a48c9e3bcd14c69e1448bfc5f1504556d"
+    }
+  ],
+  "membersRemoved": [],
+  "phase": "Z5",
+  "phaseCodeDelta": [
+    {
+      "bytes": 15866,
+      "gitBlob": "2be10cefc955744660fc40553c63f33acb7429e9",
+      "mode": "100644",
+      "path": "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/worker.ts",
+      "sha256": "fb7560a067774d919d26d32ae8eaa5f794bd63540fd67d33286a0c507aa737f3"
+    }
+  ],
+  "phaseCodeDigest": "62c319967fb9464f783dabe297f786f941b1c0219da0de6ed041c2e343f22076",
+  "phaseCodeMembers": 36,
+  "phaseCodeRule": "Preserve the base's phaseCodeFiles order; replace matching paths from phaseCodeDelta; SHA256 compact sorted-key UTF8 JSON of all 36 complete rows.",
+  "retainedFailureEvidence": [
+    "scope-z/phase-evidence/z5/source-commit-shield-01.json",
+    "scope-z/phase-evidence/z5/reconstruction/blocked-source-guard-01.log",
+    "scope-z/phase-evidence/z5/process-e2e-01/report.json",
+    "scope-z/phase-evidence/z5/backend-types-01.log",
+    "scope-z/phase-evidence/z5/backend-types-03.log",
+    "scope-z/phase-evidence/z5/coverage-check-03.log"
+  ],
+  "schema": "finnor.z5.current-source-delta-checkpoint.v1",
+  "scopeObservations": {
+    "archivesCreated": 0,
+    "newDatabaseActions": 0,
+    "newListeners": 0,
+    "newSigners": 0,
+    "outsideOwnedTrackedSourceChanges": [],
+    "userLaunchFilesUntracked": [
+      "scope-z/orchestration/shared-computer-launch/execution.prompt.md",
+      "scope-z/orchestration/shared-computer-launch/runtime-settings.json"
+    ]
+  },
+  "state": "UNCOMMITTED_ENGINEERING_CHECKPOINT_DELIVERY_BLOCKED",
+  "toolchain": {
+    "backendLockSha256": "4116b2a7e02a28b8e49baa4a24a378e5170c5dc66d285075c8cf50bf11b9faed",
+    "fullGraphHeapMiB": 4096,
+    "heavyLock": "/home/factory-user/repos/finnor-z-shared-heavy.lock",
+    "node": "v22.23.4",
+    "nodePath": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+    "npm": "11.19.1",
+    "python": "3.12.3",
+    "rootLockSha256": "af1d36679eb4123ab5f2d9f4668e82e1defc952a45777a74d3dff30c6d16f117"
+  }
+}

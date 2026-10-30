@@ -1,0 +1,17 @@
+{
+  "correctedExtractionLine": "wrapper=re.search(r'const memoryUnderLock = String[.]raw`(.*?)`;',source,re.S).group(1)",
+  "correctedRunnerSha256": "4db1330e6874b372d1b9b44c7bb76163e5c6caf1096cf5479f52fd9425339a1c",
+  "expectedCasesAndThresholdsChanged": false,
+  "failure": "OVER_ESCAPED_REGEX_BEFORE_ANY_GUARD_OR_PAYLOAD_DISPATCH",
+  "freshOutputDirectory": "/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/reconstruction-memory-02",
+  "newlineEncodingCorrections": 3,
+  "oldExtractionLine": "wrapper=re.search(r'const memoryUnderLock = String\\\\.raw`(.*?)`;',source,re.S).group(1)",
+  "originalActualExit": 1,
+  "originalEmptyOutputDirectoryPreserved": "/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/reconstruction-memory-01",
+  "originalTimingPath": "/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/reconstruction-memory-01-timing.json",
+  "originalTimingSha256": "694462eff308bc8046d96b8e40e7af439863565fa4c83854c7b8db144242192e",
+  "productCodeChanged": false,
+  "schema": "finnor.z5.reconstruction-memory-evidence-runner-correction.v1",
+  "sourceArchivesOrNativeActions": 0,
+  "sourceSha256": "88796fa666e99150af354d52105938e7e1361c5ab461f23b7013a8d86d7cb79b"
+}

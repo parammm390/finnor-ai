@@ -1,0 +1,27 @@
+{
+  "actualRawCasePath": "scope-z/phase-evidence/z5/reconstruction-memory-02/finite-boundary/rebound-over-budget-positive.json",
+  "actualRawCaseSha256": "7335f956f9d6b8fcc98c92009d34733d90c94d14b8ce36c0613bd4f0c3e4e42f",
+  "correctedVerificationPath": "scope-z/phase-evidence/z5/reconstruction-memory-verification-02.log",
+  "failure": "POSTCONDITION_VERIFIER_REQUIRED_A_NONEXISTENT_PROTECTED_FIELD_ON_AN_ALREADY_REFUSED_CHECKER_RECORD",
+  "failureActualExit": 1,
+  "failureCpuAndRss": "UNKNOWN",
+  "failureWallMs": 1265.7413919951068,
+  "newProducerCheckerOrNativeExecutionRequired": false,
+  "onlyPermittedRejectedCase": "rebound-over-budget-positive",
+  "onlyPermittedRejectedExit": 1,
+  "onlyPermittedRejectedFormat": {
+    "checked": false,
+    "checker": "z5-original-semantics-checker-v1",
+    "executionAuthorityGranted": false,
+    "reason": "REFUSAL_CANNOT_CARRY_POSITIVE_PROOF",
+    "schema": "finnor.z5.independent-check.v1"
+  },
+  "originalToolLogPreservedPath": "scope-z/phase-evidence/z5/reconstruction-memory-source-verifier-failure-01.log",
+  "originalToolLogSha256": "59abcd759fc1700f7e39e20b98798a7d6aca930073357d2895e62776d9286e89",
+  "originalVerificationPath": "scope-z/phase-evidence/z5/reconstruction-memory-verification-01.log",
+  "originalVerificationSha256": "d23a2ebc350dcf91458895abeeb2f8926f7e3e70715b01fc23f644dae83a59e6",
+  "positiveProducerAndCheckerAuthorityPredicatesUnchanged": true,
+  "productionCodeResourceGuardsInputsAndExpectedValuesChanged": false,
+  "schema": "finnor.z5.source-postcondition-verifier-correction.v1",
+  "sourceSha256": "88796fa666e99150af354d52105938e7e1361c5ab461f23b7013a8d86d7cb79b"
+}

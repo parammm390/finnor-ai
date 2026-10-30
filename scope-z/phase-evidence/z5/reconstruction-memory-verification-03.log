@@ -1,0 +1,51 @@
+{
+  "actualCachedWhitespaceExit": 2,
+  "actualExit": 0,
+  "actualWorktreeWhitespaceExit": 0,
+  "boundaryCases": 7,
+  "cachedDiagnostics": 113,
+  "cachedEvidenceFiles": 9,
+  "cachedFailureErasedOrRelabeled": false,
+  "changedPriorPaths": [
+    "finnor-os/scripts/project-z/z5/reconstruct.mjs",
+    "scope-z/phase-evidence/z5/BLOCKED-CHECKPOINT.md",
+    "scope-z/phase-evidence/z5/costs-and-frontier.md",
+    "scope-z/phase-evidence/z5/engineering-handoff.md",
+    "scope-z/phase-evidence/z5/read-audit.md",
+    "scope-z/phase-evidence/z5/reconstruction/README.md"
+  ],
+  "codeMembers": 37,
+  "completeCosts": {
+    "modelHumanProviderMoneyAndUnmeteredCosts": "UNKNOWN",
+    "selfCpuSystemSeconds": 0.14083199999999998,
+    "selfCpuUserSeconds": 0.893204,
+    "selfPeakRssBytesNotCombined": 48984064,
+    "wallMs": 1113.7838839931646
+  },
+  "freeDiskObservedBytesNotNewInstallGuard": 3142443008,
+  "guardedProcessCases": 6,
+  "implementationWhitespaceIssues": 0,
+  "indexRowsSha256": "aa9065d56dc1a823daa319e5c3e7315283be2078014e3a2490c3b468fb46ea07",
+  "journalVerifiedHashOnly": true,
+  "legacyDiskInstallerExtractorAndOwnedGroupGuardsUnchanged": true,
+  "nativeAuthorityGuardActualExit": 2,
+  "newCommitAttemptsArchivesInstallsSharedWritesOrProtectedAdmission": 0,
+  "newNativeActions": 0,
+  "ownModulesAndBuildIdsAbsent": true,
+  "phaseAccepted": false,
+  "phaseCodeDigest": "4b897351ee60ecb0a8b2894730382f291e1c14715eb10f3da6fd859887299b0e",
+  "priorPhysicalMembersChecked": 7209,
+  "schema": "finnor.z5.current-source-integrity-with-preserved-validation-failure.v1",
+  "sharedTrackedFilesUnchanged": 4586,
+  "slotReleased": false,
+  "state": "SOURCE_INTEGRITY_VERIFIED_FULL_CACHED_WHITESPACE_STILL_FAILED_NOT_PHASE_ACCEPTANCE",
+  "treeAlgorithmCalibratedAgainst": [
+    "ACTUAL_HEAD",
+    "PRESERVED_REVIEWED_INDEX",
+    "CHECKPOINT09",
+    "CHECKPOINT10"
+  ],
+  "unchangedCodeMembers": 36,
+  "unchangedPriorMembers": 7203,
+  "userLaunchUntrackedExcluded": true
+}

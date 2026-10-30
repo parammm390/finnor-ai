@@ -1,0 +1,27 @@
+{
+  "id": "large-shared-domain-row-overflow",
+  "passed": true,
+  "inputDigest": "01bdb41cdb2cee2b314a58cea154e69345fa7549565709468c0cc408f78ece71",
+  "expected": {
+    "disposition": "INCOMPLETE",
+    "context": null,
+    "replacement": null,
+    "noncircular": false
+  },
+  "producer": {
+    "exitCode": 0,
+    "signal": null,
+    "stdout": "{\"schema\":\"finnor.z5.institution-composition-certificate.v1\",\"version\":\"z5-coupled-kernel-v1\",\"inputDigest\":\"01bdb41cdb2cee2b314a58cea154e69345fa7549565709468c0cc408f78ece71\",\"disposition\":\"INCOMPLETE\",\"reasons\":[\"FULL_TRANSLATION_ROW_BOUND_EXHAUSTED\"],\"context\":null,\"replacement\":null,\"originalCounterexample\":null,\"translation\":null,\"original\":{\"states\":0,\"transitions\":0,\"initial\":0},\"discharge\":{\"initial\":0,\"componentTransitions\":0,\"environmentTransitions\":0,\"noncircular\":false},\"correspondence\":\"EXACT_BOUNDED_LISTED_TYPED_KERNELS_NOT_ARBITRARY_TS_SQL_OR_PROVIDER\",\"executionAuthorityGranted\":false,\"protectedAdmission\":false,\"costs\":{\"operations\":17,\"wallMs\":2.2943699999999865,\"cpuUserMicros\":1740,\"cpuSystemMicros\":539,\"peakRssBytes\":83144704,\"money\":null,\"human\":null,\"status\":\"MATERIAL_COSTS_UNMETERED\",\"gaps\":[\"EXTRACTION_INTEGRATION_INSTALL_RECOVERY_AND_HUMAN_COSTS_NOT_MEASURED_HERE\",\"NO_EQUIPPED_OR_FINANCIAL_RESULT\"]}}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 169.6116740000001
+  },
+  "checker": {
+    "exitCode": 0,
+    "signal": null,
+    "stdout": "{\"checked\":true,\"checker\":\"z5-original-semantics-checker-v1\",\"claimDigest\":\"37a6760802347cbb27838cf60d5feed165830bdead0a477d223498d9e5eb74ec\",\"disposition\":\"INCOMPLETE\",\"executionAuthorityGranted\":false,\"inputDigest\":\"01bdb41cdb2cee2b314a58cea154e69345fa7549565709468c0cc408f78ece71\",\"operations\":2,\"protectedAdmission\":false,\"schema\":\"finnor.z5.independent-check.v1\",\"scope\":\"ORIGINAL_FINITE_TYPED_KERNEL_SEMANTICS_NOT_NATIVE_TS_SQL_OR_PROTECTED_CUSTODY\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 57.23033899999996
+  }
+}

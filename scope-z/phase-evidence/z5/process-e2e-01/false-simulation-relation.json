@@ -1,0 +1,14 @@
+{
+  "id": "false-simulation-relation",
+  "passed": true,
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "{\"checked\":false,\"checker\":\"z5-original-semantics-checker-v1\",\"executionAuthorityGranted\":false,\"reason\":\"RELATION_BOUND\",\"schema\":\"finnor.z5.independent-check.v1\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 91.35230000000001
+  },
+  "corruptionDigest": "47be62f6713d7bb279950e826e449b704dc2ddb77f9d0ff006ca39a997734243",
+  "expected": "INDEPENDENT_REJECTION"
+}

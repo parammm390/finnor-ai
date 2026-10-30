@@ -1,0 +1,27 @@
+{
+  "id": "translation-one-row-overflow",
+  "passed": true,
+  "inputDigest": "82a2dd82c37b009c065f16645168ee2316ef0c83fde37402cfa33ab7a7fcb75f",
+  "expected": {
+    "disposition": "INCOMPLETE",
+    "context": null,
+    "replacement": null,
+    "noncircular": false
+  },
+  "producer": {
+    "exitCode": 0,
+    "signal": null,
+    "stdout": "{\"schema\":\"finnor.z5.institution-composition-certificate.v1\",\"version\":\"z5-coupled-kernel-v1\",\"inputDigest\":\"82a2dd82c37b009c065f16645168ee2316ef0c83fde37402cfa33ab7a7fcb75f\",\"disposition\":\"INCOMPLETE\",\"reasons\":[\"FULL_TRANSLATION_ROW_BOUND_EXHAUSTED\"],\"context\":null,\"replacement\":null,\"originalCounterexample\":null,\"translation\":null,\"original\":{\"states\":0,\"transitions\":0,\"initial\":0},\"discharge\":{\"initial\":0,\"componentTransitions\":0,\"environmentTransitions\":0,\"noncircular\":false},\"correspondence\":\"EXACT_BOUNDED_LISTED_TYPED_KERNELS_NOT_ARBITRARY_TS_SQL_OR_PROVIDER\",\"executionAuthorityGranted\":false,\"protectedAdmission\":false,\"costs\":{\"operations\":18,\"wallMs\":2.047167999999999,\"cpuUserMicros\":1621,\"cpuSystemMicros\":405,\"peakRssBytes\":82231296,\"money\":null,\"human\":null,\"status\":\"MATERIAL_COSTS_UNMETERED\",\"gaps\":[\"EXTRACTION_INTEGRATION_INSTALL_RECOVERY_AND_HUMAN_COSTS_NOT_MEASURED_HERE\",\"NO_EQUIPPED_OR_FINANCIAL_RESULT\"]}}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 119.189302
+  },
+  "checker": {
+    "exitCode": 0,
+    "signal": null,
+    "stdout": "{\"checked\":true,\"checker\":\"z5-original-semantics-checker-v1\",\"claimDigest\":\"e5f2795ee7f288f9aff32a416948f3c9e0606d89f7cf33ef456c00220654ed07\",\"disposition\":\"INCOMPLETE\",\"executionAuthorityGranted\":false,\"inputDigest\":\"82a2dd82c37b009c065f16645168ee2316ef0c83fde37402cfa33ab7a7fcb75f\",\"operations\":4,\"protectedAdmission\":false,\"schema\":\"finnor.z5.independent-check.v1\",\"scope\":\"ORIGINAL_FINITE_TYPED_KERNEL_SEMANTICS_NOT_NATIVE_TS_SQL_OR_PROTECTED_CUSTODY\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 34.75151499999993
+  }
+}

@@ -1,0 +1,229 @@
+STDOUT
+scope-z/phase-evidence/z5/commit-review-01/implementation-index-delta.patch:42: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/commit-review-01/implementation-index-delta.patch:603: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/commit-review-01/implementation-index-delta.patch:774: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:7: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:11: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:14: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:40: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:71: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:120: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:149: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:198: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:230: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:412: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:7: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:11: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:14: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:40: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:71: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:120: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:149: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:198: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:230: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:431: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:7: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:11: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:14: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:40: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:71: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:120: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:149: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:198: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:230: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:440: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:7: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:11: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:14: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:40: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:71: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:120: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:149: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:199: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:231: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:441: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-05/shared.patch:7: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-05/shared.patch:11: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-05/shared.patch:14: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-05/shared.patch:40: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-05/shared.patch:71: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-05/shared.patch:120: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-05/shared.patch:149: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-05/shared.patch:199: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-05/shared.patch:231: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-05/shared.patch:441: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-06/shared.patch:7: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-06/shared.patch:11: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-06/shared.patch:14: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-06/shared.patch:40: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-06/shared.patch:71: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-06/shared.patch:120: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-06/shared.patch:149: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-06/shared.patch:199: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-06/shared.patch:231: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-06/shared.patch:442: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-07/shared.patch:7: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-07/shared.patch:11: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-07/shared.patch:14: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-07/shared.patch:40: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-07/shared.patch:79: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-07/shared.patch:128: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-07/shared.patch:157: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-07/shared.patch:207: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-07/shared.patch:239: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-07/shared.patch:450: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:6: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:8: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:10: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:12: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:14: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:16: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:18: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:20: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:22: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:24: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:26: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:28: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:30: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:32: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:34: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:36: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:38: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:40: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:42: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:44: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:46: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:48: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:50: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:52: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:54: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:56: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:58: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:60: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:62: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:64: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:66: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:68: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:70: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:72: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:74: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:76: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:78: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:80: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:82: trailing whitespace.
+++ 
+scope-z/phase-evidence/z5/staged-whitespace-01.log:84: trailing whitespace.
+++ 
+
+STDERR

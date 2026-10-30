@@ -1,0 +1,14 @@
+{
+  "id": "erase-original-initial",
+  "passed": true,
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "{\"checked\":false,\"checker\":\"z5-original-semantics-checker-v1\",\"executionAuthorityGranted\":false,\"reason\":\"EVERY_ORIGINAL_INITIAL_REQUIRED\",\"schema\":\"finnor.z5.independent-check.v1\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 99.89014699999984
+  },
+  "corruptionDigest": "f02ddba88e44e36371927d02a7af8db8bf5a488e5bab6221190d0dd567ca926e",
+  "expected": "INDEPENDENT_REJECTION"
+}

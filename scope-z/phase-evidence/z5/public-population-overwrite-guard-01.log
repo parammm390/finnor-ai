@@ -1,0 +1,14 @@
+node:internal/fs/promises:858
+  return await PromisePrototypeThen(
+         ^
+
+Error: EEXIST: file already exists, mkdir '/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/public-population-audit-01'
+    at async mkdir (node:internal/fs/promises:858:10)
+    at async file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/offline-e2e.mjs:23:1 {
+  errno: -17,
+  code: 'EEXIST',
+  syscall: 'mkdir',
+  path: '/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/public-population-audit-01'
+}
+
+Node.js v22.23.4

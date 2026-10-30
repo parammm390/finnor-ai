@@ -1,0 +1,1059 @@
+{
+  "initial-exact-limit": {
+    "schema": "finnor.z5.composition-input.v1",
+    "claim": "SOUND_SUBSET",
+    "domain": "PUBLIC_OFFLINE_FIXED_KERNELS",
+    "components": [
+      {
+        "id": "A",
+        "revision": "fixed-v1",
+        "states": [
+          {
+            "id": "done0",
+            "terminal": true,
+            "quiescent": false
+          },
+          {
+            "id": "done1",
+            "terminal": true,
+            "quiescent": false
+          }
+        ],
+        "transitions": [],
+        "assumption": {
+          "const": true
+        },
+        "correspondence": {
+          "kind": "BOUNDED_TYPED_KERNEL_V1",
+          "scope": "EXACT_LISTED_KERNEL_ONLY",
+          "admission": "PUBLIC_OFFLINE_FIXED_FIXTURE",
+          "implementationDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "bridges": []
+      },
+      {
+        "id": "B",
+        "revision": "fixed-v1",
+        "states": [
+          {
+            "id": "done",
+            "terminal": true,
+            "quiescent": false
+          }
+        ],
+        "transitions": [],
+        "assumption": {
+          "const": true
+        },
+        "correspondence": {
+          "kind": "BOUNDED_TYPED_KERNEL_V1",
+          "scope": "EXACT_LISTED_KERNEL_ONLY",
+          "admission": "PUBLIC_OFFLINE_FIXED_FIXTURE",
+          "implementationDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "bridges": []
+      }
+    ],
+    "cells": [
+      {
+        "id": "world",
+        "identity": "original-world",
+        "values": [
+          "0"
+        ],
+        "kind": "world",
+        "public": true,
+        "immutable": true
+      }
+    ],
+    "ports": [],
+    "initial": [
+      {
+        "locals": {
+          "A": "done0",
+          "B": "done"
+        },
+        "cells": {
+          "world": "0"
+        }
+      },
+      {
+        "locals": {
+          "A": "done1",
+          "B": "done"
+        },
+        "cells": {
+          "world": "0"
+        }
+      }
+    ],
+    "safety": [
+      {
+        "const": true
+      }
+    ],
+    "observe": [
+      "world"
+    ],
+    "excludedEnvironmentActions": [],
+    "replacementCandidates": [],
+    "live": {
+      "locals": {
+        "A": "done0",
+        "B": "done"
+      },
+      "cells": {
+        "world": "0"
+      }
+    },
+    "limits": {
+      "maxProductStates": 2,
+      "maxContextStates": 2,
+      "maxTransitions": 16,
+      "maxOperations": 100000,
+      "wallMs": 10000,
+      "maxRelationPairs": 16,
+      "maxTranslationRows": 4096
+    }
+  },
+  "initial-overflow": {
+    "schema": "finnor.z5.composition-input.v1",
+    "claim": "SOUND_SUBSET",
+    "domain": "PUBLIC_OFFLINE_FIXED_KERNELS",
+    "components": [
+      {
+        "id": "A",
+        "revision": "fixed-v1",
+        "states": [
+          {
+            "id": "done0",
+            "terminal": true,
+            "quiescent": false
+          },
+          {
+            "id": "done1",
+            "terminal": true,
+            "quiescent": false
+          }
+        ],
+        "transitions": [],
+        "assumption": {
+          "const": true
+        },
+        "correspondence": {
+          "kind": "BOUNDED_TYPED_KERNEL_V1",
+          "scope": "EXACT_LISTED_KERNEL_ONLY",
+          "admission": "PUBLIC_OFFLINE_FIXED_FIXTURE",
+          "implementationDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "bridges": []
+      },
+      {
+        "id": "B",
+        "revision": "fixed-v1",
+        "states": [
+          {
+            "id": "done",
+            "terminal": true,
+            "quiescent": false
+          }
+        ],
+        "transitions": [],
+        "assumption": {
+          "const": true
+        },
+        "correspondence": {
+          "kind": "BOUNDED_TYPED_KERNEL_V1",
+          "scope": "EXACT_LISTED_KERNEL_ONLY",
+          "admission": "PUBLIC_OFFLINE_FIXED_FIXTURE",
+          "implementationDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "bridges": []
+      }
+    ],
+    "cells": [
+      {
+        "id": "world",
+        "identity": "original-world",
+        "values": [
+          "0"
+        ],
+        "kind": "world",
+        "public": true,
+        "immutable": true
+      }
+    ],
+    "ports": [],
+    "initial": [
+      {
+        "locals": {
+          "A": "done0",
+          "B": "done"
+        },
+        "cells": {
+          "world": "0"
+        }
+      },
+      {
+        "locals": {
+          "A": "done1",
+          "B": "done"
+        },
+        "cells": {
+          "world": "0"
+        }
+      }
+    ],
+    "safety": [
+      {
+        "const": true
+      }
+    ],
+    "observe": [
+      "world"
+    ],
+    "excludedEnvironmentActions": [],
+    "replacementCandidates": [],
+    "live": {
+      "locals": {
+        "A": "done0",
+        "B": "done"
+      },
+      "cells": {
+        "world": "0"
+      }
+    },
+    "limits": {
+      "maxProductStates": 1,
+      "maxContextStates": 2,
+      "maxTransitions": 16,
+      "maxOperations": 100000,
+      "wallMs": 10000,
+      "maxRelationPairs": 16,
+      "maxTranslationRows": 4096
+    }
+  },
+  "duplicate-initial-tuples": {
+    "schema": "finnor.z5.composition-input.v1",
+    "claim": "SOUND_SUBSET",
+    "domain": "PUBLIC_OFFLINE_FIXED_KERNELS",
+    "components": [
+      {
+        "id": "A",
+        "revision": "fixed-v1",
+        "states": [
+          {
+            "id": "done0",
+            "terminal": true,
+            "quiescent": false
+          },
+          {
+            "id": "done1",
+            "terminal": true,
+            "quiescent": false
+          }
+        ],
+        "transitions": [],
+        "assumption": {
+          "const": true
+        },
+        "correspondence": {
+          "kind": "BOUNDED_TYPED_KERNEL_V1",
+          "scope": "EXACT_LISTED_KERNEL_ONLY",
+          "admission": "PUBLIC_OFFLINE_FIXED_FIXTURE",
+          "implementationDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "bridges": []
+      },
+      {
+        "id": "B",
+        "revision": "fixed-v1",
+        "states": [
+          {
+            "id": "done",
+            "terminal": true,
+            "quiescent": false
+          }
+        ],
+        "transitions": [],
+        "assumption": {
+          "const": true
+        },
+        "correspondence": {
+          "kind": "BOUNDED_TYPED_KERNEL_V1",
+          "scope": "EXACT_LISTED_KERNEL_ONLY",
+          "admission": "PUBLIC_OFFLINE_FIXED_FIXTURE",
+          "implementationDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "bridges": []
+      }
+    ],
+    "cells": [
+      {
+        "id": "world",
+        "identity": "original-world",
+        "values": [
+          "0"
+        ],
+        "kind": "world",
+        "public": true,
+        "immutable": true
+      }
+    ],
+    "ports": [],
+    "initial": [
+      {
+        "locals": {
+          "A": "done0",
+          "B": "done"
+        },
+        "cells": {
+          "world": "0"
+        }
+      },
+      {
+        "locals": {
+          "A": "done0",
+          "B": "done"
+        },
+        "cells": {
+          "world": "0"
+        }
+      },
+      {
+        "locals": {
+          "A": "done0",
+          "B": "done"
+        },
+        "cells": {
+          "world": "0"
+        }
+      }
+    ],
+    "safety": [
+      {
+        "const": true
+      }
+    ],
+    "observe": [
+      "world"
+    ],
+    "excludedEnvironmentActions": [],
+    "replacementCandidates": [],
+    "live": {
+      "locals": {
+        "A": "done0",
+        "B": "done"
+      },
+      "cells": {
+        "world": "0"
+      }
+    },
+    "limits": {
+      "maxProductStates": 1,
+      "maxContextStates": 2,
+      "maxTransitions": 16,
+      "maxOperations": 100000,
+      "wallMs": 10000,
+      "maxRelationPairs": 16,
+      "maxTranslationRows": 4096
+    }
+  },
+  "large-shared-domain-row-overflow": {
+    "schema": "finnor.z5.composition-input.v1",
+    "claim": "SOUND_SUBSET",
+    "domain": "PUBLIC_OFFLINE_FIXED_KERNELS",
+    "components": [
+      {
+        "id": "A",
+        "revision": "fixed-v1",
+        "states": [
+          {
+            "id": "done0",
+            "terminal": true,
+            "quiescent": false
+          },
+          {
+            "id": "done1",
+            "terminal": true,
+            "quiescent": false
+          }
+        ],
+        "transitions": [],
+        "assumption": {
+          "const": true
+        },
+        "correspondence": {
+          "kind": "BOUNDED_TYPED_KERNEL_V1",
+          "scope": "EXACT_LISTED_KERNEL_ONLY",
+          "admission": "PUBLIC_OFFLINE_FIXED_FIXTURE",
+          "implementationDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "bridges": []
+      },
+      {
+        "id": "B",
+        "revision": "fixed-v1",
+        "states": [
+          {
+            "id": "done",
+            "terminal": true,
+            "quiescent": false
+          }
+        ],
+        "transitions": [],
+        "assumption": {
+          "const": true
+        },
+        "correspondence": {
+          "kind": "BOUNDED_TYPED_KERNEL_V1",
+          "scope": "EXACT_LISTED_KERNEL_ONLY",
+          "admission": "PUBLIC_OFFLINE_FIXED_FIXTURE",
+          "implementationDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "bridges": []
+      }
+    ],
+    "cells": [
+      {
+        "id": "world0",
+        "identity": "original-world-0",
+        "values": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31"
+        ],
+        "kind": "world",
+        "public": true,
+        "immutable": true
+      },
+      {
+        "id": "world1",
+        "identity": "original-world-1",
+        "values": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31"
+        ],
+        "kind": "world",
+        "public": true,
+        "immutable": true
+      },
+      {
+        "id": "world2",
+        "identity": "original-world-2",
+        "values": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31"
+        ],
+        "kind": "world",
+        "public": true,
+        "immutable": true
+      },
+      {
+        "id": "world3",
+        "identity": "original-world-3",
+        "values": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31"
+        ],
+        "kind": "world",
+        "public": true,
+        "immutable": true
+      },
+      {
+        "id": "world4",
+        "identity": "original-world-4",
+        "values": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31"
+        ],
+        "kind": "world",
+        "public": true,
+        "immutable": true
+      },
+      {
+        "id": "world5",
+        "identity": "original-world-5",
+        "values": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31"
+        ],
+        "kind": "world",
+        "public": true,
+        "immutable": true
+      },
+      {
+        "id": "world6",
+        "identity": "original-world-6",
+        "values": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31"
+        ],
+        "kind": "world",
+        "public": true,
+        "immutable": true
+      },
+      {
+        "id": "world7",
+        "identity": "original-world-7",
+        "values": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11",
+          "12",
+          "13",
+          "14",
+          "15",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21",
+          "22",
+          "23",
+          "24",
+          "25",
+          "26",
+          "27",
+          "28",
+          "29",
+          "30",
+          "31"
+        ],
+        "kind": "world",
+        "public": true,
+        "immutable": true
+      }
+    ],
+    "ports": [],
+    "initial": [
+      {
+        "locals": {
+          "A": "done0",
+          "B": "done"
+        },
+        "cells": {
+          "world0": "0",
+          "world1": "0",
+          "world2": "0",
+          "world3": "0",
+          "world4": "0",
+          "world5": "0",
+          "world6": "0",
+          "world7": "0"
+        }
+      },
+      {
+        "locals": {
+          "A": "done1",
+          "B": "done"
+        },
+        "cells": {
+          "world0": "0",
+          "world1": "0",
+          "world2": "0",
+          "world3": "0",
+          "world4": "0",
+          "world5": "0",
+          "world6": "0",
+          "world7": "0"
+        }
+      }
+    ],
+    "safety": [
+      {
+        "const": true
+      }
+    ],
+    "observe": [
+      "world0",
+      "world1",
+      "world2",
+      "world3",
+      "world4",
+      "world5",
+      "world6",
+      "world7"
+    ],
+    "excludedEnvironmentActions": [],
+    "replacementCandidates": [],
+    "live": {
+      "locals": {
+        "A": "done0",
+        "B": "done"
+      },
+      "cells": {
+        "world0": "0",
+        "world1": "0",
+        "world2": "0",
+        "world3": "0",
+        "world4": "0",
+        "world5": "0",
+        "world6": "0",
+        "world7": "0"
+      }
+    },
+    "limits": {
+      "maxProductStates": 2,
+      "maxContextStates": 2,
+      "maxTransitions": 16,
+      "maxOperations": 100000,
+      "wallMs": 10000,
+      "maxRelationPairs": 16,
+      "maxTranslationRows": 1
+    }
+  },
+  "translation-exact-limit": {
+    "schema": "finnor.z5.composition-input.v1",
+    "claim": "SOUND_SUBSET",
+    "domain": "PUBLIC_OFFLINE_FIXED_KERNELS",
+    "components": [
+      {
+        "id": "A",
+        "revision": "fixed-v1",
+        "states": [
+          {
+            "id": "done0",
+            "terminal": true,
+            "quiescent": false
+          },
+          {
+            "id": "done1",
+            "terminal": true,
+            "quiescent": false
+          }
+        ],
+        "transitions": [],
+        "assumption": {
+          "const": true
+        },
+        "correspondence": {
+          "kind": "BOUNDED_TYPED_KERNEL_V1",
+          "scope": "EXACT_LISTED_KERNEL_ONLY",
+          "admission": "PUBLIC_OFFLINE_FIXED_FIXTURE",
+          "implementationDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "bridges": []
+      },
+      {
+        "id": "B",
+        "revision": "fixed-v1",
+        "states": [
+          {
+            "id": "done",
+            "terminal": true,
+            "quiescent": false
+          }
+        ],
+        "transitions": [],
+        "assumption": {
+          "const": true
+        },
+        "correspondence": {
+          "kind": "BOUNDED_TYPED_KERNEL_V1",
+          "scope": "EXACT_LISTED_KERNEL_ONLY",
+          "admission": "PUBLIC_OFFLINE_FIXED_FIXTURE",
+          "implementationDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "bridges": []
+      }
+    ],
+    "cells": [
+      {
+        "id": "world",
+        "identity": "original-world",
+        "values": [
+          "0"
+        ],
+        "kind": "world",
+        "public": true,
+        "immutable": true
+      }
+    ],
+    "ports": [],
+    "initial": [
+      {
+        "locals": {
+          "A": "done0",
+          "B": "done"
+        },
+        "cells": {
+          "world": "0"
+        }
+      },
+      {
+        "locals": {
+          "A": "done1",
+          "B": "done"
+        },
+        "cells": {
+          "world": "0"
+        }
+      }
+    ],
+    "safety": [
+      {
+        "const": true
+      }
+    ],
+    "observe": [
+      "world"
+    ],
+    "excludedEnvironmentActions": [],
+    "replacementCandidates": [],
+    "live": {
+      "locals": {
+        "A": "done0",
+        "B": "done"
+      },
+      "cells": {
+        "world": "0"
+      }
+    },
+    "limits": {
+      "maxProductStates": 2,
+      "maxContextStates": 2,
+      "maxTransitions": 16,
+      "maxOperations": 100000,
+      "wallMs": 10000,
+      "maxRelationPairs": 16,
+      "maxTranslationRows": 4
+    }
+  },
+  "translation-one-row-overflow": {
+    "schema": "finnor.z5.composition-input.v1",
+    "claim": "SOUND_SUBSET",
+    "domain": "PUBLIC_OFFLINE_FIXED_KERNELS",
+    "components": [
+      {
+        "id": "A",
+        "revision": "fixed-v1",
+        "states": [
+          {
+            "id": "done0",
+            "terminal": true,
+            "quiescent": false
+          },
+          {
+            "id": "done1",
+            "terminal": true,
+            "quiescent": false
+          }
+        ],
+        "transitions": [],
+        "assumption": {
+          "const": true
+        },
+        "correspondence": {
+          "kind": "BOUNDED_TYPED_KERNEL_V1",
+          "scope": "EXACT_LISTED_KERNEL_ONLY",
+          "admission": "PUBLIC_OFFLINE_FIXED_FIXTURE",
+          "implementationDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "bridges": []
+      },
+      {
+        "id": "B",
+        "revision": "fixed-v1",
+        "states": [
+          {
+            "id": "done",
+            "terminal": true,
+            "quiescent": false
+          }
+        ],
+        "transitions": [],
+        "assumption": {
+          "const": true
+        },
+        "correspondence": {
+          "kind": "BOUNDED_TYPED_KERNEL_V1",
+          "scope": "EXACT_LISTED_KERNEL_ONLY",
+          "admission": "PUBLIC_OFFLINE_FIXED_FIXTURE",
+          "implementationDigest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        },
+        "bridges": []
+      }
+    ],
+    "cells": [
+      {
+        "id": "world",
+        "identity": "original-world",
+        "values": [
+          "0"
+        ],
+        "kind": "world",
+        "public": true,
+        "immutable": true
+      }
+    ],
+    "ports": [],
+    "initial": [
+      {
+        "locals": {
+          "A": "done0",
+          "B": "done"
+        },
+        "cells": {
+          "world": "0"
+        }
+      },
+      {
+        "locals": {
+          "A": "done1",
+          "B": "done"
+        },
+        "cells": {
+          "world": "0"
+        }
+      }
+    ],
+    "safety": [
+      {
+        "const": true
+      }
+    ],
+    "observe": [
+      "world"
+    ],
+    "excludedEnvironmentActions": [],
+    "replacementCandidates": [],
+    "live": {
+      "locals": {
+        "A": "done0",
+        "B": "done"
+      },
+      "cells": {
+        "world": "0"
+      }
+    },
+    "limits": {
+      "maxProductStates": 2,
+      "maxContextStates": 2,
+      "maxTransitions": 16,
+      "maxOperations": 100000,
+      "wallMs": 10000,
+      "maxRelationPairs": 16,
+      "maxTranslationRows": 3
+    }
+  }
+}

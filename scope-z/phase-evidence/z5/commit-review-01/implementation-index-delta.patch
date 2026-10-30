@@ -1,0 +1,1028 @@
+diff --git a/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/api.ts b/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/api.ts
+index 240445f..4743318 100644
+--- a/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/api.ts
++++ b/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/api.ts
+@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
+ import type { PeMutationContext } from "../../types";
+ import { ordinaryDevelopment, Z5_OPERATIONS, Z5_SCHEMAS, RequestSchema, UseSchema, digest } from "./contracts";
+ import { registerFixedProfile } from "./owners";
+-import { transaction, requestTx } from "./store";
++import { transaction, requestTx, nativeFailureReason } from "./store";
+ import { submitInstitutionLink, readInstitutionLink, institutionLinkProjection, cancelInstitutionLink, revokeInstitutionProfile } from "./service";
+ import { admitInstitutionComposition, useInstitutionComposition } from "./consumer";
+ export { Z5_OPERATIONS, Z5_SCHEMAS };
+@@ -56,7 +56,7 @@ export async function handleInstitutionLinkOperation(ctx: PeMutationContext, ope
+     }
+     return { status: operation === "institution-link-submit" ? 202 : 200, body };
+   } catch (error) {
+-    const code = error instanceof Error && /^Z5_[A-Z0-9_]+$/.test(error.message) ? error.message : "Z5_NATIVE_OWNER_DEPENDENCY_UNAVAILABLE";
++    const code = nativeFailureReason(error, "Z5_NATIVE_OWNER_DEPENDENCY_UNAVAILABLE");
+     return { status: /IDEMPOTENCY|STALE|CURRENT|CHANGED|FENCED|EXHAUSTED/.test(code) ? 409 : 403,
+       body: { code, error: "The original permitted owner state or supported conditional contract is unavailable",
+         protectedAdmission: false, executionAuthorityGranted: false, oldExposureRetained: true } };
+diff --git a/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/consumer.ts b/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/consumer.ts
+index d09f18e..916dd5a 100644
+--- a/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/consumer.ts
++++ b/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/consumer.ts
+@@ -1,11 +1,12 @@
+ /** Ordinary S8 admission and real S4 declared-contract selection, not effects. */
+ import { randomUUID } from "node:crypto";
++import type { PoolClient } from "pg";
+ import type { JobExecutionContext } from "../../../../../apps/worker/src/queue";
+ import type { ExperimentRef } from "@finnor/shared-types";
+ import type { PeMutationContext } from "../../types";
+ import { chargeInstitutionDemand } from "../../allocation-store";
+ import { canonical, digest, CONSUMER_VERSION, type Admission, type SessionRow } from "./contracts";
+-import { transaction, principal, requestTx, profileTx, artifactTx, eventTx, reference, assertDeliveryTx, boundScope } from "./store";
++import { transaction, principal, checkedRequestTx, profileTx, artifactTx, eventTx, reference, assertDeliveryTx, boundScope } from "./store";
+ import { assertCurrentScope } from "../../../../epistemic-runtime/src/project-z/z5-institution-linker/ownership";
+ import { inspectOwners, assertOwnerCutTx } from "./owners";
+ import { loadedBuild } from "./source";
+@@ -14,9 +15,7 @@ import { requestOriginalS8Check, recheckOriginalS8Admission } from "./native-s8"
+ 
+ export async function checkedCurrent(ctx: PeMutationContext, id: string) {
+   const retained = await transaction(ctx, async c => {
+-    const row = await requestTx(ctx, c, id), profile = await profileTx(ctx, c, row.profile_ref);
+-    if (!row.artifact_digest || row.cancel_requested || row.deadline_at.getTime() <= Date.now()
+-      || ["STALE", "REVOKED", "CANCELLED", "UNKNOWN", "INCOMPLETE"].includes(row.status)) throw Error("Z5_NO_CURRENT_CHECKED_ARTIFACT");
++    const row = await checkedRequestTx(ctx, c, id), profile = await profileTx(ctx, c, row.profile_ref);
+     return { row, profile, artifact: await artifactTx(ctx, c, row) };
+   });
+   const build = await loadedBuild(), cut = await inspectOwners(ctx, retained.row.request, retained.profile);
+@@ -40,10 +39,12 @@ export async function admitInstitutionComposition(ctx: PeMutationContext, id: st
+     verifyAdmission(row, row.admission);
+     await recheckOriginalS8Admission(row, row.admission);
+     return transaction(ctx, async c => {
+-      const current = await requestTx(ctx, c, id);
++      const current = await checkedRequestTx(ctx, c, row);
+       if (physical) await assertDeliveryTx(ctx, c, current, physical);
+       await assertOwnerCutTx(ctx, c, current.request, profile, cut);
+-      return current.admission!;
++      if (!current.admission) throw Error("Z5_EXACT_ADMITTED_ARTIFACT_REQUIRED");
++      verifyAdmission(current, current.admission);
++      return current.admission;
+     });
+   }
+   const invocation = randomUUID();
+@@ -53,11 +54,9 @@ export async function admitInstitutionComposition(ctx: PeMutationContext, id: st
+   if (native.assertion.checkerSha256 !== checker.sha256 || checked.claimDigest !== artifact.payload.check.claimDigest)
+     throw Error("Z5_ORIGINAL_S8_CHECKER_SUBSTITUTION");
+   return transaction(ctx, async c => {
+-    const current = await requestTx(ctx, c, id, true);
++    const current = await checkedRequestTx(ctx, c, row, true);
+     if (physical) await assertDeliveryTx(ctx, c, current, physical);
+     await assertOwnerCutTx(ctx, c, current.request, profile, cut);
+-    if (current.artifact_digest !== row.artifact_digest || current.cancel_requested || current.source_digest !== build.sourceDigest)
+-      throw Error("Z5_ADMISSION_PUBLICATION_FENCED");
+     if (current.admission) {
+       verifyAdmission(current, current.admission);
+       return current.admission;
+@@ -104,10 +103,10 @@ export async function useInstitutionComposition(ctx: PeMutationContext, id: stri
+     ordinal: 1, units: 1, physicalInvocationId,
+   });
+   return transaction(ctx, async c => {
+-    const current = await requestTx(ctx, c, id, true);
++    const current = await checkedRequestTx(ctx, c, row, true);
+     if (physical) await assertDeliveryTx(ctx, c, current, physical);
+     await assertOwnerCutTx(ctx, c, current.request, profile, cut);
+-    if (!current.admission || current.artifact_digest !== artifactDigest || current.cancel_requested)
++    if (!current.admission)
+       throw Error("Z5_S4_USE_PUBLICATION_FENCED");
+     verifyAdmission(current, current.admission);
+     const replacement = artifact.certificate.replacement!;
+@@ -155,6 +154,22 @@ function compositionBinding(current: Awaited<ReturnType<typeof checkedCurrent>>,
+     originalDeadline: row.request.originalDeadline, consumerVersion: CONSUMER_VERSION,
+     protectedAdmission: false, executionAuthorityGranted: false };
+ }
++async function assertCompositionSelectionTx(ctx: PeMutationContext, c: PoolClient, binding: unknown,
++  current: Awaited<ReturnType<typeof checkedCurrent>>, write = false) {
++  const actual = await checkedRequestTx(ctx, c, current.row, write);
++  if (!actual.admission) throw Error("Z5_HANDOFF_REQUIRES_CURRENT_S8_DECLARED_CONTRACT");
++  verifyAdmission(actual, actual.admission);
++  await assertOwnerCutTx(ctx, c, actual.request, current.profile, current.cut);
++  const head = (await c.query<{ ref: ExperimentRef }>(
++    `SELECT u.body->'ref' ref FROM finnor_os.z5_s4_heads h JOIN finnor_os.z5_s4_uses u
++     ON u.tenant_id=h.tenant_id AND u.principal_id=h.principal_id AND u.use_id=h.use_id
++     WHERE h.tenant_id=$1 AND h.principal_id=$2 AND h.work_id=$3 AND h.policy_id=$4 AND h.allocation_id=$5
++      AND h.request_id=$6 FOR SHARE OF h,u`,
++  [actual.tenant_id, actual.principal_id, actual.work_id, actual.request.policyRef.id, actual.request.allocationRef.id, actual.id])).rows[0];
++  if (!head || digest(binding) !== digest(compositionBinding({ ...current, row: actual }, head.ref)))
++    throw Error("Z5_EXACT_ORIGINAL_S4_CONDITIONAL_CONTRACT_REQUIRED");
++  return actual;
++}
+ /** Invoked by the original S4 handoff producer. A stored selection alone is not
+  * reported as actual handoff consumption; this reader checks every owner again. */
+ export async function currentCompositionForHandoff(ctx: PeMutationContext, policyRef: ExperimentRef, allocationRef?: ExperimentRef) {
+@@ -173,17 +188,22 @@ export async function currentCompositionForHandoff(ctx: PeMutationContext, polic
+   verifyAdmission(current.row, current.row.admission);
+   await recheckOriginalS8Admission(current.row, current.row.admission);
+   return transaction(ctx, async c => {
+-    const row = await requestTx(ctx, c, current.row.id, true);
++    const row = await checkedRequestTx(ctx, c, current.row, true);
++    if (!row.admission) throw Error("Z5_HANDOFF_REQUIRES_CURRENT_S8_DECLARED_CONTRACT");
++    verifyAdmission(row, row.admission);
+     await assertOwnerCutTx(ctx, c, row.request, current.profile, current.cut);
+     const use = (await c.query<{ body: { ref: ExperimentRef; artifactDigest: string; liveDigest: string } }>(
+-      "SELECT body FROM finnor_os.z5_s4_uses WHERE tenant_id=$1 AND principal_id=$2 AND use_id=$3 FOR SHARE",
+-      [row.tenant_id, row.principal_id, selection.use_id])).rows[0]?.body;
++      `SELECT u.body FROM finnor_os.z5_s4_heads h JOIN finnor_os.z5_s4_uses u
++       ON u.tenant_id=h.tenant_id AND u.principal_id=h.principal_id AND u.use_id=h.use_id
++       WHERE h.tenant_id=$1 AND h.principal_id=$2 AND h.work_id=$3 AND h.policy_id=$4 AND h.allocation_id=$5
++        AND h.request_id=$6 AND h.use_id=$7 FOR SHARE OF h,u`,
++      [row.tenant_id, row.principal_id, row.work_id, policyRef.id, allocationRef.id, row.id, selection.use_id])).rows[0]?.body;
+     if (!use || use.artifactDigest !== row.artifact_digest || use.liveDigest !== current.cut.liveDigest)
+       throw Error("Z5_HANDOFF_ACTUAL_LIVE_SELECTION_CHANGED");
+     await eventTx(ctx, c, row, "S4_ORIGINAL_HANDOFF_CONTRACT_RESOLVED", "handoff-resolved:" + selection.use_id,
+       { useRef: use.ref, originalPolicyRef: policyRef, originalAllocationRef: allocationRef,
+         actualConsumer: "prepareEnterpriseContingentHandoff", originalResourcesAndOldObligationsCarried: true });
+-    return compositionBinding(current, use.ref);
++    return compositionBinding({ ...current, row }, use.ref);
+   });
+ }
+ export async function assertCompositionHandoffCurrent(ctx: PeMutationContext, binding: unknown, policyRef: ExperimentRef,
+@@ -198,27 +218,18 @@ export async function assertCompositionHandoffCurrent(ctx: PeMutationContext, bi
+     || !current.row.admission) throw Error("Z5_HANDOFF_COMPOSITION_BINDING_STALE");
+   verifyAdmission(current.row, current.row.admission);
+   await recheckOriginalS8Admission(current.row, current.row.admission);
+-  await transaction(ctx, async c => {
+-    const actual = await requestTx(ctx, c, current.row.id);
+-    await assertOwnerCutTx(ctx, c, actual.request, current.profile, current.cut);
+-    const head = (await c.query<{ ref: ExperimentRef }>(
+-      `SELECT u.body->'ref' ref FROM finnor_os.z5_s4_heads h JOIN finnor_os.z5_s4_uses u
+-       ON u.tenant_id=h.tenant_id AND u.principal_id=h.principal_id AND u.use_id=h.use_id
+-       WHERE h.tenant_id=$1 AND h.principal_id=$2 AND h.work_id=$3 AND h.policy_id=$4 AND h.allocation_id=$5
+-        AND h.request_id=$6 FOR SHARE OF h,u`,
+-    [actual.tenant_id, actual.principal_id, actual.work_id, policyRef.id, allocationRef.id, actual.id])).rows[0];
+-    if (!head || digest(binding) !== digest(compositionBinding(current, head.ref)))
+-      throw Error("Z5_EXACT_ORIGINAL_S4_CONDITIONAL_CONTRACT_REQUIRED");
+-  });
++  const row = await transaction(ctx, c => assertCompositionSelectionTx(ctx, c, binding, current));
++  return { ...current, row };
+ }
+ export async function beginCompositionPlanning(ctx: PeMutationContext, binding: { requestId: string }) {
+-  const current = await checkedCurrent(ctx, binding.requestId), { row } = current;
+-  await assertCompositionHandoffCurrent(ctx, binding, row.request.policyRef, row.request.allocationRef);
++  const retained = await checkedCurrent(ctx, binding.requestId);
++  const current = await assertCompositionHandoffCurrent(ctx, binding, retained.row.request.policyRef, retained.row.request.allocationRef);
++  if (!current) throw Error("Z5_HANDOFF_COMPOSITION_BINDING_INVALID");
++  const { row } = current;
+   const invocation = randomUUID(), funding = await chargeInstitutionDemand(ctx, row.request.parentReservation, {
+     responsibilityIdentity: row.request.responsibilityIdentity, phase: "LIFECYCLE", ordinal: 1, units: 1, physicalInvocationId: invocation });
+   return transaction(ctx, async c => {
+-    const actual = await requestTx(ctx, c, row.id);
+-    await assertOwnerCutTx(ctx, c, actual.request, current.profile, current.cut);
++    const actual = await assertCompositionSelectionTx(ctx, c, binding, current);
+     return recordCostTx(ctx, c, actual, invocation, "CLAIM", { stageOwner: "ORIGINAL_S4_PLANNING",
+       chargeRef: funding.charge.ref, state: "IMMUTABLE_PLAN_PERSISTENCE_PENDING_UNKNOWN_IF_INTERRUPTED", money: null, human: null });
+   });
+@@ -230,9 +241,10 @@ export async function recordCompositionHandoffConsumed(ctx: PeMutationContext, b
+   const preparation = await (await import("../../enterprise-control")).readEnterpriseContingentHandoffPreparation(ctx, preparationRef);
+   if (digest((preparation as typeof preparation & { compositionContract?: unknown }).compositionContract ?? null) !== digest(binding))
+     throw Error("Z5_ORIGINAL_HANDOFF_DID_NOT_PERSIST_CONTRACT");
+-  await assertCompositionHandoffCurrent(ctx, binding, preparation.handoff.policyRef, preparation.handoff.allocationRef);
++  const current = await assertCompositionHandoffCurrent(ctx, binding, preparation.handoff.policyRef, preparation.handoff.allocationRef);
++  if (!current) throw Error("Z5_HANDOFF_COMPOSITION_BINDING_INVALID");
+   return transaction(ctx, async c => {
+-    const row = await requestTx(ctx, c, b.requestId as string, true);
++    const row = await assertCompositionSelectionTx(ctx, c, binding, current, true);
+     return eventTx(ctx, c, row, "S4_ORIGINAL_HANDOFF_CONTRACT_CONSUMED", "handoff:" + preparationRef.id,
+       { preparationRef, binding, actualOriginalConsumer: "prepareEnterpriseContingentHandoff",
+         protectedAdmission: false, executionAuthorityGranted: false });
+@@ -249,9 +261,10 @@ export async function recordCompositionPlanConsumed(ctx: PeMutationContext, bind
+   if (typeof reader !== "function") throw Error("Z5_ORIGINAL_S4_PLAN_READER_INTEGRATION_REQUIRED");
+   const plan = await reader(ctx, planRef) as { compositionContract: unknown; policyRef: ExperimentRef; allocationRef: ExperimentRef };
+   if (digest(plan.compositionContract) !== digest(binding)) throw Error("Z5_ORIGINAL_S4_PLAN_DID_NOT_CONSUME_EXACT_CONTRACT");
+-  await assertCompositionHandoffCurrent(ctx, binding, plan.policyRef, plan.allocationRef);
++  const current = await assertCompositionHandoffCurrent(ctx, binding, plan.policyRef, plan.allocationRef);
++  if (!current) throw Error("Z5_HANDOFF_COMPOSITION_BINDING_INVALID");
+   return transaction(ctx, async c => {
+-    const row = await requestTx(ctx, c, b.requestId as string, true);
++    const row = await assertCompositionSelectionTx(ctx, c, binding, current, true);
+     return eventTx(ctx, c, row, "S4_ORIGINAL_COMPOSITION_PLAN_CONSUMED", "plan:" + planRef.id, {
+       planRef, binding, actualOriginalConsumer: "prepareEnterpriseInstitutionCompositionPlan",
+       oldUnknownObligationsCarried: true, newControlChoice: false, effectAuthorityGranted: false });
+diff --git a/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/native-s8-owner.ts b/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/native-s8-owner.ts
+index 3c43d5e..c0ebd80 100644
+--- a/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/native-s8-owner.ts
++++ b/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/native-s8-owner.ts
+@@ -12,7 +12,7 @@ import { digest, ordinaryDevelopment, RefSchema } from "./contracts";
+ import type { NativeS8Assertion } from "./native-s8";
+ import { checkedCurrent } from "./consumer";
+ import { assertOwnerCutTx } from "./owners";
+-import { requestTx, transaction, assertDeliveryTx, assertComputeLeasesTx } from "./store";
++import { checkedRequestTx, transaction, assertDeliveryTx, assertComputeLeasesTx } from "./store";
+ import { independentlyCheckInstitution } from "./process";
+ import { recordCostTx } from "./artifact";
+ import { REPOSITORY } from "./source";
+@@ -55,7 +55,7 @@ export async function evaluateInstitutionFromOriginalS8(authority: OriginalS8Aut
+     const funding = await chargeInstitutionDemand(ctx, row.request.parentReservation, {
+       responsibilityIdentity: row.request.responsibilityIdentity, phase: "LIFECYCLE", ordinal: 1, units: 1, physicalInvocationId: invocation });
+     await transaction(ctx, async c => {
+-      const actual = await requestTx(ctx, c, row.id);
++      const actual = await checkedRequestTx(ctx, c, row);
+       if (body.physical) await assertDeliveryTx(ctx, c, actual, body.physical);
+       await assertOwnerCutTx(ctx, c, actual.request, profile, cut);
+       await assertComputeLeasesTx(ctx, c, leases);
+@@ -64,12 +64,10 @@ export async function evaluateInstitutionFromOriginalS8(authority: OriginalS8Aut
+     });
+     const check = await independentlyCheckInstitution(row.input, artifact.certificate, checker.sha256, undefined, row.deadline_at.getTime());
+     return await transaction(ctx, async c => {
+-      const actual = await requestTx(ctx, c, row.id);
++      const actual = await checkedRequestTx(ctx, c, row);
+       if (body.physical) await assertDeliveryTx(ctx, c, actual, body.physical);
+       await assertOwnerCutTx(ctx, c, actual.request, profile, cut);
+       await assertComputeLeasesTx(ctx, c, leases);
+-      if (actual.generation !== row.generation || actual.artifact_digest !== row.artifact_digest || actual.cancel_requested)
+-        throw Error("Z5_ORIGINAL_S8_CHECK_PUBLICATION_FENCED");
+       await recordCostTx(ctx, c, actual, invocation, "ACCEPT", { stageOwner: "ORIGINAL_S8",
+         checkerOperations: check.operations, claimDigest: check.claimDigest, chargeRef: funding.charge.ref });
+       return { schema: "finnor.s8.z5-original-composition-check.v1", tenantId: row.tenant_id, principalId: row.principal_id,
+@@ -98,8 +96,7 @@ export async function currentInstitutionFromOriginalS8(authority: OriginalS8Auth
+     || assertion.protectedAdmission !== false || assertion.executionAuthorityGranted !== false || assertion.productionActivated !== false)
+     throw Error("Z5_ORIGINAL_S8_REFERENCE_NOT_CURRENT");
+   await transaction(ctx, async c => {
+-    const actual = await requestTx(ctx, c, row.id);
+-    if (actual.generation !== row.generation || actual.cancel_requested) throw Error("Z5_ORIGINAL_S8_CURRENTNESS_FENCED");
++    const actual = await checkedRequestTx(ctx, c, row);
+     await assertOwnerCutTx(ctx, c, actual.request, profile, cut);
+   });
+   return { current: true, assertion, nativeReference: ref };
+diff --git a/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/schema.sql b/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/schema.sql
+index c34d45b..996e701 100644
+--- a/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/schema.sql
++++ b/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/schema.sql
+@@ -166,6 +166,17 @@ CREATE TRIGGER z5_attempt_progress BEFORE INSERT OR UPDATE OR DELETE ON finnor_o
+ CREATE FUNCTION finnor_os.z5_storage() RETURNS trigger LANGUAGE plpgsql SET search_path=pg_catalog,finnor_os AS $$
+ DECLARE work uuid; amount bigint;
+ BEGIN
++ -- Original INSERT reserves 512 bytes for bounded terminal control metadata.
++ -- Exhaustion must not make cancellation, revocation or a refusal impossible.
++ IF TG_OP='UPDATE' AND TG_TABLE_NAME='z5_link_requests' THEN
++  IF NEW.status IN('INCOMPLETE','UNKNOWN','STALE','REVOKED','CANCELLED')
++   AND to_jsonb(NEW)-ARRAY['status','generation','cancel_requested']
++    IS NOT DISTINCT FROM to_jsonb(OLD)-ARRAY['status','generation','cancel_requested'] THEN
++   IF octet_length(to_jsonb(NEW)::text)-octet_length(to_jsonb(OLD)::text)>512
++    THEN RAISE EXCEPTION 'Z5_TERMINAL_FENCE_METADATA_BOUND'; END IF;
++   RETURN NEW;
++  END IF;
++ END IF;
+  IF TG_TABLE_NAME IN('z5_link_requests','z5_s4_heads') THEN work:=NEW.work_id;
+  ELSE SELECT work_id INTO work FROM finnor_os.z5_link_requests WHERE tenant_id=NEW.tenant_id AND id=NEW.request_id; END IF;
+  IF TG_OP='INSERT' THEN amount:=octet_length(to_jsonb(NEW)::text)+512;
+diff --git a/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/service.ts b/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/service.ts
+index 1e65d40..777bb46 100644
+--- a/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/service.ts
++++ b/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/service.ts
+@@ -3,7 +3,7 @@ import type { PeMutationContext } from "../../types";
+ import { authorize } from "../../owner-context";
+ import { canonical, digest, parseInput, SubmitSchema, ProjectionSchema, RequestSchema, RevokeSchema,
+   type SessionRow, type Profile, type Artifact } from "./contracts";
+-import { transaction, principal, profileTx, requestTx, eventTx, enqueueTx, artifactTx, reference } from "./store";
++import { transaction, principal, profileTx, requestTx, eventTx, enqueueTx, artifactTx, reference, bestEffortTerminalAudit } from "./store";
+ import { inspectOwners, assertOwnerCutTx } from "./owners";
+ import { loadedBuild } from "./source";
+ import { recheckOriginalS8Admission } from "./native-s8";
+@@ -98,18 +98,6 @@ export async function submitInstitutionLink(ctx: PeMutationContext, raw: unknown
+       newAllowance: false, executionAuthorityGranted: false };
+   });
+ }
+-async function invalidate(ctx: PeMutationContext, row: SessionRow, reason: string) {
+-  return transaction(ctx, async c => {
+-    const current = await requestTx(ctx, c, row.id, true);
+-    if (!["STALE", "REVOKED", "CANCELLED"].includes(current.status)) {
+-      await c.query("UPDATE finnor_os.z5_link_requests SET status='STALE',generation=generation+1 WHERE tenant_id=$1 AND id=$2",
+-        [row.tenant_id, row.id]);
+-      await eventTx(ctx, c, current, "ORIGINAL_DEPENDENCY_INVALIDATED", "stale:" + current.generation, {
+-        reason, artifactRetained: true, oldComponentFallback: "RETAIN_OR_STOP_NEVER_RESET",
+-        originalReservationAndObligationsRetained: true });
+-    }
+-  });
+-}
+ export async function readInstitutionLink(ctx: PeMutationContext, raw: unknown) {
+   const input = RequestSchema.parse(raw);
+   const row = await transaction(ctx, c => requestTx(ctx, c, input.requestId));
+@@ -125,7 +113,6 @@ export async function readInstitutionLink(ctx: PeMutationContext, raw: unknown)
+       checked = { profile, cut: actual };
+     } catch {
+       current = false;
+-      await invalidate(ctx, row, "ORIGINAL_WORK_SOURCE_RIGHTS_TERMS_BUDGET_OR_ADMISSION_CHANGED");
+     }
+   }
+   return transaction(ctx, async c => {
+@@ -140,7 +127,10 @@ export async function readInstitutionLink(ctx: PeMutationContext, raw: unknown)
+     const attempts = (await c.query(
+       "SELECT id,delivery_id,claim_fence,charge_ref,body,started_at,finished_at FROM finnor_os.z5_link_attempts WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3 ORDER BY started_at LIMIT 5",
+       [row.tenant_id, row.principal_id, row.id])).rows;
+-    return { requestId: row.id, workId: row.work_id, root: row.root, status: fresh.status, current: stillCurrent,
++    const status = ["STALE", "REVOKED", "CANCELLED", "UNKNOWN", "INCOMPLETE"].includes(fresh.status) ? fresh.status
++      : fresh.cancel_requested ? "CANCELLED" : stillCurrent ? fresh.status : "STALE";
++    return { requestId: row.id, workId: row.work_id, root: row.root, status, storedStatus: fresh.status,
++      statusComputedWithoutMutation: status !== fresh.status, current: stillCurrent,
+       artifactDigest: fresh.artifact_digest, artifact: artifact ? artifactProjection(artifact) : null,
+       profileRef: row.profile_ref, admission: stillCurrent ? fresh.admission : null,
+       policyRef: row.request.policyRef, allocationRef: row.request.allocationRef,
+@@ -173,31 +163,41 @@ export async function institutionLinkProjection(ctx: PeMutationContext, raw: unk
+ }
+ export async function cancelInstitutionLink(ctx: PeMutationContext, raw: unknown) {
+   const input = RequestSchema.parse(raw);
+-  return transaction(ctx, async c => {
++  const fence = await transaction(ctx, async c => {
+     const row = await requestTx(ctx, c, input.requestId, true);
+     if (row.work_id !== input.workId || digest(row.root) !== digest(input.root)) throw Error("Z5_EXACT_WORK_ROOT_REQUIRED");
+     if (!row.cancel_requested) {
+       await c.query("UPDATE finnor_os.z5_link_requests SET cancel_requested=true,status='CANCELLED',generation=generation+1 WHERE tenant_id=$1 AND id=$2",
+         [row.tenant_id, row.id]);
+-      await eventTx(ctx, c, row, "CANCELLED_KEEPING_OLD_OBLIGATIONS", "cancel", {
+-        cancellationIsNotCompensation: true, newAllowance: false, oldLiabilitiesAndPhysicalDebitsRetained: true });
++      return { row: await requestTx(ctx, c, row.id), changed: true };
+     }
+-    return { requestId: row.id, disposition: "CANCELLED", exposureRetained: true, executionAuthorityGranted: false };
++    return { row, changed: false };
+   });
++  const auditRecorded = fence.changed ? await bestEffortTerminalAudit(ctx, async c => {
++    const current = await requestTx(ctx, c, fence.row.id);
++    await eventTx(ctx, c, current, "CANCELLED_KEEPING_OLD_OBLIGATIONS", "cancel", {
++      cancellationIsNotCompensation: true, newAllowance: false, oldLiabilitiesAndPhysicalDebitsRetained: true });
++  }) : null;
++  return { requestId: fence.row.id, disposition: "CANCELLED", controlFenceCommitted: true,
++    auditRecorded, auditGap: auditRecorded === false ? "TERMINAL_AUDIT_UNAVAILABLE" : null,
++    exposureRetained: true, executionAuthorityGranted: false };
+ }
+ export async function revokeInstitutionProfile(ctx: PeMutationContext, raw: unknown) {
+   const input = RevokeSchema.parse(raw);
+-  return transaction(ctx, async c => {
++  const rows = await transaction(ctx, async c => {
+     const profile: Profile = await profileTx(ctx, c, input.profileRef);
+     if (profile.workId !== input.workId || digest(profile.root) !== digest(input.root)) throw Error("Z5_EXACT_WORK_ROOT_REQUIRED");
+     await c.query("UPDATE finnor_os.z5_component_profiles SET revoked_at=clock_timestamp(),revocation_reason=$4 WHERE tenant_id=$1 AND principal_id=$2 AND profile_id=$3",
+       [ctx.auth.tenantId, principal(ctx), input.profileRef.id, input.reason]);
+-    const rows = (await c.query<SessionRow>(`UPDATE finnor_os.z5_link_requests SET status='REVOKED',generation=generation+1
++    return (await c.query<SessionRow>(`UPDATE finnor_os.z5_link_requests SET status='REVOKED',generation=generation+1
+       WHERE tenant_id=$1 AND principal_id=$2 AND profile_ref->>'id'=$3 AND status<>'REVOKED' RETURNING *`,
+     [ctx.auth.tenantId, principal(ctx), input.profileRef.id])).rows;
+-    for (const row of rows) await eventTx(ctx, c, row, "FIXED_COMPONENT_CONTRACT_REVOKED", "revoked:" + input.profileRef.id,
++  });
++  const auditRecorded = await bestEffortTerminalAudit(ctx, async c => {
++    for (const row of rows) await eventTx(ctx, c, await requestTx(ctx, c, row.id), "FIXED_COMPONENT_CONTRACT_REVOKED", "revoked:" + input.profileRef.id,
+       { reason: input.reason, originalObligationsAndReservationRetained: true, noCleanReset: true });
+-    return { profileRef: input.profileRef, disposition: "REVOKED", requestsInvalidated: rows.length,
+-      exposureRetained: true, executionAuthorityGranted: false };
+   });
++  return { profileRef: input.profileRef, disposition: "REVOKED", requestsInvalidated: rows.length,
++    controlFenceCommitted: true, auditRecorded, auditGap: auditRecorded ? null : "TERMINAL_AUDIT_UNAVAILABLE",
++    exposureRetained: true, executionAuthorityGranted: false };
+ }
+diff --git a/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/store.ts b/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/store.ts
+index a8db5d5..eae7243 100644
+--- a/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/store.ts
++++ b/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/store.ts
+@@ -14,6 +14,21 @@ export const transaction = <T>(ctx: PeMutationContext, fn: (c: PoolClient) => Pr
+   ordinaryDevelopment();
+   return withS5PortfolioTransaction(ctx, fn);
+ };
++/** Only after the caller's control fence has committed. An unavailable audit
++ * never rolls it back; earlier original claim/debit evidence is retained. */
++export async function bestEffortTerminalAudit(ctx: PeMutationContext, fn: (c: PoolClient) => Promise<void>) {
++  try { await transaction(ctx, fn); return true; }
++  catch { return false; }
++}
++const episodeQuotaConstraints = new Set(["z5_link_episodes_retained_bytes_check",
++  "z5_link_episodes_event_count_check", "z5_link_episodes_uses_check"]);
++export function nativeFailureReason(error: unknown, fallback = "Z5_NATIVE_DEPENDENCY_OR_PROCESS_UNAVAILABLE") {
++  const pg = error as { code?: unknown; schema?: unknown; table?: unknown; constraint?: unknown } | null;
++  if (pg?.code === "23514" && pg.schema === "finnor_os" && pg.table === "z5_link_episodes"
++    && typeof pg.constraint === "string" && episodeQuotaConstraints.has(pg.constraint))
++    return "Z5_ORIGINAL_STORAGE_OR_EVENT_BUDGET_EXHAUSTED";
++  return error instanceof Error && /^Z5_[A-Z0-9_]+$/.test(error.message) ? error.message : fallback;
++}
+ export function reference(owner: string, prefix: string, value: unknown): ExperimentRef {
+   const contentDigest = digest(value);
+   return { owner, id: prefix + ":" + contentDigest, version: "z5-institution-linker-v1", contentDigest };
+@@ -37,6 +52,19 @@ export async function requestTx(ctx: PeMutationContext, c: PoolClient, id: strin
+   await authorize(ctx, row.root, [{ type: "work", id: row.work_id }], [], c);
+   return row;
+ }
++/** Recheck under the final request lock after external owner/custody/debit
++ * work. A retained checked snapshot cannot override a newer control fence. */
++export async function checkedRequestTx(ctx: PeMutationContext, c: PoolClient, retained: string | SessionRow, write = false) {
++  const row = await requestTx(ctx, c, typeof retained === "string" ? retained : retained.id, write);
++  if (!row.artifact_digest || row.cancel_requested || row.deadline_at.getTime() <= Date.now()
++    || ["STALE", "REVOKED", "CANCELLED", "UNKNOWN", "INCOMPLETE"].includes(row.status))
++    throw Error("Z5_NO_CURRENT_CHECKED_ARTIFACT");
++  if (typeof retained !== "string" && (row.generation !== retained.generation
++    || row.artifact_digest !== retained.artifact_digest || row.source_digest !== retained.source_digest
++    || row.request_digest !== retained.request_digest))
++    throw Error("Z5_RETAINED_CHECKED_REQUEST_FENCED");
++  return row;
++}
+ export async function eventTx(ctx: PeMutationContext, c: PoolClient, row: SessionRow, kind: string, key: string, detail: unknown) {
+   const body = { schema: "finnor.z5.native-event.v1", tenantId: row.tenant_id, principalId: row.principal_id,
+     workId: row.work_id, requestId: row.id, generation: row.generation, kind, detail,
+diff --git a/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/worker.ts b/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/worker.ts
+index 1250940..5b92064 100644
+--- a/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/worker.ts
++++ b/finnor-os/packages/private-equity/src/project-z/z5-institution-linker/worker.ts
+@@ -6,7 +6,7 @@ import type { PeMutationContext } from "../../types";
+ import { chargeInstitutionDemand } from "../../allocation-store";
+ import { ordinaryDevelopment, canonical, digest, type SessionRow, type Certificate } from "./contracts";
+ import { transaction, requestTx, profileTx, assertDeliveryTx, assertClaimTx, meterStartTx, eventTx,
+-  artifactTx, insertArtifactTx, assertComputeLeasesTx } from "./store";
++  artifactTx, insertArtifactTx, assertComputeLeasesTx, bestEffortTerminalAudit, nativeFailureReason } from "./store";
+ import { inspectOwners, assertOwnerCutTx } from "./owners";
+ import { loadedBuild } from "./source";
+ import { produceInstitution, independentlyCheckInstitution } from "./process";
+@@ -57,10 +57,15 @@ export async function linkInstitutionComponentsJob(raw: Record<string, unknown>,
+     || execution.retrySafety !== "locally_idempotent") throw Error("Z5_ACTUAL_DURABLE_JOB_EXECUTION_REQUIRED");
+   const e = execution, ctx = await originalWorkerContext(p, e), abort = new AbortController();
+   let leases: ComputeResourceLease[] = [], row: SessionRow | null = null, registered = false, disposition = "UNKNOWN";
++  let heartbeatClosed = false;
+   const started = performance.now(), cpu = process.cpuUsage();
+   async function heartbeat() {
++    if (heartbeatClosed) return true;
+     try {
+-      if (!await renewComputeResourceLeases(leases)) throw Error("Z5_COMPUTE_LEASE_LOST");
++      const renewing = leases;
++      const renewed = await renewComputeResourceLeases(renewing);
++      if (heartbeatClosed) return true;
++      if (!renewed && renewing === leases) throw Error("Z5_COMPUTE_LEASE_LOST");
+       await transaction(ctx, async c => {
+         const current = await requestTx(ctx, c, p.requestId);
+         await assertDeliveryTx(ctx, c, current, e);
+@@ -69,20 +74,23 @@ export async function linkInstitutionComponentsJob(raw: Record<string, unknown>,
+           throw Error("Z5_ORIGINAL_GENERATION_NOT_CURRENT");
+         await profileTx(ctx, c, current.profile_ref);
+       });
+-      await loadedBuild();
++      if (!heartbeatClosed) await loadedBuild();
+       return true;
+-    } catch { abort.abort(); return false; }
++    } catch {
++      if (heartbeatClosed) return true;
++      abort.abort(); return false;
++    }
+   }
+   try {
+     leases = await acquireComputeResourceLeases({ tenantId: p.tenantId,
+       resourceKeys: ["native:z5-institution-linker"], requiredResourceKeys: ["native:z5-institution-linker"],
+       workloadClass: "INTERACTIVE", ownerId: "z5:" + e.deliveryAttemptId });
+     e.registerHeartbeat(heartbeat);
+-    row = await transaction(ctx, async c => {
++    const start = await transaction<{ row: SessionRow | null; exhausted?: { row: SessionRow; attempts: number | null } }>(ctx, async c => {
+       const current = await requestTx(ctx, c, p.requestId, true);
+       await assertDeliveryTx(ctx, c, current, e);
+       if (current.generation !== p.generation || current.cancel_requested
+-        || ["STALE", "REVOKED", "CANCELLED"].includes(current.status) || current.deadline_at.getTime() <= Date.now()) return null;
++        || ["STALE", "REVOKED", "CANCELLED", "INCOMPLETE"].includes(current.status) || current.deadline_at.getTime() <= Date.now()) return { row: null };
+       const episode = (await c.query<{ deliveries: number }>(
+         "SELECT deliveries FROM finnor_os.z5_link_episodes WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 FOR UPDATE",
+         [p.tenantId, p.principalId, current.work_id])).rows[0];
+@@ -90,10 +98,8 @@ export async function linkInstitutionComponentsJob(raw: Record<string, unknown>,
+         [p.tenantId, e.deliveryAttemptId])).rowCount;
+       if (!prior && (!episode || episode.deliveries >= 4 || current.deliveries >= 4)) {
+         await c.query("UPDATE finnor_os.z5_link_requests SET status='INCOMPLETE' WHERE tenant_id=$1 AND id=$2", [p.tenantId, current.id]);
+-        await eventTx(ctx, c, current, "ORIGINAL_EPISODE_EXHAUSTED", "exhausted:" + e.deliveryAttemptId,
+-          { disposition: "INCOMPLETE", originalAttempts: episode?.deliveries ?? null, newAllowance: false, searchWork: 0 });
+         disposition = "INCOMPLETE";
+-        return null; // Exhaustion evidence commits; no throw rolls it back.
++        return { row: null, exhausted: { row: await requestTx(ctx, c, current.id), attempts: episode?.deliveries ?? null } };
+       }
+       if (!prior) {
+         await c.query("UPDATE finnor_os.z5_link_episodes SET deliveries=deliveries+1 WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3",
+@@ -110,9 +116,18 @@ export async function linkInstitutionComponentsJob(raw: Record<string, unknown>,
+       await eventTx(ctx, c, claimed, "ACTUAL_QUEUE_CLAIMED", "claimed:" + e.deliveryAttemptId,
+         { jobId: e.jobId, deliveryId: e.deliveryAttemptId, claimFence: e.claimFence,
+           workerId: e.workerId, reusedArtifact: current.artifact_digest, originalEpisode: current.work_id });
+-      return claimed;
++      return { row: claimed };
+     });
+-    if (!row) return;
++    row = start.row;
++    if (!row) {
++      if (start.exhausted) await bestEffortTerminalAudit(ctx, async c => {
++        const current = await requestTx(ctx, c, start.exhausted!.row.id);
++        await assertDeliveryTx(ctx, c, current, e);
++        await eventTx(ctx, c, current, "ORIGINAL_EPISODE_EXHAUSTED", "exhausted:" + e.deliveryAttemptId,
++          { disposition: "INCOMPLETE", originalAttempts: start.exhausted!.attempts, newAllowance: false, searchWork: 0 });
++      });
++      return;
++    }
+     registered = true;
+     const charged = await chargeInstitutionDemand(ctx, row.request.parentReservation, {
+       responsibilityIdentity: row.request.responsibilityIdentity, phase: "PREPARATION", ordinal: 1,
+@@ -134,7 +149,10 @@ export async function linkInstitutionComponentsJob(raw: Record<string, unknown>,
+       checker = build.files.find(f => f.path.endsWith("/z5-institution-linker/checker.py"))!;
+     let certificate: Certificate;
+     if (row.artifact_digest) certificate = (await transaction(ctx, c => artifactTx(ctx, c, row!))).certificate;
+-    else certificate = await produceInstitution(row.input, producer.sha256, abort.signal, row.deadline_at.getTime());
++    else {
++      if (!await heartbeat()) throw Error("Z5_PRODUCER_DISPATCH_FENCED");
++      certificate = await produceInstitution(row.input, producer.sha256, abort.signal, row.deadline_at.getTime());
++    }
+     if (!await heartbeat()) throw Error("Z5_CHECK_DISPATCH_FENCED");
+     const check = await independentlyCheckInstitution(row.input, certificate, checker.sha256, abort.signal, row.deadline_at.getTime());
+     const publicationCut = await inspectOwners(ctx, row.request, profile);
+@@ -165,8 +183,10 @@ export async function linkInstitutionComponentsJob(raw: Record<string, unknown>,
+     await interrupt(ctx, row, e, "AFTER_CERTIFICATE", abort.signal);
+     if (certificate.disposition === "CHECKED_CANDIDATE") {
+       if (!await heartbeat()) throw Error("Z5_S8_CONSUMPTION_FENCED");
+-      await releaseComputeResourceLeases(leases, "Z5_PRODUCER_CHECKER_STACK_FINISHED");
++      const completedLeases = leases;
+       leases = [];
++      try { await releaseComputeResourceLeases(completedLeases, "Z5_PRODUCER_CHECKER_STACK_FINISHED"); }
++      catch (error) { leases = completedLeases; throw error; }
+       await admitInstitutionComposition(ctx, row.id, e, abort.signal);
+       if (!await heartbeat()) throw Error("Z5_S4_REPLACEMENT_FENCED");
+       await useInstitutionComposition(ctx, row.id, hash, "automatic:" + row.id, e.deliveryAttemptId, e);
+@@ -181,24 +201,38 @@ export async function linkInstitutionComponentsJob(raw: Record<string, unknown>,
+           originalObligationsRetained: true, externalEffects: 0 });
+     });
+   } catch (error) {
+-    if (!registered || !row) throw error;
+-    const reason = error instanceof Error && /^Z5_[A-Z0-9_]+$/.test(error.message) ? error.message : "Z5_NATIVE_DEPENDENCY_OR_PROCESS_UNAVAILABLE";
++    const reason = nativeFailureReason(error);
++    // Claim audit storage can exhaust before the local claim commits. Preserve
++    // other preclaim errors, especially the queue's native capacity deferral.
++    if (!registered && reason !== "Z5_ORIGINAL_STORAGE_OR_EVENT_BUDGET_EXHAUSTED") throw error;
++    const status = /BOUND|BUDGET|DEADLINE/.test(reason) ? "INCOMPLETE" : /STALE|CHANGED|CUT|PROFILE/.test(reason) ? "STALE" : "UNKNOWN";
+     try {
+-      await transaction(ctx, async c => {
++      const terminal = await transaction(ctx, async c => {
+         const current = await requestTx(ctx, c, p.requestId, true);
+         await assertDeliveryTx(ctx, c, current, e);
+-        const status = /BOUND|BUDGET|DEADLINE/.test(reason) ? "INCOMPLETE" : /STALE|CHANGED|CUT|PROFILE/.test(reason) ? "STALE" : "UNKNOWN";
+-        if (current.generation === p.generation && !current.cancel_requested && !["STALE", "REVOKED", "CANCELLED"].includes(current.status))
+-          await c.query("UPDATE finnor_os.z5_link_requests SET status=$3 WHERE tenant_id=$1 AND id=$2", [p.tenantId, current.id, status]);
++        if (current.generation !== p.generation || current.cancel_requested || ["STALE", "REVOKED", "CANCELLED"].includes(current.status))
++          return null;
++        await c.query("UPDATE finnor_os.z5_link_requests SET status=$3 WHERE tenant_id=$1 AND id=$2", [p.tenantId, current.id, status]);
++        return current.id;
++      });
++      if (terminal) await bestEffortTerminalAudit(ctx, async c => {
++        const current = await requestTx(ctx, c, terminal);
++        await assertDeliveryTx(ctx, c, current, e);
+         await eventTx(ctx, c, current, "PHYSICAL_ATTEMPT_REFUSED", "refusal:" + e.deliveryAttemptId,
+-          { reason, disposition: status, interruptionTail: "UNKNOWN", allOldObligationsAndDebitsRetained: true });
++          { reason, disposition: status, localClaimCommitted: registered,
++            interruptionTail: "UNKNOWN", allOldObligationsAndDebitsRetained: true });
+         await recordCostTx(ctx, c, current, e.deliveryAttemptId, "REFUSAL", {
+           reason, disposition: status, wallMs: performance.now() - started, usage: process.cpuUsage(cpu), money: null, human: null });
+       });
+-    } catch { /* A lost fence cannot overwrite a new physical owner's evidence. */ }
++    } catch { /* A lost/unavailable fence cannot overwrite another owner. The
++      * optional audit cannot roll back an already committed terminal fence. */ }
+     throw Error(reason);
+   } finally {
++    // No handler work remains. The queue still enforces its own claim/ACK fence.
++    heartbeatClosed = true;
+     abort.abort();
+-    await releaseComputeResourceLeases(leases, "Z5_WORKER_FINISHED_OR_REFUSED");
++    const completedLeases = leases;
++    leases = [];
++    await releaseComputeResourceLeases(completedLeases, "Z5_WORKER_FINISHED_OR_REFUSED");
+   }
+ }
+diff --git a/finnor-os/scripts/project-z/z5/assemble-integration.py b/finnor-os/scripts/project-z/z5/assemble-integration.py
+index 20bfc42..cb3d28c 100644
+--- a/finnor-os/scripts/project-z/z5/assemble-integration.py
++++ b/finnor-os/scripts/project-z/z5/assemble-integration.py
+@@ -118,7 +118,15 @@ policies = "finnor-os/apps/api/app/api/policies/[operation]/route.ts"
+ edit(policies, "export const runtime='nodejs';", """import {prepareEnterpriseInstitutionCompositionPlan} from '@finnor/private-equity/src/enterprise-control';
+ export const runtime='nodejs';""")
+ edit(policies, " case 'handoff':return response(await prepareEnterpriseContingentHandoff(ctx,handoff.parse(body)));",
+-""" case 'composition-plan':return response(await prepareEnterpriseInstitutionCompositionPlan(ctx,z.object({policyRef:ExperimentRefSchema,allocationRef:ExperimentRefSchema}).strict().parse(body)));
++""" case 'composition-plan':{
++  try{return response(await prepareEnterpriseInstitutionCompositionPlan(ctx,z.object({policyRef:ExperimentRefSchema,allocationRef:ExperimentRefSchema}).strict().parse(body)));}
++  catch(error){
++   if(!(error instanceof Error)||!/^Z5_[A-Z0-9_]{1,155}$/.test(error.message))throw error;
++   const code=error.message;
++   return response({code,error:'The original permitted conditional contract is unavailable',protectedAdmission:false,
++    executionAuthorityGranted:false,oldExposureRetained:true},/IDEMPOTENCY|STALE|CURRENT|CHANGED|FENCED|EXHAUSTED/.test(code)?409:403);
++  }
++ }
+  case 'handoff':return response(await prepareEnterpriseContingentHandoff(ctx,handoff.parse(body)));""")
+ 
+ s8 = "finnor-os/packages/capability-evolution/src/lifecycle.ts"
+@@ -209,7 +217,10 @@ for relative, (before, after) in sorted(changes.items()):
+             target.write_text(value)
+     delta = "".join(difflib.unified_diff((before or "").splitlines(keepends=True), after.splitlines(keepends=True),
+         fromfile="a/" + relative if before is not None else "/dev/null", tofile="b/" + relative))
+-    patch.append("diff --git a/" + relative + " b/" + relative + "\n" + delta)
++    header = "diff --git a/" + relative + " b/" + relative + "\n"
++    if before is None:
++        header += "new file mode 100644\n"
++    patch.append(header + delta)
+     entries.append({"path": relative, "preimageSha256": sha(before.encode()) if before is not None else None,
+         "postimageSha256": sha(after.encode()), "postimage": str((destination / "postimages" / relative).relative_to(ROOT)),
+         "preimage": str((destination / "preimages" / relative).relative_to(ROOT)) if before is not None else None,
+diff --git a/finnor-os/scripts/project-z/z5/e2e-tools.mjs b/finnor-os/scripts/project-z/z5/e2e-tools.mjs
+index b41adfd..8d52ce4 100644
+--- a/finnor-os/scripts/project-z/z5/e2e-tools.mjs
++++ b/finnor-os/scripts/project-z/z5/e2e-tools.mjs
+@@ -1,5 +1,5 @@
+ import { spawn } from "node:child_process";
+-import { readFile, writeFile, mkdir } from "node:fs/promises";
++import { readFile, writeFile, mkdir, realpath } from "node:fs/promises";
+ import { createHash } from "node:crypto";
+ import { fileURLToPath } from "node:url";
+ import path from "node:path";
+@@ -9,7 +9,11 @@ export const CHECKER = path.join(path.dirname(KERNEL), "checker.py");
+ export const hash = value => createHash("sha256").update(value).digest("hex");
+ export const load = async file => JSON.parse(await readFile(file, "utf8"));
+ export async function evidenceDirectory(directory) {
+-  if (!directory || !path.isAbsolute(directory) || !directory.startsWith(path.join(ROOT, "scope-z/phase-evidence/z5/")))
++  if (!directory || !path.isAbsolute(directory) || path.resolve(directory) !== directory)
++    throw Error("EXPLICIT_FRESH_OWNED_EVIDENCE_DIRECTORY_REQUIRED");
++  const base = await realpath(path.join(ROOT, "scope-z/phase-evidence/z5"));
++  const parent = await realpath(path.dirname(directory)), relative = path.relative(base, path.join(parent, path.basename(directory)));
++  if (!relative || relative === ".." || relative.startsWith(".." + path.sep) || path.isAbsolute(relative))
+     throw Error("EXPLICIT_FRESH_OWNED_EVIDENCE_DIRECTORY_REQUIRED");
+   await mkdir(directory, { recursive: false, mode: 0o700 });
+   return directory;
+diff --git a/finnor-os/scripts/project-z/z5/freeze-delivery.py b/finnor-os/scripts/project-z/z5/freeze-delivery.py
+index 706fa2d..64ba2c4 100644
+--- a/finnor-os/scripts/project-z/z5/freeze-delivery.py
++++ b/finnor-os/scripts/project-z/z5/freeze-delivery.py
+@@ -68,7 +68,7 @@ with archive.open("xb") as raw:
+                 with (ROOT / entry["path"]).open("rb") as source:
+                     tar.addfile(info, source)
+ sha_file = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
+-integration = ROOT / "scope-z/phase-evidence/z5/integration/request-04/manifest.json"
++integration = ROOT / "scope-z/phase-evidence/z5/integration/request-07/manifest.json"
+ request = json.loads(integration.read_text())
+ manifest = {
+     "schema": "finnor.z5.exact-source-reconstruction.v1", "sourceHead": head, "sourceTree": tree,
+diff --git a/finnor-os/scripts/project-z/z5/native-e2e.mjs b/finnor-os/scripts/project-z/z5/native-e2e.mjs
+index 2042f5a..1032015 100644
+--- a/finnor-os/scripts/project-z/z5/native-e2e.mjs
++++ b/finnor-os/scripts/project-z/z5/native-e2e.mjs
+@@ -92,7 +92,7 @@ if (!alternate?.workId || alternate.workId === request.workId || !alternate.root
+   await refuse("SECOND_EXISTING_ORIGINAL_WORK_AND_ROOT_REQUIRED_FOR_REAL_CONTEXT_SWITCH");
+ // Only now load the separately installed application-owned dependencies.
+ const require = createRequire(path.join(ROOT, "finnor-os/package.json"));
+-const { chromium } = require("playwright"), { getPool } = await import("../../../packages/db/index.ts");
++const { chromium } = require("playwright"), { getPool, withTenantTransaction } = await import("../../../packages/db/index.ts");
+ pool = getPool(); browser = await chromium.launch({ headless: true });
+ const context = await browser.newContext(), page = await context.newPage();
+ proof.authorityDigest = hash(authorityBytes); proof.sourceHead = head; proof.workId = request.workId;
+@@ -158,6 +158,8 @@ async function worker(point) {
+   const identity = await login(page, process.env.TEST_OWNER_EMAIL, process.env.TEST_OWNER_PASSWORD);
+   if (identity.tenantId !== authority.tenantId || (identity.employeeId ?? identity.userId) !== authority.principalId)
+     throw Error("AUTHENTICATED_ORIGINAL_TENANT_PRINCIPAL_MISMATCH");
++  const observe = (sql, values) => withTenantTransaction(authority.tenantId,
++    { userId: authority.principalId, readOnly: true }, async (_db, client) => client.query(sql, values));
+   const target = await pool.query("SELECT current_database() name, current_user role");
+   if (target.rows[0]?.name !== authority.database.name || target.rows[0]?.role !== "finnor_app")
+     throw Error("EXACT_UNPRIVILEGED_EXISTING_DATABASE_REQUIRED");
+@@ -202,7 +204,7 @@ async function worker(point) {
+     // A real killed worker leaves its native capacity occupied until expiry.
+     // Do not create extra queue deliveries by starting into that occupied slot,
+     // shorten a lease, steal its token or reset any original grant.
+-    await until(async () => (await pool.query(`SELECT NOT EXISTS(
++    await until(async () => (await observe(`SELECT NOT EXISTS(
+       SELECT 1 FROM finnor_os.compute_resource_leases WHERE resource_key='native:z5-institution-linker'
+        AND tenant_key=$1 AND released_at IS NULL AND expires_at>clock_timestamp()) clear`, [authority.tenantId])).rows[0]?.clear === true);
+   }
+@@ -212,7 +214,7 @@ async function worker(point) {
+     return row.status === "USED" && row.events.some(e => e.kind === "WORKER_ORIGINAL_RESULT_READY_FOR_QUEUE_ACK") ? row : null;
+   });
+   const queueAck = await until(async () => {
+-    const result = await pool.query(`SELECT j.status,a.outcome,a.finished_at FROM finnor_os.jobs j
++    const result = await observe(`SELECT j.status,a.outcome,a.finished_at FROM finnor_os.jobs j
+       JOIN finnor_os.job_delivery_attempts a ON a.tenant_id=j.tenant_id AND a.job_id=j.id
+       WHERE j.tenant_id=$1 AND j.payload->>'requestId'=$2 AND j.type='link_institution_components_v1'
+        AND a.id=$3`, [authority.tenantId, id, completed.attempts.at(-1).delivery_id]);
+@@ -238,6 +240,29 @@ async function worker(point) {
+       originalS4PlanRef: plan.body.ref, originalObligationsRetained: true,
+       actualQueueStatus: queueAck.status, actualDeliveryOutcome: queueAck.outcome,
+       actualS7CostEvents: consumed.events.filter(e => e.detail?.costRef).map(e => e.detail.costRef) }));
++  async function durableReadState() {
++    const result = await observe(`SELECT r.status,r.generation,r.cancel_requested,r.deliveries,
++      r.artifact_digest,r.admission->'ref' admission_ref,
++      e.requests,e.deliveries episode_deliveries,e.retained_bytes,e.event_count,e.uses,
++      (SELECT count(*) FROM finnor_os.z5_link_events x WHERE x.tenant_id=r.tenant_id AND x.request_id=r.id) events,
++      (SELECT count(*) FROM finnor_os.z5_link_attempts x WHERE x.tenant_id=r.tenant_id AND x.request_id=r.id) attempts,
++      (SELECT count(*) FROM finnor_os.z5_s4_uses x WHERE x.tenant_id=r.tenant_id AND x.request_id=r.id) composition_uses,
++      (SELECT coalesce(jsonb_agg(to_jsonb(h) ORDER BY h.policy_id,h.allocation_id),'[]'::jsonb)
++       FROM finnor_os.z5_s4_heads h WHERE h.tenant_id=r.tenant_id AND h.principal_id=r.principal_id
++        AND h.work_id=r.work_id) composition_heads
++      FROM finnor_os.z5_link_requests r JOIN finnor_os.z5_link_episodes e
++       ON e.tenant_id=r.tenant_id AND e.principal_id=r.principal_id AND e.work_id=r.work_id
++      WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.id=$3`,
++    [authority.tenantId, authority.principalId, id]);
++    if (result.rows.length !== 1) throw Error("ACTUAL_TENANT_SCOPED_READ_STATE_REQUIRED");
++    return hash(JSON.stringify(result.rows[0]));
++  }
++  const beforeReads = await durableReadState();
++  const firstRead = await read(id), secondRead = await read(id), afterReads = await durableReadState();
++  if (beforeReads !== afterReads || firstRead.artifactDigest !== secondRead.artifactDigest
++    || !firstRead.current || !secondRead.current) throw Error("READ_MUTATED_ORIGINAL_DURABLE_Z5_STATE");
++  await step("nonmutating-original-reads", "Repeated real authenticated reads preserve Z5 request/episode/events/attempts",
++    async () => ({ beforeDigest: beforeReads, afterDigest: afterReads, unchanged: true, actualOwnerRlsScope: true }));
+   const noFifth = await post("company-brain/institution-link-submit", { ...request, idempotencyKey: "exhausted-native:" + id });
+   if (noFifth.status !== 202 || noFifth.body.disposition !== "INCOMPLETE" || noFifth.body.requestId !== null
+     || noFifth.body.newAllowance !== false || (await read(id)).attempts.length !== 4)
+@@ -302,18 +327,35 @@ async function worker(point) {
+     async () => ({ status: stale.status, staleReuseStatus: reuse.status, obligationsRetained: true,
+       independentObservation: "ORIGINAL_PROTECTED_S6_HANDOFF_NOT_ACKNOWLEDGMENT" }));
+   const cancelled = await post("company-brain/institution-link-cancel", scoped(id));
+-  if (cancelled.status !== 200 || cancelled.body.exposureRetained !== true) throw Error("CANCEL_DROPPED_ORIGINAL_LIABILITY");
++  if (cancelled.status !== 200 || cancelled.body.exposureRetained !== true || cancelled.body.controlFenceCommitted !== true)
++    throw Error("CANCEL_DROPPED_ORIGINAL_LIABILITY");
++  const beforeCancelledConsumers = await durableReadState();
++  const cancelledAdmission = await post("company-brain/institution-link-admit", scoped(id));
++  const cancelledUse = await post("company-brain/institution-link-use", {
++    ...scoped(id), artifactDigest: consumed.artifactDigest, idempotencyKey: "post-cancel-refusal" });
++  const cancelledPlan = await post("policies/composition-plan", {
++    policyRef: request.policyRef, allocationRef: request.allocationRef });
++  const afterCancelledConsumers = await durableReadState(), cancelledState = await read(id);
++  if (![cancelledAdmission, cancelledUse, cancelledPlan].every(result => result.status >= 400 && result.status < 500)
++    || beforeCancelledConsumers !== afterCancelledConsumers || cancelledState.status !== "CANCELLED" || cancelledState.current)
++    throw Error("CANCELLED_ORIGINAL_REQUEST_CONSUMED_OR_MUTATED");
++  await step("cancelled-native-consumers-refused", "Original S8 admission, S4 use and S4 planning refuse the durable cancellation fence",
++    async () => ({ admissionStatus: cancelledAdmission.status, useStatus: cancelledUse.status, planningStatus: cancelledPlan.status,
++      beforeDigest: beforeCancelledConsumers, afterDigest: afterCancelledConsumers, unchanged: true,
++      concurrentCancellationSchedule: "NOT_EXERCISED_BY_THIS_POST_COMMIT_NEGATIVE" }));
+   const revoked = await post("company-brain/institution-contract-revoke", { workId: request.workId, root: request.root,
+     profileRef: request.profileRef, reason: "EXPLICIT_DISPOSABLE_E2E_REVOKE" });
+   const refused = await post("company-brain/institution-link-admit", scoped(id)), terminal = await read(id);
+-  if (revoked.status !== 200 || refused.status < 400 || terminal.current || terminal.status !== "REVOKED"
++  if (revoked.status !== 200 || revoked.body.controlFenceCommitted !== true || refused.status < 400 || terminal.current || terminal.status !== "REVOKED"
+     || terminal.obligations.length !== request.obligationRefs.length || terminal.attempts.length !== 4)
+     throw Error("REVOKED_CANCELLED_ORIGINAL_SCOPE_REUSED_OR_RESET");
+   await page.reload(); await panel.waitFor({ state: "visible" });
+   if (!(await panel.textContent()).includes("REVOKED")) throw Error("REVOKED_STATE_NOT_VISIBLE_AFTER_REAL_RELOAD");
+   await step("cancel-revoke-and-retained-failure", "No fresh grant, admission or lost original obligation after cancellation and revocation",
+     async () => ({ status: terminal.status, current: terminal.current, attempts: terminal.attempts.length,
+-      oldObligationsRetained: true, originalIdempotencyConflict: conflicting.status, fifthDeliveryRefused: true }));
++      oldObligationsRetained: true, originalIdempotencyConflict: conflicting.status, fifthDeliveryRefused: true,
++      cancelAuditRecorded: cancelled.body.auditRecorded, revokeAuditRecorded: revoked.body.auditRecorded,
++      cancelAuditGap: cancelled.body.auditGap, revokeAuditGap: revoked.body.auditGap }));
+   proof.state = "PASSED_NATIVE_ENGINEERING_ONLY"; proof.exit = 0;
+ } catch (error) {
+   proof.state = "FAILED"; proof.failure = error instanceof Error && /^[A-Z0-9_]+$/.test(error.message) ? error.message : "NATIVE_EXISTING_TARGET_OR_DEPENDENCY_FAILURE";
+diff --git a/finnor-os/scripts/project-z/z5/offline-e2e.mjs b/finnor-os/scripts/project-z/z5/offline-e2e.mjs
+index 06ebf09..6d05599 100644
+--- a/finnor-os/scripts/project-z/z5/offline-e2e.mjs
++++ b/finnor-os/scripts/project-z/z5/offline-e2e.mjs
+@@ -1,6 +1,6 @@
+ import { spawn } from "node:child_process";
+ import { createHash, randomUUID } from "node:crypto";
+-import { readFile, writeFile, mkdir } from "node:fs/promises";
++import { readFile, writeFile, mkdir, lstat, realpath } from "node:fs/promises";
+ import { fileURLToPath } from "node:url";
+ import path from "node:path";
+ 
+@@ -8,20 +8,134 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.
+ const kernel = path.join(root, "finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/kernel.ts");
+ const checker = path.join(path.dirname(kernel), "checker.py");
+ const frozen = path.join(root, "scope-z/phase-evidence/z5/frozen");
+-const output = process.argv[2];
+-if (!output || !path.isAbsolute(output) || !output.startsWith(path.join(root, "scope-z/phase-evidence/z5/")))
++const args = process.argv.slice(2);
++const auditOnly = args.length === 2 && args[0] === "--audit-only";
++const requestedOutput = auditOnly ? args[1] : args.length === 1 ? args[0] : null;
++const evidenceRoot = await realpath(path.join(root, "scope-z/phase-evidence/z5"));
++const inside = (parent, file) => {
++  const relative = path.relative(parent, file);
++  return relative !== "" && relative !== ".." && !relative.startsWith(".." + path.sep) && !path.isAbsolute(relative);
++};
++if (!requestedOutput || !path.isAbsolute(requestedOutput) || !inside(evidenceRoot, path.resolve(requestedOutput)))
+   throw Error("EXPLICIT_OWNED_EVIDENCE_DIRECTORY_REQUIRED");
++const output = path.join(await realpath(path.dirname(path.resolve(requestedOutput))), path.basename(path.resolve(requestedOutput)));
++if (!inside(evidenceRoot, output)) throw Error("EXPLICIT_OWNED_EVIDENCE_DIRECTORY_REQUIRED");
+ await mkdir(output, { recursive: false, mode: 0o700 });
++const startedAt = new Date().toISOString();
++const startedWall = performance.now();
+ const hash = value => createHash("sha256").update(value).digest("hex");
+ const code = {};
+ for (const file of [kernel, checker, fileURLToPath(import.meta.url)])
+   code[path.relative(root, file)] = hash(await readFile(file));
+ const registrationBytes = await readFile(path.join(frozen, "registration.json"));
++if (hash(registrationBytes) !== "74c0d1b3f02e53e3c011f4cf5f976dd62378e04d2fd56b389973078cf6b2f42e")
++  throw Error("ORIGINAL_FROZEN_REGISTRATION_CHANGED");
+ const registration = JSON.parse(registrationBytes);
++const familyFile = path.join(root, "scope-z/prompts/qualification-families.json");
++const familyBytes = await readFile(familyFile);
++const familyTitles = JSON.parse(familyBytes).phases.Z5.families;
++function canonical(value) {
++  if (Array.isArray(value)) return "[" + value.map(canonical).join(",") + "]";
++  if (value !== null && typeof value === "object")
++    return "{" + Object.keys(value).sort().map(key => JSON.stringify(key) + ":" + canonical(value[key])).join(",") + "}";
++  return JSON.stringify(value);
++}
++async function auditPopulation() {
++  const start = performance.now();
++  if (registration.schema !== "finnor.z5.pre-code-registration.v1" || registration.families !== 32
++      || registration.casesPerFamily !== 8 || registration.entries?.length !== 256
++      || !Array.isArray(familyTitles) || familyTitles.length !== 32 || new Set(familyTitles).size !== 32)
++    throw Error("ORIGINAL_FROZEN_POPULATION_SHAPE");
++  const cases = [], seen = new Set(), byInput = new Map();
++  let bytesRead = 0;
++  for (const entry of registration.entries) {
++    const match = /^F(0[1-9]|[12][0-9]|3[0-2])-(0[1-8])$/.exec(entry.id);
++    if (!match || seen.has(entry.id) || entry.path !== entry.id + ".json" || !/^[a-f0-9]{64}$/.test(entry.sha256))
++      throw Error("ORIGINAL_FROZEN_MEMBER_IDENTITY");
++    seen.add(entry.id);
++    const file = path.join(frozen, entry.path), info = await lstat(file);
++    if (!info.isFile() || info.size > 1024 * 1024) throw Error("ORIGINAL_FROZEN_MEMBER_KIND_OR_BOUND:" + entry.id);
++    const bytes = await readFile(file);
++    bytesRead += bytes.length;
++    if (bytesRead > 64 * 1024 * 1024) throw Error("ORIGINAL_FROZEN_POPULATION_BYTE_BOUND");
++    if (hash(bytes) !== entry.sha256) throw Error("FROZEN_CASE_CHANGED:" + entry.id);
++    const fixture = JSON.parse(bytes);
++    if (fixture.schema !== "finnor.z5.public-frozen-case.v1" || fixture.id !== entry.id
++        || fixture.family !== familyTitles[Number(match[1]) - 1]
++        || fixture.expected?.disposition !== entry.expected
++        || fixture.expected?.usefulSupportedPositive !== entry.usefulSupportedPositive
++        || entry.usefulSupportedPositive !== (entry.expected === "CHECKED_CANDIDATE")
++        || !["CHECKED_CANDIDATE", "CHECKED_INFEASIBLE", "UNSUPPORTED", "INCOMPLETE"].includes(entry.expected)
++        || fixture.input === null || typeof fixture.input !== "object" || Array.isArray(fixture.input))
++      throw Error("ORIGINAL_FROZEN_MEMBER_CONTRACT:" + entry.id);
++    const inputSha256 = hash(canonical(fixture.input));
++    const row = { id: entry.id, familyId: "F" + match[1], family: fixture.family, fixtureSha256: entry.sha256,
++      inputSha256, expected: entry.expected, replacement: fixture.expected.replacement ?? null,
++      usefulSupportedPositive: entry.usefulSupportedPositive };
++    cases.push(row);
++    if (!byInput.has(inputSha256)) byInput.set(inputSha256, []);
++    byInput.get(inputSha256).push(row);
++  }
++  const positives = cases.filter(row => row.usefulSupportedPositive).length;
++  if (positives !== registration.usefulPositiveDenominator) throw Error("ORIGINAL_FROZEN_POSITIVE_DENOMINATOR");
++  const groups = [...byInput].map(([inputSha256, rows]) => ({
++    inputSha256, cases: rows.map(row => row.id), familyIds: [...new Set(rows.map(row => row.familyId))],
++    expectedOutcomes: [...new Set(rows.map(row => JSON.stringify([row.expected, row.replacement])))].map(value => JSON.parse(value)),
++  }));
++  const duplicateGroups = groups.filter(group => group.cases.length > 1);
++  const perFamily = familyTitles.map((family, i) => {
++    const familyId = "F" + String(i + 1).padStart(2, "0"), rows = cases.filter(row => row.familyId === familyId);
++    const uniqueOriginalInputs = new Set(rows.map(row => row.inputSha256)).size;
++    return { familyId, family, registeredCases: rows.length, uniqueOriginalInputs,
++      repeatedOriginalInputSlots: rows.length - uniqueOriginalInputs,
++      registeredUsefulPositives: rows.filter(row => row.usefulSupportedPositive).length };
++  });
++  return {
++    schema: "finnor.z5.frozen-population-identity.v1",
++    timing: "POST_CODE_STATIC_AUDIT_NOT_A_NEW_SEMANTIC_CAMPAIGN",
++    canonicalization: "Recursive UTF-16 lexical object-key order; array order and every input field preserved; JSON.stringify scalar escaping; UTF-8 SHA-256",
++    comparisonBoundary: "Equal digests identify exact canonical input duplicates; unequal digests do not establish semantic or structural diversity",
++    registrationSha256: hash(registrationBytes), lockedFamilyDefinitionsSha256: hash(familyBytes),
++    historicalRegistrationDeclaredProductCodeWritten: registration.productCodeWritten,
++    registeredCases: cases.length, registeredFamilyLabels: perFamily.length, registeredUsefulPositives: positives,
++    uniqueOriginalInputs: byInput.size, repeatedOriginalInputSlots: cases.length - byInput.size,
++    exactDuplicateGroups: duplicateGroups, crossLabelDuplicateGroups: duplicateGroups.filter(group => group.familyIds.length > 1),
++    conflictingExpectedOutcomeGroups: groups.filter(group => group.expectedOutcomes.length > 1),
++    familiesWithEightDistinctInputs: perFamily.filter(family => family.uniqueOriginalInputs === 8).length,
++    structuralFamilyQualification: "NOT_ESTABLISHED", independentlyFreshPopulation: "NOT_ESTABLISHED",
++    protectedAdmission: false, originalCasesChanged: 0, newSemanticCaseExecutions: 0,
++    bytesRead, wallMs: performance.now() - start, perFamily, cases,
++  };
++}
++async function assertAuditedSourceUnchanged() {
++  for (const [relative, digest] of Object.entries(code))
++    if (hash(await readFile(path.join(root, relative))) !== digest) throw Error("PUBLIC_RUN_SOURCE_CHANGED:" + relative);
++  if (hash(await readFile(path.join(frozen, "registration.json"))) !== hash(registrationBytes)
++      || hash(await readFile(familyFile)) !== hash(familyBytes)) throw Error("PUBLIC_POPULATION_INDEX_CHANGED");
++}
++const populationAudit = await auditPopulation();
++if (populationAudit.conflictingExpectedOutcomeGroups.length) throw Error("FROZEN_EXPECTED_OUTCOME_CONFLICT");
++await assertAuditedSourceUnchanged();
++if (auditOnly) {
++  const report = { schema: "finnor.z5.public-population-audit.v1", state: "AUDIT_COMPLETED",
++    scope: "POST_CODE_STATIC_ORIGINAL_INPUT_IDENTITY_NOT_NATIVE_OR_PROTECTED", startedAt,
++    finishedAt: new Date().toISOString(), elapsedMs: performance.now() - startedWall,
++    node: process.version, sourceFiles: code, populationAudit,
++    producerExecutions: 0, checkerExecutions: 0, databaseActions: 0, listeners: 0, protectedAdmission: false };
++  await writeFile(path.join(output, "report.json"), JSON.stringify(report, null, 2) + "\n", { flag: "wx", mode: 0o600 });
++  await new Promise((resolve, reject) => process.stdout.write(JSON.stringify({ output, state: report.state,
++    registeredCases: populationAudit.registeredCases, uniqueOriginalInputs: populationAudit.uniqueOriginalInputs,
++    structuralFamilyQualification: populationAudit.structuralFamilyQualification, producerExecutions: 0, checkerExecutions: 0 }) + "\n",
++  error => error ? reject(error) : resolve()));
++  process.exit(0);
++}
++await writeFile(path.join(output, "population-audit.json"), JSON.stringify(populationAudit, null, 2) + "\n", { flag: "wx", mode: 0o600 });
+ const receipt = {
+-  schema: "finnor.z5.public-process-e2e.v1", id: randomUUID(), startedAt: new Date().toISOString(),
++  schema: "finnor.z5.public-process-e2e.v1", id: randomUUID(), startedAt,
+   scope: "PUBLIC_OFFLINE_ORIGINAL_SEMANTICS_NOT_NATIVE_OR_PROTECTED",
+   sourceFiles: code, registrationSha256: hash(registrationBytes), node: process.version,
++  populationAudit: { report: "population-audit.json", uniqueOriginalInputs: populationAudit.uniqueOriginalInputs,
++    structuralFamilyQualification: populationAudit.structuralFamilyQualification, independentlyFreshPopulation: populationAudit.independentlyFreshPopulation },
+   expectedPositiveDenominator: registration.usefulPositiveDenominator, cases: [], failures: [],
+   databaseActions: 0, listeners: 0, protectedAdmission: false, state: "IN_PROGRESS",
+ };
+@@ -74,7 +188,9 @@ receipt.perFamily = [...new Set(receipt.cases.map(c => c.family))].map(family =>
+   return { family, cases: cases.length, passed: cases.filter(c => c.passed).length, failures: cases.filter(c => !c.passed).map(c => c.id) };
+ });
+ receipt.finishedAt = new Date().toISOString();
++receipt.elapsedMs = performance.now() - startedWall;
+ receipt.state = receipt.failures.length === 0 && receipt.positiveRate >= 0.95 && receipt.allCriticalFalsifiersRejected ? "PASSED" : "FAILED";
++await assertAuditedSourceUnchanged();
+ await writeFile(path.join(output, "report.json"), JSON.stringify(receipt, null, 2) + "\n", { flag: "wx", mode: 0o600 });
+ console.log(JSON.stringify({ output, state: receipt.state, cases: receipt.cases.length,
+   positiveAccepted: receipt.positiveAccepted, denominator: receipt.expectedPositiveDenominator, failures: receipt.failures }));
+diff --git a/finnor-os/scripts/project-z/z5/reconstruct.mjs b/finnor-os/scripts/project-z/z5/reconstruct.mjs
+index 26a1ca2..3a6f003 100644
+--- a/finnor-os/scripts/project-z/z5/reconstruct.mjs
++++ b/finnor-os/scripts/project-z/z5/reconstruct.mjs
+@@ -5,12 +5,29 @@ import { createHash } from "node:crypto";
+ import { spawn } from "node:child_process";
+ import path from "node:path";
+ import { fileURLToPath } from "node:url";
++const sha = bytes => createHash("sha256").update(bytes).digest("hex");
++const installRequiredFreeBytes = 8 * 1024 ** 3;
++async function installationHeadroom(directory) {
++  const space = await statfs(directory), available = Number(space.bavail) * Number(space.bsize);
++  const measured = Number.isSafeInteger(available) && available >= 0, sufficient = measured && available >= installRequiredFreeBytes;
++  return { state: sufficient ? "PASSED_INSTALLATION_HEADROOM_ONLY" : measured ? "BLOCKED_INSUFFICIENT_DISK" : "BLOCKED_UNVERIFIED_DISK",
++    exit: sufficient ? 0 : 2, requiredFreeBytes: installRequiredFreeBytes, actualFreeBytes: measured ? available : null,
++    installedZ5Proof: false, databaseActions: 0, listenersStarted: 0, installsStarted: 0 };
++}
++// Read-only diagnostic, also called inside each already-held install lock.
++// It never authenticates a receipt, extracts source or invokes npm.
++if (process.argv[2] === "--installation-headroom") {
++  if (process.argv.length !== 4 || !path.isAbsolute(process.argv[3] ?? "") || process.version !== "v22.23.4")
++    throw Error("EXACT_ABSOLUTE_HEADROOM_DIRECTORY_AND_NODE22_REQUIRED");
++  const report = await installationHeadroom(process.argv[3]);
++  console.log(JSON.stringify({ ...report, sourceSha256: sha(await readFile(fileURLToPath(import.meta.url))) }));
++  process.exit(report.exit);
++}
+ const [receiptPath, expectedReceiptSha256, destination, mode = "--offline-replay"] = process.argv.slice(2);
+ if (![receiptPath, destination].every(p => p && path.isAbsolute(p))
+   || !/^[a-f0-9]{64}$/.test(expectedReceiptSha256 ?? "")
+   || !["--offline-replay", "--extract-only", "--install-engineering"].includes(mode)
+   || process.version !== "v22.23.4") throw Error("EXACT_ABSOLUTE_RECEIPT_DESTINATION_NODE22_AND_MODE_REQUIRED");
+-const sha = bytes => createHash("sha256").update(bytes).digest("hex");
+ const receiptBytes = await readFile(receiptPath);
+ if (sha(receiptBytes) !== expectedReceiptSha256) throw Error("DELIVERY_RECEIPT_PREIMAGE_MISMATCH");
+ const receipt = JSON.parse(receiptBytes), delivery = path.dirname(receiptPath);
+@@ -28,11 +45,9 @@ const manifest = JSON.parse(manifestBytes);
+ const lock = process.env.FINNOR_Z5_HEAVY_LOCK;
+ if (mode !== "--extract-only" && (!lock || !path.isAbsolute(lock))) throw Error("EXPLICIT_ABSOLUTE_SHARED_HEAVY_LOCK_REQUIRED");
+ if (mode === "--install-engineering") {
+-  const space = await statfs(path.dirname(destination));
+-  if (Number(space.bavail) * Number(space.bsize) < 8 * 1024 ** 3) {
+-    const report = { state: "BLOCKED_INSUFFICIENT_DISK", exit: 2, requiredFreeBytes: 8 * 1024 ** 3,
+-      actualFreeBytes: Number(space.bavail) * Number(space.bsize), sourceHead: receipt.sourceHead,
+-      installedZ5Proof: false, databaseActions: 0, listenersStarted: 0, installsStarted: 0 };
++  const headroom = await installationHeadroom(path.dirname(destination));
++  if (headroom.exit !== 0) {
++    const report = { ...headroom, sourceHead: receipt.sourceHead };
+     await writeFile(path.join(delivery, "installed-engineering-guard.json"), JSON.stringify(report, null, 2) + "\n", { flag: "wx", mode: 0o600 });
+     console.log(JSON.stringify(report)); process.exit(2);
+   }
+@@ -41,18 +56,40 @@ const environment = { PATH: path.dirname(process.execPath) + ":/usr/bin:/bin", L
+   PYTHONDONTWRITEBYTECODE: "1", FINNOR_Z5_DECLARED_RECONSTRUCTION: "EXACT_MANIFEST",
+   FINNOR_Z5_SOURCE_ROOT: destination };
+ const steps = [];
++// The same flock owns preflight and npm. No stale pre-extraction measurement
++// or lock release can authorize either root/backend dependency installation.
++const installUnderLock = String.raw`
++import { spawnSync } from "node:child_process";
++const guard = spawnSync(process.execPath, [process.argv[1], "--installation-headroom", process.cwd()], { stdio: "inherit" });
++if (guard.error || guard.status !== 0) {
++  console.error(JSON.stringify({ stage: "INSTALLATION_HEADROOM", exitCode: guard.status, signal: guard.signal,
++    spawnError: guard.error?.code ?? null }));
++  process.exit(guard.error ? 1 : guard.status ?? 1);
++}
++const install = spawnSync("/usr/bin/npm", ["ci", "--no-audit", "--no-fund"], { stdio: "inherit" });
++if (install.error || install.signal) console.error(JSON.stringify({ stage: "NPM_CI", exitCode: install.status,
++  signal: install.signal, spawnError: install.error?.code ?? null }));
++process.exit(install.error ? 1 : install.status ?? 1);
++`;
+ async function run(name, executable, args, expectedExit = 0, cwd = destination, extra = {}) {
+   const started = performance.now();
+   return new Promise((resolve, reject) => {
+-    const child = spawn(executable, args, { cwd, env: { ...environment, ...extra }, stdio: ["ignore", "pipe", "pipe"] });
++    const child = spawn(executable, args, { cwd, env: { ...environment, ...extra }, detached: true, stdio: ["ignore", "pipe", "pipe"] });
+     let out = "", err = "", bounded = false;
+-    const timer = setTimeout(() => { bounded = true; child.kill("SIGKILL"); }, mode === "--install-engineering" ? 1200000 : 180000);
+-    child.stdout.on("data", b => { out += b; if (Buffer.byteLength(out) > 4 * 1024 * 1024) { bounded = true; child.kill("SIGKILL"); } });
+-    child.stderr.on("data", b => { err += b; if (Buffer.byteLength(err) > 1024 * 1024) { bounded = true; child.kill("SIGKILL"); } });
++    const stopOwnedGroup = () => {
++      bounded = true;
++      if (Number.isSafeInteger(child.pid) && child.pid > 1) {
++        try { process.kill(-child.pid, "SIGKILL"); } catch { /* The owned group may already be gone. */ }
++      }
++    };
++    const timer = setTimeout(stopOwnedGroup, mode === "--install-engineering" ? 1200000 : 180000);
++    child.stdout.on("data", b => { out += b; if (Buffer.byteLength(out) > 4 * 1024 * 1024) stopOwnedGroup(); });
++    child.stderr.on("data", b => { err += b; if (Buffer.byteLength(err) > 1024 * 1024) stopOwnedGroup(); });
+     child.on("error", () => undefined);
+     child.on("close", async (exitCode, signal) => {
+       clearTimeout(timer);
+-      const result = { name, exitCode, signal, expectedExit, bounded, stdout: out, stderr: err, wallMs: performance.now() - started };
++      const result = { name, exitCode, signal, expectedExit, bounded, processGroupId: child.pid ?? null,
++        stdout: out, stderr: err, wallMs: performance.now() - started };
+       steps.push(result);
+       try {
+         if (name !== "exact-source-extraction") await writeFile(path.join(destination, "scope-z/phase-evidence/z5/reconstruction", name + ".json"),
+@@ -125,7 +162,8 @@ try {
+     const npm = await run("installed-npm-version", "/usr/bin/npm", ["--version"]);
+     if (npm.stdout.trim() !== "11.19.1") throw Error("RECONSTRUCTION_STEP_REFUSED:PINNED_NPM_VERSION");
+     for (const [name, cwd] of [["root-ci", destination], ["backend-ci", path.join(destination, "finnor-os")]])
+-      await run(name, "flock", [lock, "/usr/bin/npm", "ci", "--no-audit", "--no-fund"], 0, cwd);
++      await run(name, "flock", [lock, process.execPath, "--input-type=module", "-e", installUnderLock,
++        fileURLToPath(import.meta.url)], 0, cwd);
+     for (const graph of ["backend", "frontend"])
+       await run(graph + "-installed-proposed-types", "flock", [lock, process.execPath, "--max-old-space-size=4096",
+         path.join(scripts, "check-graphs.mjs"), destination, graph,
