@@ -170,6 +170,7 @@ const portalJournalLines = () => {
 };
 const witness = async () => {
   const [charges] = await q("SELECT count(*)::int n, coalesce(sum(units),0)::text units FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2", [parent.tenantId, parent.parentReservation.id]);
+  const phases = await q("SELECT phase,count(*)::int n FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 GROUP BY phase ORDER BY phase", [parent.tenantId, parent.parentReservation.id]);
   const [reservation] = await q("SELECT md5(envelopes::text) envelopes,status FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND reservation_id=$2", [parent.tenantId, parent.parentReservation.id]);
   const [reservations] = await q("SELECT count(*)::int n FROM finnor_os.s5_reservations WHERE tenant_id=$1", [parent.tenantId]);
   const [consumptions] = await q("SELECT count(*)::int n FROM finnor_os.s5_consumptions WHERE tenant_id=$1", [parent.tenantId]);
@@ -178,7 +179,7 @@ const witness = async () => {
   const [p1] = await q("SELECT attempts_used,steps_used FROM finnor_os.p1_episodes WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at LIMIT 1", [parent.tenantId, parent.workId]);
   const effects = await q("SELECT status,count(*)::int n FROM finnor_os.business_effects WHERE tenant_id=$1 GROUP BY status ORDER BY status", [parent.tenantId]);
   const portal = (await portalStore.snapshot(acquired.portal.dir)).state;
-  return { charges, reservation, reservationsInTenant: reservations.n, s5Consumptions: consumptions.n, workStatus: work.status, episode: episode.d,
+  return { charges, chargesByPhase: phases, reservation, reservationsInTenant: reservations.n, s5Consumptions: consumptions.n, workStatus: work.status, episode: episode.d,
     p1Used: p1, effects, portalJournalLines: portalJournalLines(), portalPhases: Object.values(portal.records ?? {}).map(item => `${item.recordId}:${item.phase}`) };
 };
 const objective = () => JSON.parse(readFileSync(join(acquired.portal.dir, "held-out-objective.json"), "utf8"));
@@ -251,9 +252,10 @@ if (!child || !parked) {
   await finish(1);
 }
 
-let session = null;
+let session = null, beforeSubmit = null;
 await runCase("Z04", "Z3 submit synthesizes and checks a strategy and the S4 writer selects exactly the first canonical step", async () => {
   const key = "z3-native-submit-" + randomUUID();
+  beforeSubmit = await witness();
   const submitted = await viability("viability-submit", { workId: parent.workId, idempotencyKey: key });
   ensure(submitted.status === 200 || submitted.status === 202, "SUBMIT_REFUSED:" + submitted.status + ":" + JSON.stringify(submitted.body).slice(0, 400));
   const sessionId = submitted.body.sessionId;
@@ -278,7 +280,7 @@ if (!session) {
 let firstDone = null;
 await runCase("Z05", "The application owner consumes the selected step under the original reservation and retains one receipt", async () => {
   const selectionId = session.selections[0].id;
-  const pre = await witness();
+  const pre = beforeSubmit;
   firstDone = await waitFor("FIRST_STEP_RETAINED", 420000, async () => {
     const [selection] = await q("SELECT status,reason,receipt_ref FROM finnor_os.z3_application_selections WHERE tenant_id=$1 AND id=$2", [parent.tenantId, selectionId]);
     if (["REFUSED", "STALE"].includes(selection.status)) throw Error(`SELECTION_${selection.status}:${selection.reason}`);
@@ -288,7 +290,8 @@ await runCase("Z05", "The application owner consumes the selected step under the
   const [receipt] = await q("SELECT body FROM finnor_os.application_semantics_artifacts WHERE tenant_id=$1 AND artifact_id=$2", [parent.tenantId, firstDone.receipt_ref.id]);
   const requests = await q("SELECT node_id,status,possible_egress FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2", [parent.tenantId, child.id]);
   record("first-step-consumption", { selectionId, firstDone, receipt: receipt?.body, requests, witnessBeforeStep: pre, witnessAfterStep: after });
-  ensure(after.charges.n > pre.charges.n, "NO_S5_DEBIT_AGAINST_THE_ORIGINAL_RESERVATION");
+  const executionCharges = witness => witness.chargesByPhase.find(row => row.phase === "EXECUTION")?.n ?? 0;
+  ensure(executionCharges(after) > executionCharges(pre), "NO_EXECUTION_S5_DEBIT_AGAINST_THE_ORIGINAL_RESERVATION");
   ensure(after.reservationsInTenant === before.reservationsInTenant && after.reservation.envelopes === before.reservation.envelopes, "A_NEW_RESERVATION_OR_ALLOWANCE_APPEARED");
   ensure(after.portalJournalLines === pre.portalJournalLines + 1, "PORTAL_JOURNAL_NOT_EXACTLY_ONE_NEW_ENTRY:" + pre.portalJournalLines + "->" + after.portalJournalLines);
   ensure(receipt?.body?.disposition === "VERIFIED" && receipt.body.z3?.sessionId === session.row.id, "RECEIPT_NOT_VERIFIED_AND_BOUND_TO_THE_Z3_SESSION");
@@ -334,6 +337,8 @@ await runCase("Z07", "Second step is consumed and Z3 reaches the VALIDATED E-sta
   record("z3-final", { recover: recover.body, end, read: read.body, witnessAfter: after });
   ensure(after.reservationsInTenant === before.reservationsInTenant, "A_NEW_RESERVATION_APPEARED");
   ensure(after.workStatus !== "completed", "ORIGINAL_WORK_COMPLETED_BY_THE_SESSION");
+  ensure(after.portalJournalLines === beforeSubmit.portalJournalLines + 2, "PORTAL_JOURNAL_NOT_EXACTLY_TWO_NEW_ENTRIES:" + beforeSubmit.portalJournalLines + "->" + after.portalJournalLines);
+  ensure(after.portalPhases.includes(objective().recordId + ":VALIDATED"), "PORTAL_RECORD_NOT_VALIDATED:" + after.portalPhases.join(","));
   return { detail: { cursor: end, portalPhases: after.portalPhases, journalLines: after.portalJournalLines, s5Charges: after.charges } };
 });
 
