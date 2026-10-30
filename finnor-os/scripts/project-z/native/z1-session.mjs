@@ -13,6 +13,7 @@ import { createRequire } from "node:module"
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { readdir, readFile, readlink, stat } from "node:fs/promises"
 import { join } from "node:path"
+import { inspectListeners } from "../z1/listener-custody.mjs"
 
 const state = process.env.FINNOR_NATIVE_STATE
 const evidence = process.env.FINNOR_NATIVE_EVIDENCE
@@ -36,7 +37,11 @@ async function step(name, action) {
   const entry = { name, startedAt: new Date().toISOString(), status: "RUNNING" }
   result.steps.push(entry); save()
   try { const value = await action(); entry.status = "OK"; return value }
-  catch (error) { entry.status = "FAILED"; entry.error = String(error?.message ?? error).split("\n")[0].slice(0, 300); throw error }
+  catch (error) {
+    entry.status = "FAILED"; entry.error = String(error?.message ?? error).split("\n")[0].slice(0, 300)
+    if (Array.isArray(error?.detail) && JSON.stringify(error.detail).length <= 2000) entry.detail = error.detail
+    throw error
+  }
   finally { entry.finishedAt = new Date().toISOString(); save() }
 }
 
@@ -89,18 +94,9 @@ function makeOwnerApi(token) {
 }
 
 async function listenerProcessIdentity(port) {
-  const portHex = port.toString(16).padStart(4, "0").toUpperCase()
-  const inodes = []
-  for (const family of ["tcp", "tcp6"]) {
-    const rows = (await readFile(`/proc/net/${family}`, "utf8")).trim().split("\n").slice(1)
-    for (const line of rows) {
-      const row = line.trim().split(/\s+/)
-      if (row[3] === "0A" && row[1].split(":")[1] === portHex) {
-        assert.ok(["0100007F", "00000000000000000000000001000000"].includes(row[1].split(":")[0]), "TARGET_LISTENER_MUST_BIND_LOOPBACK_ONLY")
-        inodes.push(row[9])
-      }
-    }
-  }
+  // The same classification the guarded driver applies: loopback rows are the declared process's; the sandbox
+  // platform's own root-owned link-local mirror of that listener is recorded; any other row refuses.
+  const { loopbackInodes: inodes, forwarders } = await inspectListeners(port)
   assert.ok(inodes.length > 0, `OWNED_LISTENER_${port}_NOT_DELIVERED`)
   const pids = (await readdir("/proc")).filter(name => /^[0-9]+$/.test(name)).map(Number).sort((a, b) => a - b)
   for (const pid of pids) {
@@ -116,7 +112,8 @@ async function listenerProcessIdentity(port) {
     const info = await stat(`/proc/${pid}`)
     const executable = await readlink(`/proc/${pid}/exe`)
     return { pid, startTicks: fields[19], uid: info.uid, executableSha256: sha(await readFile(executable)), port,
-      commandLineSha256: sha(await readFile(`/proc/${pid}/cmdline`)), cwd: await readlink(`/proc/${pid}/cwd`) }
+      commandLineSha256: sha(await readFile(`/proc/${pid}/cmdline`)), cwd: await readlink(`/proc/${pid}/cwd`),
+      platformForwarders: forwarders }
   }
   fail(`OWNED_LISTENER_${port}_PROCESS_NOT_FOUND`)
 }

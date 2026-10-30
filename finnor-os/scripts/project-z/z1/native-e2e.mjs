@@ -5,6 +5,7 @@ import { readFile, readdir, readlink, stat, writeFile, mkdir } from "node:fs/pro
 import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
+import { inspectListeners } from "./listener-custody.mjs";
 
 export const sha = bytes => createHash("sha256").update(bytes).digest("hex");
 const root = fileURLToPath(new URL("../../../../", import.meta.url));
@@ -22,24 +23,14 @@ export async function processIdentity(pid) {
   return { pid, startTicks: fields[19], uid: info.uid, executableSha256: sha(await readFile(executable)) };
 }
 async function checkListener(port, expected) {
-  const portHex = port.toString(16).padStart(4, "0").toUpperCase();
-  const inodes = [];
-  for (const family of ["tcp", "tcp6"]) {
-    const rows = (await readFile(`/proc/net/${family}`, "utf8")).trim().split("\n").slice(1);
-    for (const line of rows) {
-      const row = line.trim().split(/\s+/);
-      if (row[3] !== "0A" || row[1].split(":")[1] !== portHex) continue;
-      need(["0100007F", "00000000000000000000000001000000"].includes(row[1].split(":")[0]),
-        "TARGET_LISTENER_MUST_BIND_LOOPBACK_ONLY");
-      inodes.push(row[9]);
-    }
-  }
+  const { loopbackInodes: inodes, forwarders } = await inspectListeners(port);
   need(inodes.length > 0, "OWNED_TARGET_LISTENER_NOT_DELIVERED");
   const sockets = [];
   for (const name of await readdir(`/proc/${expected.pid}/fd`)) {
     try { sockets.push(await readlink(`/proc/${expected.pid}/fd/${name}`)); } catch { /* raced a closed fd */ }
   }
   need(inodes.every(inode => sockets.includes(`socket:[${inode}]`)), "TARGET_LISTENER_NOT_OWNED_BY_DECLARED_PROCESS");
+  return forwarders;
 }
 export async function guardTarget() {
   need(/^v22\./.test(process.version), "NODE_22_REQUIRED");
@@ -97,12 +88,12 @@ export async function guardTarget() {
     "EXACT_INSTALLED_SOURCE_IDENTITY_REQUIRED");
   need(Array.isArray(target.processes) && target.processes.length >= 3 && target.processes.length <= 8,
     "EXPLICIT_OWNED_TARGET_PROCESSES_REQUIRED");
-  const identities = [];
+  const identities = [], platformForwarders = [];
   for (const expected of target.processes) {
     const actual = await processIdentity(expected.pid);
     need(actual.uid === process.getuid() && Object.keys(actual).every(key => actual[key] === expected[key]), "TARGET_PROCESS_IDENTITY_CHANGED");
     need(Number.isInteger(expected.port) && expected.port > 1023 && expected.port < 65536, "EXPLICIT_OWNED_PORT_REQUIRED");
-    await checkListener(expected.port, expected);
+    platformForwarders.push(...await checkListener(expected.port, expected));
     need(/^[a-f0-9]{64}$/.test(expected.commandLineSha256 ?? "") &&
       sha(await readFile(`/proc/${expected.pid}/cmdline`)) === expected.commandLineSha256 &&
       isAbsolute(expected.cwd) && await readlink(`/proc/${expected.pid}/cwd`) === expected.cwd,
@@ -150,7 +141,7 @@ export async function guardTarget() {
   need(fixtureValue.schema === "finnor.z1.public-native-episode.v1" &&
     fixtureValue.dataClass === "PUBLIC_DETERMINISTIC_FIXTURE_NO_PII" && fixtureValue.externalEffects === false,
     "EXPLICIT_PUBLIC_NO_EFFECT_ORIGINAL_FIXTURE_REQUIRED");
-  return { target, fixture: fixtureValue, targetSha256: sha(bytes), identities, root, installed, scenario };
+  return { target, fixture: fixtureValue, targetSha256: sha(bytes), identities, platformForwarders, root, installed, scenario };
 }
 
 const reportIndex = process.argv.indexOf("--report");
@@ -168,6 +159,7 @@ try {
   report.scenario = guarded.scenario;
   report.sourceCommit = guarded.installed.sourceCommit; report.sourceTree = guarded.installed.sourceTree;
   report.nativeRuntimeDigest = guarded.installed.nativeRuntimeDigest; report.processIdentities = guarded.identities;
+  report.platformForwarders = guarded.platformForwarders;
   await privateJSON(resolve(output, "doctor.json"), { ...report, status: "DOCTOR_PASSED_NETWORK_AND_DB_STILL_UNTOUCHED" });
   const require = createRequire(resolve(root, "finnor-os/package.json"));
   const { tsImport } = await import(require.resolve("tsx/esm/api"));
@@ -179,6 +171,8 @@ try {
   // No raw driver, PostgreSQL, browser or auth errors: they may carry private data.
   report.blocker = error instanceof Error && /^[A-Z][A-Z0-9_]+$/.test(error.message)
     ? error.message : "NATIVE_PREREQUISITE_OR_OWNER_FLOW_FAILED_PRIVATE_DIAGNOSTIC_NOT_EXPORTED";
+  // Only the refused listener rows (port, family, address) are attached; no driver or database text.
+  if (Array.isArray(error?.detail) && error.detail.every(row => Number.isInteger(row?.port))) report.blockerDetail = error.detail;
   process.exitCode = report.status === "NOT_RUN" ? 2 : 1;
 } finally {
   report.finishedAt = new Date().toISOString();
