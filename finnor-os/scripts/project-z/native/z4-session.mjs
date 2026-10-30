@@ -349,7 +349,8 @@ try {
       { kind: "tenant", operation: "execution-proof-audit", actor: "FOREIGN", body: { sessionId: submitted.recoverOwnerSession }, status: 404, predicate: "PE_ENTITY_NOT_FOUND" },
       { kind: "authority", operation: "execution-proof-cancel", actor: "OTHER", body: { sessionId: submitted.recoverOwnerSession }, status: 404, predicate: "PE_ENTITY_NOT_FOUND" },
       { kind: "private-use", operation: "execution-proof-consume", actor: "OTHER", body: { sessionId: submitted.recoverOwnerSession, capsuleDigest: zeroDigest, idempotencyKey: "z4-negative-private-use" }, status: 404, predicate: "PE_ENTITY_NOT_FOUND" },
-      { kind: "currentness", operation: "execution-proof-submit", actor: null, body: lateDeadline, status: 422, predicate: "Z4_ORIGINAL_CURRENT_WORK_INPUT_REQUIRED" },
+      // A later deadline on the same Work is a deadline-reset attempt: workSnapshot refuses it before any budget check.
+      { kind: "currentness", operation: "execution-proof-submit", actor: null, body: lateDeadline, status: 422, predicate: "Z4_ORIGINAL_PLAN_OR_DEADLINE_CHANGED" },
       { kind: "budget", operation: "execution-proof-submit", actor: null, body: extras.overBudget, status: 422, predicate: "X2_S5_ORIGINAL_DEMAND_DOMAIN" },
       { kind: "cancellation", operation: "execution-proof-consume", actor: null, body: { sessionId: submitted.cancelledSession, capsuleDigest: zeroDigest, idempotencyKey: "z4-negative-cancelled" }, status: 422, predicate: "Z4_CURRENT_CHECKED_CAPSULE_REQUIRED" },
       { kind: "cancellation", operation: "execution-proof-audit", actor: null, body: { sessionId: submitted.cancelledSession }, status: 422, predicate: "Z4_CURRENT_CHECKED_CAPSULE_REQUIRED" },
