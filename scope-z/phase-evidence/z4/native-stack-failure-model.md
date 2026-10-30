@@ -131,3 +131,21 @@ availability, exact-integer range); I4 `obligations`; I5 `reserveApplicationPare
 rights reference); I6 retained-byte budget; I7 an error whose message is not an uppercase token (a raw library error such as a SQL or Zod message).
 Oracle: the same `submitProof` call made in-process by the scenario with the same authenticated context; the thrown message and first stack frames name
 the site. This is a diagnostic read, it is recorded as evidence and never used to pass the stage.
+
+## J. Submission commits the job, then a state write fails on a nonexistent column (w4-seed-08 and w4-seed-09)
+
+w4-seed-09 ran with the plpgsql ambiguity repair (3228ade) in place. The submission of the owner-recovery Work still answered 422
+`Z4_PREDICATE_UNPASSED`, but the in-process diagnosis of the same call returned `replayed: true`: the job row had already been committed by the HTTP
+attempt, so the refusal came from a step after the insert. The embedded Postgres log names it exactly:
+`ERROR: column "updated_at" of relation "jobs" does not exist` on `UPDATE finnor_os.jobs SET payload=jsonb_set(...),updated_at=clock_timestamp()`
+(`store.ts` `setState`). The migrations give `finnor_os.jobs` no `updated_at` and no `created_at` (0000, 0007, 0059, 0060, 0090, 0137, 0138);
+the only creation-time column is `accepted_at timestamptz NOT NULL DEFAULT clock_timestamp()` (0138). The same absent-column assumption exists in
+`listProofs` (`ORDER BY created_at DESC`), which has not run yet.
+
+| # | Failure | Expected result | Oracle |
+|---|---|---|---|
+| J1 | `setState` names a column the table lacks | The state write succeeds and is guarded by the exact-previous-state comparison only | Postgres log has no `column ... does not exist` for `finnor_os.jobs` |
+| J2 | Dropping `updated_at` loosens the concurrency guard | It must not: the `payload->'z4'=$4` compare-and-set and `rowCount===1` check are unchanged | Source diff shows only the SET list changed |
+| J3 | `listProofs` ordering uses a missing column | Ordered by `accepted_at DESC, id DESC` (deterministic tie-break) | Status/list read in the full stage returns sessions |
+| J4 | A masked refusal hides a SQL error again | The submit diagnosis already records PG `where`/`detail`; the postgres log is the second oracle | `submit-diagnosis.json` and `postgres.private.log` |
+| J5 | Committed job with a failed follow-up leaves a half-submitted session | A fresh run name is used; the retained run is not reused. The replayed in-process answer in the diagnosis confirms the idempotent submission path | `w4-seed-09` retained, next run `w4-seed-10` |

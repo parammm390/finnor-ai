@@ -89,7 +89,7 @@ export async function readProof(ctx:PeMutationContext,raw:unknown){
 export async function listProofs(ctx:PeMutationContext,raw:unknown){
  const input=listSchema.parse(raw);await authorize(ctx,input.root,[{type:'work',id:input.workId}]);
  const ids=await tx(ctx,async c=>(await c.query<{id:string}>(
-  "SELECT id::text FROM finnor_os.jobs WHERE tenant_id=$1 AND type=$2 AND payload->>'principalId'=$3 AND payload->>'workId'=$4 ORDER BY created_at DESC LIMIT 17",
+  "SELECT id::text FROM finnor_os.jobs WHERE tenant_id=$1 AND type=$2 AND payload->>'principalId'=$3 AND payload->>'workId'=$4 ORDER BY accepted_at DESC,id DESC LIMIT 17",
   [ctx.auth.tenantId,JOB,principal(ctx),input.workId])).rows,true);
  if(ids.length>16)throw Error('Z4_SESSION_PAGINATION_REQUIRED');
  const sessions=[];

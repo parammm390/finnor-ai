@@ -178,7 +178,7 @@ export async function claim(ctx:PeMutationContext,row:JobRow,execution:Readonly<
 }
 export async function setState(ctx:PeMutationContext,row:JobRow,state:JobState,c:PoolClient){
  if(state.sessionId!==row.id||state.originalDigest!==row.payload.z4.originalDigest)throw Error('Z4_ORIGINAL_IDENTITY_CHANGE_FORBIDDEN');
- const changed=await c.query("UPDATE finnor_os.jobs SET payload=jsonb_set(payload,'{z4}',$3::jsonb),updated_at=clock_timestamp() WHERE tenant_id=$1 AND id=$2 AND payload->'z4'=$4::jsonb",
+ const changed=await c.query("UPDATE finnor_os.jobs SET payload=jsonb_set(payload,'{z4}',$3::jsonb) WHERE tenant_id=$1 AND id=$2 AND payload->'z4'=$4::jsonb",
   [ctx.auth.tenantId,row.id,canonical(state),canonical(row.payload.z4)]);
  if(changed.rowCount!==1)throw Error('Z4_CONCURRENT_ORIGINAL_STATE_CHANGED');
 }
