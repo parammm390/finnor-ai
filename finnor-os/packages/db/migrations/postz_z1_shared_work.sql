@@ -536,6 +536,7 @@ END $$;
 -- Typed Z1 origins cannot be inserted or altered through ordinary table grants.
 CREATE FUNCTION finnor_os.z1_s5_writer_guard() RETURNS trigger LANGUAGE plpgsql
  SET search_path=pg_catalog,finnor_os AS $$
+#variable_conflict use_variable
 DECLARE body jsonb;is_z1 boolean;
 BEGIN
  body:=CASE WHEN TG_OP='DELETE' THEN to_jsonb(OLD) ELSE to_jsonb(NEW) END;
