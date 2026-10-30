@@ -140,10 +140,18 @@ async function until(check, timeoutMs = 240000) {
   while (Date.now() < deadline) { const value = await check(); if (value) return value; await new Promise(r => setTimeout(r, 500)); }
   throw Error("BOUNDED_ORIGINAL_DEADLINE_REACHED");
 }
+// The worker must run as the restricted worker role, never as the driver's finnor_app connection or an admin URL.
+function workerEnvironment(point) {
+  const url = process.env.FINNOR_WORKER_DATABASE_URL;
+  if (!url) throw Error("WORKER_ROLE_DATABASE_URL_REQUIRED");
+  const env = { ...process.env, DATABASE_URL: url, FINNOR_Z5_EXCLUSIVE_WORKER: "1", FINNOR_Z5_INTERRUPT_AT: point };
+  for (const name of ["FINNOR_WORKER_DATABASE_URL", "CENTROPY_E2E_DB_ADMIN_URL", "TEST_OWNER_PASSWORD", "Z5_OTHER_OWNER_PASSWORD"]) delete env[name];
+  return env;
+}
 async function worker(point) {
   const child = spawn(process.execPath, ["--import", "tsx", "--max-old-space-size=768",
     path.join(ROOT, "finnor-os/scripts/project-z/z5/native-worker.ts"), authorityFile], {
-    cwd: path.join(ROOT, "finnor-os"), env: { ...process.env, FINNOR_Z5_EXCLUSIVE_WORKER: "1", FINNOR_Z5_INTERRUPT_AT: point },
+    cwd: path.join(ROOT, "finnor-os"), env: workerEnvironment(point),
     stdio: ["ignore", "pipe", "pipe"] });
   children.add(child); const result = { pid: child.pid, stderrDigest: null, exit: null };
   let error = ""; child.stderr.on("data", b => { error += b; if (error.length > 65536) child.kill("SIGTERM"); });

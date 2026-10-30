@@ -8,7 +8,7 @@ import type { PeMutationContext } from "../../types";
 import { chargeViabilityOwnerStep, resolveViabilityNativeOrigin, type NativeOrigin } from "./native-origin";
 import { assertViabilityClaimTx, assertViabilityCurrent, nativeMappingFailureTx, viabilityEvent } from "./store";
 import { hash, z3Fault, type ViabilityClaim, type ViabilitySessionRow } from "./contracts";
-import { GENERAL_OWNER_RESULT_DOMAINS, generalS4Owners, readGeneralS4ObservationTx,
+import { GENERAL_OWNER_RESULT_DOMAINS, generalS4ExecutableOwners, generalS4Owners, readGeneralS4ObservationTx,
   resolveGeneralOwnerResultDomainsTx, type GeneralOwnerEvidence, type GeneralOwnerInvocation,
   type GeneralOwnerObservation, type GeneralOwnerRequest, type GeneralOwnerResultDomains } from "./general-owners";
 import { assertNativeOwnerOutcomeCoverage, nativeFrameChannels, nativeFrameMap, nativeOutcomeObservers,
@@ -88,6 +88,7 @@ export async function consumeGeneralViabilityTx(ctx: PeMutationContext, row: Via
     before = hash(cursor);
   }
   const transitions: Array<Record<string, unknown>> = [];
+  let awaiting: string | null = null;
   for (let count = 0; count < edgeLimit; count++) {
     await refresh();
     const stateIndex = model.arena.states.findIndex(s => s.id === cursor.stateId);
@@ -97,12 +98,28 @@ export async function consumeGeneralViabilityTx(ctx: PeMutationContext, row: Via
     let edgeIndex: number, observation: GeneralOwnerObservation;
     if (state.owner === "C") {
       const source = model.original.observations.find(row => row.stateId === state.id)!;
-      const actual = await observe(source.predicate.observerId);
-      await refresh();
-      if (!nativeStateMatches(model, state.id, [actual], current.resources)) z3Fault("Z3_NATIVE_ACTUAL_SOURCE_STATE_CHANGED");
       edgeIndex = strategy.actions[cursor.memory]?.[stateIndex] ?? -1;
+      // A selection already retained for exactly this cursor and edge was made
+      // after its source state was matched; the executed step has since changed
+      // that state, so it is not re-matched here.
+      const executable = edgeIndex >= 0 ? await generalS4ExecutableOwners()
+        .readEnterpriseViabilityExecutableSelectionTx(ctx, current.request, edgeIndex, invocation(), c) : { state: "NOT_GOVERNED" as const };
+      if (executable.state === "LIVE") { awaiting = executable.selectionId; break; }
+      if (executable.state === "FAILED") z3Fault("Z3_S4_EXECUTABLE_SELECTION_REFUSED_OR_STALE");
+      if (executable.state === "NONE" || executable.state === "NOT_GOVERNED") {
+        const actual = await observe(source.predicate.observerId);
+        await refresh();
+        if (!nativeStateMatches(model, state.id, [actual], current.resources)) z3Fault("Z3_NATIVE_ACTUAL_SOURCE_STATE_CHANGED");
+      }
       await chargeViabilityOwnerStep(ctx, origin, claim, c);
-      observation = await owners.dispatchEnterpriseViabilityOperationTx(ctx, current.request, edgeIndex, invocation(), c);
+      if (executable.state === "NOT_GOVERNED") {
+        observation = await owners.dispatchEnterpriseViabilityOperationTx(ctx, current.request, edgeIndex, invocation(), c);
+      } else {
+        const selected = await generalS4ExecutableOwners()
+          .selectEnterpriseViabilityExecutableOperationTx(ctx, current.request, edgeIndex, invocation(), c);
+        if (selected.status === "AWAITING_APPLICATION_OWNER") { awaiting = selected.selectionId; break; }
+        observation = selected.observation;
+      }
     } else {
       const outcome = model.original.environment.find(row => model.arena.edges[row.edgeIndex]!.from === state.id);
       if (!outcome) z3Fault("Z3_NATIVE_TOTAL_E_OUTCOME_BINDING_REQUIRED");
@@ -144,13 +161,15 @@ export async function consumeGeneralViabilityTx(ctx: PeMutationContext, row: Via
     mappingDigest: model.mapDigest, ownerBindingDigest: current.evidence.digest,
     deliveryAttemptId: claim.physical.deliveryAttemptId, jobClaimFence: claim.physical.claimFence, claimFence: claim.sessionFence,
     conditionality: "FINITE_ACTUAL_OWNER_PREFIX_ORIGINAL_GF_ASSUMPTIONS_NOT_FAIRNESS_OR_EFFECT_AUTHORITY",
-    unknownClearedWithoutS6: false, protectedReceipt: null, executionAuthorityGranted: false };
+    unknownClearedWithoutS6: false, protectedReceipt: null, executionAuthorityGranted: false,
+    ...(awaiting ? { awaitingApplicationOwnerSelectionId: awaiting } : {}) };
   await transitionWorkTx(db, row.tenant_id, row.work_id, work.status, "viability_native_prefix_observed", body,
     { expectedStatus: work.status, expectedWorkInputId: row.work_input_id });
   await viabilityEvent(ctx, row, "Z3_S4_NATIVE_PREFIX", body, c);
   await refresh();
   return { consumed: true as const, cursor, cursorDigest: hash(cursor), transitions: transitions.length,
-    originalWorkObservation: "viability_native_prefix_observed", executionAuthorityGranted: false as const };
+    originalWorkObservation: "viability_native_prefix_observed", executionAuthorityGranted: false as const,
+    ...(awaiting ? { awaitingApplicationOwnerSelectionId: awaiting } : {}) };
 }
 
 type FramePrefix = { cursor: GeneralViabilityFrameCursor; cursorDigest: string };

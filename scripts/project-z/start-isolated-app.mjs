@@ -1,8 +1,8 @@
 import assert from "node:assert/strict"
-import { createHash } from "node:crypto"
-import { spawn } from "node:child_process"
+import { createHash, generateKeyPairSync } from "node:crypto"
+import { execFileSync, spawn } from "node:child_process"
 import { createRequire } from "node:module"
-import { createWriteStream, existsSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs"
+import { chmodSync, createWriteStream, existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs"
 import { dirname, isAbsolute, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { setTimeout as delay } from "node:timers/promises"
@@ -43,21 +43,108 @@ appUrl.password = "finnor_app"
 const adminEnv = { ...isolated, RAYON_NUM_THREADS: "2", TSX_DISABLE_CACHE: "1" }
 // Opt-in phase profiles reach only the application processes, never migrate/seed.
 const profiles = new Set(process.argv.filter(arg => arg.startsWith("--profile=")).flatMap(arg => arg.slice(10).split(",")))
-assert.ok([...profiles].every(profile => ["z1", "z2", "x1", "z3"].includes(profile)), "Unknown launcher profile")
+assert.ok([...profiles].every(profile => ["z1", "z2", "x1", "z3", "z4", "x2", "z0", "z5"].includes(profile)), "Unknown launcher profile")
 // The Z3 runtime pins the producer bundle by digest itself; only its location is supplied here.
 const z3Producer = process.argv.find(arg => arg.startsWith("--z3-producer="))?.slice(14)
 assert.ok(!profiles.has("z3") || (z3Producer && isAbsolute(z3Producer) && realpathSync(z3Producer) === z3Producer),
   "Z3 producer bundle path required")
 const ownsWorker = process.argv.includes("--no-worker")
+// BEGIN --auth-tls-origin / --production-build / z4 profile (inert unless given)
+const option = name => process.argv.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3)
+const authTlsOrigin = option("auth-tls-origin")
+const authTlsCertificate = option("auth-tls-cert")
+const authTlsState = option("auth-tls-state")
+const productionBuild = process.argv.includes("--production-build")
+const s3Python = option("s3-python")
+assert.ok(!("NODE_TLS_REJECT_UNAUTHORIZED" in process.env), "NODE_TLS_REJECT_UNAUTHORIZED_REFUSED")
+assert.ok(!profiles.has("z4") || (s3Python && isAbsolute(s3Python) && existsSync(s3Python)), "Z4_PROFILE_REQUIRES_S3_PYTHON")
+// BEGIN z1 S3/S4 owner chain (the unresolved S6 obligation Z1 must preserve needs real upstream owners)
+const z1Chain = profiles.has("z1") && s3Python !== undefined
+assert.ok(!z1Chain || (isAbsolute(s3Python) && existsSync(s3Python)), "Z1_CHAIN_REQUIRES_EXISTING_ABSOLUTE_S3_PYTHON")
+// A longer native episode (three physical kills, seven stages) needs more than the 30 minute default; bounded either way.
+const setupBudgetMs = Number(option("budget-ms") ?? (productionBuild ? 3000000 : 1800000))
+assert.ok(Number.isInteger(setupBudgetMs) && setupBudgetMs >= 600000 && setupBudgetMs <= 7200000, "SETUP_BUDGET_OUT_OF_RANGE")
+// END
+let authTlsReceipt
+if (authTlsOrigin) {
+  assert.ok(authTlsCertificate && authTlsState && isAbsolute(authTlsCertificate) && isAbsolute(authTlsState), "AUTH_TLS_ARGUMENTS_REQUIRED")
+  const front = JSON.parse(readFileSync(join(authTlsState, "state.json"), "utf8"))
+  assert.equal(front.status, "READY_LOOPBACK_TLS_AUTH_FRONT")
+  assert.equal(front.origin, authTlsOrigin)
+  assert.match(authTlsOrigin, /^https:\/\/127\.0\.0\.1:[0-9]{4,5}$/)
+  assert.equal(front.certificateFile, authTlsCertificate)
+  assert.equal(createHash("sha256").update(readFileSync(authTlsCertificate)).digest("hex"), front.certificateSha256, "AUTH_TLS_CERTIFICATE_CHANGED")
+  authTlsReceipt = { origin: authTlsOrigin, certificateFile: authTlsCertificate, certificateSha256: front.certificateSha256, spkiSha256: front.spkiSha256 }
+} else {
+  assert.ok(!authTlsCertificate && !authTlsState, "AUTH_TLS_ORIGIN_REQUIRED")
+}
+const z4Stores = profiles.has("z4") || z1Chain ? ["models", "policies", "capsules"].map(name => {
+  const directory = join(state, "z4-stores", name)
+  mkdirSync(directory, { recursive: true, mode: 0o700 })
+  return directory
+}) : []
+// END
+// X2 refuses every environment except explicit isolated staging with its own disposable profile
+// name, and reads disposable application credentials only from this launcher-owned private root.
+// z0 is x1 + x2: the original X1 institution parent and the X2 application computation share one stack.
+const x2Profile = profiles.has("x2") || profiles.has("z0")
+const x2SecretRoot = join(state, "x2-secrets")
+// BEGIN z5-native
+// Root keys are created here so the application processes can verify, from their first request, configuration
+// that the scenario signs later (the S6 ledger and S8 lifecycle processes do not exist yet). Private halves stay
+// 0600 under the 0700 state directory; the application receives only public keys and the deterministic file paths.
+const z5Dir = join(state, "z5-private")
+const z5Env = {}
+if (profiles.has("z5")) {
+  mkdirSync(z5Dir, { mode: 0o700, recursive: true })
+  chmodSync(z5Dir, 0o700)
+  for (const [name, envName] of [["transport-root", "FINNOR_S6_OWNER_TRANSPORT_ROOT"], ["consumer-root", "FINNOR_Z5_S8_CONSUMER_ROOT"]]) {
+    const pair = generateKeyPairSync("ed25519")
+    writeFileSync(join(z5Dir, name + ".key"), pair.privateKey.export({ type: "pkcs8", format: "pem" }), { flag: "wx", mode: 0o600 })
+    z5Env[envName] = pair.publicKey.export({ type: "spki", format: "pem" }).toString()
+  }
+  // The S6 check-dispatch route signs its current-owner assessments with this key; the scenario's protected broker
+  // policy pins only the public half, which it derives from the 0600 file.
+  writeFileSync(join(z5Dir, "owner-signer.pem"), generateKeyPairSync("ed25519").privateKey.export({ type: "pkcs8", format: "pem" }), { flag: "wx", mode: 0o600 })
+  z5Env.FINNOR_S6_CURRENT_OWNER_SIGNER = join(z5Dir, "owner-signer.pem")
+  // The S3 fit route runs the pinned numerics inside the API process; the S3/S4 stores are shared with the
+  // S8 lifecycle process and the scenario-owned worker through this private environment file.
+  const z5Python = process.argv.find(arg => arg.startsWith("--z5-s3-python="))?.slice(15)
+  assert.ok(z5Python && isAbsolute(z5Python) && existsSync(z5Python), "Z5_PROFILE_REQUIRES_ABSOLUTE_S3_PYTHON")
+  for (const store of ["models", "policies"]) mkdirSync(join(state, "z5-stores", store), { mode: 0o700, recursive: true })
+  Object.assign(z5Env, { FINNOR_S3_PYTHON: z5Python, FINNOR_S3_MODEL_STORE: join(state, "z5-stores/models"),
+    FINNOR_S4_POLICY_STORE: join(state, "z5-stores/policies") })
+  Object.assign(z5Env, { FINNOR_Z5_PROFILE: "ordinary_disposable",
+    FINNOR_S6_OWNER_TRANSPORT_CONFIG: join(z5Dir, "transport.json"), FINNOR_Z5_S8_CONSUMER_CONFIG: join(z5Dir, "s8-consumer.json") })
+}
+// END z5-native
 const profileEnv = {
   ...(profiles.has("z1") ? { FINNOR_Z1_PROFILE: "ordinary_disposable", P3_GOVERNORS: "1" } : {}),
+  // BEGIN z1 S3/S4 owner chain environment
+  ...(z1Chain ? { FINNOR_S3_MODEL_STORE: z4Stores[0], FINNOR_S4_POLICY_STORE: z4Stores[1], FINNOR_S3_PYTHON: s3Python } : {}),
+  // END
   ...(profiles.has("z2") ? { FINNOR_Z2_DISPOSABLE_E2E: "1", FINNOR_Z2_CONVERGED_DEVELOPMENT: "1",
     FINNOR_Y1_PROFILE: "ordinary_disposable", FINNOR_Y3_PROFILE: "ordinary_disposable" } : {}),
-  ...(profiles.has("x1") ? { FINNOR_P4_PROFILE: "ordinary_disposable" } : {}),
+  ...(profiles.has("x1") || profiles.has("z0") ? { FINNOR_P4_PROFILE: "ordinary_disposable" } : {}),
+  ...(x2Profile ? { FINNOR_ENVIRONMENT: "staging", FINNOR_X2_PROFILE: "ordinary_disposable",
+    FINNOR_X2_SOURCE_ROOT: root, FINNOR_X2_DISPOSABLE_SECRET_ROOT: x2SecretRoot } : {}),
   ...(profiles.has("z3") ? { FINNOR_Z3_PRODUCER_BUNDLE: z3Producer,
     FINNOR_Z3_CHECKER_SOURCE: join(backend, "packages/epistemic-runtime/src/project-z/z3-viability/checker.py") } : {}),
+  // BEGIN z4 and auth-tls environment
+  ...(profiles.has("z4") ? { FINNOR_ENVIRONMENT: "staging", FINNOR_Z4_PROFILE: "ordinary_disposable",
+    FINNOR_S3_MODEL_STORE: z4Stores[0], FINNOR_S4_POLICY_STORE: z4Stores[1], FINNOR_Z4_CAPSULE_STORE: z4Stores[2],
+    FINNOR_S3_PYTHON: s3Python } : {}),
+  ...(authTlsReceipt ? { SUPABASE_URL: authTlsReceipt.origin, NEXT_PUBLIC_SUPABASE_URL: authTlsReceipt.origin,
+    NODE_EXTRA_CA_CERTS: authTlsReceipt.certificateFile } : {}),
+  // END
+  ...z5Env, // z5-native
 }
 const appEnv = { ...adminEnv, ...profileEnv, DATABASE_URL: appUrl.toString(), CENTROPY_E2E_DB_ADMIN_URL: adminUrl.toString() }
+assert.equal(appEnv.FINNOR_ENVIRONMENT, x2Profile || profiles.has("z4") ? "staging" : "ordinary_disposable", "PROFILE_ENVIRONMENT_MISMATCH")
+if (x2Profile) {
+  mkdirSync(x2SecretRoot, { mode: 0o700, recursive: true })
+  chmodSync(x2SecretRoot, 0o700)
+}
 const receipt = {
   schema: "finnor.project-z.isolated-native-app.v1", status: "STARTING", stage: "MIGRATION",
   startedAt: new Date().toISOString(), sourceRoot: root, state,
@@ -65,6 +152,8 @@ const receipt = {
   authUserId: authState.authUserId, authBypass: false, inheritedEnvironment: false,
   externalCredentials: false, application: "NOT_READY", phasesAccepted: [], steps: [], pids: { harness: process.pid },
   ...(profiles.size ? { profiles: [...profiles].sort(), profileEnvNames: Object.keys(profileEnv).sort() } : {}),
+  ...(authTlsReceipt ? { authTls: authTlsReceipt } : {}),
+  ...(productionBuild ? { productionBuild: { requested: true, stage: "NOT_BUILT" } } : {}),
 }
 function save() { writeFileSync(stateFile, JSON.stringify(receipt, null, 2) + "\n", { mode: 0o600 }) }
 const children = []
@@ -98,7 +187,7 @@ async function stop(code, reason) {
 }
 process.once("SIGINT", () => void stop(0, "OPERATOR_STOP"))
 process.once("SIGTERM", () => void stop(0, "OPERATOR_STOP"))
-setTimeout(() => void stop(1, "ORDINARY_SETUP_RUNTIME_BUDGET_EXPIRED"), 1800000).unref()
+setTimeout(() => void stop(1, "ORDINARY_SETUP_RUNTIME_BUDGET_EXPIRED"), setupBudgetMs).unref()
 async function step(label, script) {
   receipt.stage = label
   save()
@@ -133,6 +222,60 @@ async function waitFor(url, allowedStatuses) {
   }
   throw new Error("OWNED_APPLICATION_READINESS_TIMEOUT")
 }
+// BEGIN production build (own pass per run; never reuses a pre-existing build directory)
+async function buildProduction() {
+  const head = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], { encoding: "utf8" }).trim()
+  const dirty = execFileSync("git", ["-C", root, "diff", "--name-only", "HEAD", "--", ".", ":(exclude)next-env.d.ts",
+    ":(exclude)finnor-os/apps/api/next-env.d.ts", ":(exclude)finnor-os/apps/web/next-env.d.ts"], { encoding: "utf8" }).trim()
+  assert.equal(dirty, "", "PRODUCTION_BUILD_REQUIRES_COMMITTED_SOURCE")
+  const buildId = `pz-${head.slice(0, 12)}-${state.split("/").pop()}`
+  const apiNext = join(backend, "node_modules/next/dist/bin/next")
+  const frontendNext = join(root, "node_modules/next/dist/bin/next")
+  const targets = { api: { cwd: join(backend, "apps/api"), next: apiNext }, frontend: { cwd: root, next: frontendNext } }
+  for (const target of Object.values(targets)) {
+    assert.ok(realpathSync(target.next).startsWith(realpathSync(root) + "/"), "PRODUCTION_BUILD_DONOR_NEXT_REFUSED")
+    assert.ok(!existsSync(join(target.cwd, ".next")), "PRODUCTION_BUILD_DIRECTORY_MUST_NOT_PRE_EXIST")
+  }
+  const buildEnv = { ...appEnv, NODE_ENV: "production", FINNOR_BUILD_ID: buildId, CI: "1" }
+  // The browser bundle inlines NEXT_PUBLIC_* at build time, so the Auth URL it will use is fixed here.
+  const frontendEnv = { ...buildEnv, NEXT_PUBLIC_OS_API_URL: isolated.NEXT_PUBLIC_OS_API_URL }
+  receipt.productionBuild = { requested: true, stage: "BUILDING", buildId, sourceCommit: head }
+  for (const [label, env] of [["api", buildEnv], ["frontend", frontendEnv]]) {
+    receipt.stage = `PRODUCTION_BUILD_${label.toUpperCase()}`
+    save()
+    const target = targets[label]
+    const start = new Date().toISOString()
+    // Only `next build`: the API package's npm build script would restamp tracked source files.
+    const proc = child(`build-${label}`, [target.next, "build", ...(label === "frontend" ? ["--webpack"] : [])], target.cwd, env)
+    const timer = setTimeout(() => { try { process.kill(-proc.pid, "SIGKILL") } catch {} }, 1200000)
+    const result = await new Promise(done => {
+      proc.once("error", () => done({ code: null, signal: "SPAWN_ERROR" }))
+      proc.once("exit", (code, signal) => done({ code, signal }))
+    })
+    clearTimeout(timer)
+    receipt.productionBuild[label] = { start, end: new Date().toISOString(), ...result }
+    save()
+    assert.ok(result.code === 0 && result.signal === null, "PRODUCTION_BUILD_FAILED")
+    const idFile = join(target.cwd, ".next/BUILD_ID")
+    assert.ok(existsSync(idFile), "PRODUCTION_BUILD_ID_FILE_REQUIRED")
+    const bytes = readFileSync(idFile)
+    assert.equal(bytes.toString("utf8"), buildId, "PRODUCTION_BUILD_ID_MISMATCH")
+    receipt.productionBuild[label] = { ...receipt.productionBuild[label], buildIdFile: idFile, buildIdSha256: createHash("sha256").update(bytes).digest("hex") }
+    save()
+  }
+  if (authTlsReceipt) {
+    // A browser bundle still pointing at the http gateway would make https Auth unreachable from the mounted login.
+    const scan = pattern => { try { return execFileSync("grep", ["-rlF", "--include=*.js", pattern, join(root, ".next/static")], { encoding: "utf8" }).trim() } catch { return "" } }
+    assert.ok(scan(authTlsReceipt.origin) !== "", "FRONTEND_BUNDLE_MISSING_HTTPS_AUTH_ORIGIN")
+    assert.equal(scan(isolated.SUPABASE_URL), "", "FRONTEND_BUNDLE_STILL_INLINES_HTTP_AUTH_ORIGIN")
+    receipt.productionBuild.frontend.authOriginInlined = authTlsReceipt.origin
+  }
+  receipt.productionBuild.stage = "BUILT"
+  save()
+  return { apiNext, frontendNext, buildId, serverEnv: { ...appEnv, NODE_ENV: "production", FINNOR_BUILD_ID: buildId },
+    spawned: { api: [apiNext, "start", "-H", "127.0.0.1", "-p", "3101"], frontend: [frontendNext, "start", "-H", "127.0.0.1", "-p", "3001"] } }
+}
+// END
 save()
 try {
   if (prefixFile) {
@@ -163,6 +306,12 @@ try {
     assert.equal(binding.rows[0].employee_status, "active", "REAL_TEST_OWNER_MUST_BE_ACTIVE")
     receipt.ownerBinding = { userId: binding.rows[0].user_id, tenantId: binding.rows[0].tenant_id,
       role: binding.rows[0].user_role, authorityRevision: binding.rows[0].authority_revision }
+    if (x2Profile) {
+      // Secret custody requires 0700 directories owned by the process uid at both levels.
+      const tenantSecrets = join(x2SecretRoot, binding.rows[0].tenant_id)
+      mkdirSync(tenantSecrets, { mode: 0o700, recursive: true })
+      chmodSync(tenantSecrets, 0o700)
+    }
   } finally { await pool.end() }
   receipt.stage = "WORKER_DATABASE_ROLE"
   save()
@@ -200,8 +349,13 @@ try {
   receipt.workerLifecycle = ownsWorker ? "OWNED_BY_SCENARIO_NOT_STARTED_BY_LAUNCHER" : "STOCK_WORKER_STARTED_BY_LAUNCHER"
   receipt.stage = "LOOPBACK_SERVERS"
   save()
-  const api = child("api", [join(backend, "node_modules/next/dist/bin/next"), "dev", "-H", "127.0.0.1", "-p", "3101"], join(backend, "apps/api"), appEnv)
-  const frontend = child("frontend", [join(root, "node_modules/next/dist/bin/next"), "dev", "--webpack", "-H", "127.0.0.1", "-p", "3001"], root, appEnv)
+  // BEGIN production build and start
+  const production = productionBuild ? await buildProduction() : null
+  const api = production ? child("api", production.spawned.api, join(backend, "apps/api"), production.serverEnv)
+    : child("api", [join(backend, "node_modules/next/dist/bin/next"), "dev", "-H", "127.0.0.1", "-p", "3101"], join(backend, "apps/api"), appEnv)
+  const frontend = production ? child("frontend", production.spawned.frontend, root, production.serverEnv)
+    : child("frontend", [join(root, "node_modules/next/dist/bin/next"), "dev", "--webpack", "-H", "127.0.0.1", "-p", "3001"], root, appEnv)
+  // END
   const worker = ownsWorker ? null : child("worker", ["--import", require.resolve("tsx"), join(backend, "apps/worker/src/index.ts")], backend, workerEnv)
   for (const proc of [api, frontend, ...(worker ? [worker] : [])]) {
     proc.once("exit", () => { if (!stopping) void stop(1, "OWNED_APPLICATION_PROCESS_EXITED") })
@@ -211,6 +365,22 @@ try {
     apiUnauthenticated: await waitFor("http://127.0.0.1:3101/api/me", [401]),
     frontendLogin: await waitFor("http://127.0.0.1:3001/centropy/login", [200]),
   }
+  // BEGIN production identity of the listening servers
+  if (production) {
+    for (const [label, port] of [["frontend", 3001], ["api", 3101]]) {
+      const listener = execFileSync("ss", ["-ltnpH", `sport = :${port}`], { encoding: "utf8" }).match(/pid=(\d+)/)
+      assert.ok(listener, "PRODUCTION_LISTENER_NOT_OBSERVED")
+      // The server renames its process title, so the spawned argv and the process environment are the evidence.
+      const pid = Number(listener[1])
+      const environment = readFileSync(`/proc/${pid}/environ`, "utf8").split("\0")
+      assert.equal(pid, receipt.pids[label], "PRODUCTION_LISTENER_MUST_BE_THE_SPAWNED_NEXT_START")
+      assert.ok(environment.includes("NODE_ENV=production") && environment.includes(`FINNOR_BUILD_ID=${production.buildId}`), "PRODUCTION_LISTENER_ENVIRONMENT_REQUIRED")
+      receipt.productionBuild[label] = { ...receipt.productionBuild[label], listenerPid: pid, spawnedArgv: [...production.spawned[label]].map(value => value.replace(root, "<repo>")),
+        processTitle: readFileSync(`/proc/${pid}/cmdline`, "utf8").split("\0")[0] }
+    }
+    receipt.productionBuild.stage = "SERVING_NEXT_START"
+  }
+  // END
   Object.assign(receipt, { status: "READY_REAL_AUTHENTICATED_NATIVE_TARGET", stage: "READY",
     application: "READY_FOR_MOUNTED_OWNER_SMOKE_NOT_PHASE_ADMISSION", readyAt: new Date().toISOString() })
   save()

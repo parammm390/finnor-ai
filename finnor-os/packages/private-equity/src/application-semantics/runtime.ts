@@ -661,7 +661,14 @@ export class NativeApplicationRuntime implements ApplicationLearningPort {
     await (await import("./validity")).revalidateApplicationOperation(this.ctx, this.session, operation, current.description, fresh);
     return current;
   }
-  async continueComposition(composition: CheckedApplicationComposition) {
+  /** `throughStepId` bounds a viability-governed continuation to exactly one
+   * canonical step: every earlier step must already be VERIFIED and the bound
+   * step is performed (or, after a redelivery, only re-verified) and returned
+   * without the final goal check. Omitted, behaviour is unchanged. */
+  async continueComposition(composition: CheckedApplicationComposition, throughStepId?: string) {
+    if (throughStepId !== undefined && !composition.steps.some((step) => step.id === throughStepId)) {
+      x2Fault("X2_GOVERNED_STEP_NOT_IN_CANONICAL_COMPOSITION");
+    }
     const { model, check } = await currentApplicationModel(this.ctx, this.session);
     assertApplicationModelUse(model, check);
     const initial = await this.freshInitial();
@@ -696,8 +703,10 @@ export class NativeApplicationRuntime implements ApplicationLearningPort {
         }, operation.id, obligation.before, parameters);
         await this.reconcileOriginalCapability(existing, evidence);
         observed = event.detail.observation;
+        if (step.id === throughStepId) return observed;
         continue;
       }
+      if (throughStepId !== undefined && step.id !== throughStepId) x2Fault("X2_GOVERNED_STEP_NOT_NEXT_CANONICAL_STEP");
       if (await applicationConsumerPolicy({
         tenantId: this.session.tenant_id, principalId: this.session.principal_id,
         rightsRef: this.session.parent.rightsRevision,
@@ -725,6 +734,7 @@ export class NativeApplicationRuntime implements ApplicationLearningPort {
       if (executed.observed.classified.disposition !== "VERIFIED" || !executed.observed.after) x2Fault("X2_FRESH_EFFECT_RECONCILIATION_REQUIRED");
       this.assertPredictedTransition(operation, current, executed.observed.after, parameters);
       observed = executed.observed.after;
+      if (step.id === throughStepId) return observed;
     }
     const final = await this.observe(composition.target, ApplicationExecuteSchema.parse(this.session.request).executionProfileId);
     if (!applicationGoalEstablished(composition.goal, final.state)) x2Fault("X2_INDEPENDENT_BUSINESS_GOAL_NOT_ESTABLISHED");
@@ -834,13 +844,14 @@ function x2ObligationRef(id: string): ExperimentRef {
 }
 /** Actual S6 continuation callee. No independently supplied program body or URL. */
 export async function continueNativeApplicationComposition(ctx: PeMutationContext, sessionId: string,
-  composition: CheckedApplicationComposition, execution: Readonly<JobExecutionContext>, runtime?: NativeApplicationRuntime) {
+  composition: CheckedApplicationComposition, execution: Readonly<JobExecutionContext>, runtime?: NativeApplicationRuntime,
+  throughStepId?: string) {
   const row = await applicationSession(ctx, sessionId);
   if (!row.composition_ref || !sameX2Ref(row.composition_ref, composition.ref)) x2Fault("X2_CANONICAL_S4_COMPOSITION_REQUIRED");
   const retained = await applicationArtifact<Record<string, unknown>>(ctx, row.composition_ref);
   if (x2Digest(retained) !== composition.ref.contentDigest) x2Fault("X2_S6_RETAINED_COMPOSITION_PREIMAGE");
   const owned = runtime ?? new NativeApplicationRuntime(ctx, row, execution);
   owned.setPhase("EXECUTION");
-  try { return await owned.continueComposition(composition); }
+  try { return await owned.continueComposition(composition, throughStepId); }
   finally { if (!runtime) await owned.close(); }
 }

@@ -14,7 +14,7 @@ import {
 import { reserveApplicationParent, applicationParentCharges } from "./allocation";
 import {
   applicationArtifact, applicationEvent, applicationSession, assertProfileTarget, currentApplicationWork,
-  currentApplicationModel, enqueueApplicationSession, nativeApplicationProfile, pinnedApplicationCode,
+  currentApplicationModel, enqueueApplicationExpiry, enqueueApplicationSession, nativeApplicationProfile, pinnedApplicationCode,
   retainApplicationArtifact, type ApplicationSessionRow,
 } from "./store";
 import { x2Digest, x2Fault, x2Ref } from "./contracts";
@@ -217,6 +217,77 @@ export async function requestApplicationExecution(ctx: PeMutationContext, input:
   if (!row) throw unavailable();
   return { sessionId: row.id, status: row.status, originalParentRef: parent.original_parent_ref,
     originalDeadline: parent.parent.deadlineAt, newAllowance: false };
+}
+/** Continues the ORIGINAL institution responsibility with one execution child of
+ * an S4-accepted institution-origin model. Same Work, input, reservation and
+ * deadline; no allowance is created. The child is born viability-governed: it
+ * composes, then waits for a retained Z3 selection and never steps alone.
+ * requestApplicationExecution keeps refusing origin parents (learning is not
+ * fresh business authority). */
+export async function requestInstitutionApplicationExecution(ctx: PeMutationContext, input: unknown) {
+  const request = ApplicationExecuteSchema.parse(input);
+  if (ctx.auth.role !== "owner" || principal(ctx) !== ctx.auth.userId) throw unavailable();
+  const parent = await applicationSession(ctx, request.sessionId);
+  const originRef = originOf(parent);
+  if (!originRef) x2Fault("Z3_INSTITUTION_ORIGIN_PARENT_REQUIRED", 403);
+  if (parent.id !== parent.parent_id || parent.status !== "MODEL_READY") x2Fault("X2_FROZEN_NATIVE_MODEL_REQUIRED_BEFORE_FRESH_OBJECTIVE");
+  if (request.workId !== parent.work_id || x2Digest(request.root) !== x2Digest(parent.root)
+    || !parent.profile_ids.includes(request.executionProfileId)) x2Fault("Z3_ORIGINAL_WORK_AND_GOVERNED_PROFILE_REQUIRED");
+  if ((parent.request as ApplicationAcquireRequest).targets.some((target) => target.id === request.targetId)) x2Fault("X2_FRESH_RECORD_MUST_NOT_BE_A_DEMONSTRATION");
+  await currentApplicationWork(ctx, parent);
+  await authorize(ctx, request.root, [{ type: "work", id: request.workId }]);
+  const { model } = await currentApplicationModel(ctx, parent);
+  const profiles = await Promise.all(parent.profile_ids.map((id) => nativeApplicationProfile(ctx, id)));
+  const profile = profiles.find((item) => item.profile.id === request.executionProfileId)!;
+  const observationTarget = { kind: "identity" as const, application: model.scope.application, account: model.scope.account,
+    entity: profile.allowedEntities.length === 1 ? profile.allowedEntities[0]! : "", id: request.targetId };
+  if (!observationTarget.entity) x2Fault("X2_EXACT_FRESH_TARGET_ENTITY_REQUIRED");
+  assertProfileTarget(profile, observationTarget);
+  const digest = x2Digest(request), childId = randomUUID();
+  const fresh = await prepareFreshApplicationAuthority(ctx, parent, model, profiles, {
+    sessionId: childId, workId: parent.work_id, workInputDigest: parent.work_input_digest, target: observationTarget,
+  });
+  await tx(ctx, async (c) => {
+    await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [`s5-portfolio:${ctx.auth.tenantId}`]);
+    const prior = (await c.query<{ id: string; request_digest: string }>(
+      "SELECT id,request_digest FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3",
+      [ctx.auth.tenantId, principal(ctx), request.idempotencyKey])).rows[0];
+    if (prior) { if (prior.request_digest !== digest) x2Fault("X2_EXECUTION_IDEMPOTENCY_CONFLICT"); return; }
+    const current = await applicationSession(ctx, parent.id, c, true);
+    if (current.status !== "MODEL_READY" || current.generation !== parent.generation) x2Fault("X2_FROZEN_NATIVE_MODEL_REQUIRED_BEFORE_FRESH_OBJECTIVE");
+    // Z3 resolves exactly one child per original responsibility.
+    if ((await c.query("SELECT id FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND parent_id=$3 AND id<>parent_id LIMIT 1",
+      [ctx.auth.tenantId, principal(ctx), parent.id])).rowCount) x2Fault("Z3_ORIGINAL_EXECUTION_CHILD_ALREADY_EXISTS");
+    const accepted = (await c.query<{ ref: ExperimentRef }>(
+      "SELECT body->'detail'->'acceptanceRef' ref FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND principal_id=$2"
+      + " AND session_id=$3 AND kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED' LIMIT 2", [ctx.auth.tenantId, principal(ctx), parent.id])).rows;
+    if (accepted.length !== 1 || !accepted[0]!.ref) x2Fault("Z3_S4_ACCEPTED_INSTITUTION_MODEL_REQUIRED");
+    const governed = { schema: "finnor.s4.z3-governed-origin-child.v1", acceptanceRef: accepted[0]!.ref,
+      originalReservationRef: parent.reservation_ref, selectedBy: "Z3_VIABILITY_STRATEGY_VIA_S4", autonomousExecution: false };
+    await c.query("INSERT INTO finnor_os.application_semantics_sessions(id,tenant_id,principal_id,work_id,root,work_input_id,work_input_digest,parent_id,original_parent_ref,parent,profile_ids,request,request_digest,idempotency_key,rights_revision,allocation_ref,reservation_ref,root_consumption_ref,status,deadline_at,model_ref,check_ref) VALUES($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9::jsonb,$10::jsonb,$11::uuid[],$12::jsonb,$13,$14,$15,$16::jsonb,$17::jsonb,$18::jsonb,'QUEUED',$19,$20::jsonb,$21::jsonb)",
+      [childId, ctx.auth.tenantId, principal(ctx), parent.work_id, JSON.stringify(parent.root), parent.work_input_id, parent.work_input_digest,
+        parent.id, JSON.stringify(parent.original_parent_ref), JSON.stringify({ ...parent.parent, viabilityGoverned: governed }),
+        parent.profile_ids, JSON.stringify(request), digest, request.idempotencyKey, parent.rights_revision,
+        JSON.stringify(parent.allocation_ref), JSON.stringify(parent.reservation_ref), JSON.stringify(parent.root_consumption_ref),
+        parent.parent.deadlineAt, JSON.stringify(parent.model_ref), JSON.stringify(parent.check_ref)]);
+    const child = await applicationSession(ctx, childId, c);
+    await currentApplicationWork(ctx, child, c);
+    for (const item of profiles) await retainApplicationArtifact(ctx, item.profile.grantRef, item.grantBody, false, c, [parent.parent.rightsRevision]);
+    await retainApplicationArtifact(ctx, fresh.ref, fresh.body, false, c, [parent.parent.rightsRevision]);
+    await applicationEvent(ctx, child, "FRESH_ASSIGNMENT_CONSUMES_FROZEN_MODEL", {
+      modelRef: parent.model_ref, checkRef: parent.check_ref, originalParentRef: parent.original_parent_ref,
+      originalDeadline: parent.parent.deadlineAt, newAllowance: false, freshTarget: observationTarget,
+      freshAuthorityRef: fresh.ref, institutionalOriginRef: originRef, governed,
+    }, c);
+    await enqueueApplicationSession(ctx, child, "fresh-execution", c);
+    await enqueueApplicationExpiry(ctx, child, c);
+  });
+  const row = await tx(ctx, async (c) => (await c.query<{ id: string; status: string }>(
+    "SELECT id,status FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3",
+    [ctx.auth.tenantId, principal(ctx), request.idempotencyKey])).rows[0], true);
+  if (!row) throw unavailable();
+  return { sessionId: row.id, status: row.status, originalParentRef: parent.original_parent_ref,
+    originalDeadline: parent.parent.deadlineAt, newAllowance: false, governed: true };
 }
 export async function projectApplicationSemantics(ctx: PeMutationContext, input: unknown) {
   const request = ApplicationProjectionSchema.parse(input);

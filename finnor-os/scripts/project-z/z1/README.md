@@ -238,7 +238,10 @@ The target manifest has schema `finnor.z1.authorized-native-target.v1` and exact
 
 - `repository`, `flavor` (`SOURCE_DEVELOPMENT` or
   `SEPARATELY_INSTALLED_DEVELOPMENT`), loopback `frontend` and `api` origins;
-  `database.name`, `database.port`, nonprivileged `database.role`; same `authOrigin`.
+  `database.name`, `database.port`, nonprivileged `database.role` and a different
+  nonprivileged `database.workerRole`; same `authOrigin`. Only the worker role has
+  cross-tenant queue authority (migration 0171), so the driver's queue census and
+  its owned workers use it, never the application role.
 - Installed stamp's `sourceCommit`, `sourceTree`, `nativeRuntimeDigest`,
   `reconstructionReference`; absolute `fixtureFile` and its `fixtureSha256`.
 - Explicit `authorization.reference`, `disposableDatabaseExclusive`,
@@ -279,7 +282,9 @@ The target manifest has schema `finnor.z1.authorized-native-target.v1` and exact
 Supply locally, never print or archive values:
 `FINNOR_Z1_TARGET_MANIFEST`, `FINNOR_Z1_TARGET_SHA256`,
 `FINNOR_Z1_NATIVE_AUTHORIZED=DISPOSABLE_ORIGINAL_Z1_EPISODE_ONLY`,
-`TEST_OWNER_EMAIL`, `TEST_OWNER_PASSWORD`, `DATABASE_URL`,
+`TEST_OWNER_EMAIL`, `TEST_OWNER_PASSWORD`, `DATABASE_URL` (application role),
+`FINNOR_Z1_WORKER_DATABASE_URL` (the manifest's `database.workerRole` on the same
+loopback database; the frontend and API processes must not hold it),
 `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_URL`, `FINNOR_ENVIRONMENT=staging`
 (converged runtime) or the legacy standalone `ordinary_disposable`,
 `FINNOR_Z1_PROFILE=ordinary_disposable`, `P3_GOVERNORS=1`. No Auth bypass or named

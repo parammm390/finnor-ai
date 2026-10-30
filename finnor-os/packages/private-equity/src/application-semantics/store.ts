@@ -45,9 +45,10 @@ export const APPLICATION_SOURCE_FILES = [
   "finnor-os/packages/orchestration/src/project-z/z0-convergence/s5-owner-adapter.sql",
   "finnor-os/packages/db/migration-head.ts",
   "finnor-os/packages/db/migrations/postz_z0_institution_application_bridge.sql",
+  "finnor-os/packages/db/migrations/postz_zi_z3_s4_executable_selection.sql",
   "finnor-os/packages/shared-types/src/application-semantics.ts",
   ...["contracts", "native-contracts", "ports", "envelope", "learner", "checker", "composition",
-    "source", "schema-pattern", "observation", "store", "allocation", "obligations", "runtime", "worker", "api", "validity", "fresh-authority"]
+    "source", "schema-pattern", "observation", "store", "allocation", "obligations", "runtime", "worker", "api", "validity", "fresh-authority", "governed"]
     .map((name) => `finnor-os/packages/private-equity/src/application-semantics/${name}.ts`),
   "finnor-os/packages/computer/src/application-provider.ts",
   "finnor-os/packages/computer/src/application-passive-document.ts",
@@ -252,6 +253,21 @@ export async function enqueueApplicationSession(ctx: PeMutationContext, row: App
   await client.query("INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,protocol_version,retry_safety,max_attempts) VALUES($1,'run_application_semantics_v1',$2::jsonb,$3,'interactive',1,'reconcilable',5) ON CONFLICT(idempotency_key) DO NOTHING",
     [ctx.auth.tenantId, JSON.stringify({ tenantId: ctx.auth.tenantId, principalId: principal(ctx), sessionId: row.id, generation: row.generation }),
       `x2:${row.id}:${row.generation}:${stage}`]);
+}
+/** The application owner's own delivery of one retained Z3 selection. The job
+ * carries the selection id only as a locator; the claim, fence and every
+ * currentness check are the application owner's. */
+export async function enqueueApplicationSelection(ctx: PeMutationContext, row: ApplicationSessionRow, selectionId: string, client: PoolClient) {
+  await client.query("INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,protocol_version,retry_safety,max_attempts) VALUES($1,'run_application_semantics_v1',$2::jsonb,$3,'interactive',1,'reconcilable',5) ON CONFLICT(idempotency_key) DO NOTHING",
+    [ctx.auth.tenantId, JSON.stringify({ tenantId: ctx.auth.tenantId, principalId: principal(ctx), sessionId: row.id,
+      generation: row.generation, selectionId }), `x2:${row.id}:${row.generation}:z3-selection:${selectionId}`]);
+}
+/** A governed child parked for its selection still blocks the original P1, so
+ * the inherited original deadline must end it even when no selection comes. */
+export async function enqueueApplicationExpiry(ctx: PeMutationContext, row: ApplicationSessionRow, client: PoolClient) {
+  await client.query("INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,protocol_version,retry_safety,max_attempts,run_at) VALUES($1,'run_application_semantics_v1',$2::jsonb,$3,'interactive',1,'reconcilable',5,$4::timestamptz+interval '1 second') ON CONFLICT(idempotency_key) DO NOTHING",
+    [ctx.auth.tenantId, JSON.stringify({ tenantId: ctx.auth.tenantId, principalId: principal(ctx), sessionId: row.id, generation: row.generation }),
+      `x2:${row.id}:${row.generation}:z3-expiry`, row.deadline_at.toISOString()]);
 }
 export async function canonicalApplicationActor(tenantId: string, principalId: string): Promise<PeMutationContext> {
   const provisional: PeMutationContext = { auth: { tenantId, userId: principalId, employeeId: principalId, role: "owner" } };

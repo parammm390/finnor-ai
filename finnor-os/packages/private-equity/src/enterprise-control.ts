@@ -708,11 +708,17 @@ export async function continueEnterpriseViabilityTx(ctx:PeMutationContext,sessio
  claim:import('./project-z/z3-viability/contracts').ViabilityClaim,client:PoolClient,db:import('@finnor/db').Db){
  return (await import('./project-z/z3-viability/consumer')).consumeCheckedViabilityTx(ctx,sessionId,claim,client,db);
 }
-/** Independently versioned executable-operation selection precheck. It refuses
- * by name until the actual application owner can consume a retained selection. */
+/** Independently versioned executable-operation selection. The application
+ * owner's governed origin child is the explicit opt-in; the selection itself
+ * grants nothing and is consumed under the application owner's own claim. */
 export const Z3_EXECUTABLE_OPERATION_BINDING='finnor.s4.z3-original-executable-operation-binding.v1' as const;
+export async function readEnterpriseViabilityExecutableSelectionTx(ctx:PeMutationContext,
+ request:import('./project-z/z3-viability/general-owners').GeneralOwnerRequest,edgeIndex:number,
+ invocation:import('./project-z/z3-viability/general-owners').GeneralOwnerInvocation,client:PoolClient){
+ return (await import('./project-z/z3-viability/general-owners')).executableSelectionStateTx(ctx,request,edgeIndex,invocation,client);
+}
 export async function selectEnterpriseViabilityExecutableOperationTx(ctx:PeMutationContext,
  request:import('./project-z/z3-viability/general-owners').GeneralOwnerRequest,edgeIndex:number,
- invocation:import('./project-z/z3-viability/general-owners').GeneralOwnerInvocation,client:PoolClient):Promise<never>{
+ invocation:import('./project-z/z3-viability/general-owners').GeneralOwnerInvocation,client:PoolClient){
  return (await import('./project-z/z3-viability/general-owners')).selectGeneralExecutableOperationTx(ctx,request,edgeIndex,invocation,client);
 }

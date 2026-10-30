@@ -25,12 +25,20 @@ export interface ApplicationDiscovery {
   typeSignatureRefs: ExperimentRef[];
   substrate: "API" | "UI" | "HYBRID";
 }
+export interface GovernedOriginChild {
+  schema: "finnor.s4.z3-governed-origin-child.v1";
+  acceptanceRef: ExperimentRef; originalReservationRef: ExperimentRef;
+  selectedBy: "Z3_VIABILITY_STRATEGY_VIA_S4"; autonomousExecution: false;
+}
 export interface OriginalApplicationParent {
   originalParentRef: ExperimentRef;
   tenantRef: ExperimentRef;
   workRef: ExperimentRef;
   institutionalProgramRef: ExperimentRef | null;
   institutionalOriginRef?: ExperimentRef;
+  /** Set only by requestInstitutionApplicationExecution; the immutable session
+   * `parent` record makes it unreachable from any caller-supplied request. */
+  viabilityGoverned?: GovernedOriginChild;
   authorityGrantRef: ExperimentRef;
   resourceGrantRef: ExperimentRef;
   baselineManifestRef: ExperimentRef;

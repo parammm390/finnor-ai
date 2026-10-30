@@ -10,7 +10,7 @@ export const sha = bytes => createHash("sha256").update(bytes).digest("hex");
 const root = fileURLToPath(new URL("../../../../", import.meta.url));
 const required = ["FINNOR_Z1_TARGET_MANIFEST", "FINNOR_Z1_TARGET_SHA256", "FINNOR_Z1_NATIVE_AUTHORIZED",
   "TEST_OWNER_EMAIL", "TEST_OWNER_PASSWORD", "DATABASE_URL", "NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_URL",
-  "FINNOR_ENVIRONMENT", "FINNOR_Z1_PROFILE", "P3_GOVERNORS"];
+  "FINNOR_ENVIRONMENT", "FINNOR_Z1_PROFILE", "P3_GOVERNORS", "FINNOR_Z1_WORKER_DATABASE_URL"];
 export function need(condition, code) { if (!condition) throw Error(code); }
 export async function privateJSON(path, value) {
   await writeFile(path, JSON.stringify(value, null, 2) + "\n", { flag: "wx", mode: 0o600 });
@@ -74,6 +74,15 @@ export async function guardTarget() {
   need(["postgres:", "postgresql:"].includes(database.protocol) && database.hostname === "127.0.0.1" &&
     database.port && database.pathname === `/${target.database.name}` && Number(database.port) === target.database.port &&
     !database.search && !database.hash, "EXPLICIT_OWNED_DISPOSABLE_DATABASE_REQUIRED");
+  // Only the separate worker role has cross-tenant queue authority (migration 0171); a worker or queue census on the
+  // application role would see an empty queue, so the episode refuses to run without the worker role connection.
+  const workerDatabase = new URL(process.env.FINNOR_Z1_WORKER_DATABASE_URL);
+  need(["postgres:", "postgresql:"].includes(workerDatabase.protocol) && workerDatabase.hostname === "127.0.0.1" &&
+    workerDatabase.port === database.port && workerDatabase.pathname === database.pathname &&
+    !workerDatabase.search && !workerDatabase.hash && typeof target.database.workerRole === "string" &&
+    target.database.workerRole !== target.database.role &&
+    decodeURIComponent(workerDatabase.username) === target.database.workerRole,
+  "SEPARATE_WORKER_DATABASE_ROLE_ON_THE_SAME_OWNED_DATABASE_REQUIRED");
   const auth = new URL(process.env.SUPABASE_URL), browserAuth = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL);
   need(auth.origin === browserAuth.origin && auth.origin === target.authOrigin && auth.pathname === "/" && browserAuth.pathname === "/" &&
     !auth.username && !auth.password && !auth.search && !auth.hash &&
@@ -107,6 +116,8 @@ export async function guardTarget() {
         environment.P3_GOVERNORS === "1" && !bypasses.some(key => environment[key] === "1") &&
         !Object.keys(environment).some(key => forbidden.test(key) && environment[key]),
         "ACTUAL_TARGET_ENVIRONMENT_MUST_DISABLE_BYPASSES_AND_EXTERNAL_PROVIDERS");
+      need(environment.FINNOR_Z1_WORKER_DATABASE_URL === undefined &&
+        environment.DATABASE_URL !== process.env.FINNOR_Z1_WORKER_DATABASE_URL, "APPLICATION_PROCESSES_MUST_NOT_HOLD_THE_WORKER_DATABASE_ROLE");
       if (expected.port === Number(front.port)) need(environment.NEXT_PUBLIC_SUPABASE_URL &&
         new URL(environment.NEXT_PUBLIC_SUPABASE_URL).origin === target.authOrigin &&
         (environment.FINNOR_OS_API_URL ?? environment.NEXT_PUBLIC_OS_API_URL)?.replace(/\/$/, "") === api.origin,
