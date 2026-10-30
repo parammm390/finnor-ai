@@ -91,6 +91,7 @@ GRANT SELECT,INSERT,UPDATE ON finnor_os.z3_application_selections TO finnor_app;
 -- z0_s5_application_frame is untouched, and no allowance is created.
 CREATE OR REPLACE FUNCTION finnor_os.z0_s5_application_consumption(p_body jsonb,p_decision uuid)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
+#variable_conflict use_variable
 DECLARE t uuid:=finnor_os.request_tenant_id(); u uuid:=nullif(current_setting('app.user_id',true),'')::uuid;
  frame jsonb; cert jsonb; parent jsonb; prior jsonb;
 BEGIN
