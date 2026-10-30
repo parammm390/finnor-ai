@@ -3,19 +3,43 @@ import {employeeAuthoritySnapshotTx} from '@finnor/authority';
 import {buildGoalSpec,buildConstraintSet,buildPlanningWorldSnapshot,DEFAULT_PLAN_BUDGETS,type CandidatePlan} from '@finnor/planning';
 import type {CanonicalOperationalQueryRequest} from '@finnor/shared-types';
 import type {PeMutationContext} from '../../types';
-import {authorize,principal,tx} from '../../owner-context';
-import {intakeSchema,planSchema,acceptedDefinition,developmentOnly,planReference,sha} from './contracts';
+import {authorize,principal,tx,unavailable} from '../../owner-context';
+import {intakeSchema,adoptingIntakeSchema,planSchema,acceptedDefinition,developmentOnly,planReference,sha,type Intake} from './contracts';
 import {ownerSource} from './source';
 import type {Original} from './store';
 import type {Db} from '@finnor/db';
 
+/** An adopted Work already carries its canonical `about` link to the root, so the S1 view pinned by the S3 model includes it
+ * and this intake adds no link. A replay is accepted only for the one typed input that carries this exact key and definition. */
+async function adoptableProofWork(ctx:PeMutationContext,input:Intake,workId:string,acceptedDigest:string,key:string){
+ const row=await tx(ctx,async c=>{
+  const work=(await c.query(`SELECT w.status,w.created_by,
+    EXISTS(SELECT 1 FROM finnor_os.work_entity_links l WHERE l.tenant_id=w.tenant_id AND l.work_id=w.id AND l.entity_type=$3
+     AND l.entity_id=$4::uuid AND l.relationship='about') AS linked,
+    EXISTS(SELECT 1 FROM finnor_os.work_plan_revisions p WHERE p.tenant_id=w.tenant_id AND p.work_id=w.id) AS planned
+    FROM finnor_os.works w WHERE w.tenant_id=$1 AND w.id=$2 FOR SHARE`,[ctx.auth.tenantId,workId,input.root.entityType,input.root.entityId])).rows[0];
+  if(!work)return null;
+  const typed=(await c.query(`SELECT idempotency_key,context_snapshot->>'executionProofAcceptedRequestDigest' AS digest FROM finnor_os.work_inputs
+    WHERE tenant_id=$1 AND work_id=$2 AND context_snapshot->>'executionProofAcceptedRequestDigest' IS NOT NULL`,[ctx.auth.tenantId,workId])).rows;
+  return {work,typed};
+ });
+ if(!row)throw unavailable();
+ const {work,typed}=row;
+ if(work.created_by!==principal(ctx)||['completed','failed','cancelled'].includes(work.status)||!work.linked)throw Error('Z4_ADOPTED_WORK_NOT_ELIGIBLE');
+ if(typed.length){
+  if(typed.length!==1||typed[0].idempotency_key!==key)throw Error('Z4_ADOPTED_WORK_NOT_ELIGIBLE');
+  if(typed[0].digest!==acceptedDigest)throw Error('Z4_ADOPTED_INTAKE_DEFINITION_CONFLICT');
+ }else if(work.planned)throw Error('Z4_ADOPTED_WORK_NOT_ELIGIBLE');
+}
 export async function intakeProofWork(ctx:PeMutationContext,raw:unknown){
- developmentOnly();const input=intakeSchema.parse(raw);
+ developmentOnly();const {adoptWorkId,...fields}=adoptingIntakeSchema.parse(raw),input=intakeSchema.parse(fields);
  if(Date.parse(input.deadlineAt)<=Date.now()||Date.parse(input.deadlineAt)>Date.now()+3600000)throw Error('Z4_ORIGINAL_ONE_HOUR_DEADLINE_REQUIRED');
  await ownerSource(ctx,input);
  const acceptedDigest=sha(acceptedDefinition(input));
+ const key='z4-intake:'+sha({principal:principal(ctx),key:input.idempotencyKey});
+ if(adoptWorkId)await adoptableProofWork(ctx,input,adoptWorkId,acceptedDigest,key);
  const intake=await receiveWork({tenantId:ctx.auth.tenantId,userId:principal(ctx),instruction:input.purpose,channel:'console',
-  idempotencyKey:'z4-intake:'+sha({principal:principal(ctx),key:input.idempotencyKey}),requireExactIntake:true,
+  idempotencyKey:key,...(adoptWorkId?{workId:adoptWorkId}:{requireExactIntake:true}),
   activeContext:{focusedEntity:input.root,executionProofAcceptedRequestDigest:acceptedDigest}});
  await attachWorkEntity(ctx.auth.tenantId,intake.workId,{...input.root,source:'Z4:original-authenticated-proof-request'});
  return {...intake,acceptedRequestDigest:acceptedDigest,originalDeadlineAt:input.deadlineAt,executionAuthorityGranted:false};
