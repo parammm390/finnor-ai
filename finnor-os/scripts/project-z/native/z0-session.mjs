@@ -12,7 +12,7 @@ import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   readNativeEnvironment, signInOwner, startOwnedWorker, createOriginalInstitutionParent,
-  driveAcquisitionToModelReady, submitInstitutionAcquisition, createStandaloneApplicationWork,
+  driveAcquisitionToModelReady, submitInstitutionAcquisition, createStandaloneApplicationWork, reviseOriginalSource,
 } from "./x1-origin-fixture.mts";
 
 const state = process.env.FINNOR_NATIVE_STATE, evidence = process.env.FINNOR_NATIVE_EVIDENCE;
@@ -226,6 +226,99 @@ if (process.env.FINNOR_Z0_MODE === "reject") {
   chmodSync(workerLog, 0o600);
   console.log(JSON.stringify({ event: "Z0_SESSION_DONE", mode: "reject", tally: tallyReject }));
   process.exit(tallyReject.FAIL ? 1 : 0);
+}
+
+
+/**
+ * `current` mode (failure model section 14): a real owner-path change of one dependency of the original parent at the
+ * INTAKE stage (before any acquisition) and at the CLAIM stage (acquisition accepted while the owned worker is down,
+ * dependency changed, worker restarted, so the first claim happens after the change). Each case uses its own fresh
+ * original parent; the first parent is the untouched control whose owner state must not move.
+ */
+if (process.env.FINNOR_Z0_MODE === "current") {
+  const STOP = ["MODEL_READY", "FAILED", "BLOCKED", "UNKNOWN", "STALE", "CANCELLED"];
+  const authorityRevision = async () => (await q("SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=$1", [parent.tenantId]))[0]?.revision ?? null;
+  const mutations = {
+    SOURCE: async p => ({ via: "institution-register-source (new document version of the original CRM export)", ...(await reviseOriginalSource(env, p)) }),
+    PARENT: async p => { const r = await owner.operation("institution-revise", { workId: p.workId, workInputId: p.workInputId, grantIds: p.grantIds,
+      idempotencyKey: "z0-revise:" + randomUUID(), parentRequestId: p.compilerRequestId }); return { via: "institution-revise (new compiler revision of the same Work)", status: r.status, body: r.body }; },
+    TERMS: async p => { const r = await owner.call("/api/workforce/profiles", { key: `z0-native-${p.tag}`, name: "Revised governed terms",
+      capabilityGrants: [{ kind: "query", capability: "query:harness_program_v1" }], autonomyLimits: { maxActions: 0, maxQueries: 1, maxReplans: 1, maxPlannerCalls: 1, maxWallClockMs: 60000 },
+      planningHints: { qualification: "DISPOSABLE_ORDINARY_NO_PROTECTED_ADMISSION" } }); return { via: "POST /api/workforce/profiles (same key, narrower terms)", status: r.status, body: r.body }; },
+    RIGHTS: async () => { const before = await authorityRevision();
+      // The row is a disposable role definition; the authority revision itself is bumped by the product's own trigger.
+      await q("INSERT INTO finnor_os.employee_roles(tenant_id,key,name) VALUES($1,$2,'Z0 disposable rights revision')", [parent.tenantId, "z0-rights-" + randomUUID().slice(0, 8)]);
+      return { via: "employee_roles insert; product trigger bump_authority_revision", revisionBefore: before, revisionAfter: await authorityRevision() }; },
+  };
+  // Other parents of the same tenant add reservations, so the comparison is limited to the one original parent.
+  const sameOriginal = (a, b) => a.original.envelopes === b.original.envelopes && a.original.status === b.original.status && a.episode === b.episode;
+  const controlBefore = await witness(parent);
+  const controlUnchanged = async () => { const now = await witness(parent); return now.sessions === controlBefore.sessions && now.charges.count === controlBefore.charges.count && sameOriginal(controlBefore, now) && now.peRequests === controlBefore.peRequests; };
+  const cancelAndStop = async (submitted, sessionId) => {
+    await owner.operation("application-cancel", { root: submitted.request.root, workId: submitted.request.workId, sessionId }).catch(() => null);
+    await submitted.handle.portal.stop();
+  };
+  const currentCase = (stage, dependency) => runCase(`CUR-${stage}-${dependency}`, `Currentness ${stage} x ${dependency}: an actual change of the dependency is refused or stops the affected work only`, async () => {
+    const p = await createOriginalInstitutionParent(env, { record, tag: `c${stage[0].toLowerCase()}${dependency[0].toLowerCase()}${randomUUID().slice(0, 4)}`, shape: "partial-unresolved" });
+    const before = await witness(p);
+    const sessionsOf = async () => (await q("SELECT id,status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND work_id=$2", [p.tenantId, p.workId]));
+    if (stage === "INTAKE") {
+      const mutation = await mutations[dependency](p);
+      const submitted = await submitInstitutionAcquisition(env, p, { privateRoot, record }, owner);
+      const accepted = submitted.response.status === 202;
+      if (accepted) await cancelAndStop(submitted, submitted.response.body.sessionId); else await submitted.handle.portal.stop();
+      const after = await witness(p), sessions = await sessionsOf();
+      const refused = submitted.response.status >= 400 && submitted.response.status < 500 && sessions.length === 0;
+      ensure(await controlUnchanged(), "UNRELATED_CONTROL_PARENT_CHANGED");
+      ensure(sameOriginal(before, after) && after.charges.count === before.charges.count, "REFUSAL_CHANGED_THE_ORIGINAL_BUDGET");
+      return { outcome: refused ? "PASS" : "FAIL", detail: { predicate: refused ? "CHANGED_DEPENDENCY_REFUSED_AT_INTAKE" : accepted ? "CHANGED_DEPENDENCY_NOT_FENCED_ACQUISITION_ACCEPTED" : "NOT_A_CLEAN_REFUSAL",
+        mutation, status: submitted.response.status, body: submitted.response.body, sessions, before, after } };
+    }
+    ensure(worker, "OWNED_WORKER_REQUIRED_FOR_CLAIM_STAGE");
+    await worker.stop();
+    worker = null;
+    let submitted = null;
+    try {
+      submitted = await submitInstitutionAcquisition(env, p, { privateRoot, record }, owner);
+      ensure(submitted.response.status === 202, `ACQUIRE_NOT_ACCEPTED_${submitted.response.status}:${JSON.stringify(submitted.response.body).slice(0, 200)}`);
+      const sessionId = submitted.response.body.sessionId;
+      const queued = await q("SELECT status,attempts FROM finnor_os.jobs WHERE tenant_id=$1 AND type='run_application_semantics_v1' AND payload->>'sessionId'=$2", [p.tenantId, sessionId]);
+      ensure(queued.length === 1 && queued[0].status === "queued" && queued[0].attempts === 0, "ACQUISITION_JOB_WAS_CLAIMED_BEFORE_THE_CHANGE");
+      const mutation = await mutations[dependency](p);
+      worker = await startWorker(30);
+      let row = null;
+      for (let i = 0; i < 120; i++) {
+        row = (await q("SELECT status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [p.tenantId, sessionId]))[0];
+        if (STOP.includes(row?.status)) break;
+        await sleep(2500);
+      }
+      const [acceptance] = await q("SELECT count(*)::int n FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 AND kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED'", [p.tenantId, sessionId]);
+      const [physical] = await q("SELECT count(*)::int n FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2", [p.tenantId, sessionId]);
+      const after = await witness(p);
+      ensure(await controlUnchanged(), "UNRELATED_CONTROL_PARENT_CHANGED");
+      ensure(sameOriginal(before, after) && after.charges.count === before.charges.count, "CLAIM_REFUSAL_CHANGED_THE_ORIGINAL_BUDGET");
+      const stopped = STOP.includes(row?.status) && row.status !== "MODEL_READY" && acceptance.n === 0 && physical.n === 0;
+      return { outcome: stopped ? "PASS" : "FAIL", detail: { predicate: stopped ? "CHANGED_DEPENDENCY_STOPPED_THE_CLAIM" : "CHANGED_DEPENDENCY_NOT_FENCED_AT_CLAIM_" + row?.status,
+        mutation, session: row, acceptanceEvents: acceptance.n, physicalRequests: physical.n, before, after } };
+    } finally {
+      if (submitted) await submitted.handle.portal.stop();
+      if (!worker) worker = await startWorker(30);
+    }
+  });
+  for (const stage of ["INTAKE", "CLAIM"]) for (const dependency of ["SOURCE", "PARENT", "TERMS", "RIGHTS"]) await currentCase(stage, dependency);
+  const noFence = "no owner fence found: X1 pins its own installed compiler method identity (X1_INSTALLED_COMPILER_METHOD_CHANGED), but no application-semantics learner, checker or Z0 consumer source identity is bound by any owner read; a source-byte fault would only modify the running product, not exercise a fence";
+  for (const stage of ["INTAKE", "CLAIM", "USE", "DISPATCH"]) for (const dependency of ["CODE", "CHECKER", "CONSUMER"]) notRun(`CUR-${stage}-${dependency}`, `Currentness ${stage} x ${dependency}`, noFence);
+  for (const stage of ["USE", "DISPATCH"]) for (const dependency of ["SOURCE", "PARENT", "TERMS", "RIGHTS"]) notRun(`CUR-${stage}-${dependency}`, `Currentness ${stage} x ${dependency}`,
+    "needs a completed acquisition per case plus an interleaving harness that changes the dependency between S4 acceptance and the original consumer (stage USE) or between model materialisation and the business row (stage DISPATCH); not built in this revision");
+  notRun("CUR-CHECKER-ACCEPTANCE", "Currentness at independent checker acceptance (Z0-R07-C05)", "needs a change injected between the checker verdict and S4 acceptance inside one worker delivery; no owner hook, not built");
+  notRun("CUR-ARTIFACT-PUBLICATION", "Currentness at artifact publication (Z0-R41-C04)", "needs a change injected between artifact write and publication inside one worker delivery; no owner hook, not built");
+  const tallyCurrent = results.reduce((acc, row) => ({ ...acc, [row.outcome]: (acc[row.outcome] ?? 0) + 1 }), {});
+  record("summary", { tally: tallyCurrent, results, tenantId: parent.tenantId, parents: [parent.programId] });
+  await sql.end();
+  await worker?.stop();
+  chmodSync(workerLog, 0o600);
+  console.log(JSON.stringify({ event: "Z0_SESSION_DONE", mode: "current", tally: tallyCurrent }));
+  process.exit(tallyCurrent.FAIL ? 1 : 0);
 }
 
 const killMode = process.env.FINNOR_Z0_MODE === "kill";

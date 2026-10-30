@@ -185,6 +185,7 @@ export interface OriginalInstitutionParent {
   originalDeadlineAt: string; wallDeadlineAt: string; dutyDeadlineAt: string; programmeDeadlineAt: string;
   deadlineAt: string; rightsRevision: string;
   resources: { compute: string; human: string }; grantIds: string[];
+  sourceBindings: Array<{ sourceClass: string; documentId: string; versionId: string; sha256: string }>;
   nativeStatus: { compiler: string; programme: string; liveJobs: number };
   jobs: Array<{ id: string; type: string; status: string }>;
   /** Only the `gated-two-supported-and-unresolved` shape: duty A is dispatched and `pending` owner approval, duty B is
@@ -363,7 +364,7 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
       parentReservation: episode.parent_reservation, parentDemandDigest: episode.parent_demand.demandDigest, chargeScope: episode.parent_demand.chargeScope,
       responsibilityIdentity: selected.stableIdentity, supportedIdentities: supportedNodes.map(node => node.stableIdentity),
       originalDeadlineAt: deadlines[0]!, wallDeadlineAt: deadlines[1]!, dutyDeadlineAt: deadlines[2]!, programmeDeadlineAt: deadlines[3]!,
-      deadlineAt: deadlines.reduce((a, b) => (Date.parse(a) <= Date.parse(b) ? a : b)), rightsRevision: rights, resources, grantIds,
+      deadlineAt: deadlines.reduce((a, b) => (Date.parse(a) <= Date.parse(b) ? a : b)), rightsRevision: rights, resources, grantIds, sourceBindings: bindings,
       nativeStatus: { compiler: cut.compiler_status, programme: cut.p1_status, liveJobs: cut.live }, jobs, ...(gated ? { gated } : {}) };
     await record("parent-04-quiescent-original-parent", parent);
     return parent;
@@ -554,4 +555,24 @@ export async function createStandaloneApplicationWork(env: NativeEnvironment, pa
       existingUse: ["0", "0", "0"], safetyMargin: "0", covenants: [], revoked: false, qualification: "AUTHENTICATED_OWNER_ASSERTION_UNADMITTED" }), null);
     return { workId, resourceId, units, tenantId };
   } finally { await sql.end(); }
+}
+
+/**
+ * Owner-path source revision: append a new version of the first original source document (the CRM export) and register it
+ * through `institution-register-source`, which supersedes the earlier grant of that source for the same Work.
+ */
+export async function reviseOriginalSource(env: NativeEnvironment, parent: OriginalInstitutionParent) {
+  const { db, dataPlatform } = await owners(env);
+  const owner = await signInOwner(env);
+  const binding = parent.sourceBindings[0];
+  if (!binding) throw Error("Z0_FIXTURE_ORIGINAL_SOURCE_BINDING_MISSING");
+  const rows = [{ id: "deal-A", kind: "entity", entityType: "deal", registrationId: parent.registrationId, name: `Z0 original ${parent.tag} revised` }];
+  const bytes = Buffer.from(JSON.stringify(rows));
+  const version = await db.withTenantTransaction(parent.tenantId, { userId: parent.ownerId }, async (tx: any) => dataPlatform.appendDocumentVersion(tx, {
+    tenantId: parent.tenantId, documentId: binding.documentId, bytes, mediaType: "application/octet-stream", format: "unknown", origin: "manual_upload",
+    actor: parent.ownerId, sourceSystem: "owner-export", sourceRef: `revised-${parent.tag}`, providerVersionId: "r2" }));
+  const expiresAt = new Date(Date.now() + 2 * 3600000).toISOString();
+  const response = await owner.operation("institution-register-source", { workId: parent.workId, documentId: binding.documentId, documentVersionId: version.id,
+    sourceClass: binding.sourceClass, protocol: "json_records", purpose: "standing evidence responsibility", expiresAt });
+  return { status: response.status, body: response.body, newVersionId: version.id, previousVersionId: binding.versionId };
 }
