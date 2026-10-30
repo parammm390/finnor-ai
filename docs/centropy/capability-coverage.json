@@ -8,10 +8,10 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-10-30T12:26:20.431Z",
-  "sourceBaseCommit": "6f30dc21c9378928b4bbd0c7f0fd17145acc5cc7",
+  "generatedAt": "2026-10-30T20:31:35.119Z",
+  "sourceBaseCommit": "49f9be817f298ee5807878901eb3061af4ee2c19",
   "manifestSha256": "047da00ad53bc39b585f00a685dc706f8a0971d6d7b8b96380df70f1032c0921",
-  "formsSha256": "f1b6c932cab041e07536e50f56bcbddbc9aaa62c8fd3e3d911f2d3bb2b7cbf57",
+  "formsSha256": "a242706604fe07b7579ec20a152788fe87fd54d3a24b986187654d2e9bcee371",
   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
   "counts": {
     "total": 696,
@@ -1209,7 +1209,7 @@
       },
       {
         "file": "src/lib/jarvis/openapi-types.ts",
-        "sha256": "6810cfeb9656e694f3d80f027251042edcc44aea9bfc569ef8797f8079d9ae94"
+        "sha256": "676051b681b4d6a0e32ff0b65ae1cf58e05be89777de7ad62386d5596ba0a767"
       },
       {
         "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
@@ -1341,7 +1341,7 @@
       },
       {
         "file": "src/lib/centropy/human-forms.generated.json",
-        "sha256": "f1b6c932cab041e07536e50f56bcbddbc9aaa62c8fd3e3d911f2d3bb2b7cbf57"
+        "sha256": "a242706604fe07b7579ec20a152788fe87fd54d3a24b986187654d2e9bcee371"
       },
       {
         "file": "src/components/centropy/controls/CanonicalRecordForm.tsx",
@@ -1493,7 +1493,7 @@
       },
       {
         "file": "finnor-os/packages/private-equity/src/project-z/z4-execution-proof/ExecutionProofPanel.tsx",
-        "sha256": "b6649b3fee7f0b969055f2af39ee707c395a4b2bea0bfdadbe0d8e1abe1aeca2"
+        "sha256": "c981b24552141cb1680fb2f9c1e75a119de940f5f9a91cff0f66b2ab956f6046"
       },
       {
         "file": "finnor-os/packages/private-equity/src/project-z/z1-shared-work/work-panel.tsx",

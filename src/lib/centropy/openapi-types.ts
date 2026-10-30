@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 2b2821ab00bd9f26e5d46ac77c41df512d05674821c75483d6f036a6b4948b58.
+// Generated from finnor-os/openapi.json, SHA-256 d4de4ca6e92a2b23720a7b4cfdcfb7e874803a32dafaf1ae755c9ea02bfc19a7.
 export interface paths {
     "/api/interventions/assess-pywhy": {
         parameters: {
@@ -49381,6 +49381,8 @@ export interface components {
                 /** Format: date-time */
                 compilerFrozenAt: string;
             };
+            /** Format: uuid */
+            adoptWorkId?: string;
         };
         "execution-proof-plan": {
             /** @constant */
