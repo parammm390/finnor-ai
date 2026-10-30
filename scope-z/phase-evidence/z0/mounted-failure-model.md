@@ -251,3 +251,36 @@ backend waiting on the lock is `HOLD_NOT_IN_FLIGHT` (FAIL, not PASS).
   patch request if the coordinator wants true expiry.
 - Screenshots are evidence of what was rendered only; every claim is checked against O-SQL/O-API.
   Screenshot originals are mode 0600; any committed derivative must be redacted (no email, token).
+
+## 6. Pre-run amendments (written after reading the mounted panels, before any run; nothing below was observed)
+
+The mounted Work page renders two private panels for the original Work, so M-01..M-04 read both:
+`section[aria-label="Institution responsibility"]` (`InstitutionProgramPanel`: standing responsibility rows,
+original deadline, observed/inferred/unresolved claim counts, attempts and acquisition units retained) and
+`.ct-application-semantics` (`ApplicationSemanticsPanel`). Owner expectations for the first are taken from
+`POST /api/company-brain/institution-read` (O-API) cross-checked with `x1_compiler_requests`,
+`x1_compiler_episodes` and `p1_programs` (O-SQL).
+
+1. M-01 item 5 is split into separately recorded predicates (mandate responsibility rows, requested resource
+   demand per resource, requested targets, requested deadline). Each failing predicate is named
+   (`UI_GAP_*`); the case outcome is FAIL when any of them is absent.
+2. M-04 revokes only the application accounts of B2 (`account_key` carries B2's tag), not every `x2_portal`
+   account of the tenant, so the original Work's MODEL_READY session is not affected by the revocation.
+3. M-07: after the first real refresh the token's server-side expiry is again inside supabase-js's
+   refresh margin of the advanced browser clock, so further refreshes at the library's 30 s tick are expected.
+   Expected is: at least one refresh request, every observed refresh answered 200 by the real Auth, the first
+   one yields a new access token, and the panel re-reads under the new token within 45 s. "Exactly one"
+   is replaced by "all observed refreshes are real 200 grants and none replays a mutation".
+4. M-06/M-10 foreign principal: the launcher-seeded owner of a different tenant is used when present
+   (`users.role = 'owner'`, tenant differs); otherwise the cases are NOT_RUN `FOREIGN_OWNER_NOT_SEEDED`.
+   Its Auth credential is created through the isolated Auth admin endpoint with a random password kept only
+   in memory.
+5. Root carriage: the Work page is first opened without a `root` parameter (the product's persisted root
+   path). If the panel does not mount within 30 s, the `root` URL parameter of the product's own routing
+   (`?root={"entityType":"pe_deal","entityId":...}`) is used and `ROOT_NOT_PERSISTED_BY_THREAD` is
+   recorded as an observation (not a failure of the Work readback).
+6. Locale/time: browser contexts use `en-US` and `UTC` so the panel's date formatting can be compared to
+   owner instants at minute resolution.
+7. M-07 normalises the panel's browser-clock dependent phrases (deadline "expired", validity window wording)
+   out of the fact signature, because the page clock is deliberately advanced; the instants themselves are
+   still compared.
