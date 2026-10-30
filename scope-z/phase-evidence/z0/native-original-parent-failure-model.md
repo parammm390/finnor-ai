@@ -383,3 +383,14 @@ set rule does not matter: each parent has its own resources; the extra tenants a
 | B2 | A second resume starts a second delivery or resends | Delivery attempt count and claim fence before/after; portal journal write events accounted for by session requests |
 | B3 | Recovery renews budget or moves the deadline | `invariants` (reused): session reservation_ref equals the parent's, deadline <= original, reservation count and envelope digests unchanged, charges <= envelope |
 | B4 | Revocation of one parent's accounts stops other work | Accounts are selected by this parent's tag; the control parent's original digests are compared |
+
+### 15.1 Correction before implementation (B-KILL-CLAIM, concurrent resumes)
+
+Reading `handleApplicationOperation("application-resume")` and `enqueueApplicationSession`: every resume increments the
+session generation and enqueues `run_application_semantics_v1` with idempotency key `x2:<session>:<generation>:original-observation-and-continuation`.
+Two concurrent explicit resumes therefore legitimately produce two generations and up to two queued jobs. The oracle in
+section 15 ("exactly ONE new delivery attempt, fence +1") would assert a promise the product does not make and is withdrawn.
+The oracle that stays is the one that protects the owner: for the identity of every physical request, portal dispatch
+events for it are at most one in total (before kill plus after both resumes); S4 acceptance events are at most one; the
+session settles once; no request row is duplicated for one obligation; budget and deadline invariants hold. The number of
+jobs and generations created by the two resumes, and which of them ran, is recorded as an observation, not asserted.
