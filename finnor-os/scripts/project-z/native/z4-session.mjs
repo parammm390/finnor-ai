@@ -3,7 +3,7 @@
 // The grant is never written by this program: only the coordinator signer creates the receipt.
 // Nothing here admits a phase; the replay report is the only result.
 import assert from "node:assert/strict"
-import { createHash, randomBytes } from "node:crypto"
+import { createHash, randomBytes, randomUUID } from "node:crypto"
 import { spawn, spawnSync } from "node:child_process"
 import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
@@ -41,7 +41,6 @@ assert.equal(process.env.SUPABASE_URL, tls.origin, "AUTH_ORIGIN_MUST_BE_THE_DECL
 const day = 86400000
 const API = "http://127.0.0.1:3101"
 const FRONTEND = "http://127.0.0.1:3001"
-const ROOT_ORG = "90000000-0000-4000-8000-000000000027"
 const REGISTRATION = "scope-z/phase-evidence/z4/public-cases.pre-code.json"
 const REGISTRATION_SHA = "3992c3111ed0ba6fb700ae99095720780e713f7b55b1b9e938a6534004514d94"
 const fail = predicate => { throw new Error(predicate) }
@@ -97,7 +96,12 @@ try {
   const principalId = me.employeeId ?? me.userId
   const ctx = { auth: { tenantId, userId: me.userId, employeeId: me.employeeId ?? undefined, role: "owner" } }
   result.owner = { tenantId, principalId, role: me.role }
-  const root = { entityType: "external_organization", entityId: ROOT_ORG }
+  // A fresh organization per run: the tenant's pre-existing world carries unversioned core
+  // Document/DecisionReceipt records, which make its permitted canonical cut PARTIAL and
+  // disqualify every pin. A fresh root has a vacuously complete recorded cut (the same
+  // shape the product's own S3/S5 owner fixtures fit against).
+  const root = { entityType: "external_organization", entityId: randomUUID() }
+  result.world = { root }
 
   const { default: pg } = await import("pg")
   const admin = new pg.Client({ connectionString: privateEnv.CENTROPY_E2E_DB_ADMIN_URL })
@@ -147,11 +151,13 @@ try {
     const begin = new Date(Math.floor(Date.now() / day) * day - 128 * day).toISOString()
     const refOf = (id, owner = "SUPPLIED") => ({ owner, id, version: "fixture-v1", contentDigest: sha(id) })
     const model = await step("s3-seed-and-fit", async () => {
-      const ok = (await admin.query(`SELECT 1 FROM finnor_os.users u JOIN finnor_os.external_organizations o ON o.tenant_id=u.tenant_id
-        WHERE u.tenant_id=$1 AND u.id=$2 AND u.status='active' AND u.role='owner' AND o.id=$3 AND o.active
+      const ok = (await admin.query(`SELECT 1 FROM finnor_os.users u
+        WHERE u.tenant_id=$1 AND u.id=$2 AND u.status='active' AND u.role='owner'
           AND EXISTS(SELECT 1 FROM finnor_os.tenant_vertical_assignments v WHERE v.tenant_id=u.tenant_id AND v.vertical_key='private_equity' AND v.effective_from<=clock_timestamp())`,
-        [tenantId, me.userId, ROOT_ORG])).rows[0]
-      if (!ok) fail("Z4_EXISTING_CANONICAL_ROOT_AND_OWNER_REQUIRED")
+        [tenantId, me.userId])).rows[0]
+      if (!ok) fail("Z4_EXISTING_CANONICAL_OWNER_AND_VERTICAL_REQUIRED")
+      await admin.query(`INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,$3,'other')`,
+        [root.entityId, tenantId, `z4-${runName}`])
       const sourceRow = await memory.createEvidenceSource(tenantId, { sourceKey: `z4:${runName}:history`, sourceType: "pe_document_claim", title: "Generated exact integer history" })
       const version = (await admin.query("SELECT gen_random_uuid()::text id")).rows[0].id
       await admin.query(`INSERT INTO finnor_os.evidence_source_versions(id,source_id,scope,tenant_id,version_number,content_hash,content,snapshot,as_of,retrieved_at,created_at)
@@ -175,7 +181,7 @@ try {
       })
       const series = {}
       for (const id of ["outcome", "price", "priceSecondary"]) {
-        const metric = await pe.createMetricSeries(ctx, { subjectType: "external_organization", subjectId: ROOT_ORG, metricKey: `z4-${id}`, name: `Exact ${id}`, unit: "1", frequency: "daily" })
+        const metric = await pe.createMetricSeries(ctx, { subjectType: "external_organization", subjectId: root.entityId, metricKey: `z4-${id}`, name: `Exact ${id}`, unit: "1", frequency: "daily" })
         series[id] = String(metric.row.id)
         await pe.attachCanonicalEvidenceToWorld(ctx, { worldRoot: root, entity: { entityType: "pe_metric_series", entityId: series[id] },
           evidenceSourceId: sourceRow.id, evidenceVersionId: version, relationship: "supports" })
@@ -257,7 +263,7 @@ try {
     })
     await step("s5-compute-resource", async () => {
       const m = policy.mandate
-      const resource = { schema: "finnor.allocation-resource.v1", resourceId: "execution", tenantId, ownerRef: m.businessOwnerRef, legalEntityRef: refOf(ROOT_ORG, "S1"),
+      const resource = { schema: "finnor.allocation-resource.v1", resourceId: "execution", tenantId, ownerRef: m.businessOwnerRef, legalEntityRef: refOf(root.entityId, "S1"),
         scopeRef: refOf("z4-native", "BUSINESS_OWNER"), permittedRoots: [root], rightsRef: m.rightsRef, unit: "request", currency: null, kind: "CUMULATIVE_EXPENDITURE",
         resourceClass: "COMPUTE", horizon: m.horizon, sourceRef: refOf("source-execution", "BUSINESS_OWNER"), asOf: m.knowledgeAt, knowledgeAt: m.knowledgeAt,
         validUntil: m.validUntil, beliefPins: policy.policy.bindings.beliefPins, availability: ["2000", "2000", "2000"].map(amount => ({ amount, basis: "REPORTED_AVAILABLE" })),
