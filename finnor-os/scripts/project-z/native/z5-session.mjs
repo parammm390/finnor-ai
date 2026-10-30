@@ -8,7 +8,7 @@
  * launcher itself seeds the same way (second tenant/owner row, S3 evidence inputs through owner libraries);
  * owner rows for the Z5 chain come from authenticated HTTP, owner libraries and the real processes.
  */
-import { createHash, createPrivateKey, randomUUID, sign as edSign } from "node:crypto";
+import { createHash, createPrivateKey, createPublicKey, randomUUID, sign as edSign } from "node:crypto";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, readlinkSync, realpathSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
@@ -67,6 +67,7 @@ const S = { parents: [], children: [] };
 const stopAll = async () => {
   for (const child of S.children) if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
   await S.ledger?.stop?.().catch(() => undefined);
+  await S.dispatch?.close?.().catch(() => undefined);
   await S.worker?.stop?.("SIGKILL").catch(() => undefined);
   await sql.end().catch(() => undefined);
 };
@@ -120,15 +121,22 @@ if (!owner) { record("summary", { results }); await stopAll(); process.exit(1); 
 // ---------------------------------------------------------------- Z5N-02 S6 ledger and transport policy
 await runCase("Z5N-02", "Separate S6 ledger process and launcher-root-signed owner-transport policy", async () => {
   const { createZ5Ledger } = await import("./z5-ledger.mts");
+  const dispatchLib = S.dispatchLib = await import("./z5-dispatch.mts");
   S.valuator = randomUUID();
+  S.dispatch = await dispatchLib.startDispatchFixtures(join(privateRoot, "dispatch"), () => owner.call);
+  const ownerPublicKeyPem = createPublicKey(createPrivateKey(readFileSync(join(privateRoot, "owner-signer.pem")))).export({ type: "spki", format: "pem" }).toString();
+  const sources = ["enterprise-obligations.ts", "enterprise-allocation.ts", "enterprise-control.ts", "enterprise-beliefs.ts", "allocation-store.ts",
+    "obligation-contracts.ts"].map(name => join(BACKEND, "packages/private-equity/src", name)).concat(join(BACKEND, "apps/api/app/api/obligations/[operation]/route.ts"));
   S.ledger = await createZ5Ledger(S.tenantId, S.ownerId, S.valuator, { directory: join(privateRoot, "ledger"),
-    rightsRef: RIGHTS, transportPath, transportPrivateKeyPem: readFileSync(join(privateRoot, "transport-root.key"), "utf8") });
+    rightsRef: RIGHTS, transportPath, transportPrivateKeyPem: readFileSync(join(privateRoot, "transport-root.key"), "utf8"),
+    dispatch: { ...S.dispatch.ledgerOptions, ownerPublicKeyPem, ownerSourcePaths: sources } });
   S.children.push(S.ledger.child());
   // The API, lifecycle, worker and driver children all read the launcher-fixed transport path.
   process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG = transportPath;
   process.env.FINNOR_S6_OWNER_TRANSPORT_ROOT = env.FINNOR_S6_OWNER_TRANSPORT_ROOT;
   return { detail: { endpoint: S.ledger.endpoint(), policyDigest: sha(JSON.stringify(S.ledger.policy)),
-    owners: S.ledger.policy.owners.map(o => [o.owner, o.append]) } };
+    owners: S.ledger.policy.owners.map(o => [o.owner, o.append, Boolean(o.dispatch), Boolean(o.protectedExecution)]),
+    provider: S.dispatch.providerOrigin, authority: S.dispatch.ledgerOptions.authority.endpoint } };
 });
 
 // ---------------------------------------------------------------- Z5N-03 second tenant owner
@@ -214,11 +222,16 @@ await runCase("Z5N-07", "Real S3 fit, S4 policy, S5 clearing and handoff over HT
   const organization = { id: randomUUID() };
   await q("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,$4,'other')",
     [organization.id, S.tenantId, `z5-${RUN}-chain`, `Z5 S5 chain root ${RUN}`]);
-  const f = await support.fixture("z5-" + randomUUID().slice(0, 8), 2, [{ id: "cash", unit: "USD", capacity: 100, totalLimit: 100 }],
+  // The execution (COMPUTE) and human-attention budgets are the S5 allowances the S6 governed dispatch charges.
+  const f = await support.fixture("z5-" + randomUUID().slice(0, 8), 2, [{ id: "cash", unit: "USD", capacity: 100, totalLimit: 100 },
+    { id: "execution", unit: "request", capacity: 200, totalLimit: 200, resourceClass: "COMPUTE" },
+    { id: "human", unit: "seconds", capacity: 4, totalLimit: 4, resourceClass: "HUMAN_ATTENTION" }],
     { existing: { tenant: S.tenantId, principal: S.ownerId, root: { entityType: "external_organization", entityId: organization.id } },
       expiresAt: parent().originalDeadlineAt, exposureUnit: "USD:minor:RECORDED_MINOR" });
-  const policy = await support.policy(f, "z5", { cash: 25 });
+  const policy = await support.policy(f, "z5", { cash: 25, execution: 130, human: 4 });
   await support.resource(f, "cash", "USD", "STOCK", ["100", "100", "100"]);
+  await support.resource(f, "execution", "request", "CUMULATIVE_EXPENDITURE", Array(f.mandate.horizon.periods + 1).fill("200"));
+  await support.resource(f, "human", "seconds", "CUMULATIVE_EXPENDITURE", Array(f.mandate.horizon.periods + 1).fill("4"));
   const cleared = ok(await api(f, "clear", support.clearing(f, { z5: ["100"] }, [], [], [policy])));
   ensure(cleared.status === "FEASIBLE", "CLEARING_NOT_FEASIBLE:" + cleared.status);
   const handoff = ok(await api(f, "handoff", { policyRef: policy.ref, allocationRef: cleared.certificate.ref, decision: support.decision(f, cleared.certificate.ref) }));
@@ -229,13 +242,58 @@ await runCase("Z5N-07", "Real S3 fit, S4 policy, S5 clearing and handoff over HT
 
 // ---------------------------------------------------------------- Z5N-08 S6 obligation with Work lineage
 const ownerCtx = () => ({ auth: { tenantId: S.tenantId, userId: S.ownerId, employeeId: S.ownerId, role: "owner" } });
+const deliver = async semanticOwner => {
+  const transport = await import("../../../packages/governed-execution/src/owner-delivery-store.ts");
+  // The owner transport caps one batch at 32 requests; drain until a batch finds nothing left to claim.
+  const total = { inspected: 0, accepted: 0, failures: [] };
+  for (let round = 0; round < 16; round++) {
+    const r = await transport.deliverOwnerTransportBatch({ semanticOwner, tenantId: S.tenantId, principalId: S.ownerId }, { limit: 32 });
+    total.inspected += r.inspected; total.accepted += r.accepted; total.failures.push(...r.failures);
+    ensure(r.failures.length === 0, "OWNER_DELIVERY_FAILED:" + semanticOwner + ":" + JSON.stringify(r.failures).slice(0, 300));
+    if (r.inspected === 0) break;
+  }
+  return total;
+};
+const publishMandate = async () => {
+  if (S.mandatePublished) return;
+  const mandateContent = { ...S.upstream.f.mandate };
+  delete mandateContent.ref;
+  await S.ledger.publish({ ...S.upstream.f.mandate.ref, content: mandateContent });
+  S.mandatePublished = true;
+};
 await runCase("Z5N-08", "S6 durable obligation bound to the original Work lineage", async () => {
   ensure(S.upstream, "NO_UPSTREAM_CHAIN");
   const obligations = await import("../../../packages/private-equity/src/enterprise-obligations.ts");
   const { preparationRef, allocationRef, consumptionRef } = S.upstream.handoff;
   const prepared = await obligations.prepareEnterpriseDurableObligation(ownerCtx(), { preparationRef, allocationRef, consumptionRef }, { workId: parent().workId });
   S.obligation = prepared;
-  return { detail: { obligationRef: prepared.ref, workLineage: prepared.workLineage, reservationRef: prepared.reservationRef } };
+  await publishMandate();
+  const delivered = {};
+  for (const semanticOwner of ["S5", "S6"]) { const r = await deliver(semanticOwner); delivered[semanticOwner] = { inspected: r.inspected, accepted: r.accepted }; }
+  return { detail: { obligationRef: prepared.ref, workLineage: prepared.workLineage, reservationRef: prepared.reservationRef, delivered } };
+});
+
+// ---------------------------------------------------------------- Z5N-13A S6 governed dispatch to UNKNOWN_OUTCOME
+// Must precede the S8 profile: the profile maps the reservation status and the live S6 locations that the owner cut reads.
+await runCase("Z5N-13A", "S6 governed dispatch of the carried obligation: provider applies, response lost, S6/S5 UNKNOWN_OUTCOME with the liability retained", async () => {
+  ensure(S.obligation && S.upstream, "NO_OBLIGATION");
+  const dispatched = await S.dispatchLib.dispatchToUnknown(S.dispatch, S.obligation, S.upstream.organizationId, owner.call,
+    S.ledger.validUntil, S.ledger.sourceDigests);
+  S.dispatched = dispatched;
+  const [state] = await q(`SELECT st.status, r.status reservation_status, r.envelopes FROM finnor_os.s5_consumption_states st
+    JOIN finnor_os.s5_consumptions co USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservations r USING(tenant_id,reservation_id)
+    WHERE st.tenant_id=$1 AND st.consumption_id=$2`, [S.tenantId, S.upstream.handoff.consumptionRef.id]);
+  ensure(state?.status === "UNKNOWN_OUTCOME" && state.reservation_status === "UNKNOWN_OUTCOME", "S5_NOT_UNKNOWN_OUTCOME:" + JSON.stringify(state));
+  ensure(JSON.stringify(state.envelopes) === JSON.stringify(S.obligation.resourceEnvelope), "S5_ENVELOPES_CHANGED_BY_DISPATCH");
+  const handoff = await owner.call("/api/obligations/read-execution-handoff", { obligationRef: S.obligation.ref });
+  ensure(handoff.status === 200, "S6_HANDOFF_UNREADABLE_" + handoff.status);
+  const body = handoff.body.handoff;
+  ensure(body.attempts.length === 1 && body.settlements.length === 0, "S6_HISTORY_NOT_ONE_ATTEMPT_NO_SETTLEMENT");
+  S.handoffBaseline = new Set(body.history.map(row => row.event.eventId));
+  return { detail: { acceptedStatus: dispatched.accepted.body.status, providerRequests: S.dispatch.requests.map(r => [r.method, r.authorizationMatched]),
+    authorityAssessments: S.dispatch.authorityCalls.map(c => [c.operation, c.assessment?.status ?? null]),
+    s5: { consumption: state.status, reservation: state.reservation_status }, historyEvents: body.history.map(row => row.event.type),
+    baselineEventIds: [...S.handoffBaseline] } };
 });
 
 // ---------------------------------------------------------------- Z5N-09 S8 lifecycle (real process), pins and consumer config
@@ -353,12 +411,6 @@ await runCase("Z5N-12", "S2/S7 economic assignment whose estimand names the exac
   ensure(S.upstream, "NO_UPSTREAM_CHAIN");
   const { economicFixture } = await import("../../s7/economic-fixtures.mts");
   const engine = await import("../../../packages/epistemic-runtime/src/economic-attribution.ts");
-  const transport = await import("../../../packages/governed-execution/src/owner-delivery-store.ts");
-  const deliver = async semanticOwner => {
-    const r = await transport.deliverOwnerTransportBatch({ semanticOwner, tenantId: S.tenantId, principalId: S.ownerId }, { limit: 64 });
-    ensure(r.failures.length === 0, "OWNER_DELIVERY_FAILED:" + JSON.stringify(r.failures).slice(0, 300));
-    return r;
-  };
   const e = structuredClone(economicFixture(8, 0, 15).input.estimand);
   const now = Date.now();
   e.registeredAt = new Date(now).toISOString();
@@ -372,9 +424,7 @@ await runCase("Z5N-12", "S2/S7 economic assignment whose estimand names the exac
   // The estimand names the REAL S4/S5 mandate reference, not a generated stand-in.
   const mandateRef = S.upstream.f.mandate.ref;
   e.mandateRef = mandateRef;
-  const mandateContent = { ...S.upstream.f.mandate };
-  delete mandateContent.ref;
-  await S.ledger.publish({ ...mandateRef, content: mandateContent });
+  await publishMandate();
   const rewrite = (value, id, contentDigest) => {
     if (value && typeof value === "object") {
       if (value.id === id && value.contentDigest) value.contentDigest = contentDigest;
@@ -424,12 +474,10 @@ await runCase("Z5N-12", "S2/S7 economic assignment whose estimand names the exac
   return { detail: { assignmentRef: S.assignmentRef, estimandRef: stored.content.estimandRef, mandateRef } };
 });
 
-notRun("Z5N-13", "Old-revision S6 provider obligation with an independent delayed callback after the replacement",
-  "Not yet attempted; requires the governed-dispatch fake provider and S6 broker (lost response, then reconcile) bound to the original Work lineage.");
 
 // ---------------------------------------------------------------- Z5N-14 driver
 await runCase("Z5N-14", "Guarded native E2E driver (native-e2e.mjs) on the assembled stack", async () => {
-  ensure(S.profileRef && S.obligation && S.upstream, "PREREQUISITE_CHAIN_MISSING");
+  ensure(S.profileRef && S.obligation && S.upstream && S.dispatched, "PREREQUISITE_CHAIN_MISSING");
   ensure(S.assignmentRef, "NO_ECONOMIC_ASSIGNMENT_REF");
   ensure(other, "NO_SECOND_TENANT");
   const uid = process.getuid();
@@ -488,10 +536,37 @@ await runCase("Z5N-14", "Guarded native E2E driver (native-e2e.mjs) on the assem
       FINNOR_S3_PYTHON: env.FINNOR_S3_PYTHON ?? "",
       PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? "/home/factory-user/repos/fzv-browsers" } });
   S.children.push(driver);
+  // The independent callback is released only after the driver's own report shows the three physical kills and the
+  // mounted/second-tenant/sign-out steps are done; the driver then observes it through the S6 owner route.
+  S.callback = { state: "NOT_TRIGGERED" };
+  const watcher = (async () => {
+    while (driver.exitCode === null && driver.signalCode === null) {
+      let ready = false;
+      try {
+        for (const name of readdirSync(outDir).filter(n => /^\d\d\.json$/.test(n))) {
+          if (JSON.parse(readFileSync(join(outDir, name), "utf8")).name === "genuine-tenant-and-session-scope-change") ready = true;
+        }
+      } catch { /* the directory or a partially written step file is not there yet */ }
+      if (ready) {
+        S.callback.state = "TRIGGERED"; S.callback.triggeredAt = new Date().toISOString();
+        await sleep(3000);
+        try {
+          const done = await S.dispatchLib.reconcileAndSettle(S.dispatch, S.dispatched, S.obligation, owner.call);
+          Object.assign(S.callback, { state: "DELIVERED", at: new Date().toISOString(), reconcileStatus: done.recovered.body.status,
+            settlementEventId: done.recovered.body.receipt.identity, consumption: done.settled.body.consumption?.status,
+            reservation: done.settled.body.reservation?.status, releaseGranted: done.settled.body.releaseGranted,
+            providerRequests: S.dispatch.requests.map(r => r.method) });
+        } catch (error) { Object.assign(S.callback, { state: "FAILED", error: String(error?.message ?? error).slice(0, 600) }); }
+        return;
+      }
+      await sleep(500);
+    }
+  })();
   let log = "";
   driver.stdout.on("data", chunk => { log += chunk; });
   driver.stderr.on("data", chunk => { log += chunk; if (log.length > 200000) log = log.slice(-100000); });
   const [code] = await once(driver, "exit");
+  await watcher;
   // Driver artifacts are copied only after a credential scan; the run directory itself stays in the worktree.
   const leaked = /password|refresh_token|access_token|service_role/i;
   const artifacts = {};
@@ -507,6 +582,12 @@ await runCase("Z5N-14", "Guarded native E2E driver (native-e2e.mjs) on the assem
   return { detail: { exit: code, state: report?.state, actions: (report?.actions ?? []).map(a => ({ name: a.name, at: a.at })), artifacts } };
 });
 
+if (S.callback?.state === "DELIVERED") {
+  await runCase("Z5N-13B", "Delayed independent S6 callback after the replacement: read-only provider reconcile then the S5 owner settlement, released after the third kill", async () => ({
+    detail: S.callback }));
+} else if (S.callback) {
+  notRun("Z5N-13B", "Delayed independent S6 callback after the replacement", "callback state " + S.callback.state + (S.callback.error ? ": " + S.callback.error : ""));
+} else notRun("Z5N-13B", "Delayed independent S6 callback after the replacement", "the driver was never started");
 record("summary", { run: RUN, results: results.map(r => ({ id: r.id, outcome: r.outcome })) });
 await stopAll();
 const failed = results.some(r => r.outcome === "FAIL");
