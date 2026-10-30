@@ -373,7 +373,17 @@ try {
     })
     const submitted = await step("pre-submit-and-cancel", async () => {
       const recoverOwner = works.find(item => item.recoverOwner)
-      const sessionBody = expectStatus(await call(API, "/api/company-brain/execution-proof-submit", ownerToken, recoverOwner.request), 202, "PRE_SUBMIT_OWNER_RECOVERY")
+      const preSubmit = await call(API, "/api/company-brain/execution-proof-submit", ownerToken, recoverOwner.request)
+      if (preSubmit.status !== 202) {
+        // The route masks any non-token error as one predicate; the same call in this process names the throw site.
+        const diagnosis = { httpStatus: preSubmit.status, httpBody: preSubmit.body }
+        try {
+          const api = await import("../../../packages/private-equity/src/project-z/z4-execution-proof/api.ts")
+          diagnosis.inProcess = { outcome: "RETURNED", value: await api.submitProof(ctx, recoverOwner.request) }
+        } catch (error) { diagnosis.inProcess = { outcome: "THREW", message: String(error?.message ?? error).slice(0, 600), stack: String(error?.stack ?? "").split("\n").slice(0, 10) } }
+        writeFileSync(join(evidence, "submit-diagnosis.json"), JSON.stringify(diagnosis, null, 2) + "\n", { mode: 0o600 })
+      }
+      const sessionBody = expectStatus(preSubmit, 202, "PRE_SUBMIT_OWNER_RECOVERY")
       const cancelledSession = expectStatus(await call(API, "/api/company-brain/execution-proof-submit", ownerToken, extras.cancelled), 202, "PRE_SUBMIT_CANCELLED")
       expectStatus(await call(API, "/api/company-brain/execution-proof-cancel", ownerToken, { sessionId: cancelledSession.sessionId }), 200, "CANCEL_ORIGINAL")
       return { recoverOwnerSession: sessionBody.sessionId, cancelledSession: cancelledSession.sessionId }
