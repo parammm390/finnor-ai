@@ -8,7 +8,7 @@
  * (owner code, authenticated HTTP and the real worker).
  */
 import { createHash, randomUUID } from "node:crypto";
-import { chmodSync, mkdirSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   readNativeEnvironment, signInOwner, startOwnedWorker, createOriginalInstitutionParent,
@@ -165,41 +165,75 @@ if (!killMode) {
 } else if (!ownedWorker) {
   notRun("P1-03", "SIGKILL of the worker during acquisition", "launcher was not started with --no-worker");
 } else {
-  await runCase("P1-03", "SIGKILL of the worker during acquisition, restart, bounded recovery on the original reservation", async () => {
+  await runCase("P1-03", "SIGKILL of the worker at the ambiguous request boundary, lease quarantine, explicit resume on the original reservation", async () => {
     const before = await witness(parent);
     const submitted = await submitInstitutionAcquisition(env, parent, { privateRoot, record }, owner);
     ensure(submitted.response.status === 202, "ACQUIRE_NOT_ACCEPTED_" + submitted.response.status);
     const sessionId = submitted.response.body.sessionId;
     acquired = { sessionId, request: submitted.request };
-    let killedAt = null;
-    for (let i = 0; i < 600 && !killedAt; i++) {
-      const [row] = await q("SELECT status FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parent.tenantId, sessionId]);
-      const [job] = await q("SELECT type FROM finnor_os.jobs WHERE tenant_id=$1 AND payload->>'sessionId'=$2 AND status='running' LIMIT 1", [parent.tenantId, sessionId]);
-      if (job || ["ACQUIRING", "PLANNING"].includes(row?.status)) { worker.child.kill("SIGKILL"); killedAt = { status: row?.status, runningJob: job?.type ?? null }; }
-      else if (["MODEL_READY", "FAILED", "BLOCKED"].includes(row?.status)) break;
-      else await sleep(100);
+    const sessionRow = async () => (await q("SELECT status,reason,generation,reservation_ref,original_parent_ref,deadline_at FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parent.tenantId, sessionId]))[0];
+    const ambiguous = () => q("SELECT id,status,obligation_id,request_ref,body->'wire'->'identity'->>'requestId' wire_request_id,body->'wire'->'identity'->>'effectId' effect_id,body->>'operationId' operation FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2 AND possible_egress AND observation_ref IS NULL AND status IN ('POSSIBLE_EGRESS','PENDING') ORDER BY created_at LIMIT 1", [parent.tenantId, sessionId]);
+    let lost = null;
+    for (let i = 0; i < 12000 && !lost; i++) {
+      const [row] = await ambiguous();
+      if (row) { lost = row; break; }
+      if (["MODEL_READY", "FAILED", "BLOCKED", "UNKNOWN", "STALE", "CANCELLED"].includes((await sessionRow())?.status)) break;
+      await sleep(50);
     }
+    ensure(lost, "KILL_BOUNDARY_NOT_OBSERVED");
+    const [attempt] = await q("SELECT j.id job_id,j.attempts,j.claim_fence,j.lease_owner,j.lease_expires_at,a.id attempt_id,a.worker_id FROM finnor_os.jobs j JOIN finnor_os.job_delivery_attempts a ON a.job_id=j.id AND a.claim_token=j.claim_token WHERE j.tenant_id=$1 AND j.payload->>'sessionId'=$2 AND j.status='running' AND a.finished_at IS NULL", [parent.tenantId, sessionId]);
+    ensure(attempt, "ACTUAL_QUEUE_CLAIM_NOT_FOUND");
+    ensure(String(attempt.worker_id).endsWith(":" + worker.pid), "KILLED_PROCESS_IS_NOT_THE_QUEUE_OWNER");
+    const pid = worker.pid;
+    const [stillAmbiguous] = await ambiguous();
+    worker.child.kill("SIGKILL");
     const exit = await worker.exited;
-    const afterKill = (await q("SELECT status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parent.tenantId, sessionId]))[0];
-    const jobsAfterKill = await q("SELECT type,status,attempts FROM finnor_os.jobs WHERE tenant_id=$1 AND payload->>'sessionId'=$2", [parent.tenantId, sessionId]);
+    ensure(exit.signal === "SIGKILL", "WORKER_EXIT_NOT_SIGKILL_" + exit.signal);
+    const journalPath = join(submitted.handle.portal.dir, "provider", "journal.ndjson");
+    const journalEvents = () => readFileSync(journalPath, "utf8").trim().split("\n").flatMap(line => JSON.parse(line).events ?? []);
+    const sends = requestId => journalEvents().filter(event => event.requestId === requestId && /^(dispatch\.|submission\.accepted|approval\.committed)/.test(event.type)).length;
+    const sendsAtKill = sends(lost.wire_request_id);
+    const afterKill = await sessionRow();
     worker = await startWorker(30);
+    let quarantine = null;
+    for (let i = 0; i < 180 && !quarantine; i++) {
+      const [row] = await q("SELECT j.status,j.attempts,j.claim_fence,a.outcome,a.failure_kind FROM finnor_os.jobs j JOIN finnor_os.job_delivery_attempts a ON a.job_id=j.id AND a.id=$2 WHERE j.id=$1", [attempt.job_id, attempt.attempt_id]);
+      if (row?.status === "quarantined") quarantine = row; else await sleep(2500);
+    }
+    ensure(quarantine, "LOST_JOB_NOT_QUARANTINED_AFTER_LEASE_EXPIRY");
+    ensure(quarantine.outcome === "reconciliation_required" && quarantine.failure_kind === "lease_expired", `QUARANTINE_CLASSIFICATION_${quarantine.outcome}_${quarantine.failure_kind}`);
+    ensure(quarantine.attempts === attempt.attempts && quarantine.claim_fence === attempt.claim_fence, "QUARANTINE_CHANGED_ATTEMPT_OR_FENCE");
+    const resumed = await owner.operation("application-resume", { root: submitted.request.root, workId: parent.workId, sessionId });
+    ensure(resumed.status === 202, `RESUME_NOT_ACCEPTED_${resumed.status}:${JSON.stringify(resumed.body).slice(0, 200)}`);
     let final = null;
     for (let i = 0; i < 240; i++) {
-      final = (await q("SELECT status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parent.tenantId, sessionId]))[0];
+      final = await sessionRow();
       if (["MODEL_READY", "FAILED", "BLOCKED", "UNKNOWN", "STALE", "CANCELLED"].includes(final?.status)) break;
       await sleep(2500);
     }
-    const jobsFinal = await q("SELECT type,status,attempts,left(coalesce(last_error,''),200) error FROM finnor_os.jobs WHERE tenant_id=$1 AND payload->>'sessionId'=$2", [parent.tenantId, sessionId]);
+    const lostRows = await q("SELECT id,status,obligation_id,possible_egress,observation_ref IS NOT NULL observed,reason FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2 AND request_ref=$3::jsonb", [parent.tenantId, sessionId, JSON.stringify(lost.request_ref)]);
+    const sendsAfter = sends(lost.wire_request_id);
+    const jobsFinal = await q("SELECT type,status,attempts,claim_fence,left(coalesce(last_error,''),200) error FROM finnor_os.jobs WHERE tenant_id=$1 AND payload->>'sessionId'=$2 ORDER BY run_at,id", [parent.tenantId, sessionId]);
+    const portalJournalDigest = sha(journalEvents());
     await submitted.handle.portal.stop();
     const checked = await invariants(before, sessionId);
-    ensure(killedAt, "KILL_BOUNDARY_NOT_OBSERVED");
-    return { outcome: ["MODEL_READY", "UNKNOWN"].includes(final?.status) ? "PASS" : "FAIL",
-      detail: { sessionId, killedAt, exit, afterKill, jobsAfterKill, final, jobsFinal, before, ...checked } };
+    ensure(JSON.stringify(final.reservation_ref) === JSON.stringify(afterKill.reservation_ref) && JSON.stringify(final.original_parent_ref) === JSON.stringify(afterKill.original_parent_ref)
+      && Date.parse(final.deadline_at) === Date.parse(afterKill.deadline_at), "RECOVERY_CHANGED_PARENT_RESERVATION_OR_DEADLINE");
+    ensure(sendsAtKill <= 1 && sendsAfter === sendsAtKill, `LOST_REQUEST_RESENT sendsAtKill=${sendsAtKill} sendsAfter=${sendsAfter}`);
+    ensure(lostRows.length === 1 && lostRows[0].id === lost.id && lostRows[0].obligation_id === lost.obligation_id, "LOST_REQUEST_IDENTITY_NOT_PRESERVED");
+    ensure(["VERIFIED", "DENIED", "UNKNOWN"].includes(lostRows[0].status), "LOST_REQUEST_NOT_RECONCILED_OR_RETAINED_" + lostRows[0].status);
+    ensure(["MODEL_READY", "UNKNOWN", "BLOCKED", "FAILED", "STALE"].includes(final?.status), "RECOVERY_DID_NOT_SETTLE_" + final?.status);
+    return { detail: { sessionId, pid, exit, boundary: { requestId: lost.id, status: lost.status, operation: lost.operation, stillAmbiguousAtKill: Boolean(stillAmbiguous), attemptWorkerId: attempt.worker_id },
+      jobBeforeKill: { attempts: attempt.attempts, claimFence: attempt.claim_fence, leaseExpiresAt: attempt.lease_expires_at }, afterKill: { status: afterKill.status, reason: afterKill.reason },
+      quarantine, resume: { status: resumed.status }, final: { status: final.status, reason: final.reason }, lostRequestAfter: lostRows[0],
+      portalSends: { atKill: sendsAtKill, afterResume: sendsAfter }, portalJournalDigest, jobsFinal, before, ...checked } };
   });
 }
 
 await runCase("P0-11", "Original continuation after acceptance consumes or falls back on the accepted model (outcome recorded)", async () => {
   if (!acquired) return { outcome: "NOT_RUN", detail: "no accepted model" };
+  const [accepted] = await q("SELECT 1 FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 AND kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED' LIMIT 1", [parent.tenantId, acquired.sessionId]);
+  if (!accepted) return { outcome: "NOT_RUN", detail: "the session has no S4 acceptance event, so there is no model to consume" };
   await sleep(45000);
   const events = await q(`SELECT e.kind,e.generation,left(e.body::text,600) body FROM finnor_os.p1_events e WHERE e.tenant_id=$1 AND e.request_id=$2 ORDER BY e.created_at`, [parent.tenantId, parent.programId]);
   const jobs = await q("SELECT type,status,left(coalesce(last_error,''),300) error,attempts FROM finnor_os.jobs WHERE tenant_id=$1 AND (payload->>'programId'=$2 OR payload->>'sessionId'=$3) ORDER BY run_at,id", [parent.tenantId, parent.programId, acquired.sessionId]).catch(async () =>
