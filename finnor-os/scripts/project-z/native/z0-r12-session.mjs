@@ -324,6 +324,7 @@ await runCase("R12-01", "AFTER side: typed intent registered in the planner regi
 
 await runCase("R12-02", "Unplanned/unstarted Work: typed result is partial, never ok, no programme digest", async () => {
   const f = await build();
+  main = f;
   const before = await probe(f.workId);
   ensure(before.status === "partial" && before.data.nativeOwnerConsumed === false && before.data.current === false && before.data.programmeId === null && before.data.definitionDigest === null, "UNSTARTED_NOT_PARTIAL:" + JSON.stringify(before.data));
   ensure(await planRevisions(f.workId) === 0 && !(await loopOf(f.workId)), "UNPLANNED_WORK_HAS_PLAN_OR_LOOP");
@@ -331,7 +332,7 @@ await runCase("R12-02", "Unplanned/unstarted Work: typed result is partial, neve
   main = f;
   return { detail: { workId: f.workId, status: before.status, data: before.data } };
 });
-const unplannedWork = main.workId;
+const unplannedWork = main?.workId ?? (await call("primary-open-work", { root, instruction: "R12 fallback unplanned Work", idempotencyKey: randomUUID() }, 201)).body.workId;
 
 // ---- main chain on a fresh Work (R12-03, 04, 05, 17, 18, 19, 25, 29, 30, 09) ----
 await runCase("R12-03", "Full chain: plan -> submit -> worker -> independent checker -> consume -> wake -> objective success", async () => {
@@ -479,10 +480,14 @@ await runCase("R12-09", "Malformed/extra envelope fields and forged reader field
 
 // ---- identity and scope (R12-06, 07, 08, 10) ----
 const otherTenant = randomUUID(), otherTenantUser = randomUUID(), otherPrincipal = randomUUID();
+let fixtureSecondScope = "READY";
+try {
 await q("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,'R12 other tenant')", [otherTenant, randomUUID()]);
 await q("INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name) VALUES($1,$2,$3,'owner','active','R12 other tenant owner'),($4,$5,$6,'owner','active','R12 other principal')",
   [otherTenantUser, otherTenant, otherTenantUser + "@test.invalid", otherPrincipal, tenantId, otherPrincipal + "@test.invalid"]);
 await db.configureTenantVertical({ tenantId: otherTenant, verticalKey: "private_equity", expectedVersion: 0, createdBy: otherTenantUser, sourceSystem: "R12:disposable-fixture" });
+} catch (error) { fixtureSecondScope = "FIXTURE_FAILED:" + String(error?.message ?? error).slice(0, 300); }
+record("second-scope-fixture", { status: fixtureSecondScope });
 
 await runCase("R12-06", "Wrong Work (same owner, different Work with no programme) never reports another Work's digest", async () => {
   ensure(mainRun, "MAIN_CHAIN_UNAVAILABLE");
