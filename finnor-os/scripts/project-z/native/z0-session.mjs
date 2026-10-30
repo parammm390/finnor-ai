@@ -87,10 +87,10 @@ for (const route of ["institution-mandate", "institution-register-source", "inst
 
 let parent = null, acquired = null;
 await runCase("P0-01", "Original institution parent reaches a quiescent checked state through owner code", async () => {
-  parent = await createOriginalInstitutionParent(env, { record, tag: "a" + randomUUID().slice(0, 6) });
+  parent = await createOriginalInstitutionParent(env, { record, tag: "a" + randomUUID().slice(0, 6), shape: "gated-two-supported-and-unresolved" });
   ensure(parent.nativeStatus.liveJobs === 0, "PARENT_NOT_QUIESCENT");
   const w = await witness(parent);
-  ensure(w.sessions === 0 && w.domainActions === 0 && w.peRequests === 0,
+  ensure(w.sessions === 0 && w.domainActions === (parent.gated ? 1 : 0) && w.peRequests === 0,
     `ORIGINAL_EFFECT_OR_SESSION_PREEXISTS sessions=${w.sessions} actions=${w.domainActions} peRequests=${w.peRequests}`);
   return { detail: { programId: parent.programId, status: parent.nativeStatus, deadlineAt: parent.deadlineAt, reservation: parent.parentReservation, witness: w } };
 });
@@ -302,28 +302,6 @@ if (!killMode && !revokeMode) {
   });
 }
 
-await runCase("P0-11", "Original continuation after acceptance consumes or falls back on the accepted model (outcome recorded)", async () => {
-  if (!acquired) return { outcome: "NOT_RUN", detail: "no accepted model" };
-  const [accepted] = await q("SELECT 1 FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 AND kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED' LIMIT 1", [parent.tenantId, acquired.sessionId]);
-  if (!accepted) return { outcome: "NOT_RUN", detail: "the session has no S4 acceptance event, so there is no model to consume" };
-  await sleep(45000);
-  const events = await q(`SELECT e.kind,e.generation,left(e.body::text,600) body FROM finnor_os.p1_events e WHERE e.tenant_id=$1 AND e.request_id=$2 ORDER BY e.created_at`, [parent.tenantId, parent.programId]);
-  const jobs = await q("SELECT type,status,left(coalesce(last_error,''),300) error,attempts FROM finnor_os.jobs WHERE tenant_id=$1 AND (payload->>'programId'=$2 OR payload->>'sessionId'=$3) ORDER BY run_at,id", [parent.tenantId, parent.programId, acquired.sessionId]).catch(async () =>
-    q("SELECT type,status FROM finnor_os.jobs WHERE tenant_id=$1 AND (payload->>'programId'=$2 OR payload->>'sessionId'=$3) ORDER BY run_at,id", [parent.tenantId, parent.programId, acquired.sessionId]));
-  const used = events.filter(row => /P1_ORIGINAL_APPLICATION_/.test(row.kind));
-  const w = await witness(parent);
-  const [head] = await q("SELECT jsonb_array_length(coalesce(body->'nodes','[]'::jsonb)) nodes, (SELECT count(*)::int FROM jsonb_array_elements(coalesce(body->'nodes','[]'::jsonb)) n WHERE n->'action' IS NOT NULL AND n->'action' <> 'null'::jsonb) executable FROM finnor_os.p1_programs WHERE tenant_id=$1 AND id=(SELECT head_id FROM finnor_os.p1_requests WHERE tenant_id=$1 AND id=$2)", [parent.tenantId, parent.programId]);
-  const quarantined = jobs.filter(row => row.type === "run_x1_institution_continuation_v1" && row.status === "quarantined");
-  if (!used.length && head.executable === 0 && quarantined.some(row => /X1_SUPPORTED_ACTION_POPULATION_REQUIRED/.test(row.error ?? ""))) {
-    // Owner contract (institution-continuation.ts): continuation only consumes a model for an executable, not yet dispatched duty. A parent whose
-    // only duty is unresolved has none, so the continuation quarantines. This is a precondition gap of the parent shape, not a consumption result.
-    return { outcome: "NOT_RUN", reason: "ORIGINAL_PARENT_HAS_NO_EXECUTABLE_UNDISPATCHED_DUTY: continuation quarantined X1_SUPPORTED_ACTION_POPULATION_REQUIRED; accepted model could be neither used nor fallen back on",
-      detail: { reason: "ORIGINAL_PARENT_HAS_NO_EXECUTABLE_UNDISPATCHED_DUTY", head, events: events.map(row => row.kind), jobs, witness: w } };
-  }
-  return { outcome: used.length ? "PASS" : "FAIL", detail: { used: used.map(row => row.kind), events: events.map(row => row.kind), jobs, head, witness: w,
-    note: used.length ? null : "accepted model has no recorded original-programme use or fallback" } };
-});
-
 await runCase("P0-12", "Second acquisition for the same original Work cannot create a fresh parent/budget", async () => {
   const before = await witness(parent);
   const submitted = await submitInstitutionAcquisition(env, parent, { privateRoot, record }, owner);
@@ -344,6 +322,112 @@ await runCase("P1-01", "Duplicate delivery of the exact acquisition request retu
   const sessionId = again.body?.sessionId ?? again.body?.id ?? null;
   ensure(after.sessions === before.sessions && after.charges.count === before.charges.count && after.reservations.count === before.reservations.count, "DUPLICATE_DELIVERY_CHANGED_STATE");
   return { outcome: sessionId === acquired.sessionId ? "PASS" : "FAIL", detail: { status: again.status, sessionId, expected: acquired.sessionId, body: again.body } };
+});
+
+/**
+ * P0-11 / P0-11b. The original parent holds duty A pending owner approval and duty B executable and undispatched
+ * (fixture shape gated-two-supported-and-unresolved). Everything after acceptance goes through the real owner paths:
+ * the enqueued original continuation, the HTTP approval route and the owner program-resume operation.
+ */
+const waitUntil = async (label, ms, probe, every = 2000) => {
+  const end = Date.now() + ms;
+  for (;;) { const value = await probe(); if (value) return value; if (Date.now() > end) throw Error("TIMEOUT_" + label); await sleep(every); }
+};
+const confirmAction = async actionId => {
+  const [effect] = await q("SELECT semantic_hash FROM finnor_os.business_effects WHERE tenant_id=$1 AND domain_action_id=$2", [parent.tenantId, actionId]);
+  const response = await owner.call(`/api/actions/${actionId}/confirm`, { ...(effect ? { expectedEffectHash: effect.semantic_hash } : {}), typedConfirmation: true });
+  return { status: response.status, body: response.body, hashSent: Boolean(effect) };
+};
+const actionRow = async actionId => (await q("SELECT a.id::text,a.status,a.payload,a.authority_context,a.created_at,a.plan_revision_id::text,a.work_id::text,e.status effect_status FROM finnor_os.domain_actions a LEFT JOIN finnor_os.business_effects e ON e.tenant_id=a.tenant_id AND e.domain_action_id=a.id WHERE a.tenant_id=$1 AND a.id=$2", [parent.tenantId, actionId]))[0] ?? null;
+const programEvents = async () => q("SELECT e.kind,e.generation,e.created_at,e.body FROM finnor_os.p1_events e WHERE e.tenant_id=$1 AND e.request_id=$2 ORDER BY e.created_at,e.event_id", [parent.tenantId, parent.programId]);
+const continuationJobs = async () => q("SELECT id::text,status,created_at,left(coalesce(last_error,''),240) error FROM finnor_os.jobs WHERE tenant_id=$1 AND type='run_x1_institution_continuation_v1' AND payload->>'programId'=$2 ORDER BY created_at,id", [parent.tenantId, parent.programId]);
+const quiet = async () => (await continuationJobs()).every(job => !["queued", "running"].includes(job.status));
+let p011 = null;
+await runCase("P0-11", "Original continuation consumes the accepted model for the undispatched duty (or records a direct fallback) and returns to the original Work", async () => {
+  if (!acquired) return { outcome: "NOT_RUN", detail: "no accepted model" };
+  const [accepted] = await q("SELECT created_at,body->'detail'->'acceptanceRef' acceptance_ref FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 AND kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED' LIMIT 1", [parent.tenantId, acquired.sessionId]);
+  if (!accepted) return { outcome: "NOT_RUN", detail: "the session has no S4 acceptance event, so there is no model to consume" };
+  if (!parent.gated) return { outcome: "NOT_RUN", detail: { reason: "ORIGINAL_PARENT_HAS_NO_EXECUTABLE_UNDISPATCHED_DUTY" } };
+  const g = parent.gated, A = g.heldActionId, B = g.undispatchedActionId;
+  const [headBefore] = await q("SELECT body->'bounds'->>'deadlineAt' deadline FROM finnor_os.p1_programs WHERE tenant_id=$1 AND id=(SELECT head_id FROM finnor_os.p1_requests WHERE tenant_id=$1 AND id=$2)", [parent.tenantId, parent.programId]);
+  const budgetBefore = await witness(parent);
+  const preparationCount = async () => (await q("SELECT count(*)::int n FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 AND phase='PREPARATION'", [parent.tenantId, parent.parentReservation.id]))[0].n;
+  const preparationBefore = await preparationCount();
+  // N2/N1: after acceptance the enqueued continuation must leave B undispatched while A still holds the Deal.
+  await waitUntil("POST_ACCEPTANCE_CONTINUATION_SETTLED", 180000, async () => (await continuationJobs()).some(job => job.created_at > accepted.created_at && job.status !== "queued" && job.status !== "running") && await quiet());
+  const afterAcceptance = { jobs: await continuationJobs(), held: await actionRow(A), undispatched: await actionRow(B) };
+  ensure(afterAcceptance.held?.status === "pending", "HELD_DUTY_NOT_PENDING_AFTER_ACCEPTANCE_" + afterAcceptance.held?.status);
+  ensure(afterAcceptance.undispatched === null, "UNDISPATCHED_DUTY_DISPATCHED_BEFORE_HELD_DUTY_RESOLVED");
+  const steps = { afterAcceptance };
+  steps.confirmHeld = await confirmAction(A);
+  ensure(steps.confirmHeld.status === 200, `CONFIRM_HELD_ACTION_REFUSED_${steps.confirmHeld.status}:${JSON.stringify(steps.confirmHeld.body).slice(0, 240)}`);
+  const settled = async id => { const row = await actionRow(id); return row?.status === "completed" && row.effect_status === "verified" ? row : null; };
+  steps.heldSettled = await waitUntil("HELD_ACTION_COMPLETED_AND_VERIFIED", 240000, () => settled(A));
+  const resume = async label => {
+    const before = (await continuationJobs()).length;
+    const response = await owner.operation("program-resume", { programId: parent.programId });
+    ensure(response.status === 202, `PROGRAM_RESUME_${label}_REFUSED_${response.status}:${JSON.stringify(response.body).slice(0, 200)}`);
+    await waitUntil("CONTINUATION_" + label, 240000, async () => (await continuationJobs()).length > before && await quiet());
+    return { status: response.status, jobs: (await continuationJobs()).slice(before) };
+  };
+  steps.resumeAfterHeld = await resume("AFTER_HELD");
+  steps.undispatchedDispatched = await waitUntil("UNDISPATCHED_DUTY_DISPATCHED", 120000, () => actionRow(B));
+  const dispatched = steps.undispatchedDispatched;
+  const events = await programEvents();
+  const original = events.filter(row => /^P1_ORIGINAL_APPLICATION_/.test(row.kind));
+  const materialized = original.find(row => row.kind === "P1_ORIGINAL_APPLICATION_MODEL_MATERIALIZED");
+  const consumed = original.find(row => row.kind === "P1_ORIGINAL_APPLICATION_MODEL_CONSUMED");
+  const fallback = original.find(row => row.kind === "P1_ORIGINAL_APPLICATION_DIRECT_FALLBACK");
+  const authority = dispatched.authority_context ?? {};
+  const bound = Boolean(authority.applicationModelUseRef && authority.applicationModelAcceptanceRef && authority.applicationModelInputDigest);
+  ensure(Date.parse(dispatched.created_at) > Date.parse(accepted.created_at), "UNDISPATCHED_DUTY_ACTION_PREDATES_ACCEPTANCE");
+  ensure(dispatched.work_id === parent.workId, "ACTION_NOT_ON_ORIGINAL_WORK");
+  const acceptanceId = accepted.acceptance_ref?.id;
+  if (bound) {
+    ensure(authority.applicationModelAcceptanceRef.id === acceptanceId, "ACTION_BOUND_TO_A_DIFFERENT_ACCEPTANCE");
+    ensure(materialized && consumed && consumed.body.canonicalActionId === B && consumed.body.modelUseRef?.id === authority.applicationModelUseRef.id, "CONSUMED_EVENT_DOES_NOT_NAME_THE_ACTION");
+  } else {
+    ensure(fallback && fallback.body.acceptanceRef?.id === acceptanceId, "NEITHER_MODEL_USE_NOR_FALLBACK_FOR_THIS_ACCEPTANCE");
+  }
+  const traced = materialized ?? fallback;
+  const chargeRefId = traced.body.chargeRef?.id ?? null;
+  const preparationAfter = await preparationCount();
+  ensure(preparationAfter === preparationBefore + 1, `PREPARATION_CHARGE_COUNT_ON_ORIGINAL_RESERVATION_${preparationBefore}_TO_${preparationAfter}`);
+  const [charge] = await q("SELECT to_jsonb(c) row FROM finnor_os.s5_governed_resource_charges c WHERE c.tenant_id=$1 AND c.reservation_id=$2 AND c.phase='PREPARATION' AND to_jsonb(c)::text LIKE '%'||$3||'%'", [parent.tenantId, parent.parentReservation.id, chargeRefId ?? "\u0000"]);
+  steps.confirmUndispatched = await confirmAction(B);
+  ensure(steps.confirmUndispatched.status === 200, `CONFIRM_CONSUMING_ACTION_REFUSED_${steps.confirmUndispatched.status}:${JSON.stringify(steps.confirmUndispatched.body).slice(0, 240)}`);
+  steps.undispatchedSettled = await waitUntil("UNDISPATCHED_ACTION_COMPLETED_AND_VERIFIED", 240000, () => settled(B));
+  steps.resumeAfterUndispatched = await resume("AFTER_UNDISPATCHED");
+  const finalHead = await waitUntil("BOTH_SUPPORTED_DUTIES_OBSERVED", 120000, async () => {
+    const [head] = await q("SELECT jsonb_array_length(body->'observedPostconditions') observed, body->'bounds'->>'deadlineAt' deadline, body->>'status' head_status FROM finnor_os.p1_programs WHERE tenant_id=$1 AND id=(SELECT head_id FROM finnor_os.p1_requests WHERE tenant_id=$1 AND id=$2)", [parent.tenantId, parent.programId]);
+    return head.observed >= 2 ? head : null;
+  }, 3000);
+  const [programme] = await q("SELECT status,failure FROM finnor_os.p1_requests WHERE tenant_id=$1 AND id=$2", [parent.tenantId, parent.programId]);
+  // N8: independent canonical read of the business row and comparison with values derived from the fixture inputs.
+  const [workstream] = await q("SELECT id::text FROM finnor_os.pe_workstreams WHERE tenant_id=$1 AND deal_id=$2 AND external_id=$3", [parent.tenantId, parent.dealId, g.workstreamExternalId]);
+  const [recipient] = await q("SELECT id::text FROM finnor_os.pe_deal_parties WHERE tenant_id=$1 AND deal_id=$2 AND external_id=$3", [parent.tenantId, parent.dealId, g.recipientExternalId]);
+  const [peRow] = await q("SELECT to_jsonb(r) row FROM finnor_os.pe_requests r WHERE r.tenant_id=$1 AND r.id=$2", [parent.tenantId, B]);
+  const expectedPayload = { dealId: parent.dealId, requestText: g.undispatchedRequestText, requiresAcceptedDeliverable: true, workstreamId: workstream?.id, requestedFromDealPartyId: recipient?.id };
+  const mismatched = Object.entries(expectedPayload).filter(([key, value]) => dispatched.payload?.[key] !== value).map(([key]) => key);
+  ensure(mismatched.length === 0, "ACTION_PAYLOAD_DIFFERS_FROM_FIXTURE_INPUTS:" + mismatched.join(","));
+  ensure(Date.parse(dispatched.payload.dueAt) === Date.parse(parent.dutyDeadlineAt), "ACTION_DUE_DATE_DIFFERS_FROM_ORIGINAL_DEADLINE");
+  ensure(peRow && JSON.stringify(peRow.row).includes(g.undispatchedRequestText), "INDEPENDENT_PE_REQUEST_ROW_MISSING_OR_DIFFERENT");
+  ensure(Date.parse(finalHead.deadline) === Date.parse(headBefore.deadline) && Date.parse(finalHead.deadline) === Date.parse(parent.programmeDeadlineAt), "ORIGINAL_DEADLINE_CHANGED");
+  const budgetAfter = await witness(parent);
+  ensure(budgetAfter.reservations.count === budgetBefore.reservations.count && budgetAfter.original.envelopes === budgetBefore.original.envelopes && budgetAfter.episode === budgetBefore.episode, "NEW_PARENT_OR_ENVELOPE_CHANGED");
+  const [envelope] = await q("SELECT (SELECT sum(v::numeric) FROM jsonb_array_elements_text(e->'quantities') v)::text limit_units, e->>'resourceId' resource_id FROM finnor_os.s5_reservations r, jsonb_array_elements(r.envelopes) e WHERE r.tenant_id=$1 AND r.reservation_id=$2 AND e->>'unit'='request'", [parent.tenantId, parent.parentReservation.id]);
+  const [spent] = await q("SELECT coalesce(sum(units),0)::text used FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 AND resource_id=$3 AND unit='request'", [parent.tenantId, parent.parentReservation.id, envelope.resource_id]);
+  ensure(BigInt(spent.used) <= BigInt(envelope.limit_units), `ORIGINAL_ENVELOPE_EXCEEDED used=${spent.used} limit=${envelope.limit_units}`);
+  const checked = { original: { limit: envelope.limit_units, used: spent.used }, preparationCharges: { before: preparationBefore, after: preparationAfter } };
+  p011 = { path: bound ? "MODEL_USED" : "DIRECT_FALLBACK", fallbackReason: fallback?.body.reason ?? null };
+  return { detail: { path: p011.path, fallbackReason: p011.fallbackReason, acceptanceRef: accepted.acceptance_ref, steps, originalEvents: original.map(row => ({ kind: row.kind, at: row.created_at })),
+    authorityBinding: { bound, modelUseRef: authority.applicationModelUseRef ?? null, acceptanceRef: authority.applicationModelAcceptanceRef ?? null, inputDigest: authority.applicationModelInputDigest ?? null },
+    chargeRefInS5Row: Boolean(charge), chargeRefId, finalHead, programme, expectedPayload, observedPayload: dispatched.payload, peRowDigest: sha(peRow.row), budgetBefore, budgetAfter, invariants: checked } };
+});
+await runCase("P0-11b", "The learned model computed the native argument of the original duty (useful result)", async () => {
+  if (!p011) return { outcome: "NOT_RUN", detail: { reason: "P0-11 did not complete" } };
+  if (p011.path !== "MODEL_USED") return { outcome: "NOT_RUN", detail: { reason: "ORIGINAL_P1_RECORDED_DIRECT_FALLBACK_" + p011.fallbackReason, note: "the accepted model could not represent the complete frozen owner argument; the original completed through its own direct path" } };
+  return { detail: { path: p011.path } };
 });
 
 await runCase("P1-02", "Cancel after MODEL_READY returns to the original (direct fallback) without a new allowance", async () => {
