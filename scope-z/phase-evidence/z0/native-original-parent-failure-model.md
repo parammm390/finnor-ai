@@ -161,3 +161,23 @@ P0-04 verification: `remainingInstitutionBudget` rejects a ceiling above 2048
 with `Z0_ORIGINAL_RESOURCE_DOMAIN` and a ceiling above the remaining
 (520 - 13 = 507) with `Z0_ORIGINAL_BUDGET_EXHAUSTED`. The demand 2048 is not
 above 2048, so it must be refused with `Z0_ORIGINAL_BUDGET_EXHAUSTED`.
+
+## 7. Addendum: physical worker kill at the ambiguous request boundary (kill mode)
+
+Written before the kill-mode code is changed. The earlier kill case killed the
+worker when "a job is running" and then waited for a terminal session status
+after restarting the worker. It can pass or fail for reasons unrelated to the
+recovery contract (kill before any request, or no explicit resume after the
+queue quarantined the lost job). It is replaced by the PRD 3.5 sequence that
+`scripts/x2/run-native-e2e.mts` proves for the X2 owner, now on the original
+parent.
+
+| # | How it can fail or be faked | Independent expectation / oracle |
+|---|---|---|
+| K1 | Kill before any request, or after the request settled | Boundary oracle (database): a request row of the session with `possible_egress` and no `observation_ref` and status not VERIFIED/DENIED/UNKNOWN exists at the moment of the kill; its identity (`request_ref`, `obligation_id`, wire `requestId`/`effectId`) is recorded before the kill. No such row: FAIL `KILL_BOUNDARY_NOT_OBSERVED`. |
+| K2 | The killed process is a wrapper, not the queue owner | `job_delivery_attempts.worker_id` of the unfinished attempt ends with `:<pid>` of the process that received SIGKILL; the exit event reports signal SIGKILL for that pid. |
+| K3 | The restart replays the job blindly | After lease expiry the queue's recovery leaves the job `quarantined` with attempt outcome `reconciliation_required`, failure kind `lease_expired`, and `attempts` and `claim_fence` equal to the values read before the kill. |
+| K4 | Resume sends the lost request again | Portal journal (independent of the owner database): the wire `requestId` of the killed request appears in exactly one `dispatch.*`, `submission.accepted` or `approval.committed` event after resume; the session has exactly one request row with that `request_ref`. |
+| K5 | Recovery changes parent, reservation, deadline or grants a new allowance | `reservation_ref`, `original_parent_ref`, `deadline_at` of the session and the original episode/envelope digests equal their pre-kill values; reservation count unchanged; the S5 charges created after the restart belong to the original reservation. |
+| K6 | The lost request disappears or is relabelled success | After resume the request row still exists with the same obligation, in VERIFIED/DENIED only through the independent request/record observation, otherwise UNKNOWN. Final session status must be a settled state (MODEL_READY, UNKNOWN, BLOCKED, FAILED or STALE); ACQUIRING/PLANNING after the wait window is FAIL `RECOVERY_DID_NOT_SETTLE`. A MODEL_READY session is not treated as business completion. |
+| K7 | Later cases consume a model that never existed | The consumption case is NOT_RUN unless an `S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED` event exists for the session. |
