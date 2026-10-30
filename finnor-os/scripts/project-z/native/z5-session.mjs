@@ -9,9 +9,10 @@
  * owner rows for the Z5 chain come from authenticated HTTP, owner libraries and the real processes.
  */
 import { createHash, createPrivateKey, randomUUID, sign as edSign } from "node:crypto";
-import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, readlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, readlinkSync, realpathSync, writeFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
+import { once } from "node:events";
 import { fileURLToPath } from "node:url";
 import { readNativeEnvironment, signInOwner, startOwnedWorker, createOriginalInstitutionParent, API_ORIGIN } from "./x1-origin-fixture.mts";
 
@@ -119,16 +120,16 @@ if (!owner) { record("summary", { results }); await stopAll(); process.exit(1); 
 
 // ---------------------------------------------------------------- Z5N-02 S6 ledger and transport policy
 await runCase("Z5N-02", "Separate S6 ledger process and launcher-root-signed owner-transport policy", async () => {
-  const { createEconomicLedger } = await import("../../s7/ledger-fixture.mts");
+  const { createZ5Ledger } = await import("./z5-ledger.mts");
   S.valuator = randomUUID();
-  S.ledger = await createEconomicLedger(S.tenantId, S.ownerId, S.valuator, { capabilityLifecycle: true, rightsRef: RIGHTS });
-  const generated = JSON.parse(readFileSync(join(S.ledger.root, "transport.json"), "utf8"));
-  const policy = generated.policy;
-  privateWrite(transportPath, JSON.stringify({ policy, signature: edSignCanonical(transportKey, policy) }));
-  // The ledger fixture rebinds process.env to its own file; the API, lifecycle and children use the launcher's.
+  S.ledger = await createZ5Ledger(S.tenantId, S.ownerId, S.valuator, { directory: join(privateRoot, "ledger"),
+    rightsRef: RIGHTS, transportPath, transportPrivateKeyPem: readFileSync(join(privateRoot, "transport-root.key"), "utf8") });
+  S.children.push(S.ledger.child());
+  // The API, lifecycle, worker and driver children all read the launcher-fixed transport path.
   process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG = transportPath;
   process.env.FINNOR_S6_OWNER_TRANSPORT_ROOT = env.FINNOR_S6_OWNER_TRANSPORT_ROOT;
-  return { detail: { endpoint: S.ledger.endpoint(), routes: policy.routes.map(r => [r.semanticOwner, r.purpose]), policyDigest: digest(policy) } };
+  return { detail: { endpoint: S.ledger.endpoint(), policyDigest: sha(JSON.stringify(S.ledger.policy)),
+    owners: S.ledger.policy.owners.map(o => [o.owner, o.append]) } };
 });
 
 // ---------------------------------------------------------------- Z5N-03 second tenant owner
@@ -341,19 +342,164 @@ await runCase("Z5N-11", "S8 fixed-component profile and per-component admissions
   return { detail: { profileRef, facts: profileFacts, register: direct.body, firstAttempt: registered?.status } };
 });
 
-// ---------------------------------------------------------------- Z5N-12 economic assignment (S7) and delayed callback (S6)
-notRun("Z5N-12", "S2/S7 economic assignment whose estimand names the S4/S5 mandate (assignmentRef for the original request)",
-  "Not yet attempted in this scenario revision; the S7 estimand must resolve the S5 mandate reference through the S6 ledger.");
+// ---------------------------------------------------------------- Z5N-12 economic assignment (S7)
+await runCase("Z5N-12", "S2/S7 economic assignment whose estimand names the exact S4/S5 mandate (assignmentRef)", async () => {
+  ensure(S.upstream, "NO_UPSTREAM_CHAIN");
+  const { economicFixture } = await import("../../s7/economic-fixtures.mts");
+  const engine = await import("../../../packages/epistemic-runtime/src/economic-attribution.ts");
+  const transport = await import("../../../packages/governed-execution/src/owner-delivery-store.ts");
+  const deliver = async semanticOwner => {
+    const r = await transport.deliverOwnerTransportBatch({ semanticOwner, tenantId: S.tenantId, principalId: S.ownerId }, { limit: 64 });
+    ensure(r.failures.length === 0, "OWNER_DELIVERY_FAILED:" + JSON.stringify(r.failures).slice(0, 300));
+    return r;
+  };
+  const e = structuredClone(economicFixture(8, 0, 15).input.estimand);
+  const now = Date.now();
+  e.registeredAt = new Date(now).toISOString();
+  e.assignmentAt = new Date(now + 15000).toISOString();
+  e.outcomeAccessNotBefore = new Date(now + 35000).toISOString();
+  e.endpointAt = new Date(now + 35000).toISOString();
+  e.horizonMonths = 1;
+  e.analysis.registeredLooks = [e.endpointAt];
+  e.discountSchedule = [{ at: e.endpointAt, factor: "1" }];
+  e.valuationProtocol.authorityRefs[0].id = S.valuator;
+  // The estimand names the REAL S4/S5 mandate reference, not a generated stand-in.
+  const mandateRef = S.upstream.f.mandate.ref;
+  e.mandateRef = mandateRef;
+  const mandateContent = { ...S.upstream.f.mandate };
+  delete mandateContent.ref;
+  await S.ledger.publish({ ...mandateRef, content: mandateContent });
+  const rewrite = (value, id, contentDigest) => {
+    if (value && typeof value === "object") {
+      if (value.id === id && value.contentDigest) value.contentDigest = contentDigest;
+      for (const item of Object.values(value)) rewrite(item, id, contentDigest);
+    }
+  };
+  for (const ref of engine.collectEconomicRefs(e)) {
+    if (ref.id === "protocol" || ref.id.startsWith("manifest-") || ref.id === mandateRef.id) continue;
+    let content = { schema: "finnor.generated-source.v1", id: ref.id, sourceOrigin: "GENERATED_CHALLENGE", independent: true };
+    if (ref.id === S.valuator) content = { schema: "finnor.independent-valuation-authority.v1", principalId: S.valuator,
+      economicNoticeResolution: true, sourceOrigin: "GENERATED_CHALLENGE" };
+    const contentDigest = engine.economicHash(content);
+    rewrite(e, ref.id, contentDigest);
+    await S.ledger.publish({ ...ref, contentDigest, content });
+  }
+  for (const cluster of e.clusters) {
+    const content = { schema: "finnor.economic-source-manifest.v1", ownerBoundaryRef: e.ownerBoundaryRef, currency: e.currency,
+      clusterId: cluster.id, openingWealth: cluster.openingWealth, wealthSupport: cluster.wealthSupport,
+      ownershipWaterfallRef: e.ownershipWaterfallRef, sourceOrigin: "GENERATED_CHALLENGE" };
+    cluster.sourceManifestRef.contentDigest = engine.economicHash(content);
+    await S.ledger.publish({ ...cluster.sourceManifestRef, content });
+  }
+  const protocol = { schema: "finnor.s2.economic-assignment-protocol.v1", key: "z5-law-" + randomUUID().slice(0, 8),
+    mandateRef, populationRef: e.populationRef, clusterIds: e.clusters.map(c => c.id), controllerIds: e.controllers.map(c => c.id),
+    probabilityUnits: Object.fromEntries(e.controllers.map(c => [c.id, Math.round(Number(e.assignment.probabilities[c.id]) * 1000000)])),
+    assignmentNotBefore: e.assignmentAt, outcomeAccessNotBefore: e.outcomeAccessNotBefore,
+    randomization: "INDEPENDENT_CRYPTO_CATEGORICAL_V1" };
+  const registeredProtocol = await owner.call("/api/economic-outcomes/register-assignment-protocol", { protocol, rightsRef: RIGHTS });
+  ensure(registeredProtocol.status === 200, "PROTOCOL_REGISTER_" + registeredProtocol.status + ":" + JSON.stringify(registeredProtocol.body).slice(0, 400));
+  await deliver("S2");
+  e.assignment.protocolRef = registeredProtocol.body.record.ref;
+  const question = await owner.call("/api/economic-outcomes/register", { estimand: e, rightsRef: RIGHTS, mode: "PROSPECTIVE",
+    idempotencyKey: "z5-question-" + randomUUID().slice(0, 8) });
+  ensure(question.status === 200, "ESTIMAND_REGISTER_" + question.status + ":" + JSON.stringify(question.body).slice(0, 400));
+  await deliver("S7");
+  await sleep(Math.max(0, Date.parse(e.assignmentAt) - Date.now() + 500));
+  const assigned = await owner.call("/api/economic-outcomes/assign-programme", { estimandId: question.body.record.ref.id,
+    protocolId: registeredProtocol.body.record.ref.id, idempotencyKey: "z5-assignment-" + randomUUID().slice(0, 8) });
+  ensure(assigned.status === 200, "ASSIGN_PROGRAMME_" + assigned.status + ":" + JSON.stringify(assigned.body).slice(0, 400));
+  S.assignmentRef = assigned.body.record.ref;
+  const assignments = await import("../../../packages/private-equity/src/enterprise-economic-assignments.ts");
+  const stored = await assignments.readEnterpriseEconomicAssignmentRecord(ownerCtx(), S.assignmentRef);
+  const estimandRecord = await (await import("../../../packages/private-equity/src/economic-store.ts"))
+    .readStoredEconomicRecord(ownerCtx(), String(stored.content.estimandRef?.id ?? ""));
+  ensure(estimandRecord.payload.estimand?.mandateRef?.id === mandateRef.id
+    && estimandRecord.payload.estimand?.mandateRef?.contentDigest === mandateRef.contentDigest, "ESTIMAND_MANDATE_NOT_THE_REAL_ONE");
+  return { detail: { assignmentRef: S.assignmentRef, estimandRef: stored.content.estimandRef, mandateRef } };
+});
+
 notRun("Z5N-13", "Old-revision S6 provider obligation with an independent delayed callback after the replacement",
   "Not yet attempted; requires the governed-dispatch fake provider and S6 broker (lost response, then reconcile) bound to the original Work lineage.");
 
 // ---------------------------------------------------------------- Z5N-14 driver
-const driverIds = ["login", "pool", "contract", "submit", "worker", "use", "plan", "reads", "incomplete", "panel", "second-tenant", "sign-out", "callback", "cancel", "revoke"];
-if (!S.profileRef || !S.obligation || !S.upstream) {
-  notRun("Z5N-14", "Guarded native E2E driver (" + driverIds.join(", ") + ")", "Prerequisite stages did not pass; see the earlier cases.");
-} else if (!S.assignmentRef) {
-  notRun("Z5N-14", "Guarded native E2E driver", "No economic assignmentRef (Z5N-12 NOT_RUN): the driver refuses without it. Prerequisite stages through Z5N-11 are recorded above.");
-}
+await runCase("Z5N-14", "Guarded native E2E driver (native-e2e.mjs) on the assembled stack", async () => {
+  ensure(S.profileRef && S.obligation && S.upstream, "PREREQUISITE_CHAIN_MISSING");
+  ensure(S.assignmentRef, "NO_ECONOMIC_ASSIGNMENT_REF");
+  ensure(other, "NO_SECOND_TENANT");
+  const uid = process.getuid();
+  const ownerOf = port => {
+    const matches = listenerPids(port).filter(pid => {
+      try {
+        const status = readFileSync(`/proc/${pid}/status`, "utf8");
+        if (Number(/^Uid:\s+(\d+)/m.exec(status)?.[1]) !== uid) return false;
+        const cwd = realpathSync(`/proc/${pid}/cwd`);
+        return cwd === ROOT || cwd.startsWith(ROOT + "/");
+      } catch { return false; }
+    });
+    ensure(matches.length === 1, "PORT_OWNER_AMBIGUOUS_" + port + ":" + matches.join(","));
+    return matches[0];
+  };
+  const head = sourceHead();
+  const owned = { frontend: { pid: ownerOf(3001), port: 3001, sourceHead: head },
+    api: { pid: ownerOf(3101), port: 3101, sourceHead: head },
+    s8: { pid: ownerOf(S.s8Port), port: S.s8Port, sourceHead: head } };
+  ensure(owned.s8.pid === S.s8.pid, "S8_LISTENER_IS_NOT_THE_LIFECYCLE_PROCESS");
+  const dbUrl = new URL(env.DATABASE_URL);
+  const runId = "z5-" + randomUUID();
+  const mountFor = (workId, root) => "/centropy/world?root=" + encodeURIComponent(JSON.stringify(root))
+    + "&object=" + encodeURIComponent(JSON.stringify({ id: workId, type: "work", namespace: "core", owner: "@finnor/db" }))
+    + "&workId=" + workId;
+  const authority = { schema: "finnor.z5.explicit-existing-disposable-authority.v1", repository: ROOT, sourceHead: head,
+    runId, expiresAt: parent().originalDeadlineAt,
+    database: { host: dbUrl.hostname, port: Number(dbUrl.port || 5432), name: decodeURIComponent(dbUrl.pathname.slice(1)), existingOnly: true },
+    noLiveProviders: true, noRealFinancialEffects: true, exclusiveWorker: true,
+    sameSupabaseProjectVerified: true, existingOriginalS8Contracts: true,
+    frontendOrigin: "http://127.0.0.1:3001", ownedProcesses: owned,
+    tenantId: S.tenantId, principalId: S.ownerId, workId: parent().workId,
+    submit: { workId: parent().workId, root: S.root, profileRef: S.profileRef,
+      preparationRef: S.upstream.handoff.preparationRef, policyRef: S.upstream.policy.ref,
+      allocationRef: S.upstream.handoff.allocationRef, consumptionRef: S.upstream.handoff.consumptionRef,
+      mandateRef: S.upstream.f.mandate.ref, assignmentRef: S.assignmentRef,
+      parentReservation: parent().parentReservation, responsibilityIdentity: parent().responsibilityIdentity,
+      obligationRefs: S.obligationRefs, originalDeadline: parent().originalDeadlineAt, idempotencyKey: runId },
+    registerProfile: { root: S.root, workId: parent().workId, sourceRef: S.profileRef },
+    mountedWorkUrl: mountFor(parent().workId, S.root),
+    alternateMountedWork: { workId: S.parents[1].workId, root: S.alternateRoot, url: mountFor(S.parents[1].workId, S.alternateRoot) } };
+  const authorityPath = join(privateRoot, "authority.json");
+  privateWrite(authorityPath, JSON.stringify(authority));
+  const outDir = join(ROOT, "scope-z/phase-evidence/z5/native-integrated-" + RUN);
+  const driver = spawn(process.execPath, [join(BACKEND, "scripts/project-z/z5/native-e2e.mjs"), outDir], { cwd: ROOT,
+    stdio: ["ignore", "pipe", "pipe"],
+    env: { PATH: process.env.PATH, HOME: process.env.HOME, TMPDIR: process.env.TMPDIR,
+      DATABASE_URL: env.DATABASE_URL, FINNOR_WORKER_DATABASE_URL: env.FINNOR_WORKER_DATABASE_URL,
+      TEST_OWNER_EMAIL: env.TEST_OWNER_EMAIL, TEST_OWNER_PASSWORD: env.TEST_OWNER_PASSWORD,
+      Z5_OTHER_OWNER_EMAIL: other.email, Z5_OTHER_OWNER_PASSWORD: other.password,
+      FINNOR_Z5_DISPOSABLE_AUTHORITY: "EXPLICIT", FINNOR_Z5_AUTHORITY_FILE: authorityPath,
+      FINNOR_Z5_PROFILE: "ordinary_disposable", FINNOR_ENVIRONMENT: "ordinary_disposable", AUTH_DEV_BYPASS: "0",
+      FINNOR_S6_OWNER_TRANSPORT_CONFIG: transportPath, FINNOR_S6_OWNER_TRANSPORT_ROOT: env.FINNOR_S6_OWNER_TRANSPORT_ROOT,
+      FINNOR_Z5_S8_CONSUMER_CONFIG: join(privateRoot, "s8-consumer.json"), FINNOR_Z5_S8_CONSUMER_ROOT: env.FINNOR_Z5_S8_CONSUMER_ROOT,
+      FINNOR_S3_MODEL_STORE: env.FINNOR_S3_MODEL_STORE, FINNOR_S4_POLICY_STORE: env.FINNOR_S4_POLICY_STORE,
+      FINNOR_S3_PYTHON: env.FINNOR_S3_PYTHON ?? "",
+      PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH ?? "/home/factory-user/repos/fzv-browsers" } });
+  S.children.push(driver);
+  let log = "";
+  driver.stdout.on("data", chunk => { log += chunk; });
+  driver.stderr.on("data", chunk => { log += chunk; if (log.length > 200000) log = log.slice(-100000); });
+  const [code] = await once(driver, "exit");
+  // Driver artifacts are copied only after a credential scan; the run directory itself stays in the worktree.
+  const leaked = /password|refresh_token|access_token|service_role/i;
+  const artifacts = {};
+  for (const name of readdirSync(outDir)) {
+    const text = readFileSync(join(outDir, name), "utf8");
+    if (leaked.test(text)) { artifacts[name] = "WITHHELD_CREDENTIAL_PATTERN"; continue; }
+    copyFileSync(join(outDir, name), join(evidence, "driver-" + name));
+    artifacts[name] = text.length + " bytes";
+  }
+  const report = existsSync(join(outDir, "report.json")) ? JSON.parse(readFileSync(join(outDir, "report.json"), "utf8")) : null;
+  record("driver-report", { exit: code, report, logTail: log.slice(-3000) });
+  ensure(code === 0, "DRIVER_EXIT_" + code + ":" + String(report?.blocker ?? report?.failure ?? log.slice(-400)));
+  return { detail: { exit: code, state: report?.state, actions: (report?.actions ?? []).map(a => ({ name: a.name, at: a.at })), artifacts } };
+});
 
 record("summary", { run: RUN, results: results.map(r => ({ id: r.id, outcome: r.outcome })) });
 await stopAll();
