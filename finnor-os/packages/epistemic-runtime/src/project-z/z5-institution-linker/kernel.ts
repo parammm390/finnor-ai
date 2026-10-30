@@ -535,7 +535,8 @@ export function produce(raw: unknown): Certificate {
   return result;
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+// No top-level await: the OpenAPI generator imports this module through contracts.ts under a CommonJS transform.
+async function main(): Promise<void> {
   let source = "";
   process.stdin.setEncoding("utf8");
   for await (const chunk of process.stdin) {
@@ -543,4 +544,11 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     if (Buffer.byteLength(source) > 8 * 1024 * 1024) throw new Error("Z5_STDIN_BYTE_BOUND");
   }
   process.stdout.write(JSON.stringify(produce(JSON.parse(source))) + "\n");
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : String(error)}\n`);
+    process.exitCode = 1;
+  });
 }

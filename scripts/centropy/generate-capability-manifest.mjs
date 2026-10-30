@@ -81,10 +81,12 @@ const branchOperations = new Map([...block(branchSource,"export const BranchOper
 if(!capitalOperations.length||!m4Operations.size||!branchOperations.size||
   !companyBrainSource.includes("CAPITAL_PROGRAM_V2_OPERATIONS")||!companyBrainSource.includes("M4_OPERATIONS"))
   throw new Error("Completed owner operation registries must be present and actually delegated")
-// Product admission is limited to the mounted coalition controls; the generic
-// owner catalogue does not grant release, consent or effect authority.
+// Product admission is limited to the mounted coalition controls and the one
+// mounted Z5 S4 composition-plan consumption; the generic owner catalogue does
+// not grant release, consent or effect authority.
 const coalitionOperations = new Map([
   ["policies/coalition-read", "READ"],
+  ["policies/composition-plan", "MUTATION"],
   ["allocations/coalition-read", "READ"],
   ["allocations/coalition-clear", "MUTATION"],
   ["allocations/coalition-consume", "MUTATION"],
