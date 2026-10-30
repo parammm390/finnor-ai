@@ -312,8 +312,17 @@ await step("fixture-constructions", async () => {
   // Stale source: the model claim source of the CHECKED N2 protocol moves to a new head version.
   await lib.memory.appendEvidenceVersion(TENANT_A, negatives.n2ModelSourceId,
     { content: JSON.stringify({ moved: "n-stale", at: new Date().toISOString() }), snapshot: { note: "stale-source negative" }, asOf: new Date() });
-  // Revoked rights: the second participant of N1 is suspended (identity row, same pattern as the seed).
-  await admin.query("UPDATE finnor_os.users SET status='suspended' WHERE tenant_id=$1 AND id=$2", [TENANT_A, MEMBER_THREE]);
+});
+
+// Revoked rights: the second participant of N1 stays an active, authenticated owner but receives an active deny grant on
+// world queries through a dedicated role (authority tables, the same rows scripts/s1/run-s1-e2e.mts writes for its deny).
+// A suspended identity could not authenticate, so identity suspension is deliberately not used.
+await step("revoked-rights-authority", async () => {
+  const role = (await admin.query("INSERT INTO finnor_os.employee_roles(tenant_id,key,name) VALUES($1,'z2-revoked-world-query','Z2 revoked world query') RETURNING id",
+    [TENANT_A])).rows[0].id;
+  await admin.query("INSERT INTO finnor_os.employee_role_assignments(tenant_id,employee_id,role_id) VALUES($1,$2,$3)", [TENANT_A, MEMBER_THREE, role]);
+  await admin.query("INSERT INTO finnor_os.role_authority_grants(tenant_id,role_id,capability,resource_type,effect) VALUES($1,$2,'query:pe_world_state','*','deny')",
+    [TENANT_A, role]);
 });
 
 await step("fixture-jobs-drained-and-worker-stopped", async () => {
@@ -401,7 +410,7 @@ const driverExit = await step("native-replay-driver", async () => {
       { kind: "STALE_SOURCE", actorIndex: 0, operation: "interaction-admit",
         input: { protocolId: negatives.n2Submitted.protocolId }, httpStatuses: [422], expectedCodeOrStatus: "Y3_PROTOCOL_DEPENDENCIES_CHANGED" },
       { kind: "REVOKED_RIGHTS", actorIndex: 2, operation: "interaction-local",
-        input: { protocolId: negatives.n1Submitted.protocolId }, httpStatuses: [403], expectedCodeOrStatus: "Y3_ACTIVE_PARTICIPANT_REQUIRED" },
+        input: { protocolId: negatives.n1Submitted.protocolId }, httpStatuses: [404], expectedCodeOrStatus: "Y3_AUTHENTICATED_RESOURCE_UNAVAILABLE" },
       { kind: "CROSS_TENANT", actorIndex: 0, operation: "interaction-read",
         input: { protocolId: negatives.n5Submitted.protocolId }, httpStatuses: [404], expectedCodeOrStatus: "Y3_AUTHENTICATED_RESOURCE_UNAVAILABLE" },
       { kind: "RESOURCE_BOUND", actorIndex: 0, operation: "coalition-submit",
