@@ -36,7 +36,9 @@ Object.assign(process.env, { NODE_ENV: "test", FINNOR_ENVIRONMENT: "ordinary_dis
   FINNOR_Z2_DISPOSABLE_E2E: "1", FINNOR_Z2_CONVERGED_DEVELOPMENT: "1", SECRETS_PROVIDER: "env",
   ALLOW_PLAINTEXT_ENV_SECRETS: "1", TSX_DISABLE_CACHE: "1" });
 
-const L = await import("./z2-fixtures.mjs");
+// Fixture builders are provenance-checked pack files; import them from the pack so this scenario file may
+// also run from outside the pack during harness iteration without diverging the verified fixture code.
+const L = await import(join(pack, "finnor-os/scripts/project-z/native/z2-fixtures.mjs"));
 const lib = await L.loadLibraries(pack);
 const admin = new Client({ connectionString: isolated.DATABASE_URL });
 await admin.connect();
