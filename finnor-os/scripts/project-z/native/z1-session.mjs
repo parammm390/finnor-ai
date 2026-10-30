@@ -189,30 +189,11 @@ try {
         { content: JSON.stringify({ episodeId, name, initial: true }), snapshot, asOf: new Date() })
       sources[name] = { sourceId: source.id, versionId: version.versionId }
     }
-    const now = Date.now(), sanitized = episodeId.replace(/[^a-z0-9]/g, "_")
-    const ref = (id, owner = "BUSINESS_OWNER") => ({ owner, id, version: "public-owner-input-v1",
-      contentDigest: sha(JSON.stringify({ id, owner })) })
-    const horizon = { startAt: new Date(now - 60000).toISOString(), periodMs: 3600000, periods: 6 }
-    const roles = { logical: ["z1-logical-tick", "CUMULATIVE_EXPENDITURE"], cpu: ["cpu-microseconds", "CUMULATIVE_EXPENDITURE"],
-      storage: ["byte", "CUMULATIVE_EXPENDITURE"], memory: ["byte", "OCCUPANCY"] }
-    const resources = {}
-    for (const [role, [unit, kind]] of Object.entries(roles)) {
-      const body = { schema: "finnor.allocation-resource.v1", resourceId: `z1_${sanitized}_${role}`, tenantId,
-        ownerRef: ref(principalId), legalEntityRef: ref(root.entityId, "S1"), scopeRef: ref(`z1-${sanitized}-${role}`),
-        permittedRoots: [root], rightsRef: "S1:current-owner-assertion", unit, currency: null, kind, resourceClass: "COMPUTE",
-        horizon, sourceRef: ref(`public_declared_compute_${role}`), asOf: new Date(now - 60000).toISOString(),
-        knowledgeAt: new Date(now - 60000).toISOString(), validUntil: new Date(now + 6 * 3600000).toISOString(),
-        beliefPins: [], availability: Array.from({ length: horizon.periods + 1 }, () => ({ amount: "100000000000", basis: "REPORTED_AVAILABLE" })),
-        existingUse: Array(horizon.periods + 1).fill("0"), safetyMargin: "0", covenants: [], revoked: false,
-        qualification: "AUTHENTICATED_OWNER_ASSERTION_UNADMITTED" }
-      const createdResource = await store.putAllocationResource(ctx, body, null)
-      resources[role] = createdResource.ref
-    }
-    return { root, foreignRoot, investmentCaseId, works, foreignWorkId: foreign.workId, sources, resources }
+    return { root, foreignRoot, investmentCaseId, works, foreignWorkId: foreign.workId, sources }
   })
-  const { root, foreignRoot, investmentCaseId, works, sources, resources } = seeded
+  const { root, foreignRoot, investmentCaseId, works, sources } = seeded
   Object.assign(result, { root, foreignRoot, workIds: works.map(work => work.workId), foreignWorkId: seeded.foreignWorkId,
-    investmentCaseIds: [investmentCaseId], sources, resources })
+    investmentCaseIds: [investmentCaseId], sources })
 
   const chain = await step("s3-s4-s5-owner-chain", async () => {
     // All upstream owners run before the first S6 obligation: S4 lawfully refuses new
@@ -244,13 +225,17 @@ try {
     await support.resource(owner, "cash", "USD", "STOCK", ["100", "100", "100"])
     const cleared = expectStatus(await apiCall("/api/allocations/clear", ownerToken,
       support.clearing(owner, { z1obligation: ["100"] })), 200, "S5_CLEAR")
-    assert.equal(cleared.status, "FEASIBLE", "S5_CLEARING_NOT_FEASIBLE")
+    await artifact("clear-response.json", { status: cleared.status, reasons: cleared.reasons ?? null,
+      certificateRef: cleared.certificate?.ref ?? null, reservationRef: cleared.reservation?.ref ?? null })
+    assert.equal(cleared.status, "FEASIBLE",
+      `S5_CLEARING_NOT_FEASIBLE:${cleared.status}:${JSON.stringify(cleared.reasons ?? []).slice(0, 160)}`)
     const handoff = expectStatus(await apiCall("/api/policies/handoff", ownerToken,
       { policyRef: policy.ref, allocationRef: cleared.certificate.ref,
         decision: support.decision(owner, cleared.certificate.ref) }), 200, "S4_HANDOFF")
     assert.ok(handoff.preparationRef && handoff.allocationRef && handoff.consumptionRef && handoff.intervention,
       "S4_HANDOFF_REFERENCES_REQUIRED")
     return { chainRoot, modelRef: owner.model.ref, policyRef: policy.ref, allocationRef: cleared.certificate.ref,
+      reservationRef: cleared.reservation.ref,
       preparationRef: handoff.preparationRef, consumptionRef: handoff.consumptionRef, handoffInterventionDigest: sha(JSON.stringify(handoff.intervention)) }
   })
   result.chain = chain
@@ -278,6 +263,38 @@ try {
     return { obligationRef: prepared.ref, lineage }
   })
   result.obligation = { ref: obligation.obligationRef, workId: works[2].workId }
+
+  // The enterprise clearing needs a mandate-conformant COMPLETE registry (failure model C8), so the Z1
+  // compute resources, which carry their own hourly horizon, are registered only after the chain.
+  const reservationState = () => db.withTenantTransaction(tenantId, { userId: principalId, readOnly: true }, async (_db, c) =>
+    (await c.query("SELECT status,revision FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND reservation_id=$2",
+      [tenantId, chain.reservationRef.id])).rows)
+  const resources = await step("register-z1-compute-resources", async () => {
+    const before = await reservationState()
+    assert.equal(before.length, 1, "CHAIN_S5_RESERVATION_REQUIRED")
+    const now = Date.now(), sanitized = episodeId.replace(/[^a-z0-9]/g, "_")
+    const ref = (id, owner = "BUSINESS_OWNER") => ({ owner, id, version: "public-owner-input-v1",
+      contentDigest: sha(JSON.stringify({ id, owner })) })
+    const horizon = { startAt: new Date(now - 60000).toISOString(), periodMs: 3600000, periods: 6 }
+    const roles = { logical: ["z1-logical-tick", "CUMULATIVE_EXPENDITURE"], cpu: ["cpu-microseconds", "CUMULATIVE_EXPENDITURE"],
+      storage: ["byte", "CUMULATIVE_EXPENDITURE"], memory: ["byte", "OCCUPANCY"] }
+    const registered = {}
+    for (const [role, [unit, kind]] of Object.entries(roles)) {
+      const body = { schema: "finnor.allocation-resource.v1", resourceId: `z1_${sanitized}_${role}`, tenantId,
+        ownerRef: ref(principalId), legalEntityRef: ref(root.entityId, "S1"), scopeRef: ref(`z1-${sanitized}-${role}`),
+        permittedRoots: [root], rightsRef: "S1:current-owner-assertion", unit, currency: null, kind, resourceClass: "COMPUTE",
+        horizon, sourceRef: ref(`public_declared_compute_${role}`), asOf: new Date(now - 60000).toISOString(),
+        knowledgeAt: new Date(now - 60000).toISOString(), validUntil: new Date(now + 6 * 3600000).toISOString(),
+        beliefPins: [], availability: Array.from({ length: horizon.periods + 1 }, () => ({ amount: "100000000000", basis: "REPORTED_AVAILABLE" })),
+        existingUse: Array(horizon.periods + 1).fill("0"), safetyMargin: "0", covenants: [], revoked: false,
+        qualification: "AUTHENTICATED_OWNER_ASSERTION_UNADMITTED" }
+      const createdResource = await store.putAllocationResource(ctx, body, null)
+      registered[role] = createdResource.ref
+    }
+    assert.deepEqual(await reservationState(), before, "CHAIN_S5_RESERVATION_MOVED_BY_COMPUTE_RESOURCE_REGISTRATION")
+    return registered
+  })
+  result.resources = resources
 
   const bindings = await step("read-existing-bindings", async () => {
     // FOR SHARE owner reads need a writable transaction; nothing is written here.
