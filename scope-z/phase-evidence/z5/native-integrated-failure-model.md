@@ -40,3 +40,14 @@ login; pool role; contract register 200; submit 202 + conflicting preimage 409 `
 D1. Driver spawns the worker with the driver's `DATABASE_URL` (finnor_app) -> fix in `z5/native-e2e.mjs`: worker child uses `FINNOR_WORKER_DATABASE_URL`.
 D2. Launcher has no `z5` profile -> add localized `// BEGIN z5-native` block (profile whitelist plus env paths).
 D3. Evidence directory restriction vs runner evidence dir -> scenario copies.
+
+## Defects found while reading the integrated tree (entry written before each fix)
+
+D4. `registerFixedProfile` requires `digest(profile) === sourceRef.contentDigest`, but the profile content schema itself contains `sourceRef`. The S6 ledger accepts a reference only when `sha256(canonical(content)) === reference.contentDigest` (`referencePreimageDigest`), so the content cannot contain a descriptor that holds its own digest (a hash fixed point). No ledger-published profile can ever register: `institution-contract-register` would refuse every real S8 reference with `Z5_PROFILE_CANONICAL_PREIMAGE_REQUIRED` or fail the schema.
+ - Wrong fix (rejected): accept a caller-chosen digest or skip the digest check.
+ - Independent expected outcome after the fix: content published to the real ledger WITHOUT `sourceRef` registers; content whose canonical digest differs from the descriptor digest, or content carrying an unknown `sourceRef` key, is refused (strict schema); the stored profile body is the verified content plus the descriptor that was read back from the ledger.
+ - Fix location: `z5-institution-linker/owners.ts` (Z5 owned).
+
+D5. (planned verification, not yet a defect) The launcher fixes the application environment at start while the S6 ledger / S8 lifecycle processes and signed configurations are created later by the scenario. The `z5` profile therefore only pre-creates launcher-owned root keys and deterministic private file paths; the transport policy and the S8 consumer policy are signed by the scenario with those roots after the processes exist. Expected failure if wrong: owners see `OWNER_TRANSPORT_PRIVATE_FILE_UNSAFE`/ENOENT on the first call; the scenario writes the transport file before any owner call that can read it.
+
+D6. (planned verification) The scenario-owned stock worker used to build the X1 original parent must not run while the Z5 driver's exclusive worker runs (F4): it is stopped and its absence asserted (no `apps/worker`/`z0-worker` process) before the driver starts.

@@ -135,6 +135,7 @@ try {
   save()
   const app = start("app", process.execPath, [join(root, "scripts/project-z/start-isolated-app.mjs"), "--state=" + state,
     ...(profiles ? ["--profile=" + profiles] : []), ...(z3Producer ? ["--z3-producer=" + z3Producer] : []),
+    ...(profiles?.split(",").includes("z5") ? ["--z5-s3-python=" + process.env.FINNOR_S3_PYTHON] : []), // z5-native
     ...(noWorker ? ["--no-worker"] : [])], "READY_REAL_AUTHENTICATED_NATIVE_TARGET")
   assert.ok(await bounded(app.ready, 1200000), "REAL_APPLICATION_READY_REQUIRED")
   receipt.stage = hold ? "HELD_READY" : "SCENARIOS"

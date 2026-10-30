@@ -19,7 +19,7 @@ const ProfileSchema = z.object({
   schema: z.literal("finnor.s8.fixed-institution-components.v1"), domain: z.literal("ORDINARY_DEVELOPMENT"),
   tenantId: z.string().uuid(), principalId: z.string().uuid(), workId: z.string().uuid(), root: RegisterSchema.shape.root,
   validUntil: z.string().datetime({ offset: true }), rightsRevision: z.string().regex(/^[1-9][0-9]*$/),
-  sourceRef: RefSchema, contract: z.unknown().transform(parseInput), componentAdmissionRefs: z.array(RefSchema).min(2).max(32),
+  contract: z.unknown().transform(parseInput), componentAdmissionRefs: z.array(RefSchema).min(2).max(32),
   sourceDependencies: z.array(z.object({ key: z.string().min(1).max(512), revision: z.number().int().safe().nonnegative(),
     nodeIds: z.array(z.string()).max(256), digest: z.null() }).strict()).min(1).max(128),
   nativeLocals: z.array(z.object({ component: z.string().min(1).max(192),
@@ -36,7 +36,9 @@ export async function registerFixedProfile(ctx: PeMutationContext, raw: unknown)
   const accepted = await readOwnerTransportReference({ semanticOwner: "S8", tenantId: ctx.auth.tenantId, principalId: principal(ctx) }, input.sourceRef.id);
   const { content, ...ref } = accepted.reference;
   if (!same(ref, input.sourceRef)) throw Error("Z5_PROFILE_ORIGINAL_PREIMAGE_REQUIRED");
-  const profile = ProfileSchema.parse(content) as Profile;
+  // The descriptor cannot be inside its own preimage (sha256 fixed point); it is bound to the content by the ledger read-back above.
+  const parsed = ProfileSchema.parse(content);
+  const profile = { ...parsed, sourceRef: input.sourceRef } as Profile;
   if (profile.tenantId !== ctx.auth.tenantId || profile.principalId !== principal(ctx) || profile.workId !== input.workId
     || !same(profile.root, input.root) || profile.contract.domain !== "ORDINARY_DEVELOPMENT"
     || [...profile.contract.components, ...profile.contract.replacementCandidates].some(c =>
@@ -64,7 +66,8 @@ export async function registerFixedProfile(ctx: PeMutationContext, raw: unknown)
       || body.protectedAdmission !== false || body.executionAuthorityGranted !== false)
       throw Error("Z5_ORIGINAL_COMPONENT_ADMISSION_NOT_CURRENT");
   }
-  if (digest(profile) !== input.sourceRef.contentDigest) throw Error("Z5_PROFILE_CANONICAL_PREIMAGE_REQUIRED");
+  if (digest(content) !== input.sourceRef.contentDigest || digest(parsed) !== input.sourceRef.contentDigest)
+    throw Error("Z5_PROFILE_CANONICAL_PREIMAGE_REQUIRED");
   return transaction(ctx, async c => {
     const rights = await authorize(ctx, input.root, [{ type: "work", id: input.workId }], [], c);
     if (String(rights.revision) !== profile.rightsRevision || Date.parse(profile.validUntil) <= Date.now())
