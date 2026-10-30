@@ -1,0 +1,11 @@
+file:///home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/audit-capability-coverage.mjs:37
+    if (!isDeepStrictEqual(row[field], value)) throw new Error(`Canonical planner metadata differs: ${entry.capability}.${field}`)
+                                                     ^
+
+Error: Canonical planner metadata differs: query:work_list.planning
+    at file:///home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-UfA8os/checkout/scripts/centropy/audit-capability-coverage.mjs:37:54
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.23.4

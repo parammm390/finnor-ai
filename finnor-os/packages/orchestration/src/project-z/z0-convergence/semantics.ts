@@ -8,10 +8,11 @@ export const NativeObservationSchema = z.discriminatedUnion("intent", [
   z.object({ intent: z.literal("harness_program_v1"), ...work, programId: uuid }).strict(),
   z.object({ intent: z.literal("economic_programme_v1"), ...work, programmeId: uuid }).strict(),
   z.object({ intent: z.literal("confidential_economic_computation_v1"), ...work }).strict(),
+  z.object({ intent: z.literal("execution_proof_capsule_v1"), ...work }).strict(),
 ]);
 export type NativeObservation = z.infer<typeof NativeObservationSchema>;
 export function isOriginalWorkObservation(value: { intent: string }): value is NativeObservation {
-  return ["harness_program_v1", "economic_programme_v1", "confidential_economic_computation_v1"].includes(value.intent);
+  return ["harness_program_v1", "economic_programme_v1", "confidential_economic_computation_v1", "execution_proof_capsule_v1"].includes(value.intent);
 }
 export function nativeObservationRequest(input: unknown, envelope: unknown) {
   const request = NativeObservationSchema.safeParse(input);
