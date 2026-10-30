@@ -17,7 +17,7 @@ const negativeSchema=z.object({kind:z.enum(['tenant','private-use','authority','
  operation:z.enum(['execution-proof-read','execution-proof-audit','execution-proof-consume','execution-proof-cancel','execution-proof-submit']),
  bodyFile:absolute,bodySha256:digest,credentialsEnvironmentVariable:envName.optional(),
  expectedStatus:z.union([z.literal(400),z.literal(404),z.literal(422)]),expectedPredicate:z.string().regex(/^[A-Z][A-Z0-9_]{1,159}$/)}).strict();
-const scopeSchema=z.object({phase:z.literal('Z4'),mode:z.literal('ordinary_disposable'),publicInputOnly:z.literal(true),
+export const scopeSchema=z.object({phase:z.literal('Z4'),mode:z.literal('ordinary_disposable'),publicInputOnly:z.literal(true),
  existingTargetOnly:z.literal(true),noInitialization:z.literal(true),noListeners:z.literal(true),noExternalEffects:z.literal(true),
  sourceCommit:commit,sourceTree:commit,ownedSourceDigest:digest,nativeSourceDigest:digest,nativeBinarySha256:digest,
  tenantId:uuid,principalId:uuid,targetReceiptFile:absolute,targetReceiptSha256:digest,
@@ -26,9 +26,9 @@ const scopeSchema=z.object({phase:z.literal('Z4'),mode:z.literal('ordinary_dispo
  grantedAt:z.string().datetime({offset:true}),expiresAt:z.string().datetime({offset:true}),
  cases:z.array(caseSchema).min(2).max(8),negatives:z.array(negativeSchema).min(8).max(16),
 }).strict();
-const manifestSchema=z.object({schema:z.literal('finnor.z4.replay-authority.v1'),fixture:z.literal(false),
+export const manifestSchema=z.object({schema:z.literal('finnor.z4.replay-authority.v1'),fixture:z.literal(false),
  scope:scopeSchema,grantReceiptPath:absolute,grantReceiptSha256:digest}).strict();
-const targetSchema=z.object({schema:z.literal('finnor.z4.existing-native-target.v1'),fixture:z.literal(false),
+export const targetSchema=z.object({schema:z.literal('finnor.z4.existing-native-target.v1'),fixture:z.literal(false),
  production:z.literal(false),initializationAlreadyComplete:z.literal(true),authProjectSame:z.literal(true),
  liveProvidersDisabled:z.literal(true),externalEffectsDisabled:z.literal(true),exclusiveHeavyWorker:z.literal(true),
  frontendOrigin:z.string().url(),backendOrigin:z.string().url(),authOrigin:z.string().url(),
