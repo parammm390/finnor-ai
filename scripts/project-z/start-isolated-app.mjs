@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { createHash } from "node:crypto"
+import { createHash, generateKeyPairSync } from "node:crypto"
 import { execFileSync, spawn } from "node:child_process"
 import { createRequire } from "node:module"
 import { chmodSync, createWriteStream, existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs"
@@ -43,7 +43,7 @@ appUrl.password = "finnor_app"
 const adminEnv = { ...isolated, RAYON_NUM_THREADS: "2", TSX_DISABLE_CACHE: "1" }
 // Opt-in phase profiles reach only the application processes, never migrate/seed.
 const profiles = new Set(process.argv.filter(arg => arg.startsWith("--profile=")).flatMap(arg => arg.slice(10).split(",")))
-assert.ok([...profiles].every(profile => ["z1", "z2", "x1", "z3", "z4", "x2", "z0"].includes(profile)), "Unknown launcher profile")
+assert.ok([...profiles].every(profile => ["z1", "z2", "x1", "z3", "z4", "x2", "z0", "z5"].includes(profile)), "Unknown launcher profile")
 // The Z3 runtime pins the producer bundle by digest itself; only its location is supplied here.
 const z3Producer = process.argv.find(arg => arg.startsWith("--z3-producer="))?.slice(14)
 assert.ok(!profiles.has("z3") || (z3Producer && isAbsolute(z3Producer) && realpathSync(z3Producer) === z3Producer),
@@ -89,6 +89,35 @@ const z4Stores = profiles.has("z4") || z1Chain ? ["models", "policies", "capsule
 // z0 is x1 + x2: the original X1 institution parent and the X2 application computation share one stack.
 const x2Profile = profiles.has("x2") || profiles.has("z0")
 const x2SecretRoot = join(state, "x2-secrets")
+// BEGIN z5-native
+// Root keys are created here so the application processes can verify, from their first request, configuration
+// that the scenario signs later (the S6 ledger and S8 lifecycle processes do not exist yet). Private halves stay
+// 0600 under the 0700 state directory; the application receives only public keys and the deterministic file paths.
+const z5Dir = join(state, "z5-private")
+const z5Env = {}
+if (profiles.has("z5")) {
+  mkdirSync(z5Dir, { mode: 0o700, recursive: true })
+  chmodSync(z5Dir, 0o700)
+  for (const [name, envName] of [["transport-root", "FINNOR_S6_OWNER_TRANSPORT_ROOT"], ["consumer-root", "FINNOR_Z5_S8_CONSUMER_ROOT"]]) {
+    const pair = generateKeyPairSync("ed25519")
+    writeFileSync(join(z5Dir, name + ".key"), pair.privateKey.export({ type: "pkcs8", format: "pem" }), { flag: "wx", mode: 0o600 })
+    z5Env[envName] = pair.publicKey.export({ type: "spki", format: "pem" }).toString()
+  }
+  // The S6 check-dispatch route signs its current-owner assessments with this key; the scenario's protected broker
+  // policy pins only the public half, which it derives from the 0600 file.
+  writeFileSync(join(z5Dir, "owner-signer.pem"), generateKeyPairSync("ed25519").privateKey.export({ type: "pkcs8", format: "pem" }), { flag: "wx", mode: 0o600 })
+  z5Env.FINNOR_S6_CURRENT_OWNER_SIGNER = join(z5Dir, "owner-signer.pem")
+  // The S3 fit route runs the pinned numerics inside the API process; the S3/S4 stores are shared with the
+  // S8 lifecycle process and the scenario-owned worker through this private environment file.
+  const z5Python = process.argv.find(arg => arg.startsWith("--z5-s3-python="))?.slice(15)
+  assert.ok(z5Python && isAbsolute(z5Python) && existsSync(z5Python), "Z5_PROFILE_REQUIRES_ABSOLUTE_S3_PYTHON")
+  for (const store of ["models", "policies"]) mkdirSync(join(state, "z5-stores", store), { mode: 0o700, recursive: true })
+  Object.assign(z5Env, { FINNOR_S3_PYTHON: z5Python, FINNOR_S3_MODEL_STORE: join(state, "z5-stores/models"),
+    FINNOR_S4_POLICY_STORE: join(state, "z5-stores/policies") })
+  Object.assign(z5Env, { FINNOR_Z5_PROFILE: "ordinary_disposable",
+    FINNOR_S6_OWNER_TRANSPORT_CONFIG: join(z5Dir, "transport.json"), FINNOR_Z5_S8_CONSUMER_CONFIG: join(z5Dir, "s8-consumer.json") })
+}
+// END z5-native
 const profileEnv = {
   ...(profiles.has("z1") ? { FINNOR_Z1_PROFILE: "ordinary_disposable", P3_GOVERNORS: "1" } : {}),
   // BEGIN z1 S3/S4 owner chain environment
@@ -108,6 +137,7 @@ const profileEnv = {
   ...(authTlsReceipt ? { SUPABASE_URL: authTlsReceipt.origin, NEXT_PUBLIC_SUPABASE_URL: authTlsReceipt.origin,
     NODE_EXTRA_CA_CERTS: authTlsReceipt.certificateFile } : {}),
   // END
+  ...z5Env, // z5-native
 }
 const appEnv = { ...adminEnv, ...profileEnv, DATABASE_URL: appUrl.toString(), CENTROPY_E2E_DB_ADMIN_URL: adminUrl.toString() }
 assert.equal(appEnv.FINNOR_ENVIRONMENT, x2Profile || profiles.has("z4") ? "staging" : "ordinary_disposable", "PROFILE_ENVIRONMENT_MISMATCH")

@@ -184,6 +184,7 @@ try {
     ...(noWorker ? ["--no-worker"] : []),
     ...(authTls ? ["--auth-tls-origin=" + receipt.authTls.origin, "--auth-tls-cert=" + tlsCertificate, "--auth-tls-state=" + tlsState] : []),
     ...(productionBuild ? ["--production-build"] : []), ...(z4Profile || z1Chain ? ["--s3-python=" + s3Python] : []),
+    ...(profiles?.split(",").includes("z5") ? ["--z5-s3-python=" + process.env.FINNOR_S3_PYTHON] : []), // z5-native
     ...(budgetMs ? ["--budget-ms=" + budgetMs] : [])],
     "READY_REAL_AUTHENTICATED_NATIVE_TARGET")
   assert.ok(await bounded(app.ready, productionBuild ? 3000000 : 1200000), "REAL_APPLICATION_READY_REQUIRED")
