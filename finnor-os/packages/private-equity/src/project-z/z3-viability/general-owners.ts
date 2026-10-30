@@ -18,7 +18,7 @@ import type { InstitutionApplicationOrigin } from "../../../../orchestration/src
 import { isGovernedChild, Z3_STEP_RECEIPT, type ApplicationSelectionRow } from "../../application-semantics/governed";
 import { assertViabilityClaimTx, viabilitySession } from "./store";
 import { hash, z3Fault, type ViabilityClaim } from "./contracts";
-import { parseGeneralNativeModel, type GeneralNativeModel, type NativeDomainField, type NativeDomainRegion,
+import { LATE_BOUND_MODEL_REVISION, parseGeneralNativeModel, type GeneralNativeModel, type NativeDomainField, type NativeDomainRegion,
   type NativeDomainValue, type NativeFacts, type NativeObservation, type NativeObserver } from "./general-model";
 
 export const GENERAL_S4_BINDING = "finnor.s4.z3-original-operation-binding.v2" as const;
@@ -88,7 +88,9 @@ async function originalRequest(ctx: PeMutationContext, request: GeneralOwnerRequ
 async function applicationContext(ctx: PeMutationContext, request: GeneralOwnerRequest,
   observer: Extract<NativeObserver, { kind: "APPLICATION_SNAPSHOT" }>, c: PoolClient) {
   // Resolve the actual original P1 responsibility, never a convenient session
-  // ID or an independently created application parent.
+  // ID or an independently created application parent. A late-bound observer
+  // names no identity: it is the single child continuing the original request.
+  const lateBound = observer.lateBinding === "ACCEPTED_ORIGIN_MODEL";
   const rows = (await c.query<{ id: string; origin: InstitutionApplicationOrigin }>(
     `SELECT s.id::text,a.body origin FROM finnor_os.application_semantics_sessions s
      JOIN finnor_os.application_semantics_artifacts a ON a.tenant_id=s.tenant_id
@@ -96,11 +98,11 @@ async function applicationContext(ctx: PeMutationContext, request: GeneralOwnerR
      WHERE s.tenant_id=$1 AND s.principal_id=$2 AND s.work_id=$3 AND s.work_input_id=$4
        AND a.body->>'schema'='finnor.z0.institution-application-origin.v1'
        AND a.body->'selector'->>'programId'=$5
-       AND a.body->'selector'->>'responsibilityIdentity'=$6
+       AND ($6::text IS NULL OR a.body->'selector'->>'responsibilityIdentity'=$6)
        AND s.id<>s.parent_id AND s.cancel_requested_at IS NULL
        AND s.status NOT IN('CANCELLED','FAILED') ORDER BY s.id LIMIT 2`,
     [ctx.auth.tenantId, principal(ctx), request.workId, request.workInputId,
-      request.parentRequestId, observer.responsibilityIdentity])).rows;
+      request.parentRequestId, lateBound ? null : observer.responsibilityIdentity ?? null])).rows;
   if (rows.length !== 1 || !rows[0]) z3Fault("Z3_NATIVE_UNIQUE_ORIGINAL_APPLICATION_OWNER_REQUIRED");
   const row = await app.applicationSession(ctx, rows[0].id, c, true);
   const originRef = row.parent.institutionalOriginRef;
@@ -110,8 +112,24 @@ async function applicationContext(ctx: PeMutationContext, request: GeneralOwnerR
     || !sameX2Ref(origin.originalReservationRef, request.reservationRef)
     || origin.workId !== request.workId || origin.workInputId !== request.workInputId
     || origin.selector.programId !== request.parentRequestId
-    || origin.selector.responsibilityIdentity !== observer.responsibilityIdentity) {
+    || !lateBound && origin.selector.responsibilityIdentity !== observer.responsibilityIdentity) {
     z3Fault("Z3_NATIVE_ORIGINAL_APPLICATION_LINEAGE_CHANGED");
+  }
+  if (lateBound) {
+    if (!row.model_ref || !row.check_ref) z3Fault("Z3_NATIVE_ORIGINAL_APPLICATION_LINEAGE_CHANGED");
+    const parent = await app.applicationSession(ctx, row.parent_id, c);
+    const accepted = (await c.query<{ model: ExperimentRef; check: ExperimentRef; identity: string }>(
+      `SELECT body->'detail'->'modelRef' model,body->'detail'->'checkRef' "check",
+         body->'detail'->>'responsibilityIdentity' identity
+       FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND principal_id=$2 AND session_id=$3
+         AND kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED' LIMIT 2`,
+      [ctx.auth.tenantId, principal(ctx), parent.id])).rows;
+    if (parent.status !== "MODEL_READY" || accepted.length !== 1 || !accepted[0]
+      || !sameX2Ref(accepted[0].model, row.model_ref) || !sameX2Ref(accepted[0].check, row.check_ref)
+      || accepted[0].identity !== origin.selector.responsibilityIdentity
+      || !sameX2Ref(parent.original_parent_ref, row.original_parent_ref)) {
+      z3Fault("Z3_NATIVE_ORIGINAL_APPLICATION_LINEAGE_CHANGED");
+    }
   }
   await app.currentApplicationWork(ctx, row, c);
   if (!row.model_ref || !row.check_ref) z3Fault("Z3_NATIVE_CURRENT_TYPED_APPLICATION_MODEL_REQUIRED");
@@ -153,10 +171,13 @@ async function applicationContext(ctx: PeMutationContext, request: GeneralOwnerR
   return { row, model, check, authority, execute, snapshot, snapshotRef: observations[0].ref };
 }
 
+const applicationRevision = (observer: Extract<NativeObserver, { kind: "APPLICATION_SNAPSHOT" }>, model: ExperimentRef) =>
+  observer.lateBinding === "ACCEPTED_ORIGIN_MODEL" ? LATE_BOUND_MODEL_REVISION : model;
+
 async function context(ctx: PeMutationContext, request: GeneralOwnerRequest, observer: NativeObserver, c: PoolClient) {
   if (observer.kind === "APPLICATION_SNAPSHOT") {
     const value = await applicationContext(ctx, request, observer, c);
-    return { kind: observer.kind, revision: value.model.ref,
+    return { kind: observer.kind, revision: applicationRevision(observer, value.model.ref),
       digest: hash({ model: value.model.ref, check: value.check.ref, authority: value.authority,
         originalParent: value.row.original_parent_ref }), application: value } as const;
   }
@@ -539,7 +560,7 @@ async function executableOutcome(ctx: PeMutationContext, request: GeneralOwnerRe
     z3Fault("Z3_NATIVE_OWNER_RECEIPT_ORIGINAL_BINDING_CHANGED");
   }
   await invocationCurrent(ctx, request, invocation, c);
-  const observation: NativeObservation = { observerId: target.observer.id, revision: target.value.model.ref,
+  const observation: NativeObservation = { observerId: target.observer.id, revision: applicationRevision(target.observer, target.value.model.ref),
     sourceRef: selection.receipt_ref,
     facts: { ...flattenState(receipt.afterState), $view: "OPERATION_RETURNED", resultKind: "EXECUTED_APPLICATION_STEP_READBACK",
       disposition: null, operationId: receipt.operationId },
