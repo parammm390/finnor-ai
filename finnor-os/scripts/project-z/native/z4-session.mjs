@@ -230,6 +230,27 @@ try {
     result.timing = { fitStartedAt: new Date(model.fitStartedAt).toISOString(), originalDeadlineAt: deadlineAt, modelValidUntil: new Date(model.validUntil).toISOString() }
     save()
 
+    // The fit pin must stay current for every later use of the model. This trace records, after each stage that could touch the root's
+    // world, the S1 view at the pin's own validAt, so a changed dependency digest is attributed to the exact reference that differs.
+    const worldTrace = []
+    let traceBaseline = null
+    const trace = async label => {
+      const entry = { label, at: new Date().toISOString() }
+      try {
+        const beliefs = await import("../../../packages/private-equity/src/enterprise-beliefs.ts")
+        const view = await beliefs.loadEnterpriseBeliefView(ctx, { root, validAt: model.pin.validAt })
+        const refs = view.experience.event.dependencyRefs
+        Object.assign(entry, { dependencyDigest: view.dependencyDigest, matchesFitPin: view.dependencyDigest === model.pin.dependencyDigest,
+          rightsRevision: view.rights.revision, coverage: view.coverage, sourceCutOwners: view.sourceCuts.map(cut => cut.owner), refCount: refs.length })
+        if (traceBaseline) Object.assign(entry, { added: refs.filter(ref => !traceBaseline.has(ref)), removed: [...traceBaseline].filter(ref => !refs.includes(ref)) })
+        else traceBaseline = new Set(refs)
+        entry.pinStatus = (await beliefs.validateBeliefViewPin(ctx, model.pin)).status
+      } catch (error) { entry.error = String(error?.message ?? error).slice(0, 300) }
+      worldTrace.push(entry)
+      writeFileSync(join(evidence, "world-trace.json"), JSON.stringify(worldTrace, null, 2) + "\n", { mode: 0o600 })
+    }
+    await trace("after-fit")
+
     // ---- S4 mandate/policy and S5 compute envelope, via the real owner routes ----
     const zeros = { cash: 0, execution: 0 }
     const policy = await step("s4-policy", async () => {
@@ -262,6 +283,7 @@ try {
       if (produced.status !== "POLICY_AVAILABLE" || !produced.policy) fail("S4_POLICY_NOT_AVAILABLE_" + JSON.stringify(produced).slice(0, 400))
       return { mandate, policy: produced.policy }
     })
+    await trace("after-s4-policy")
     await step("s5-compute-resource", async () => {
       const m = policy.mandate
       const resource = { schema: "finnor.allocation-resource.v1", resourceId: "execution", tenantId, ownerRef: m.businessOwnerRef, legalEntityRef: refOf(root.entityId, "S1"),
@@ -271,6 +293,7 @@ try {
         existingUse: ["0", "0", "0"], safetyMargin: "0", covenants: [], revoked: false, qualification: "AUTHENTICATED_OWNER_ASSERTION_UNADMITTED" }
       expectStatus(await call(API, "/api/allocations/resource", ownerToken, { resource }), 200, "S5_RESOURCE")
     })
+    await trace("after-s5-resource")
 
     // ---- original Work: intake, plan and (for some) submission through the real routes ----
     const horizon = 2
@@ -296,8 +319,10 @@ try {
       const intakeBody = baseRequest({ tag, ...parts })
       const intake = expectStatus(await call(API, "/api/company-brain/execution-proof-intake", ownerToken, intakeBody), 200, "INTAKE_" + tag)
       assert.match(intake.workId, /^[0-9a-f-]{36}$/)
+      await trace(`after-intake:${tag}`)
       const planBody = { ...intakeBody, workId: intake.workId, workInputId: intake.workInputId }
       const plan = expectStatus(await call(API, "/api/company-brain/execution-proof-plan", ownerToken, planBody), 200, "PLAN_" + tag)
+      await trace(`after-plan:${tag}`)
       return { ...planBody, workRevisionRef: plan.workRevisionRef }
     }
     const works = await step("original-work-intake-and-plan", async () => {
