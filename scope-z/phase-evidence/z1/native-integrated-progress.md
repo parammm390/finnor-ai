@@ -71,6 +71,27 @@ authority, qualification, 100× or activation is claimed here or by the run.
   with `PLAYWRIGHT_BROWSERS_PATH=/home/factory-user/repos/fzv-browsers` and the
   pinned `FINNOR_S3_PYTHON` exported.
 
+- `w1-native-02`: FAILED_RETAINED at the runner resource guard
+  (`UNCHANGED_RESOURCE_GUARD`, 3.82 GiB free < 4 GiB required on the remote). No
+  scenario executed. Infrastructure, not product: five concurrent workers had filled
+  the disk. Retained at `fzv-int-out/native/w1-native-02`.
+- `w1-native-03`: FAILED_RETAINED in 2 s at `REAL_AUTH_AND_DATABASE`. The pinned Auth
+  starter `realpathSync`s the parent of its state directory and this remote worktree
+  had never held a certification run, so `.centropy-certification` did not exist
+  (`ENOENT`). Fixed in the runner by creating the state root (commit 21289e0).
+- `w1-native-04` (head 21289e0): the scenario ran. Owner login, owner identity and the
+  Work/source seeding passed; the S3 fit and S4 policy artifacts were written under the
+  fresh organization root (so the chain-root revision of e5b2d1c works); the chain
+  failed at the S5 clearing with `S5_CLEARING_NOT_FEASIBLE` and no solver run
+  (`POST /api/allocations/clear 200 in 529ms`). Diagnosis from the owner source, not a
+  guess: the session had registered the four Z1 compute resources before the clearing,
+  and `clearNumericEnterprisePortfolio` requires the tenant's complete current resource
+  registry, each resource carrying the mandate's horizon and rights reference
+  (`enterprise-allocation.ts:119`, `allocation-contracts.ts:128`). Failure model C8-C10;
+  fixed in b4ca52e (compute resources registered after the S6 obligation; the clearing
+  status and reasons are retained). Evidence: `fzv-int-out/native/w1-native-04/`.
+- `w1-native-05` (head b4ca52e): queued behind the five successor workers' jobs.
+
 ## Known limits of this attempt
 
 - SOURCE_DEVELOPMENT flavor only; SEPARATELY_INSTALLED_DEVELOPMENT (pinned builds,
