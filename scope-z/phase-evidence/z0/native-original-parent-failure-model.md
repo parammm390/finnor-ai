@@ -1,0 +1,133 @@
+# Z0 native original-parent path: failure model, oracle and run plan
+
+Written before any launcher, fixture or scenario code of worker Z0 (run-name prefix `w0-`).
+It governs `scripts/project-z/start-isolated-app.mjs` (profile `x2`/`z0`),
+`finnor-os/scripts/project-z/native/x1-origin-fixture.mts` and
+`finnor-os/scripts/project-z/native/z0-session.mjs`.
+
+Nothing here is accepted, published, deployed or protected. The stack is the
+disposable native stack (pinned local Auth, embedded PostgreSQL on 55441, Next
+API 3101, Next frontend 3001, fake loopback application portal). No external
+contact, no new authority, signer, grant or funding.
+
+## 1. Chain under test (PRD 3.3, 4.3 item 4, 4.4 fixtures)
+
+```text
+authenticated owner (real local Auth password grant)
+ -> original Work, deal/workstream/party originals, owned source documents
+ -> authenticated HTTP: workforce profile, policy, institution-mandate,
+    institution-register-source, institution-sources, institution-submit
+ -> registered durable job run_x1_institution_compiler_v1 (worker, role finnor_worker)
+ -> S5 institution parent reservation + x1 compiler episode (real owner code),
+    checked artifact, p1_request institution_responsibility_v1, plan revision,
+    first P1 delivery to a quiescent WAITING/PARTIAL head
+ -> authenticated HTTP application-acquire carrying institutionalOrigin selector
+ -> job run_application_semantics_v1 (claim/fence) -> X2 computation against the
+    disposable fake portal -> independent checker -> retained model/check
+ -> S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED
+ -> enqueueProgram: ORIGINAL P1 continuation consumes the accepted model,
+    charging the ORIGINAL reservation (PREPARATION), or records the typed
+    direct fallback; original deadline; no new reservation
+ -> S6 boundary / independent observation or retained UNKNOWN (only if the
+    original frozen action is resolvable; otherwise recorded as not reached)
+ -> mounted Work readback
+```
+
+Independent oracle sources (never the candidate/model output):
+
+* O-DB: rows read with the admin connection of the throwaway database that the
+  owner code itself does not use for the decision (`s5_reservations`,
+  `s5_reservation_origins`, `s5_governed_resource_charges`, `x1_compiler_*`,
+  `p1_requests`, `p1_episodes`, `jobs`, `job_delivery_attempts`,
+  `application_semantics_*`).
+* O-PORTAL: the fake application portal's own journal (`fixtures/store.mjs`
+  snapshot): sequence/digest before and after. Any portal write or request
+  that the original ledger does not account for is a failure.
+* O-INPUT: values recorded by the scenario BEFORE the owner call (owner id,
+  tenant id, deadline literal, resource amounts, source byte hashes, expected
+  object ids).
+* O-AUTH: HTTP identity from the real Auth token (`/api/me`), compared to the
+  launcher receipt owner binding.
+
+## 2. Failure cases with independent expected outcome
+
+Legend: R = must be REFUSED by the product with the typed code listed;
+P = must PASS with the stated observable; N = not reachable on this stack
+(recorded NOT_RUN with reason, never PASS).
+
+### A. The parent itself can be faked or wrong
+
+| # | How it can fail or be faked | Independent expected outcome / oracle |
+|---|---|---|
+| A1 | Parent rows built by hand-written INSERTs of owner rows | The fixture library only calls owner functions (`createDeal`, `receiveWork`, `createDocument`, `putAllocationResource`) and authenticated HTTP owner routes; the compiler/episode/reservation/p1 rows must exist with `created_by` the worker job and an S5 `s5_reservation_origins` row of schema `finnor.s5.institution-reservation.v1` (O-DB). The only admin SQL is the disposable `compute_resource_policies('native:p4')` capacity row every product e2e uses. A scan of the library for `INSERT INTO finnor_os.(x1_|p1_|s5_|work_plan)` must find none. |
+| A2 | Planner-created request mistaken for X1 | Parent selector must come from a `p1_requests` row whose `request->'institution'->>'compilerRequestId'` equals the compiler request id, with `plan_revision_id` of an active revision of the same Work. An ordinary planner run (no mandate) yields no such row; the scenario asserts the count of `institution_responsibility_v1` rows for a plain Work is 0 and acquisition with that Work's ids is refused `Z0_CURRENT_ORIGINAL_X1_OWNER_REQUIRED`. |
+| A3 | New reservation instead of the original | Count of `s5_reservations` rows with origin schema institution-reservation for the tenant is constant (1 per compiler episode) before and after acquisition + continuation; the session `reservation_ref` equals `x1_compiler_episodes.parent_reservation` (O-DB); certificate occupation = `EXISTING_ORIGINAL_X1_RESERVATION_NO_NEW_FUNDING`. |
+| A4 | Deadline or budget reset | session `deadline_at` <= episode `original_deadline`; request with deadline later than the original is R `Z0_ORIGINAL_DEADLINE_EXHAUSTED_OR_EXTENDED`; request with a demand above the original remaining is R `Z0_ORIGINAL_BUDGET_EXHAUSTED`; remaining = envelope limit minus `s5_governed_resource_charges` sum, computed from O-DB, equals the projection. Sum of charges never exceeds the original envelope limit. |
+| A5 | Wrong Work or stale work input digest | acquire naming another Work -> R `Z0_CURRENT_ORIGINAL_X1_OWNER_REQUIRED`; appended newer work input -> R `Z0_EXACT_ORIGINAL_X1_INPUT_REQUIRED` or `X2_CURRENT_ACTOR_OR_WORK_INPUT_CHANGED`; session `work_input_id` equals the compiler row's. |
+| A6 | Wrong responsible principal | selector responsibilityIdentity not in the checked duties -> R `Z0_CHECKED_ORIGINAL_RESPONSIBILITY_REQUIRED`; a second owner (other principal) calling the same selector -> R (404 `PERMITTED_CONTEXT_UNAVAILABLE` or the owner refusal), zero sessions created for the other principal. |
+| A7 | Stale compiler head or generation | after a newer compiler revision the old selector is R `Z0_ORIGINAL_INSTITUTION_BINDING_CHANGED` / `X1_COMPILER_*`; no session. (Only attempted if the owner API permits creating a newer revision without new authority; otherwise N.) |
+| A8 | Original delivery not quiescent | a queued/running `run_harness_program_v1` for the programme at acquisition time -> R `Z0_ORIGINAL_P1_DELIVERY_MUST_BE_QUIESCENT`. Observed with the worker stopped right after the compiler submit (job still queued). |
+| A9 | Pending application subcomputation then a second acquisition | second acquisition while the first session is non-terminal -> R `Z0_ORIGINAL_APPLICATION_SUBCOMPUTATION_PENDING`; exactly one session and one root consumption exist (O-DB). |
+| A10 | Standalone reset of an X1 Work | acquire without `institutionalOrigin` on the X1 Work -> R `Z0_X1_WORK_CANNOT_RESET_AS_STANDALONE_X2`; zero sessions. |
+| A11 | New-parent budget reset | A second acquisition after the first one is terminal that asks for a demand equal to the full original envelope again -> R `Z0_ORIGINAL_BUDGET_EXHAUSTED` once the original charges exceed the remaining. A fresh parent for the same Work is impossible (A10). Observable: no new `s5_reservations` row. |
+
+### B. Model use and acceptance
+
+| # | How it can fail | Expected |
+|---|---|---|
+| B1 | Model used without S4 acceptance | The continuation selects only artifacts of `S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED` events; with a session that is MODEL_READY but whose acceptance event is absent (observed by cancelling before publication) there is zero `P1_ORIGINAL_APPLICATION_MODEL_MATERIALIZED` trace. |
+| B2 | Double use | A second delivery of the same continuation does not add a second PREPARATION charge for the same physical invocation, and a repeated model-consumed trace is idempotent (O-DB: charge keys unique, trace count). |
+| B3 | Candidate turned into verified success | session status MODEL_READY, never COMPLETED; `learnedModelCompletesResponsibility=false`; the responsibility is not in `observedPostconditions` unless the independent canonical observer says so. |
+| B4 | Model computes an argument the owner never takes | `Z0_MODEL_CANNOT_REPRESENT_COMPLETE_FROZEN_PAYLOAD` fallback is recorded as `P1_ORIGINAL_APPLICATION_DIRECT_FALLBACK`; it is reported as fallback, not as model use. |
+| B5 | Portal changed by the learner | O-PORTAL sequence/digest after acquisition equals the digest accounted by the ledger (no unexpected write). |
+
+### C. Recovery and races (PRD 3.5, 4.4)
+
+| # | Case | Expected |
+|---|---|---|
+| C1 | Lost provider response + physical SIGKILL of the worker after durable acceptance at the ambiguous request boundary | After restart: same session id, same `original_parent_ref`, same `reservation_ref`, same deadline; the request is reconciled by observation, never re-sent (portal journal sequence unchanged except by the original single send); S6 obligation/effect identity unchanged; if observation cannot establish the outcome the status stays UNKNOWN/`reconciliation_required`. A single physical kill is recorded with the exit signal SIGKILL of the exact pid. |
+| C2 | Duplicate delivery of the same job after restart | claim fence strictly increases, `job_delivery_attempts` shows the second claim, zero second possible-egress request for the same effect identity. |
+| C3 | Restart with cancellation | cancellation does not release or compensate: `resourceReleaseGranted=false`, reservation not RELEASED, UNKNOWN retained. |
+| C4 | Claim/accept/use revocation | Revoking the owner's source grant / mandate / profile at claim, at acceptance and at original-P1 use stops only the affected session (typed R), an unrelated second Work's session keeps running (O-DB status). |
+| C5 | Cross-tenant/other principal | Calls by a second user in the same tenant or another tenant read nothing (404 `PERMITTED_CONTEXT_UNAVAILABLE`), create nothing. |
+| C6 | UNKNOWN lost on restart | An S5 consumption in UNKNOWN_OUTCOME stays UNKNOWN across worker restart; continuation refuses with `Z0_ORIGINAL_S6_UNCERTAINTY_MUST_BE_OBSERVED` until observed. |
+
+### D. Mounted Work (P2)
+
+| # | Case | Expected |
+|---|---|---|
+| D1 | Reload keeps Work and the institution session projection | same ids after `page.reload()`. |
+| D2 | Logout then new sign-in of a different principal | the previous principal's Work text/ids are absent from the DOM and from `/api/centropy/*` responses; delayed old-principal response does not repopulate. |
+| D3 | Token refresh | the Work remains readable; a request with the revoked old token is 401. |
+| D4 | Offline/reconnect | no state change in O-DB while offline; no candidate presented as verified. |
+Cases that cannot be shown through the mounted UI because the UI has no control
+are recorded NOT_RUN with the missing control named.
+
+## 3. Launcher profile failures (x2/z0)
+
+* Existing profiles `z1,z2,x1,z3` must stay byte-identical in effect: compare
+  `profileEnv` objects for each existing profile before and after (the scenario
+  receipt records `profileEnvNames`; the pre-change env literal is the oracle).
+* Assertion `FINNOR_ENVIRONMENT=ordinary_disposable` must stay for the Auth
+  state file. The application environment may differ only when the `x2` profile
+  is requested and then must equal exactly `staging`; any other combination
+  fails closed. Profile `x2` must set `FINNOR_X2_PROFILE=ordinary_disposable`,
+  `FINNOR_X2_SOURCE_ROOT=<repo root>`, `FINNOR_X2_DISPOSABLE_SECRET_ROOT=<state>/x2-secrets` (mode 0700, owned by the launcher uid).
+* Failure signals: `X2_PROTECTED_APPLICATION_DOMAIN_UNADMITTED`,
+  `Disposable application secret custody is invalid`, application refusing to
+  start under `staging` (Next dev or Sentry/production gates), API 503.
+
+## 4. Environment/transport failures (never PASS)
+
+Port busy, MemAvailable < 4 GiB, Auth install failure, cold-compile 504 from the
+proxy, job lease expiry before the scenario polls, worker unable to claim
+(role). Each is reported as a stack/transport failure with the log name; the
+immutable run name is never reused.
+
+## 5. Evidence artifact (each run)
+
+`/home/factory-user/repos/fzv-int-out/native/<run>/scenario-01/z0-session.json`
+containing inputs, steps, the O-* observations, step-by-step expected vs
+observed, exit codes, source commit, scenario sha256; private logs stay in
+`*.private.*` files at mode 0600. Failures are kept and cited; no run is
+re-labelled.
