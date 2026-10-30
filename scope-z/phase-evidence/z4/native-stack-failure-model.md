@@ -74,3 +74,22 @@ the component under test. A run that hits a case reports the predicate named her
 | F2 | The worker is not exclusive (stock worker also running). | The z4 run uses `--no-worker`; the scenario starts exactly one worker and records it. | Process list in evidence. |
 | F3 | A failed run is retried in place. | Never; every run has a new immutable name and failed runs are kept. | Run directory names. |
 | F4 | A PASS is claimed from the transport-only scenario. | It reports `transport_only` and nothing else. | Result file field. |
+
+## G. World-pin currentness across the session (added after w4-seed-05)
+
+Observed in w4-seed-05: the S3 fit succeeded, the first original Work (`s3-producer-recovery`) completed intake and plan, and the intake of the
+second Work was refused because the model's S1 pin (dependencyDigest `2822127f...`) no longer equalled the fresh view at the pin's own validAt
+(`a648b172...`) with the same rightsRevision (43) and canonicalStatus COMPLETE. S3's revalidation is not weakened; the session has to be shaped so
+the pin is current wherever the product demands it.
+
+| # | Candidate cause of a changed dependency digest after the fit | Independent expected result | Oracle |
+|---|---|---|---|
+| G1 | The first original Work's `work_entity_link` to the root enters the root's canonical world (world-state `work_entity_link` history) | The trace shows exactly one added dependency reference of owner `work_entity_link` right after the first intake | Reference difference between consecutive views loaded at the same validAt |
+| G2 | S4 synthesis or S5 resource registration writes a canonical row connected to the root | The trace changes after `after-s4-policy` / `after-s5-resource` and names the added reference | Same |
+| G3 | Plan selection / objective start writes versioned canonical rows connected to the root | The trace changes after `after-plan:*` | Same |
+| G4 | Clock effect: coverage or source-cut fields that depend on request time rather than a revision | The digest changes with no added/removed reference; the coverage or source-cut owners differ | Trace `coverage` and `sourceCutOwners` compared field by field |
+| G5 | A reused root is shared by several Works so one Work's mutation stales the pin used by the next | A per-Work root removes the cross-Work effect; a mutation caused by the Work's own link remains and is reported, not hidden | Trace per root |
+
+Rules for the fix: no edit of `enterprise-beliefs.ts`, `enterprise-interventions.ts` or the S3/S4 gates; no pin refreshed by hand; any re-fit is a
+real `/api/interventions/fit` call whose new model reference is the one named by the Work it serves; a Work whose model is stale at submit is
+reported as a product defect with the trace, never patched around. Expected values (the public-case finals) never depend on this stage.
