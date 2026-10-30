@@ -118,6 +118,13 @@ export async function guardTarget() {
         "ACTUAL_TARGET_ENVIRONMENT_MUST_DISABLE_BYPASSES_AND_EXTERNAL_PROVIDERS");
       need(environment.FINNOR_Z1_WORKER_DATABASE_URL === undefined &&
         environment.DATABASE_URL !== process.env.FINNOR_Z1_WORKER_DATABASE_URL, "APPLICATION_PROCESSES_MUST_NOT_HOLD_THE_WORKER_DATABASE_ROLE");
+      // The flavor must describe what is actually listening: an installed target runs the compiled build under the
+      // pinned build id, a source target never runs a compiled build.
+      const compiled = environment.NODE_ENV === "production";
+      const pinned = expected.port === Number(front.port) ? target.builds?.frontend : target.builds?.api;
+      need(target.flavor === "SEPARATELY_INSTALLED_DEVELOPMENT"
+        ? compiled && typeof pinned?.id === "string" && environment.FINNOR_BUILD_ID === pinned.id : !compiled,
+      "TARGET_FLAVOR_MUST_MATCH_THE_LISTENER_BUILD_MODE");
       if (expected.port === Number(front.port)) need(environment.NEXT_PUBLIC_SUPABASE_URL &&
         new URL(environment.NEXT_PUBLIC_SUPABASE_URL).origin === target.authOrigin &&
         (environment.FINNOR_OS_API_URL ?? environment.NEXT_PUBLIC_OS_API_URL)?.replace(/\/$/, "") === api.origin,
@@ -132,7 +139,8 @@ export async function guardTarget() {
   for (const port of [Number(front.port), Number(api.port), Number(database.port)])
     need(target.processes.some(process => process.port === port), "COMPLETE_OWNED_TARGET_PORT_CUSTODY_REQUIRED");
   if (target.flavor === "SEPARATELY_INSTALLED_DEVELOPMENT") {
-    need(target.builds?.frontend?.path === ".next-z1-install/BUILD_ID" &&
+    // `.next-z1-install` is the Z1 package build; `.next` is the launcher's own production build in a cold checkout.
+    need([".next-z1-install/BUILD_ID", ".next/BUILD_ID"].includes(target.builds?.frontend?.path) &&
       target.builds?.api?.path === "finnor-os/apps/api/.next/BUILD_ID", "EXPLICIT_SEPARATE_INSTALLED_BUILD_IDENTITIES_REQUIRED");
     for (const build of [target.builds.frontend, target.builds.api])
       need(typeof build.id === "string" && build.id.length > 0 && build.id.length <= 256 &&

@@ -396,7 +396,14 @@ try {
     const { chromium } = require("@playwright/test")
     const processes = []
     for (const port of [3001, 3101, Number(database.port)]) processes.push(await listenerProcessIdentity(port))
-    const target = { schema: "finnor.z1.authorized-native-target.v1", flavor: "SOURCE_DEVELOPMENT", repository,
+    // The flavor is what the launcher actually serves (`next start` of its own production build), not a caller label.
+    const compiled = appState.productionBuild
+    if (compiled) assert.ok(compiled.requested === true && compiled.stage === "SERVING_NEXT_START" &&
+      typeof compiled.buildId === "string" && compiled.buildId.length > 0, "INSTALLED_FLAVOR_REQUIRES_THE_SERVED_PRODUCTION_BUILD")
+    const target = { schema: "finnor.z1.authorized-native-target.v1",
+      flavor: compiled ? "SEPARATELY_INSTALLED_DEVELOPMENT" : "SOURCE_DEVELOPMENT", repository,
+      ...(compiled ? { builds: { frontend: { path: ".next/BUILD_ID", id: compiled.buildId },
+        api: { path: "finnor-os/apps/api/.next/BUILD_ID", id: compiled.buildId } } } : {}),
       frontend: FRONTEND + "/", api: API + "/", authOrigin: new URL(privateEnv.SUPABASE_URL).origin,
       database: { name: database.pathname.slice(1), port: Number(database.port),
         role: decodeURIComponent(database.username), workerRole: decodeURIComponent(workerDatabase.username) },

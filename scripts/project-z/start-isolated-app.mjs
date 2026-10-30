@@ -89,6 +89,10 @@ const profileEnv = {
   // BEGIN z1 S3/S4 owner chain environment
   ...(z1Chain ? { FINNOR_S3_MODEL_STORE: z4Stores[0], FINNOR_S4_POLICY_STORE: z4Stores[1], FINNOR_S3_PYTHON: s3Python } : {}),
   // END
+  // BEGIN z1 installed development: a compiled Z1 API refuses its native routes without this, and the frontend
+  // content security policy reads it when the frontend is built, so the build and the listener must share it.
+  ...(profiles.has("z1") && productionBuild ? { FINNOR_Z1_INSTALLED_DEVELOPMENT: "1" } : {}),
+  // END
   ...(profiles.has("z2") ? { FINNOR_Z2_DISPOSABLE_E2E: "1", FINNOR_Z2_CONVERGED_DEVELOPMENT: "1",
     FINNOR_Y1_PROFILE: "ordinary_disposable", FINNOR_Y3_PROFILE: "ordinary_disposable" } : {}),
   ...(profiles.has("x1") ? { FINNOR_P4_PROFILE: "ordinary_disposable" } : {}),

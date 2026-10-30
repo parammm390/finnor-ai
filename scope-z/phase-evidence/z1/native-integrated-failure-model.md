@@ -81,6 +81,24 @@ reported as a limitation, never as a pass.
 | G2 | Host guards are skipped (memory, disk, ports), so a failed run leaves listeners that break the next one. | Preflight requires free ports, at least 4 GiB available memory and at least 6 GiB free disk. After the run the ports are checked again and any survivor is reported. |
 | G3 | The evidence cannot be rerun. | Evidence names `HEAD`, tree, archive and diff digests, Node, Python and Playwright versions, lock hashes, browser digest, the exact command, the guard report, per-stage independent expected values and observations, physical exits, costs marked UNKNOWN where unmeasured, and the failed attempts. |
 
+## H. Separately installed flavor (cold local clone, launcher production build)
+
+The same episode, driver and oracle run a second time against a cold checkout of the exact committed source
+(full local clone, its own two locked `npm ci` installs, no donor modules, no pre-existing `.next`), built by the
+launcher's own `--production-build` pass and served by `next start`. It gets its own state; the source flavor
+result is never reused as an installed result.
+
+| ID | Failure | Closed by |
+|---|---|---|
+| H1 | The compiled API refuses every Z1 native route because `developmentOnly()` demands `FINNOR_Z1_INSTALLED_DEVELOPMENT=1` whenever `NODE_ENV=production`. The episode would then show refusals, not owner use. | The launcher adds that variable only for the `z1` profile together with `--production-build`. The guard already requires it on the API listener. A run is not installed unless the listener environment shows `NODE_ENV=production` and the variable. |
+| H2 | The compiled frontend's content security policy omits the loopback http Auth origin (it is computed from the environment when the frontend is built), so the real browser login is blocked before any mounted action. | The same variable is part of the profile environment that feeds both the build and the server, so they agree. A blocked login stays a recorded failed attempt, not a skipped stage. |
+| H3 | The guard pins the frontend build file to `.next-z1-install/BUILD_ID`, which the launcher never writes. The installed flavor then refuses before any action, or the pin is loosened to anything. | Exactly two frontend paths are accepted (`.next-z1-install/BUILD_ID` from the Z1 package build, `.next/BUILD_ID` from the launcher build). The API path stays exact. Each id must still equal the file bytes. Nothing else is relaxed. |
+| H4 | The flavor is mislabelled: a `next dev` target recorded as installed, or a production target recorded as source. | The session derives the flavor from the launcher receipt (`productionBuild.stage === "SERVING_NEXT_START"`) and the guard adds a check that the installed flavor's listeners run `NODE_ENV=production` with `FINNOR_BUILD_ID` equal to the pinned id, and that the source flavor's listeners do not. |
+| H5 | The installed target borrows a donor: node_modules linked from another checkout, a pre-existing build directory, or an install that did not use the lock. | The cold clone script runs both `npm ci` in the clone, records the lock hashes and the install logs, verifies that no `node_modules` path resolves outside the clone, and refuses a pre-existing `.next`. The launcher already refuses a donor `next` binary and a pre-existing build directory. |
+| H6 | The stamp's declared delta (`git diff --binary <integrated base> HEAD`) needs the base commit's objects, so a shallow clone fails with `DECLARED_GIT_IDENTITY_REQUIRED`. | The clone is a full local clone of the owned checkout. No network Git is used. |
+| H7 | The launcher's production build runs out of memory (the API build did once) and is reported as a product failure, or is silently retried. | Builds inherit the launcher's 4096 MiB heap and run under the shared heavy lock. A killed build is a retained failure with its logs. The same run name is never reused. |
+| H8 | A behaviour that only worked under `next dev` (lazy environment reads, compile-on-demand, relaxed headers) fails under `next start`. | Not predictable. Any failure is diagnosed from the retained logs and recorded as the next entry here before the fix. No timeout, header or environment is loosened to pass. |
+
 ## Expected observations for a pass
 
 Seven stages (INITIAL, INSERT, RETRACT, OBJECTIVE_EDIT, WITHDRAW, REACTIVATE, REVOKE) over three

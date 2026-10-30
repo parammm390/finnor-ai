@@ -276,8 +276,10 @@ The target manifest has schema `finnor.z1.authorized-native-target.v1` and exact
   (raw `/proc/PID/cmdline`), and absolute `cwd`. Driver checks every actual
   loopback listening socket belongs to that exact process.
 - Separately installed flavor additionally pins `builds.frontend.path` to
-  `.next-z1-install/BUILD_ID` and `builds.api.path` to
-  `finnor-os/apps/api/.next/BUILD_ID`, each with the actual `id`.
+  `.next-z1-install/BUILD_ID` (the Z1 package build) or `.next/BUILD_ID` (the launcher's own production build in a
+  cold checkout) and `builds.api.path` to `finnor-os/apps/api/.next/BUILD_ID`, each with the actual `id`. The
+  frontend and API listeners must run `NODE_ENV=production` with `FINNOR_BUILD_ID` equal to the pinned `id`; a
+  source-flavor target must not run a compiled build.
 
 Supply locally, never print or archive values:
 `FINNOR_Z1_TARGET_MANIFEST`, `FINNOR_Z1_TARGET_SHA256`,
