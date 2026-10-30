@@ -15,6 +15,7 @@ const state = process.env.FINNOR_NATIVE_STATE, out = process.env.FINNOR_NATIVE_E
   pack = process.env.FINNOR_Z2_PACK_ROOT, installReportPath = process.env.FINNOR_Z2_INSTALL_REPORT,
   issuer = process.env.FINNOR_Z2_AUTH_ISSUER, spkiBase64 = process.env.FINNOR_Z2_AUTH_SPKI_BASE64;
 assert(state && out && pack && installReportPath && issuer && spkiBase64, "Z2_SESSION_ENVIRONMENT_REQUIRED");
+await mkdir(out, { recursive: true, mode: 0o700 });
 const isolated = JSON.parse(readFileSync(join(state, "environment.private.json"), "utf8"));
 const appEnvFile = JSON.parse(readFileSync(join(state, "native-environment-01.private.json"), "utf8"));
 const appState = JSON.parse(readFileSync(join(state, "native-app-state.json"), "utf8"));
