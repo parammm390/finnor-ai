@@ -13,15 +13,19 @@ import { executeApplicationOwnerOperation } from "../program-synthesis/owners";
 import { assertApplicationModelUse } from "./checker";
 import { applicationGoalEstablished } from "./composition";
 import { ApplicationExecuteSchema } from "./native-contracts";
-import { applicationDatabaseDiagnostic, applicationFailureReason, x2Digest, x2Fault, x2Ref } from "./contracts";
+import { applicationDatabaseDiagnostic, applicationFailureReason, parseApplicationComposition, x2Digest, x2Fault, x2Ref } from "./contracts";
 import { assertApplicationClaim } from "./obligations";
 import { applicationArtifact, applicationEvent, applicationSession, canonicalApplicationActor,
   currentApplicationWork, retainApplicationArtifact, type ApplicationSessionRow } from "./store";
 import { initializeApplicationValidities } from "./validity";
-import { NativeApplicationRuntime } from "./runtime";
+import { continueNativeApplicationComposition, NativeApplicationRuntime } from "./runtime";
+import { beginSelectionConsumption, isGovernedChild, retainSelectionReceipt, settleSelectionFailure,
+  staleLiveSelections } from "./governed";
+import { executeGovernedApplicationStep } from "../program-synthesis/owners";
 
 const PayloadSchema = z.object({ tenantId: z.string().uuid(), principalId: z.string().uuid(),
-  sessionId: z.string().uuid(), generation: z.number().int().positive().safe() }).strict();
+  sessionId: z.string().uuid(), generation: z.number().int().positive().safe(),
+  selectionId: z.string().uuid().optional() }).strict();
 const terminal = new Set(["COMPLETED", "MODEL_READY"]);
 const stopped = new Set(["CANCELLED", "FAILED", "STALE", "BLOCKED"]);
 async function claim(ctx: PeMutationContext, row: ApplicationSessionRow, execution: Readonly<JobExecutionContext>) {
@@ -141,6 +145,45 @@ async function publishAssignment(ctx: PeMutationContext, row: ApplicationSession
   });
 }
 
+/** A governed origin child is inert without a live Z3 selection. With one it
+ * performs exactly that canonical step, retains the owner receipt and parks
+ * again. The Work is never completed here: the original P1 owns it. */
+async function runGovernedChild(ctx: PeMutationContext, start: ApplicationSessionRow, execution: Readonly<JobExecutionContext>,
+  runtime: NativeApplicationRuntime, selectionId: string | undefined) {
+  let row = start;
+  const park = async () => {
+    if (row.status !== "PLANNING") row = await changeStatus(ctx, row, execution, "PLANNING", null);
+  };
+  if (!selectionId) {
+    await park();
+    await applicationEvent(ctx, row, "Z3_GOVERNED_CHILD_PARKED_FOR_SELECTION", { compositionRef: row.composition_ref,
+      s5ConsumptionS6S8OrWire: false, originalDeadline: row.parent.deadlineAt, newAllowance: false });
+    return;
+  }
+  let selection = await beginSelectionConsumption(ctx, row, selectionId, execution);
+  if (selection.status !== "CONSUMING") { await park(); return; }
+  row = await changeStatus(ctx, row, execution, "EXECUTING", null);
+  runtime.adoptCanonicalSession(row);
+  const after = await executeGovernedApplicationStep(ctx, { sessionId: row.id, compositionRef: row.composition_ref!,
+    stepId: selection.step_id }, execution, runtime);
+  selection = await retainSelectionReceipt(ctx, row, selection, after, execution);
+  const composition = parseApplicationComposition({ ...await applicationArtifact<object>(ctx, row.composition_ref!),
+    ref: row.composition_ref! });
+  if (selection.step_index === composition.steps.length - 1) {
+    try {
+      const final = await continueNativeApplicationComposition(ctx, row.id, composition, execution, runtime);
+      row = await changeStatus(ctx, row, execution, "COMPLETED", null, { reason: "Z3_GOVERNED_GOAL_INDEPENDENTLY_ESTABLISHED",
+        finalObservationRef: x2Ref("COMPUTER", "application-observation", final), workTransition: "NOT_PERFORMED_ORIGINAL_P1_OWNS_COMPLETION" });
+      return;
+    } catch (error) {
+      if (applicationFailureReason(error) !== "X2_INDEPENDENT_BUSINESS_GOAL_NOT_ESTABLISHED") throw error;
+      await applicationEvent(ctx, row, "Z3_GOVERNED_COMPOSITION_EXHAUSTED_GOAL_NOT_ESTABLISHED", {
+        selectionId, goalSuccess: false, newAllowance: false });
+    }
+  }
+  await park();
+}
+
 export async function runApplicationSemanticsJob(payload: Record<string, unknown>, actual?: Readonly<JobExecutionContext>): Promise<void> {
   const input = PayloadSchema.parse(payload);
   const claimFence = Number(actual?.claimFence);
@@ -171,6 +214,8 @@ export async function runApplicationSemanticsJob(payload: Record<string, unknown
         { reason: row.cancel_requested_at ? "X2_ORIGINAL_CANCELLED" : "X2_ORIGINAL_BUSINESS_DEADLINE_EXPIRED",
           resourcesReleased: false, newAllowance: false });
       await tx(ctx, c => returnInstitutionApplicationToOriginal(ctx, row, c));
+      if (isGovernedChild(row)) await staleLiveSelections(ctx, row.id,
+        row.cancel_requested_at ? "X2_ORIGINAL_CANCELLED" : "X2_ORIGINAL_BUSINESS_DEADLINE_EXPIRED");
       await applicationEvent(ctx, row, "STOPPED_ORIGINAL_OBSERVATION_FALLBACK", { recovered, unresolved,
         callee: "S6:NativeApplicationRuntime.reconcilePossibleRequests", actualMutations: 0, newAllowance: false });
       return;
@@ -210,6 +255,10 @@ export async function runApplicationSemanticsJob(payload: Record<string, unknown
           [current.tenant_id, current.id, JSON.stringify(selected.reference)])).rows[0] ?? await applicationSession(ctx, current.id, c);
       });
     }
+    if (isGovernedChild(row)) {
+      await runGovernedChild(ctx, row, execution, runtime, input.selectionId);
+      return;
+    }
     row = await changeStatus(ctx, row, execution, "EXECUTING", "executing");
     runtime.adoptCanonicalSession(row);
     const continued = await executeApplicationOwnerOperation(ctx, { schema: "finnor.p1.application-owner-operation.v1",
@@ -237,6 +286,7 @@ export async function runApplicationSemanticsJob(payload: Record<string, unknown
       "SELECT id FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND principal_id=$2 AND session_id=$3"
       + " AND possible_egress AND status NOT IN ('VERIFIED','DENIED') LIMIT 1", [row.tenant_id, row.principal_id, row.id])).rowCount, true);
     const status = possible ? "UNKNOWN" : /DRIFT|CHANGED|CURRENT|VALIDITY|INTERFERENCE/.test(reason) ? "STALE" : "FAILED";
+    if (input.selectionId) await settleSelectionFailure(ctx, row.id, input.selectionId, reason, status === "STALE");
     await changeStatus(ctx, current, execution, status, possible ? "waiting" : "blocked", { reason,
       fallback: possible ? "EXPLICIT_ORIGINAL_REQUEST_OBSERVATION_RESUME" : "NO_ADMITTED_FORWARD_REPAIR" });
   } finally {
