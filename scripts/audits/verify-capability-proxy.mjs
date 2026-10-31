@@ -91,6 +91,8 @@ async function check(id, method, path, predicate, expected, body = "{}", headers
 }
 try {
   await check("existing-company-brain-root-operation", "POST", "company-brain/roots", row => row.status === 200 && row.upstreamRequests.length === 1 && row.upstreamRequests[0].authorization === "Bearer DISPOSABLE_AUDIT_CALLER", "Existing operation forwards exactly once with caller identity")
+  const restrictedFamilies = new Set(['experiments', 'economic-outcomes'])
+  const restrictedPaths = new Set(['allocations/coalition-release', 'obligations/coalition-consent'])
   const families = ['experiments', 'interventions', 'allocations', 'obligations', 'economic-outcomes', 'elicitation-protocols']
   for (const family of families) {
     const operationSource = family === 'elicitation-protocols'
@@ -109,13 +111,19 @@ try {
     }
     visit(parsed)
     assert(operations.size > 0, `No actual operation cases found for ${family}`)
-    for (const operation of operations) await check(`named-operation-${family}/${operation}`, 'POST', `${family}/${operation}`, row => row.status === 200 && row.upstreamRequests.length === 1, 'Actual declared named operation reaches upstream exactly once')
-    await check(`named-operation-requires-caller-${family}`, 'POST', `${family}/${[...operations][0]}`, row => row.status === 401 && row.upstreamRequests.length === 0, 'Known operations require the caller bearer; no service-identity substitution', '{}', { authorization: '' })
+    for (const operation of operations) {
+      const path = `${family}/${operation}`
+      const restricted = restrictedFamilies.has(family) || restrictedPaths.has(path)
+      await check(`named-operation-${path}`, 'POST', path,
+        row => restricted ? row.status === 404 && row.upstreamRequests.length === 0 : row.status === 200 && row.upstreamRequests.length === 1,
+        restricted ? 'Current admin-only operation stays outside the product proxy' : 'Actual declared product operation reaches upstream exactly once')
+    }
+    await check(`named-operation-requires-caller-${family}`, 'POST', `${family}/${[...operations][0]}`, row => row.status === (restrictedFamilies.has(family) ? 404 : 401) && row.upstreamRequests.length === 0, 'Restricted operations remain hidden; admitted operations require the caller bearer', '{}', { authorization: '' })
     for (const operation of ['audit-unknown-operation', '11111111-1111-4111-8111-111111111111']) {
       await check(`unknown-operation-denied-${family}/${operation}`, 'POST', `${family}/${operation}`, row => row.status === 404 && row.upstreamRequests.length === 0, 'Undeclared operation is denied before upstream dispatch')
     }
   }
-  for (const path of ["company-brain/belief-view", "company-brain/belief-pin", "experiments/design", "interventions/query", "allocations/resources", "obligations/read", "economic-outcomes/read", "elicitation-protocols/read"]) {
+  for (const path of ["company-brain/belief-view", "company-brain/belief-pin", "interventions/query", "allocations/resources", "obligations/read", "elicitation-protocols/read"]) {
     await check("backend-operation-exposed-" + path, "POST", path, row => row.status === 200 && row.upstreamRequests.length === 1, "Implemented user-product operation reaches upstream transport; does not qualify its business result")
   }
   await check("google-start-preserves-state-cookie", "POST", "connections/google/start", row => row.status === 200 && Boolean(row.headers["set-cookie"]), "OAuth start response returns the backend state cookie")

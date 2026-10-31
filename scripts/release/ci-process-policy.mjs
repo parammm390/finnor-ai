@@ -54,6 +54,7 @@ export function verifyCiProcess(root) {
   require(workflowJob(sourceWorkflow, "governance").includes("npm run test:release") && !workflowJob(sourceWorkflow, "source").includes("npm run test:release"), "governance fixtures must run once in parallel with source checks")
   const source = workflowJob(sourceWorkflow, "source")
   require(source.includes('import { sourceCheckFailures } from "./scripts/release/ci-process-policy.mjs"') && source.includes("const failures = sourceCheckFailures(") && source.includes("id: aggregate") && source.includes("if: ${{ always() }}"), "independent source diagnostics must end in a fail-closed aggregate")
+  require(source.includes("npm run build:inputs:check || status=1"), "source gate must verify generated build stamps and replay custody before image work")
   for (const name of ["shards", "workspace", "backend", "types", "inventory", "lint", "drift"]) {
     require(source.includes(`id: ${name}`) && source.includes(`steps.${name}.outcome`), `source aggregate must consume ${name} outcome`)
   }

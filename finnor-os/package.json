@@ -65,7 +65,9 @@
     "verify:tenant-probe": "node --import=tsx scripts/audits/verify-tenant-probe.mts",
     "verify:memory": "node --import=tsx scripts/audits/verify-short-term-memory.mts",
     "verify:job-heartbeats": "node --import=tsx scripts/audits/verify-job-heartbeats.mts",
-    "verify:oauth-proxy": "node --import=tsx ../scripts/audits/verify-oauth-proxy.mjs"
+    "verify:oauth-proxy": "node --import=tsx ../scripts/audits/verify-oauth-proxy.mjs",
+    "build:inputs:generate": "tsx scripts/x3/stamp-source.mts && tsx scripts/x5/stamp-source.mts && tsx scripts/x4/stamp-source.mts && tsx scripts/y2/stamp-source.mts && tsx scripts/release/generate-planner-replay-manifest.mts",
+    "build:inputs:check": "tsx scripts/x3/stamp-source.mts --check && tsx scripts/x5/stamp-source.mts --check && tsx scripts/x4/stamp-source.mts --check && tsx scripts/y2/stamp-source.mts --check && tsx scripts/release/generate-planner-replay-manifest.mts --check"
   },
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.1086.0",
