@@ -36,6 +36,17 @@ jobs:
       - name: Check source restoration after both actual kernel runs
         if: ${{ always() }}
         run: git diff --exit-code
+      - name: Retain readable controlled kernel results in the job log
+        if: ${{ always() }}
+        run: |
+          for phase in before after; do
+            result="$RUNNER_TEMP/w123-kernel-comparison/$phase/results.json"
+            if [ -f "$result" ]; then
+              echo "W123_KERNEL_RESULT_BEGIN_$phase"
+              cat "$result"
+              echo "W123_KERNEL_RESULT_END_$phase"
+            fi
+          done
       - name: Retain controlled kernel evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -44,3 +55,7 @@ jobs:
           path: ${{ runner.temp }}/w123-kernel-comparison/
           if-no-files-found: error
           retention-days: 7
+  installed-worker:
+    uses: ./.github/workflows/ci.yml
+    with:
+      run_worker_image: true

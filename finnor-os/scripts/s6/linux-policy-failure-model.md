@@ -97,6 +97,16 @@ real W owners. No privileged installation is authorized by this contract.
 Those gates remain NOT_RUN on this Mac. A component pass or a source inspection
 must not be relabelled as installed or Linux owning completion.
 
+### Installed packaging coupling, before the Docker follow-up
+
+The new production launcher includes `linux-lifetime.h`, while both existing
+Docker launcher build stages copy only `linux-launcher.c`. The ordinary image
+must carry and compile the exact same header before its installed native proof
+can count. The existing worker-image build and smoke workflow is the owner of
+this packaging gate. Retain the original compiler failure, then repair both
+source-copy sites and repeat that unchanged build/smoke. No host privileged
+installation, workflow gate suppression, deployment, or admission is authorized.
+
 ### Additional POSIX queue finding, before the follow-up repair
 
 Linux POSIX message queues resolve names through the IPC namespace. A fixed
