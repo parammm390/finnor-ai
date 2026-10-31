@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { PE_WORLD_ROOT_TYPES } from "@finnor/shared-types";
 import { ExperimentRefSchema } from "@finnor/epistemic-runtime";
-import { hash, parseArena, parseBinding, Z3_VERSION,
+import { hash, parseArena, parseBinding, Z3_VERSION, Z3_NONCONFLICTING_VERSION,
   type Candidate, type CheckReceipt, type IncompleteCandidate } from "../../../../epistemic-runtime/src/project-z/z3-viability/contracts";
 
 export const Z3_NATIVE_VERSION = "z3-native-v2" as const;
@@ -107,10 +107,12 @@ export const receiptDigestOf = (receipt: CheckReceipt): string => hash(stripMetr
 export function parseStoredCandidate(value: unknown): Candidate {
   if (!value || typeof value !== "object" || Array.isArray(value)) z3Fault("Z3_CANDIDATE_PREIMAGE_INVALID");
   const c = value as Record<string, unknown>;
-  if (c.schema !== "finnor.z3.viability-candidate.v1" || c.version !== Z3_VERSION) z3Fault("Z3_CANDIDATE_VERSION");
+  const legacy = c.schema === "finnor.z3.viability-candidate.v1" && c.version === Z3_VERSION;
+  const nonconflicting = c.schema === "finnor.z3.viability-candidate.v2" && c.version === Z3_NONCONFLICTING_VERSION;
+  if (!legacy && !nonconflicting) z3Fault("Z3_CANDIDATE_VERSION");
   if (c.disposition === "COMPLETE") return value as Candidate;
   const partial = value as IncompleteCandidate;
-  if ((c.disposition === "UNKNOWN" || c.disposition === "UNSUPPORTED")
+  if (legacy && (c.disposition === "UNKNOWN" || c.disposition === "UNSUPPORTED")
     && partial.certificate === null && partial.strategy === null) return value as Candidate;
   z3Fault("Z3_CANDIDATE_PREIMAGE_INVALID");
 }
@@ -124,11 +126,20 @@ export function parseStoredReceipt(value: unknown): CheckReceipt {
   }
   if (typeof r.reason !== "string" || !r.reason.length || r.reason.length > 256
     || typeof r.ordinaryComplete !== "boolean") z3Fault("Z3_CHECK_PREIMAGE_INVALID");
+  if (r.nonconflictingComplete !== undefined && typeof r.nonconflictingComplete !== "boolean") {
+    z3Fault("Z3_CHECK_PREIMAGE_INVALID");
+  }
+  if (r.nonconflictingComplete === true && (!["WINNING", "UNREALIZABLE"].includes(String(r.nonconflictingStatus))
+    || !Array.isArray(r.nonconflictingRegion) || r.nonconflictingRegion.length > 256
+    || r.nonconflictingRegion.some((v, i, values) => !Number.isSafeInteger(v) || v < 0 || v >= 256
+      || i > 0 && v <= values[i - 1]))) z3Fault("Z3_CHECK_COMPLETENESS_MISSING");
   if (r.status === "VIABLE" && (r.ordinaryComplete !== true || r.ordinaryStatus !== "WINNING"
     || r.safety !== true || r.liveness !== true || r.nonconflicting !== true
-    || r.originalAssumptionsSatisfiable !== true)) z3Fault("Z3_CHECK_VIABLE_OBLIGATIONS_MISSING");
+    || r.originalAssumptionsSatisfiable !== true || r.nonconflictingComplete === false
+    || r.nonconflictingComplete === true && r.nonconflictingStatus !== "WINNING")) z3Fault("Z3_CHECK_VIABLE_OBLIGATIONS_MISSING");
   if (r.status === "UNREALIZABLE" && (r.ordinaryComplete !== true
-    || r.ordinaryStatus !== "UNREALIZABLE")) z3Fault("Z3_CHECK_COMPLETENESS_MISSING");
+    || r.ordinaryStatus !== "UNREALIZABLE"
+      && !(r.nonconflictingComplete === true && r.nonconflictingStatus === "UNREALIZABLE"))) z3Fault("Z3_CHECK_COMPLETENESS_MISSING");
   return value as CheckReceipt;
 }
 

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 export const Z3_VERSION = "z3-public-gr1-v1" as const;
+export const Z3_NONCONFLICTING_VERSION = "z3-public-nonconflicting-v2" as const;
 export const PROFILE = Object.freeze({ states: 256, outgoing: 8, assumptions: 2, goals: 2,
   memories: 4, product: 1024, inputBytes: 1_048_576, artifactBytes: 8_388_608,
   operations: 40_000_000, iterants: 65_536, deadlineMs: 10_000 });
@@ -36,6 +37,13 @@ export interface CompleteCandidate {
   completeness: "COMPLETE_ORDINARY_REGION_NOT_COMPLETE_NONCONFLICTING_SYNTHESIS";
   metrics: { wallMs: number; operations: number; iterants: number; productVertices: number };
 }
+export interface NonconflictingCandidate extends Omit<CompleteCandidate, "schema" | "version" | "completeness"> {
+  schema: "finnor.z3.viability-candidate.v2"; version: typeof Z3_NONCONFLICTING_VERSION;
+  completeness: "COMPLETE_NONCONFLICTING_REGION";
+  /** winningRegion/certificate remain the complete ORIGINAL ordinary region.
+   * This separate region has its own complete proof and actual strategy. */
+  nonconflicting: { region: number[]; certificate: string[]; ordinaryStrategy: Strategy };
+}
 export interface IncompleteCandidate {
   schema: "finnor.z3.viability-candidate.v1"; version: typeof Z3_VERSION;
   disposition: "UNKNOWN" | "UNSUPPORTED"; reason: string;
@@ -44,11 +52,13 @@ export interface IncompleteCandidate {
   arenaDigest: string | null; bindingDigest: string | null;
   certificate: null; strategy: null; metrics: { wallMs: number; operations: number };
 }
-export type Candidate = CompleteCandidate | IncompleteCandidate;
+export type Candidate = CompleteCandidate | NonconflictingCandidate | IncompleteCandidate;
 export interface CheckReceipt {
   schema: "finnor.z3.independent-check.v1"; status: "VIABLE" | "UNREALIZABLE" | "UNKNOWN" | "REJECTED" | "UNSUPPORTED";
   reason: string; arenaDigest: string | null; bindingDigest: string | null; candidateDigest: string | null;
   ordinaryComplete: boolean; ordinaryStatus?: "WINNING" | "UNREALIZABLE";
+  nonconflictingComplete?: boolean; nonconflictingStatus?: "WINNING" | "UNREALIZABLE";
+  nonconflictingRegion?: number[];
   originalAssumptionsSatisfiable?: boolean; nonconflicting?: boolean;
   safety?: boolean; liveness?: boolean; reachable?: number; badSccs?: unknown[];
   metrics?: { wallMs: number; operations: number };

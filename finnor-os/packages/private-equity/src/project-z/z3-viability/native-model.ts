@@ -4,6 +4,7 @@ import { z } from "zod";
 import { parseArena, hash, z3Fault } from "./contracts";
 import type { PublicArena } from "../../../../epistemic-runtime/src/project-z/z3-viability/contracts";
 import { PROFILE } from "../../../../epistemic-runtime/src/project-z/z3-viability/contracts";
+import { parseGeneralNativeModel, type GeneralNativeModel } from "./general-model";
 
 const OriginalSchema = z.object({
   schema: z.literal("finnor.z3.original-internal-readiness.v1"),
@@ -15,15 +16,21 @@ export type NativeOperation = "READINESS" | "RECONCILE";
 export const NATIVE_OUTCOMES: Readonly<Record<NativeOperation, readonly string[]>> = Object.freeze({
   READINESS: ["READY", "NOT_READY"], RECONCILE: ["CLEAR", "UNKNOWN_RETAINED"],
 });
-export interface NativeOriginalModel {
+export interface NativeReadinessModel {
+  kind: "READINESS";
   original: z.infer<typeof OriginalSchema>; arena: PublicArena;
   environmentOperations: ReadonlyMap<string, NativeOperation>;
 }
+export type NativeOriginalModel = NativeReadinessModel | GeneralNativeModel;
 
 export function parseNativeOriginalInstruction(instruction: string): NativeOriginalModel {
   if (Buffer.byteLength(instruction) > PROFILE.inputBytes) z3Fault("Z3_ORIGINAL_INSTRUCTION_BYTE_BOUND");
   let value: unknown;
   try { value = JSON.parse(instruction); } catch { z3Fault("Z3_ORIGINAL_NATIVE_MANDATE_REQUIRED"); }
+  if (value && typeof value === "object" && !Array.isArray(value)
+    && "schema" in value && value.schema === "finnor.z3.original-native-map.v2") {
+    return parseGeneralNativeModel(value);
+  }
   const parsed = OriginalSchema.safeParse(value);
   if (!parsed.success) z3Fault("Z3_ORIGINAL_NATIVE_MANDATE_REQUIRED");
   const arena = parseArena(parsed.data.arena);
@@ -55,5 +62,5 @@ export function parseNativeOriginalInstruction(instruction: string): NativeOrigi
       z3Fault("Z3_NATIVE_RECURRING_GOAL_MEANING");
     }
   }
-  return { original: parsed.data, arena, environmentOperations: operations };
+  return { kind: "READINESS", original: parsed.data, arena, environmentOperations: operations };
 }

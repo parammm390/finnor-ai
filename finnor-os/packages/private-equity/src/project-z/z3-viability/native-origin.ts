@@ -11,6 +11,7 @@ import { principal } from "../../evidence-execution/store";
 import { hash, parseBinding, z3Fault, type ViabilityClaim, type ViabilityDelivery } from "./contracts";
 import { parseNativeOriginalInstruction, type NativeOriginalModel } from "./native-model";
 import { viabilityRuntimeIdentity } from "./runtime";
+import { generalS4Owners, type GeneralOwnerEvidence, type GeneralOwnerRequest } from "./general-owners";
 
 type S5Validation = Awaited<ReturnType<typeof s5.validateInstitutionDemand>>;
 type S5Charge = Awaited<ReturnType<typeof s5.chargeInstitutionDemand>>;
@@ -33,6 +34,8 @@ export interface NativeOrigin {
   model: NativeOriginalModel; parent: InstitutionProgramRow;
   binding: ReturnType<typeof parseBinding>; reservationRef: ExperimentRef;
   compilerEpisodeId: string; obligationIds: string[]; effectsDigest: string;
+  general: { request: GeneralOwnerRequest; evidence: GeneralOwnerEvidence } | null;
+  resourceState: { maximum: number; remaining: number; capacity: number; unknown: string[]; reservationRef: ExperimentRef } | null;
   remaining: { attempts: number; steps: number; computeRequests: number };
 }
 
@@ -97,8 +100,11 @@ export async function resolveViabilityNativeOrigin(ctx: PeMutationContext, workI
      ORDER BY e.id LIMIT 257` + (lock ? " FOR SHARE OF e" : ""), [ctx.auth.tenantId])).rows;
   if (effects.length > 256) z3Fault("Z3_ORIGINAL_OBLIGATION_BOUND");
   const obligationIds = [...new Set(effects.map(e => e.obligation_id ?? e.id))].sort();
-  if (hash([...model.arena.resources.obligationIds].sort()) !== hash(obligationIds)
-    || model.arena.states.some(state => hash([...state.unknown].sort()) !== hash(obligationIds))) {
+  if (model.kind === "READINESS" && (hash([...model.arena.resources.obligationIds].sort()) !== hash(obligationIds)
+    || model.arena.states.some(state => hash([...state.unknown].sort()) !== hash(obligationIds)))) {
+    z3Fault("Z3_ORIGINAL_S6_IDENTITY_OR_UNKNOWN_CHANGED");
+  }
+  if (model.kind === "GENERAL" && obligationIds.some(id => !model.arena.resources.obligationIds.includes(id))) {
     z3Fault("Z3_ORIGINAL_S6_IDENTITY_OR_UNKNOWN_CHANGED");
   }
   const charges = (await c.query<{ resource_id: string; units: number; unit: string }>(
@@ -116,6 +122,23 @@ export async function resolveViabilityNativeOrigin(ctx: PeMutationContext, workI
     "SELECT revision::text revision FROM finnor_os.authority_states WHERE tenant_id=$1" + (lock ? " FOR SHARE" : ""),
     [ctx.auth.tenantId])).rows[0];
   if (!rights) z3Fault("Z3_AUTHORITY_STATE_UNAVAILABLE");
+  let general: NativeOrigin["general"] = null;
+  let resourceState: NativeOrigin["resourceState"] = null;
+  if (model.kind === "GENERAL") {
+    const request: GeneralOwnerRequest = { workId, workInputId: original.id, originalParentId: episode.id,
+      parentRequestId: parent.id, reservationRef, model };
+    const evidence = await generalS4Owners().resolveEnterpriseViabilityBindingsTx(ctx, request, c);
+    const modelsCompute = model.original.resources.meaning === "ORIGINAL_S5_REQUEST_ALLOWANCE_AND_S4_UNKNOWN_CAPACITY";
+    const maximum = modelsCompute ? limit : 0;
+    if (evidence.mapDigest !== model.mapDigest || evidence.schema !== "finnor.s4.z3-original-operation-binding.v2"
+      || model.arena.resources.maximum !== maximum) z3Fault("Z3_NATIVE_ORIGINAL_S5_RESOURCE_MEANING_CHANGED");
+    if (model.arena.resources.capacity !== evidence.capacity) z3Fault("Z3_NATIVE_ORIGINAL_S4_CAPACITY_MEANING_CHANGED");
+    const retained = new Set([...obligationIds, ...evidence.settlements.map(row => row.obligationId)]);
+    if (model.arena.resources.obligationIds.some(id => !retained.has(id))) z3Fault("Z3_NATIVE_ORIGINAL_S6_UNIVERSE_UNBOUND");
+    general = { request, evidence };
+    resourceState = { maximum, remaining: modelsCompute ? limit - used : 0,
+      capacity: evidence.capacity, unknown: obligationIds, reservationRef };
+  }
   const runtime = await viabilityRuntimeIdentity();
   const effectsDigest = hash(effects);
   const binding = parseBinding({
@@ -126,14 +149,19 @@ export async function resolveViabilityNativeOrigin(ctx: PeMutationContext, workI
       compilerId: compiler.id, compilerRevision: compiler.revision, source: compiler.input_manifest?.current }),
     rightsRevision: rights.revision,
     mandateDigest: hash({ original: model.original, mandate: parent.request.institution.responsibilities.map(r => r.obligation.rule) }),
-    observationDigest: hash({ publicObservations: model.arena.states.map(s => [s.id, s.observation]),
-      operations: [...model.environmentOperations], effectsDigest }),
+    observationDigest: general ? hash({ mappingDigest: general.request.model.mapDigest,
+      ownerEvidence: general.evidence.digest, publicObservations: model.arena.states.map(s => [s.id, s.observation]) })
+      : hash({ publicObservations: model.arena.states.map(s => [s.id, s.observation]),
+        operations: [...model.environmentOperations], effectsDigest }),
     resourceDigest: hash({ reservationRef, demand: validation.reservation.demand,
       resources: resources.resources.map(r => r.ref), episode: { id: limits.id,
-        maxAttempts: limits.max_attempts, maxSteps: limits.max_steps }, obligations: obligationIds }),
+        maxAttempts: limits.max_attempts, maxSteps: limits.max_steps },
+      obligations: model.kind === "GENERAL" ? [...model.arena.resources.obligationIds].sort() : obligationIds }),
     deadlineAt, codeDigest: runtime.digest,
   });
-  return { model, parent, compilerEpisodeId: episode.id, binding, reservationRef, obligationIds, effectsDigest,
+  return { model, parent, compilerEpisodeId: episode.id, binding, reservationRef,
+    obligationIds: model.kind === "GENERAL" ? [...model.arena.resources.obligationIds].sort() : obligationIds,
+    effectsDigest, general, resourceState,
     remaining: { attempts: limits.max_attempts - limits.attempts_used,
       steps: limits.max_steps - limits.steps_used, computeRequests: limit - used } };
 }

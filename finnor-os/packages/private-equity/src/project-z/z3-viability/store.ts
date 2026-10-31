@@ -30,6 +30,9 @@ import type { ViabilityBuildIdentity } from "./assets";
 import type { ViabilityChildObservation } from "./process";
 import type { ViabilityCursor } from "./consumer";
 import { originalViabilityIdentityRefinement } from "../../../../orchestration/src/project-z/z3-viability/revision";
+import { originalGeneralViabilityIdentityRefinement,
+  type GeneralViabilityRevisionBridge } from "../../../../orchestration/src/project-z/z3-viability/general-revision";
+import { GENERAL_NATIVE_MAPPING_FAILURES, isGeneralNativeMappingFailure } from "./general-transition";
 export type { ViabilityBuildIdentity } from "./assets";
 
 type SubmitInput = z.infer<typeof SubmitSchema>;
@@ -117,6 +120,14 @@ export async function viabilityEvent(ctx: PeMutationContext, row: ViabilitySessi
     [row.tenant_id, principal(ctx), row.id, kind, encoded]);
 }
 
+export async function nativeMappingFailureTx(row: ViabilitySessionRow, c: PoolClient): Promise<string | null> {
+  const fault = (await c.query<{ code: string }>(
+    `SELECT body->>'code' code FROM finnor_os.z3_viability_events WHERE tenant_id=$1 AND principal_id=$2
+     AND session_id=$3 AND kind='Z3_DELIVERY_FAULT' AND body->>'code'=ANY($4::text[]) ORDER BY id DESC LIMIT 1`,
+    [row.tenant_id, row.principal_id, row.id, GENERAL_NATIVE_MAPPING_FAILURES])).rows[0];
+  return fault && isGeneralNativeMappingFailure(fault.code) ? fault.code : null;
+}
+
 async function retainViabilityArtifact(ctx: PeMutationContext, row: ViabilitySessionRow,
   kind: string, body: unknown, c: PoolClient) {
   const encoded = JSON.stringify(body);
@@ -189,7 +200,7 @@ export async function createViabilitySession(ctx: PeMutationContext, input: Subm
     const previous = (await c.query<{ id: string }>(
       `SELECT id::text FROM finnor_os.z3_viability_sessions WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3
        ORDER BY created_at DESC,id DESC LIMIT 1`, [ctx.auth.tenantId, principal(ctx), input.workId])).rows[0];
-    let revisionBridge: ReturnType<typeof originalViabilityIdentityRefinement> | null = null;
+    let revisionBridge: ReturnType<typeof originalViabilityIdentityRefinement> | GeneralViabilityRevisionBridge | null = null;
     if (previous) {
       const priorSession = await viabilitySession(ctx, previous.id, c, true), priorBinding = parseBinding(priorSession.binding);
       if (priorBinding.originalParentId !== binding.originalParentId || priorBinding.deadlineAt !== binding.deadlineAt
@@ -213,11 +224,26 @@ export async function createViabilitySession(ctx: PeMutationContext, input: Subm
         if (!priorPrefix || hash(priorPrefix.cursor) !== priorPrefix.cursorDigest || oldCandidate.disposition !== "COMPLETE") {
           z3Fault("Z3_PREVIOUS_ACTUAL_CURSOR_REQUIRED");
         }
-        try { revisionBridge = originalViabilityIdentityRefinement({
-          previousSessionId: previous.id, previousBinding: priorBinding, binding,
-          previousArena: parseArena(priorSession.arena), arena, previousReservation: priorSession.reservation_ref,
-          reservation: reservationRef, strategy: oldCandidate.strategy, cursor: priorPrefix.cursor,
-        }); } catch { z3Fault("Z3_ORIGINAL_BEHAVIOR_REVISION_BRIDGE_REQUIRED"); }
+        if (priorPrefix.cursor.schema === "finnor.z3.s4-cursor.v2") {
+          if (await nativeMappingFailureTx(priorSession, c)) z3Fault("Z3_GENERAL_NATIVE_SEMANTIC_REVISION_BRIDGE_REQUIRED");
+          const oldReceipt = parseStoredReceipt(priorSession.check_receipt);
+          if (!origin.general || oldCandidate.schema !== "finnor.z3.viability-candidate.v2"
+            || oldReceipt.status !== "VIABLE" || oldReceipt.nonconflictingComplete !== true) {
+            z3Fault("Z3_GENERAL_NATIVE_PREVIOUS_CHECKED_PREFIX_REQUIRED");
+          }
+          try { revisionBridge = originalGeneralViabilityIdentityRefinement({
+            previousSessionId: previous.id, previousBinding: priorBinding, binding,
+            previousArena: parseArena(priorSession.arena), arena, previousReservation: priorSession.reservation_ref,
+            reservation: reservationRef, strategy: oldCandidate.strategy, cursor: priorPrefix.cursor,
+            mapDigest: origin.general.request.model.mapDigest, ownerEvidenceDigest: origin.general.evidence.digest,
+          }); } catch { z3Fault("Z3_GENERAL_NATIVE_SEMANTIC_REVISION_BRIDGE_REQUIRED"); }
+        } else {
+          try { revisionBridge = originalViabilityIdentityRefinement({
+            previousSessionId: previous.id, previousBinding: priorBinding, binding,
+            previousArena: parseArena(priorSession.arena), arena, previousReservation: priorSession.reservation_ref,
+            reservation: reservationRef, strategy: oldCandidate.strategy, cursor: priorPrefix.cursor,
+          }); } catch { z3Fault("Z3_ORIGINAL_BEHAVIOR_REVISION_BRIDGE_REQUIRED"); }
+        }
       }
     }
     if (origin.remaining.attempts < 1 || origin.remaining.steps < 5 || origin.remaining.computeRequests < 1) {
@@ -242,6 +268,8 @@ export async function createViabilitySession(ctx: PeMutationContext, input: Subm
     await viabilityEvent(ctx, row, "Z3_SESSION_INTAKE", {
       workId: input.workId, workInputId: binding.workInputId, arenaDigest, bindingDigest,
       originalParentId: binding.originalParentId, reservationRef, remainingBudget: origin.remaining, revisionBridge,
+      nativeProfile: origin.model.kind, mappingDigest: origin.general?.request.model.mapDigest ?? null,
+      ownerBindingDigest: origin.general?.evidence.digest ?? null,
       qualification: "ORIGINAL_WORK_INTAKE_NOT_A_NEW_AUTHORITY_GRANT" }, c);
     await enqueueViabilityJob(ctx, row, Z3_PRODUCE_JOB, `z3:${id}:synthesize:1`, c);
     return { schema: "finnor.z3.viability-submit.v1" as const, sessionId: id,
@@ -518,6 +546,7 @@ export async function requestViabilityRecovery(ctx: PeMutationContext, input: Re
       return { schema: "finnor.z3.viability-recover.v1" as const, sessionId: row.id,
         recovery: "ENQUEUED" as const, status: row.status, semanticReplay: true };
     }
+    if (await nativeMappingFailureTx(row, c)) z3Fault("Z3_NATIVE_MAPPING_FALSIFIED_REQUIRES_ADMITTED_REVISION");
     if (Z3_TERMINAL_STATUSES.includes(row.status) && row.status !== "VIABLE") {
       return { schema: "finnor.z3.viability-recover.v1" as const, sessionId: row.id,
         recovery: "NOT_REQUIRED_TERMINAL" as const, status: row.status };
@@ -550,7 +579,7 @@ export async function requestViabilityRecovery(ctx: PeMutationContext, input: Re
 }
 
 function nextAuthorizedAction(arena: PublicArena, candidate: Candidate | null, cursor: ViabilityCursor | null): string | null {
-  if (!candidate || candidate.disposition !== "COMPLETE") return null;
+  if (!candidate || candidate.disposition !== "COMPLETE" || !cursor && arena.initial.length !== 1) return null;
   const index = arena.states.findIndex(s => s.id === (cursor?.stateId ?? arena.initial[0]));
   const state = arena.states[index];
   if (!state || state.owner === "E") return null;
@@ -580,6 +609,9 @@ export async function readViabilityPublic(ctx: PeMutationContext, input: ReadInp
   if (root) await authorize(ctx, root, [{ type: "work", id: row.work_id }]);
   let staleReason: string | null = null;
   let remainingBudget: NativeOrigin["remaining"] | null = null;
+  let nativeProfile: "READINESS" | "GENERAL" | null = null;
+  let actualOutstanding: number | null = null;
+  let modeledResourceState: NativeOrigin["resourceState"] = null;
   try {
     // Existing native owners take currentness locks and retain S1 decisions.
     // Do not incorrectly call those owners inside a SQL READ ONLY transaction.
@@ -588,9 +620,12 @@ export async function readViabilityPublic(ctx: PeMutationContext, input: ReadInp
       const loaded = await viabilitySession(ctx, row.id, c, true);
       await authorizeOwner(ctx, c);
       await assertViabilityCurrent(ctx, loaded, c, true, origin);
-      return { row: loaded, remaining: origin.remaining };
+      return { row: loaded, remaining: origin.remaining, nativeProfile: origin.model.kind,
+        outstanding: origin.resourceState?.unknown.length ?? origin.obligationIds.length,
+        resourceState: origin.resourceState };
     });
-    row = current.row; remainingBudget = current.remaining;
+    row = current.row; remainingBudget = current.remaining; nativeProfile = current.nativeProfile;
+    actualOutstanding = current.outstanding; modeledResourceState = current.resourceState;
   } catch (error) {
     if (error instanceof Z3NativeFault) staleReason = error.code;
     else if (error instanceof Error && error.name === "PeDomainError") staleReason = "Z3_WORK_UNAVAILABLE";
@@ -624,8 +659,17 @@ export async function readViabilityPublic(ctx: PeMutationContext, input: ReadInp
       || prefix.cursor.candidateDigest !== row.candidate_digest || prefix.cursor.checkDigest !== row.check_digest)) {
       z3Fault("Z3_S4_CURSOR_PREIMAGE_CHANGED");
     }
-    return { pending, superseded, events, cursor: prefix?.cursor ?? null };
+    const intake = (await c.query<{ body: { nativeProfile?: "READINESS" | "GENERAL" } }>(
+      `SELECT body FROM finnor_os.z3_viability_events WHERE tenant_id=$1 AND principal_id=$2
+       AND session_id=$3 AND kind='Z3_SESSION_INTAKE' ORDER BY id LIMIT 1`,
+      [row.tenant_id, row.principal_id, row.id])).rows[0]?.body;
+    const recordedProfile: "GENERAL" | "READINESS" | null = intake?.nativeProfile
+      ?? (prefix?.cursor.schema === "finnor.z3.s4-cursor.v2" ? "GENERAL" : prefix ? "READINESS" : null);
+    return { pending, superseded, events, cursor: prefix?.cursor ?? null,
+      nativeProfile: recordedProfile,
+      nativeMappingFailure: await nativeMappingFailureTx(row, c) };
   }, true);
+  nativeProfile ??= counts.nativeProfile;
   const attempts = counts.events.find(e => e.kind === "Z3_PHYSICAL_DELIVERY_CHARGED")?.n ?? 0;
   const stalePublications = counts.events.find(e => e.kind === "Z3_STALE_PUBLICATION_REFUSED")?.n ?? 0;
   const compute = await listStoredWorkCompute(ctx,
@@ -645,6 +689,7 @@ export async function readViabilityPublic(ctx: PeMutationContext, input: ReadInp
       digest: row.candidate_digest, disposition: candidate.disposition,
       ordinaryStatus: candidate.disposition === "COMPLETE" ? candidate.ordinaryStatus : null,
       winningRegionSize: candidate.disposition === "COMPLETE" ? candidate.winningRegion.length : null,
+      nonconflictingRegionSize: candidate.schema === "finnor.z3.viability-candidate.v2" ? candidate.nonconflicting.region.length : null,
       safetyKernelSize: candidate.disposition === "COMPLETE" ? candidate.safetyKernel.length : null,
       memories: candidate.disposition === "COMPLETE" ? candidate.strategy.memories.length : null,
       completeness: candidate.disposition === "COMPLETE" ? candidate.completeness : null,
@@ -652,27 +697,39 @@ export async function readViabilityPublic(ctx: PeMutationContext, input: ReadInp
     check: receipt === null ? null : {
       digest: row.check_digest, status: receipt.status, reason: receipt.reason,
       ordinaryComplete: receipt.ordinaryComplete, ordinaryStatus: receipt.ordinaryStatus ?? null,
+      nonconflictingComplete: receipt.nonconflictingComplete ?? null,
+      nonconflictingStatus: receipt.nonconflictingStatus ?? null,
+      nonconflictingRegionSize: receipt.nonconflictingRegion?.length ?? null,
       safety: receipt.safety ?? null, liveness: receipt.liveness ?? null,
       nonconflicting: receipt.nonconflicting ?? null,
       originalAssumptionsSatisfiable: receipt.originalAssumptionsSatisfiable ?? null,
       reachable: receipt.reachable ?? null,
     },
     nextAuthorizedAction: {
-      action: staleReason ? null : nextAuthorizedAction(arena, candidate, counts.cursor),
-      qualification: "INTERNAL_READINESS_MODEL_ACTION_NOT_EFFECT_AUTHORITY",
+      action: staleReason || status !== "VIABLE" || receipt?.status !== "VIABLE"
+        || counts.nativeMappingFailure
+        || nativeProfile === "GENERAL" && !counts.cursor
+        ? null : nextAuthorizedAction(arena, candidate, counts.cursor),
+      qualification: nativeProfile === "GENERAL" ? "CURRENT_TYPED_S4_BINDING_NOT_EFFECT_AUTHORITY"
+        : "INTERNAL_READINESS_MODEL_ACTION_NOT_EFFECT_AUTHORITY",
     },
     pendingJobs: counts.pending, supersededRunningJobs: counts.superseded,
-    stalePublications, nativeTransitions: (counts.cursor?.operations ?? 0) * 2,
+    stalePublications, nativeTransitions: counts.cursor?.schema === "finnor.z3.s4-cursor.v2"
+      ? counts.cursor.transitions : (counts.cursor?.operations ?? 0) * 2,
     nativeActions: counts.cursor?.operations ?? 0, s4Cursor: counts.cursor,
-    s4Consumed: row.s4_consumed, s5Current, s6OutstandingEffects: arena.resources.obligationIds.length,
+    s4Consumed: row.s4_consumed, s5Current, s6OutstandingEffects: actualOutstanding,
     s7CostRef: compute.records.at(-1)?.ref ?? null,
     s7HistoryComplete: compute.complete && attempts === compute.records.length,
     costs: { attempts, completedMeterRecords: compute.records.length, money: null, status: "UNMETERED" as const },
     remainingBudget,
+    nativeProfile, modeledResourceState,
+    nativeMappingFailure: counts.nativeMappingFailure,
+    nativeUseStatus: counts.nativeMappingFailure ? "BLOCKED_MAPPING_FALSIFIER"
+      : staleReason ? "BLOCKED_CURRENTNESS" : row.s4_consumed ? "FINITE_PREFIX_OBSERVED" : "NOT_CONSUMED",
     remainingBudgetQualification: "ORIGINAL_P1_AND_S5_REQUEST_UNITS_NOT_USD_OR_UNBOUNDED_ALLOWANCE",
     claimFence: fenceOf(row) ?? 0,
     unknownClearedWithoutS6: false,
-    conditionality: "Conditional recurrence is not a per-request deadline. Only finite internal-readiness prefixes spend the remaining original allowance; exhaustion invalidates further use.",
+    conditionality: "Conditional recurrence is not a per-request deadline or a promise of original fairness. Finite registered owner prefixes spend only the remaining original allowance; exhaustion or unmapped actual outcomes invalidate further use.",
     gates: {
       architecture: "IN_PROGRESS", internalSoftware: "IN_PROGRESS",
       installedReconstruction: "NOT_RUN", mathematicalSecurityDomain: "IN_PROGRESS",
@@ -700,7 +757,12 @@ export async function readViabilityPublic(ctx: PeMutationContext, input: ReadInp
         resourceDigest: binding.resourceDigest,
       },
       rightsAndPermittedUseFingerprint: binding.rightsRevision,
-      supportedDomain: "PUBLIC_PERFECT_INFORMATION finite turn-based GR(1) profile (<=256 states, <=8 outgoing, <=2 assumptions, <=2 goals, <=4 memories)",
+      supportedDomain: "PUBLIC_PERFECT_INFORMATION finite turn-based GR(1) input (<=256 states, <=8 outgoing, <=2 assumptions, <=2 goals); strategy <=4 memories and <=1024 product vertices",
+      nativeSupportedDomain: nativeProfile === "GENERAL"
+        ? "VERSIONED_GENERAL_ORIGINAL_MAP; total original edge/state/justice tables, actual initial selection, current typed S4 observation/exact-choice/composition owners; no external effect execution; S5 renewal requires an original typed owner representation"
+        : nativeProfile === "READINESS"
+          ? "S4_READINESS_RECONCILIATION_V1; no original fairness, exactly two operation goals, one observed initial controller state, no renewable resource"
+          : "NATIVE_PROFILE_NOT_YET_CURRENTLY_RESOLVED",
       unsupportedConditions: ["PARTIAL_OR_PRIVATE_OBSERVATION", "HIDDEN_STATE_ORACLE",
         "UNBOUNDED_OR_NONINTEGER_RESOURCES", "INVENTED_RENEWAL_OR_FAIRNESS"],
       claimAndEvidenceClasses: { computation: "deterministic", evidenceClass: "deterministic" },
@@ -710,7 +772,8 @@ export async function readViabilityPublic(ctx: PeMutationContext, input: ReadInp
       securityAndConfidentialityProfile: { tenantIsolation: "ROW_LEVEL_SECURITY", secretsExported: false },
       ownerConsumerContractVersion: "z3-native-v2",
       costAndResourceReceiptReferences: { s7: compute.records.map(r => r.ref.id), s5: row.reservation_ref },
-      gaps: ["NATIVE_E2E_NOT_RUN_WITHOUT_COORDINATOR_AUTHORIZATION",
+      gaps: ["NATIVE_GENERAL_ARENA_MAPPING_NOT_IMPLEMENTED",
+        "NATIVE_E2E_NOT_RUN_WITHOUT_COORDINATOR_AUTHORIZATION",
         "MANDATE_REF_RESOLVED_TO_DIGEST_ONLY", "USD_COSTS_UNMETERED_NOT_ZERO",
         "SOURCE_COMMIT_TREE_AND_RECONSTRUCTION_BOUND_SEPARATELY_IN_DELIVERY"],
       reconstructionReference: null,

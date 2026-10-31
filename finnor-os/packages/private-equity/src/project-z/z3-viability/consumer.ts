@@ -9,12 +9,16 @@ import { chargeViabilityOwnerStep, resolveViabilityNativeOrigin } from "./native
 import { assertViabilityClaimTx, assertViabilityCurrent, viabilityEvent, viabilitySession } from "./store";
 import { hash, parseStoredCandidate, parseStoredReceipt, z3Fault, type ViabilityClaim } from "./contracts";
 import type { NativeOperation } from "./native-model";
+import { advanceViabilityCursor } from "./transition";
 import type { ViabilityRevisionBridge } from "../../../../orchestration/src/project-z/z3-viability/revision";
+import { consumeGeneralViabilityTx } from "./general-consumer";
+import type { GeneralViabilityCursor } from "./general-transition";
 
-export interface ViabilityCursor {
+export interface ReadinessViabilityCursor {
   schema: "finnor.z3.s4-cursor.v1"; candidateDigest: string; checkDigest: string; bindingDigest: string;
   stateId: string; memory: number; operations: number; goalVisits: Record<NativeOperation, number>;
 }
+export type ViabilityCursor = ReadinessViabilityCursor | GeneralViabilityCursor;
 interface Observation {
   operation: NativeOperation; outcome: string; evidenceDigest: string;
 }
@@ -56,8 +60,17 @@ export async function consumeCheckedViabilityTx(ctx: PeMutationContext, sessionI
     || receipt.arenaDigest !== row.arena_digest || !row.candidate_digest || !row.check_digest) {
     z3Fault("Z3_S4_CURRENT_CHECKED_STRATEGY_REQUIRED");
   }
+  if (candidate.schema === "finnor.z3.viability-candidate.v2"
+    && (receipt.nonconflictingComplete !== true || receipt.nonconflictingStatus !== "WINNING"
+      || hash(receipt.nonconflictingRegion) !== hash(candidate.nonconflicting.region))) {
+    z3Fault("Z3_S4_COMPLETE_NONCONFLICTING_STRATEGY_REQUIRED");
+  }
+  if (origin.model.kind === "GENERAL") {
+    if (candidate.schema !== "finnor.z3.viability-candidate.v2") z3Fault("Z3_S4_COMPLETE_NONCONFLICTING_STRATEGY_REQUIRED");
+    return consumeGeneralViabilityTx(ctx, row, origin, candidate, claim, c, db);
+  }
   if (origin.remaining.steps < 4) z3Fault("Z3_ORIGINAL_NATIVE_BUDGET_EXHAUSTED");
-  const prior = (await c.query<{ body: { cursor: ViabilityCursor; cursorDigest: string } }>(
+  const prior = (await c.query<{ body: { cursor: ReadinessViabilityCursor; cursorDigest: string } }>(
     `SELECT body FROM finnor_os.z3_viability_events WHERE tenant_id=$1 AND principal_id=$2
      AND session_id=$3 AND kind='Z3_S4_NATIVE_PREFIX' ORDER BY id DESC LIMIT 1`,
     [row.tenant_id, row.principal_id, row.id])).rows[0]?.body;
@@ -72,7 +85,7 @@ export async function consumeCheckedViabilityTx(ctx: PeMutationContext, sessionI
     || bridge.cursor.stateId !== arena.initial[0] || bridge.cursor.memory !== strategy.initial[0])) {
     z3Fault("Z3_REDERIVED_STRATEGY_DOES_NOT_COVER_CARRIED_MEMORY");
   }
-  let cursor: ViabilityCursor = prior?.cursor ?? {
+  let cursor: ReadinessViabilityCursor = prior?.cursor ?? {
     schema: "finnor.z3.s4-cursor.v1", candidateDigest: row.candidate_digest, checkDigest: row.check_digest,
     bindingDigest: row.binding_digest, stateId: bridge?.cursor.stateId ?? arena.initial[0]!,
     memory: bridge?.cursor.memory ?? strategy.initial[0]!,
@@ -84,13 +97,7 @@ export async function consumeCheckedViabilityTx(ctx: PeMutationContext, sessionI
     || !Number.isSafeInteger(cursor.operations) || cursor.operations < 0) z3Fault("Z3_S4_CURSOR_PREIMAGE_CHANGED");
   const transitions: Array<Record<string, unknown>> = [];
   const step = (edgeIndex: number) => {
-    const edge = arena.edges[edgeIndex];
-    if (!Number.isSafeInteger(edgeIndex) || !edge || edge.from !== cursor.stateId) z3Fault("Z3_S4_UNMODELLED_ORIGINAL_EDGE");
-    const memory = strategy.updates[cursor.memory]?.[edgeIndex];
-    if (!Number.isSafeInteger(memory) || memory === undefined || memory < 0 || memory >= strategy.memories.length) {
-      z3Fault("Z3_S4_UNMODELLED_MEMORY_UPDATE");
-    }
-    cursor = { ...cursor, stateId: edge.to, memory };
+    cursor = advanceViabilityCursor(arena, strategy, cursor, edgeIndex);
   };
   const before = hash(cursor);
   for (let index = 0; index < 4; index++) {

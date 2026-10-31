@@ -26,9 +26,11 @@ try {
   const processes = await import("../../../packages/private-equity/src/project-z/z3-viability/process");
   const contracts = await import("../../../packages/private-equity/src/project-z/z3-viability/contracts");
   const nativeModel = await import("../../../packages/private-equity/src/project-z/z3-viability/native-model");
+  const transition = await import("../../../packages/private-equity/src/project-z/z3-viability/transition");
   const revision = await import("../../../packages/orchestration/src/project-z/z3-viability/revision");
   const producerBundle = args["--cli"] ?? join(repo, "scope-z/phase-evidence/z3/build/cli.mjs");
   const checkerSource = join(repo, "finnor-os/packages/epistemic-runtime/src/project-z/z3-viability/checker.py");
+  const checkerAdapterSource = join(dirname(checkerSource), "nonconflicting-checker.py");
   const pinned = await assets.pinViabilityToolchain({ producerBundle, checkerSource });
   report.build = pinned.identity;
   const inventory: Record<string, string> = {};
@@ -92,6 +94,58 @@ try {
     originalArenaDigest: contracts.hash(model.arena), independentCheck: nativeReceipt.status });
   const complete = contracts.parseStoredCandidate(nativeCandidate.value);
   if (complete.disposition !== "COMPLETE") throw Error("NATIVE_PUBLIC_CANDIDATE_INCOMPLETE");
+  // V2 chases the two ORIGINAL goals and V. Freeze the source-state mode
+  // sequence from those meanings, not from the producer's update table.
+  const expectedMemories = complete.schema === "finnor.z3.viability-candidate.v2"
+    ? [0, 0, 1, 1, 2, 0, 1, 1, 2] : [0, 0, 1, 1, 0, 0, 1, 1, 0];
+  const expectedStates = ["readiness", "readiness-outcome", "reconcile", "reconcile-outcome",
+    "readiness", "readiness-outcome", "reconcile", "reconcile-outcome", "readiness"];
+  const memoryInputs: Array<Record<string, unknown>> = [];
+  for (const order of ["original", "reversed"] as const) {
+    const arena = { ...model.arena, edges: order === "original" ? model.arena.edges : [...model.arena.edges].reverse() };
+    let candidate = complete;
+    let receipt = nativeReceipt;
+    if (order === "reversed") {
+      const produced = await processes.runViabilityChild({ command: process.execPath,
+        args: ["--max-old-space-size=512", "--input-type=module", "--eval", pinned.producer.source, "z3-cli", "produce-batch"],
+        inputLine: JSON.stringify({ arena, binding: useful.binding }) + "\n", wallMs: 30000 });
+      const parsed = contracts.parseStoredCandidate(produced.value);
+      if (parsed.disposition !== "COMPLETE") throw Error("REORDERED_NATIVE_PUBLIC_CANDIDATE_INCOMPLETE");
+      candidate = parsed;
+      const checked = await processes.runViabilityChild({ command: pinned.pythonExecutable,
+        args: ["-I", "-c", pinned.checker.source, "--batch"],
+        inputLine: JSON.stringify({ arena, binding: useful.binding, candidate }) + "\n", wallMs: 300000 });
+      receipt = contracts.parseStoredReceipt(checked.value);
+      if (receipt.status !== "VIABLE") throw Error("REORDERED_NATIVE_PUBLIC_CHECK_FAILED");
+    }
+    memoryInputs.push({ order, arena, binding: useful.binding, candidate, receipt });
+    for (const readiness of ["READY", "NOT_READY"]) for (const reconciliation of ["CLEAR", "UNKNOWN_RETAINED"]) {
+      let cursor = { stateId: "readiness", memory: candidate.strategy.initial[0]! };
+      const observed = [{ ...cursor }], edges: number[] = [];
+      let failure: string | null = null;
+      try {
+        for (const action of [readiness, reconciliation, readiness, reconciliation]) {
+          const stateIndex = arena.states.findIndex(state => state.id === cursor.stateId);
+          const controllerEdge = candidate.strategy.actions[cursor.memory]?.[stateIndex];
+          if (controllerEdge === undefined) throw Error("REGISTERED_CONTROLLER_ACTION_MISSING");
+          cursor = transition.advanceViabilityCursor(arena, candidate.strategy, cursor, controllerEdge);
+          edges.push(controllerEdge); observed.push({ ...cursor });
+          const environmentEdge = arena.edges.findIndex(edge => edge.from === cursor.stateId && edge.action === action);
+          cursor = transition.advanceViabilityCursor(arena, candidate.strategy, cursor, environmentEdge);
+          edges.push(environmentEdge); observed.push({ ...cursor });
+        }
+      } catch (error) { failure = error instanceof Error ? error.message : "UNKNOWN"; }
+      const passed = failure === null && observed.length === expectedMemories.length
+        && observed.every((value, index) => value.memory === expectedMemories[index] && value.stateId === expectedStates[index]);
+      cases.push({ id: "N19_ORIGINAL_STATE_MONITOR", order, readiness, reconciliation, cycles: 2,
+        expectedMemories, expectedStates, observed, edges, failure, passed,
+        meaning: "ACTUAL_S4_TRANSITION_OFFLINE_NOT_AUTHENTICATED_OWNER_PROOF" });
+    }
+  }
+  await writeFile(join(output, "state-memory-inputs.json"), JSON.stringify(memoryInputs, null, 2) + "\n", { flag: "wx" });
+  if (cases.some(c => c.id === "N19_ORIGINAL_STATE_MONITOR" && c.passed !== true)) {
+    throw Error("ORIGINAL_STATE_MONITOR_TRACE_MISMATCH");
+  }
   const bridgeInput = { previousSessionId: "PUBLIC_PREVIOUS_NOT_NATIVE", previousBinding: useful.binding,
     binding: { ...useful.binding, sourceRevision: "PUBLIC_NEW_REVISION" }, previousArena: model.arena, arena: model.arena,
     previousReservation: { publicFixture: true }, reservation: { publicFixture: true },
@@ -115,7 +169,7 @@ try {
     () => assets.pinViabilityToolchain({ producerBundle: fakeProducer, checkerSource }));
   const copiedChecker = join(temporary, "checker.py");
   await copyFile(checkerSource, copiedChecker);
-  const copied = await assets.pinViabilityToolchain({ producerBundle, checkerSource: copiedChecker });
+  const copied = await assets.pinViabilityToolchain({ producerBundle, checkerSource: copiedChecker, checkerAdapterSource });
   await writeFile(copiedChecker, "# replaced after pin\n");
   await expectFault("N08_REVALIDATE_AFTER_PIN", "Z3_CHECKER_ASSET_NOT_APPROVED", () => copied.revalidate());
   const captured = await processes.runViabilityChild({
@@ -124,6 +178,19 @@ try {
   });
   if ((captured.value as any)?.status !== "VIABLE") throw Error("CAPTURED_BYTES_NOT_EXECUTED");
   cases.push({ id: "N08_CAPTURED_VERIFIED_BYTES_NO_PATH_REREAD", passed: true });
+  await expectFault("N20_FORGED_MEMORY_CHECKER_ADAPTER", "Z3_CHECKER_ADAPTER_ASSET_NOT_APPROVED",
+    () => assets.pinViabilityToolchain({ producerBundle, checkerSource, checkerAdapterSource: fakeChecker }));
+  const copiedAdapter = join(temporary, "nonconflicting-checker.py");
+  await copyFile(checkerAdapterSource, copiedAdapter);
+  const adapterCapture = await assets.pinViabilityToolchain({ producerBundle, checkerSource, checkerAdapterSource: copiedAdapter });
+  await writeFile(copiedAdapter, "# replaced after pin\n");
+  await expectFault("N20_REVALIDATE_ADAPTER_AFTER_PIN", "Z3_CHECKER_ADAPTER_ASSET_NOT_APPROVED", () => adapterCapture.revalidate());
+  const adapterCaptured = await processes.runViabilityChild({
+    command: adapterCapture.pythonExecutable, args: ["-I", "-c", adapterCapture.checker.source, "--batch"],
+    inputLine: JSON.stringify({ ...original, candidate: produced.value }) + "\n", wallMs: 300_000,
+  });
+  if ((adapterCaptured.value as any)?.status !== "VIABLE") throw Error("CAPTURED_ADAPTER_BYTES_NOT_EXECUTED");
+  cases.push({ id: "N20_CAPTURED_ADAPTER_BYTES_NO_PATH_REREAD", passed: true });
   for (const [id, program, expected, options] of [
     ["N04_ABORT_WAITS_FOR_PHYSICAL_CLOSE", "setInterval(()=>{},1000)", "Z3_CHILD_ABORTED", { abort: true }],
     ["N05_ORIGINAL_REMAINING_DEADLINE", "setInterval(()=>{},1000)", "Z3_CHILD_TIMEOUT", { wallMs: 40 }],

@@ -1,5 +1,6 @@
-import { canonical, fault, hash, parseArena, parseBinding, parseLimits, PROFILE, ViabilityFault, Z3_VERSION,
-  type Candidate, type CompleteCandidate, type OriginalBinding, type PublicArena, type SolverLimits, type Strategy } from "./contracts";
+import { canonical, fault, hash, parseArena, parseBinding, parseLimits, PROFILE, ViabilityFault, Z3_VERSION, Z3_NONCONFLICTING_VERSION,
+  type Candidate, type NonconflictingCandidate, type OriginalBinding, type PublicArena, type SolverLimits, type Strategy } from "./contracts";
+import { synthesizeNonconflicting } from "./nonconflicting";
 
 type Mask = bigint;
 class Budget {
@@ -165,15 +166,19 @@ export function produceViability(rawArena: unknown, rawBinding: unknown, rawLimi
   try {
     arena = parseArena(rawArena); binding = parseBinding(rawBinding);
     budget = new Budget(parseLimits(rawLimits));
-    const fixed = fixedPoints(arena, budget), strategy = extract(arena, fixed, budget);
+    const fixed = fixedPoints(arena, budget), ordinaryStrategy = extract(arena, fixed, budget);
+    const nonconflicting = synthesizeNonconflicting(arena, fixed, budget);
+    const strategy = nonconflicting.strategy;
     const region = members(fixed.region, fixed.n);
-    const candidate: CompleteCandidate = {
-      schema: "finnor.z3.viability-candidate.v1", version: Z3_VERSION, disposition: "COMPLETE",
+    const candidate: NonconflictingCandidate = {
+      schema: "finnor.z3.viability-candidate.v2", version: Z3_NONCONFLICTING_VERSION, disposition: "COMPLETE",
       arenaDigest: hash(arena), bindingDigest: hash(binding),
       safetyKernel: members(fixed.kernel, fixed.n), winningRegion: region,
       certificate: { safety: fixed.safety, gr1: fixed.gr1 }, strategy,
       ordinaryStatus: arena.initial.every(id => region.includes(fixed.ids.get(id)!)) ? "WINNING" : "UNREALIZABLE",
-      completeness: "COMPLETE_ORDINARY_REGION_NOT_COMPLETE_NONCONFLICTING_SYNTHESIS",
+      completeness: "COMPLETE_NONCONFLICTING_REGION",
+      nonconflicting: { region: members(nonconflicting.region, fixed.n),
+        certificate: nonconflicting.certificate, ordinaryStrategy },
       metrics: { wallMs: performance.now() - start, operations: budget.operations, iterants: budget.iterants,
         productVertices: fixed.n * strategy.memories.length },
     };

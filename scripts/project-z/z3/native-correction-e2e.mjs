@@ -2,7 +2,7 @@
 // concrete S4 prefix -> expiry/recovery -> retained finite memory. Never seeds,
 // migrates, creates Auth/grants, starts listeners or dispatches effects.
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { isAbsolute, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { createHash, randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -69,11 +69,19 @@ async function main() {
     throw Error("EXPLICIT_EXISTING_OWNED_LOOPBACK_TARGET_REQUIRED");
   }
   const checkerBytes = await readFile(permission.checkerSource), producerBytes = await readFile(permission.producerBundle);
+  const adapterBytes = await readFile(join(dirname(permission.checkerSource), "nonconflicting-checker.py"));
   if (bytesDigest(checkerBytes) !== "b71c0bec3be5eb1e6218e4b04a26bf07918a3f781e5712800a8ff061497e837e"
-    || bytesDigest(producerBytes) !== "43a3d180cf01602ccacfc01147d934a5f3a5a437f5767eccb1a1ce933bdaa4d7"
+    || bytesDigest(producerBytes) !== "0925012e866e2195bae5ae2173c5863fe8b9294ac7ce6966d0100e98e0ec4793"
+    || bytesDigest(adapterBytes) !== "a7e1a84fdd1b8116e97b97d98afa9fd7913ae41282390ab3f3176da8696ba2b9"
     || bytesDigest(await readFile("/usr/bin/python3.12")) !== "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f") {
     throw Error("APPROVED_INDEPENDENT_CHECKER_OR_PRODUCER_REQUIRED");
   }
+  const checkerProgram = [
+    "import base64 as _z3_b64, types as _z3_types",
+    "_original_checker = _z3_types.ModuleType('finnor_z3_original_checker')",
+    `exec(compile(_z3_b64.b64decode("${checkerBytes.toString("base64")}"), "<approved-original-checker>", "exec"), _original_checker.__dict__)`,
+    adapterBytes.toString("utf8"),
+  ].join("\n");
   const require = createRequire(join(permission.repository, "package.json"));
   const backendRequire = createRequire(join(permission.repository, "finnor-os/package.json"));
   database = new (backendRequire("pg").Client)({ connectionString: dbValue, connectionTimeoutMillis: 10000,
@@ -163,7 +171,7 @@ async function main() {
     const original = JSON.parse(state.input.instruction_text).arena;
     if (digest(original) !== state.session.arena_digest || state.session.work_input_id !== state.input.id
       || state.session.binding.codeDigest !== permission.runtimeDigest) throw Error("ORIGINAL_INPUT_OR_SOURCE_BINDING_CHANGED");
-    const child = spawn("/usr/bin/python3.12", ["-I", "-c", checkerBytes.toString("utf8"), "--batch"],
+    const child = spawn("/usr/bin/python3.12", ["-I", "-c", checkerProgram, "--batch"],
       { stdio: ["pipe", "pipe", "ignore"], env: { LANG: "C.UTF-8" } });
     const observed = new Promise((resolve, reject) => {
       const chunks = []; let total = 0, failure = false;
@@ -189,7 +197,7 @@ async function main() {
       for (const transition of prefix.transitions) {
         const index = arena.states.findIndex(s => s.id === vertex), edge = strategy.actions[memory][index];
         if (transition.from.stateId !== vertex || transition.from.memory !== memory || transition.controllerEdge !== edge) throw Error("NATIVE_CONTROLLER_EDGE_NOT_ORIGINAL");
-        vertex = arena.edges[edge].to; memory = strategy.updates[memory][edge];
+        memory = strategy.updates[memory][index]; vertex = arena.edges[edge].to;
         const operation = arena.edges[edge].action;
         const expected = operation === "READINESS"
           ? state.parent.body && ["WAITING", "PARTIAL"].includes(state.parent.body.status) ? "READY" : "NOT_READY"
@@ -197,7 +205,8 @@ async function main() {
         if (transition.environment.stateId !== vertex || transition.environment.memory !== memory || transition.outcome !== expected) throw Error("NATIVE_ENVIRONMENT_NOT_INDEPENDENTLY_OBSERVED");
         const actual = arena.edges.findIndex(e => e.from === vertex && e.action === expected);
         if (actual !== transition.environmentEdge) throw Error("NATIVE_OBSERVATION_EDGE_NOT_ORIGINAL");
-        vertex = arena.edges[actual].to; memory = strategy.updates[memory][actual]; operations++; goals[operation]++;
+        const environmentIndex = arena.states.findIndex(s => s.id === vertex);
+        memory = strategy.updates[memory][environmentIndex]; vertex = arena.edges[actual].to; operations++; goals[operation]++;
         if (transition.to.stateId !== vertex || transition.to.memory !== memory) throw Error("NATIVE_MEMORY_RESET_OR_UPDATE_CHANGED");
       }
       if (prefix.cursor.stateId !== vertex || prefix.cursor.memory !== memory || prefix.cursor.operations !== operations
