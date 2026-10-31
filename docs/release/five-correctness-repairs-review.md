@@ -33,3 +33,19 @@ Commands and requirements for reproducing the drivers are in [correctness-regres
 ## Qualification limits
 
 This is sequential self-review by one agent. No independent review is claimed. GitHub CI results belong to the published PR head and are separate from these local results. Live model quality, hosted JWT isolation, real OAuth consent and staging throughput have not been qualified. No deployment or production mutation is requested. Current tenant marker and staging load fixture secrets require configuration before their scheduled live checks can pass.
+
+## Follow-up after the first hosted run
+
+The first hosted run failed before backend, root and readiness execution. Two distinct causes were retained and reproduced locally.
+
+### Standards
+
+The initial repair added Zod 3.25.76 to the memory workspace while the repository uses patched Zod 4.6.7. That introduced an advisory and a private nested dependency tree. The package now uses the repository version and the explicit key/value record schema. The lockfile contains no nested Zod 3.
+
+The dependency gate also found glob and minimatch advisories in the root toolchain. Glob now resolves to 14.0.2. Modern minimatch consumers use 11.0.1; legacy callable consumers use the documented adapter in `vendor/minimatch-compat.md`, which delegates matching to unmodified 11.0.1. No scanner exclusions or advisory suppressions were added. OSV 2.3.8 scans both lockfiles with no findings.
+
+### Spec
+
+The required source check must prove that test shards partition the actual suite. The programmatic Vitest call replaced its default exclusions with a single retired-file exclusion. A nested dependency therefore added its own tests to the runtime discovery result. The verifier now combines the installed Vitest default exclusions with the existing retired fixture exclusion. It verifies all 231 active files, 77 per shard, and all public owner export resolutions. The exact original failure is reproduced before the correction; it was not a failure of the business test suite.
+
+These are sequential self-review findings, with the fixed comparison point `df9111da8c7a1170f1f074e43fdf5984eaa55b8b` and diff `git diff df9111da8c...HEAD`. Standards sources are `AGENTS.md`, the existing CI process policy and production dependency/security gates. Requirements come from the five-issue repair request and this PR's repair record. Tool-enforced diagnostics are reported as verification results rather than style findings. No independent review is claimed.

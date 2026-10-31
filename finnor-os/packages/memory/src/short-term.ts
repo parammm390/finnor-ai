@@ -7,7 +7,7 @@ import { z } from "zod";
 const TTL_SECONDS = 30 * 60;
 const MAX_SHORT_TERM_TURNS = 20;
 const MAX_APPEND_ATTEMPTS = 64;
-const ShortTermSchema = z.record(z.unknown());
+const ShortTermSchema = z.record(z.string(), z.unknown());
 const COMPARE_AND_SET = `
 local current = redis.call('GET', KEYS[1])
 if ARGV[1] == 'missing' then
