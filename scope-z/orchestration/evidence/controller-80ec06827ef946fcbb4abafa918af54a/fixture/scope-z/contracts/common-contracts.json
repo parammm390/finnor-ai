@@ -1,0 +1,438 @@
+{
+  "authority": "requirements-only; native owners retain all admission and effect authority",
+  "canonicalIdentityRule": "Map logical fields to actual existing canonical types. Do not create alternative tenant, Work, grant, reservation, effect or admission identities.",
+  "computationDispositions": [
+    "CHECKED_CANDIDATE",
+    "COUNTEREXAMPLE",
+    "CHECKED_INFEASIBLE",
+    "INCOMPLETE",
+    "UNSUPPORTED",
+    "STALE",
+    "REVOKED",
+    "UNKNOWN"
+  ],
+  "evidenceClasses": [
+    "deterministic",
+    "empirical",
+    "probabilistic",
+    "partial",
+    "blocked-external",
+    "unknown"
+  ],
+  "externalActionPolicy": {
+    "computerProvisioningRequiresRendererApply": true,
+    "customerOrCounterpartyContact": false,
+    "grantsOrSigners": false,
+    "localTaskOwnedEngineering": true,
+    "merge": false,
+    "productionDeployment": false,
+    "programmeRequestedContextDelivery": true,
+    "pullRequest": false,
+    "push": false,
+    "realFinancialEffects": false
+  },
+  "handoffFinalLabels": [
+    "IMPLEMENTED",
+    "CHANGED",
+    "EVIDENCE",
+    "COMPLETION GATE",
+    "REMAINING LIMITATIONS",
+    "FRONTIER DELTA",
+    "NEXT DEPENDENCIES"
+  ],
+  "handoffRequiredFields": [
+    "phase",
+    "productLockDigest",
+    "executionPackDigest",
+    "sourceBase",
+    "sourceHead",
+    "sourceTree",
+    "branch",
+    "changedFiles",
+    "interfaceVersions",
+    "verification",
+    "retainedFailures",
+    "reconstruction",
+    "integrationRequests",
+    "costsAndMeterGaps",
+    "remainingBudget",
+    "unresolvedObligations",
+    "receivedPeerReceipts",
+    "engineeringDisposition"
+  ],
+  "logicalEnvelopeFields": [
+    "schemaVersion",
+    "phase",
+    "principalOutputType",
+    "immutableArtifactDigest",
+    "productLockDigest",
+    "sourceCommit",
+    "sourceTree",
+    "producerBuildIdentity",
+    "originalTenant",
+    "principal",
+    "Work",
+    "mandate",
+    "assignment",
+    "parentReservation",
+    "originalDeadline",
+    "remainingBudgetReference",
+    "unresolvedObligationReferences",
+    "inputSemanticsAndRevisionReferences",
+    "rightsAndPermittedUseFingerprint",
+    "supportedDomain",
+    "unsupportedConditions",
+    "claimAndEvidenceClasses",
+    "checkerIdentityAndResultReferences",
+    "currentnessDependencies",
+    "securityAndConfidentialityProfile",
+    "ownerConsumerContractVersion",
+    "costAndResourceReceiptReferences",
+    "gaps",
+    "reconstructionReference"
+  ],
+  "modelPolicy": {
+    "actualReceiptRequired": true,
+    "fallbackAllowed": false,
+    "model": "gpt-6.1-sol",
+    "reasoningEffort": "max",
+    "roles": [
+      "coordinator",
+      "prompt-engineer",
+      "researcher",
+      "orchestrator",
+      "worker",
+      "validator",
+      "subagent"
+    ]
+  },
+  "phasePathPrecedence": "Phase-owned leaf prefixes below take precedence over a broad shared pattern. Existing native/global files remain shared unless explicitly assigned in an immutable integration receipt.",
+  "phases": {
+    "Z0": {
+      "boundary": "one coherent installed native runtime, not a new scientific mechanism",
+      "branch": "factory/project-z0-convergence",
+      "computerName": "FINNOR Project Z0 Convergence",
+      "firstProfile": "existing supported native X/Y capability paths; reproduce defects before repair",
+      "nativeConsumers": [
+        "canonical Work/planner/native intake",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "S7",
+        "S8"
+      ],
+      "output": "ConvergedInstitutionRuntime",
+      "ownedPrefixes": [
+        "finnor-os/packages/orchestration/src/project-z/z0-convergence/",
+        "scope-z/phase-evidence/z0/",
+        "finnor-os/scripts/project-z/z0/"
+      ],
+      "requiredEarlierFullSeeds": [],
+      "requiresOtherZEngine": false,
+      "sharedRequests": [
+        "query envelope identity",
+        "canonical capability completeness",
+        "X1-to-X2 parent adapter",
+        "safe candidate accessibility",
+        "mounted Work/currentness"
+      ],
+      "worktreeName": "finnor-z-z0"
+    },
+    "Z1": {
+      "boundary": "joint exact change-maintained computation of distinct lawful material Works",
+      "branch": "factory/project-z1-shared-work",
+      "computerName": "FINNOR Project Z1",
+      "firstProfile": {
+        "maxDagNodes": 4096,
+        "maxDerivedRows": 1000000,
+        "maxRationalComponentBits": 512,
+        "maxSourceRows": 100000,
+        "semantics": "finite typed exact pure DAGs; original unit and bag/set semantics",
+        "works": [
+          2,
+          1000
+        ]
+      },
+      "independentChecker": "derive original per-Work programmes and compare exact initial/update/edit/retraction projections",
+      "nativeConsumers": [
+        "S3",
+        "S4",
+        "S5"
+      ],
+      "nativeSeam": "safe registered candidate job; separate original Work projections and effects",
+      "output": "SharedWorkProgram",
+      "ownedPrefixes": [
+        "finnor-os/packages/epistemic-runtime/src/project-z/z1-shared-work/",
+        "finnor-os/packages/private-equity/src/project-z/z1-shared-work/",
+        "finnor-os/packages/orchestration/src/project-z/z1-shared-work/",
+        "scope-z/phase-evidence/z1/",
+        "finnor-os/scripts/project-z/z1/"
+      ],
+      "requiredEarlierFullSeeds": [
+        "Z0"
+      ],
+      "requiresOtherZEngine": false,
+      "worktreeName": "finnor-z-z1"
+    },
+    "Z2": {
+      "boundary": "no declared weak-Pareto-profitable correlated joint contingent deviation plus full Y3 floor",
+      "branch": "factory/project-z2-coalitions",
+      "computerName": "FINNOR Project Z2",
+      "firstProfile": {
+        "conceptExclusions": [
+          "interim coalition-proof sequential equilibrium",
+          "arbitrary later coalition formation",
+          "Abraham-et-al k-resilience",
+          "MASE"
+        ],
+        "maxCandidateProtocols": 128,
+        "maxInformationSets": 64,
+        "maxPureJointPlansPerCoalition": 4096,
+        "maxRationalComponentBits": 512,
+        "participants": [
+          2,
+          4
+        ],
+        "protectedInitialCoalitionLimit": "k=n",
+        "timing": "coalition selects deviation ex ante; plans use all lawful subsequent local histories"
+      },
+      "independentChecker": "reconstruct all original lawful joint contingent plans; exact rational primal counterstrategy or dual inequalities; retain full native Y3 sequential/common-belief check",
+      "nativeConsumers": [
+        "native Y3 InteractionProtocol owner",
+        "S4",
+        "S5",
+        "S6"
+      ],
+      "nativeSeam": "existing participant-local InteractionProtocol/Work/consent, fixed economic meanings",
+      "output": "CoalitionResilientProtocol",
+      "ownedPrefixes": [
+        "finnor-os/packages/epistemic-runtime/src/project-z/z2-coalitions/",
+        "finnor-os/packages/private-equity/src/project-z/z2-coalitions/",
+        "finnor-os/packages/orchestration/src/project-z/z2-coalitions/",
+        "scope-z/phase-evidence/z2/",
+        "finnor-os/scripts/project-z/z2/"
+      ],
+      "requiredEarlierFullSeeds": [
+        "Z0"
+      ],
+      "requiresOtherZEngine": false,
+      "worktreeName": "finnor-z-z2"
+    },
+    "Z3": {
+      "boundary": "all-play unconditional safety and precisely conditional recurring progress",
+      "branch": "factory/project-z3-viability",
+      "computerName": "FINNOR Project Z3",
+      "firstProfile": {
+        "information": "genuinely public fully observed finite arena",
+        "maxEnvironmentJusticeSets": 2,
+        "maxExplicitStates": 256,
+        "maxOutgoingChoicesPerState": 8,
+        "maxRecurringGoals": 2,
+        "resourceSemantics": "actual original renewal/nonrenewal, UNKNOWN and authority denial",
+        "strategyMemory": "explicit bound and independently checked extraction"
+      },
+      "independentChecker": "original arena coverage, exact region evidence, reachable strategy-memory graph, non-bottom fair bad SCC, separate nonvacuity",
+      "nativeConsumers": [
+        "S4",
+        "S5",
+        "S6"
+      ],
+      "nativeSeam": "existing S4 strategy consumption with original continuation/obligation identity",
+      "output": "ViabilityStrategy",
+      "ownedPrefixes": [
+        "finnor-os/packages/epistemic-runtime/src/project-z/z3-viability/",
+        "finnor-os/packages/private-equity/src/project-z/z3-viability/",
+        "finnor-os/packages/orchestration/src/project-z/z3-viability/",
+        "scope-z/phase-evidence/z3/",
+        "finnor-os/scripts/project-z/z3/"
+      ],
+      "requiredEarlierFullSeeds": [
+        "Z0"
+      ],
+      "requiresOtherZEngine": false,
+      "worktreeName": "finnor-z-z3"
+    },
+    "Z4": {
+      "boundary": "compact relation-bound proof of actual untrusted supported execution",
+      "branch": "factory/project-z4-execution-proof",
+      "computerName": "FINNOR Project Z4",
+      "firstProfile": {
+        "checkedWidenedIntermediateBits": 64,
+        "executionLengths": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          64,
+          256
+        ],
+        "maxInstructionsPerStep": 16,
+        "maxRegisters": 8,
+        "security": "reviewed actual parameters/assumptions required; no invented soundness exponent",
+        "signedInputBits": 32,
+        "unsupported": [
+          "arbitrary TypeScript",
+          "unbounded floating arithmetic",
+          "unauthorized trusted setup"
+        ],
+        "withheldNewFunctionCasesAtLeast": 40
+      },
+      "independentChecker": "original exact interpreter and compiler correspondence plus actual pinned proof verifier",
+      "nativeConsumers": [
+        "eligible S3/S4 evaluation",
+        "independent audit/replay verifier"
+      ],
+      "nativeSeam": "registered producer and separately executed relation/proof verifier before real owner consumption",
+      "output": "ExecutionProofCapsule",
+      "ownedPrefixes": [
+        "finnor-os/packages/epistemic-runtime/src/project-z/z4-execution-proof/",
+        "finnor-os/packages/epistemic-runtime/native/z4-execution-proof/",
+        "finnor-os/packages/private-equity/src/project-z/z4-execution-proof/",
+        "finnor-os/packages/orchestration/src/project-z/z4-execution-proof/",
+        "scope-z/phase-evidence/z4/",
+        "finnor-os/scripts/project-z/z4/"
+      ],
+      "requiredEarlierFullSeeds": [
+        "Z0"
+      ],
+      "requiresOtherZEngine": false,
+      "worktreeName": "finnor-z-z4"
+    },
+    "Z5": {
+      "boundary": "noncircular compatible-context and contextual replacement assurance for fixed components",
+      "branch": "factory/project-z5-institution-linker",
+      "computerName": "FINNOR Project Z5",
+      "firstProfile": {
+        "components": [
+          2,
+          16
+        ],
+        "exclusions": [
+          "new component synthesis",
+          "unqualified whole-code correspondence",
+          "unbounded recurring-liveness claim"
+        ],
+        "maxContextAutomatonStates": 4096,
+        "maxCoupledFiniteSharedCells": 8,
+        "maxLocalStates": 32,
+        "maxPortLabels": 16,
+        "semantics": "fixed qualified finite I/O transitions, declared may/must, atomicity and legal quiescence"
+      },
+      "independentChecker": "context automata and refinement/simulation, actual initial/transition discharge, coupled shared state and live replacement bridge",
+      "nativeConsumers": [
+        "S4 integration/replacement planning",
+        "existing S8 contract admission"
+      ],
+      "nativeSeam": "existing component contract references and current S4/S8 use; S5/S6 retain their checks",
+      "output": "InstitutionCompositionCertificate",
+      "ownedPrefixes": [
+        "finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/",
+        "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/",
+        "finnor-os/packages/orchestration/src/project-z/z5-institution-linker/",
+        "scope-z/phase-evidence/z5/",
+        "finnor-os/scripts/project-z/z5/"
+      ],
+      "requiredEarlierFullSeeds": [
+        "Z0"
+      ],
+      "requiresOtherZEngine": false,
+      "worktreeName": "finnor-z-z5"
+    }
+  },
+  "prdVersion": "FINNOR-Z-PRD-1.0.0",
+  "qualificationStates": [
+    "NOT_RUN",
+    "IN_PROGRESS",
+    "PASSED",
+    "FAILED",
+    "BLOCKED",
+    "UNKNOWN",
+    "REUSED"
+  ],
+  "requiredPositivePath": [
+    "authorized-original-Work-intake",
+    "actual-durable-job-claim",
+    "producer",
+    "independent-checker",
+    "durable-artifact",
+    "real-native-owner-consumption",
+    "shared-S5-feasibility",
+    "existing-S6-if-required",
+    "independent-observation-or-retained-UNKNOWN",
+    "S7-full-costs",
+    "mounted-canonical-Work"
+  ],
+  "schedule": {
+    "capacity": 3,
+    "certificationBlocksRefill": false,
+    "countResearchAsExecution": false,
+    "countStagedRequestsAsActive": false,
+    "dedicatedComputerPerPhase": true,
+    "initialGroup": [
+      "Z0",
+      "Z1",
+      "Z2"
+    ],
+    "lightHandoffRequired": true,
+    "refillOrder": [
+      "Z3",
+      "Z4",
+      "Z5"
+    ]
+  },
+  "schemaVersion": "finnor.project-z.common-contracts.v1",
+  "separateGates": [
+    "architecture",
+    "internal-software",
+    "installed-development-reconstruction",
+    "mathematical-security-domain",
+    "protected-admission",
+    "equipped-increment",
+    "operational-100x",
+    "financial-headroom",
+    "financial-100x",
+    "production-activation"
+  ],
+  "sharedChangeOwner": "PRD/coordinator",
+  "sharedChangeRequestFields": [
+    "phase",
+    "productLockDigest",
+    "preimageDigest",
+    "exactPatch",
+    "symbolsAndVersion",
+    "callers",
+    "failureModel",
+    "compatibilityImpact",
+    "migrationImpact",
+    "finiteVerification",
+    "remainingObligations"
+  ],
+  "sharedWritePatterns": [
+    "scope-z/FINNOR-Z-PRD.md",
+    "scope-z/contracts/**",
+    "scope-z/locks/**",
+    "scope-z/orchestration/**",
+    "scope-z/prompts/**",
+    "finnor-os/packages/shared-types/**",
+    "finnor-os/packages/db/**",
+    "finnor-os/packages/orchestration/src/index.ts",
+    "finnor-os/packages/orchestration/src/planner.ts",
+    "finnor-os/packages/orchestration/src/plugin-registry.ts",
+    "finnor-os/apps/api/app/api/**",
+    "finnor-os/apps/worker/src/index.ts",
+    "src/components/centropy/**",
+    "scripts/centropy/**",
+    "**/package.json",
+    "**/package-lock.json",
+    "**/pnpm-lock.yaml",
+    "**/tsconfig.json",
+    "**/migrations/**"
+  ],
+  "sourceBase": {
+    "commit": "7bfdd2d3ab611c90f1355637858824ff1ba67f98",
+    "comparison": "all intended completed S/P/M/R/V/X/Y, not this checkout's gaps",
+    "tree": "82caf48007bc826794650505ae76aba92d4f981b"
+  }
+}

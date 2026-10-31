@@ -1,0 +1,16 @@
+{
+  "fixtureOnly": true,
+  "members": [
+    {
+      "bytes": 14576,
+      "path": "scope-z/contracts/common-contracts.json",
+      "sha256": "a022c6dbac39bfc4826dcee1491a3eda0cbdaad86adf767f5af465916ec8be6d"
+    },
+    {
+      "bytes": 33,
+      "path": "scope-z/FINNOR-Z-PRD.md",
+      "sha256": "e98d2b4d143ee98548b75341148e908f24e1c355899590b0d30c6ebd96cb3230"
+    }
+  ],
+  "schemaVersion": "finnor.project-z.product-lock.v1"
+}

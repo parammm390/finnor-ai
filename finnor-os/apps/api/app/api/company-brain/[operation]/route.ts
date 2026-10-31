@@ -1,3 +1,4 @@
+import { SharedWorkOperations, readSharedWorkBody, handleSharedWorkOperation, sharedWorkResponseError } from '@finnor/private-equity/src/project-z/z1-shared-work/api';
 import {
   COMPANY_BRAIN_NAMESPACES,
   CORE_BRAIN_OBJECT_TYPES,
@@ -41,6 +42,7 @@ import {LedgerFault} from '../../../../../../packages/governed-execution/src/pro
 import {ApplicationProviderFault} from '@finnor/computer';
 import {handleInterfaceOperation,INTERFACE_OPERATIONS} from '@finnor/private-equity/src/interface-synthesis/api';
 import {handleContinuationOperation,CONTINUATION_OPERATIONS} from '@finnor/private-equity/src/live-recompilation/api';
+import {handleViabilityOperation,VIABILITY_OPERATIONS} from '@finnor/private-equity/src/project-z/z3-viability/api';
 import {handleProcedureOperation,PROCEDURE_OPERATIONS} from '@finnor/private-equity/src/procedure-induction/api';
 import {handleCapitalProgramOperation,CAPITAL_PROGRAM_V2_OPERATIONS,capitalProgramResponseError} from '@finnor/private-equity/src/capital-program/v2-api';
 import {inM3Episode,m3TransportDeadline,readM3Body} from '@finnor/private-equity/src/capital-program/v2-budget';
@@ -58,7 +60,10 @@ import {EconomicFault} from '@finnor/private-equity/src/economic-action-theory/c
 import {StrategicOperations,handleStrategicOperation,readStrategicBody} from '@finnor/private-equity/src/strategic-response/api';
 import {StrategicFault} from '@finnor/private-equity/src/strategic-response/contracts';
 import {CONFIDENTIAL_OPERATIONS,handleConfidentialOperation} from '@finnor/private-equity/src/confidential-computation/api';
+import {EXECUTION_PROOF_OPERATIONS} from '@finnor/private-equity/src/project-z/z4-execution-proof/contracts';
+import {handleProofOperation} from '@finnor/private-equity/src/project-z/z4-execution-proof/api';
 import {InteractionOperations,handleInteractionOperation,readInteractionBody} from '@finnor/private-equity/src/interaction-synthesis/api';
+import {CoalitionOperations,handleCoalitionOperation} from '@finnor/private-equity/src/project-z/z2-coalitions/api';
 import {InteractionFault} from '@finnor/private-equity/src/interaction-synthesis/contracts';
 
 export const runtime = "nodejs";
@@ -214,9 +219,21 @@ function checkedRef(value: unknown): CompanyBrainObjectRef {
 
 export async function POST(req: Request, { params }: { params: Promise<{ operation: string }> }): Promise<Response> {
   try {const route=await params;
+    if(SharedWorkOperations.some(operation=>operation===route.operation)){
+      try{
+        const auth=await requireContext(req),body=await readSharedWorkBody(req);
+        const result=await handleSharedWorkOperation({auth},route.operation,body);
+        return response(result.body,result.status);
+      }catch(error){const mapped=sharedWorkResponseError(error);return mapped?response(mapped.body,mapped.status):requestError(error);}
+    }
     if(StrategicOperations.some(operation=>operation===route.operation)){
       const auth=await requireContext(req),body=await readStrategicBody(req);
       const result=await handleStrategicOperation({auth},route.operation,body);
+      return response(result.body,result.status);
+    }
+    if(CoalitionOperations.some(operation=>operation===route.operation)){
+      const auth=await requireContext(req),body=await readInteractionBody(req);
+      const result=await handleCoalitionOperation({auth},route.operation,body);
       return response(result.body,result.status);
     }
     if(InteractionOperations.some(operation=>operation===route.operation)){
@@ -233,6 +250,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ operati
       try{
         const auth=await requireContext(req),body=await readApplicationBody(req);
         const result=await handleConfidentialOperation({auth},route.operation,body);
+        return response(result.body,result.status);
+      }catch(error){const mapped=applicationResponseError(error);return mapped?response(mapped.body,mapped.status):requestError(error);}
+    }
+    if(EXECUTION_PROOF_OPERATIONS.some(operation=>operation===route.operation)){
+      try{
+        const auth=await requireContext(req),body=await readApplicationBody(req);
+        const result=await handleProofOperation({auth},route.operation,body);
         return response(result.body,result.status);
       }catch(error){const mapped=applicationResponseError(error);return mapped?response(mapped.body,mapped.status):requestError(error);}
     }
@@ -298,6 +322,7 @@ async function dispatchPost(req:Request,route:{operation:string}):Promise<Respon
     if((APPLICATION_SEMANTICS_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleApplicationSemanticsOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if(CAPITAL_FORMATION_OPERATION_NAMES.has(route.operation)){const result=await handleCapitalFormationOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if((CONTINUATION_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleContinuationOperation(ctx,route.operation,body);return response(result.body,result.status);}
+    if((VIABILITY_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleViabilityOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if ((PROCEDURE_OPERATIONS as readonly string[]).includes(route.operation)) { const result=await handleProcedureOperation(ctx,route.operation,body);return response(result.body,result.status); }
     if(M1_OPERATIONS.has(route.operation))return response(await handleDecisionSliceOperation(ctx,route.operation,body));
     if((INTERFACE_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleInterfaceOperation(ctx,route.operation,body);return response(result.body,result.status);}

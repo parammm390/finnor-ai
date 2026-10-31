@@ -1,0 +1,17 @@
+{
+  "executionPackDigest": "f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a",
+  "gate": "independent-scrutiny",
+  "model": "gpt-6.1-sol",
+  "observations": [
+    {
+      "class": "SIMULATED",
+      "path": "facts/cert.json",
+      "sha256": "a601bc6c78208f01228acbf5f215c0155fb6440aaf20cacfe0681391a016ecc0"
+    }
+  ],
+  "phase": "Z2",
+  "productLockDigest": "ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3",
+  "reasoningEffort": "max",
+  "status": "IN_PROGRESS",
+  "synthetic": true
+}

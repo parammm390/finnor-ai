@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "finnor.project-z.platform-observation.v1",
+  "observedAt": "2026-10-24T14:35:01.100438+00:00",
+  "method": "GET",
+  "url": "https://api.factory.ai/api/v0/computers?includeProvisioningSteps=false",
+  "mutationRequested": false,
+  "rawBodyRetained": false,
+  "httpStatus": 200,
+  "responseSha256": "da79248f9f3b2b926ff36d66a5909d834a47ddd0be87d8afcc1c38a8ba38112a",
+  "parseState": "PARSED",
+  "totalObservedComputers": 1,
+  "projectZComputers": []
+}

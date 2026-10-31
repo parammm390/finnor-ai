@@ -2,36 +2,36 @@
   "canonicalPlanner": {
     "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
     "verticalKey": "private_equity",
-    "count": 77,
-    "entriesSha256": "f1cad9ed2bdd17205550f32521c780debf087b79f4b8862b9e3ec0b463fb014e",
+    "count": 78,
+    "entriesSha256": "242a82eb17373c944c3919e3f8fb3265de1dfa4775e4b39d23a43fe6bfa7bdcb",
     "fullMetadataMatched": true,
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-10-24T15:54:00.348Z",
-  "sourceBaseCommit": "684d805e471836a720aa6741a3128eca17d28202",
-  "manifestSha256": "9958c308e2a4266c259123d8ae6773e847b8f86cfcf73c3e6cea09df0146758a",
-  "formsSha256": "78e6da8a2346c1a96712b634d0307535e8adbef6959cc5a72cc2302f8b445ec6",
+  "generatedAt": "2026-10-25T12:20:57.761Z",
+  "sourceBaseCommit": "9f3edfd3b4c6758832c53139da0773218062191e",
+  "manifestSha256": "62ea09518d45cbe0c80b8b17dcfa1a5b1b235ee8804ed3187d766f8dd7932b20",
+  "formsSha256": "649b41b8a9c36331dc782e6118f4cafa5355b4cf2fcaf6ede71508bd093b1943",
   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
   "counts": {
-    "total": 657,
-    "http": 580,
-    "planner": 77,
-    "classified": 657,
+    "total": 677,
+    "http": 599,
+    "planner": 78,
+    "classified": 677,
     "classificationCoveragePercent": 100,
     "unclassified": 0,
-    "backendApiWithoutMountedFrontend": 93,
+    "backendApiWithoutMountedFrontend": 94,
     "dynamicFrontendCalls": 77,
     "unresolvedDynamicCalls": 0,
     "disposition": {
       "ACTIVE_TYPED_HUMAN_CONTROL": 66,
       "INTENTIONAL_COMPATIBILITY": 23,
-      "ACTIVE_DIRECT_FRONTEND_PATH": 336,
+      "ACTIVE_DIRECT_FRONTEND_PATH": 354,
       "RESTRICTED_SYSTEM_OR_ADMIN": 58,
       "PROVIDER_PROTOCOL_CALLBACK": 2,
-      "BACKEND_API_NO_MOUNTED_FRONTEND": 93,
+      "BACKEND_API_NO_MOUNTED_FRONTEND": 94,
       "INTENTIONAL_ALTERNATE_CANONICAL_INTAKE": 2,
-      "CANONICAL_AGENT_CAPABILITY": 63,
+      "CANONICAL_AGENT_CAPABILITY": 64,
       "HUMAN_ONLY_CANONICAL_DECISION": 11,
       "CANONICAL_RUNTIME_CONTROL": 2,
       "UNAVAILABLE_CANONICAL_CAPABILITY": 1
@@ -71,6 +71,7 @@
     "http.post.company-brain.capital-formation-proposal",
     "http.post.company-brain.capital-program-list",
     "http.post.company-brain.capital-program-ports",
+    "http.post.company-brain.coalition-read",
     "http.post.company-brain.compute-search-read",
     "http.post.company-brain.confidential-allocation",
     "http.post.company-brain.confidential-control-choice",
@@ -537,7 +538,7 @@
       "file": "src/components/centropy/world/WorldWorkRecord.tsx",
       "route": "works/:ref",
       "method": "GET",
-      "line": 50,
+      "line": 53,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
@@ -762,6 +763,8 @@
     ],
     "files": [
       "finnor-os/packages/planning/src/contracts.ts",
+      "finnor-os/packages/private-equity/src/project-z/z1-shared-work/work-panel.tsx",
+      "finnor-os/packages/private-equity/src/project-z/z4-execution-proof/ExecutionProofPanel.tsx",
       "finnor-os/packages/shared-types/src/allocation.ts",
       "finnor-os/packages/shared-types/src/application-semantics.ts",
       "finnor-os/packages/shared-types/src/capital-formation.ts",
@@ -912,6 +915,7 @@
       "src/components/centropy/thread/thread-contract.ts",
       "src/components/centropy/thread/use-investigation.ts",
       "src/components/centropy/world/ConfidentialComputationPanel.tsx",
+      "src/components/centropy/world/ViabilityPanel.tsx",
       "src/components/centropy/world/WorldExplorer.tsx",
       "src/components/centropy/world/WorldRelationships.tsx",
       "src/components/centropy/world/WorldWorkRecord.tsx",
@@ -994,7 +998,7 @@
       },
       {
         "file": "src/lib/centropy/capability-manifest.generated.json",
-        "sha256": "9958c308e2a4266c259123d8ae6773e847b8f86cfcf73c3e6cea09df0146758a"
+        "sha256": "62ea09518d45cbe0c80b8b17dcfa1a5b1b235ee8804ed3187d766f8dd7932b20"
       },
       {
         "file": "finnor-os/packages/planning/src/contracts.ts",
@@ -1178,7 +1182,7 @@
       },
       {
         "file": "src/lib/jarvis/openapi-types.ts",
-        "sha256": "b6fd53b076763d9c97acb4a8df942de8f0b86e444c0ddcae99bf97dff7d8700d"
+        "sha256": "78e0a80808b56b40641027818926a769694a9bd54eb780eba2a26d7a25ca93ec"
       },
       {
         "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
@@ -1310,7 +1314,7 @@
       },
       {
         "file": "src/lib/centropy/human-forms.generated.json",
-        "sha256": "78e6da8a2346c1a96712b634d0307535e8adbef6959cc5a72cc2302f8b445ec6"
+        "sha256": "649b41b8a9c36331dc782e6118f4cafa5355b4cf2fcaf6ede71508bd093b1943"
       },
       {
         "file": "src/components/centropy/controls/CanonicalRecordForm.tsx",
@@ -1394,7 +1398,7 @@
       },
       {
         "file": "src/components/centropy/world/WorldWorkRecord.tsx",
-        "sha256": "06b7adb4a5ed940105c8af088e649da459dcde6fe0d48e0173896e0e841f6da5"
+        "sha256": "d633dd599d7c95eaf8bedd9c0525acaf7e213d2639d36e49dd91f93f027d493f"
       },
       {
         "file": "src/components/centropy/thread/PendingEffects.tsx",
@@ -1422,7 +1426,7 @@
       },
       {
         "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
-        "sha256": "61fd1b1c319b355647fd1b33dc768fd038dba11b68938965900bb8f61fec5dfe"
+        "sha256": "86f01688acfc3335a208d1ca02d215cba624974dae9d14d52c24193190de06de"
       },
       {
         "file": "src/components/centropy/controls/LiveInstitutionalControl.tsx",
@@ -1439,6 +1443,18 @@
       {
         "file": "src/components/centropy/world/ConfidentialComputationPanel.tsx",
         "sha256": "7f2202d2a4ef819dd3e8bfda4cf5149043546db69fe454f676e1f57fe87fed93"
+      },
+      {
+        "file": "src/components/centropy/world/ViabilityPanel.tsx",
+        "sha256": "ade638063543f900304e1a8499b7a169ed622a156a5e5cbbb74bda83c45b3649"
+      },
+      {
+        "file": "finnor-os/packages/private-equity/src/project-z/z4-execution-proof/ExecutionProofPanel.tsx",
+        "sha256": "b6649b3fee7f0b969055f2af39ee707c395a4b2bea0bfdadbe0d8e1abe1aeca2"
+      },
+      {
+        "file": "finnor-os/packages/private-equity/src/project-z/z1-shared-work/work-panel.tsx",
+        "sha256": "59dfbfd68bdd3e1f4ae22f742ec39ece76409b4b4116b1a0aa071b889b99331b"
       },
       {
         "file": "src/components/centropy/world/WorldRelationships.tsx",
@@ -4492,7 +4508,7 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "me",
           "method": "GET",
-          "line": 70,
+          "line": 78,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -7192,7 +7208,7 @@
           "file": "src/components/centropy/world/WorldWorkRecord.tsx",
           "route": "works/:ref",
           "method": "GET",
-          "line": 50,
+          "line": 53,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -14018,6 +14034,130 @@
       "externalConfiguration": null
     },
     {
+      "capabilityId": "http.post.company-brain.coalition-read",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/coalition-read",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "BACKEND_API_NO_MOUNTED_FRONTEND",
+      "actualRouteOrTool": "POST /api/company-brain/coalition-read",
+      "frontendSourceBindings": [],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.coalition-submit",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/coalition-submit",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/coalition-submit",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
+          "route": "company-brain/coalition-submit",
+          "method": "POST",
+          "line": 152,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
       "capabilityId": "http.post.company-brain.compute-search-cancel",
       "family": "company-brain",
       "owner": "@finnor/private-equity",
@@ -19403,6 +19543,592 @@
       "externalConfiguration": null
     },
     {
+      "capabilityId": "http.post.company-brain.execution-proof-audit",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/execution-proof-audit",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain",
+        "authority",
+        "source"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/execution-proof-audit",
+      "frontendSourceBindings": [
+        {
+          "file": "finnor-os/packages/private-equity/src/project-z/z4-execution-proof/ExecutionProofPanel.tsx",
+          "route": "company-brain/execution-proof-audit",
+          "method": "POST",
+          "line": 98,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [
+        {
+          "id": "http.post.company-brain.execution-proof-audit",
+          "group": "execution-proofs",
+          "generatedFrom": "finnor-os/openapi.json#paths//api/company-brain/execution-proof-audit/post"
+        }
+      ],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.execution-proof-cancel",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/execution-proof-cancel",
+      "routeDepth": 2,
+      "classification": "CONTROL",
+      "kind": "control",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "runtime_control",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain",
+        "authority",
+        "source"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/execution-proof-cancel",
+      "frontendSourceBindings": [
+        {
+          "file": "finnor-os/packages/private-equity/src/project-z/z4-execution-proof/ExecutionProofPanel.tsx",
+          "route": "company-brain/execution-proof-cancel",
+          "method": "POST",
+          "line": 98,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [
+        {
+          "id": "http.post.company-brain.execution-proof-cancel",
+          "group": "execution-proofs",
+          "generatedFrom": "finnor-os/openapi.json#paths//api/company-brain/execution-proof-cancel/post"
+        }
+      ],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.execution-proof-consume",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/execution-proof-consume",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain",
+        "authority",
+        "source"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/execution-proof-consume",
+      "frontendSourceBindings": [
+        {
+          "file": "finnor-os/packages/private-equity/src/project-z/z4-execution-proof/ExecutionProofPanel.tsx",
+          "route": "company-brain/execution-proof-consume",
+          "method": "POST",
+          "line": 98,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [
+        {
+          "id": "http.post.company-brain.execution-proof-consume",
+          "group": "execution-proofs",
+          "generatedFrom": "finnor-os/openapi.json#paths//api/company-brain/execution-proof-consume/post"
+        }
+      ],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.execution-proof-intake",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/execution-proof-intake",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain",
+        "authority",
+        "source"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/execution-proof-intake",
+      "frontendSourceBindings": [
+        {
+          "file": "finnor-os/packages/private-equity/src/project-z/z4-execution-proof/ExecutionProofPanel.tsx",
+          "route": "company-brain/execution-proof-intake",
+          "method": "POST",
+          "line": 98,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [
+        {
+          "id": "http.post.company-brain.execution-proof-intake",
+          "group": "execution-proofs",
+          "generatedFrom": "finnor-os/openapi.json#paths//api/company-brain/execution-proof-intake/post"
+        }
+      ],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.execution-proof-list",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/execution-proof-list",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/execution-proof-list",
+      "frontendSourceBindings": [
+        {
+          "file": "finnor-os/packages/private-equity/src/project-z/z4-execution-proof/ExecutionProofPanel.tsx",
+          "route": "company-brain/execution-proof-list",
+          "method": "POST",
+          "line": 51,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.execution-proof-plan",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/execution-proof-plan",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain",
+        "authority",
+        "source"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/execution-proof-plan",
+      "frontendSourceBindings": [
+        {
+          "file": "finnor-os/packages/private-equity/src/project-z/z4-execution-proof/ExecutionProofPanel.tsx",
+          "route": "company-brain/execution-proof-plan",
+          "method": "POST",
+          "line": 98,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [
+        {
+          "id": "http.post.company-brain.execution-proof-plan",
+          "group": "execution-proofs",
+          "generatedFrom": "finnor-os/openapi.json#paths//api/company-brain/execution-proof-plan/post"
+        }
+      ],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.execution-proof-read",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/execution-proof-read",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/execution-proof-read",
+      "frontendSourceBindings": [
+        {
+          "file": "finnor-os/packages/private-equity/src/project-z/z4-execution-proof/ExecutionProofPanel.tsx",
+          "route": "company-brain/execution-proof-read",
+          "method": "POST",
+          "line": 55,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.execution-proof-submit",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/execution-proof-submit",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain",
+        "authority",
+        "source"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/execution-proof-submit",
+      "frontendSourceBindings": [
+        {
+          "file": "finnor-os/packages/private-equity/src/project-z/z4-execution-proof/ExecutionProofPanel.tsx",
+          "route": "company-brain/execution-proof-submit",
+          "method": "POST",
+          "line": 98,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [
+        {
+          "id": "http.post.company-brain.execution-proof-submit",
+          "group": "execution-proofs",
+          "generatedFrom": "finnor-os/openapi.json#paths//api/company-brain/execution-proof-submit/post"
+        }
+      ],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
       "capabilityId": "http.post.company-brain.history",
       "family": "company-brain",
       "owner": "@finnor/private-equity",
@@ -21275,7 +22001,7 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-action",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -21342,7 +22068,7 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-admit",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -21407,7 +22133,7 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-artifact",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -21474,7 +22200,7 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-cancel",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -21539,7 +22265,7 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-compare",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -21606,7 +22332,7 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-consent",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -21671,14 +22397,14 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-list",
           "method": "POST",
-          "line": 78,
+          "line": 86,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-list",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -21743,14 +22469,14 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-local",
           "method": "POST",
-          "line": 86,
+          "line": 94,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-local",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -21817,7 +22543,7 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-materialize",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -21884,7 +22610,7 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-observe",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -21949,14 +22675,14 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-read",
           "method": "POST",
-          "line": 90,
+          "line": 98,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-read",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -22023,7 +22749,7 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-reconcile",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -22090,7 +22816,7 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-resume",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -22157,7 +22883,7 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-run",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -22222,14 +22948,14 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-run-read",
           "method": "POST",
-          "line": 97,
+          "line": 105,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-run-read",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -22296,7 +23022,7 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-start",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -22363,7 +23089,7 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-submit",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -22430,7 +23156,7 @@
           "file": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
           "route": "company-brain/interaction-terms",
           "method": "POST",
-          "line": 144,
+          "line": 152,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -27479,6 +28205,617 @@
       },
       "verificationPath": {
         "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.viability-read",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/viability-read",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/viability-read",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/world/ViabilityPanel.tsx",
+          "route": "company-brain/viability-read",
+          "method": "POST",
+          "line": 51,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.viability-recover",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/viability-recover",
+      "routeDepth": 2,
+      "classification": "CONTROL",
+      "kind": "control",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "runtime_control",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/viability-recover",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/world/ViabilityPanel.tsx",
+          "route": "company-brain/viability-recover",
+          "method": "POST",
+          "line": 98,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.viability-submit",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/viability-submit",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/viability-submit",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/world/ViabilityPanel.tsx",
+          "route": "company-brain/viability-submit",
+          "method": "POST",
+          "line": 84,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.z1-admit-shared-work",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/z1-admit-shared-work",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": true,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "human_attestation",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain",
+        "authority",
+        "source"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/z1-admit-shared-work",
+      "frontendSourceBindings": [
+        {
+          "file": "finnor-os/packages/private-equity/src/project-z/z1-shared-work/work-panel.tsx",
+          "route": "company-brain/z1-admit-shared-work",
+          "method": "POST",
+          "line": 113,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "human_attestation",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.z1-cancel-shared-work",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/z1-cancel-shared-work",
+      "routeDepth": 2,
+      "classification": "CONTROL",
+      "kind": "control",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "runtime_control",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain",
+        "authority",
+        "source"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/z1-cancel-shared-work",
+      "frontendSourceBindings": [
+        {
+          "file": "finnor-os/packages/private-equity/src/project-z/z1-shared-work/work-panel.tsx",
+          "route": "company-brain/z1-cancel-shared-work",
+          "method": "POST",
+          "line": 114,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.z1-project-original-work",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/z1-project-original-work",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/z1-project-original-work",
+      "frontendSourceBindings": [
+        {
+          "file": "finnor-os/packages/private-equity/src/project-z/z1-shared-work/work-panel.tsx",
+          "route": "company-brain/z1-project-original-work",
+          "method": "POST",
+          "line": 38,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.z1-read-shared-work",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/z1-read-shared-work",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/z1-read-shared-work",
+      "frontendSourceBindings": [
+        {
+          "file": "finnor-os/packages/private-equity/src/project-z/z1-shared-work/work-panel.tsx",
+          "route": "company-brain/z1-read-shared-work",
+          "method": "POST",
+          "line": 86,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.z1-reserve-original-budget",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/z1-reserve-original-budget",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain",
+        "authority",
+        "source"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/z1-reserve-original-budget",
+      "frontendSourceBindings": [
+        {
+          "file": "finnor-os/packages/private-equity/src/project-z/z1-shared-work/work-panel.tsx",
+          "route": "company-brain/z1-reserve-original-budget",
+          "method": "POST",
+          "line": 112,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/WorldExplorer.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.company-brain.z1-submit-shared-work",
+      "family": "company-brain",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "company-brain/z1-submit-shared-work",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD",
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain",
+        "authority",
+        "source"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/company-brain/z1-submit-shared-work",
+      "frontendSourceBindings": [
+        {
+          "file": "finnor-os/packages/private-equity/src/project-z/z1-shared-work/work-panel.tsx",
+          "route": "company-brain/z1-submit-shared-work",
+          "method": "POST",
+          "line": 111,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
         "backendSource": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts"
       },
       "presentation": {
@@ -43091,6 +44428,96 @@
       "externalConfiguration": null
     },
     {
+      "capabilityId": "planner.query:execution_proof_capsule_v1",
+      "family": "operational-query",
+      "owner": "@finnor/orchestration",
+      "transport": "planner",
+      "method": null,
+      "routePattern": null,
+      "routeDepth": 0,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": true,
+      "modelCallable": true,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [
+        "workId"
+      ],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "backend_runtime",
+      "presentationTargets": [
+        "THREAD",
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "RUNTIME",
+      "tests": [],
+      "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+      "planning": {
+        "capability": "query:execution_proof_capsule_v1",
+        "kind": "query",
+        "modelProposable": true,
+        "available": true,
+        "health": "available",
+        "risk": "low",
+        "irreversible": false,
+        "requiredReferences": [
+          "workId"
+        ],
+        "effectClass": null,
+        "observationStrategy": "operational_query",
+        "reversibility": "read_only",
+        "supportedRecoveryModes": [
+          "retry",
+          "replan",
+          "escalate"
+        ],
+        "externalSideEffect": false,
+        "authorityRequirement": "query"
+      },
+      "disposition": "CANONICAL_AGENT_CAPABILITY",
+      "actualRouteOrTool": "query:execution_proof_capsule_v1",
+      "frontendSourceBindings": [],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": {
+        "registry": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+        "modelCallable": true,
+        "available": true,
+        "health": "available",
+        "kind": "query",
+        "executor": "canonical operational-query executor"
+      },
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/packages/orchestration/src/plugin-registry.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "backend_runtime",
+        "backendSource": "finnor-os/packages/orchestration/src/plugin-registry.ts"
+      },
+      "presentation": {
+        "targets": [
+          "THREAD",
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/thread/RecordedValue.tsx",
+          "src/components/centropy/thread/PendingEffects.tsx",
+          "src/components/centropy/world/WorldWorkRecord.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
       "capabilityId": "planner.query:harness_program_v1",
       "family": "operational-query",
       "owner": "@finnor/orchestration",
@@ -46781,6 +48208,8 @@
       "note": "Consult this proof's scope and limitations. A family proof does not certify every capability."
     }
   ],
+  "executedProofIndexMode": "CURRENT_FILES_READ",
+  "sourceBuildProvenance": null,
   "limitations": [
     "Classification coverage is not a claim of 100% executed capability coverage",
     "Backend API without mounted frontend is an unverified path, not a proven malfunction",

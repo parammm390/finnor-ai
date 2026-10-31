@@ -1,20 +1,20 @@
 import {
-  canonical, digest, fail, PROFILE, ProblemSchema, type InteractionProblem, type InteractionModel, type Node
+  canonical, digest, fail, PROFILE, ProblemSchema, type InteractionProblem, type InteractionModel, type Node, type Party, participantIndex
 } from "./contracts.js";
 import { q, ONE, ZERO, sum } from "./exact.js";
 
 export type ObservationToken = { date: number; key: string; value: string; visibility: "PUBLIC" | "PRIVATE" };
 export type RecallToken = { informationKey: string; actionId: string };
 export type InformationSet = {
-  id: string; participant: "P0" | "P1"; actionIds: string[]; nodeIds: string[]; date: number;
+  id: string; participant: Party; actionIds: string[]; nodeIds: string[]; date: number;
   observations: ObservationToken[]; recall: RecallToken[];
 };
 export type CompiledNode = {
   id: string; original: Node; kind: Node["kind"]; date: number; depth: number;
   informationKey: string | null; controlKey: string | null; chanceReach: string;
   edges: { actionId: string; next: string; probability: string }[];
-  observations: [ObservationToken[], ObservationToken[]]; publicObservations: ObservationToken[];
-  recall: [RecallToken[], RecallToken[]];
+  observations: ObservationToken[][]; publicObservations: ObservationToken[];
+  recall: RecallToken[][];
 };
 export type CompiledGame = {
   modelId: string; root: string; informationSets: InformationSet[]; nodes: Record<string, CompiledNode>;
@@ -71,8 +71,8 @@ function originalTree(problem: InteractionProblem, model: InteractionModel) {
   return { nodes, controls, rules };
 }
 function compatibleBases(problem: InteractionProblem) {
-  for (const i of [0, 1] as const) {
-    const outside = problem.participants[i].outsideOption;
+  for (let i = 0; i < problem.participants.length; i++) {
+    const outside = problem.participants[i]!.outsideOption;
     if (!same(outside.basis, problem.quantityBasis.utilities[i])) fail("Y3_OUTSIDE_OPTION_BASIS");
     if (outside.value === null || outside.basis.sourceStatus === "UNKNOWN") fail("Y3_UNKNOWN_OUTSIDE_OPTION");
   }
@@ -130,11 +130,11 @@ export function compileGame(input: InteractionProblem, suppliedModel: Interactio
         fail("Y3_MANDATORY_DISCLOSURE_MISSING");
     }
   }
-  function walk(id: string, depth: number, observed: [ObservationToken[], ObservationToken[]],
-    publicHistory: ObservationToken[], recall: [RecallToken[], RecallToken[]],
+  function walk(id: string, depth: number, observed: ObservationToken[][],
+    publicHistory: ObservationToken[], recall: RecallToken[][],
     delivered: Map<string, Set<string>>, chanceReach: string) {
     const n = original.get(id)!;
-    const obs: [ObservationToken[], ObservationToken[]] = [[...observed[0]], [...observed[1]]];
+    const obs: ObservationToken[][] = observed.map(row => [...row]);
     const pub = [...publicHistory];
     const sent = new Map([...delivered].map(([k, v]) => [k, new Set(v)]));
     for (const o of n.observations) {
@@ -143,7 +143,8 @@ export function compileGame(input: InteractionProblem, suppliedModel: Interactio
         visibility: o.recipients.includes("PUBLIC") ? "PUBLIC" : "PRIVATE"
       };
       if (o.recipients.includes("PUBLIC")) pub.push(token);
-      for (const i of [0, 1] as const) if (o.recipients.includes(i === 0 ? "P0" : "P1") || o.recipients.includes("PUBLIC")) obs[i].push(token);
+      for (const [i, participant] of problem.participants.entries())
+        if (o.recipients.includes(participant.id) || o.recipients.includes("PUBLIC")) obs[i]!.push(token);
       const recipients = sent.get(o.key) ?? new Set<string>();
       o.recipients.forEach(r => recipients.add(r)); sent.set(o.key, recipients);
     }
@@ -152,10 +153,10 @@ export function compileGame(input: InteractionProblem, suppliedModel: Interactio
       if (!limit || q(value).compare(ZERO) < 0 || q(value).compare(q(limit.value!)) > 0) fail("Y3_ALL_HISTORY_RESOURCE_LIMIT");
     }
     if (n.liabilities.some(v => q(v).compare(ZERO) < 0)) fail("Y3_NEGATIVE_LIABILITY");
-    for (const i of [0, 1] as const) {
-      const payment = q(n.payments[i]), absolute = payment.compare(ZERO) < 0 ? ZERO.sub(payment) : payment;
-      if (absolute.compare(q(problem.financialLimits.absolutePayments[i].value!)) > 0
-        || q(n.liabilities[i]).compare(q(problem.financialLimits.liabilities[i].value!)) > 0)
+    for (let i = 0; i < problem.participants.length; i++) {
+      const payment = q(n.payments[i]!), absolute = payment.compare(ZERO) < 0 ? ZERO.sub(payment) : payment;
+      if (absolute.compare(q(problem.financialLimits.absolutePayments[i]!.value!)) > 0
+        || q(n.liabilities[i]!).compare(q(problem.financialLimits.liabilities[i]!.value!)) > 0)
         fail("Y3_ALL_HISTORY_FINANCIAL_LIMIT");
     }
     const state: CompiledNode = {
@@ -177,12 +178,12 @@ export function compileGame(input: InteractionProblem, suppliedModel: Interactio
       edges = n.edges.filter(e => e.actionId === choice);
     }
     if (n.kind === "DECISION") {
-      const p = n.participant === "P0" ? 0 : 1;
-      const key = informationKey(n.participant, n.date, obs[p], recall[p]);
+      const p = participantIndex(n.participant);
+      const key = informationKey(n.participant, n.date, obs[p]!, recall[p]!);
       state.informationKey = key;
       const info = infos.get(key) ?? {
         id: key, participant: n.participant, actionIds: n.edges.map(e => e.actionId), nodeIds: [],
-        date: n.date, observations: obs[p], recall: recall[p]
+        date: n.date, observations: obs[p]!, recall: recall[p]!
       };
       if (!same([...info.actionIds].sort(), n.edges.map(e => e.actionId).sort())) fail("Y3_INFORMATION_ACTION_ALPHABET");
       info.nodeIds.push(id); infos.set(key, info);
@@ -196,14 +197,14 @@ export function compileGame(input: InteractionProblem, suppliedModel: Interactio
       if (q(probability).compare(ZERO) === 0) continue;
       const next = original.get(e.next)!;
       if (next.date > n.date) mandatory(sent, next.date - 1);
-      const nextRecall: [RecallToken[], RecallToken[]] = [[...recall[0]], [...recall[1]]];
-      if (n.kind === "DECISION") nextRecall[n.participant === "P0" ? 0 : 1].push({ informationKey: state.informationKey!, actionId: e.actionId });
+      const nextRecall: RecallToken[][] = recall.map(row => [...row]);
+      if (n.kind === "DECISION") nextRecall[participantIndex(n.participant)]!.push({ informationKey: state.informationKey!, actionId: e.actionId });
       state.edges.push({ actionId: e.actionId, next: e.next, probability });
       walk(e.next, depth + 1, obs, pub, nextRecall, sent, q(chanceReach).mul(q(probability)).toString());
     }
   }
-  walk(model.root, 0, [[], []], [], [[], []], new Map(), "1");
-  for (const p of ["P0", "P1"])
+  walk(model.root, 0, problem.participants.map(() => []), [], problem.participants.map(() => []), new Map(), "1");
+  for (const { id: p } of problem.participants)
     if ([...infos.values()].filter(i => i.participant === p).length > PROFILE.protocol_horizon_and_deviation_classes.maxInformationSetsPerParty)
       fail("Y3_INFORMATION_SET_BOUND");
   return { modelId: model.id, root: model.root, informationSets: [...infos.values()], nodes, topologicalOrder, usedControlKeys: [...used] };

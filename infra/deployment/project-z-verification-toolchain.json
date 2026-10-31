@@ -1,0 +1,18 @@
+{
+  "schema": "finnor.project-z.local-verification-toolchain.v1",
+  "supabaseAuth": {
+    "version": "v2.197.0",
+    "sourceCommit": "4eee58f296d9698a1c2c0ae14d7a0b379c7622d3",
+    "platform": "linux-x64",
+    "url": "https://github.com/supabase/auth/releases/download/v2.197.0/auth-v2.197.0-amd64.tar.xz",
+    "archiveBytes": 9897464,
+    "archiveSha256": "b5c2991d1df760c9b099c1c2395a94bd1c2f83ed58901934921997179dc9f7ea"
+  },
+  "ports": {
+    "database": 55441,
+    "auth": 54322,
+    "authGateway": 54321,
+    "frontend": 3001,
+    "api": 3101
+  }
+}

@@ -142,16 +142,41 @@ export async function validateEnterpriseInterventionModel(ctx: PeMutationContext
   if (reason) await saveEvents(ctx, [interventionModelEvent(model, 'VALIDITY_CHANGE', { reason, checkedScope: 'S1_AND_LOCAL_ARTIFACT_NOT_SCIENTIFIC_ADMISSION' })]);
   return { status: reason ? 'INVALIDATED' : 'CURRENT', reason: reason ?? 'CURRENT_SOURCE_AND_LOCAL_ARTIFACT_ONLY_NOT_CAUSAL_METHOD_OR_EXECUTION_ADMISSION', executionAuthorityGranted: false, checkedScope: 'S1_AND_LOCAL_ARTIFACT_NOT_SCIENTIFIC_ADMISSION', modelRef: model.ref };
 }
-export async function queryEnterpriseInterventionModel(ctx: PeMutationContext, input: { modelRef: unknown; query: unknown }): Promise<InterventionResponseBundle> {
+export async function queryEnterpriseInterventionModel(ctx: PeMutationContext, input: { modelRef: unknown; query: unknown; executionProofGuard?: unknown }): Promise<InterventionResponseBundle> {
   const model = await readModel(ctx, input.modelRef);
   if (await current(ctx, model)) throw unavailable();
   await recoverModelExperience(ctx,model);
+  await (await import('./project-z/z4-execution-proof/owner-consumer')).assertExecutionProofGuard(ctx,input.executionProofGuard,'S3',{modelRef:input.modelRef,query:input.query},'BEFORE');
   const response = await queryInterventionModel(model, input.query,{preparedReferenceSink:async({schema,...reference})=>{await enqueueNativeReferences(ctx,[{...reference,owner:'S3'}],model.beliefBindings.map(b=>b.rightsRef));}});
   if (await current(ctx, model)) throw unavailable();
   await enqueueNativeReferences(ctx,[nativeReference('S3',response.queryRef,response.query,'s3-response-query-v1'),{...response.ref,content:{modelRef:response.modelRef,queryRef:response.queryRef,identification:response.identification,responses:response.responses,compute:response.compute}},...(response.compute?[nativeReference('S3',response.compute.id,response.compute,'model-compute-v1')]:[]),{...response.lineage.interventionRef,content:response.query.intervention},{...response.lineage.comparatorRef,content:response.query.comparator}],model.beliefBindings.map(b=>b.rightsRef));
   await saveEvents(ctx, response.experience);
   await immutableFile(ctx, 'responses', response.ref.contentDigest, response);
+  await (await import('./project-z/z4-execution-proof/owner-consumer')).assertExecutionProofGuard(ctx,input.executionProofGuard,'S3',{modelRef:input.modelRef,query:input.query},'AFTER');
   return response;
+}
+/** Read only this principal's immutable original S3 response, with current rights. */
+export async function readEnterpriseInterventionResponse(ctx:PeMutationContext,value:unknown):Promise<InterventionResponseBundle>{
+ const parsed=ExperimentRefSchema.safeParse(value);
+ if(!parsed.success||parsed.data.owner!=='S3'||parsed.data.version!=='s3-temporal-linear-v1'||
+  parsed.data.id!==`intervention-response:${parsed.data.contentDigest}`)throw unavailable();
+ try{
+  await checkedStore(ctx);const dir=join(directory(ctx),'responses');await privateDirectory(dir);
+  const file=await open(join(dir,`${parsed.data.contentDigest}.json`),constants.O_RDONLY|constants.O_NOFOLLOW);
+  let response:InterventionResponseBundle;
+  try{
+   const st=await file.stat();
+   if(!st.isFile()||st.size>8*1024*1024||st.uid!==process.getuid?.()||(st.mode&0o077)!==0)throw unavailable();
+   response=JSON.parse(await file.readFile('utf8'));
+  }finally{await file.close();}
+  if(response.schema!=='finnor.s3.response-bundle.v1'||epistemicHash(response.ref)!==epistemicHash(parsed.data)||
+   response.queryRef!==`response-query:${epistemicHash(response.query)}`||
+   epistemicHash({modelRef:response.modelRef,queryRef:response.queryRef,identification:response.identification,
+    responses:response.responses,compute:response.compute})!==parsed.data.contentDigest)throw unavailable();
+  const model=await readModel(ctx,response.modelRef);await readableHistory(ctx,model);
+  if(epistemicHash(model.ref)!==epistemicHash(response.modelRef)||await current(ctx,model))throw unavailable();
+  return response;
+ }catch{throw unavailable();}
 }
 export async function projectEnterpriseInterventionExperiment(ctx: PeMutationContext, modelRef: unknown): Promise<{
   schema: 'finnor.s3.experiment-projection.v1'; status: 'UNSUPPORTED'; modelRef: ExperimentRef;

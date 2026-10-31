@@ -23,6 +23,8 @@ function block(source, start, end) {
 const companyBrainSource = readFileSync(join(apiRoot, "company-brain/[operation]/route.ts"), "utf8")
 const r1Operations = registeredOperations("finnor-os/packages/private-equity/src/r1/api.ts", "R1_OPERATIONS")
 const r1Reads=new Set(["r1-read","r1-review","r1-projection","r1-history","r1-record"])
+const viabilityOperations = registeredOperations("finnor-os/packages/private-equity/src/project-z/z3-viability/contracts.ts", "Z3_OPERATIONS")
+if (!companyBrainSource.includes("VIABILITY_OPERATIONS")) throw new Error("Viability operations must be actually delegated")
 function registeredOperations(path, name) {
   const source = readFileSync(join(project, path), "utf8")
   const match = source.match(new RegExp(`export\\s+const\\s+${name}\\s*=\\s*(?:new\\s+Set\\s*\\(\\s*)?\\[([\\s\\S]*?)\\]`))
@@ -35,6 +37,7 @@ function registeredOperations(path, name) {
   return operations
 }
 const delegatedRegistries = [
+  ["SharedWorkOperations", "project-z/z1-shared-work/api.ts"],
   ["INSTITUTION_OPERATIONS", "institution-program/api.ts"],
   ["EVIDENCE_OPERATIONS", "evidence-execution/api.ts"],
   ["PRIMARY_OPERATIONS", "primary-diligence/api.ts"],
@@ -48,7 +51,9 @@ const delegatedRegistries = [
   ["EconomicOperations", "economic-action-theory/api.ts"],
   ["StrategicOperations", "strategic-response/contracts.ts"],
   ["CONFIDENTIAL_OPERATIONS", "confidential-computation/api.ts"],
+  ["EXECUTION_PROOF_OPERATIONS", "project-z/z4-execution-proof/contracts.ts"],
   ["InteractionOperations", "interaction-synthesis/api.ts"],
+  ["CoalitionOperations", "project-z/z2-coalitions/api.ts"],
   ["M1_OPERATIONS", "decision-slice/handler.ts"],
   ["CONTINUATION_OPERATIONS", "live-recompilation/api.ts"],
   ["PROCEDURE_OPERATIONS", "procedure-induction/api.ts"],
@@ -87,6 +92,7 @@ const coalitionOperations = new Map([
   ["obligations/coalition-prepare", "MUTATION"],
 ])
 const companyBrainOperations = [...new Set([
+  ...viabilityOperations,
   ...capitalOperations,...formationOperations,...m4Operations.keys(),
   ...[...companyBrainSource.matchAll(/case "([a-z-]+)":/g)].map((match) => match[1]),
   ...delegatedRegistries.flatMap(([name, file]) => {
@@ -96,6 +102,8 @@ const companyBrainOperations = [...new Set([
 ])]
 const closingOperations = registeredOperations("finnor-os/packages/private-equity/src/closing/api.ts", "CLOSING_OPERATIONS")
 const companyBrainReads = new Set([
+  "viability-read",
+  "z1-read-shared-work", "z1-project-original-work",
   "institution-read", "institution-status", "institution-witness", "institution-sources", "institution-inputs",
   "belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse",
   "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context",
@@ -120,6 +128,7 @@ const companyBrainReads = new Set([
   "economic-programme-read", "economic-reservation-read",
   "response-model-read", "response-model-list", "response-model-artifact", "response-model-compare", "response-use-read",
   "interaction-read", "interaction-list", "interaction-artifact", "interaction-compare", "interaction-local", "interaction-run-read",
+  "coalition-read",
 ])
 const elicitationOperations=registeredOperations("finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts","ELICITATION_OPERATIONS")
 const elicitationReads=new Set(["context","read","status","history"])
@@ -152,6 +161,13 @@ const atlasOperations = new Map([...block(atlasSource, "export const R7Operation
 if (!atlasOperations.size) throw new Error("Missing versioned R7 operation classes")
 
 const operationClasses = new Map()
+operationClasses.set("company-brain/z1-cancel-shared-work", "CONTROL")
+operationClasses.set("company-brain/viability-recover", "CONTROL")
+for (const operation of ["execution-proof-read", "execution-proof-list"])
+  operationClasses.set(`company-brain/${operation}`, "READ")
+operationClasses.set("company-brain/execution-proof-cancel", "CONTROL")
+for (const operation of ["execution-proof-intake", "execution-proof-plan", "execution-proof-submit", "execution-proof-audit", "execution-proof-consume"])
+  operationClasses.set(`company-brain/${operation}`, "MUTATION")
 for (const operation of ["response-model-cancel", "response-model-resume", "response-use-cancel", "response-use-resume"])
   operationClasses.set(`company-brain/${operation}`, "CONTROL")
 for (const [family, operations] of ownerLeafOperations) for (const operation of operations)
@@ -224,6 +240,7 @@ const denyPrefixes = [
 ]
 const restrictedOperations = new Set(["allocations/coalition-release", "obligations/coalition-consent"])
 const humanOnlyPatterns = [
+  /^company-brain\/z1-admit-shared-work$/,
   /^company-brain\/confidential-(?:consent|revoke|import-release)$/,
   /^company-brain\/interaction-(?:consent|observe|action)$/,
   /^elicitation-protocols\/(?:report|event|review|close|use)$/,
@@ -295,7 +312,10 @@ function routeEntry(method, path, source) {
     verificationClass: read ? "canonical_read" : "canonical_reread",
     presentationTargets: userProduct ? presentationTargets : [],
     invalidationTags: read ? [] : family==="elicitation-protocol"?["work","company-brain","elicitation-protocol"]:family==="branch-fabric"?["work","branch-fabric"]:
+      path.startsWith("company-brain/z1-")?["work","company-brain","authority","source"]:
+      path.startsWith("company-brain/viability-")?["work","company-brain"]:
       path.startsWith("company-brain/response-")?["work","company-brain"]:
+      path.startsWith("company-brain/execution-proof-")?["work","company-brain","authority","source"]:
       path.startsWith("company-brain/confidential-")?["work","company-brain","authority","source","underwriting"]:
       path.startsWith("company-brain/capital-formation-")?["work","company-brain","authority","source"]:
       path.startsWith("company-brain/capital-program-")||m4Operations.has(path.slice("company-brain/".length))?["work","company-brain"]:tags(family),

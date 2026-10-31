@@ -7,7 +7,7 @@ import {centropyGet,centropyPost,CentropyApiError} from '../lib/api'
 import {getSupabaseBrowser} from '@/lib/centropy/supabase-browser'
 
 const paths={
- submit:'interaction-submit',read:'interaction-read',list:'interaction-list',admit:'interaction-admit',resume:'interaction-resume',
+ coalitionSubmit:'coalition-submit',submit:'interaction-submit',read:'interaction-read',list:'interaction-list',admit:'interaction-admit',resume:'interaction-resume',
  cancel:'interaction-cancel',artifact:'interaction-artifact',compare:'interaction-compare',terms:'interaction-terms',
  local:'interaction-local',consent:'interaction-consent',start:'interaction-start',runRead:'interaction-run-read',
  observe:'interaction-observe',action:'interaction-action',materialize:'interaction-materialize',run:'interaction-run',reconcile:'interaction-reconcile',
@@ -29,22 +29,30 @@ function watchLogout(){
 }
 const Ref=z.object({owner:z.string(),id:z.string(),version:z.string(),contentDigest:z.string().regex(/^[a-f0-9]{64}$/)})
 const Root=z.object({entityType:z.string(),entityId:z.string().uuid()})
-const Terms=z.object({ref:Ref,id:z.string().uuid(),revision:z.number().int(),validUntil:z.string()}).passthrough()
-const Local=z.object({protocolId:z.string().uuid(),tenantId:z.string().uuid(),principalId:z.string().uuid(),participant:z.enum(['P0','P1']),
+const CoalitionTerms=z.object({schema:z.literal('finnor.project-z.z2.terms-contract.v1'),certificateRef:Ref,
+ incentiveConcept:z.string(),coalitionLimit:z.string(),excludedThreatClasses:z.array(z.string()),
+ actualCompliance:z.literal('UNKNOWN'),privateProofDataIncluded:z.literal(false),protectedAdmission:z.literal(false),
+ productionActivated:z.literal(false),executionAuthorityGranted:z.literal(false)}).passthrough()
+const Terms=z.object({ref:Ref,id:z.string().uuid(),revision:z.number().int(),validUntil:z.string(),
+ coalition:CoalitionTerms.optional()}).passthrough()
+const Local=z.object({protocolId:z.string().uuid(),tenantId:z.string().uuid(),principalId:z.string().uuid(),participant:z.enum(['P0','P1','P2','P3']),
  workId:z.string().uuid(),root:Root,current:z.boolean(),status:z.string(),currentnessReasons:z.array(z.string()),
- terms:Terms.nullable(),consents:z.array(z.unknown()),runs:z.array(z.object({id:z.string().uuid(),status:z.string()})),
+ terms:Terms.nullable(),participantWork:z.object({workId:z.string().uuid(),workInputId:z.string().uuid(),
+  originalWorkId:z.string().uuid(),originalEpisodeId:z.string().uuid(),termsRef:Ref,participant:z.string(),
+  originalBudgetOnly:z.literal(true),actualCompliance:z.literal('UNKNOWN'),executionAuthorityGranted:z.literal(false)}).nullable().optional(),
+ participantWorkStatus:z.string().optional(),consents:z.array(z.unknown()),runs:z.array(z.object({id:z.string().uuid(),status:z.string()})),
  protectedQualification:z.literal(false),productionActivated:z.literal(false),financialEfficacyEstablished:z.literal(false)})
 const Owner=z.object({protocolId:z.string().uuid(),tenantId:z.string().uuid(),principalId:z.string().uuid(),workId:z.string().uuid(),
  root:Root,status:z.string(),current:z.boolean(),artifact:z.unknown().nullable(),admission:z.unknown().nullable(),resumable:z.boolean(),
  counters:z.object({episodeId:z.string(),attempts:z.number(),maxAttempts:z.number(),retainedBytes:z.number(),deadlineAt:z.string()}),
  events:z.array(z.unknown()),protectedQualification:z.literal(false),productionActivated:z.literal(false)}).passthrough()
-const Run=z.object({runId:z.string().uuid(),protocolId:z.string().uuid(),workId:z.string().uuid(),root:Root,participant:z.enum(['P0','P1']),
+const Run=z.object({runId:z.string().uuid(),protocolId:z.string().uuid(),workId:z.string().uuid(),root:Root,participant:z.enum(['P0','P1','P2','P3']),
  current:z.boolean(),status:z.string(),programmeId:z.string().uuid().nullable(),
  local:z.object({viewDigest:z.string(),revision:z.number().int(),status:z.string(),observations:z.array(z.unknown()),
   actions:z.array(z.object({id:z.string(),prescribedProbability:z.string(),permittedDeviation:z.literal(true)}))}).passthrough().nullable(),
  intent:z.object({ref:Ref}).passthrough().nullable(),protectedQualification:z.literal(false),financialEfficacyEstablished:z.literal(false)}).passthrough()
 const pretty=(value:unknown)=>JSON.stringify(value,null,2)
-const keyed=new Set<Operation>(['submit','terms','consent','start','observe','action','materialize'])
+const keyed=new Set<Operation>(['submit','coalitionSubmit','terms','consent','start','observe','action','materialize'])
 
 export function InteractionProtocolPanel({root,workId}:{root:{entityType:string;entityId:string};workId:string}){
  const {session}=useCentropyAuth(),logical=JSON.stringify([session?.user.id??null,root.entityType,root.entityId,workId]),
@@ -59,10 +67,10 @@ export function InteractionProtocolPanel({root,workId}:{root:{entityType:string;
   [result,setResult]=useState<{identity:string;value:unknown}|null>(null),[busy,setBusy]=useState(false),
   [message,setMessage]=useState('Select the exact Work to construct or inspect a dynamic interaction.'),
   [specification,setSpecification]=useState(''),[reservation,setReservation]=useState(''),[observation,setObservation]=useState(''),
-  [online,setOnline]=useState(true)
+  [online,setOnline]=useState(true),[coalitionRequired,setCoalitionRequired]=useState(false)
  const shown=view?.identity===identity?view:null,shownRun=run?.identity===identity&&run.value.protocolId===shown?.local.protocolId?run.value:null,
   enabled=!!session&&online&&formIdentity===identity&&actor?.identity===identity
- const wipe=()=>{setView(null);setRun(null);setResult(null);setList(null);setSpecification('');setReservation('');setObservation('')}
+ const wipe=()=>{setView(null);setRun(null);setResult(null);setList(null);setSpecification('');setReservation('');setObservation('');setCoalitionRequired(false)}
  const refresh=useCallback(async(sequence:number,preferred?:string)=>{
   if(!session||!navigator.onLine)return
   const expected=identity,current=()=>identityRef.current===expected&&epoch.current===sequence
@@ -188,12 +196,21 @@ export function InteractionProtocolPanel({root,workId}:{root:{entityType:string;
    {list?.identity===identity&&list.rows.length?<label>Interaction<select disabled={busy||!!pending.current} value={shown?.local.protocolId??selected.current}
     onChange={e=>{selected.current=e.target.value;selectedRun.current='';wipe();void refresh(++epoch.current,e.target.value)}}>
     {list.rows.map(p=><option key={p.id} value={p.id}>{p.id} · {p.status}</option>)}</select></label>:null}
-   <details><summary>Construct from original models and fixed meanings</summary><form onSubmit={e=>jsonForm(e,'submit',specification,
+   <details><summary>Construct from original models and fixed meanings</summary><form onSubmit={e=>jsonForm(e,coalitionRequired?'coalitionSubmit':'submit',specification,
     {schema:'finnor.interaction-request.v1',root,workId,...(shown?.owner?{parentProtocolId:shown.local.protocolId}:{})})}>
+    <label><input type="checkbox" checked={coalitionRequired} disabled={busy||!!pending.current}
+     onChange={e=>setCoalitionRequired(e.target.checked)}/>Require ex-ante correlated coalition checks</label>
+    {coalitionRequired?<p>Development request for two to four participants. Checks cover ex-ante correlated joint local contingent deviations in every supplied model. No interim coalition-proof, later-formation, MASE or Abraham guarantee. Actual compliance is unknown.</p>:null}
     <label>Original problem, fixed Y1 lowering and canonical source bindings JSON<textarea value={specification} onChange={e=>setSpecification(e.target.value)}
-     rows={8} required maxLength={1000000} spellCheck={false}/></label><button disabled={busy}>Queue dynamic synthesis</button></form></details>
+     rows={8} required maxLength={1000000} spellCheck={false}/></label><button disabled={busy}>{coalitionRequired?'Queue coalition-resilient synthesis':'Queue dynamic synthesis'}</button></form></details>
   </>:null}
-  {enabled&&shown?<><p>{shown.local.participant} · {shown.local.status} · {shown.local.current?'current':'new use disabled'}.</p>
+  {enabled&&shown?<>
+   {shown.local.participantWorkStatus?<section aria-label="Your canonical participant Work">
+    <h5>Your canonical participant Work</h5><p>{shown.local.participantWorkStatus}</p>
+    {shown.local.participantWork?<><p>Work {shown.local.participantWork.workId}. Original episode {shown.local.participantWork.originalEpisodeId}.</p>
+     <p>Uses only the original budget and exact terms. No new reservation or effect authority. Actual compliance: UNKNOWN.</p></>:null}
+   </section>:null}
+   <p>{shown.local.participant} · {shown.local.status} · {shown.local.current?'current':'new use disabled'}.</p>
    {shown.owner?<><p>Attempts {shown.owner.counters.attempts}/{shown.owner.counters.maxAttempts}. Original deadline {shown.owner.counters.deadlineAt}. Retained occupation {shown.owner.counters.retainedBytes} bytes.</p>
     <details><summary>Constructed policy, exact incentive and global-belief checks</summary><pre>{pretty(shown.owner.artifact)}</pre></details>
     <details><summary>Native attempts, invalidation, costs and recovery</summary><pre>{pretty(shown.owner.events)}</pre></details>
@@ -208,6 +225,12 @@ export function InteractionProtocolPanel({root,workId}:{root:{entityType:string;
     </>:null}
     <button disabled={busy} onClick={()=>void act('compare',{protocolId:shown.local.protocolId},false)}>Inspect current dynamic fallback</button>
    </>:null}
+   {terms?.coalition&&shown.local.current?<section aria-label="Coalition incentive contract">
+    <h5>Exact coalition incentive contract</h5><p>Ex-ante correlated joint local contingent deviations, all nonempty coalitions through the original participant count.</p>
+    <p>Concept: {terms.coalition.incentiveConcept}. Scope: {terms.coalition.coalitionLimit}.</p>
+    <p>Excluded: {terms.coalition.excludedThreatClasses.join(', ')}. Actual compliance: UNKNOWN.</p>
+    <p>Certificate {terms.coalition.certificateRef.contentDigest}. No private proof data, protected admission or effect authority.</p>
+   </section>:null}
    {terms&&shown.local.current?<><details open><summary>Exact current terms, no effect authority</summary><pre>{pretty(terms)}</pre></details>
     <button disabled={busy} onClick={()=>consent('TERMS','ACCEPT')}>Accept exact protocol terms</button>
     <button disabled={busy} onClick={()=>consent('TERMS','WITHDRAW')}>Withdraw exact protocol terms</button>

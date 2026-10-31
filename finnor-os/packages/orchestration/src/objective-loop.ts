@@ -1232,6 +1232,60 @@ export async function schedulePreparedConfidentialObjectiveTx(db:Db,params:{
  await scheduleIterationTx(db,loop,new Date());
 }
 
+/** Schedule original-goal observation only after durable, doubly guarded native readback. */
+export async function schedulePreparedExecutionProofObjectiveTx(db:Db,params:{
+ tenantId:string;workId:string;planRevisionId:string;sessionId:string;definitionDigest:string;
+ capsuleDigest:string;resultDigest:string;useId:string;
+}):Promise<void>{
+ const [plan]=await db.select().from(workPlanRevisions).where(and(eq(workPlanRevisions.tenantId,params.tenantId),
+  eq(workPlanRevisions.workId,params.workId),eq(workPlanRevisions.id,params.planRevisionId))).limit(1);
+ if(!plan?.objectiveLoopId||plan.status!=='active'||!plan.workInputId)throw Error('Z4_NATIVE_ACTIVE_OBJECTIVE_PLAN_REQUIRED');
+ await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${params.tenantId}
+  AND ${workObjectiveLoops.id}=${plan.objectiveLoopId} FOR NO KEY UPDATE`);
+ let [loop]=await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),
+  eq(workObjectiveLoops.id,plan.objectiveLoopId))).limit(1);
+ const deadline=(plan.constraintSet as {deadlineAt?:unknown})?.deadlineAt;
+ if(!loop||loop.workId!==params.workId||!loop.createdBy||!['waiting','continue'].includes(loop.state)||
+  loop.deadlineAt.getTime()<=Date.now()||typeof deadline!=='string'||Date.parse(deadline)!==loop.deadlineAt.getTime())
+  throw Error('Z4_NATIVE_ORIGINAL_OBJECTIVE_FENCED');
+ const condition=parseObjectiveSuccessCondition(loop.successCondition);
+ if(condition.mode!=='all'||condition.criteria.length!==3||!condition.criteria.every(c=>c.kind==='canonical_query'
+  &&c.request.intent==='execution_proof_capsule_v1'&&c.request.workId===params.workId)||
+  !Object.entries({status:'CHECKED',definitionDigest:params.definitionDigest,nativeOwnerConsumed:true}).every(([key,expected])=>
+   condition.criteria.some(c=>c.kind==='canonical_query'&&c.assertion.path.join('.')==='data.'+key&&
+    c.assertion.operator==='eq'&&c.assertion.expected===expected)))throw Error('Z4_NATIVE_ORIGINAL_SUCCESS_CONDITION_CHANGED');
+ const ready=await db.execute(sql`SELECT j.id FROM finnor_os.jobs j
+  JOIN finnor_os.work_inputs i ON i.tenant_id=j.tenant_id AND i.work_id=${params.workId}::uuid AND i.id=${plan.workInputId}::uuid
+  WHERE j.tenant_id=${params.tenantId}::uuid AND j.id=${params.sessionId}::uuid AND j.type='prove_exact_execution_v1'
+   AND j.payload->>'tenantId'=${params.tenantId} AND j.payload->>'principalId'=${loop.createdBy}
+   AND j.payload->>'sessionId'=${params.sessionId} AND j.payload->>'workId'=${params.workId}
+   AND j.payload->>'workInputId'=${plan.workInputId} AND j.payload->'workRevisionRef'->>'id'=${params.planRevisionId}
+   AND j.payload->>'definitionDigest'=${params.definitionDigest}
+   AND j.payload->'z4'->>'schema'='finnor.z4.job.v1'
+   AND j.payload->'z4'->>'sessionId'=${params.sessionId} AND j.payload->'z4'->>'principalId'=${loop.createdBy}
+   AND j.payload->'z4'->>'status'='CHECKED' AND j.payload->'z4'->>'capsuleDigest'=${params.capsuleDigest}
+   AND j.payload->'z4'->'delivery'->>'state'='ACKNOWLEDGED'
+   AND j.payload->'z4'->'delivery'->>'capsuleDigest'=${params.capsuleDigest}
+   AND j.payload->'z4'->'delivery'->>'resultDigest'=${params.resultDigest}
+   AND j.payload->'z4'->'delivery'->>'useId'=${params.useId}
+   AND j.payload->'z4'->'delivery'->'acks' @> '["BEFORE","AFTER"]'::jsonb
+   AND i.created_by=${loop.createdBy}::uuid
+   AND i.context_snapshot->>'executionProofAcceptedRequestDigest'=${params.definitionDigest}
+   AND NOT EXISTS(SELECT 1 FROM finnor_os.work_inputs n WHERE n.tenant_id=i.tenant_id AND n.work_id=i.work_id
+    AND (n.created_at,n.id)>(i.created_at,i.id))`);
+ if(ready.rows.length!==1)throw Error('Z4_NATIVE_TYPED_OWNER_OBSERVATION_REQUIRED');
+ if(loop.state==='waiting'){
+  await transitionWorkTx(db,params.tenantId,params.workId,'executing','execution_proof_observation_ready',
+   {sessionId:params.sessionId,planRevisionId:plan.id,metadataOnly:true},{expectedWorkInputId:plan.workInputId});
+  [loop]=await db.update(workObjectiveLoops).set({state:'continue',revision:loop.revision+1,
+   reason:'Native owner independently consumed the exact history guard; verify the original canonical goal.',updatedAt:new Date()})
+   .where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.id,loop.id),
+    eq(workObjectiveLoops.state,'waiting'))).returning();
+ }
+ if(!loop)throw Error('Z4_NATIVE_OBJECTIVE_FENCED');
+ await scheduleIterationTx(db,loop,new Date());
+}
+
 async function workerContext(tenantId: string, workId: string): Promise<{ ctx: TenantContext; work: typeof works.$inferSelect }> {
   return withTenant(tenantId, async (db) => {
     const [work] = await db.select().from(works).where(and(eq(works.tenantId, tenantId), eq(works.id, workId))).limit(1);
@@ -1365,7 +1419,7 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
   let businessRequest: OperationalQueryRequest;
   const success = parseObjectiveSuccessCondition(loop.successCondition);
   const harnessOnly = success.criteria.every(c=>c.kind==="canonical_query"
-    &&(c.request.intent==="harness_program_v1"||c.request.intent==="confidential_economic_computation_v1")&&c.request.workId===workId);
+    &&(c.request.intent==="harness_program_v1"||c.request.intent==="confidential_economic_computation_v1"||c.request.intent==="execution_proof_capsule_v1")&&c.request.workId===workId);
   const harnessRequest = harnessOnly && success.criteria[0]?.kind==="canonical_query" ? success.criteria[0].request : null;
   if (harnessRequest) {
     // Analytical programme objectives have a registered current owner reader;
@@ -3101,7 +3155,7 @@ export class ObjectiveLoopRuntime {
           workId: params.workId,
           userId: ctx.userId,
           employeeId: ctx.employeeId,
-          ...(["harness_program_v1","confidential_economic_computation_v1"].includes(validated.request.intent) ? {workInputId:active?.workInputId??undefined} : {}),
+          ...(["harness_program_v1","confidential_economic_computation_v1","execution_proof_capsule_v1"].includes(validated.request.intent) ? {workInputId:active?.workInputId??undefined} : {}),
           executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:decision-query`,
         });
         const executionId = result.execution?.id ?? null;

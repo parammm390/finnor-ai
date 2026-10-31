@@ -1,0 +1,1 @@
+Invalid flags: --session-id cannot be used with --use-spec or --spec-model. Spec mode is only supported for new sessions.

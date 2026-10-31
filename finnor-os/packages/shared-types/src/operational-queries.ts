@@ -36,12 +36,16 @@ export interface EconomicProgrammeQueryRequest { intent: "economic_programme_v1"
 /** Y4 exposes only current completion metadata, never recipient outputs. */
 export const CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS = ["confidential_economic_computation_v1"] as const;
 export interface ConfidentialComputationQueryRequest { intent:"confidential_economic_computation_v1"; workId:string }
+/** Z4 current completion metadata only, never raw owner/private outputs. */
+export const EXECUTION_PROOF_OPERATIONAL_QUERY_INTENTS = ["execution_proof_capsule_v1"] as const;
+export interface ExecutionProofQueryRequest { intent:"execution_proof_capsule_v1"; workId:string }
 
 export const OPERATIONAL_QUERY_INTENTS = [
   ...CORE_OPERATIONAL_QUERY_INTENTS,
   ...PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
   ...PROGRAM_OPERATIONAL_QUERY_INTENTS,
   ...CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS,
+  ...EXECUTION_PROOF_OPERATIONAL_QUERY_INTENTS,
 ] as const;
 
 export type CoreOperationalQueryIntent = (typeof CORE_OPERATIONAL_QUERY_INTENTS)[number];
@@ -177,6 +181,7 @@ export type CanonicalOperationalQueryRequest =
   | HarnessProgramQueryRequest
   | EconomicProgrammeQueryRequest
   | ConfidentialComputationQueryRequest
+  | ExecutionProofQueryRequest
   | CoreOperationalQueryRequest
   | PeWorldStateRequest
   | DealContextRequest
@@ -760,11 +765,13 @@ export interface PeWorldStateResult extends OperationalQueryResultBase<"pe_world
 export interface HarnessProgramQueryResult extends OperationalQueryResultBase<"harness_program_v1"> {}
 export interface EconomicProgrammeQueryResult extends OperationalQueryResultBase<"economic_programme_v1"> {}
 export interface ConfidentialComputationQueryResult extends OperationalQueryResultBase<"confidential_economic_computation_v1"> {}
+export interface ExecutionProofQueryResult extends OperationalQueryResultBase<"execution_proof_capsule_v1"> {}
 
 export type OperationalQueryResult =
   | HarnessProgramQueryResult
   | EconomicProgrammeQueryResult
   | ConfidentialComputationQueryResult
+  | ExecutionProofQueryResult
   | WorkListResult
   | AttentionQueueResult
   | AgentActivityResult
@@ -788,6 +795,7 @@ export type OperationalQueryResultFor<R extends OperationalQueryRequest> =
   R extends EconomicProgrammeQueryRequest ? EconomicProgrammeQueryResult
     : R extends HarnessProgramQueryRequest ? HarnessProgramQueryResult
     : R extends ConfidentialComputationQueryRequest ? ConfidentialComputationQueryResult
+    : R extends ExecutionProofQueryRequest ? ExecutionProofQueryResult
     : R extends WorkListRequest ? WorkListResult
     : R extends AttentionQueueRequest ? AttentionQueueResult
       : R extends AgentActivityRequest ? AgentActivityResult

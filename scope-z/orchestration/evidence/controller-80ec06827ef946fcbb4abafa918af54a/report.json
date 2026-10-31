@@ -1,0 +1,934 @@
+{
+  "schemaVersion": "finnor.project-z.controller-e2e.v1",
+  "evidenceClass": "deterministic-local-SIMULATED-platform-fixtures",
+  "source": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+  "sourceSha256": "860b0c8f1689804a6cf0f0636faac40b8c3306c50a0c87c3f465d2e27a5018e4",
+  "driverSha256": "272ab49e875f7c243cb8f3c82a3d14b089818e772e056c08ae3afbf844662491",
+  "planned": [
+    "sealed-fixture-init",
+    "idempotent-init",
+    "draft-missing-lock",
+    "mutated-product-lock-member",
+    "symlink-member",
+    "fixture-live-separation",
+    "request-exact-initial-group",
+    "reject-early-Z3",
+    "reject-staged-computer",
+    "reject-wrong-model",
+    "reject-missing-model-role",
+    "start-initial-three",
+    "reject-duplicate-computer",
+    "start-idempotence",
+    "event-payload-conflict",
+    "certification-does-not-release-slot",
+    "interruption-not-completion",
+    "resume-same-parent",
+    "reject-reset-parent",
+    "reject-out-of-owner-handoff",
+    "reject-wrong-cut",
+    "reject-incomplete-internal-software",
+    "atomic-concurrent-handoffs",
+    "ordered-refill-Z3-Z4",
+    "reject-fourth-slot",
+    "handoff-refills-Z5-without-certification",
+    "replayed-handoff-does-not-refill-twice",
+    "unknown-launch-retains-slot",
+    "reconcile-same-launch-intent",
+    "physical-pointer-interruption",
+    "orphan-snapshot-fails-closed",
+    "recover-exact-immutable-pending-state",
+    "corrupt-state-fails-closed",
+    "immutable-snapshots-survive",
+    "final-model-and-three-slot-invariants"
+  ],
+  "cases": [
+    {
+      "name": "sealed-fixture-init",
+      "status": "PASSED"
+    },
+    {
+      "name": "idempotent-init",
+      "status": "PASSED"
+    },
+    {
+      "name": "mutated-product-lock-member",
+      "status": "PASSED"
+    },
+    {
+      "name": "draft-missing-lock",
+      "status": "PASSED"
+    },
+    {
+      "name": "symlink-member",
+      "status": "PASSED"
+    },
+    {
+      "name": "fixture-live-separation",
+      "status": "PASSED"
+    },
+    {
+      "name": "request-exact-initial-group",
+      "status": "PASSED"
+    },
+    {
+      "name": "reject-early-Z3",
+      "status": "PASSED"
+    },
+    {
+      "name": "reject-staged-computer",
+      "status": "PASSED"
+    },
+    {
+      "name": "reject-wrong-model",
+      "status": "PASSED"
+    },
+    {
+      "name": "reject-missing-model-role",
+      "status": "PASSED"
+    },
+    {
+      "name": "reject-duplicate-computer",
+      "status": "PASSED"
+    },
+    {
+      "name": "start-initial-three",
+      "status": "PASSED"
+    },
+    {
+      "name": "start-idempotence",
+      "status": "PASSED"
+    },
+    {
+      "name": "event-payload-conflict",
+      "status": "PASSED"
+    },
+    {
+      "name": "certification-does-not-release-slot",
+      "status": "PASSED"
+    },
+    {
+      "name": "interruption-not-completion",
+      "status": "PASSED"
+    },
+    {
+      "name": "reject-reset-parent",
+      "status": "PASSED"
+    },
+    {
+      "name": "resume-same-parent",
+      "status": "PASSED"
+    },
+    {
+      "name": "reject-out-of-owner-handoff",
+      "status": "PASSED"
+    },
+    {
+      "name": "reject-wrong-cut",
+      "status": "PASSED"
+    },
+    {
+      "name": "reject-incomplete-internal-software",
+      "status": "PASSED"
+    },
+    {
+      "name": "atomic-concurrent-handoffs",
+      "status": "PASSED"
+    },
+    {
+      "name": "ordered-refill-Z3-Z4",
+      "status": "PASSED"
+    },
+    {
+      "name": "reject-fourth-slot",
+      "status": "PASSED"
+    },
+    {
+      "name": "handoff-refills-Z5-without-certification",
+      "status": "PASSED"
+    },
+    {
+      "name": "replayed-handoff-does-not-refill-twice",
+      "status": "PASSED"
+    },
+    {
+      "name": "unknown-launch-retains-slot",
+      "status": "PASSED"
+    },
+    {
+      "name": "reconcile-same-launch-intent",
+      "status": "PASSED"
+    },
+    {
+      "name": "physical-pointer-interruption",
+      "status": "PASSED"
+    },
+    {
+      "name": "orphan-snapshot-fails-closed",
+      "status": "PASSED"
+    },
+    {
+      "name": "recover-exact-immutable-pending-state",
+      "status": "PASSED"
+    },
+    {
+      "name": "corrupt-state-fails-closed",
+      "status": "PASSED"
+    },
+    {
+      "name": "immutable-snapshots-survive",
+      "status": "PASSED"
+    },
+    {
+      "name": "final-model-and-three-slot-invariants",
+      "status": "PASSED"
+    }
+  ],
+  "commands": [
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "init"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"initialized-no-launch\", \"active\": [], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [], \"reserved\": [], \"sequence\": 0, \"underfilledActiveSlots\": 3}\n",
+      "stderr": "",
+      "beforeStateSha256": null,
+      "afterStateSha256": "ec51ae913ec845cd2fd18f69b079d6f20d879b97a4ef138f71f978013e9fa645"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "init"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"init\", \"active\": [], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [], \"reserved\": [], \"sequence\": 0, \"underfilledActiveSlots\": 3}\n",
+      "stderr": "",
+      "beforeStateSha256": "ec51ae913ec845cd2fd18f69b079d6f20d879b97a4ef138f71f978013e9fa645",
+      "afterStateSha256": "ec51ae913ec845cd2fd18f69b079d6f20d879b97a4ef138f71f978013e9fa645"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "verify"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"locked member changed: scope-z/FINNOR-Z-PRD.md\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": "",
+      "beforeStateSha256": "ec51ae913ec845cd2fd18f69b079d6f20d879b97a4ef138f71f978013e9fa645",
+      "afterStateSha256": "ec51ae913ec845cd2fd18f69b079d6f20d879b97a4ef138f71f978013e9fa645"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "verify"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"required JSON artifact missing: /home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/scope-z/locks/product-lock.json\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": "",
+      "beforeStateSha256": "ec51ae913ec845cd2fd18f69b079d6f20d879b97a4ef138f71f978013e9fa645",
+      "afterStateSha256": "ec51ae913ec845cd2fd18f69b079d6f20d879b97a4ef138f71f978013e9fa645"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "verify"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"symlink path is not accepted\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": "",
+      "beforeStateSha256": "ec51ae913ec845cd2fd18f69b079d6f20d879b97a4ef138f71f978013e9fa645",
+      "afterStateSha256": "ec51ae913ec845cd2fd18f69b079d6f20d879b97a4ef138f71f978013e9fa645"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "verify"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"wrong immutable product trust anchor\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "request-initial",
+        "--event-id",
+        "initial"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"request-initial\", \"active\": [], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [\"Z0\", \"Z1\", \"Z2\"], \"reserved\": [\"Z0\", \"Z1\", \"Z2\"], \"sequence\": 1, \"underfilledActiveSlots\": 3}\n",
+      "stderr": "",
+      "beforeStateSha256": "ec51ae913ec845cd2fd18f69b079d6f20d879b97a4ef138f71f978013e9fa645",
+      "afterStateSha256": "69baca92a35fa617b9668815f3c6ea0b8de024fd73bad8f2ffe31c1195b41598"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "start",
+        "--event-id",
+        "early-Z3",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/early-Z3.json"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"phase is not an eligible requested slot\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": "",
+      "beforeStateSha256": "69baca92a35fa617b9668815f3c6ea0b8de024fd73bad8f2ffe31c1195b41598",
+      "afterStateSha256": "69baca92a35fa617b9668815f3c6ea0b8de024fd73bad8f2ffe31c1195b41598"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "start",
+        "--event-id",
+        "staged",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/staged.json"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"Computer is not the dedicated ready Computer\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": "",
+      "beforeStateSha256": "69baca92a35fa617b9668815f3c6ea0b8de024fd73bad8f2ffe31c1195b41598",
+      "afterStateSha256": "69baca92a35fa617b9668815f3c6ea0b8de024fd73bad8f2ffe31c1195b41598"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "start",
+        "--event-id",
+        "wrong-model",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/wrong-model.json"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"wrong, default or unattested model role\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": "",
+      "beforeStateSha256": "69baca92a35fa617b9668815f3c6ea0b8de024fd73bad8f2ffe31c1195b41598",
+      "afterStateSha256": "69baca92a35fa617b9668815f3c6ea0b8de024fd73bad8f2ffe31c1195b41598"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "start",
+        "--event-id",
+        "missing-role",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/missing-role.json"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"missing actual/configured model role\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": "",
+      "beforeStateSha256": "69baca92a35fa617b9668815f3c6ea0b8de024fd73bad8f2ffe31c1195b41598",
+      "afterStateSha256": "69baca92a35fa617b9668815f3c6ea0b8de024fd73bad8f2ffe31c1195b41598"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "start",
+        "--event-id",
+        "start-Z0",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/start-Z0.json"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"start\", \"active\": [\"Z0\"], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [\"Z1\", \"Z2\"], \"reserved\": [\"Z0\", \"Z1\", \"Z2\"], \"sequence\": 2, \"underfilledActiveSlots\": 2}\n",
+      "stderr": "",
+      "beforeStateSha256": "69baca92a35fa617b9668815f3c6ea0b8de024fd73bad8f2ffe31c1195b41598",
+      "afterStateSha256": "fa9301a163cce262731f9a16c1a10b825fd732c43394334805c19b46bb8fdd2a"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "start",
+        "--event-id",
+        "duplicate-computer",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/duplicate-computer.json"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"dedicated Computer reused by another phase\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": "",
+      "beforeStateSha256": "fa9301a163cce262731f9a16c1a10b825fd732c43394334805c19b46bb8fdd2a",
+      "afterStateSha256": "fa9301a163cce262731f9a16c1a10b825fd732c43394334805c19b46bb8fdd2a"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "start",
+        "--event-id",
+        "start-Z1",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/start-Z1.json"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"start\", \"active\": [\"Z0\", \"Z1\"], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [\"Z2\"], \"reserved\": [\"Z0\", \"Z1\", \"Z2\"], \"sequence\": 3, \"underfilledActiveSlots\": 1}\n",
+      "stderr": "",
+      "beforeStateSha256": "fa9301a163cce262731f9a16c1a10b825fd732c43394334805c19b46bb8fdd2a",
+      "afterStateSha256": "9b79c721bc501a81f61b254f07a5704e3841921d10c2984472f2a2054dc1bdc0"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "start",
+        "--event-id",
+        "start-Z2",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/start-Z2.json"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"start\", \"active\": [\"Z0\", \"Z1\", \"Z2\"], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [], \"reserved\": [\"Z0\", \"Z1\", \"Z2\"], \"sequence\": 4, \"underfilledActiveSlots\": 0}\n",
+      "stderr": "",
+      "beforeStateSha256": "9b79c721bc501a81f61b254f07a5704e3841921d10c2984472f2a2054dc1bdc0",
+      "afterStateSha256": "e2cc412c39eef881dbbb26ebf423fa9438d58ed57490d05689e6b29fb2f551de"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "start",
+        "--event-id",
+        "start-Z0",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/start-Z0.json"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"idempotent-start\", \"active\": [\"Z0\", \"Z1\", \"Z2\"], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [], \"reserved\": [\"Z0\", \"Z1\", \"Z2\"], \"sequence\": 4, \"underfilledActiveSlots\": 0}\n",
+      "stderr": "",
+      "beforeStateSha256": "e2cc412c39eef881dbbb26ebf423fa9438d58ed57490d05689e6b29fb2f551de",
+      "afterStateSha256": "e2cc412c39eef881dbbb26ebf423fa9438d58ed57490d05689e6b29fb2f551de"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "start",
+        "--event-id",
+        "start-Z0",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/event-conflict.json"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"event ID reused with different payload\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": "",
+      "beforeStateSha256": "e2cc412c39eef881dbbb26ebf423fa9438d58ed57490d05689e6b29fb2f551de",
+      "afterStateSha256": "e2cc412c39eef881dbbb26ebf423fa9438d58ed57490d05689e6b29fb2f551de"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "certify",
+        "--event-id",
+        "cert-Z2",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/cert-Z2.json"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"certify\", \"active\": [\"Z0\", \"Z1\", \"Z2\"], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [], \"reserved\": [\"Z0\", \"Z1\", \"Z2\"], \"sequence\": 5, \"underfilledActiveSlots\": 0}\n",
+      "stderr": "",
+      "beforeStateSha256": "e2cc412c39eef881dbbb26ebf423fa9438d58ed57490d05689e6b29fb2f551de",
+      "afterStateSha256": "866147b9fe230a17e2973a3b3dd7950189372971dca02cfdf8ae2c2dccab8478"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "interrupt",
+        "--event-id",
+        "interrupt-Z2",
+        "--phase",
+        "Z2",
+        "--reason",
+        "SIMULATED interruption"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"interrupt\", \"active\": [\"Z0\", \"Z1\"], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [\"Z2\"], \"reserved\": [\"Z0\", \"Z1\", \"Z2\"], \"sequence\": 6, \"underfilledActiveSlots\": 1}\n",
+      "stderr": "",
+      "beforeStateSha256": "866147b9fe230a17e2973a3b3dd7950189372971dca02cfdf8ae2c2dccab8478",
+      "afterStateSha256": "8fb7835ffb187791454cb85f12fb1fa0123e796b5fc98e520605ae312b42d5fb"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "resume",
+        "--event-id",
+        "bad-resume",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/bad-resume.json"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"original parent/deadline reset\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": "",
+      "beforeStateSha256": "8fb7835ffb187791454cb85f12fb1fa0123e796b5fc98e520605ae312b42d5fb",
+      "afterStateSha256": "8fb7835ffb187791454cb85f12fb1fa0123e796b5fc98e520605ae312b42d5fb"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "resume",
+        "--event-id",
+        "resume-Z2",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/resume-Z2.json"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"resume\", \"active\": [\"Z0\", \"Z1\", \"Z2\"], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [], \"reserved\": [\"Z0\", \"Z1\", \"Z2\"], \"sequence\": 7, \"underfilledActiveSlots\": 0}\n",
+      "stderr": "",
+      "beforeStateSha256": "8fb7835ffb187791454cb85f12fb1fa0123e796b5fc98e520605ae312b42d5fb",
+      "afterStateSha256": "f048cd5370ba33c5ea92e889d43873816cfaa8acf9facc81b39e04450129fe69"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "handoff",
+        "--event-id",
+        "bad-owner",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/bad-owner.json"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"phase-authored change outside ownership\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": "",
+      "beforeStateSha256": "f048cd5370ba33c5ea92e889d43873816cfaa8acf9facc81b39e04450129fe69",
+      "afterStateSha256": "f048cd5370ba33c5ea92e889d43873816cfaa8acf9facc81b39e04450129fe69"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "handoff",
+        "--event-id",
+        "wrong-cut",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/wrong-cut.json"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"wrong handoff source cut\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": "",
+      "beforeStateSha256": "f048cd5370ba33c5ea92e889d43873816cfaa8acf9facc81b39e04450129fe69",
+      "afterStateSha256": "f048cd5370ba33c5ea92e889d43873816cfaa8acf9facc81b39e04450129fe69"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "handoff",
+        "--event-id",
+        "incomplete",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/incomplete.json"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"required internal software remains incomplete\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": "",
+      "beforeStateSha256": "f048cd5370ba33c5ea92e889d43873816cfaa8acf9facc81b39e04450129fe69",
+      "afterStateSha256": "f048cd5370ba33c5ea92e889d43873816cfaa8acf9facc81b39e04450129fe69"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "handoff",
+        "--event-id",
+        "handoff-Z0",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/handoff-Z0.json"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"handoff\", \"active\": [\"Z1\", \"Z2\"], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [\"Z3\"], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [\"Z3\"], \"reserved\": [\"Z1\", \"Z2\", \"Z3\"], \"sequence\": 8, \"underfilledActiveSlots\": 1}\n",
+      "stderr": "",
+      "beforeStateSha256": "f048cd5370ba33c5ea92e889d43873816cfaa8acf9facc81b39e04450129fe69",
+      "afterStateSha256": "37a821a551cab68742121f5b27825a1959c3c0c232d2bd5909016816af1dc640"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "handoff",
+        "--event-id",
+        "handoff-Z1",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/handoff-Z1.json"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"handoff\", \"active\": [\"Z2\"], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [\"Z3\", \"Z4\"], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [\"Z3\", \"Z4\"], \"reserved\": [\"Z2\", \"Z3\", \"Z4\"], \"sequence\": 9, \"underfilledActiveSlots\": 2}\n",
+      "stderr": "",
+      "beforeStateSha256": "f048cd5370ba33c5ea92e889d43873816cfaa8acf9facc81b39e04450129fe69",
+      "afterStateSha256": "4d1282742113a38e0f9601a8742d9f1d8aea63b62809e8d9d679b3fa1df43463"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "start",
+        "--event-id",
+        "early-Z5",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/early-Z5.json"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"phase is not an eligible requested slot\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": "",
+      "beforeStateSha256": "4d1282742113a38e0f9601a8742d9f1d8aea63b62809e8d9d679b3fa1df43463",
+      "afterStateSha256": "4d1282742113a38e0f9601a8742d9f1d8aea63b62809e8d9d679b3fa1df43463"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "start",
+        "--event-id",
+        "start-Z3",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/start-Z3.json"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"start\", \"active\": [\"Z2\", \"Z3\"], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [\"Z3\", \"Z4\"], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [\"Z4\"], \"reserved\": [\"Z2\", \"Z3\", \"Z4\"], \"sequence\": 10, \"underfilledActiveSlots\": 1}\n",
+      "stderr": "",
+      "beforeStateSha256": "4d1282742113a38e0f9601a8742d9f1d8aea63b62809e8d9d679b3fa1df43463",
+      "afterStateSha256": "ee5051a98dc71afa63940c05772e62b586416cb5b20fed4c108afb24abe53347"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "start",
+        "--event-id",
+        "start-Z4",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/start-Z4.json"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"start\", \"active\": [\"Z2\", \"Z3\", \"Z4\"], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [\"Z3\", \"Z4\"], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [], \"reserved\": [\"Z2\", \"Z3\", \"Z4\"], \"sequence\": 11, \"underfilledActiveSlots\": 0}\n",
+      "stderr": "",
+      "beforeStateSha256": "ee5051a98dc71afa63940c05772e62b586416cb5b20fed4c108afb24abe53347",
+      "afterStateSha256": "a316d5776972bf20bc2e5a9402ed31bea04a1e22d03347edaf311dda5db170dd"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "handoff",
+        "--event-id",
+        "handoff-Z2",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/handoff-Z2.json"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"handoff\", \"active\": [\"Z3\", \"Z4\"], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [\"Z3\", \"Z4\", \"Z5\"], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [\"Z5\"], \"reserved\": [\"Z3\", \"Z4\", \"Z5\"], \"sequence\": 12, \"underfilledActiveSlots\": 1}\n",
+      "stderr": "",
+      "beforeStateSha256": "a316d5776972bf20bc2e5a9402ed31bea04a1e22d03347edaf311dda5db170dd",
+      "afterStateSha256": "2d574ba6b8c368ee0dc0437bd8de695d9e14d10adbbfcba5d70a588f9136aeca"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "handoff",
+        "--event-id",
+        "handoff-Z0",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/handoff-Z0.json"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"idempotent-handoff\", \"active\": [\"Z3\", \"Z4\"], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [\"Z3\", \"Z4\", \"Z5\"], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [\"Z5\"], \"reserved\": [\"Z3\", \"Z4\", \"Z5\"], \"sequence\": 12, \"underfilledActiveSlots\": 1}\n",
+      "stderr": "",
+      "beforeStateSha256": "2d574ba6b8c368ee0dc0437bd8de695d9e14d10adbbfcba5d70a588f9136aeca",
+      "afterStateSha256": "2d574ba6b8c368ee0dc0437bd8de695d9e14d10adbbfcba5d70a588f9136aeca"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "launch-unknown",
+        "--event-id",
+        "unknown-Z5",
+        "--phase",
+        "Z5",
+        "--reason",
+        "SIMULATED lost acknowledgement"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"launch-unknown\", \"active\": [\"Z3\", \"Z4\"], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [\"Z3\", \"Z4\", \"Z5\"], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [\"Z5\"], \"reserved\": [\"Z3\", \"Z4\", \"Z5\"], \"sequence\": 13, \"underfilledActiveSlots\": 1}\n",
+      "stderr": "",
+      "beforeStateSha256": "2d574ba6b8c368ee0dc0437bd8de695d9e14d10adbbfcba5d70a588f9136aeca",
+      "afterStateSha256": "4afe3c2a2dee67ca7e3e084078cde8a55a868b191b1a7755cd75f82137f378f6"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "start",
+        "--event-id",
+        "start-Z5",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/start-Z5.json"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"start\", \"active\": [\"Z3\", \"Z4\", \"Z5\"], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [\"Z3\", \"Z4\", \"Z5\"], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [], \"reserved\": [\"Z3\", \"Z4\", \"Z5\"], \"sequence\": 14, \"underfilledActiveSlots\": 0}\n",
+      "stderr": "",
+      "beforeStateSha256": "4afe3c2a2dee67ca7e3e084078cde8a55a868b191b1a7755cd75f82137f378f6",
+      "afterStateSha256": "c8ba6bd21bcbf78812af2cfa4e5d597819791f4e65681cbf460ffa2422ffb19a"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "certify",
+        "--event-id",
+        "interrupted-cert",
+        "--receipt",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/receipts/interrupted-cert.json"
+      ],
+      "exitCode": 70,
+      "stdout": "",
+      "stderr": "",
+      "beforeStateSha256": "c8ba6bd21bcbf78812af2cfa4e5d597819791f4e65681cbf460ffa2422ffb19a",
+      "afterStateSha256": "c8ba6bd21bcbf78812af2cfa4e5d597819791f4e65681cbf460ffa2422ffb19a"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "status"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"immutable pending snapshot exists; explicit recovery required\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": "",
+      "beforeStateSha256": "c8ba6bd21bcbf78812af2cfa4e5d597819791f4e65681cbf460ffa2422ffb19a",
+      "afterStateSha256": "c8ba6bd21bcbf78812af2cfa4e5d597819791f4e65681cbf460ffa2422ffb19a"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "recover"
+      ],
+      "exitCode": 0,
+      "stdout": "{\"action\": \"recover\", \"active\": [\"Z3\", \"Z4\", \"Z5\"], \"controlOnly\": true, \"executionPackDigest\": \"f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a\", \"fixtureOnly\": true, \"ok\": true, \"productLockDigest\": \"ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3\", \"productQualificationConferred\": false, \"refillRequested\": [\"Z3\", \"Z4\", \"Z5\"], \"remoteActionsPerformed\": false, \"requestedNotRunning\": [], \"reserved\": [\"Z3\", \"Z4\", \"Z5\"], \"sequence\": 15, \"underfilledActiveSlots\": 0}\n",
+      "stderr": "",
+      "beforeStateSha256": "c8ba6bd21bcbf78812af2cfa4e5d597819791f4e65681cbf460ffa2422ffb19a",
+      "afterStateSha256": "ac3e0020dd64423d04bc14f4d89ff0c1eaabcd0fa3479d8c998d494a9b561df2"
+    },
+    {
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state",
+        "--fixture",
+        "status"
+      ],
+      "exitCode": 2,
+      "stdout": "{\"controlOnly\": true, \"error\": \"malformed JSON: /home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/controller-80ec06827ef946fcbb4abafa918af54a/fixture/control-state/state.json\", \"ok\": false, \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": ""
+    }
+  ],
+  "elapsedSeconds": 2.0897865295410156,
+  "failure": null,
+  "productRuntimeEvidence": false,
+  "remoteExecutionEvidence": false,
+  "rerun": [
+    "/usr/bin/python3",
+    "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/e2e_controller.py"
+  ]
+}

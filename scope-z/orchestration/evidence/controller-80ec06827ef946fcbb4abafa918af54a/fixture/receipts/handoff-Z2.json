@@ -1,0 +1,108 @@
+{
+  "branch": "factory/project-z2-coalitions",
+  "changedFiles": [
+    {
+      "file": "packets/Z2/fixture.ts",
+      "path": "finnor-os/packages/epistemic-runtime/src/project-z/z2-coalitions/fixture.ts",
+      "sha256": "cce403f55c32a99b5582e5b666ea31ddc503d991ddb99329d74ab28e850a0d5a"
+    }
+  ],
+  "costsAndMeterGaps": {
+    "fixtureOnly": true
+  },
+  "engineeringDisposition": "INTERNAL_SOFTWARE_COMPLETE",
+  "executionPackDigest": "f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a",
+  "integrationRequests": [],
+  "interfaceVersions": [
+    "finnor.project-z.common-contracts.v1"
+  ],
+  "phase": "Z2",
+  "productLockDigest": "ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3",
+  "receivedPeerReceipts": [],
+  "reconstruction": {
+    "class": "SIMULATED",
+    "path": "packets/Z2/reconstruction.fixture.json",
+    "sha256": "befbe0f11d7b3f2a9914612d22616206c7b510b1870d622e3245b8812355c59b"
+  },
+  "remainingBudget": {
+    "deadline": "2099-01-01T00:00:00Z",
+    "reference": "SIMULATED-original-parent",
+    "remaining": {
+      "humanMillis": 900000,
+      "milliUSD": 100000,
+      "wallMillis": 3600000
+    }
+  },
+  "retainedFailures": [],
+  "sourceBase": "7bfdd2d3ab611c90f1355637858824ff1ba67f98",
+  "sourceHead": "5555555555555555555555555555555555555555",
+  "sourceTree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "startedFrom": "3333333333333333333333333333333333333333",
+  "synthetic": true,
+  "unresolvedObligations": [],
+  "verification": [
+    {
+      "evidence": {
+        "class": "SIMULATED",
+        "path": "facts/Z2-checks.json",
+        "sha256": "59e3aae310adec318fdda4fbb852e0a101a87295f000f2fccdcc8e76e6208bd4"
+      },
+      "name": "mechanism",
+      "result": "PASSED"
+    },
+    {
+      "evidence": {
+        "class": "SIMULATED",
+        "path": "facts/Z2-checks.json",
+        "sha256": "59e3aae310adec318fdda4fbb852e0a101a87295f000f2fccdcc8e76e6208bd4"
+      },
+      "name": "independent-checker",
+      "result": "PASSED"
+    },
+    {
+      "evidence": {
+        "class": "SIMULATED",
+        "path": "facts/Z2-checks.json",
+        "sha256": "59e3aae310adec318fdda4fbb852e0a101a87295f000f2fccdcc8e76e6208bd4"
+      },
+      "name": "positive-owner-flow",
+      "result": "PASSED"
+    },
+    {
+      "evidence": {
+        "class": "SIMULATED",
+        "path": "facts/Z2-checks.json",
+        "sha256": "59e3aae310adec318fdda4fbb852e0a101a87295f000f2fccdcc8e76e6208bd4"
+      },
+      "name": "physical-recovery",
+      "result": "PASSED"
+    },
+    {
+      "evidence": {
+        "class": "SIMULATED",
+        "path": "facts/Z2-checks.json",
+        "sha256": "59e3aae310adec318fdda4fbb852e0a101a87295f000f2fccdcc8e76e6208bd4"
+      },
+      "name": "mounted-work",
+      "result": "PASSED"
+    },
+    {
+      "evidence": {
+        "class": "SIMULATED",
+        "path": "facts/Z2-checks.json",
+        "sha256": "59e3aae310adec318fdda4fbb852e0a101a87295f000f2fccdcc8e76e6208bd4"
+      },
+      "name": "installed-reconstruction",
+      "result": "PASSED"
+    },
+    {
+      "evidence": {
+        "class": "SIMULATED",
+        "path": "facts/Z2-checks.json",
+        "sha256": "59e3aae310adec318fdda4fbb852e0a101a87295f000f2fccdcc8e76e6208bd4"
+      },
+      "name": "cost-metering",
+      "result": "PASSED"
+    }
+  ]
+}

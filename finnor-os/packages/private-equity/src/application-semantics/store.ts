@@ -242,10 +242,10 @@ export function assertProfileTarget(profile: NativeApplicationProfile, target: {
   if (target.application !== profile.profile.application || target.account !== profile.profile.account
     || !profile.profile.allowedTargets.includes(target.id) || !profile.allowedEntities.includes(target.entity)) x2Fault("X2_EXACT_AUTHORIZED_TARGET_REQUIRED", 403);
 }
-export async function currentApplicationModel(ctx: PeMutationContext, row: ApplicationSessionRow): Promise<{ model: ApplicationActionModel; check: ApplicationModelCheck }> {
+export async function currentApplicationModel(ctx: PeMutationContext, row: ApplicationSessionRow, client?: PoolClient): Promise<{ model: ApplicationActionModel; check: ApplicationModelCheck }> {
   if (!row.model_ref || !row.check_ref) x2Fault("X2_NATIVE_CHECKED_MODEL_REQUIRED");
-  const body = await applicationArtifact<Omit<ApplicationActionModel, "ref">>(ctx, row.model_ref);
-  const checkBody = await applicationArtifact<Omit<ApplicationModelCheck, "ref">>(ctx, row.check_ref);
+  const body = await applicationArtifact<Omit<ApplicationActionModel, "ref">>(ctx, row.model_ref, client);
+  const checkBody = await applicationArtifact<Omit<ApplicationModelCheck, "ref">>(ctx, row.check_ref, client);
   return { model: parseApplicationModel({ ...body, ref: row.model_ref }), check: parseApplicationCheck({ ...checkBody, ref: row.check_ref }) };
 }
 export async function enqueueApplicationSession(ctx: PeMutationContext, row: ApplicationSessionRow, stage: string, client: PoolClient) {

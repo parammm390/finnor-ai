@@ -1,0 +1,66 @@
+{
+  "computer": {
+    "id": "SIMULATED-computer-Z0",
+    "name": "FINNOR Project Z0 Convergence",
+    "state": "ready"
+  },
+  "delivery": {
+    "receiverSessionId": "SIMULATED-session-Z0",
+    "seedSha256": "66fa0ca200a531a1797d693b14923a81b556897e28441fb6e0f17de036d52f07",
+    "status": "ACKNOWLEDGED_READ"
+  },
+  "executionPackDigest": "f2063b18c2c36a06763a44a1b20cb03df6387fc98a06bad190042f82dddc198a",
+  "modelRoles": {
+    "orchestrator": {
+      "model": "gpt-6.1-sol",
+      "observed": true,
+      "reasoningEffort": "max"
+    },
+    "session": {
+      "model": "gpt-6.1-sol",
+      "observed": true,
+      "reasoningEffort": "max"
+    },
+    "validator": {
+      "model": "gpt-6.1-sol",
+      "observed": true,
+      "reasoningEffort": "max"
+    },
+    "worker": {
+      "model": "gpt-6.1-sol",
+      "observed": true,
+      "reasoningEffort": "max"
+    }
+  },
+  "observations": [
+    {
+      "class": "SIMULATED",
+      "path": "facts/Z0-start-observation.json",
+      "sha256": "2475b40b680f31209a8c62c2c37e80b3ed7d9401dfab2f9db656e60507e93b22"
+    }
+  ],
+  "originalParent": {
+    "deadline": "2099-01-01T00:00:00Z",
+    "reference": "SIMULATED-original-parent",
+    "remaining": {
+      "humanMillis": 900000,
+      "milliUSD": 100000,
+      "wallMillis": 3600000
+    }
+  },
+  "phase": "Z0",
+  "productLockDigest": "ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3",
+  "requestIdentity": "291e515c964ac17d5ecda26b85400aed86bea64d8b0faca7ae2fb08f79f266e4:Z0",
+  "session": {
+    "computerId": "SIMULATED-computer-Z0",
+    "id": "SIMULATED-session-Z0",
+    "status": "running"
+  },
+  "source": {
+    "base": "7bfdd2d3ab611c90f1355637858824ff1ba67f98",
+    "branch": "factory/project-z0-convergence",
+    "head": "1111111111111111111111111111111111111111",
+    "tree": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "synthetic": true
+}

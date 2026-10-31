@@ -1,0 +1,37 @@
+{
+  "fixtureOnly": true,
+  "members": [
+    {
+      "bytes": 18,
+      "path": "scope-z/prompts/seeds/z0.seed.md",
+      "sha256": "66fa0ca200a531a1797d693b14923a81b556897e28441fb6e0f17de036d52f07"
+    },
+    {
+      "bytes": 18,
+      "path": "scope-z/prompts/seeds/z1.seed.md",
+      "sha256": "e53ae98d5b7774e3e62c7209cb15fff595ae18051686f9b532c3c9b7b7222fd3"
+    },
+    {
+      "bytes": 18,
+      "path": "scope-z/prompts/seeds/z2.seed.md",
+      "sha256": "fd41ae9fc674e1a15060a7801a1e99725a181a68a22d6de761a17871e19a2181"
+    },
+    {
+      "bytes": 18,
+      "path": "scope-z/prompts/seeds/z3.seed.md",
+      "sha256": "0d0c3c80284af6f541e9688b33e9da95e24fd02020be2cb7c5bb9d1b2ce115aa"
+    },
+    {
+      "bytes": 18,
+      "path": "scope-z/prompts/seeds/z4.seed.md",
+      "sha256": "594b2b3337f3cc4099028e304bd349d5d88b9d5c0684e59384853245bb6ed5ae"
+    },
+    {
+      "bytes": 18,
+      "path": "scope-z/prompts/seeds/z5.seed.md",
+      "sha256": "5b228a9e6fd540fd5049024a7f31cfe6e1def0b0e1c13b3cababe45ac925accb"
+    }
+  ],
+  "productLockSha256": "ab04ed35ccb5034384af4073eb2d16851685ec4297c1f60043e086835f0672f3",
+  "schemaVersion": "finnor.project-z.execution-pack.v1"
+}
