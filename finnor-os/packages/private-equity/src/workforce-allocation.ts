@@ -1,0 +1,613 @@
+import type { PoolClient } from "pg";
+import { canExerciseAuthorityTx } from "@finnor/authority";
+import type { AllocationEnvelope, AllocationResource, ExperimentRef } from "@finnor/shared-types";
+import { allocationDerivedQuantity, allocationDecimal as decimal, allocationRef, sameAllocationRef } from "../../epistemic-runtime/src/allocation-contracts";
+import { verifyCanonicalResourceSchedules, type AllocationSchedule } from "../../epistemic-runtime/src/allocation-resource-check";
+import { epistemicHash } from "../../epistemic-runtime/src/source-precedence";
+import { readAllocationSnapshotTx, allocationPermissionResources } from "./allocation-store";
+import type { PeMutationContext } from "./types";
+import { readKnownWorkforceLocalAttemptTx } from "../../governed-execution/src/workforce-local-attempt";
+import { readWorkforceClosingPaymentsTx } from "./workforce-compensation-closing";
+
+export interface WorkforceResourceSchedule { resourceId: string; quantities: string[] }
+export interface WorkforceBudgetRequest {
+  workId: string; programmeId: string; purpose: string; deadlineAt: string;
+  resourceRefs: ExperimentRef[]; schedules: WorkforceResourceSchedule[]; idempotencyKey: string;
+}
+export interface WorkforceBudget {
+  schema: "finnor.s5.workforce-budget.v1"; ref: ExperimentRef;
+  tenantId: string; principalId: string; workId: string; programmeId: string;
+  reservationRef: ExperimentRef; certificateRef: ExperimentRef; resources: AllocationResource[];
+  envelopes: AllocationEnvelope[]; validUntil: string; executionAuthorityGranted: false; protectedReceipt: null;
+}
+export interface WorkforceCarveRecord {
+  ref: ExperimentRef; assignmentId: string; rootId: string; parentReservationId: string | null;
+  envelope: AllocationEnvelope[]; directReserved: AllocationEnvelope[]; spent: AllocationEnvelope[];
+  unresolved: AllocationEnvelope[]; status: "HELD" | "RELEASED";
+}
+interface WorkforceCarveFrontier {
+  schema: "finnor.s5.workforce-carve-frontier.v1"; ref: ExperimentRef; previousRef: ExperimentRef;
+  originalReservation: ExperimentRef; programmeId: string; revision: number; records: WorkforceCarveRecord[];
+}
+const actor = (ctx: PeMutationContext) => ctx.auth.employeeId ?? ctx.auth.userId;
+export class WorkforceAllocationError extends Error {
+  constructor(readonly code: string) { super(code); }
+}
+const fail = (code: string): never => { throw new WorkforceAllocationError(code); };
+const quantity = (value: string) => allocationDerivedQuantity(
+  typeof value === "string" && value.includes("/") && !value.startsWith("r3q:") ? "r3q:" + value : value);
+const domainQuantity = (value: ReturnType<typeof quantity>) => value.d === 1n ? String(value.n) : `${value.n}/${value.d}`;
+const zero = () => quantity("0");
+function bounded(value: unknown) {
+  if (Buffer.byteLength(JSON.stringify(value)) > 8 * 1024 * 1024) fail("WORKFORCE_S5_RECORD_LIMIT");
+}
+function schedules(resources: AllocationResource[], input: WorkforceResourceSchedule[]): AllocationSchedule {
+  if (new Set(input.map(s => s.resourceId)).size !== input.length ||
+      input.some(s => !resources.some(r => r.resourceId === s.resourceId))) fail("WORKFORCE_S5_RESOURCE_SCHEDULE_MISMATCH");
+  return new Map(resources.map(resource => {
+    const values = input.find(s => s.resourceId === resource.resourceId)?.quantities ?? Array(resource.horizon.periods + 1).fill("0");
+    if (values.length !== resource.horizon.periods + 1 || values.some(v => typeof v !== "string" || v.length > 192 || quantity(v).n < 0n))
+      fail("WORKFORCE_S5_QUANTITY_OR_CALENDAR_MISMATCH");
+    return [resource.resourceId, values.map(quantity)];
+  }));
+}
+function intervalPaths(resources: AllocationResource[], maximum: AllocationSchedule) {
+  const empty: AllocationSchedule = new Map(resources.map(r => [r.resourceId, maximum.get(r.resourceId)!.map(zero)]));
+  const paths = [{ id: "original-maximum", increment: maximum }, { id: "no-spending", increment: empty }];
+  const covenants = [...new Map(resources.flatMap(r => r.covenants).map(c => [c.id, c])).values()];
+  if (covenants.length > 62) fail("WORKFORCE_S5_COVENANT_PROFILE_UNSUPPORTED");
+  for (const covenant of covenants) {
+    // A promised negative use cannot fund another resource. Check the worst
+    // independent interval corner for each original canonical inequality.
+    const coefficients = new Map<string, ReturnType<typeof quantity>>();
+    for (const term of covenant.terms)
+      coefficients.set(term.resourceId, (coefficients.get(term.resourceId) ?? zero()).add(quantity(term.coefficient)));
+    paths.push({ id: "covenant:" + covenant.id, increment: new Map(resources.map(r =>
+      [r.resourceId, (coefficients.get(r.resourceId) ?? zero()).n < 0n ? empty.get(r.resourceId)! : maximum.get(r.resourceId)!])) });
+  }
+  return paths;
+}
+async function budgetAuthority(ctx: PeMutationContext, c: PoolClient, resources: AllocationResource[],
+  input: Pick<WorkforceBudgetRequest, "workId" | "schedules">) {
+  let usd = zero();
+  for (const resource of resources) {
+    if (!resource.permittedRoots.some(root => root.entityType === "work" && root.entityId === input.workId) ||
+        !await canExerciseAuthorityTx(ctx.auth, { operation: "query", capability: "query:allocation_resources",
+          resource: { type: "allocation_resource", id: resource.scopeRef.id }, risk: "low" }, c))
+      fail("WORKFORCE_S5_ORIGINAL_ROOT_OR_RESOURCE_AUTHORITY_DENIED");
+    if (resource.currency !== null) {
+      if (resource.currency !== "USD" || !["USD", "microUSD"].includes(resource.unit)) fail("WORKFORCE_S5_EXACT_FX_MAPPING_UNAVAILABLE");
+      const amount = (input.schedules.find(s => s.resourceId === resource.resourceId)?.quantities ?? []).reduce((a, v) => a.add(quantity(v)), zero());
+      usd = usd.add(resource.unit === "microUSD" ? amount.mul(quantity("0.000001")) : amount);
+    }
+  }
+  if (!await canExerciseAuthorityTx(ctx.auth, { operation: "action", capability: "action:allocate_resource",
+      workId: input.workId, resources: allocationPermissionResources(resources), risk: "high", exactAmountUsd: decimal(usd) }, c))
+    fail("WORKFORCE_S5_CURRENT_ALLOCATION_AUTHORITY_DENIED");
+}
+
+/** New use requires today's canonical permission, not just a still-held
+ * original certificate. Observation, return and recovery do not use this port. */
+export async function assertCurrentWorkforceAllocationAuthorityTx(ctx: PeMutationContext, c: PoolClient, budget: WorkforceBudget) {
+  await budgetAuthority(ctx, c, budget.resources, { workId: budget.workId, schedules: budget.envelopes });
+}
+
+/** Native typed S5 specialization, in the caller's original portfolio transaction.
+ * One root commitment, never one fresh grant per assignment or delegated edge. */
+export async function reserveWorkforceBudgetTx(ctx: PeMutationContext, c: PoolClient, input: WorkforceBudgetRequest): Promise<WorkforceBudget> {
+  const current = await readAllocationSnapshotTx(ctx, c), digest = epistemicHash(input);
+  bounded(input);
+  const prior = (await c.query(`SELECT r.request_digest,h.body FROM finnor_os.s5_requests r
+    JOIN finnor_os.s5_reservation_origins o ON o.tenant_id=r.tenant_id AND o.allocation_digest=r.allocation_digest
+    JOIN finnor_os.s5_history h ON h.tenant_id=o.tenant_id AND h.subject_id=o.reservation_id AND h.operation='WORKFORCE_BUDGET'
+    WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.idempotency_key=$3`,
+  [ctx.auth.tenantId, actor(ctx), input.idempotencyKey])).rows[0];
+  if (prior) {
+    if (prior.request_digest !== digest) fail("WORKFORCE_S5_IDEMPOTENCY_CONFLICT");
+    return prior.body as WorkforceBudget;
+  }
+  if (!input.resourceRefs.length || input.resourceRefs.length > 16 || new Set(input.resourceRefs.map(r => r.id)).size !== input.resourceRefs.length ||
+      current.outstanding.length >= 256 || !Number.isFinite(Date.parse(input.deadlineAt)) || Date.parse(input.deadlineAt) <= Date.now())
+    fail("WORKFORCE_S5_PROFILE_OR_ORIGINAL_DEADLINE_UNAVAILABLE");
+  const selected = input.resourceRefs.map(ref => current.resources.find(r => sameAllocationRef(ref, r.ref)));
+  if (selected.some(r => !r)) fail("WORKFORCE_S5_CANONICAL_RESOURCE_REVISION_CHANGED");
+  const resources = selected as AllocationResource[];
+  // A complete connected covenant component is required. No hidden resource
+  // or alternate calendar can be dropped to manufacture spare capacity.
+  const ids = new Set(resources.map(r => r.resourceId));
+  if (current.resources.some(r => r.covenants.some(cv => cv.terms.some(t => ids.has(t.resourceId)) &&
+      (!ids.has(r.resourceId) || cv.terms.some(t => !ids.has(t.resourceId))))))
+    fail("WORKFORCE_S5_COUPLED_RESOURCE_COMPONENT_INCOMPLETE");
+  await budgetAuthority(ctx, c, resources, input);
+  const maximum = schedules(resources, input.schedules), now = new Date().toISOString();
+  const outstanding = current.outstanding.map(held => ({ ...held, envelopes: held.envelopes.filter(e => ids.has(e.resourceId)) }))
+    .filter(held => held.envelopes.length);
+  const check = verifyCanonicalResourceSchedules({ resources, outstanding, horizon: resources[0]!.horizon,
+    knowledgeAt: now, paths: intervalPaths(resources, maximum) });
+  if (!check.feasible) fail("WORKFORCE_S5_CANONICAL_CAPACITY_DENIED:" + check.reasons.join(","));
+  const validUntil = new Date(Math.min(Date.parse(input.deadlineAt), ...resources.map(r => Date.parse(r.validUntil)))).toISOString();
+  const problem = { schema: "finnor.s5.workforce-resource-problem.v1", tenantId: ctx.auth.tenantId, principalId: actor(ctx),
+    root: { entityType: "work", entityId: input.workId }, programmeId: input.programmeId, purpose: input.purpose,
+    resources, outstanding, originalSchedules: input.schedules, knowledgeAt: now, validUntil,
+    snapshotDigest: current.snapshotDigest, policies: [], qualification: "EXACT_CANONICAL_INTERVAL_BUDGET_NO_EFFECT_OR_ADMISSION_AUTHORITY" };
+  const certificateBody = { schema: "finnor.s5.workforce-certificate.v1", semanticOwner: "S5", tenantId: ctx.auth.tenantId,
+    principalId: actor(ctx), workId: input.workId, programmeId: input.programmeId, policyBindings: [],
+    resourceRefs: resources.map(r => r.ref), rightsRef: resources[0]!.rightsRef, validUntil, check,
+    problemRef: allocationRef("S5", "workforce-problem", problem, "s5-workforce-v1"), executionAuthorityGranted: false, protectedReceipt: null };
+  const certificate = { ...certificateBody, ref: allocationRef("S5", "allocation-certificate", certificateBody, "s5-workforce-v1") };
+  const reservationBody = { schema: "finnor.allocation-reservation.v1", tenantId: ctx.auth.tenantId, principalId: actor(ctx),
+    certificateRef: certificate.ref, idempotencyKey: input.idempotencyKey, requestDigest: digest, createdAt: now,
+    envelopes: check.envelopes, status: "RESERVED", revocationReason: null, revision: 1, executionAuthorityGranted: false, protectedReceipt: null };
+  const reservation = { ...reservationBody, ref: allocationRef("S5", "allocation-reservation", reservationBody, "s5-workforce-v1") };
+  const body = { schema: "finnor.s5.workforce-budget.v1" as const, tenantId: ctx.auth.tenantId, principalId: actor(ctx),
+    workId: input.workId, programmeId: input.programmeId, reservationRef: reservation.ref, certificateRef: certificate.ref,
+    resources, envelopes: check.envelopes, validUntil, executionAuthorityGranted: false as const, protectedReceipt: null };
+  const budget: WorkforceBudget = { ...body, ref: allocationRef("S5", "workforce-budget", body, "s5-workforce-v1") };
+  bounded({ problem, certificate, reservation, budget });
+  await c.query("INSERT INTO finnor_os.s5_proposals(tenant_id,principal_id,content_digest,problem,certificate) VALUES($1,$2,$3,$4::jsonb,$5::jsonb)",
+    [ctx.auth.tenantId, actor(ctx), certificate.ref.contentDigest, JSON.stringify(problem), JSON.stringify(certificate)]);
+  await c.query("INSERT INTO finnor_os.s5_reservation_origins(tenant_id,principal_id,reservation_id,allocation_digest,body) VALUES($1,$2,$3,$4,$5::jsonb)",
+    [ctx.auth.tenantId, actor(ctx), reservation.ref.id, certificate.ref.contentDigest, JSON.stringify(reservation)]);
+  await c.query("INSERT INTO finnor_os.s5_reservations(tenant_id,reservation_id,allocation_digest,revision,status,envelopes) VALUES($1,$2,$3,1,'RESERVED',$4::jsonb)",
+    [ctx.auth.tenantId, reservation.ref.id, certificate.ref.contentDigest, JSON.stringify(check.envelopes)]);
+  await c.query("INSERT INTO finnor_os.s5_requests(tenant_id,principal_id,idempotency_key,request_digest,allocation_digest) VALUES($1,$2,$3,$4,$5)",
+    [ctx.auth.tenantId, actor(ctx), input.idempotencyKey, digest, certificate.ref.contentDigest]);
+  await c.query("INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,1,'WORKFORCE_BUDGET',$3::jsonb)",
+    [ctx.auth.tenantId, reservation.ref.id, JSON.stringify(budget)]);
+  return budget;
+}
+
+export async function assertWorkforceBudgetTx(ctx: PeMutationContext, c: PoolClient, budget: WorkforceBudget) {
+  const current = await readAllocationSnapshotTx(ctx, c);
+  const row = (await c.query(`SELECT s.*,o.body,p.certificate,p.problem FROM finnor_os.s5_reservations s
+    JOIN finnor_os.s5_reservation_origins o USING(tenant_id,reservation_id)
+    JOIN finnor_os.s5_proposals p ON p.tenant_id=s.tenant_id AND p.content_digest=s.allocation_digest
+    WHERE s.tenant_id=$1 AND s.reservation_id=$2 AND o.principal_id=$3 FOR UPDATE OF s`,
+  [ctx.auth.tenantId, budget.reservationRef.id, actor(ctx)])).rows[0];
+  if (!row || row.problem.schema !== "finnor.s5.workforce-resource-problem.v1" || row.problem.programmeId !== budget.programmeId ||
+      !sameAllocationRef(row.body.ref, budget.reservationRef) || !sameAllocationRef(row.certificate.ref, budget.certificateRef) ||
+      row.revocation_reason || ["RELEASED", "SETTLED_RETAINED"].includes(row.status) || Date.now() >= Date.parse(budget.validUntil) ||
+      budget.resources.some(r => !current.resources.some(now => sameAllocationRef(now.ref, r.ref) && !now.revoked && Date.parse(now.validUntil) > Date.now())))
+    fail("WORKFORCE_S5_ORIGINAL_BUDGET_FENCED");
+  return row;
+}
+
+async function workforceCarveState(ctx: PeMutationContext, c: PoolClient, budget: WorkforceBudget) {
+  const certificates = (await c.query(`SELECT body FROM finnor_os.s5_history
+    WHERE tenant_id=$1 AND operation='WORKFORCE_CARVE' AND body->>'rootId'=$2 LIMIT 8193`,
+    [ctx.auth.tenantId, budget.workId])).rows.map(row => row.body as WorkforceCarveRecord);
+  if (certificates.length > 8192) fail("WORKFORCE_S5_CARVE_HISTORY_PROFILE_EXHAUSTED");
+  const allByRef = new Map(certificates.map(record => [record.ref.id, record]));
+  const owned = certificates.filter(record => {
+    const parent = record.parentReservationId ? allByRef.get(record.parentReservationId) : null;
+    return (!record.parentReservationId || !!parent) && sameAllocationRef(record.ref,
+      allocationRef("S5", "workforce-carve", { reservationRef: budget.reservationRef, programmeId: budget.programmeId,
+        assignmentId: record.assignmentId, parentAssignmentId: parent?.assignmentId ?? null,
+        rootId: record.rootId, envelope: record.envelope }, "s5-workforce-v1"));
+  });
+  const frames = (await c.query(`SELECT revision,body FROM finnor_os.s5_history WHERE tenant_id=$1 AND subject_id=$2
+    AND operation='WORKFORCE_CARVE_FRONTIER' ORDER BY revision LIMIT 8193`,
+    [ctx.auth.tenantId, budget.reservationRef.id])).rows;
+  if (frames.length > 8192) fail("WORKFORCE_S5_FRONTIER_HISTORY_PROFILE_EXHAUSTED");
+  let latest: WorkforceCarveFrontier | null = null;
+  for (const row of frames) {
+    const frame = row.body as WorkforceCarveFrontier, { ref, ...body } = frame;
+    if (frame.schema !== "finnor.s5.workforce-carve-frontier.v1" || frame.programmeId !== budget.programmeId ||
+        frame.revision !== row.revision || !sameAllocationRef(frame.originalReservation, budget.reservationRef) ||
+        !sameAllocationRef(frame.previousRef, latest?.ref ?? budget.ref) ||
+        !sameAllocationRef(ref, allocationRef("S5", "workforce-carve-frontier", body, "s5-workforce-v1")) ||
+        new Set(frame.records.map(record => record.ref.id)).size !== frame.records.length ||
+        latest?.records.some(prior => !frame.records.some(record => sameAllocationRef(record.ref, prior.ref) &&
+          (prior.status !== "RELEASED" || record.status === "RELEASED"))))
+      fail("WORKFORCE_S5_FRONTIER_PREIMAGE_OR_CHAIN_INVALID");
+    latest = frame;
+  }
+  const records = structuredClone(latest?.records ?? owned);
+  if (records.length !== owned.length || records.some(record => !owned.some(original =>
+    sameAllocationRef(record.ref, original.ref) && record.assignmentId === original.assignmentId &&
+    record.rootId === original.rootId && record.parentReservationId === original.parentReservationId &&
+    epistemicHash(record.envelope) === epistemicHash(original.envelope))))
+    fail("WORKFORCE_S5_FRONTIER_LOST_OR_CHANGED_CARVE");
+  const uses = (await c.query(`SELECT co.body,st.status,
+    (SELECT h.body FROM finnor_os.s5_history h WHERE h.tenant_id=co.tenant_id AND h.subject_id=co.consumption_id
+      AND h.operation='WORKFORCE_OBSERVATION' ORDER BY h.revision DESC LIMIT 1) observation
+    FROM finnor_os.s5_consumptions co JOIN finnor_os.s5_consumption_states st USING(tenant_id,consumption_id)
+    WHERE co.tenant_id=$1 AND co.reservation_id=$2 ORDER BY co.consumption_id LIMIT 2049`,
+    [ctx.auth.tenantId, budget.reservationRef.id])).rows;
+  if (uses.length > 2048 || uses.some(use => use.body.schema !== "finnor.s5.workforce-consumption.v1"))
+    fail("WORKFORCE_S5_ORIGINAL_USE_CUT_UNAVAILABLE");
+  const releases = (await c.query(`SELECT subject_id,operation,body FROM finnor_os.s5_history
+    WHERE tenant_id=$1 AND operation IN('WORKFORCE_CARVE_RELEASE','WORKFORCE_CARVE_RETIREMENT')
+      AND body->>'programmeId'=$2 LIMIT 8193`, [ctx.auth.tenantId, budget.programmeId])).rows;
+  if (releases.length > 8192 || new Set(releases.map(row => row.subject_id)).size !== releases.length ||
+      releases.some(row => !records.some(record => record.ref.id === row.subject_id)))
+    fail("WORKFORCE_S5_RELEASE_CUT_INCOMPLETE");
+  const releaseByRef = new Map(releases.map(row => [row.subject_id, row]));
+  const retired = new Set<string>();
+  for (const record of records) {
+    const state = releaseByRef.get(record.ref.id), release = state?.body;
+    if (release) {
+      if (!sameAllocationRef(release.originalRef, record.ref) || release.programmeId !== budget.programmeId ||
+          !sameAllocationRef(release.originalReservation, budget.reservationRef))
+        fail("WORKFORCE_S5_RELEASE_PREIMAGE_UNAVAILABLE");
+      if (state!.operation === "WORKFORCE_CARVE_RELEASE") {
+        if (!release.noPhysicalConsumption) fail("WORKFORCE_S5_RELEASE_PREIMAGE_UNAVAILABLE");
+      } else {
+        const { ref, ...body } = release;
+        const own = uses.filter(use => use.body.nodeId === record.assignmentId);
+        if (release.schema !== "finnor.s5.known-workforce-carve-retirement.v1" || release.noPhysicalConsumption !== false ||
+            release.rootCapacityReplenished !== false || release.assignmentId !== record.assignmentId ||
+            !sameAllocationRef(ref, allocationRef("S5", "known-workforce-carve-retirement", body, "s5-workforce-v1")) ||
+            !own.length || own.length !== release.consumptionCut.length ||
+            own.some(use => use.status !== "RECONCILED" || use.observation?.status !== "RECONCILED" ||
+              !release.consumptionCut.some((cut: { ref: ExperimentRef; bodyDigest: string; observationDigest: string }) =>
+                sameAllocationRef(cut.ref, use.body.ref) && cut.bodyDigest === epistemicHash(use.body) &&
+                cut.observationDigest === epistemicHash(use.observation))))
+          fail("WORKFORCE_S5_KNOWN_RETIREMENT_PREIMAGE_CHANGED");
+        const { ref: witnessRef, ...witness } = release.witness;
+        if (witness.schema !== "finnor.s6.known-local-workforce-attempt.v1" || witness.assignmentId !== record.assignmentId ||
+            witness.originalRoot !== budget.workId || witness.noEgressAuthority !== true ||
+            !sameAllocationRef(witness.originalReservation, budget.reservationRef) ||
+            !sameAllocationRef(witnessRef, allocationRef("S6", "known-local-workforce-attempt", witness, "s6-workforce-v1")))
+          fail("WORKFORCE_S5_KNOWN_S6_WITNESS_UNAVAILABLE");
+        retired.add(record.ref.id);
+        record.spent = release.record.spent;
+        record.unresolved = release.record.unresolved;
+      }
+      record.status = "RELEASED";
+      record.directReserved = record.directReserved.map(e => ({ ...e, quantities: e.quantities.map(() => "0") }));
+    } else if (record.status !== "HELD") fail("WORKFORCE_S5_FALSE_CARVE_RELEASE");
+  }
+  return { records, latest, uses, retired };
+}
+
+/** Project the current ledger, not an old certificate's unspent-looking copy.
+ * Unknown uses retain their ceiling, including an observed overrun. */
+export async function readWorkforceCarvesTx(ctx: PeMutationContext, c: PoolClient, budget: WorkforceBudget,
+  expectedRefs?: ExperimentRef[]): Promise<WorkforceCarveRecord[]> {
+  const { records, uses, retired } = await workforceCarveState(ctx, c, budget);
+  const payments = await readWorkforceClosingPaymentsTx(c, ctx.auth.tenantId, budget.programmeId);
+  if (expectedRefs && (new Set(expectedRefs.map(ref => ref.id)).size !== expectedRefs.length ||
+      expectedRefs.length !== records.length || records.some(record => !expectedRefs.some(ref => sameAllocationRef(ref, record.ref)))))
+    fail("WORKFORCE_S5_NATIVE_CARVE_CUT_MISMATCH");
+  return records.map(record => {
+    const own = uses.filter(use => use.body.nodeId === record.assignmentId);
+    if (record.status === "RELEASED" && own.length && !retired.has(record.ref.id)) fail("WORKFORCE_S5_RELEASED_PHYSICAL_USE");
+    const projected = budget.envelopes.map(template => {
+      const held = record.directReserved.find(e => e.resourceId === template.resourceId);
+      const spent = template.quantities.map(zero), unresolved = template.quantities.map(zero);
+      for (const payment of payments.filter(payment => payment.assignmentId === record.assignmentId && payment.resourceId === template.resourceId)) {
+        if (template.unit !== payment.resourceUnit) fail("WORKFORCE_S5_PAYMENT_RESOURCE_COORDINATE_CHANGED");
+        spent[payment.resourcePeriod] = spent[payment.resourcePeriod]!.add(quantity(payment.resourceAmount));
+      }
+      for (const use of own) {
+        const ceiling = use.body.envelope.find((e: AllocationEnvelope) => e.resourceId === template.resourceId);
+        const actual = use.observation?.actual?.find((e: WorkforceResourceSchedule) => e.resourceId === template.resourceId);
+        for (let period = 0; period < spent.length; period++) {
+          const bound = quantity(ceiling?.quantities[period] ?? "0"), observed = actual ? quantity(actual.quantities[period]) : null;
+          if (use.status === "RECONCILED" && observed) spent[period] = spent[period]!.add(observed);
+          else unresolved[period] = unresolved[period]!.add(observed && observed.compare(bound) > 0 ? observed : bound);
+        }
+      }
+      const remaining = template.quantities.map((_, period) => {
+        const value = quantity(held?.quantities[period] ?? "0").sub(spent[period]!).sub(unresolved[period]!);
+        return value.n < 0n ? "0" : domainQuantity(value);
+      });
+      const vector = (values: string[]) => ({ ...template, quantities: values, minimumQuantities: values.map(() => "0") });
+      return { resourceId: template.resourceId, spent: vector(spent.map(domainQuantity)),
+        unresolved: vector(unresolved.map(domainQuantity)), remaining: vector(remaining),
+        included: record.envelope.some(e => e.resourceId === template.resourceId) ||
+          spent.some(value => value.n > 0n) || unresolved.some(value => value.n > 0n) };
+    }).filter(value => value.included);
+    return { ...record, directReserved: projected.map(value => value.remaining),
+      spent: projected.map(value => value.spent), unresolved: projected.map(value => value.unresolved) };
+  });
+}
+
+/** Keep original carve certificates immutable. Re-partition only through an
+ * append-only, independently reconstructible original-root frontier. */
+export async function recordWorkforceCarvesTx(ctx: PeMutationContext, c: PoolClient, budget: WorkforceBudget,
+  carves: Array<{ assignmentId: string; parentAssignmentId: string | null; rootId: string; envelope: AllocationEnvelope[] }>) {
+  await assertWorkforceBudgetTx(ctx, c, budget);
+  const previous = await workforceCarveState(ctx, c, budget);
+  const retained = await readWorkforceCarvesTx(ctx, c, budget);
+  if (carves.length > 512 || new Set(carves.map(v => v.assignmentId)).size !== carves.length)
+    fail("WORKFORCE_S5_CARVE_PROFILE_EXCEEDED");
+  const byId = new Map(carves.map(v => [v.assignmentId, v]));
+  const retired = retained.filter(record => record.status === "RELEASED");
+  const carveRefId = (carve: typeof carves[number]) => allocationRef("S5", "workforce-carve",
+    { reservationRef: budget.reservationRef, programmeId: budget.programmeId, ...carve }, "s5-workforce-v1").id;
+  const retainedChildren = (parent: typeof carves[number] | null) =>
+    retired.filter(record => record.parentReservationId === (parent ? carveRefId(parent) : null));
+  const retainedCharge = (record: WorkforceCarveRecord, resourceId: string, period: number) =>
+    quantity(record.spent.find(e => e.resourceId === resourceId)?.quantities[period] ?? "0")
+      .add(quantity(record.unresolved.find(e => e.resourceId === resourceId)?.quantities[period] ?? "0"));
+  for (const carve of carves) {
+    if (carve.rootId !== budget.workId || new Set(carve.envelope.map(e => e.resourceId)).size !== carve.envelope.length)
+      fail("WORKFORCE_S5_CARVE_ORIGINAL_ROOT_OR_COORDINATE");
+    const seen = new Set<string>();
+    let parent: typeof carve | undefined = carve;
+    while (parent) {
+      if (seen.has(parent.assignmentId) || seen.size > 8) fail("WORKFORCE_S5_CARVE_ANCESTRY_INVALID");
+      seen.add(parent.assignmentId);
+      if (parent.parentAssignmentId !== null && !byId.has(parent.parentAssignmentId)) fail("WORKFORCE_S5_CARVE_PARENT_MISSING");
+      parent = parent.parentAssignmentId ? byId.get(parent.parentAssignmentId) : undefined;
+    }
+    for (const envelope of carve.envelope) {
+      const canonical = budget.envelopes.find(e => e.resourceId === envelope.resourceId);
+      if (!canonical || envelope.unit !== canonical.unit || envelope.kind !== canonical.kind ||
+          epistemicHash(envelope.horizon) !== epistemicHash(canonical.horizon) || envelope.quantities.length !== canonical.quantities.length)
+        fail("WORKFORCE_S5_CARVE_CANONICAL_COORDINATE_MISMATCH");
+    }
+  }
+  const checkChildren = (cap: AllocationEnvelope[], children: typeof carves, historical: WorkforceCarveRecord[]) => {
+    for (const resource of budget.resources) {
+      const maximum = cap.find(e => e.resourceId === resource.resourceId);
+      const used = Array(resource.horizon.periods + 1).fill("0").map(zero);
+      for (const child of children) {
+        const envelope = child.envelope.find(e => e.resourceId === resource.resourceId);
+        if (envelope) for (let period = 0; period < used.length; period++)
+          used[period] = used[period]!.add(quantity(envelope.quantities[period]!));
+      }
+      for (const record of historical) for (let period = 0; period < used.length; period++)
+        used[period] = used[period]!.add(retainedCharge(record, resource.resourceId, period));
+      let prefix = zero(), ceiling = zero();
+      for (let period = 0; period < used.length; period++) {
+        prefix = prefix.add(used[period]!); ceiling = ceiling.add(quantity(maximum?.quantities[period] ?? "0"));
+        if (used[period]!.compare(quantity(maximum?.quantities[period] ?? "0")) > 0 ||
+            ["STOCK", "CUMULATIVE_EXPENDITURE"].includes(resource.kind) && prefix.compare(ceiling) > 0)
+          fail("WORKFORCE_S5_CARVE_CONSERVATION_DENIED");
+      }
+    }
+  };
+  checkChildren(budget.envelopes, carves.filter(v => v.parentAssignmentId === null), retainedChildren(null));
+  for (const parent of carves) checkChildren(parent.envelope,
+    carves.filter(v => v.parentAssignmentId === parent.assignmentId), retainedChildren(parent));
+  const records: WorkforceCarveRecord[] = [];
+  for (const carve of carves) {
+    const children = carves.filter(v => v.parentAssignmentId === carve.assignmentId);
+    const directReserved = carve.envelope.map(e => ({ ...e, quantities: e.quantities.map((value, period) =>
+      domainQuantity(retainedChildren(carve).reduce((remaining, old) => remaining.sub(retainedCharge(old, e.resourceId, period)),
+        children.reduce((remaining, child) => remaining.sub(quantity(child.envelope.find(v =>
+          v.resourceId === e.resourceId)?.quantities[period] ?? "0")), quantity(value))))),
+      minimumQuantities: e.minimumQuantities.map(() => "0") }));
+    const empty = carve.envelope.map(e => ({ ...e, quantities: e.quantities.map(() => "0"), minimumQuantities: e.quantities.map(() => "0") }));
+    const parent = carve.parentAssignmentId ? byId.get(carve.parentAssignmentId)! : null;
+    const parentBody = parent ? { reservationRef: budget.reservationRef, programmeId: budget.programmeId, ...parent } : null;
+    const body = { reservationRef: budget.reservationRef, programmeId: budget.programmeId, ...carve };
+    const ref = allocationRef("S5", "workforce-carve", body, "s5-workforce-v1");
+    const record = { ref, assignmentId: carve.assignmentId, rootId: carve.rootId,
+      parentReservationId: parentBody ? allocationRef("S5", "workforce-carve", parentBody, "s5-workforce-v1").id : null,
+      envelope: carve.envelope, directReserved, spent: empty, unresolved: empty, status: "HELD" as const };
+    const prior = (await c.query("SELECT body FROM finnor_os.s5_history WHERE tenant_id=$1 AND subject_id=$2 AND operation='WORKFORCE_CARVE'",
+      [ctx.auth.tenantId, ref.id])).rows[0]?.body;
+    if (prior && epistemicHash({ ...prior, directReserved }) !== epistemicHash(record))
+      fail("WORKFORCE_S5_CARVE_IDENTITY_CONFLICT");
+    const old = retained.find(value => value.assignmentId === record.assignmentId);
+    if (old?.status === "RELEASED") fail("WORKFORCE_S5_RELEASED_CARVE_CANNOT_REFILL");
+    for (const resource of budget.resources) {
+      const cap = record.directReserved.find(e => e.resourceId === resource.resourceId);
+      const spent = old?.spent.find(e => e.resourceId === resource.resourceId);
+      const unresolved = old?.unresolved.find(e => e.resourceId === resource.resourceId);
+      for (let period = 0; period <= resource.horizon.periods; period++)
+        if (quantity(spent?.quantities[period] ?? "0").add(quantity(unresolved?.quantities[period] ?? "0"))
+          .compare(quantity(cap?.quantities[period] ?? "0")) > 0)
+          fail("WORKFORCE_S5_REFINEMENT_RETAINS_SPENT_AND_UNKNOWN");
+    }
+    if (!prior) await c.query("INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,1,'WORKFORCE_CARVE',$3::jsonb)",
+      [ctx.auth.tenantId, ref.id, JSON.stringify(record)]);
+    records.push(record);
+  }
+  for (const old of previous.records) if (!records.some(record => sameAllocationRef(record.ref, old.ref))) {
+    if (old.status !== "RELEASED") fail("WORKFORCE_S5_REFINEMENT_DROPPED_RETAINED_CARVE");
+    records.push(old);
+  }
+  records.sort((a, b) => a.assignmentId.localeCompare(b.assignmentId));
+  const ledger = (await c.query(`SELECT COALESCE(max(revision),0)::int revision,
+    COALESCE(sum(octet_length(body::text)) FILTER(WHERE operation='WORKFORCE_CARVE_FRONTIER'),0)::text bytes
+    FROM finnor_os.s5_history WHERE tenant_id=$1 AND subject_id=$2`,
+    [ctx.auth.tenantId, budget.reservationRef.id])).rows[0];
+  const body = { schema: "finnor.s5.workforce-carve-frontier.v1" as const, originalReservation: budget.reservationRef,
+    programmeId: budget.programmeId, revision: ledger.revision + 1,
+    previousRef: previous.latest?.ref ?? budget.ref, records };
+  const frontier: WorkforceCarveFrontier = { ...body, ref: allocationRef("S5", "workforce-carve-frontier", body, "s5-workforce-v1") };
+  bounded(frontier);
+  if (BigInt(ledger.bytes) + BigInt(Buffer.byteLength(JSON.stringify(frontier))) > 64n * 1024n * 1024n)
+    fail("WORKFORCE_S5_FRONTIER_OBSERVATION_ENVELOPE_EXHAUSTED");
+  await c.query(`INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body)
+    VALUES($1,$2,$3,'WORKFORCE_CARVE_FRONTIER',$4::jsonb)`,
+    [ctx.auth.tenantId, budget.reservationRef.id, body.revision, JSON.stringify(frontier)]);
+  return records;
+}
+
+/** Only an original carve with no physical consumption can be reused. The root
+ * reservation is not released, copied or replenished. Caller holds portfolio. */
+export async function releaseUnconsumedWorkforceCarveTx(ctx: PeMutationContext, c: PoolClient, budget: WorkforceBudget,
+  assignmentId: string, carveRef: ExperimentRef, releaseKey: string) {
+  await assertWorkforceBudgetTx(ctx, c, budget);
+  const rows = (await c.query(`SELECT body FROM finnor_os.s5_history WHERE tenant_id=$1 AND operation='WORKFORCE_CARVE'
+    AND subject_id=$2 AND body->>'assignmentId'=$3 LIMIT 2`, [ctx.auth.tenantId, carveRef.id, assignmentId])).rows;
+  if (rows.length !== 1) fail("WORKFORCE_S5_ORIGINAL_CARVE_UNAVAILABLE");
+  const original = rows[0].body;
+  if (!sameAllocationRef(original.ref, carveRef) || original.rootId !== budget.workId)
+    fail("WORKFORCE_S5_ORIGINAL_CARVE_IDENTITY_CHANGED");
+  const used = (await c.query(`SELECT consumption_id FROM finnor_os.s5_consumptions
+    WHERE tenant_id=$1 AND reservation_id=$2 AND body->>'nodeId'=$3 LIMIT 1`,
+    [ctx.auth.tenantId, budget.reservationRef.id, assignmentId])).rowCount;
+  if (used) fail("WORKFORCE_S5_PRIOR_PHYSICAL_USE_PREVENTS_CARVE_REUSE");
+  const prior = (await c.query(`SELECT body FROM finnor_os.s5_history WHERE tenant_id=$1 AND subject_id=$2
+    AND operation='WORKFORCE_CARVE_RELEASE'`, [ctx.auth.tenantId, original.ref.id])).rows[0]?.body;
+  if (prior) {
+    if (prior.releaseKey !== releaseKey || !sameAllocationRef(prior.originalRef, original.ref))
+      fail("WORKFORCE_S5_CARVE_RELEASE_CONFLICT");
+    return prior.record;
+  }
+  const record = { ...original, status: "RELEASED", directReserved: original.directReserved.map((e: AllocationEnvelope) =>
+    ({ ...e, quantities: e.quantities.map(() => "0"), minimumQuantities: e.minimumQuantities.map(() => "0") })) };
+  await c.query(`INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body)
+    VALUES($1,$2,2,'WORKFORCE_CARVE_RELEASE',$3::jsonb)`, [ctx.auth.tenantId, original.ref.id,
+    JSON.stringify({ schema: "finnor.s5.workforce-carve-release.v1", originalRef: original.ref, record, releaseKey,
+      programmeId: budget.programmeId, assignmentId, originalReservation: budget.reservationRef,
+      noPhysicalConsumption: true, rootCapacityReplenished: false, at: new Date().toISOString() })]);
+  return record;
+}
+
+/** Separate from never-used release: preserve every known spent coordinate,
+ * require the actual S6 no-egress observation, and return only unused capacity.
+ * This cannot reconcile an unknown attempt, release money/labor, or refill root. */
+export async function retireKnownWorkforceCarveTx(ctx: PeMutationContext, c: PoolClient, budget: WorkforceBudget,
+  assignmentId: string, carveRef: ExperimentRef, releaseKey: string) {
+  await assertWorkforceBudgetTx(ctx, c, budget);
+  const state = await workforceCarveState(ctx, c, budget);
+  const original = state.records.find(record => record.assignmentId === assignmentId && sameAllocationRef(record.ref, carveRef));
+  if (!original || state.records.some(record => record.parentReservationId === original.ref.id))
+    return fail("WORKFORCE_S5_KNOWN_LEAF_CARVE_REQUIRED");
+  const prior = (await c.query(`SELECT body FROM finnor_os.s5_history WHERE tenant_id=$1 AND subject_id=$2
+    AND operation='WORKFORCE_CARVE_RETIREMENT'`, [ctx.auth.tenantId, original.ref.id])).rows[0]?.body;
+  if (prior) {
+    if (prior.releaseKey !== releaseKey) fail("WORKFORCE_S5_KNOWN_RETIREMENT_CONFLICT");
+    return prior;
+  }
+  if (original.status !== "HELD") return fail("WORKFORCE_S5_ORIGINAL_CARVE_ALREADY_RELEASED");
+  const witness = await readKnownWorkforceLocalAttemptTx(ctx.auth, c, budget.programmeId, assignmentId,
+    budget.ref, budget.reservationRef);
+  const own = state.uses.filter(use => use.body.nodeId === assignmentId);
+  if (own.length !== 1 || !sameAllocationRef(own[0]!.body.ref, witness.consumptionRef) ||
+      own[0]!.body.decisionDigest !== witness.consumptionDecisionDigest ||
+      own.some(use => use.status !== "RECONCILED" || use.observation?.status !== "RECONCILED" ||
+        use.observation.possibleEffect || use.observation.resourceOverrun || use.observation.meterGaps?.length ||
+        !sameAllocationRef(use.observation.evidenceRef, witness.observationEvidenceRef) ||
+        use.observation.actual.length !== budget.resources.length ||
+        budget.resources.some(resource => !use.observation.actual.some((value: WorkforceResourceSchedule) =>
+          value.resourceId === resource.resourceId && value.quantities.length === resource.horizon.periods + 1))))
+    fail("WORKFORCE_S5_WHOLE_KNOWN_CONSUMPTION_REQUIRED");
+  const current = (await readWorkforceCarvesTx(ctx, c, budget)).find(record => record.assignmentId === assignmentId)!;
+  if (current.unresolved.some(e => e.quantities.some(value => quantity(value).n !== 0n)))
+    fail("WORKFORCE_S5_UNKNOWN_EXPOSURE_CANNOT_BE_RETIRED");
+  const record: WorkforceCarveRecord = { ...original, status: "RELEASED", spent: current.spent,
+    unresolved: current.unresolved, directReserved: original.directReserved.map(e =>
+      ({ ...e, quantities: e.quantities.map(() => "0"), minimumQuantities: e.minimumQuantities.map(() => "0") })) };
+  const body = { schema: "finnor.s5.known-workforce-carve-retirement.v1", originalRef: original.ref,
+    originalReservation: budget.reservationRef, programmeId: budget.programmeId, assignmentId, releaseKey,
+    witness, record, remainingEnvelope: current.directReserved,
+    consumptionCut: own.map(use => ({ ref: use.body.ref as ExperimentRef,
+      bodyDigest: epistemicHash(use.body), observationDigest: epistemicHash(use.observation) })),
+    noPhysicalConsumption: false, possibleEffectsReleased: false, rootCapacityReplenished: false,
+    at: new Date().toISOString() };
+  const result = { ...body, ref: allocationRef("S5", "known-workforce-carve-retirement", body, "s5-workforce-v1") };
+  bounded(result);
+  await c.query(`INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body)
+    VALUES($1,$2,2,'WORKFORCE_CARVE_RETIREMENT',$3::jsonb)`,
+  [ctx.auth.tenantId, original.ref.id, JSON.stringify(result)]);
+  return result;
+}
+
+export async function reserveWorkforceUseTx(ctx: PeMutationContext, c: PoolClient, budget: WorkforceBudget,
+  input: { assignmentId: string; operationKey: string; schedules: WorkforceResourceSchedule[]; decisionDigest: string }) {
+  await assertWorkforceBudgetTx(ctx, c, budget);
+  const requestDigest = epistemicHash({ budgetRef: budget.ref, ...input });
+  const prior = (await c.query(`SELECT co.body,st.status FROM finnor_os.s5_consumptions co
+    JOIN finnor_os.s5_consumption_states st USING(tenant_id,consumption_id)
+    WHERE co.tenant_id=$1 AND co.principal_id=$2 AND co.idempotency_key=$3`,
+  [ctx.auth.tenantId, actor(ctx), "w2:" + input.operationKey])).rows[0];
+  if (prior) {
+    if (prior.body.requestDigest !== requestDigest) fail("WORKFORCE_S5_USE_IDEMPOTENCY_CONFLICT");
+    return { consumption: prior.body, status: prior.status as string, replay: true };
+  }
+  await assertCurrentWorkforceAllocationAuthorityTx(ctx, c, budget);
+  const requested = schedules(budget.resources, input.schedules);
+  const uses = (await c.query(`SELECT co.body,st.status,
+    (SELECT h.body FROM finnor_os.s5_history h WHERE h.tenant_id=co.tenant_id AND h.subject_id=co.consumption_id
+      AND h.operation='WORKFORCE_OBSERVATION' ORDER BY h.revision DESC LIMIT 1) observation
+    FROM finnor_os.s5_consumptions co JOIN finnor_os.s5_consumption_states st USING(tenant_id,consumption_id)
+    WHERE co.tenant_id=$1 AND co.reservation_id=$2 ORDER BY co.consumption_id LIMIT 2049`,
+  [ctx.auth.tenantId, budget.reservationRef.id])).rows;
+  if (uses.length >= 2048) fail("WORKFORCE_S5_ORIGINAL_ATTEMPT_PROFILE_EXHAUSTED");
+  if (input.assignmentId !== budget.programmeId) {
+    const carve = (await readWorkforceCarvesTx(ctx, c, budget)).find(record => record.assignmentId === input.assignmentId);
+    if (!carve || carve.status !== "HELD") return fail("WORKFORCE_S5_CURRENT_ASSIGNMENT_CARVE_REQUIRED");
+    for (const resource of budget.resources) {
+      const remaining = carve.directReserved.find(e => e.resourceId === resource.resourceId);
+      if (requested.get(resource.resourceId)!.some((value, period) => value.compare(quantity(remaining?.quantities[period] ?? "0")) > 0))
+        fail("WORKFORCE_S5_CURRENT_DIRECT_FRONTIER_EXHAUSTED");
+    }
+  }
+  for (const resource of budget.resources) {
+    const cap = budget.envelopes.find(e => e.resourceId === resource.resourceId)!;
+    const total = requested.get(resource.resourceId)!.slice();
+    for (const use of uses) {
+      if (use.body.schema !== "finnor.s5.workforce-consumption.v1") fail("WORKFORCE_S5_MIXED_CONSUMPTION_CONTRACT");
+      const held = use.body.envelope.find((e: AllocationEnvelope) => e.resourceId === resource.resourceId);
+      const observed = use.observation?.actual?.find((s: WorkforceResourceSchedule) => s.resourceId === resource.resourceId)?.quantities;
+      for (let period = 0; period < total.length; period++) {
+        const ceiling = quantity(held.quantities[period]);
+        const actual = observed ? quantity(observed[period]) : null;
+        total[period] = total[period]!.add(use.status === "RECONCILED" && actual ? actual :
+          actual && actual.compare(ceiling) > 0 ? actual : ceiling);
+      }
+    }
+    let usedPrefix = zero(), capPrefix = zero();
+    for (let period = 0; period < total.length; period++) {
+      usedPrefix = usedPrefix.add(total[period]!); capPrefix = capPrefix.add(quantity(cap.quantities[period]!));
+      const cumulative = ["STOCK", "CUMULATIVE_EXPENDITURE"].includes(resource.kind);
+      if ((cumulative ? usedPrefix : total[period]!).compare(cumulative ? capPrefix : quantity(cap.quantities[period]!)) > 0)
+        fail("WORKFORCE_S5_ORIGINAL_FRONTIER_EXHAUSTED");
+    }
+  }
+  const envelope = budget.resources.map(r => ({ resourceId: r.resourceId, unit: r.unit, kind: r.kind, horizon: r.horizon,
+    quantities: requested.get(r.resourceId)!.map(decimal), minimumQuantities: requested.get(r.resourceId)!.map(() => "0") }));
+  const body = { schema: "finnor.s5.workforce-consumption.v1", tenantId: ctx.auth.tenantId, principalId: actor(ctx),
+    reservationRef: budget.reservationRef, certificateRef: budget.certificateRef, programmeId: budget.programmeId,
+    nodeId: input.assignmentId, operationKey: input.operationKey, decisionDigest: input.decisionDigest,
+    idempotencyKey: "w2:" + input.operationKey, requestDigest, createdAt: new Date().toISOString(), envelope,
+    executionAuthorityGranted: false, protectedReceipt: null };
+  const consumption = { ...body, ref: allocationRef("S5", "workforce-consumption", body, "s5-workforce-v1") };
+  await c.query(`INSERT INTO finnor_os.s5_consumptions(tenant_id,principal_id,consumption_id,reservation_id,policy_id,node_id,idempotency_key,request_digest,body)
+    VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)`, [ctx.auth.tenantId, actor(ctx), consumption.ref.id,
+    budget.reservationRef.id, budget.programmeId, input.operationKey, body.idempotencyKey, requestDigest, JSON.stringify(consumption)]);
+  await c.query("INSERT INTO finnor_os.s5_consumption_states(tenant_id,consumption_id,status,revision) VALUES($1,$2,'INTENDED_PENDING_S6',1)",
+    [ctx.auth.tenantId, consumption.ref.id]);
+  await c.query(`UPDATE finnor_os.s5_reservations SET status=CASE WHEN status='RESERVED' THEN 'CONSUMPTION_PENDING' ELSE status END,
+    revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND reservation_id=$2`, [ctx.auth.tenantId, budget.reservationRef.id]);
+  return { consumption, status: "INTENDED_PENDING_S6", replay: false };
+}
+
+/** Only observations settle known coordinates. Missing child CPU, labor, money
+ * or possible effects retain the original ceiling, never an invented zero. */
+export async function observeWorkforceUseTx(ctx: PeMutationContext, c: PoolClient, budget: WorkforceBudget,
+  input: { consumptionId: string; observationKey: string; actual: WorkforceResourceSchedule[]; evidenceRef: ExperimentRef | null;
+    possibleEffect: boolean; meterGaps: string[] }) {
+  await readAllocationSnapshotTx(ctx, c);
+  const row = (await c.query(`SELECT co.body,st.status,st.revision FROM finnor_os.s5_consumptions co
+    JOIN finnor_os.s5_consumption_states st USING(tenant_id,consumption_id)
+    WHERE co.tenant_id=$1 AND co.principal_id=$2 AND co.reservation_id=$3 AND co.consumption_id=$4 FOR UPDATE OF st`,
+  [ctx.auth.tenantId, actor(ctx), budget.reservationRef.id, input.consumptionId])).rows[0];
+  if (!row || row.body.schema !== "finnor.s5.workforce-consumption.v1") fail("WORKFORCE_S5_ORIGINAL_USE_UNAVAILABLE");
+  const old = (await c.query(`SELECT body FROM finnor_os.s5_history WHERE tenant_id=$1 AND subject_id=$2
+    AND operation='WORKFORCE_OBSERVATION' ORDER BY revision DESC LIMIT 1`, [ctx.auth.tenantId, input.consumptionId])).rows[0]?.body;
+  if (old?.observationKey === input.observationKey) {
+    if (epistemicHash(old.request) !== epistemicHash(input)) fail("WORKFORCE_S5_OBSERVATION_CONFLICT");
+    return old;
+  }
+  if (row.status === "RECONCILED") fail("WORKFORCE_S5_RECONCILED_OBSERVATION_IMMUTABLE");
+  const actual = schedules(budget.resources.filter(r => input.actual.some(s => s.resourceId === r.resourceId)), input.actual);
+  let exceeded = false;
+  for (const [id, values] of actual) {
+    const ceiling = row.body.envelope.find((e: AllocationEnvelope) => e.resourceId === id);
+    if (!ceiling || values.some((v, i) => v.compare(quantity(ceiling.quantities[i])) > 0)) exceeded = true;
+  }
+  const complete = actual.size === budget.resources.length && input.meterGaps.length === 0 && !input.possibleEffect && !exceeded;
+  const observation = { schema: "finnor.s5.workforce-observation.v1", observationKey: input.observationKey, request: input,
+    actual: input.actual, evidenceRef: input.evidenceRef, possibleEffect: input.possibleEffect, meterGaps: input.meterGaps,
+    resourceOverrun: exceeded, status: complete ? "RECONCILED" : "UNKNOWN_OUTCOME", originalEnvelopeRetained: true,
+    protectedReceipt: null, releaseGranted: false };
+  bounded(observation);
+  const state = (await c.query(`UPDATE finnor_os.s5_consumption_states SET status=$3,revision=revision+1,updated_at=clock_timestamp()
+    WHERE tenant_id=$1 AND consumption_id=$2 RETURNING revision`, [ctx.auth.tenantId, input.consumptionId, observation.status])).rows[0];
+  await c.query("INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,$3,'WORKFORCE_OBSERVATION',$4::jsonb)",
+    [ctx.auth.tenantId, input.consumptionId, state.revision, JSON.stringify(observation)]);
+  if (!complete) await c.query(`UPDATE finnor_os.s5_reservations SET status='UNKNOWN_OUTCOME',revision=revision+1,updated_at=clock_timestamp()
+    WHERE tenant_id=$1 AND reservation_id=$2 AND status IN ('CONSUMPTION_PENDING','PARTIALLY_RECONCILED','UNKNOWN_OUTCOME')`,
+    [ctx.auth.tenantId, budget.reservationRef.id]);
+  return observation;
+}

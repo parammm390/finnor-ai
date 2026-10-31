@@ -46,6 +46,10 @@ import { fileURLToPath } from "node:url"
 // Normal installations resolve to this project; managed read-only overlays use
 // their common parent without changing which product source is imported.
 const projectRoot = dirname(fileURLToPath(import.meta.url))
+const ownedFrontendInstall = process.env.FINNOR_X1_FRONTEND_INSTALL === "1" ||
+  process.env.FINNOR_W2_FRONTEND_INSTALL === "1"
+if (process.env.FINNOR_X1_FRONTEND_INSTALL === "1" && process.env.FINNOR_W2_FRONTEND_INSTALL === "1")
+  throw new Error("Ambiguous owned frontend installation profile")
 const nextPackageRoot = dirname(createRequire(import.meta.url).resolve("next/package.json"))
 let dependencyRoot = projectRoot
 while (relative(dependencyRoot, nextPackageRoot) === ".." || relative(dependencyRoot, nextPackageRoot).startsWith(`..${sep}`)) {
@@ -62,16 +66,16 @@ const nextConfig = {
     config.cache = { type: "memory", maxGenerations: 1 }
     return config
   },
-  ...(process.env.FINNOR_X1_FRONTEND_INSTALL === "1" ? {
+  ...(ownedFrontendInstall ? {
     output: "standalone",
     outputFileTracingRoot: dependencyRoot,
-    distDir: ".next-x1-install",
+    distDir: process.env.FINNOR_W2_FRONTEND_INSTALL === "1" ? ".next-w2-install" : ".next-x1-install",
   } : {}),
   turbopack: { root: dependencyRoot },
   // Disposable authenticated sessions use fresh local origins. Persisting each
   // development compilation grows a cache that these sessions cannot reuse.
   experimental: { turbopackFileSystemCacheForDev: false,
-    ...(process.env.FINNOR_X1_FRONTEND_INSTALL === "1" ? {
+    ...(ownedFrontendInstall ? {
       cpus: 1, webpackMemoryOptimizations: true, preloadEntriesOnStart: false,
     } : {}),
   },

@@ -41,6 +41,10 @@
     "./workforce-runtime": {
       "types": "./src/workforce-runtime.ts",
       "import": "./src/workforce-runtime.ts"
+    },
+    "./workforce-execution": {
+      "types": "./src/workforce-execution/index.ts",
+      "import": "./src/workforce-execution/index.ts"
     }
   },
   "dependencies": {

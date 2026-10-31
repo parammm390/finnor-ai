@@ -130,6 +130,9 @@
       "@finnor/orchestration/workforce-runtime": [
         "./packages/orchestration/src/workforce-runtime.ts"
       ],
+      "@finnor/orchestration/workforce-execution": [
+        "./packages/orchestration/src/workforce-execution/index.ts"
+      ],
       "@finnor/workflow-runtime/commands": [
         "./packages/workflow-runtime/src/commands.ts"
       ],

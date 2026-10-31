@@ -74,7 +74,8 @@ export async function startDevelopmentApi(routes: DevelopmentRoute[]): Promise<S
   const port = Number(process.env.PORT ?? "3100");
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw Error("X1_LOCAL_PORT_INVALID");
   await new Promise<void>((resolve, reject) => { api.once("error", reject); api.listen(port, "127.0.0.1", resolve); });
-  console.log(JSON.stringify({ event: "X1_COMPILED_API_READY", pid: process.pid, address: api.address(),
+  console.log(JSON.stringify({ event: installed.manifest.schema === "finnor.postz.w2.development-installation.v1"
+    ? "W2_COMPILED_API_READY" : "X1_COMPILED_API_READY", pid: process.pid, address: api.address(),
     manifestDigest: installed.manifestDigest, role: role.current_user, productionActive: false }));
   return api;
 }

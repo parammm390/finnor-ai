@@ -6,11 +6,13 @@ import { advancePrivateReadGeneration } from "./private-read-generation"
 
 /** Monotone browser cache identity. A→B→A gets a new generation; credentials
  * stay in memory and are never part of a rendered key or public projection. */
-export function usePrivateRequestScope(resourceIdentity: string) {
+export function usePrivateRequestScope(resourceIdentity: string, audience: "OWNER" | "WORKFORCE_PARTICIPANT" = "OWNER") {
+  resourceIdentity = audience + ":" + resourceIdentity
   const instance = useId()
   const [, render] = useState(0)
   const auth = useCentropyAuth()
-  const allowed = Boolean(auth.session && auth.role === "owner" && !auth.roleError && !auth.authError)
+  const allowed = Boolean(auth.session && auth.role &&
+    (auth.role === "owner" || audience === "WORKFORCE_PARTICIPANT") && !auth.roleError && !auth.authError)
   const credential = auth.session?.access_token ?? null
   const principal = auth.session?.user.id ?? "signed-out"
   const state = useRef<null | { credential: string | null; principal: string; resourceIdentity: string;

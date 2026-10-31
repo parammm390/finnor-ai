@@ -5,6 +5,7 @@
 node_modules
 .next
 .next-x1-install
+.next-w2-install
 .next.prebuild-*
 
 # local artifacts and secrets

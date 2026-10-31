@@ -5,7 +5,12 @@ const { resolve, dirname, sep } = require("node:path");
 // The fixed sibling manifest belongs to this installation. Neither CWD nor an
 // environment variable can select a different source tree or artifact.
 const root = realpathSync(resolve(__dirname, "../../.."));
-const manifestPath = resolve(root, "finnor-os/x1-development-installation.json");
+const candidates = ["finnor-os/x1-development-installation.json", "finnor-os/w2-development-installation.json"];
+const available = candidates.filter(path => existsSync(resolve(root, path)));
+if (available.length > 1) throw Error("OWNED_INSTALLATION_PROFILE_AMBIGUOUS");
+const manifestPath = resolve(root, available[0] || candidates[0]);
+const schema = available[0] === candidates[1]
+  ? "finnor.postz.w2.development-installation.v1" : "finnor.x1.development-installation.v1";
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
 let loadedDigest;
 const measured = new Map();
@@ -65,7 +70,7 @@ function installedRuntime(required = false) {
   const manifestDigest = sha(bytes);
   if (loadedDigest && loadedDigest !== manifestDigest) throw Error("X1_LOADED_INSTALLATION_MANIFEST_CHANGED");
   const manifest = JSON.parse(bytes);
-  if (manifest.schema !== "finnor.x1.development-installation.v1" || manifest.mode !== "DEVELOPMENT_ONLY"
+  if (manifest.schema !== schema || manifest.mode !== "DEVELOPMENT_ONLY"
       || manifest.productionActive !== false || manifest.executionAuthorityGranted !== false
       || !Array.isArray(manifest.files) || !Array.isArray(manifest.checkerPins) || !Array.isArray(manifest.links)
       || manifest.runtime.node !== process.version || manifest.runtime.platform !== process.platform

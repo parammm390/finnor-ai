@@ -7,6 +7,8 @@ import { ClosingError } from "./contracts";
 import { closingDigest } from "./compiler";
 import { closingEvent } from "./store";
 import { closingTx as tx } from "../owner-context";
+import { withS5PortfolioTransaction } from "../allocation-store";
+import { recordWorkforceClosingPaymentsTx } from "../workforce-compensation-closing";
 
 /** The controller supplies identities only. Checker credentials and receipt
  * insertion authority are absent from the API and worker. */
@@ -60,6 +62,12 @@ export async function refreshIndependentClosingCheck(ctx: PeMutationContext, q: 
     await c.query("UPDATE finnor_os.pe_closing_programmes SET last_check_id=$3,updated_at=clock_timestamp() WHERE tenant_id=$1 AND id=$2", [q.tenant_id, q.id, receipt.id]);
   });
   q.last_check_id = receipt.id;
+  if (q.spec.fundsFlows.some(flow => flow.workforceCompensation)) {
+    await withS5PortfolioTransaction(ctx, async c => {
+      await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [`v3-material-cut:${q.tenant_id}`]);
+      await recordWorkforceClosingPaymentsTx(ctx, c, q.id);
+    });
+  }
   await finishClosingReadBudget(q.tenant_id, stepId, { checkId: receipt.id, accepted: receipt.check.accepted,
     observationCutDigest: receipt.observationCutDigest, checkerDigest: receipt.checkerDigest });
   return receipt.check;

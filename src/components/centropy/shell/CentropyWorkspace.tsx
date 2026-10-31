@@ -485,9 +485,9 @@ function CentropyWorkspaceContent() {
   }
 
   if (auth.loading || auth.roleLoading && !auth.role) return <div className="ct-auth-state" role="status">Restoring your private workspace…</div>
-  if (auth.authError || auth.roleError) return <div className="ct-auth-state"><LockKeyhole size={25} /><h1>Workspace unavailable</h1><p>{auth.authError ?? auth.roleError}</p><button type="button" onClick={auth.authError ? auth.retryAuth : auth.retryRole}>Retry</button><Link href="/centropy/login">Sign in again</Link></div>
+  if (auth.authError || auth.roleError) return <div className="ct-auth-state"><LockKeyhole size={25} /><h1>Workspace unavailable</h1><p>{auth.authError ?? auth.roleError}</p><button type="button" onClick={auth.authError ? auth.retryAuth : auth.retryRole}>Retry</button><Link href="/centropy/login">Sign in again</Link>{auth.session ? <button type="button" onClick={() => void auth.signOut()}>Sign out</button> : null}</div>
   if (!auth.session) return <div className="ct-auth-state"><LockKeyhole size={25} /><h1>Your investment context stays private.</h1><p>Sign in to open your Investigations and verified work.</p><Link href="/centropy/login">Sign in <ArrowRight size={16} /></Link></div>
-  if (auth.role !== "owner") return <div className="ct-auth-state"><h1>Workspace access unavailable</h1><p>The authenticated role has no active CENTROPY workspace.</p></div>
+  if (auth.role !== "owner") return <div className="ct-auth-state"><h1>Participant workspace</h1><p>The institutional workspace is owner-only. Your assignments require their own current authority.</p><Link href="/centropy/workforce">Open your workforce contracts</Link><button type="button" onClick={() => void auth.signOut()}>Sign out</button></div>
 
   return <div className="ct-app" data-mobile-pane={mobilePane} data-density={density}>
     <header className="ct-topbar">

@@ -92,6 +92,19 @@ const Condition = z.object({
     allowedReasonCodes: z.array(Key).min(1).max(32),
   }).strict().nullable(),
 }).strict();
+/** Optional immutable link to an already accepted promise. This is neither
+ * payment authority nor a receipt; the receiving owner must attest the exact
+ * binding alongside its ordinary financial settlement. */
+export const ClosingWorkforceCompensationSchema = z.object({
+  schema: z.literal("finnor.s6.closing-workforce-compensation.v1"),
+  obligationRef: ClosingOwnerRefSchema.omit({ kind: true }),
+  programmeId: Id, workId: Id, originalRoot: Id,
+  assignmentId: z.string().min(1).max(256),
+  originalBudget: ClosingOwnerRefSchema.omit({ kind: true }),
+  originalReservation: ClosingOwnerRefSchema.omit({ kind: true }),
+  termsDigest: Digest, payerPrincipalId: Id, payeePrincipalId: Id,
+}).strict();
+export type ClosingWorkforceCompensation = z.infer<typeof ClosingWorkforceCompensationSchema>;
 const Flow = z.object({
   ...Requirement,
   money: ClosingMoneySchema,
@@ -102,6 +115,7 @@ const Flow = z.object({
   fundingKeys: z.array(Key).min(1).max(32),
   purpose: z.enum(["PURCHASE_PRICE", "DEBT_PAYOFF", "FEE", "TAX", "ESCROW", "RELEASE"]),
   operationKey: Key,
+  workforceCompensation: ClosingWorkforceCompensationSchema.optional(),
 }).strict();
 const Transfer = z.object({
   ...Requirement,

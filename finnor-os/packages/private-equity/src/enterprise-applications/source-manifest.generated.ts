@@ -72,7 +72,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
-      "sha256": "4399637b25c1c838ab4cfd4daf297e53aa95a01fca5fcf0d619d4413e9d5a9fb"
+      "sha256": "a1a76c6af95f6d5326f8ee46b826a1ed9ed7384919c7fa67927d8de312d270a4"
     },
     {
       "path": "finnor-os/packages/private-equity/src/owner-context.ts",
@@ -84,7 +84,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/compute-contract.ts",
-      "sha256": "ee9be447fc295ee17cf4f6c75c97dc777fed34cdb3e6792e88e7295be872fd5c"
+      "sha256": "0dd8341592d74d9f10ceec46c0151916a9fede77e4e2603847286a69ca4d3d9c"
     },
     {
       "path": "finnor-os/packages/db/compute-governor.ts",
@@ -96,7 +96,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "1766bb87fbc25efa2c5a39c4ccacc1c084d6d48b0ec3bba2fc7a56065873a149"
+      "sha256": "ca5040d3bd2cb49800f59aa32451d92101e68d3448712b9f9344f23fd215a145"
     },
     {
       "path": "finnor-os/packages/db/migrations/0189_x3_enterprise_applications.sql",
@@ -112,7 +112,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/worker/src/index.ts",
-      "sha256": "147aa059980b4bdb800527e6a9a93da677c92cb20359d000a9ed0d162fa39777"
+      "sha256": "f98987752f2a2c9f016621de2503dd3fc89348a895605ad08f7d855b2df7eae3"
     },
     {
       "path": "finnor-os/apps/worker/src/queue.ts",
@@ -180,7 +180,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/CanvasDocument.tsx",
-      "sha256": "fea5ab1849094ad59bb93b8994069b58415dad80d8d87f4f763904f850831bed"
+      "sha256": "d0a60424b7bb1242068a2a023d7ad3bb1d4d02bc648491e403dff2a3a4fbaab3"
     },
     {
       "path": "src/components/centropy/canvas/canvas-compose.ts",
@@ -192,7 +192,7 @@ export default {
     },
     {
       "path": "src/lib/centropy/capability-manifest.generated.json",
-      "sha256": "ad69e07f9eb9bc59c8cebc6b813862a1c3aab671c5e3aae386d689f787c09bd9"
+      "sha256": "4d57f2431eeb9d55587d2f4855b0a323c2d609ada77ccc40ba329fabf916ae83"
     },
     {
       "path": "package-lock.json",

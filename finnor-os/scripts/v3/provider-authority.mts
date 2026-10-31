@@ -24,6 +24,7 @@ const money = (s: string) => {
 const programmes = new Map<string, any>();
 const requests: any[] = [];
 let gateReads = false;
+let gateReadNodeKey = "draw-debt";
 const journal = await open(config.journal, "ax", 0o600);
 async function record(body: unknown) {
   await journal.write(JSON.stringify({ recordedAt: new Date().toISOString(), ...body as object }) + "\n");
@@ -59,7 +60,8 @@ function originalOperation(s: any, key: string) {
   } else if (step.kind === "PAY_FUNDS") {
     r = s.spec.fundsFlows.find((r: any) => r.key === step.requirementKey);
     op = { kind: step.kind, operationKey: r.operationKey, money: r.money, payerEntityId: r.payerEntityId,
-      receivingEntityId: r.receivingEntityId, receivingAccountDigest: r.receivingAccountDigest, purpose: r.purpose };
+      receivingEntityId: r.receivingEntityId, receivingAccountDigest: r.receivingAccountDigest, purpose: r.purpose,
+      ...(r.workforceCompensation ? { workforceCompensation: r.workforceCompensation } : {}) };
   } else if (step.kind === "TRANSFER_RIGHTS") {
     r = s.spec.rightsTransfers.find((r: any) => r.key === step.requirementKey);
     op = { kind: step.kind, operationKey: r.operationKey, fromEntityId: r.fromEntityId, toEntityId: r.toEntityId,
@@ -100,13 +102,16 @@ async function mutate(s: any, body: any) {
     s.balance -= money(r.money.amount); s.received += money(r.money.amount);
     Object.assign(claims, { money: r.money, receivingEntityId: r.receivingEntityId,
       accountDigest: r.receivingAccountDigest, operationKey: r.operationKey, receivingState: "SETTLED_RECEIVED" });
+    if (r.workforceCompensation) Object.assign(claims, { payerEntityId: r.payerEntityId,
+      workforceCompensation: r.workforceCompensation });
     if (s.fault === "wrong-beneficiary") claims.accountDigest = "0".repeat(64);
     if (s.fault === "partial-settlement") {
       claims.money = { ...r.money, amount: "119999999.99" }; claims.receivingState = "PARTIAL";
     }
     issuerId = "receiving-authority";
   } else if (step.kind === "TRANSFER_RIGHTS") {
-    assert(s.received === money("120000000"), "Registry cannot transfer before full independent receiving settlement");
+    assert(s.received === s.spec.fundsFlows.reduce((sum: bigint, flow: any) => sum + money(flow.money.amount), 0n),
+      "Registry cannot transfer before full independent receiving settlement");
     s.transferred = true;
     Object.assign(claims, { fromEntityId: r.fromEntityId, toEntityId: r.toEntityId,
       rightsDigest: r.rightsDigest, quantity: r.quantity, unit: r.unit, operationKey: r.operationKey });
@@ -126,8 +131,8 @@ async function mutate(s: any, body: any) {
     businessEffectId: body.businessEffectId, nodeKey: step.key, kind: step.kind, request: body, observation,
     ledger: { borrowerBalanceExact18: String(s.balance), sellerReceivedExact18: String(s.received),
       drawn: s.drawn, rightsTransferred: s.transferred, legallyEffective: s.effective },
-    responseWithheld: step.kind === "DRAW_FUNDS" && s.fault === "lost-draw" });
-  return { observation, withhold: step.kind === "DRAW_FUNDS" && s.fault === "lost-draw" };
+    responseWithheld: step.kind === "DRAW_FUNDS" && s.fault === "lost-draw" || step.kind === "PAY_FUNDS" && s.fault === "lost-pay" });
+  return { observation, withhold: step.kind === "DRAW_FUNDS" && s.fault === "lost-draw" || step.kind === "PAY_FUNDS" && s.fault === "lost-pay" };
 }
 async function json(req: any) {
   const chunks = []; let size = 0;
@@ -144,7 +149,9 @@ const server = createServer(async (req, res) => {
       assert.equal(input.spec.environment, "DEVELOPMENT");
       const digest = hash(input.spec); assert.equal(digest, input.digest);
       assert(!programmes.has(digest));
-      programmes.set(digest, { ...input, balance: money("40000000"), received: 0n, drawn: false,
+      const equity = input.spec.funding.filter((funding: any) => funding.sourceClass === "EQUITY_CAPITAL" && !funding.drawOperationKey)
+        .reduce((sum: bigint, funding: any) => sum + money(funding.money.amount), 0n);
+      programmes.set(digest, { ...input, balance: equity, received: 0n, drawn: false,
         signed: false, transferred: false, effective: false, effects: new Map() });
       await record({ type: "REGISTERED", digest, input: { ...input, documents: Object.keys(input.documents) } });
       res.end('{"registered":true}'); return;
@@ -152,8 +159,11 @@ const server = createServer(async (req, res) => {
     if (req.url === "/__fixture/read-gate" && req.method === "POST") {
       const input = await json(req);
       gateReads = Boolean(input.blocked);
-      await record({ type: "DRAW_READ_GATE", blocked: gateReads, nodeKey: "draw-debt" });
-      res.end(JSON.stringify({ gateReads, nodeKey: "draw-debt" })); return;
+      gateReadNodeKey = input.nodeKey ?? "draw-debt";
+      assert(["draw-debt", "pay-seller"].includes(gateReadNodeKey));
+      await record({ type: gateReadNodeKey === "draw-debt" ? "DRAW_READ_GATE" : "ORIGINAL_OPERATION_READ_GATE",
+        blocked: gateReads, nodeKey: gateReadNodeKey });
+      res.end(JSON.stringify({ gateReads, nodeKey: gateReadNodeKey })); return;
     }
     if (req.url === "/__fixture/requalify" && req.method === "POST") {
       const input = await json(req), original = programmes.get(input.originalDigest);
@@ -186,7 +196,7 @@ const server = createServer(async (req, res) => {
     if (req.method === "GET") {
       const fact = [...programmes.values()].flatMap(s => [...s.effects.entries()]).find(([id]) => id === effectId);
       const nodeKey = requests.find(request => request.effectId === effectId)?.nodeKey;
-      if (gateReads && nodeKey === "draw-debt") { res.writeHead(404); res.end('{"observed":false}'); return; }
+      if (gateReads && nodeKey === gateReadNodeKey) { res.writeHead(404); res.end('{"observed":false}'); return; }
       if (!fact) { res.writeHead(404); res.end('{"observed":false}'); return; }
       res.end(JSON.stringify(fact[1])); return;
     }

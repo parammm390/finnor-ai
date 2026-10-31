@@ -131,7 +131,9 @@ function operationSettled(operation: ClosingCheckInput["operations"][number], cu
     if (!f) return false;
     return moneyEqual(o.claims.money, f.money) && o.claims.operationKey === f.operationKey
       && o.claims.receivingEntityId === f.receivingEntityId && o.claims.accountDigest === f.receivingAccountDigest
-      && o.claims.receivingState === "SETTLED_RECEIVED";
+      && o.claims.receivingState === "SETTLED_RECEIVED"
+      && (!f.workforceCompensation || o.claims.payerEntityId === f.payerEntityId
+        && equal(o.claims.workforceCompensation, f.workforceCompensation));
   }
   if (step.kind === "TRANSFER_RIGHTS") {
     const t = spec.rightsTransfers.find(t => t.key === step.requirementKey);
@@ -436,6 +438,8 @@ export function checkClosingTransaction(input: ClosingCheckInput, checkedAt = ne
     moneyEqual(o.claims.money, f.money) && o.claims.receivingEntityId === f.receivingEntityId
     && o.claims.accountDigest === f.receivingAccountDigest && o.claims.operationKey === f.operationKey
     && o.claims.receivingState === "SETTLED_RECEIVED"
+    && (!f.workforceCompensation || o.claims.payerEntityId === f.payerEntityId
+      && equal(o.claims.workforceCompensation, f.workforceCompensation))
     && spec.beneficiaries.some(b => b.required && b.key === f.beneficiaryRequirementKey
       && b.accountDigest === f.receivingAccountDigest && b.legalEntityId === f.receivingEntityId)
     && f.money.entityId === f.payerEntityId

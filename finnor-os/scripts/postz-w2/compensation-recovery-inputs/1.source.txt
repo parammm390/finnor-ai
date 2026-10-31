@@ -1,0 +1,275 @@
+/** S5-owned accepted compensation, not a payment API or a second grant.
+ * No outbound financial settlement adapter is installed. Its absence is an
+ * explicit UNKNOWN; S7 costs, invoices and labor releases cannot settle it. */
+import type { PoolClient } from "pg";
+import type { AllocationEnvelope, ExperimentRef } from "@finnor/shared-types";
+import { allocationDerivedQuantity, allocationRef, sameAllocationRef } from "../../epistemic-runtime/src/allocation-contracts";
+import { epistemicHash } from "../../epistemic-runtime/src/source-precedence";
+import { workforceTaskSchema, workforceTermsSchema, type WorkforceAssignment,
+  type WorkforceExecutionProgram, type WorkforceTask, type WorkforceTerms } from "../../workforce/src/execution-program/schema";
+import { workforceProgramGraph } from "../../workforce/src/execution-program/graph";
+import { assertWorkforceBudgetTx, readWorkforceCarvesTx, type WorkforceBudget } from "./workforce-allocation";
+import { readWorkforceCompensationPaymentRequestsTx } from "./workforce-compensation-payment";
+import type { PeMutationContext } from "./types";
+
+function fail(code: string): never { throw Object.assign(new Error(code), { code, status: 409 }); }
+const quantity = (value: string) => allocationDerivedQuantity(
+  value.includes("/") && !value.startsWith("r3q:") ? "r3q:" + value : value);
+const text = (value: ReturnType<typeof quantity>) => value.d === 1n ? String(value.n) : `${value.n}/${value.d}`;
+const zero = () => quantity("0");
+export interface WorkforceCompensationMapping {
+  schema: "finnor.s5.workforce-compensation-mapping.v1";
+  amount: { value: string; currency: string };
+  resourceRef: ExperimentRef; resourceId: string; resourceUnit: "USD" | "microUSD";
+  resourceAmount: string; resourcePeriod: 0; originalReservation: ExperimentRef; taskEnvelope: AllocationEnvelope;
+  independentGrantCreated: false; externalSettlementEstablished: false;
+}
+
+/** Exactly one existing task coordinate must cover the promised amount.
+ * Currency is not inferred from a label, and no conversion rate is invented. */
+export function workforceCompensationMapping(budget: WorkforceBudget, task: WorkforceTask,
+  terms: WorkforceTerms = task.terms): WorkforceCompensationMapping | null {
+  const amount = quantity(terms.compensation.value);
+  if (amount.n < 0n) fail("WORKFORCE_S5_NEGATIVE_COMPENSATION");
+  if (amount.n === 0n) return null;
+  if (terms.compensation.unit !== "USD") fail("WORKFORCE_S5_COMPENSATION_EXACT_CURRENCY_UNSUPPORTED");
+  const matches = budget.resources.flatMap(resource => {
+    const envelope = task.demand.find(e => e.resourceId === resource.resourceId);
+    if (!envelope || resource.resourceClass !== "CASH" || resource.currency !== terms.compensation.unit || !["USD", "microUSD"].includes(resource.unit) ||
+        !["STOCK", "CUMULATIVE_EXPENDITURE"].includes(resource.kind) || envelope.unit !== resource.unit ||
+        envelope.kind !== resource.kind || epistemicHash(envelope.horizon) !== epistemicHash(resource.horizon) ||
+        envelope.quantities.length !== resource.horizon.periods + 1) return [];
+    const required = resource.unit === "microUSD" ? amount.mul(quantity("1000000")) : amount;
+    // Reserve the promise against an existing present coordinate. Summing a
+    // STOCK across calendar periods would promise the same money twice.
+    const available = quantity(envelope.quantities[0]!);
+    if (envelope.quantities.some(value => quantity(value).n < 0n) || available.compare(required) < 0) return [];
+    return [{ resource, envelope, required }];
+  });
+  if (matches.length !== 1) fail("WORKFORCE_S5_COMPENSATION_CANONICAL_MAPPING_MISSING_OR_AMBIGUOUS");
+  const { resource, envelope, required } = matches[0]!;
+  return { schema: "finnor.s5.workforce-compensation-mapping.v1", amount: { value: text(amount), currency: "USD" },
+    resourceRef: resource.ref, resourceId: resource.resourceId, resourceUnit: resource.unit as "USD" | "microUSD",
+    resourceAmount: text(required), resourcePeriod: 0, originalReservation: budget.reservationRef, taskEnvelope: structuredClone(envelope),
+    independentGrantCreated: false, externalSettlementEstablished: false };
+}
+
+interface NativeProgramme {
+  id: string; principal_id: string; work_id: string; budget: WorkforceBudget;
+  original: { actorSourceIds: string[]; outcome: { tasks: WorkforceTask[]; ceiling: { purposes: string[] } } };
+  program: { assignments: WorkforceAssignment[] } | null;
+  compile_result: { program?: { assignments: WorkforceAssignment[] } | null } | null;
+}
+async function canonicalProgramme(ctx: PeMutationContext, c: PoolClient, budget: WorkforceBudget) {
+  const q = (await c.query<NativeProgramme>(`SELECT id,principal_id,work_id,budget,original,program,compile_result
+    FROM finnor_os.w2_programs WHERE tenant_id=$1 AND id=$2 AND principal_id=$3`,
+  [ctx.auth.tenantId, budget.programmeId, ctx.auth.employeeId ?? ctx.auth.userId])).rows[0];
+  if (!q || q.work_id !== budget.workId || !sameAllocationRef(q.budget.ref, budget.ref))
+    fail("WORKFORCE_S5_COMPENSATION_ORIGINAL_PROGRAMME_UNAVAILABLE");
+  return q;
+}
+async function canonicalAssignment(ctx: PeMutationContext, c: PoolClient, q: NativeProgramme, assignmentId: string) {
+  const a = (q.program ?? q.compile_result?.program)?.assignments.find(a => a.id === assignmentId);
+  if (!a) fail("WORKFORCE_S5_COMPENSATION_CANONICAL_ASSIGNMENT_REQUIRED");
+  const head = (await c.query(`SELECT task,recipient_principal_id FROM finnor_os.w2_assignment_heads
+    WHERE tenant_id=$1 AND program_id=$2 AND assignment_id=$3`,
+  [ctx.auth.tenantId, q.id, assignmentId])).rows[0];
+  const task = workforceTaskSchema.parse(head?.task ?? q.original.outcome.tasks.find(t => t.id === a.taskId));
+  return { assignment: a, task, recipientPrincipalId: head?.recipient_principal_id as string | undefined };
+}
+
+export async function assertWorkforceCompensationMappingsTx(ctx: PeMutationContext, c: PoolClient,
+  budget: WorkforceBudget, tasks: WorkforceTask[]) {
+  const mapped = tasks.map(task => workforceCompensationMapping(budget, task)).filter((v): v is WorkforceCompensationMapping => v !== null);
+  if (mapped.length) await assertWorkforceBudgetTx(ctx, c, budget);
+  return mapped;
+}
+
+/** Called in the acceptance transaction, after the native exact command is
+ * durable but before publication. Resolve its canonical preimages here. */
+export async function recordWorkforceCompensationAcceptanceTx(ctx: PeMutationContext, c: PoolClient,
+  budget: WorkforceBudget, assignmentId: string, dispositionRef: ExperimentRef) {
+  await assertWorkforceBudgetTx(ctx, c, budget);
+  const q = await canonicalProgramme(ctx, c, budget);
+  const { assignment, task, recipientPrincipalId } = await canonicalAssignment(ctx, c, q, assignmentId);
+  const offeredTerms = workforceTermsSchema.parse(assignment.terms), mapping = workforceCompensationMapping(budget, task, offeredTerms);
+  if (!mapping) return null;
+  const acceptance = (await c.query(`SELECT event_id,body FROM finnor_os.w2_events
+    WHERE tenant_id=$1 AND program_id=$2 AND kind='DISPOSITION' AND body->'observation'->'ref'=$3::jsonb LIMIT 2`,
+  [ctx.auth.tenantId, q.id, JSON.stringify(dispositionRef)])).rows;
+  const commands = (await c.query(`SELECT event_id,body FROM finnor_os.w2_events
+    WHERE tenant_id=$1 AND program_id=$2 AND kind='COMMAND'
+      AND body->'command'->>'assignmentId'=$3 AND body->'command'->'action'->>'kind'='ACCEPT'
+      AND body->'command'->'action'->'dispositionRef'=$4::jsonb LIMIT 2`,
+  [ctx.auth.tenantId, q.id, assignmentId, JSON.stringify(dispositionRef)])).rows;
+  if (acceptance.length !== 1 || commands.length !== 1) fail("WORKFORCE_S5_COMPENSATION_ACTUAL_ACCEPTANCE_PREIMAGE_REQUIRED");
+  const native = acceptance[0]!, disposition = native.body.observation, command = commands[0]!;
+  if (disposition.assignmentId !== assignment.id || disposition.actorId !== assignment.actorId || disposition.decision !== "ACCEPT" ||
+      disposition.termsDigest !== assignment.termsDigest || disposition.termsRevision !== offeredTerms.revision ||
+      disposition.mode !== task.assignmentMode || disposition.revokedAt !== null ||
+      Date.parse(disposition.at) > Date.now() || Date.parse(disposition.at) >= Date.parse(offeredTerms.expiresAt))
+    fail("WORKFORCE_S5_COMPENSATION_ACCEPTED_TERMS_CHANGED");
+  let payee = recipientPrincipalId;
+  if (!payee) {
+    // Only the initial native institutional machine disposition precedes heads.
+    // A human/provider must already have its actual recipient-scoped offer.
+    const rows = (await c.query(`SELECT u.id FROM finnor_os.evidence_sources s
+      JOIN LATERAL(SELECT snapshot FROM finnor_os.evidence_source_versions v
+        WHERE v.tenant_id=s.tenant_id AND v.source_id=s.id ORDER BY version_number DESC LIMIT 1) v ON true
+      JOIN finnor_os.users u ON u.tenant_id=s.tenant_id AND u.id=(v.snapshot->'canonical'->>'principalId')::uuid
+      JOIN finnor_os.employee_actor_profiles p ON p.tenant_id=u.tenant_id AND p.principal_id=u.id
+      WHERE s.tenant_id=$1 AND s.id=ANY($2::uuid[]) AND u.status='active'
+        AND v.snapshot->'canonical'->>'kind'='USER' AND v.snapshot->'canonical'->>'id'=$3
+        AND u.id::text=$3 AND (
+          v.snapshot->'actor'->>'kind'='MODEL_AGENT' AND p.actor_kind='AGENT' OR
+          v.snapshot->'actor'->>'kind' IN('DETERMINISTIC_SERVICE','COMPUTATIONAL_CELL') AND p.actor_kind='SERVICE')
+      LIMIT 2`, [ctx.auth.tenantId, q.original.actorSourceIds, assignment.actorId])).rows;
+    if (rows.length !== 1 || task.assignmentMode !== "INTERNAL_AUTHORIZED")
+      fail("WORKFORCE_S5_COMPENSATION_ACTUAL_PAYEE_REQUIRED");
+    payee = rows[0]!.id;
+  }
+  const recipient = (await c.query("SELECT id FROM finnor_os.users WHERE tenant_id=$1 AND id=$2 AND status='active' FOR SHARE",
+    [ctx.auth.tenantId, payee])).rowCount;
+  const voluntary = task.assignmentMode === "EXTERNAL_VOLUNTARY";
+  if (!recipient || (voluntary ? native.body.authenticatedPrincipal !== payee ||
+      disposition.source !== "NATIVE_RECIPIENT_DISPOSITION" :
+      ![payee, q.principal_id].includes(native.body.authenticatedPrincipal) || disposition.source !== "NATIVE_INSTITUTIONAL_ASSIGNMENT"))
+    fail("WORKFORCE_S5_COMPENSATION_AUTHENTICATED_ACCEPTANCE_REQUIRED");
+  const body = { schema: "finnor.s5.workforce-compensation-obligation.v1" as const, tenantId: ctx.auth.tenantId,
+    principalId: q.principal_id, workId: q.work_id, rootId: assignment.rootId, programmeId: q.id, assignmentId: assignment.id,
+    actorId: assignment.actorId, payeePrincipalId: payee, offeredTerms, termsDigest: assignment.termsDigest,
+    mapping, dispositionRef, acceptedAt: disposition.at as string, dispositionEventId: native.event_id as string,
+    commandEventId: command.event_id as string, originalBudget: budget.ref, originalReservation: budget.reservationRef,
+    originalTaskDigest: epistemicHash(task), status: "OPEN" as const,
+    settlement: { kind: "UNKNOWN" as const, reason: "NO_INSTALLED_CANONICAL_OUTBOUND_FINANCIAL_SETTLEMENT_OWNER" },
+    laborReleaseIsSettlement: false, invoiceIsSettlement: false, economicRecordIsSettlement: false,
+    externalSettlementEstablished: false, financialTransferAuthorized: false, independentGrantCreated: false };
+  const record = { ...body, ref: allocationRef("S5", "workforce-compensation-obligation", body, "s5-workforce-v1") };
+  const prior = (await c.query(`SELECT body FROM finnor_os.s5_history
+    WHERE tenant_id=$1 AND subject_id=$2 AND operation='WORKFORCE_COMPENSATION_ACCEPTANCE'`,
+  [ctx.auth.tenantId, record.ref.id])).rows[0]?.body;
+  if (prior && epistemicHash(prior) !== epistemicHash(record)) fail("WORKFORCE_S5_COMPENSATION_IDEMPOTENCY_CONFLICT");
+  if (!prior) await c.query(`INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body)
+    VALUES($1,$2,1,'WORKFORCE_COMPENSATION_ACCEPTANCE',$3::jsonb)`, [ctx.auth.tenantId, record.ref.id, JSON.stringify(record)]);
+  return record;
+}
+
+/** This projection does not treat any arbitrary receipt, S7 payload or local
+ * financial right transition as an external settlement. A future real owner
+ * must implement and qualify an exact amount/payee/terms/obligation join. */
+export async function readWorkforceCompensationTx(ctx: PeMutationContext, c: PoolClient, budget: WorkforceBudget) {
+  const q = await canonicalProgramme(ctx, c, budget);
+  const rows = (await c.query(`SELECT body FROM finnor_os.s5_history
+    WHERE tenant_id=$1 AND operation='WORKFORCE_COMPENSATION_ACCEPTANCE'
+      AND body->>'programmeId'=$2 ORDER BY subject_id LIMIT 8193`, [ctx.auth.tenantId, q.id])).rows;
+  if (rows.length > 8192) fail("WORKFORCE_S5_COMPENSATION_PROFILE_INCOMPLETE");
+  const records = [];
+  for (const row of rows) {
+    const { ref, ...body } = row.body;
+    if (body.schema !== "finnor.s5.workforce-compensation-obligation.v1" ||
+        body.tenantId !== ctx.auth.tenantId || body.workId !== budget.workId || body.principalId !== q.principal_id ||
+        body.status !== "OPEN" || !sameAllocationRef(body.originalReservation, budget.reservationRef) ||
+        !sameAllocationRef(body.originalBudget, budget.ref) ||
+        !sameAllocationRef(ref, allocationRef("S5", "workforce-compensation-obligation", body, "s5-workforce-v1")))
+      fail("WORKFORCE_S5_COMPENSATION_PREIMAGE_CHANGED");
+    const { task, assignment } = await canonicalAssignment(ctx, c, q, body.assignmentId);
+    const mapping = workforceCompensationMapping(budget, task, workforceTermsSchema.parse(body.offeredTerms));
+    if (body.rootId !== assignment.rootId || !mapping ||
+        epistemicHash(mapping) !== epistemicHash(body.mapping) || epistemicHash(task) !== body.originalTaskDigest)
+      fail("WORKFORCE_S5_COMPENSATION_ORIGINAL_MAPPING_CHANGED");
+    const preimage = (await c.query(`SELECT body FROM finnor_os.w2_events WHERE tenant_id=$1 AND program_id=$2
+      AND event_id=$3 AND kind='DISPOSITION'`, [ctx.auth.tenantId, q.id, body.dispositionEventId])).rows[0]?.body;
+    if (!preimage || !sameAllocationRef(preimage.observation.ref, body.dispositionRef) ||
+        preimage.observation.termsDigest !== body.termsDigest || preimage.observation.decision !== "ACCEPT")
+      fail("WORKFORCE_S5_COMPENSATION_ACCEPTANCE_LOST");
+    records.push({ ...body, ref });
+  }
+  // Append-only settlement discharges. Only an exact internal self-obligation
+  // discharge exists; it never mutates the acceptance record, which keeps its
+  // own immutable OPEN history status, and never claims an external payment.
+  const settlementRows = (await c.query(`SELECT body FROM finnor_os.s5_history
+    WHERE tenant_id=$1 AND operation='WORKFORCE_COMPENSATION_SETTLEMENT' AND body->>'programmeId'=$2
+    ORDER BY subject_id LIMIT 8193`, [ctx.auth.tenantId, q.id])).rows;
+  if (settlementRows.length > 8192) fail("WORKFORCE_S5_COMPENSATION_PROFILE_INCOMPLETE");
+  const settlements = [];
+  for (const row of settlementRows) {
+    const { ref, ...settlementBody } = row.body;
+    if (settlementBody.schema !== "finnor.s5.workforce-compensation-settlement.v1" ||
+        settlementBody.tenantId !== ctx.auth.tenantId || settlementBody.programmeId !== q.id ||
+        settlementBody.kind !== "INTERNAL_SELF_OBLIGATION_DISCHARGE" ||
+        settlementBody.monetaryMovement !== "NONE_INTERNAL_COUNTER_ENTRY" ||
+        settlementBody.financialTransferAuthorized !== false || settlementBody.externalSettlementEstablished !== false ||
+        settlementBody.realPayment !== false || settlementBody.independentGrantCreated !== false ||
+        !sameAllocationRef(ref, allocationRef("S5", "workforce-compensation-settlement", settlementBody, "s5-workforce-v1")))
+      fail("WORKFORCE_S5_COMPENSATION_SETTLEMENT_PREIMAGE_CHANGED");
+    settlements.push({ ...settlementBody, ref });
+  }
+  const dischargeByObligation = new Map<string, (typeof settlements)[number]>();
+  for (const settlement of settlements) {
+    const key = settlement.settlementOf?.id;
+    if (typeof key !== "string" || dischargeByObligation.has(key)) fail("WORKFORCE_S5_COMPENSATION_SETTLEMENT_CONFLICT");
+    dischargeByObligation.set(key, settlement);
+  }
+  const observations = [];
+  for (const record of records) {
+    const discharge = dischargeByObligation.get(record.ref.id as string);
+    if (discharge) {
+      dischargeByObligation.delete(record.ref.id as string);
+      if (!sameAllocationRef(discharge.settlementOf, record.ref) ||
+          discharge.assignmentId !== record.assignmentId || discharge.termsDigest !== record.termsDigest ||
+          discharge.payeePrincipalId !== record.payeePrincipalId || discharge.payerPrincipalId !== record.principalId ||
+          discharge.amount?.value !== record.mapping.amount.value ||
+          !(Date.parse(discharge.at as string) >= Date.parse(record.acceptedAt as string)))
+        fail("WORKFORCE_S5_COMPENSATION_SETTLEMENT_OBLIGATION_MISMATCH");
+    }
+    observations.push({ ref: record.ref as ExperimentRef, assignmentId: record.assignmentId as string,
+      rootId: record.rootId as string, kind: "COMPENSATION" as const,
+      status: discharge ? "RELEASED" as const : "OPEN" as const,
+      at: (discharge ? discharge.at : record.acceptedAt) as string });
+  }
+  if (dischargeByObligation.size) fail("WORKFORCE_S5_COMPENSATION_SETTLEMENT_WITHOUT_OBLIGATION");
+  const paymentRequests = await readWorkforceCompensationPaymentRequestsTx(ctx, c, q, records);
+  return { records, observations, paymentRequests, settlements,
+    settlementOwner: "UNAVAILABLE" as const, externalSettlementEstablished: false };
+}
+
+/** Exact outstanding promises and new offers share the same original held
+ * frontier. A child cannot reuse cash already promised to its parent, and an
+ * accepted historical claim is not replaced by a newer zero-paid term. */
+export async function assertWorkforceCompensationCoverageTx(ctx: PeMutationContext, c: PoolClient,
+  budget: WorkforceBudget, program: WorkforceExecutionProgram) {
+  if (!budget.resources.some(resource => resource.resourceClass === "CASH")) {
+    if (program.assignments.some(a => quantity(a.terms.compensation.value).n > 0n))
+      fail("WORKFORCE_S5_COMPENSATION_CANONICAL_MAPPING_MISSING_OR_AMBIGUOUS");
+    return;
+  }
+  const funding = await readWorkforceCarvesTx(ctx, c, budget);
+  const historical = await readWorkforceCompensationTx(ctx, c, budget);
+  // A durably discharged internal self-obligation no longer needs held cash
+  // backing; every other accepted claim keeps its exact held frontier.
+  const discharged = new Set(historical.settlements.map(settlement => settlement.settlementOf.id as string));
+  const claims = historical.records.filter(record => !discharged.has(record.ref.id as string))
+    .map(record => ({ assignmentId: record.assignmentId as string,
+      termsDigest: record.termsDigest as string, mapping: record.mapping as WorkforceCompensationMapping }));
+  const graph = workforceProgramGraph(program);
+  for (const assignment of program.assignments) {
+    if (assignment.state.kind === "CLOSED" || claims.some(claim =>
+      claim.assignmentId === assignment.id && claim.termsDigest === assignment.termsDigest)) continue;
+    const task = graph.tasks.find(task => task.id === assignment.taskId);
+    if (!task) fail("WORKFORCE_S5_COMPENSATION_ORIGINAL_TASK_REQUIRED");
+    const mapping = workforceCompensationMapping(budget, task, assignment.terms);
+    if (mapping) claims.push({ assignmentId: assignment.id, termsDigest: assignment.termsDigest, mapping });
+  }
+  const totals = new Map<string, ReturnType<typeof quantity>>();
+  for (const claim of claims) {
+    const key = claim.assignmentId + "\0" + claim.mapping.resourceId;
+    totals.set(key, (totals.get(key) ?? zero()).add(quantity(claim.mapping.resourceAmount)));
+  }
+  for (const [key, promised] of totals) {
+    const [assignmentId, resourceId] = key.split("\0");
+    const held = funding.find(record => record.assignmentId === assignmentId);
+    const available = held?.status === "HELD"
+      ? quantity(held.directReserved.find(e => e.resourceId === resourceId)?.quantities[0] ?? "0") : zero();
+    if (available.compare(promised) < 0) fail("WORKFORCE_S5_OUTSTANDING_COMPENSATION_FRONTIER_REQUIRED");
+  }
+}

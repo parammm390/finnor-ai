@@ -184,6 +184,7 @@ for (const [path, operations] of [
 
 const familyRules = [
   [/^capabilities\//, "capability-upgrades", "@finnor/orchestration", ["CANVAS"]],
+  [/^workforce\/execution-programs/, "workforce-execution", "@finnor/orchestration", ["CANVAS"]],
   [/^policies\/r1-/, "exact-control", "@finnor/private-equity", ["CANVAS"]],
   [/^identification-plans\//, "identification-plan", "@finnor/private-equity", ["CANVAS"]],
   [/^decision-atlases\//, "decision-atlas", "@finnor/private-equity", ["CANVAS"]],
@@ -254,6 +255,7 @@ function familyFor(path) {
 
 function tags(family) {
   const byFamily = {
+    "workforce-execution": ["workforce", "agents", "work", "authority"],
     "exact-control": ["work", "company-brain"],
     "coalition-programme": ["work", "company-brain", "authority"],
     "decision-atlas": ["work", "company-brain"],

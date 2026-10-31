@@ -44,9 +44,12 @@ type Scope =
   | { kind: "unavailable" };
 
 type Assignment = {
+  id: string;
   roleId: string;
   roleKey: string;
   scope: Scope;
+  validFrom: string;
+  validUntil: string | null;
 };
 
 type Grant = {
@@ -63,7 +66,7 @@ type Grant = {
 
 type LoadedAuthority = {
   revision: number;
-  employee: { id: string; status: "active" | "suspended"; role: Role } | null;
+  employee: { id: string; status: "active" | "suspended"; role: typeof users.$inferSelect.role } | null;
   assignments: Assignment[];
   grants: Grant[];
 };
@@ -85,7 +88,11 @@ function scope(value: unknown): Scope {
   if (raw.kind === "resources") return {
     kind: "resources",
     ...(typeof raw.resourceType === "string" ? { resourceType: raw.resourceType } : {}),
-    resourceIds: Array.isArray(raw.resourceIds) ? raw.resourceIds.filter((id): id is string => typeof id === "string" && UUID.test(id)) : [],
+    // Native W2 assignment identifiers are bounded composite keys, not UUIDs.
+    // A scoped deny must not disappear during canonical scope normalization.
+    resourceIds: Array.isArray(raw.resourceIds) ? raw.resourceIds.filter((id): id is string =>
+      typeof id === "string" && (UUID.test(id) ||
+        raw.resourceType === "workforce_assignment" && id.length > 0 && id.length <= 256)) : [],
   };
   if (raw.kind === "assigned" || raw.kind === "self") return { kind: raw.kind };
   return { kind: raw.kind === "tenant" ? "tenant" : "unavailable" };
@@ -140,13 +147,17 @@ function withinAmount(request: AuthorityRequest, ceiling: string | null): boolea
 /** Share the actual revision/employee fence with a reader or writer's existing
  * transaction. Do not open another hosted-pool connection while holding it. */
 export async function lockCurrentAuthorityTx(ctx: TenantContext, client: PoolClient, lock = true): Promise<number> {
+  return lockCanonicalAuthorityTx(ctx, client, lock, false);
+}
+async function lockCanonicalAuthorityTx(ctx: TenantContext, client: PoolClient, lock: boolean, workforceParticipant: boolean): Promise<number> {
   if (!UUID.test(ctx.employeeId ?? ctx.userId) || ctx.employeeId && ctx.employeeId !== ctx.userId)
     throw new Error("CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE");
   const result = await client.query<{ revision: number }>(
     `SELECT a.revision FROM finnor_os.authority_states a
        JOIN finnor_os.users u ON u.tenant_id=a.tenant_id
-      WHERE a.tenant_id=$1 AND u.id=$2 AND u.status='active' AND u.role='owner'
-      ${lock ? 'FOR SHARE OF a,u' : ''}`, [ctx.tenantId, ctx.employeeId ?? ctx.userId]);
+      WHERE a.tenant_id=$1 AND u.id=$2 AND u.status='active' AND u.role=ANY($3::text[])
+      ${lock ? 'FOR SHARE OF a,u' : ''}`, [ctx.tenantId, ctx.employeeId ?? ctx.userId,
+        workforceParticipant ? ["owner", "dispatcher", "technician"] : ["owner"]]);
   if (result.rowCount !== 1 || ctx.employeeId && ctx.employeeId !== ctx.userId) throw new Error("CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE");
   return result.rows[0]!.revision;
 }
@@ -188,12 +199,16 @@ async function everyResourceAllows(
   return true;
 }
 
-async function loadAuthorities(db: AuthorityReadDb, tenantId: string, employeeIds: string[]): Promise<Map<string, LoadedAuthority>> {
+async function loadAuthorities(db: AuthorityReadDb, tenantId: string, employeeIds: string[], workforceParticipant = false): Promise<Map<string, LoadedAuthority>> {
   const uniqueEmployeeIds = [...new Set(employeeIds)];
   const [state] = await db.select({ revision: authorityStates.revision }).from(authorityStates).where(eq(authorityStates.tenantId, tenantId)).limit(1);
   if (uniqueEmployeeIds.length === 0) return new Map();
   const employees = await db.select({ id: users.id, status: users.status, role: users.role }).from(users).where(and(eq(users.tenantId, tenantId), inArray(users.id, uniqueEmployeeIds)));
-  const assignmentsWithEmployee = await db.select({ employeeId: employeeRoleAssignments.employeeId, roleId: employeeRoleAssignments.roleId, roleKey: employeeRoles.key, resourceScope: employeeRoleAssignments.resourceScope })
+  const assignmentsWithEmployee = await db.select({ id: employeeRoleAssignments.id,
+    employeeId: employeeRoleAssignments.employeeId, roleId: employeeRoleAssignments.roleId, roleKey: employeeRoles.key,
+    resourceScope: employeeRoleAssignments.resourceScope,
+    validFrom: sql<string>`${employeeRoleAssignments.effectiveFrom}::text`,
+    validUntil: sql<string | null>`${employeeRoleAssignments.expiresAt}::text` })
     .from(employeeRoleAssignments)
     .innerJoin(employeeRoles, and(eq(employeeRoles.id, employeeRoleAssignments.roleId), eq(employeeRoles.tenantId, tenantId), eq(employeeRoles.active, true)))
     .where(and(
@@ -202,7 +217,7 @@ async function loadAuthorities(db: AuthorityReadDb, tenantId: string, employeeId
       eq(employeeRoleAssignments.active, true),
       sql`${employeeRoleAssignments.effectiveFrom} <= clock_timestamp()`,
       or(isNull(employeeRoleAssignments.expiresAt), sql`${employeeRoleAssignments.expiresAt} > clock_timestamp()`),
-    ));
+    )).orderBy(employeeRoleAssignments.id);
   const roleIds = [...new Set(assignmentsWithEmployee.map((row) => row.roleId))];
   const grantRows = roleIds.length === 0 ? [] : await db.select().from(roleAuthorityGrants).where(and(eq(roleAuthorityGrants.tenantId, tenantId), inArray(roleAuthorityGrants.roleId, roleIds)));
   const grants: Grant[] = grantRows.map((row) => ({
@@ -221,19 +236,21 @@ async function loadAuthorities(db: AuthorityReadDb, tenantId: string, employeeId
     const employee = employeeById.get(employeeId);
     const assignments = assignmentsWithEmployee
       .filter((row) => row.employeeId === employeeId)
-      .map((row) => ({ roleId: row.roleId, roleKey: row.roleKey, scope: scope(row.resourceScope) }));
+      .map((row) => ({ id: row.id, roleId: row.roleId, roleKey: row.roleKey, scope: scope(row.resourceScope),
+        validFrom: row.validFrom, validUntil: row.validUntil }));
     const employeeRoleIds = new Set(assignments.map((assignment) => assignment.roleId));
     return [employeeId, {
       revision: state?.revision ?? 1,
-      employee: employee?.role === "owner" ? { id: employee.id, status: employee.status, role: "owner" as const } : null,
+      employee: employee && (employee.role === "owner" || workforceParticipant &&
+        ["dispatcher", "technician"].includes(employee.role)) ? employee : null,
       assignments,
       grants: grants.filter((grant) => employeeRoleIds.has(grant.roleId)),
     }] as const;
   }));
 }
 
-async function loadAuthority(db: AuthorityReadDb, tenantId: string, employeeId: string): Promise<LoadedAuthority> {
-  const authorities = await loadAuthorities(db, tenantId, [employeeId]);
+async function loadAuthority(db: AuthorityReadDb, tenantId: string, employeeId: string, workforceParticipant = false): Promise<LoadedAuthority> {
+  const authorities = await loadAuthorities(db, tenantId, [employeeId], workforceParticipant);
   return authorities.get(employeeId) ?? { revision: 1, employee: null, assignments: [], grants: [] };
 }
 
@@ -588,11 +605,11 @@ export async function isFinalApprovalStep(tenantId: string, actionId: string): P
   });
 }
 
-export async function employeeAuthoritySnapshot(ctx: TenantContext): Promise<{ employeeId: string; revision: number; roles: string[] }> {
+export async function employeeAuthoritySnapshot(ctx: TenantContext, workforceParticipant = false): Promise<{ employeeId: string; revision: number; roles: string[] }> {
   const employeeId = ctx.employeeId ?? ctx.userId;
   if (!UUID.test(employeeId)) throw new Error("Canonical employee identity is required");
   return withAuthorityRead(ctx.tenantId, async (db) => {
-    const auth = await loadAuthority(db, ctx.tenantId, employeeId);
+    const auth = await loadAuthority(db, ctx.tenantId, employeeId, workforceParticipant);
     if (!auth.employee || auth.employee.status !== "active") throw new Error("Employee identity is not active");
     return { employeeId, revision: auth.revision, roles: auth.assignments.map((row) => row.roleKey) };
   });
@@ -616,6 +633,142 @@ export async function employeeAuthoritySnapshotTx(ctx: TenantContext, client: Po
   const auth = await loadAuthority(transactionDb(client), ctx.tenantId, ctx.employeeId ?? ctx.userId);
   if (!auth.employee || auth.employee.status !== "active") throw new Error("CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE");
   return { employeeId: auth.employee.id, revision, roles: auth.assignments.map(row => row.roleKey), validUntil };
+}
+
+/** A non-owner can participate only under already configured canonical grants.
+ * This does not reactivate the retired role in the generic authority evaluator,
+ * grant owner status, or authorize any financial/protected adapter capability. */
+export async function workforceEmployeeAuthoritySnapshotTx(ctx: TenantContext, client: PoolClient) {
+  const revision = await lockCanonicalAuthorityTx(ctx, client, true, true);
+  const validUntil = await authorityTemporalBoundaryTx(ctx, client);
+  const auth = await loadAuthority(transactionDb(client), ctx.tenantId, ctx.employeeId ?? ctx.userId, true);
+  if (!auth.employee || auth.employee.status !== "active") throw new Error("CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE");
+  return { employeeId: auth.employee.id, revision, roles: auth.assignments.map(row => row.roleKey), validUntil };
+}
+
+export async function canExerciseWorkforceAuthorityTx(ctx: TenantContext, request: AuthorityRequest, client: PoolClient) {
+  await lockCanonicalAuthorityTx(ctx, client, true, true);
+  return canExerciseAuthorityOnDb(ctx, request, transactionDb(client), true);
+}
+
+/** Read-control projection only. The same evaluator checks every exact resource
+ * scope; no decision, grant, mutation permit or cross-transaction cache exists.
+ * Mutations still independently call the current canonical single-request port. */
+export async function canExerciseWorkforceAuthorityBatchTx(ctx: TenantContext, requests: readonly AuthorityRequest[], client: PoolClient) {
+  if (requests.length > 16384) throw new Error("WORKFORCE_AUTHORITY_READ_PROFILE_EXCEEDED");
+  if (!requests.length) return [];
+  await lockCanonicalAuthorityTx(ctx, client, true, true);
+  const boundary = await authorityTemporalBoundaryTx(ctx, client);
+  const db = transactionDb(client), auth = await loadAuthority(db, ctx.tenantId, ctx.employeeId ?? ctx.userId, true);
+  const result: boolean[] = [];
+  for (const request of requests) result.push(await canExerciseAuthorityOnDb(ctx, request, db, true, auth));
+  // Clock-triggered role changes need no row writer. Do not return a stale
+  // control if one occurred during this private, revision-fenced projection.
+  return boundary && Date.parse(boundary) <= Date.now() ? requests.map(() => false) : result;
+}
+
+export interface CanonicalAuthoritySourceProof {
+  schema: "finnor.current-canonical-authority-source.v1";
+  principalId: string;
+  request: AuthorityRequest;
+  employee: LoadedAuthority["employee"];
+  applicable: Array<{ assignment: Omit<Assignment, "roleKey">; grant: Grant }>;
+  allowed: boolean;
+  executionAuthorityGranted: false;
+}
+
+async function canonicalAuthoritySourceProofs(ctx: TenantContext, requests: readonly AuthorityRequest[],
+  db: AuthorityReadDb, workforceParticipant: boolean, auth: LoadedAuthority): Promise<CanonicalAuthoritySourceProof[]> {
+  const result: CanonicalAuthoritySourceProof[] = [];
+  for (const request of requests) {
+    const applicable: CanonicalAuthoritySourceProof["applicable"] = [], resources = normalizeResources(request);
+    for (const grant of auth.grants) {
+      if (!capabilityMatches(grant.capability, request.capability) ||
+          !resources.every(resource => resourceTypeMatches(grant.resourceType, resource.type))) continue;
+      // Use exactly the same selected canonical assignment as the evaluator.
+      const assignment = auth.assignments.find(value => value.roleId === grant.roleId);
+      if (!assignment || !await everyResourceAllows(resources,
+        resource => scopeAllows(db, ctx.tenantId, ctx.employeeId ?? ctx.userId, assignment, resource))) continue;
+      const { roleKey: _displayKey, ...sourceAssignment } = assignment;
+      applicable.push({ assignment: sourceAssignment, grant });
+    }
+    applicable.sort((a, b) => a.assignment.id.localeCompare(b.assignment.id) || a.grant.id.localeCompare(b.grant.id));
+    result.push({ schema: "finnor.current-canonical-authority-source.v1",
+      principalId: ctx.employeeId ?? ctx.userId, request: structuredClone(request), employee: auth.employee, applicable,
+      allowed: await canExerciseAuthorityOnDb(ctx, request, db, workforceParticipant, auth),
+      executionAuthorityGranted: false });
+  }
+  return result;
+}
+
+/** Current source preimages, never an execution token. Keep the exact applicable
+ * assignment/grant identity and PG timestamp precision, not the tenant-wide
+ * revision: an unrelated scoped deny cannot invalidate this resource. Callers
+ * must independently use the ordinary canonical mutation port at actual use. */
+export async function readCanonicalAuthoritySourceProofsTx(ctx: TenantContext, requests: readonly AuthorityRequest[],
+  client: PoolClient, workforceParticipant = false): Promise<CanonicalAuthoritySourceProof[]> {
+  if (requests.length > 16384) throw new Error("CANONICAL_AUTHORITY_SOURCE_PROFILE_EXCEEDED");
+  if (!requests.length) return [];
+  await lockCanonicalAuthorityTx(ctx, client, true, workforceParticipant);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const boundary = await authorityTemporalBoundaryTx(ctx, client), db = transactionDb(client);
+    const auth = await loadAuthority(db, ctx.tenantId, ctx.employeeId ?? ctx.userId, workforceParticipant);
+    const result = await canonicalAuthoritySourceProofs(ctx, requests, db, workforceParticipant, auth);
+    // A clock-only change is not covered by row locking. Reload once in this
+    // transaction, then fail closed rather than persisting a stale source proof.
+    if (!boundary || Date.parse(boundary) > Date.now()) return result;
+  }
+  throw new Error("CURRENT_CANONICAL_AUTHORITY_TEMPORAL_BOUNDARY_CROSSED");
+}
+
+/** One fresh W2 population, not a cached authority or a mutation permit. The
+ * same revision and every admitted identity stay row-fenced; the canonical
+ * loader/evaluator and exact source-proof builder are shared with the scalar
+ * port. A missing/clock-unstable principal cannot borrow another's authority. */
+export async function readWorkforceAuthoritySourcesTx(ctx: TenantContext,
+  requestsByPrincipal: ReadonlyMap<string, readonly AuthorityRequest[]>, client: PoolClient) {
+  const ids = [...requestsByPrincipal.keys()];
+  if (ids.length > 128 || ids.some(id => !UUID.test(id)) ||
+      [...requestsByPrincipal.values()].some(requests => requests.length > 16384))
+    throw new Error("WORKFORCE_AUTHORITY_SOURCE_POPULATION_PROFILE_EXCEEDED");
+  if (ctx.employeeId && ctx.employeeId !== ctx.userId)
+    throw new Error("CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE");
+  const result = new Map<string, { revision: number; validUntil: string | null; proofs: CanonicalAuthoritySourceProof[] }>();
+  if (!ids.length) return result;
+  const locked = await client.query<{ id: string; revision: number }>(
+    `SELECT u.id,a.revision FROM finnor_os.authority_states a
+       JOIN finnor_os.users u ON u.tenant_id=a.tenant_id
+      WHERE a.tenant_id=$1 AND u.id=ANY($2::uuid[]) AND u.status='active'
+        AND u.role=ANY($3::text[]) ORDER BY u.id FOR SHARE OF a,u`,
+    [ctx.tenantId, ids, ["owner", "dispatcher", "technician"]]);
+  const revisions = new Map(locked.rows.map(row => [row.id, row.revision]));
+  let pending = ids.filter(id => revisions.has(id));
+  for (let attempt = 0; attempt < 2 && pending.length; attempt++) {
+    const temporal = await client.query<{ employee_id: string; valid_until: Date }>(
+      `SELECT employee_id,min(event_at) valid_until FROM (
+         SELECT employee_id,effective_from event_at FROM finnor_os.employee_role_assignments
+          WHERE tenant_id=$1 AND employee_id=ANY($2::uuid[]) AND active AND effective_from>clock_timestamp()
+         UNION ALL
+         SELECT employee_id,expires_at FROM finnor_os.employee_role_assignments
+          WHERE tenant_id=$1 AND employee_id=ANY($2::uuid[]) AND active AND expires_at>clock_timestamp()
+        ) temporal GROUP BY employee_id`, [ctx.tenantId, pending]);
+    const boundaries = new Map(temporal.rows.map(row => [row.employee_id, row.valid_until.toISOString()]));
+    const db = transactionDb(client), authorities = await loadAuthorities(db, ctx.tenantId, pending, true);
+    for (const id of pending) {
+      const auth = authorities.get(id);
+      if (!auth?.employee || auth.employee.status !== "active") continue;
+      const actor = { ...ctx, userId: id, employeeId: id };
+      result.set(id, { revision: revisions.get(id)!, validUntil: boundaries.get(id) ?? null,
+        proofs: await canonicalAuthoritySourceProofs(actor, requestsByPrincipal.get(id)!, db, true, auth) });
+    }
+    // Check all returned principals after the entire population, not just the
+    // last one. Reload clock-crossed sources once, then omit only those still
+    // unstable. No earlier decision survives its own temporal boundary.
+    pending = [...result].filter(([, value]) => value.validUntil !== null &&
+      Date.parse(value.validUntil) <= Date.now()).map(([id]) => id);
+    for (const id of pending) result.delete(id);
+  }
+  return result;
 }
 
 /** Business roles are current, resource-scoped canonical assignments. A role
@@ -702,7 +855,8 @@ export async function validateExactControlApprovalsTx(
   return { decision: requirements.decision, approvalDecisionIds: [...new Set(accepted)] };
 }
 
-async function canExerciseAuthorityOnDb(ctx: TenantContext, request: AuthorityRequest, db: AuthorityReadDb): Promise<boolean> {
+async function canExerciseAuthorityOnDb(ctx: TenantContext, request: AuthorityRequest, db: AuthorityReadDb,
+  workforceParticipant = false, preloaded?: LoadedAuthority): Promise<boolean> {
     const employeeId = ctx.employeeId ?? (UUID.test(ctx.userId) ? ctx.userId : null);
     const legacyApprovalAllowed = async (): Promise<boolean> => {
       if (process.env.NODE_ENV === "production" || request.operation !== "approval") return false;
@@ -717,9 +871,12 @@ async function canExerciseAuthorityOnDb(ctx: TenantContext, request: AuthorityRe
     };
     if (!employeeId) return legacyApprovalAllowed();
 
-    const auth = await loadAuthority(db, ctx.tenantId, employeeId);
+    const auth = preloaded ?? await loadAuthority(db, ctx.tenantId, employeeId, workforceParticipant);
     if (!auth.employee) return legacyApprovalAllowed();
     if (auth.employee.status !== "active") return false;
+    if (workforceParticipant && auth.employee.role !== "owner" &&
+        !["query:work", "action:workforce_assign_contract", "action:workforce_respond_contract"].includes(request.capability))
+      return false;
 
     const resources = normalizeResources(request);
     const candidates = auth.grants.filter((grant) => capabilityMatches(grant.capability, request.capability));

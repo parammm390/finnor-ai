@@ -2388,6 +2388,92 @@
       "source": "finnor-os/apps/api/app/api/workflows/runs/route.ts"
     },
     {
+      "capabilityId": "http.get.workforce.execution-programs",
+      "family": "workforce-execution",
+      "owner": "@finnor/orchestration",
+      "transport": "http",
+      "method": "GET",
+      "routePattern": "workforce/execution-programs",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/workforce/execution-programs/route.ts"
+    },
+    {
+      "capabilityId": "http.get.workforce.execution-programs.$id",
+      "family": "workforce-execution",
+      "owner": "@finnor/orchestration",
+      "transport": "http",
+      "method": "GET",
+      "routePattern": "workforce/execution-programs/:id",
+      "routeDepth": 3,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [
+        "path_reference"
+      ],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/workforce/execution-programs/[id]/route.ts"
+    },
+    {
+      "capabilityId": "http.get.workforce.participants",
+      "family": "workforce",
+      "owner": "@finnor/workforce",
+      "transport": "http",
+      "method": "GET",
+      "routePattern": "workforce/participants",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/workforce/participants/route.ts"
+    },
+    {
       "capabilityId": "http.get.workforce.profiles",
       "family": "workforce",
       "owner": "@finnor/workforce",
@@ -17579,6 +17665,206 @@
       "timeoutClass": "WRITE",
       "tests": [],
       "source": "finnor-os/apps/api/app/api/workforce/assignments/[id]/reassign/route.ts"
+    },
+    {
+      "capabilityId": "http.post.workforce.execution-programs",
+      "family": "workforce-execution",
+      "owner": "@finnor/orchestration",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "workforce/execution-programs",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "workforce",
+        "agents",
+        "work",
+        "authority"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/workforce/execution-programs/route.ts"
+    },
+    {
+      "capabilityId": "http.post.workforce.execution-programs.$id.actions",
+      "family": "workforce-execution",
+      "owner": "@finnor/orchestration",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "workforce/execution-programs/:id/actions",
+      "routeDepth": 4,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [
+        "path_reference"
+      ],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "workforce",
+        "agents",
+        "work",
+        "authority"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/workforce/execution-programs/[id]/actions/route.ts"
+    },
+    {
+      "capabilityId": "http.post.workforce.execution-programs.$id.reconcile",
+      "family": "workforce-execution",
+      "owner": "@finnor/orchestration",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "workforce/execution-programs/:id/reconcile",
+      "routeDepth": 4,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [
+        "path_reference"
+      ],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "workforce",
+        "agents",
+        "work",
+        "authority"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/workforce/execution-programs/[id]/reconcile/route.ts"
+    },
+    {
+      "capabilityId": "http.post.workforce.execution-programs.intake",
+      "family": "workforce-execution",
+      "owner": "@finnor/orchestration",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "workforce/execution-programs/intake",
+      "routeDepth": 3,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "workforce",
+        "agents",
+        "work",
+        "authority"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/workforce/execution-programs/intake/route.ts"
+    },
+    {
+      "capabilityId": "http.post.workforce.participants",
+      "family": "workforce",
+      "owner": "@finnor/workforce",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "workforce/participants",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "agents",
+        "work"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/workforce/participants/route.ts"
+    },
+    {
+      "capabilityId": "http.post.workforce.participants.$id",
+      "family": "workforce",
+      "owner": "@finnor/workforce",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "workforce/participants/:id",
+      "routeDepth": 3,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [
+        "path_reference"
+      ],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "agents",
+        "work"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/workforce/participants/[id]/route.ts"
     },
     {
       "capabilityId": "http.post.workforce.profiles",

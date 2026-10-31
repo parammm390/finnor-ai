@@ -11,6 +11,7 @@ import { canExerciseAuthorityTx, evaluateAuthorityTx, lockCurrentAuthorityTx, va
 import {planInstitutionDemandCharge,type InstitutionResourceDemand,type InstitutionChargeRequest} from './institution-program/resource-demand';
 import {validateBeliefViewPin} from './enterprise-beliefs';
 import {lockInstitutionSourceAuthority} from './institution-program/source-locks';
+import {workforceAccountingFrontierTx} from './workforce-compensation-closing';
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 const denied=()=>new AllocationContractError('PERMITTED_CONTEXT_UNAVAILABLE','Permitted S5 context is unavailable');
@@ -111,7 +112,7 @@ async function snapshot(c:pg.PoolClient,tenantId:string):Promise<AllocationSnaps
     demandRef:row.demand_ref,envelopes:row.envelopes,status:row.status,
     policyRefs:[],effectRefs:[]});
   if(outstanding.length>256)throw new AllocationContractError('LIMIT_EXCEEDED','S5 shared occupation bound exceeded');
-  const value={resources,outstanding};bounded(value);return {...value,snapshotDigest:epistemicHash(value)};
+  const value={resources,outstanding:await workforceAccountingFrontierTx(c,tenantId,outstanding)};bounded(value);return {...value,snapshotDigest:epistemicHash(value)};
 }
 export async function readAllocationSnapshot(ctx:PeMutationContext,client?:pg.PoolClient):Promise<AllocationSnapshot>{return locked(ctx,async c=>{
  const result=await snapshot(c,ctx.auth.tenantId);await authorizeResources(ctx,c,result.resources);return result;
@@ -453,6 +454,11 @@ export async function putAllocationResource(ctx:PeMutationContext,input:Allocati
           await c.query("INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,$3,'ECONOMIC_RESOURCE_INVALIDATION',$4::jsonb)",
             [ctx.auth.tenantId,old.reservation_id,old.revision,JSON.stringify({...detail,theoryId:proposal.certificate.theoryId,
               semanticOwner:'S5',obligationsRetained:true,executionAuthorityGranted:false})]);
+          continue;
+        }
+        if(proposal?.problem.schema==='finnor.s5.workforce-resource-problem.v1'){
+          await c.query("INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,$3,'WORKFORCE_RESOURCE_INVALIDATION',$4::jsonb)",
+            [ctx.auth.tenantId,old.reservation_id,old.revision,JSON.stringify({...detail,programmeId:proposal.problem.programmeId,clearanceInvalidated:true,exposureRetained:true,executionAuthorityGranted:false})]);
           continue;
         }
         if(['finnor.s5.fixed-primary-problem.v1','finnor.s5.fixed-programme-problem.v1'].includes(proposal.problem.schema)){

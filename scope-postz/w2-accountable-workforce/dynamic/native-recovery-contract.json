@@ -1,0 +1,62 @@
+{
+  "schema": "finnor.postz.w2.native-recovery-owner-campaign.v1",
+  "sourceClass": "CONTROLLED_ACTOR_RECORDS",
+  "registeredActors": 4,
+  "authenticatedPrincipals": 4,
+  "originalWorks": 5,
+  "physicalWorkers": 1,
+  "wallSeconds": 900,
+  "perWorkOriginalOperationCeiling": "10",
+  "sharedOriginalOperationCapacity": "100",
+  "compensatedWorkOriginalUsdCeiling": "10",
+  "maximumOutputBytes": 67108864,
+  "cases": [
+    {
+      "id": "known-spend-lawful-original-replacement",
+      "requirement": "An actually accepted human parent creates a bounded computational child. The accepted native machine physically computes the wrong literal, then its actual authenticated principal returns the disputed attempt. Its S5 consumption is independently known and its egress authority was NONE. The actual human parent separately releases its own labor claim, never a presumed machine wage waiver. Replace the child under the same original budget, retain old spent/history and require fresh exact acceptance before the second authenticated machine principal supplies the correct literal and the independent checker verifies it.",
+      "fixtureReason": "A participant-input delivery is not an observation of human resource use. Obtain known per-attempt spend from the actual isolated native computation instead of inventing a human counter measurement. Pause only the owned idle physical worker while the replacement recipient responds; resume the same PID for ordinary closure."
+    },
+    {
+      "id": "respond-revoked-after-start-smallest-closure",
+      "requirement": "After actual ACCEPT/START, install a disposable canonical respond deny scoped to just that assignment. The next use must fence without needing another START. Query the owning programme/event tables before any GET or reload: the fence and currentness event must already be durable. Retain the exact smallest P7 closure and durable currentness observation; a separately rooted recipient must still complete through ordinary authenticated actions."
+    },
+    {
+      "id": "compensated-child-canonical-s5-obligation",
+      "requirement": "An actually accepted parent creates a paid child only from one exact same-currency original S5 coordinate. The actual enrolled provider accepts, starts and delivers. S5 retains the exact payee/terms/amount/disposition commitment. Labor release and a hostile W2 compensation assertion cannot settle it. With no authoritative outbound settlement, money stays UNKNOWN, the accepted financial obligation stays OPEN and closure refuses. Native acceptance must also drive an exact canonical payment preparation through the actual job/claim to the separately owned S6 financial broker. Its durable protected refusal must bind the original obligation, root, reservation, terms and payee, preserve immutable acceptance and keep financial transfer unauthorized. The old constant UNKNOWN/UNAVAILABLE helper alone cannot pass this added predicate."
+    },
+    {
+      "id": "protected-delegated-child-unadmitted",
+      "requirement": "An actually accepted human parent proposes a delegated child carrying a possible protected effect. Refusal happens before any child assignment, task creation event, S6 intent or new S5 consumption. The exact checked owner evidence is durably bound: current parent chain, recipient attenuation, original root budget, attempt history and the absent concrete S6 origin. Repeat the same refused request and retain both actual time-bound checked cuts immutably, with exact body/digest equality and unchanged programme, history and consumption. Protected custody, egress and execution authority stay false and unadmitted; the actual parent then completes ordinarily and the refused child never exists.",
+      "fixtureReason": "A controlled effect identifier with no canonical S6 origin is used; no real protected custody, genuine protected qualification or effect authority is claimed. This case runs before the shared-resource allocation-right denial, which necessarily fences every later original submission by the same principal."
+    },
+    {
+      "id": "allocation-right-revoked-with-held-reservation",
+      "requirement": "Keep the original S5 reservation present in its exact post-compilation CONSUMPTION_PENDING state, revoke the caller's allocation right through a current canonical deny, then attempt the next physical-use boundary. Refuse before any new consumption/effect; retain the identical original reservation, known spend and obligations.",
+      "fixtureReason": "The actual known compilation use already occurred. A held reservation is not necessarily in the never-used RESERVED state; compare the exact original row before and after instead of resetting it. The denied allocation resource is shared by every original root, so this case must remain the campaign's last submission."
+    },
+    {
+      "id": "participant-natural-expiry-and-fresh-exact-consent",
+      "requirement": "For both PROPOSED and actually recipient-CONFIRMED disposable contact bindings, wait for their real original validity deadline. A different authorized proposer, without RLS access to the old private binding, must then create a fresh binding and obtain fresh exact recipient confirmation. Preserve every original proposal/consent event, record an explicit EXPIRED disposition without claiming human revocation, and keep one current binding. An exact current replay is semantic replay; an unexpired competing proposal is an opaque 409 without private old-binding details, not a uniqueness-error HTTP 500.",
+      "fixtureReason": "Two additional existing disposable directory contacts are not extra registered workforce actors or new Works. Both fixtures use the same four actual controlled authenticated principals, real clock expiry and ordinary API calls. Run before the unchanged last allocation-right denial; no profile population, deadline, output or wall bound increases."
+    },
+    {
+      "id": "paid-local-computation-preserves-original-payable",
+      "requirement": "Within the SAME already compensated original Work, the actual accepted parent delegates a second deterministic machine child with 2 USD compensation, a 2 USD original carve and a separate operation coordinate. Its actual recipient accepts exact terms. The physical registered worker must compute the original 42 and commit S6 evidence without reserving the promised paycheck as local-computation spending. Retain the original S5 accepted payable, payee, original root and reservation. Capture any worker compensation-frontier error rather than waiting it away or relabeling a failed job.",
+      "fixtureReason": "Reuse the original paid Work, parent, four registered actors, resource calendars and 10 USD ceiling. No new Work, financial root, actor, timeout or profile budget is introduced. Run before the unchanged final allocation-right denial."
+    }
+  ],
+  "failureRules": [
+    "No active financial grant, compensation mapping, source/enrollment, original budget or current authority may be inferred from a caller success flag.",
+    "Do not erase previous accepted paid terms or count labor release, S7 cost data, inbound invoices or an internal right transition as a cash payment.",
+    "No blanket wage/claim waiver is introduced: legal/employee protections cannot be presumed waivable.",
+    "UNKNOWN original egress remains nonreplayable under the unchanged main SIGKILL campaign.",
+    "Each actually checked protected delegated-child refusal cut leaves its exact durable content-addressed binding, never a fabricated admission; no child assignment, task creation, attempt or consumption is created for it.",
+    "Natural contact-binding expiry cannot manufacture fresh consent, erase previous consent or make an authorized renewal fail with a server error; a new recipient confirmation is mandatory.",
+    "No source pin is refreshed by reading, no original deadline/root is reset, and no original protected or mounted floor is replaced."
+  ],
+  "genuineHumanQualified": false,
+  "realContactSent": false,
+  "realPayment": false,
+  "protectedQualification": false,
+  "economicImprovementEstablished": false
+}

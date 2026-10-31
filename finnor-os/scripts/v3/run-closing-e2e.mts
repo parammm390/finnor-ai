@@ -19,6 +19,8 @@ import { createDeal } from "@finnor/private-equity";
 import { createEvidenceSource } from "@finnor/memory";
 import { createUpstreamFixtureSupport } from "../s5/owner-fixture.mjs";
 import { ClosingSpecSchema } from "@finnor/shared-types";
+import { compensationCases, prepareCompensationFixture, compensationReadback, compensationFunding,
+  type CompensationCase } from "../postz-w2/closing-compensation-fixture.mts";
 
 process.umask(0o077); // Includes the database library's transient password file.
 const root = resolve(import.meta.dirname, "../../.."), backend = join(root, "finnor-os");
@@ -29,7 +31,11 @@ const selected = caseArgument < 0 ? "authenticated-positive" : process.argv[case
 const continuationProof = process.env.FINNOR_V3_ORIGINAL_WORK_CONTINUATION_PROOF === "1";
 assert(selected, "Registered case name required");
 assert(["authenticated-positive", "lost-draw", "signer-professional", "settlement", "ordering-cancellation",
-  "currentness", "concurrency-isolation", "reopening", "requalification", "fallback", "cross-phase"].includes(selected), "Unsupported registered case");
+  "currentness", "concurrency-isolation", "reopening", "requalification", "fallback", "cross-phase",
+  "workforce-compensation"].includes(selected), "Unsupported registered case");
+const workforceCompensation = selected === "workforce-compensation";
+const compensationCase = (process.env.FINNOR_W2_COMPENSATION_CASE ?? "exact") as CompensationCase;
+if (workforceCompensation) assert(compensationCases.includes(compensationCase), "Registered compensation control required");
 await mkdir(output, { recursive: true });
 const privateDirectory = await mkdtemp(join(tmpdir(), "finnor-v3-runtime-private-"));
 const dbDirectory = await mkdtemp(join(tmpdir(), "finnor-v3-runtime-pg-"));
@@ -47,6 +53,8 @@ const fixtures: Record<string, any> = {};
 const startedAt = new Date().toISOString();
 let admin: pg.Client | undefined, authServer: Server | undefined, postgresRunning = false;
 let apiOrigin = "", authOrigin = "", providerOrigin = "", checkerDigest = "", worker: ChildProcess | undefined;
+let compensationWorkerEnv: NodeJS.ProcessEnv = {};
+let compensationHorizon: { startAt: string; periodMs: number; periods: number };
 let failed: any, current: any;
 let resourceMonitor: NodeJS.Timeout | undefined, resourceFailure: Error | undefined;
 const resourceObservation = { profile: continuationProof ? "USER_AUTHORIZED_BOUNDED_CONTINUATION_ENGINEERING" : "ORIGINAL_DEFAULT",
@@ -106,9 +114,9 @@ async function ready(service: Awaited<ReturnType<typeof launch>>, label: string)
   }
   throw Error(label + " readiness deadline");
 }
-async function request(f: any, path: string, body: unknown, actorId?: string, token?: string) {
+async function request(f: any, path: string, body?: unknown, actorId?: string, token?: string) {
   const began = performance.now();
-  const response = await fetch(apiOrigin + path, { method: "POST", headers: {
+  const response = await fetch(apiOrigin + path, { method: body === undefined ? "GET" : "POST", headers: {
     authorization: "Bearer " + (token ?? bearer(f, actorId)), "content-type": "application/json",
   }, body: JSON.stringify(body), signal: AbortSignal.timeout(90000) });
   const text = await response.text();
@@ -274,15 +282,34 @@ async function configureClosingOwner(f: any) {
   await save(f.name + "/native-agent-profile.json", profile);
 }
 async function fixture(label: string, fault?: string) {
+  const price = workforceCompensation ? "2" : "120000000";
+  const debtAmount = workforceCompensation ? "1" : "80000000";
+  const equityAmount = workforceCompensation ? "1" : "40000000";
   const f = await support.fixture(label, 1, [
-    { id: "cash", unit: "USD", capacity: 120000000, totalLimit: 120000000, resourceClass: "CASH" },
-    { id: "debt", unit: "USD", capacity: 80000000, totalLimit: 80000000, resourceClass: "BORROWING_HEADROOM" },
-  ], { beforeFit: configureClosingOwner });
+    { id: "cash", unit: "USD", capacity: workforceCompensation ? 6 : 120000000, totalLimit: workforceCompensation ? 6 : 120000000, resourceClass: "CASH" },
+    { id: "debt", unit: "USD", capacity: Number(debtAmount), totalLimit: Number(debtAmount), resourceClass: "BORROWING_HEADROOM" },
+  ], { beforeFit: async f => {
+    await configureClosingOwner(f);
+    if (!workforceCompensation) return;
+    await actors(f);
+    current = f; f.w2WorkId = randomUUID(); f.compensationHorizon = compensationHorizon;
+    f.compensationFixture = await prepareCompensationFixture({ admin: admin! as any, f, request, save,
+      startWorker: async () => {
+        worker = (await launch("w2-original-compiler", ["--import=tsx", join(backend, "scripts/postz-w2/physical-worker.mts")],
+          compensationWorkerEnv)).cp;
+      },
+      stopWorker: async () => {
+        assert(worker);
+        const cp = worker, exited = new Promise<void>(done => cp.once("exit", () => done()));
+        const timer = setTimeout(() => process.kill(-cp.pid!, "SIGKILL"), 5000);
+        process.kill(-cp.pid!, "SIGTERM"); await exited; clearTimeout(timer); worker = undefined;
+      } }, compensationCase);
+  } });
   current = f;
-  for (const [label, spend] of [["signature", {}], ["draw", { debt: 80000000 }], ["pay", { cash: 120000000 }],
+  for (const [label, spend] of [["signature", {}], ["draw", { debt: Number(debtAmount) }], ["pay", { cash: Number(price) }],
     ["transfer", {}], ["file", {}]] as const) await support.policy(f, label, spend);
-  await support.resource(f, "cash", "USD", "STOCK", ["120000000", "120000000"]);
-  await support.resource(f, "debt", "USD", "STOCK", ["80000000", "80000000"]);
+  if (!workforceCompensation) await support.resource(f, "cash", "USD", "STOCK", ["120000000", "120000000"]);
+  await support.resource(f, "debt", "USD", "STOCK", [debtAmount, debtAmount]);
   const clearing = support.clearing(f, { signature: ["10"], draw: ["10"], pay: ["10"], transfer: ["10"], file: ["10"] });
   const cleared = ok(await ownerApi(f, "clear", clearing)); assert.equal(cleared.status, "FEASIBLE", JSON.stringify(cleared));
   assert.equal(cleared.certificate.policyBindings.length, 5, "All original operation policies must be genuinely selected");
@@ -292,7 +319,7 @@ async function fixture(label: string, fault?: string) {
     await admin!.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,$4,'other')", [id, f.tenant, `${label}-${name.toLowerCase()}`, name]);
   const sourceId = (await createEvidenceSource(f.tenant, { sourceKey: "approved-closing-terms:" + label,
     sourceType: "independently_accepted_transaction_terms", title: "Hypothetical exact approved closing terms" })).id;
-  const terms = `Hypothetical original ${label}: buyer ${f.root.entityId}; seller ${sellerEntity}; acquired company ${f.targetEntity}; price USD120000000; debt USD80000000; settled equity USD40000000; exact approved document and parties.`;
+  const terms = `Hypothetical original ${label}: buyer ${f.root.entityId}; seller ${sellerEntity}; acquired company ${f.targetEntity}; price USD${price}; debt USD${debtAmount}; settled equity USD${equityAmount}; exact approved document and parties.`;
   const termsVersion = randomUUID();
   await admin!.query("INSERT INTO finnor_os.evidence_source_versions(id,source_id,scope,tenant_id,version_number,content_hash,content,snapshot,as_of,retrieved_at,created_at) VALUES($1,$2,'tenant',$3,1,$4,$5,'{}'::jsonb,clock_timestamp(),clock_timestamp(),clock_timestamp())", [termsVersion, sourceId, f.tenant, hash(terms), terms]);
   const documentId = randomUUID(), documentBytes = Buffer.from(`%PDF-1.4\n% Hypothetical approved exact agreement\n${terms}\n%%EOF\n`);
@@ -356,7 +383,7 @@ async function fixture(label: string, fault?: string) {
       resourceBindings: resource ? [{ resourceRef: withKind(resource.ref, "native-S5-resource"), quantity: exposure, unit: "USD" }] : [] };
   };
   const sellerActor = { principalId: roleBindings[1]!.principalId, legalEntityId: sellerEntity, roleRef: roleBindings[1]!.ref };
-  f.spec = ClosingSpecSchema.parse({
+  const specInput = {
     schema: "finnor.closing-spec.v1", transactionId: f.dealId, tenantId: f.tenant,
     approvedTermsRevision: termsVersion, approvedTermsDigest: hash(terms), profileId, environment: "DEVELOPMENT",
     originalGrant: { episodeRef: { ...withKind(f.mandate.ref, "original-native-episode"), id: f.mandate.episodeId },
@@ -369,37 +396,39 @@ async function fixture(label: string, fault?: string) {
     { key: "observable-condition", required: true, dependsOn: [], evidence: evidence("OBSERVABLE_CONDITION", "observable-condition", "counsel-authority"),
       canonicalConditionId: null, statement: "Exact hypothetical recorded condition", evidenceClass: "OBSERVABLE", professionalScope: null, waiver: null }],
     funding: [{ key: "debt", required: true, dependsOn: [], evidence: evidence("FUNDING_AVAILABLE", "debt", "receiving-authority"),
-      money: usd("80000000"), facilityDigest: debt.sourceRef.contentDigest, providerEntityId: lenderEntity,
+      money: usd(debtAmount), facilityDigest: debt.sourceRef.contentDigest, providerEntityId: lenderEntity,
       sourceClass: "DEBT_FACILITY", continuingDutyKeys: ["debt-principal"], requiredState: "EFFECTIVE_AVAILABLE", drawOperationKey: "original-debt-draw" },
     { key: "equity", required: true, dependsOn: [], evidence: evidence("FUNDING_AVAILABLE", "equity", "receiving-authority"),
-      money: usd("40000000"), facilityDigest: hash("original-settled-equity"), providerEntityId: equityEntity,
+      money: usd(equityAmount), facilityDigest: hash("original-settled-equity"), providerEntityId: equityEntity,
       sourceClass: "EQUITY_CAPITAL", continuingDutyKeys: [], requiredState: "EFFECTIVE_AVAILABLE", drawOperationKey: null }],
     beneficiaries: [{ key: "seller-beneficiary", required: true, dependsOn: [], evidence: evidence("BENEFICIARY_VALIDATED", "seller-beneficiary", "receiving-authority"),
       legalEntityId: sellerEntity, accountDigest: hash("frozen-original-seller-account:" + sellerEntity), independentValidationChannel: "disposable-contract" }],
     fundsFlows: [{ key: "purchase-price", required: true, dependsOn: ["agreement", "debt", "equity", "seller-beneficiary", "regulatory-condition"],
       evidence: evidence("RECEIVING_SETTLEMENT", "purchase-price", "receiving-authority"),
-      money: usd("120000000"), payerEntityId: f.root.entityId, receivingEntityId: sellerEntity,
+      money: usd(price), payerEntityId: f.root.entityId, receivingEntityId: sellerEntity,
       receivingAccountDigest: hash("frozen-original-seller-account:" + sellerEntity), beneficiaryRequirementKey: "seller-beneficiary",
-      fundingKeys: ["debt", "equity"], purpose: "PURCHASE_PRICE", operationKey: "original-purchase-price" }],
+      fundingKeys: ["debt", "equity"], purpose: workforceCompensation ? "FEE" : "PURCHASE_PRICE", operationKey: "original-purchase-price",
+      ...(workforceCompensation ? { workforceCompensation: f.compensationFixture.binding } : {}) }],
     rightsTransfers: [{ key: "equity-rights", required: true, dependsOn: ["purchase-price"], evidence: evidence("RIGHTS_TRANSFER", "equity-rights", "registry-authority"),
       fromEntityId: sellerEntity, toEntityId: f.root.entityId, rightsDigest: hash("exact-original-equity-rights:" + f.targetEntity), quantity: "100",
       unit: "shares", operationKey: "original-rights-transfer" }],
     legalEffectiveness: [{ key: "legal-effectiveness", required: true, dependsOn: ["equity-rights"], evidence: evidence("LEGAL_EFFECTIVENESS", "legal-effectiveness", "counsel-authority"),
       jurisdiction: "DISPOSABLE", legalBasisDigest: hash("hypothetical-original-effectiveness"), professionalScope: "legal-effectiveness", operationKey: "original-legal-filing" }],
-    continuingDuties: [{ key: "debt-principal", ownerPrincipalId: f.principal, statement: "Retain exact USD80000000 debt principal and service duties",
-      dueAt: new Date(Date.now() + 86400000).toISOString(), dependencyKeys: ["original-debt-draw"], liability: usd("80000000"), obligationRef: null },
+    continuingDuties: [{ key: "debt-principal", ownerPrincipalId: f.principal, statement: "Retain exact USD" + debtAmount + " debt principal and service duties",
+      dueAt: new Date(Date.now() + 86400000).toISOString(), dependencyKeys: ["original-debt-draw"], liability: usd(debtAmount), obligationRef: null },
     { key: "post-close-record", ownerPrincipalId: f.principal, statement: "Maintain original closing record and continuing legal duties",
       dueAt: new Date(Date.now() + 2 * 86400000).toISOString(), dependencyKeys: ["original-legal-filing"], liability: null, obligationRef: null }],
     steps: [step("request-signature", "REQUEST_SIGNATURE", "agreement", [], "signature", null),
-      step("draw-debt", "DRAW_FUNDS", "debt", ["agreement", "regulatory-condition"], "draw", "80000000", debt),
-      step("pay-seller", "PAY_FUNDS", "purchase-price", ["agreement", "regulatory-condition", "debt", "equity", "seller-beneficiary"], "pay", "120000000", cash),
-      step("transfer-rights", "TRANSFER_RIGHTS", "equity-rights", ["purchase-price"], "transfer", "120000000"),
-      step("file-effectiveness", "FILE", "legal-effectiveness", ["equity-rights"], "file", "120000000"),
+      step("draw-debt", "DRAW_FUNDS", "debt", ["agreement", "regulatory-condition"], "draw", debtAmount, debt),
+      step("pay-seller", "PAY_FUNDS", "purchase-price", ["agreement", "regulatory-condition", "debt", "equity", "seller-beneficiary"], "pay", price, cash),
+      step("transfer-rights", "TRANSFER_RIGHTS", "equity-rights", ["purchase-price"], "transfer", price),
+      step("file-effectiveness", "FILE", "legal-effectiveness", ["equity-rights"], "file", price),
       step("acquire-observable", "ACQUIRE_EVIDENCE", "observable-condition", [], null, null),
       step("request-professional", "REQUEST_PROFESSIONAL", "regulatory-condition", [], null, null)],
     dependencyKeys: ["closing-material:" + f.dealId], assumptions: ["Independent hypothetical DEVELOPMENT fixture only. No protected, live, V1/V2 or economic qualification."],
     unsupportedPredicates: [],
-  });
+  };
+  f.spec = workforceCompensation ? specInput : ClosingSpecSchema.parse(specInput);
   const legal = fact(f, { key: "closing-spec" }, "LEGAL_SPEC_ACCEPTANCE", "counsel-authority",
     { accepted: true, specDigest: hash(f.spec) }, { professionalScope: "closing-spec" });
   f.intake = { spec: f.spec, expectedSpecDigest: hash(f.spec), acceptedTermsEvidence: { sourceId, versionId: termsVersion },
@@ -525,15 +554,26 @@ try {
     ...execFileSync("git", ["-C", root, "ls-files", "--others", "--exclude-standard", "--", ":(exclude)scope-v/**/evidence/**"], { encoding: "utf8" }).trim().split("\n"),
     "finnor-os/scripts/s5/owner-fixture.mts", "finnor-os/scripts/s3/reference.py",
     "finnor-os/apps/api/next.config.mjs", "finnor-os/apps/worker/src/queue.ts", "finnor-os/package-lock.json", "package-lock.json"];
-  const manifest = [];
+  const sourceCommit = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+  const sourceTree = execFileSync("git", ["-C", root, "rev-parse", "HEAD^{tree}"], { encoding: "utf8" }).trim();
+  const manifest = [], absentSourceFiles: string[] = [];
   for (const path of [...new Set(sourceFiles)].filter(p => p && !p.includes("/evidence/")).sort()) {
-    const bytes = await readFile(join(root, path)), target = join(output, "source-snapshot", path);
+    let bytes: Buffer;
+    try { bytes = await readFile(join(root, path)); }
+    catch (error) {
+      if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+        absentSourceFiles.push(path); continue;
+      }
+      throw error;
+    }
+    const target = join(output, "source-snapshot", path);
     await mkdir(dirname(target), { recursive: true });
     await copyFile(join(root, path), target, fsConstants.COPYFILE_EXCL | fsConstants.COPYFILE_FICLONE);
     assert.equal(hash(await readFile(target)), hash(bytes), "Source snapshot bytes changed");
     manifest.push({ path, sha256: hash(bytes) });
   }
-  await save("freeze.json", { schema: "finnor.v3.runtime-freeze.v1", startedAt, selected, node: process.version, manifest,
+  await save("freeze.json", { schema: "finnor.v3.runtime-freeze.v1", startedAt, selected, node: process.version,
+    sourceCommit, sourceTree, manifest, absentSourceFiles,
     originalFullWorkContinuationProof: continuationProof,
     resourceFloor: { freeMemoryBytesEstimate, memoryProbe, diskAvailableBytes: Number(disk[3]) * 1024,
       diskAdmissionBytes, originalDefaultDiskAdmissionBytes: 1.5 * 1024 ** 3 },
@@ -585,6 +625,7 @@ try {
     FINNOR_V3_CHECKER_ORIGIN: `http://127.0.0.1:${checkerPort}`, FINNOR_V3_CHECKER_CLIENT_TOKEN_FILE: join(privateDirectory, "checker.token"),
     FINNOR_V3_BROKER_ORIGIN: `http://127.0.0.1:${brokerPort}`, FINNOR_V3_BROKER_CLIENT_TOKEN_FILE: brokerTokenFile };
   const workerEnv = { ...appEnv, DATABASE_URL: databaseUrl("finnor_worker") };
+  compensationWorkerEnv = workerEnv;
   const apiPort = await port(); apiOrigin = `http://127.0.0.1:${apiPort}`;
   const api = await launch("api", [join(backend, "node_modules/next/dist/bin/next"), "dev", "--hostname", "127.0.0.1", "--port", String(apiPort)],
     { ...appEnv, NODE_ENV: "development", NODE_OPTIONS: "--max-old-space-size=3072" }, join(backend, "apps/api"));
@@ -600,13 +641,30 @@ try {
   }
   assert(warm, "Actual Next auth route never became ready");
   const day = 86400000, begin = new Date(Math.floor(Date.now() / day) * day - 128 * day).toISOString();
+  compensationHorizon = { startAt: new Date(Date.parse(begin) + 128 * day).toISOString(), periodMs: day, periods: 1 };
   support = createUpstreamFixtureSupport({ admin: () => admin, generatedRows, begin, day, fixtures,
     api: ownerApi, artifact: save });
   await save("runtime-identities.json", { migrations, checkerDigest, publicJwk: jwk, apiOrigin, authOrigin, providerOrigin,
     database: { directory: dbDirectory, port: databasePort, name: "v3_runtime" },
     roles: (await admin.query("SELECT rolname,rolsuper,rolbypassrls FROM pg_roles WHERE rolname IN('finnor_app','finnor_worker','finnor_closing_checker','finnor_closing_broker') ORDER BY rolname")).rows,
     authentication: "REAL_RS256_JWKS_NO_AUTH_DEV_BYPASS", privateCredentialsIncluded: false });
-  const f = await fixture("registered-" + selected, selected === "lost-draw" ? "lost-draw"
+  if (workforceCompensation) {
+    const ownerSources = (await readdir(join(backend, "packages/private-equity/src")))
+      .filter(name => name.startsWith("workforce-") && name.endsWith(".ts"))
+      .map(name => "packages/private-equity/src/" + name);
+    const paths = [...ownerSources, "packages/private-equity/src/allocation-store.ts",
+      "packages/private-equity/src/closing/store.ts", "packages/orchestration/src/workforce-execution/dependencies.ts",
+      "packages/shared-types/src/closing.ts", "packages/epistemic-runtime/src/closing-checker.ts",
+      "packages/governed-execution/src/closing-provider.ts", "scripts/v3/provider-authority.mts",
+      "scripts/v3/run-closing-e2e.mts", "scripts/postz-w2/closing-compensation-fixture.mts"];
+    await save("workforce-compensation/source-preimages.json", {
+      schema: "finnor.w2.closing-compensation-sources.v1", compensationCase,
+      sources: await Promise.all(paths.sort().map(async path => ({ path,
+        sha256: createHash("sha256").update(await readFile(join(backend, path))).digest("hex") }))),
+      qualification: "EXACT_EXECUTED_DEVELOPMENT_SOURCE_NOT_INSTALLED_OR_COLD_PROOF" });
+  }
+  const f = await fixture("registered-" + selected + (workforceCompensation ? "-" + compensationCase : ""),
+    workforceCompensation && compensationCase === "exact" ? "lost-pay" : selected === "lost-draw" ? "lost-draw"
     : selected === "signer-professional" ? "wrong-signer" : selected === "settlement" ? "partial-settlement" : undefined);
   assert.equal((await request(f, "/api/closing/read", { programmeId: f.programmeId }, undefined, bearer(f, f.principal, -1))).status, 401);
   if (selected === "authenticated-positive") {
@@ -681,6 +739,8 @@ try {
   if (["lost-draw", "ordering-cancellation", "currentness"].includes(selected)) {
     await providerRequest("/__fixture/read-gate", { blocked: true });
   }
+  if (workforceCompensation && compensationCase === "exact")
+    await providerRequest("/__fixture/read-gate", { blocked: true, nodeKey: "pay-seller" });
   worker = (await launch("worker-1", ["--import=tsx", join(backend, "apps/worker/src/index.ts")], workerEnv)).cp;
   if (selected === "fallback") {
     await waitFor(f, q => q.children.some((c: any) => c.nodeKey === "request-professional"));
@@ -701,7 +761,75 @@ try {
     await providerRequest("/__fixture/read-gate", { blocked: false });
     ok(await request(f, "/api/closing/resume", { programmeId: f.programmeId }));
   }
-  if (selected === "ordering-cancellation" || selected === "currentness") {
+  if (workforceCompensation) {
+    if (compensationCase === "exact") {
+      const unknown = await waitFor(f, q => q.unresolvedEffects.some((e: any) => e.nodeKey === "pay-seller"));
+      const promise = await compensationReadback({ f, request });
+      assert.equal(promise.observations[0].status, "OPEN", "Acknowledgement or UNKNOWN paid the accepted promise");
+      assert.equal(promise.externalSettlementEstablished, false);
+      await save("workforce-compensation/unknown-original-effect.json", { unknown, promise, funding: await compensationFunding({ f }) });
+      await providerRequest("/__fixture/read-gate", { blocked: false, nodeKey: "pay-seller" });
+      ok(await request(f, "/api/closing/resume", { programmeId: f.programmeId }));
+    }
+    const completed = await waitFor(f, q => q.status === "CLOSED" && q.certificate?.currentlyValid, 480000);
+    const nativeCompletion = await completedNativeWork(f);
+    const compensation = await compensationReadback({ f, request }), funding = await compensationFunding({ f });
+    const portfolio = ok(await request(f, "/api/allocations/resources", {}));
+    await save("workforce-compensation/settled-owner-before-projection-assertion.json",
+      { completed, nativeCompletion, compensation, funding, portfolio });
+    assert.equal(JSON.stringify(compensation.records[0]), f.compensationFixture.acceptedBytes, "Immutable acceptance was rewritten");
+    assert.equal(compensation.observations[0].status, compensationCase === "exact" ? "SETTLED" : "OPEN",
+      "Exact receiving receipt join must pay only the original amount, payee and reservation");
+    assert.equal(compensation.externalSettlementEstablished, compensationCase === "exact");
+    if (compensationCase === "exact") {
+      const paid = funding.find(row => row.assignmentId === f.compensationFixture.obligation.assignmentId);
+      assert(paid);
+      const cashSpent = paid.spent.find(e => e.resourceId === "cash"), cashHeld = paid.directReserved.find(e => e.resourceId === "cash");
+      assert(cashSpent && cashHeld);
+      assert.equal(cashSpent.quantities[0], "2");
+      assert.equal(cashHeld.quantities[0], "0",
+        "Paid cash was made available again");
+      const cashCommitted = portfolio.outstanding.flatMap((row: any) => row.envelopes)
+        .filter((e: any) => e.resourceId === "cash").reduce((sum: bigint, e: any) => sum + BigInt(e.quantities[0]), 0n);
+      assert.equal(cashCommitted, 2n, "The same physical payment was charged to both original reservations");
+    }
+    const before = await snapshot(f), posts = completed.state.requests.filter((r: any) => r.specDigest === hash(f.spec));
+    assert.equal(posts.filter((r: any) => r.nodeKey === "pay-seller").length, 1, "Physical payment repeated");
+    const paidEffect = posts.find((r: any) => r.nodeKey === "pay-seller").effectId;
+    assert.equal(before.consumptions.filter((r: any) => r.effect_ref?.id === paidEffect).length, 1,
+      "The original physical financial effect must have exactly one S5 consumption");
+    const killedPid = worker!.pid;
+    process.kill(-killedPid!, "SIGKILL");
+    await new Promise<void>(done => worker!.once("exit", () => done()));
+    worker = (await launch("worker-compensation-recovery", ["--import=tsx", join(backend, "apps/worker/src/index.ts")], workerEnv)).cp;
+    const replay = await compensationReadback({ f, request }), replayFunding = await compensationFunding({ f });
+    assert.deepEqual(replay, compensation, "Read-only recovery changed the receipt join");
+    assert.deepEqual(replayFunding, funding, "Receipt replay charged or freed cash twice");
+    assert.equal((await providerRequest("/__fixture/state")).requests.length, completed.state.requests.length,
+      "Receipt recovery performed a new physical mutation");
+    let currentness: any;
+    if (compensationCase === "exact") {
+      const originalReceipt = completed.state.programmes.find((p: any) => p.transactionId === f.dealId).effects
+        .find((effect: any) => effect.businessEffectId === paidEffect).observation;
+      const correction = fact(f, f.spec.fundsFlows[0], "RECEIVING_SETTLEMENT", "receiving-authority",
+        { ...originalReceipt.claims, receivingState: "DISPUTED" },
+        { status: "FAILED", supersedesFactIds: [originalReceipt.factId] });
+      ok(await observe(f, correction));
+      const corrected = await projection(f), retained = await compensationReadback({ f, request });
+      assert.equal(corrected.status, "REOPENED");
+      assert.equal(retained.observations[0].status, "OPEN", "A stale independent closing receipt discharged a promise");
+      assert.equal(retained.externalSettlementEstablished, false);
+      assert.equal(JSON.stringify(retained.records[0]), f.compensationFixture.acceptedBytes);
+      assert.deepEqual(await compensationFunding({ f }), funding, "A receipt correction refunded historical cash");
+      assert.equal((await providerRequest("/__fixture/state")).requests.length, completed.state.requests.length);
+      currentness = { correction, corrected, retained, physicalPaymentNotUndone: true };
+    }
+    await save("workforce-compensation/receiving-join-" + compensationCase + ".json",
+      { completed, nativeCompletion, compensation, funding, before, killedPid, replay, replayFunding, currentness,
+        realPayment: false, genuineHumanQualified: false, newFinancialTransport: false });
+    successes.push({ id: "workforce-compensation-" + compensationCase, fullNativeHttpWorkerClose: true,
+      exactReceiptDischarged: compensationCase === "exact", noReplay: true, realPayment: false, protectedAdmission: "NOT_ADMITTED" });
+  } else if (selected === "ordering-cancellation" || selected === "currentness") {
     const before = await waitFor(f, (_q, state) => state.programmes.some((p: any) => p.drawn));
     if (selected === "currentness") {
       await admin.query("UPDATE finnor_os.users SET status='suspended' WHERE tenant_id=$1 AND id=$2",

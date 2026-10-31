@@ -10,7 +10,9 @@ import { employeeAuthoritySnapshot } from "@finnor/authority";
 export async function GET(req: Request): Promise<Response> {
   try {
     const ctx = await requireContext(req);
-    const authority = ctx.employeeId ? await employeeAuthoritySnapshot(ctx) : null;
+    // Identity discovery is not owner-workspace admission. Non-owners receive
+    // their own configured role names; business routes still re-authorize.
+    const authority = ctx.employeeId ? await employeeAuthoritySnapshot(ctx, true) : null;
     return Response.json({ userId: ctx.userId, employeeId: ctx.employeeId ?? null, tenantId: ctx.tenantId, role: ctx.role, authority });
   } catch (err) {
     return errorResponse(err);

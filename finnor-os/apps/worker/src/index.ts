@@ -1,4 +1,5 @@
 import {runDecisionAtlasJob} from '../../../packages/private-equity/src/r7/worker';
+import {runWorkforceExecutionJob} from '../../../packages/orchestration/src/workforce-execution/worker';
 import {buildEnterpriseApplicationJob} from '../../../packages/private-equity/src/enterprise-applications/worker';
 import {compileLearnedPolicyJob} from '../../../packages/private-equity/src/policy-learning/worker';
 import {runConfidentialEconomicJob} from '../../../packages/private-equity/src/confidential-computation/worker';
@@ -71,6 +72,7 @@ import { installWorkerDrainSignals } from "./drain-signals";
 
 export function createWorker(): JobQueue {
   const queue = new JobQueue();
+  queue.register('run_workforce_execution_v1',runWorkforceExecutionJob,PRODUCTION_JOB_CONTRACTS.run_workforce_execution_v1);
   queue.register('learn_strategic_response_model_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.learn_strategic_response_model_v1);
   queue.register('evaluate_strategic_response_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.evaluate_strategic_response_v1);
   queue.register('construct_interaction_protocol_v1',constructInteractionProtocolJob,PRODUCTION_JOB_CONTRACTS.construct_interaction_protocol_v1);

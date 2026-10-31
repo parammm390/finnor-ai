@@ -23,6 +23,7 @@ const IdentifiedSystemPanel = lazy(() => import("./IdentifiedSystemPanel").then(
 const DeliberationPanel = lazy(() => import("./DeliberationPanel").then(module=>({default:module.DeliberationPanel})))
 const ProgramSynthesisPanel = lazy(() => import("./ProgramSynthesisPanel").then(module=>({default:module.ProgramSynthesisPanel})))
 const InstitutionProgramPanel = lazy(() => import("./InstitutionProgramPanel").then(module=>({default:module.InstitutionProgramPanel})))
+const WorkforceExecutionPanel = lazy(() => import("./WorkforceExecutionPanel").then(module=>({default:module.WorkforceExecutionPanel})))
 const EvidenceWorkbench = lazy(() => import("./EvidenceWorkbench").then(module=>({default:module.EvidenceWorkbench})))
 const PrimaryDiligencePanel = lazy(() => import("./PrimaryDiligencePanel").then(module=>({default:module.PrimaryDiligencePanel})))
 const BilateralOpportunityPanel = lazy(() => import("./BilateralOpportunityPanel").then(module=>({default:module.BilateralOpportunityPanel})))
@@ -187,6 +188,8 @@ export function CanvasDocument({ onSelectProgramWork, document, root, sourceErro
     <CanvasSectionNav sections={sections} />
     {work && !sourceErrors.some(error => error.kind === "work")
       ? <Suspense fallback={<p role="status">Reading standing responsibility…</p>}><InstitutionProgramPanel key={work.work.id} workId={work.work.id} /></Suspense> : null}
+    {work && !sourceErrors.some(error => error.kind === "work")
+      ? <Suspense fallback={<p role="status">Reading accountable workforce…</p>}><WorkforceExecutionPanel key={work.work.id} workId={work.work.id} /></Suspense> : null}
     <div className="ct-canvas-layout"><span>THREAD CANVAS ORDER · {preferences.status === "loading" ? "READING" : preferences.status.toUpperCase()}</span>{preferences.dirty && preferences.status === "ready" ? <button type="button" onClick={() => void preferences.save()}>Save order and focus</button> : null}{["unavailable", "uncertain"].includes(preferences.status) ? <button type="button" onClick={preferences.reload}>Reload saved order</button> : null}{preferences.message ? <p role="status">{preferences.message}</p> : null}</div>
     {work?.work.id ? <Suspense fallback={<p role="status">Opening research tools…</p>}><ResearchCapabilityDesk /></Suspense> : null}
     {sourcesOpen ? <Suspense fallback={<p role="status">Opening source diagnostics…</p>}><SourceDiagnostics root={root ?? null} /></Suspense> : null}

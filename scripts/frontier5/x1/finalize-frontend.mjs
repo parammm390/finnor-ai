@@ -8,8 +8,11 @@ import { fileURLToPath } from 'node:url';
 import {frontendTracingLayout} from './frontend-tracing-root.mjs';
 
 const repo=fileURLToPath(new URL('../../../',import.meta.url)),args=process.argv.slice(2);
+const w2=args.length===6&&args[4]==='--profile'&&args[5]==='postz-w2';
+if(w2)args.splice(4);
+const label=w2?'w2':'x1',distDir=`.next-${label}-install`;
 if(args.length!==4||args[0]!=='--output'||args[2]!=='--origin'||!args[1].startsWith('/'))throw Error('X1_EXISTING_FRONTEND_PACKAGE_ARGUMENTS_REQUIRED');
-const output=await realpath(args[1]),runtime=join(output,'runtime'),manifestPath=join(output,'x1-frontend-installation.json');
+const output=await realpath(args[1]),runtime=join(output,'runtime'),manifestPath=join(output,`${label}-frontend-installation.json`);
 if(existsSync(manifestPath))throw Error('X1_FRONTEND_ALREADY_FINALIZED');
 const origin=new URL(args[3]);
 if(origin.protocol!=='http:'||origin.hostname!=='127.0.0.1'||!origin.port||origin.pathname!=='/'||origin.search||origin.hash||origin.username||origin.password)
@@ -28,19 +31,22 @@ for(const path of paths){
   if(sha(original)!==sha(current)){
     if(path==='tsconfig.json'){
       const old=JSON.parse(original),next=JSON.parse(current);
-      const additions=['.next-x1-install/types/**/*.ts','.next-x1-install/dev/types/**/*.ts'];
+      const additions=[`${distDir}/types/**/*.ts`,`${distDir}/dev/types/**/*.ts`];
       assert.deepEqual(next.include.filter(p=>!additions.includes(p)),old.include);
       assert.ok(additions.every(p=>next.include.filter(v=>v===p).length===1));
       next.include=old.include;assert.deepEqual(next,old);
     }else if(path==='next-env.d.ts'){
-      assert.equal(current.toString(),original.toString().replaceAll('./.next/dev/types/','./.next-x1-install/types/'));
+      assert.equal(current.toString(),original.toString()
+        .replaceAll('./.next/dev/types/',`./${distDir}/types/`)
+        .replaceAll('./.next/types/',`./${distDir}/types/`));
     }else throw Error('X1_FRONTEND_ORIGINAL_SOURCE_CHANGED:'+path);
     generatedInputDeltas.push({path,originalSha256:sha(original),generatedSha256:sha(current),basis:'EXACT_OBSERVED_NEXT_GENERATED_TYPE_INPUT'});
   }
   sourcePreimages.push({path,sha256:sha(original),...(generatedInputDeltas.some(p=>p.path===path)?{generatedSha256:sha(current)}:{})});
 }
-const buildId='x1-'+source.commit,files=[],links=[],linkRepairs=[];let outputBytes=0,authUrlFound=false;
-const limits=JSON.parse(await readFile(join(repo,'scope-frontier5/x1-institutional-programme-compiler/verification-plan.json'),'utf8')).limits;
+const buildId=label+'-'+source.commit,files=[],links=[],linkRepairs=[];let outputBytes=0,authUrlFound=false;
+const limits=JSON.parse(await readFile(join(repo,w2?'scope-postz/w2-accountable-workforce/verification-plan.json':
+  'scope-frontier5/x1-institutional-programme-compiler/verification-plan.json'),'utf8')).limits;
 assert.ok(build.elapsedMs<=limits.finalBuildWallSeconds*1000);
 async function fileHash(path){const h=createHash('sha256');for await(const bytes of createReadStream(path))h.update(bytes);return h.digest('hex');}
 const layout=frontendTracingLayout(repo),{tracingRoot,projectPath}=layout;
@@ -78,12 +84,12 @@ async function scan(directory){for(const item of await readdir(directory,{withFi
 await scan(runtime);assert.ok(authUrlFound,'actual compiled public auth URL matches original supplied origin');
 const entry=files.find(row=>row.path===join('runtime',projectPath,'server.js'));
 assert.ok(entry,'actual compiled standalone server');
-assert.equal((await readFile(join(dirname(join(output,entry.path)),'.next-x1-install/BUILD_ID'),'utf8')).trim(),buildId);
+assert.equal((await readFile(join(dirname(join(output,entry.path)),distDir,'BUILD_ID'),'utf8')).trim(),buildId);
 const hostBytes=git('show',source.commit+':scripts/frontier5/x1/frontend-host.mjs');
 await writeFile(join(output,'frontend-host.mjs'),hostBytes,{flag:'wx',mode:0o444});
 files.push({path:'frontend-host.mjs',bytes:hostBytes.length,mode:0o444,sha256:sha(hostBytes)});outputBytes+=hostBytes.length;
 const nextPath=files.find(row=>/\/node_modules\/next\/package.json$/.test(row.path));assert.ok(nextPath);
-const manifest={schema:'finnor.x1.frontend-installation.v1',mode:'DEVELOPMENT_ONLY',source,sourcePreimages,generatedInputDeltas,
+const manifest={schema:w2?'finnor.postz.w2.frontend-installation.v1':'finnor.x1.frontend-installation.v1',mode:'DEVELOPMENT_ONLY',source,sourcePreimages,generatedInputDeltas,
   runtime:{node:process.version,platform:process.platform,arch:process.arch,nodeBinarySha256:await fileHash(process.execPath)},
   nextVersion:JSON.parse(await readFile(join(output,nextPath.path),'utf8')).version,buildId,frontendOrigin:origin.origin,
   tracingLayout:layout,

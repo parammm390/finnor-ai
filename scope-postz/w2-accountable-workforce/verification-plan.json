@@ -1,0 +1,23 @@
+{
+  "schema": "finnor.postz.w2.finite-native-verification.v1",
+  "qualification": "PUBLIC_BUILDER_DEVELOPMENT_NOT_PROTECTED_CUSTODY",
+  "limits": { "wallSeconds": 1200, "workers": 1, "databaseInstances": 1, "apiHeapMiB": 1536, "workerHeapMiB": 1536, "minimumFreeBytes": 2147483648, "maximumProgramsPerWork": 1, "maximumActors": 128, "maximumLiveAssignments": 512, "maximumDelegationEdges": 8, "maximumEvents": 32768, "maximumEventBytes": 67108864, "finalBuildWallSeconds": 900, "finalBuildMinimumFreeBytes": 3221225472, "finalBuildOutputBytes": 1610612736, "liveMinimumFreeBytes": 2147483648, "localSampledProcessMemoryStopBytes": 6442450944, "smallCheckOutputBytes": 2097152 },
+  "fixtureAmendment": { "controlledWorks": 9, "controlledActorSources": 3, "authenticatedServicePrincipals": 4, "tenants": 2, "resourceCounter": "100", "usualWorkBudget": "12", "additionalDynamicWorkBudget": "4", "maximumOriginalReservationSum": "100", "firstRealFutureSlotSeconds": 120, "firstCompletionObservationSeconds": 180, "originalDeadlineReset": false },
+  "cases": [
+    { "id": "ordinary-controlled-chain", "expected": "Real authenticated Work -> claimed production job -> exact offer -> authenticated recipient disposition -> S5 consumption -> isolated S6 value 42 -> independent literal criterion -> persisted evidence -> Work completion -> mounted readback." },
+    { "id": "wrong-recipient", "expected": "403 or opaque 404 at recipient/authority consumer, no disposition or resource use." },
+    { "id": "exact-terms", "expected": "Changed terms digest/revision rejected at exact terms consumer, not counted as acceptance." },
+    { "id": "duplicate-disposition", "expected": "Same authenticated request replays without another disposition, native charge or physical attempt." },
+    { "id": "shared-person-conflict", "expected": "Independent overlapping Work cannot accept already-committed actor at the serialized S5 occupation boundary." },
+    { "id": "current-authority", "expected": "Revoked canonical actor/grant/evidence fences dependent use/read; accepted history and original resource exposure remain." },
+    { "id": "private-recipient-view", "expected": "Recipient receives only their own task/terms; another principal/tenant and delayed old-principal reply cannot reveal parent or other assignments." },
+    { "id": "physical-worker-kill", "expected": "SIGKILL after durable accepted/intended state, real lease/fence recovery under original root/grant/deadline; uncertain original attempt is read-only, not resubmitted." },
+    { "id": "full-domain-profile", "expected": "128 canonical-shaped synthetic actors, 512 live records and depth eight in one complete domain check; explicit excess refusal. Not native population or human proof." },
+    { "id": "actual-future-slot", "expected": "Early authenticated START refuses; the ordinary worker wakes through its scheduled queue and actual database intent time is not before the accepted slot. The original deadline does not move." },
+    { "id": "dynamic-request-return", "expected": "An actually accepted controlled service creates a child; that actual child accepts and requests work from an original upstream participant. Independently checked physical returns and another refinement after known child spend close the full original Work. No new financial root, certificate mutation, inherited acceptance, duplicated intent or human claim." },
+    { "id": "final-built-path", "expected": "Actual built route modules, production worker registration and mounted Work panel repeat the controlled owning chain." },
+    { "id": "cold-reconstruction", "expected": "Separate source reconstruction, locked dependencies and explicit assets reproduce build and controlled owning chain; no builder-absolute dependency." },
+    { "id": "genuine-human-chain", "expected": "Only actually consented authorized human acceptance, return work and judgment pass. Controlled/service/model callbacks cannot pass; unavailable participation is BLOCKED, never simulated." }
+  ],
+  "separateGates": ["GENUINE_HUMAN", "PROTECTED_STRUCTURAL_QUALIFICATION", "METHOD_ADMISSION", "FIELD_ACTIVATION", "QUALIFIED_COMPLETED_Z_COMPARISON", "ECONOMICS"]
+}
