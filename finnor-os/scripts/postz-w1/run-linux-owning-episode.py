@@ -108,6 +108,9 @@ def main():
             receipt = json.loads((owner / name).read_text())
             (report / name).write_text(json.dumps(receipt, indent=2) + "\n")
             owning = json.loads((owner / "results.json").read_text())
+            pressure_preparation = owner / "internal-pressure/source-preparation.json"
+            if args.mode == "internal-pressure" and pressure_preparation.exists():
+                shutil.copyfile(pressure_preparation, report / "pressure-source-preparation.json")
             cases = []
             for row in owning["results"]:
                 observed = row.get("observed", {})
@@ -122,6 +125,21 @@ def main():
                 "status": owning["status"], "migrationNames": owning["migrationNames"],
                 "observedMigrationNames": owning["observedMigrationNames"], "cases": cases,
                 "shutdown": owning["shutdown"], "rawRuntimeUploaded": False}, indent=2) + "\n")
+            internal_diagnostics = []
+            for group, key in (("internal-revocation", "boundary"), ("internal-drift", "facet")):
+                for path in sorted((owner / group).glob("*.json")):
+                    observed = json.loads(path.read_text())
+                    if not isinstance(observed, dict) or key not in observed:
+                        continue
+                    failure = str(observed.get("failure", ""))
+                    stack = str(observed.get("stack", ""))
+                    internal_diagnostics.append({key: observed[key], "status": observed.get("status"),
+                        "failureCodes": sorted(set(re.findall(r"\b[A-Z][A-Z0-9_]{4,127}\b", failure))),
+                        "frames": [line for line in stack.splitlines()[1:]
+                                   if re.match(r"^\s+at [A-Za-z0-9_.$<> /:@()\[\]-]+:\d+:\d+\)?$", line)]})
+            if internal_diagnostics:
+                (report / "internal-boundary-diagnostics.json").write_text(
+                    json.dumps(internal_diagnostics, indent=2) + "\n")
             assert child.returncode == 0, "ORIGINAL_DRIVER_FAILED"
             assert receipt["status"] == ("PASS_LOCAL_NATIVE_BOOTSTRAP" if native else
                 "PASS_LOCAL_OWNING_SOURCE_SUITE" if args.mode == "abc" else "PASS_LOCAL_INTERNAL_OWNING_GROUP")

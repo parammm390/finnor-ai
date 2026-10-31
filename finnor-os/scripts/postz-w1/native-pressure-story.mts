@@ -60,6 +60,20 @@ export async function nativePressureStory(e: any) {
       { label: "C_ORIGINAL_DEADLINE_MISSED", workId: c.work.workId, programId: c.program.programId, searchId: cSearch },
       { label: "B_UNAFFECTED_PROGRESS", workId: b.work.workId, programId: b.program.programId, searchId: bSearch },
     ];
+    report.sourcePreparation = {
+      observedAt: new Date().toISOString(),
+      searches: (await e.admin.query(`SELECT id,status,reason,program_id,generation
+        FROM finnor_os.p2_requests WHERE id=ANY($1::uuid[]) ORDER BY id`, [[aSearch, bSearch, cSearch]])).rows,
+      programmes: (await e.admin.query(`SELECT p.id,p.status,p.episode_id,e.deadline_at
+        FROM finnor_os.p1_requests p JOIN finnor_os.p1_episodes e ON e.id=p.episode_id
+        WHERE p.id=ANY($1::uuid[]) ORDER BY p.id`, [population.map(row => row.programId)])).rows,
+      units: (await e.admin.query(`SELECT id,search_id,kind,status,attempts
+        FROM finnor_os.p2_units WHERE search_id=ANY($1::uuid[]) ORDER BY search_id,id`, [[aSearch, bSearch, cSearch]])).rows,
+      jobs: (await e.admin.query(`SELECT id,type,status,priority,protocol_version,run_at,
+        payload->>'searchId' AS search_id FROM finnor_os.jobs
+        WHERE payload->>'searchId'=ANY($1::text[]) ORDER BY run_at,id`, [[aSearch, bSearch, cSearch]])).rows,
+    };
+    await artifact("source-preparation.json", report.sourcePreparation);
     // Disclosed operator-owned queue priorities, fixed before any native claim.
     // No due time, age, deadline, grant, attempt or application result is edited.
     const priorityInputs = [];
