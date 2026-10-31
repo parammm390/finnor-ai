@@ -69,7 +69,7 @@ export async function nativeStandingStory(e: any, sourceFixture: {
         { kind: "query", capability: "query:pe_world_state" },
         { kind: "wait", capability: "wait:event" },
         { kind: "check", capability: "check:objective_success" },
-      ], autonomyLimits: { maxActions: 0, maxQueries: 1, maxReplans: 4,
+      ], autonomyLimits: { maxActions: 1, maxQueries: 1, maxReplans: 4,
         maxPlannerCalls: 4, maxWallClockMs: 60000 },
     });
     const originalContext = await resolveOperatingInteractionContext({

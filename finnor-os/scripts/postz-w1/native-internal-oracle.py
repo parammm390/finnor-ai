@@ -93,6 +93,10 @@ def standing(data):
     work_ids = {row["after"]["work"]["id"] for row in information}
     identity = data["standing"]
     assert identity["workId"] not in work_ids and len(work_ids) == 2
+    profile = data["admittedWorker"]["revision"]
+    assert profile["autonomyLimits"]["maxActions"] == 1
+    assert {(grant["kind"], grant["capability"]) for grant in profile["capabilityGrants"]} == {
+        ("query", "query:pe_world_state"), ("wait", "wait:event"), ("check", "check:objective_success")}
     waiting, woken, continued = (data[key] for key in ("waiting", "woken", "continued"))
     assert waiting["inputs"][0]["id"] == identity["workInputId"]
     assert waiting["inputs"][0]["instruction_text"] == data["originalMandate"]

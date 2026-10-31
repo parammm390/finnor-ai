@@ -26,3 +26,20 @@ Rerun the existing Linux owning matrix and `worker-image-layout.e2e.test.mjs`.
 These are separate contracts; a positive native pass does not cover standing,
 pressure or the relocated installed image. Record source commit, original inputs,
 observed failure or pass, process cleanup and independent oracle results.
+
+The repaired observer exposed a second fixture error locally: P7 deliberately
+requires an agent-profile action ceiling of at least one. Do not relax that
+governed owner contract. Configure its valid minimum ceiling with exactly the
+original query/wait/check capability grants; keep the original standing Work's
+action budget at zero. The independent oracle must check both the profile grants
+and the unchanged zero-action Work cuts. A profile ceiling supplies no capability
+grant and cannot override the Work budget.
+
+The expanded Linux diagnostics distinguish three remaining faults: the original
+C pressure programme has already expired before native staging completes; some
+P1 preparations still return QUEUED; PRICE and MODEL drift pass while LATENCY
+reaches FAILED rather than TESTED. Preserve these distinct failures. Copy only
+the existing preparation observations' safe job/state fields and failure codes
+to CI. Capture the real programme readback and terminal cut before asserting its
+status, so the intended acceptance check cannot erase the cause of a failure.
+Do not extend an original deadline or admit a case that missed its real pause.

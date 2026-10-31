@@ -104,8 +104,10 @@ export async function nativeDriftStory(e: any) {
           assert(observed.reselected.p2_events.some((row: any) => row.search_id === searchId &&
             row.kind === "W1_PRE_ADMISSION_REPLANNED"));
           if (facet === "LATENCY") {
-            assert.equal(await driveNativeProgram(e.admin, queue, programId, performance.now()), "TESTED");
+            observed.nativeTerminalStatus = await driveNativeProgram(e.admin, queue, programId, performance.now());
             observed.result = await http.call("program-read", { programId });
+            observed.terminal = await internalOwnerCut(e, f.f.tenant);
+            assert.equal(observed.nativeTerminalStatus, "TESTED");
             assert.equal(observed.result.status, 200, JSON.stringify(observed.result));
             assert.equal(observed.result.body.program.result.values.netEquity.value, "43");
             observed.expectedNext = "FRESH_NATIVE_FALLBACK_UNDER_REVISED_LATENCY_CONFIGURATION";
