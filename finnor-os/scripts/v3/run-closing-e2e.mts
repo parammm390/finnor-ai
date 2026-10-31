@@ -117,9 +117,18 @@ async function ready(service: Awaited<ReturnType<typeof launch>>, label: string)
 }
 async function request(f: any, path: string, body?: unknown, actorId?: string, token?: string) {
   const began = performance.now();
-  const response = await fetch(apiOrigin + path, { method: body === undefined ? "GET" : "POST", headers: {
+  let response: Response;
+  try { response = await fetch(apiOrigin + path, { method: body === undefined ? "GET" : "POST", headers: {
     authorization: "Bearer " + (token ?? bearer(f, actorId)), "content-type": "application/json",
-  }, body: JSON.stringify(body), signal: AbortSignal.timeout(90000) });
+  }, body: JSON.stringify(body), signal: AbortSignal.timeout(90000) }); }
+  catch (error) {
+    const cause = error && typeof error === "object" && "cause" in error ? error.cause : null;
+    const code = cause && typeof cause === "object" && "code" in cause ? String(cause.code) : null;
+    await save("http-transport-failure.json", { path, elapsedMs: performance.now() - began,
+      errorType: error instanceof Error ? error.name : "Unknown", causeCode: code && /^[A-Z0-9_]{1,64}$/.test(code) ? code : null,
+      causeType: cause instanceof Error ? cause.name : null, retried: false, credentialsRecorded: false });
+    throw error;
+  }
   const text = await response.text();
   let parsed: any; try { parsed = JSON.parse(text); } catch { throw Error(`Actual Next returned ${response.status}: ${text.slice(0, 1000)}`); }
   const result = { status: response.status, body: parsed, elapsedMs: performance.now() - began };
@@ -787,7 +796,8 @@ try {
           FROM finnor_os.pe_closing_programmes WHERE tenant_id=$1 AND id=$2)
         ORDER BY h.subject_id,h.revision LIMIT 16`,
       financial: `SELECT l.node_key,l.business_effect_id,l.consumption_ref,e.semantic_hash,o.verification_status,
-        o.observation,co.body consumption,st.status consumption_status,st.effect_ref,ro.body financial_origin,r.status reservation_status
+        o.observation,co.body consumption,co.principal_id consumption_principal_id,st.status consumption_status,
+        st.effect_ref,ro.body financial_origin,ro.principal_id reservation_principal_id,r.status reservation_status
         FROM finnor_os.pe_closing_node_links l JOIN finnor_os.business_effects e ON e.tenant_id=l.tenant_id AND e.id=l.business_effect_id
         JOIN finnor_os.external_operations o ON o.tenant_id=e.tenant_id AND o.business_effect_id=e.id
         JOIN finnor_os.s5_consumptions co ON co.tenant_id=l.tenant_id AND co.consumption_id=l.consumption_ref->>'id'

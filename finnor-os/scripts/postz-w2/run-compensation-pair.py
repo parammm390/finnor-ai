@@ -213,6 +213,7 @@ def main():
             record.update(status="FAIL", cleanupError=str(error))
         try:
             for name in ("results.json", "closing-reader-privacy-original.json", "closing-reader-privacy-result.json",
+                    "http-transport-failure.json",
                     "workforce-compensation/settled-owner-before-projection-assertion.json",
                     "workforce-compensation/receiving-join-" + selected + ".json"):
                 source = owner / name
@@ -223,6 +224,14 @@ def main():
                 shutil.copyfile(originals[0], report / "original-obligation.json")
             elif len(originals) > 1:
                 raise AssertionError("AMBIGUOUS_ORIGINAL_CONTROLLED_OBLIGATION")
+            api_log = owner / "api.log"
+            if api_log.exists():
+                api_text = api_log.read_text()
+                record["actualNextDiagnostics"] = {
+                    "memoryThresholdRestarts": api_text.count("Server is approaching the used memory threshold, restarting"),
+                    "heapOutOfMemory": "heap out of memory" in api_text,
+                    "fatalError": "FATAL ERROR" in api_text,
+                }
         except BaseException as error:
             record.update(status="FAIL", evidenceError=str(error))
         try:
