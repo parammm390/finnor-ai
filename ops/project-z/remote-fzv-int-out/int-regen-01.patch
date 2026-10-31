@@ -1,0 +1,433 @@
+diff --git a/docs/centropy/capability-coverage.json b/docs/centropy/capability-coverage.json
+index 1fe76d7..f38ad1b 100644
+--- a/docs/centropy/capability-coverage.json
++++ b/docs/centropy/capability-coverage.json
+@@ -8,10 +8,10 @@
+     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
+   },
+   "schema": "centropy.capability-coverage-audit/v1",
+-  "generatedAt": "2026-10-30T12:26:20.431Z",
+-  "sourceBaseCommit": "6f30dc21c9378928b4bbd0c7f0fd17145acc5cc7",
++  "generatedAt": "2026-10-30T20:31:35.119Z",
++  "sourceBaseCommit": "49f9be817f298ee5807878901eb3061af4ee2c19",
+   "manifestSha256": "047da00ad53bc39b585f00a685dc706f8a0971d6d7b8b96380df70f1032c0921",
+-  "formsSha256": "f1b6c932cab041e07536e50f56bcbddbc9aaa62c8fd3e3d911f2d3bb2b7cbf57",
++  "formsSha256": "a242706604fe07b7579ec20a152788fe87fd54d3a24b986187654d2e9bcee371",
+   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
+   "counts": {
+     "total": 696,
+@@ -1209,7 +1209,7 @@
+       },
+       {
+         "file": "src/lib/jarvis/openapi-types.ts",
+-        "sha256": "6810cfeb9656e694f3d80f027251042edcc44aea9bfc569ef8797f8079d9ae94"
++        "sha256": "676051b681b4d6a0e32ff0b65ae1cf58e05be89777de7ad62386d5596ba0a767"
+       },
+       {
+         "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
+@@ -1341,7 +1341,7 @@
+       },
+       {
+         "file": "src/lib/centropy/human-forms.generated.json",
+-        "sha256": "f1b6c932cab041e07536e50f56bcbddbc9aaa62c8fd3e3d911f2d3bb2b7cbf57"
++        "sha256": "a242706604fe07b7579ec20a152788fe87fd54d3a24b986187654d2e9bcee371"
+       },
+       {
+         "file": "src/components/centropy/controls/CanonicalRecordForm.tsx",
+@@ -1493,7 +1493,7 @@
+       },
+       {
+         "file": "finnor-os/packages/private-equity/src/project-z/z4-execution-proof/ExecutionProofPanel.tsx",
+-        "sha256": "b6649b3fee7f0b969055f2af39ee707c395a4b2bea0bfdadbe0d8e1abe1aeca2"
++        "sha256": "c981b24552141cb1680fb2f9c1e75a119de940f5f9a91cff0f66b2ab956f6046"
+       },
+       {
+         "file": "finnor-os/packages/private-equity/src/project-z/z1-shared-work/work-panel.tsx",
+diff --git a/finnor-os/openapi.json b/finnor-os/openapi.json
+index 8ebc374..2ef9215 100644
+--- a/finnor-os/openapi.json
++++ b/finnor-os/openapi.json
+@@ -16278,6 +16278,11 @@
+               "compilerFrozenAt"
+             ],
+             "additionalProperties": false
++          },
++          "adoptWorkId": {
++            "type": "string",
++            "format": "uuid",
++            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+           }
+         },
+         "required": [
+diff --git a/finnor-os/packages/epistemic-runtime/src/strategic-response/source-manifest.generated.ts b/finnor-os/packages/epistemic-runtime/src/strategic-response/source-manifest.generated.ts
+index e14ce77..79e927b 100644
+--- a/finnor-os/packages/epistemic-runtime/src/strategic-response/source-manifest.generated.ts
++++ b/finnor-os/packages/epistemic-runtime/src/strategic-response/source-manifest.generated.ts
+@@ -68,7 +68,7 @@ export default {
+     },
+     {
+       "path": "../../../private-equity/src/enterprise-control.ts",
+-      "sha256": "88a2b4819930bde9d23430d024ae724b10b5009ddce271f6b6312f90d428f77e"
++      "sha256": "cc04fd355ac146885dc7da12e872af5108f147cd56c60dc186b80e0426caf011"
+     },
+     {
+       "path": "../../../capability-evolution/src/strategic-response-port.ts",
+diff --git a/finnor-os/packages/orchestration/src/capabilities/planner-replay-manifest.json b/finnor-os/packages/orchestration/src/capabilities/planner-replay-manifest.json
+index 4133473..92ed8cc 100644
+--- a/finnor-os/packages/orchestration/src/capabilities/planner-replay-manifest.json
++++ b/finnor-os/packages/orchestration/src/capabilities/planner-replay-manifest.json
+@@ -450,8 +450,8 @@
+     },
+     {
+       "file": "packages/db/migration-head.ts",
+-      "bytes": 276,
+-      "sha256": "c11af9614100041f5d5dead20d4799b170d7c88e27f19b5a5b274884a51b2643"
++      "bytes": 284,
++      "sha256": "99616c3ec888fd9b67d1d69d31daa4755d1afb7aba08ffc96617adbf62344924"
+     },
+     {
+       "file": "packages/db/migrations/0150_portfolio_resource_clearing.sql",
+@@ -976,7 +976,7 @@
+     {
+       "file": "packages/epistemic-runtime/src/strategic-response/source-manifest.generated.ts",
+       "bytes": 3485,
+-      "sha256": "e7258a340aac25de086448911689a6e0452f0bcccfc34bec6ca9e0e918e09f92"
++      "sha256": "c1171e2f6c5bb17bb0eeaf9ae1ae4823d165e18c1af28db0975df5a8729a3cbe"
+     },
+     {
+       "file": "packages/epistemic-runtime/src/strategic-response/source-paths.ts",
+@@ -1435,8 +1435,8 @@
+     },
+     {
+       "file": "packages/orchestration/src/project-z/z0-convergence/institution-origin.ts",
+-      "bytes": 17258,
+-      "sha256": "5ee67ab595155e27b78b65c162d700c865f1eb62d2207bd026abf60d503199eb"
++      "bytes": 17660,
++      "sha256": "bd55b85f1f4a4777f6a1ff658ec60dd2f2dc42364a5ebf878d2ccacdc70c948a"
+     },
+     {
+       "file": "packages/orchestration/src/project-z/z0-convergence/original-work-observation.ts",
+@@ -1590,8 +1590,8 @@
+     },
+     {
+       "file": "packages/private-equity/src/application-semantics/api.ts",
+-      "bytes": 27486,
+-      "sha256": "8a97c2484347b481a7c2933c368fb75eb44b819d8b43ab58a926700cdbd5bbbf"
++      "bytes": 34243,
++      "sha256": "906d4e91e2d4c18c932b074691cb20f3bf131f82fc8a4dee49d0f605e6ff3661"
+     },
+     {
+       "file": "packages/private-equity/src/application-semantics/checker.ts",
+@@ -1618,6 +1618,11 @@
+       "bytes": 7544,
+       "sha256": "2a611a6361faaa2a7c96a7b802cc24917e1ba9efd6553f699aecbc3c70aaa80a"
+     },
++    {
++      "file": "packages/private-equity/src/application-semantics/governed.ts",
++      "bytes": 10525,
++      "sha256": "8d2e0e50c69fb21b5ebfd260b79d7218b72b41a1c34d74f5253a2078e5762f9e"
++    },
+     {
+       "file": "packages/private-equity/src/application-semantics/learner.ts",
+       "bytes": 17332,
+@@ -1640,13 +1645,13 @@
+     },
+     {
+       "file": "packages/private-equity/src/application-semantics/ports.ts",
+-      "bytes": 5028,
+-      "sha256": "92f2ee31091afe4267935bc25a5197dd3310b46a3b985d3214e078a75165c01e"
++      "bytes": 5467,
++      "sha256": "a8680aef8019c075ccd34d5a439344c16b513a3e64e50693c04935649ef75c44"
+     },
+     {
+       "file": "packages/private-equity/src/application-semantics/runtime.ts",
+-      "bytes": 60894,
+-      "sha256": "98e823ee3d1e48139dffed4dd3d7b6437a67145435c7207b2ea3fd1d4129d294"
++      "bytes": 61670,
++      "sha256": "b7770eda50dfde00ce8b2086cf4271993c845ce674bd3313f902ab06a2af818f"
+     },
+     {
+       "file": "packages/private-equity/src/application-semantics/schema-pattern.ts",
+@@ -1660,8 +1665,8 @@
+     },
+     {
+       "file": "packages/private-equity/src/application-semantics/store.ts",
+-      "bytes": 19877,
+-      "sha256": "08185d186ba7067daa2338c240769e5b1c2af464f80a5c60d905f7ffa8088090"
++      "bytes": 21643,
++      "sha256": "907925e3385dfb4687a155df2dcc7712c127ba38b11e80e13ab061d9bc64f762"
+     },
+     {
+       "file": "packages/private-equity/src/application-semantics/validity.ts",
+@@ -2171,7 +2176,7 @@
+     {
+       "file": "packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
+       "bytes": 8649,
+-      "sha256": "6fbd9c034718d5f8586febc4d80454490bceb8a7f80251738aeef7bd7f544869"
++      "sha256": "57968bdbdb9e95e3df00c63f1d6cedcdfe22508e697e5fe44e501f804de45d9e"
+     },
+     {
+       "file": "packages/private-equity/src/enterprise-applications/source-paths.ts",
+@@ -2190,8 +2195,8 @@
+     },
+     {
+       "file": "packages/private-equity/src/enterprise-control.ts",
+-      "bytes": 81147,
+-      "sha256": "88a2b4819930bde9d23430d024ae724b10b5009ddce271f6b6312f90d428f77e"
++      "bytes": 81630,
++      "sha256": "cc04fd355ac146885dc7da12e872af5108f147cd56c60dc186b80e0426caf011"
+     },
+     {
+       "file": "packages/private-equity/src/enterprise-economic-assignments.ts",
+@@ -2541,7 +2546,7 @@
+     {
+       "file": "packages/private-equity/src/policy-learning/source-manifest.generated.ts",
+       "bytes": 13612,
+-      "sha256": "4b9db733d648e0cf236eb9b8e6ded6b0c190119de700fef2caaab0c7d69e1d63"
++      "sha256": "03651ef3f464ff08ba0aa8efa4ce67629abde1b195aa3a80eea21240e8c71b18"
+     },
+     {
+       "file": "packages/private-equity/src/policy-learning/source-paths.ts",
+@@ -2715,8 +2720,8 @@
+     },
+     {
+       "file": "packages/private-equity/src/program-synthesis/owners.ts",
+-      "bytes": 12107,
+-      "sha256": "387b3b4ae6fd193c4b9fab9eb15f67841f2fb5570eb7beb3dad30e18476415a4"
++      "bytes": 14109,
++      "sha256": "f33b150e3c9285504da4e8dce101f6268af1f126ce7d0a43fda4bc1571033cea"
+     },
+     {
+       "file": "packages/private-equity/src/program-synthesis/plan.ts",
+@@ -2785,18 +2790,18 @@
+     },
+     {
+       "file": "packages/private-equity/src/project-z/z3-viability/general-consumer.ts",
+-      "bytes": 22365,
+-      "sha256": "2d90341dea5f7a39a9e92dc1102843ceafa5a28c5954bae859cab1deac42a3ed"
++      "bytes": 23680,
++      "sha256": "9cfe7902fd38ade34f5bf9e834a8e44158f67058f1887de4b5fcf1aaf96c3abf"
+     },
+     {
+       "file": "packages/private-equity/src/project-z/z3-viability/general-model.ts",
+-      "bytes": 25894,
+-      "sha256": "c407054ddf0d14ca9611a5526b38d39e3f37ddd4399e8cc5e6d2cf290986b0c0"
++      "bytes": 26772,
++      "sha256": "d0691dd9b9f9c37062ec3324e8c5e46b434efe966b5a68e759305ad03d14970e"
+     },
+     {
+       "file": "packages/private-equity/src/project-z/z3-viability/general-owners.ts",
+-      "bytes": 38605,
+-      "sha256": "0a0b57703eee614283b1939f321fec890299b9efdc8b706a9dc83f94d68a0066"
++      "bytes": 49172,
++      "sha256": "8d2d7c8d4ccc3b822254f43663eeddaad0b550c18be32f6e15ce3812ba78a111"
+     },
+     {
+       "file": "packages/private-equity/src/project-z/z3-viability/general-transition.ts",
+@@ -2835,8 +2840,8 @@
+     },
+     {
+       "file": "packages/private-equity/src/project-z/z4-execution-proof/contracts.ts",
+-      "bytes": 6036,
+-      "sha256": "96a2526869a8875f5d17f550511b9314bcfc210d1d1f66dddad2db828d5b3f00"
++      "bytes": 6292,
++      "sha256": "36190040c0db55fde0b5550dc9e24c53a7c4dbfc801ca346f7a636c935ad6126"
+     },
+     {
+       "file": "packages/private-equity/src/project-z/z4-execution-proof/identity.ts",
+@@ -2855,8 +2860,8 @@
+     },
+     {
+       "file": "packages/private-equity/src/project-z/z4-execution-proof/plan.ts",
+-      "bytes": 9830,
+-      "sha256": "2bab01832977f44ec3c9c25bb34960662f2f17e42ef65c096613b6fe14f43df3"
++      "bytes": 11840,
++      "sha256": "ff0b2aad941ab8b0f5d030b079816e3b8eb7dc7152eb3d1895d0af9df392d6be"
+     },
+     {
+       "file": "packages/private-equity/src/project-z/z4-execution-proof/qualification-host.ts",
+@@ -2910,8 +2915,8 @@
+     },
+     {
+       "file": "packages/private-equity/src/project-z/z5-institution-linker/owners.ts",
+-      "bytes": 17099,
+-      "sha256": "bda8a614741811cd80763afb4f98be1f0ca02260216c772103e1b31d47dac2b8"
++      "bytes": 17327,
++      "sha256": "8ad2fb4f21c7ab171c435738876871cbc21d8463641f4857f7975bf458d11c43"
+     },
+     {
+       "file": "packages/private-equity/src/project-z/z5-institution-linker/process.ts",
+@@ -3066,7 +3071,7 @@
+     {
+       "file": "packages/private-equity/src/system-identification/source-manifest.generated.ts",
+       "bytes": 19556,
+-      "sha256": "13664269da90f430a4fa3555652a760150ac2b187148bb17b0e4cac992e5c0a8"
++      "sha256": "0da1dd129f874b3d74c8b24484df1d79456f74e86c2665fac725fc155eab0d49"
+     },
+     {
+       "file": "packages/private-equity/src/system-identification/source-paths.ts",
+diff --git a/finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts b/finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts
+index bdf3f1f..5d704e1 100644
+--- a/finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts
++++ b/finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts
+@@ -96,7 +96,7 @@ export default {
+     },
+     {
+       "path": "finnor-os/packages/db/migration-head.ts",
+-      "sha256": "c11af9614100041f5d5dead20d4799b170d7c88e27f19b5a5b274884a51b2643"
++      "sha256": "99616c3ec888fd9b67d1d69d31daa4755d1afb7aba08ffc96617adbf62344924"
+     },
+     {
+       "path": "finnor-os/packages/db/migrations/0189_x3_enterprise_applications.sql",
+@@ -128,7 +128,7 @@ export default {
+     },
+     {
+       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+-      "sha256": "88a2b4819930bde9d23430d024ae724b10b5009ddce271f6b6312f90d428f77e"
++      "sha256": "cc04fd355ac146885dc7da12e872af5108f147cd56c60dc186b80e0426caf011"
+     },
+     {
+       "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+@@ -192,7 +192,7 @@ export default {
+     },
+     {
+       "path": "src/lib/centropy/capability-manifest.generated.json",
+-      "sha256": "eff3db21525b903cc95ec8118bd84b5feb7d2cdf89954449095f3abb0a9324a9"
++      "sha256": "047da00ad53bc39b585f00a685dc706f8a0971d6d7b8b96380df70f1032c0921"
+     },
+     {
+       "path": "package-lock.json",
+diff --git a/finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts b/finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts
+index e3857a5..75aee49 100644
+--- a/finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts
++++ b/finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts
+@@ -140,7 +140,7 @@ export default {
+     },
+     {
+       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
+-      "sha256": "6fbd9c034718d5f8586febc4d80454490bceb8a7f80251738aeef7bd7f544869"
++      "sha256": "57968bdbdb9e95e3df00c63f1d6cedcdfe22508e697e5fe44e501f804de45d9e"
+     },
+     {
+       "path": "finnor-os/packages/authority/src/index.ts",
+@@ -172,7 +172,7 @@ export default {
+     },
+     {
+       "path": "finnor-os/packages/db/migration-head.ts",
+-      "sha256": "c11af9614100041f5d5dead20d4799b170d7c88e27f19b5a5b274884a51b2643"
++      "sha256": "99616c3ec888fd9b67d1d69d31daa4755d1afb7aba08ffc96617adbf62344924"
+     },
+     {
+       "path": "finnor-os/packages/db/migrations/0190_x5_experience_policy.sql",
+@@ -264,7 +264,7 @@ export default {
+     },
+     {
+       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+-      "sha256": "88a2b4819930bde9d23430d024ae724b10b5009ddce271f6b6312f90d428f77e"
++      "sha256": "cc04fd355ac146885dc7da12e872af5108f147cd56c60dc186b80e0426caf011"
+     },
+     {
+       "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+@@ -308,7 +308,7 @@ export default {
+     },
+     {
+       "path": "src/lib/centropy/capability-manifest.generated.json",
+-      "sha256": "eff3db21525b903cc95ec8118bd84b5feb7d2cdf89954449095f3abb0a9324a9"
++      "sha256": "047da00ad53bc39b585f00a685dc706f8a0971d6d7b8b96380df70f1032c0921"
+     },
+     {
+       "path": "finnor-os/scripts/x3/stamp-source.mts",
+diff --git a/finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts b/finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts
+index ef27724..b882b5a 100644
+--- a/finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts
++++ b/finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts
+@@ -140,7 +140,7 @@ export default {
+     },
+     {
+       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
+-      "sha256": "6fbd9c034718d5f8586febc4d80454490bceb8a7f80251738aeef7bd7f544869"
++      "sha256": "57968bdbdb9e95e3df00c63f1d6cedcdfe22508e697e5fe44e501f804de45d9e"
+     },
+     {
+       "path": "finnor-os/packages/authority/src/index.ts",
+@@ -172,7 +172,7 @@ export default {
+     },
+     {
+       "path": "finnor-os/packages/db/migration-head.ts",
+-      "sha256": "c11af9614100041f5d5dead20d4799b170d7c88e27f19b5a5b274884a51b2643"
++      "sha256": "99616c3ec888fd9b67d1d69d31daa4755d1afb7aba08ffc96617adbf62344924"
+     },
+     {
+       "path": "finnor-os/packages/db/migrations/0190_x5_experience_policy.sql",
+@@ -264,7 +264,7 @@ export default {
+     },
+     {
+       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+-      "sha256": "88a2b4819930bde9d23430d024ae724b10b5009ddce271f6b6312f90d428f77e"
++      "sha256": "cc04fd355ac146885dc7da12e872af5108f147cd56c60dc186b80e0426caf011"
+     },
+     {
+       "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
+@@ -308,7 +308,7 @@ export default {
+     },
+     {
+       "path": "src/lib/centropy/capability-manifest.generated.json",
+-      "sha256": "eff3db21525b903cc95ec8118bd84b5feb7d2cdf89954449095f3abb0a9324a9"
++      "sha256": "047da00ad53bc39b585f00a685dc706f8a0971d6d7b8b96380df70f1032c0921"
+     },
+     {
+       "path": "finnor-os/scripts/x3/stamp-source.mts",
+diff --git a/src/lib/centropy/human-forms.generated.json b/src/lib/centropy/human-forms.generated.json
+index 5b1e382..eec465f 100644
+--- a/src/lib/centropy/human-forms.generated.json
++++ b/src/lib/centropy/human-forms.generated.json
+@@ -3425,6 +3425,11 @@
+               "compilerFrozenAt"
+             ],
+             "additionalProperties": false
++          },
++          "adoptWorkId": {
++            "type": "string",
++            "format": "uuid",
++            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+           }
+         },
+         "required": [
+diff --git a/src/lib/centropy/openapi-types.ts b/src/lib/centropy/openapi-types.ts
+index 708d811..af1345f 100644
+--- a/src/lib/centropy/openapi-types.ts
++++ b/src/lib/centropy/openapi-types.ts
+@@ -1,4 +1,4 @@
+-// Generated from finnor-os/openapi.json, SHA-256 2b2821ab00bd9f26e5d46ac77c41df512d05674821c75483d6f036a6b4948b58.
++// Generated from finnor-os/openapi.json, SHA-256 d4de4ca6e92a2b23720a7b4cfdcfb7e874803a32dafaf1ae755c9ea02bfc19a7.
+ export interface paths {
+     "/api/interventions/assess-pywhy": {
+         parameters: {
+@@ -49381,6 +49381,8 @@ export interface components {
+                 /** Format: date-time */
+                 compilerFrozenAt: string;
+             };
++            /** Format: uuid */
++            adoptWorkId?: string;
+         };
+         "execution-proof-plan": {
+             /** @constant */
+diff --git a/src/lib/jarvis/openapi-types.ts b/src/lib/jarvis/openapi-types.ts
+index 708d811..af1345f 100644
+--- a/src/lib/jarvis/openapi-types.ts
++++ b/src/lib/jarvis/openapi-types.ts
+@@ -1,4 +1,4 @@
+-// Generated from finnor-os/openapi.json, SHA-256 2b2821ab00bd9f26e5d46ac77c41df512d05674821c75483d6f036a6b4948b58.
++// Generated from finnor-os/openapi.json, SHA-256 d4de4ca6e92a2b23720a7b4cfdcfb7e874803a32dafaf1ae755c9ea02bfc19a7.
+ export interface paths {
+     "/api/interventions/assess-pywhy": {
+         parameters: {
+@@ -49381,6 +49381,8 @@ export interface components {
+                 /** Format: date-time */
+                 compilerFrozenAt: string;
+             };
++            /** Format: uuid */
++            adoptWorkId?: string;
+         };
+         "execution-proof-plan": {
+             /** @constant */

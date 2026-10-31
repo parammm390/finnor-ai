@@ -1,0 +1,96 @@
+{
+  "schema": "finnor.z1.listener-custody-probe.v1",
+  "status": "PASSED",
+  "uid": 1002,
+  "node": "v22.23.4",
+  "linkLocal": "169.254.0.21",
+  "source": "/home/factory-user/repos/fzv-w-z1/scope-z/phase-evidence/z1/probes/listener-custody-probe.mjs",
+  "rows": [
+    {
+      "id": "P1_LOOPBACK_LISTENER_ACCEPTED_AND_MIRROR_RECOGNISED_WHEN_PRESENT",
+      "expected": "accepted with one loopback row; zero or one platform forwarder",
+      "observed": {
+        "accepted": true,
+        "loopbackRows": 1,
+        "forwarders": [
+          {
+            "port": 33197,
+            "address": "169.254.0.21",
+            "pid": 148747,
+            "startTicks": "2703468",
+            "commandLineSha256": "6dc0c19aa146caeba5fe725c2e1ecc9d51f17e2ff174a3b89c62e755c6770195"
+          }
+        ]
+      },
+      "passed": true,
+      "note": "platform mirror present and recognised"
+    },
+    {
+      "id": "P2_FORKED_FORWARDER_CHILD_NOT_COUNTED",
+      "expected": "accepted with exactly one forwarder while a connection is open",
+      "observed": {
+        "accepted": true,
+        "loopbackRows": 1,
+        "forwarders": [
+          {
+            "port": 33197,
+            "address": "169.254.0.21",
+            "pid": 148747,
+            "startTicks": "2703468",
+            "commandLineSha256": "6dc0c19aa146caeba5fe725c2e1ecc9d51f17e2ff174a3b89c62e755c6770195"
+          }
+        ]
+      },
+      "passed": true
+    },
+    {
+      "id": "N1_WILDCARD_BIND_REFUSED",
+      "expected": "refused TARGET_LISTENER_MUST_BIND_LOOPBACK_ONLY naming the wildcard address",
+      "observed": {
+        "accepted": false,
+        "code": "TARGET_LISTENER_MUST_BIND_LOOPBACK_ONLY",
+        "detail": [
+          {
+            "port": 46299,
+            "family": "tcp",
+            "address": "0.0.0.0"
+          }
+        ]
+      },
+      "passed": true
+    },
+    {
+      "id": "N2_LINK_LOCAL_LISTENER_WITHOUT_FORWARDER_REFUSED",
+      "expected": "refused",
+      "observed": {
+        "accepted": false,
+        "code": "TARGET_LISTENER_MUST_BIND_LOOPBACK_ONLY",
+        "detail": [
+          {
+            "port": 37033,
+            "family": "tcp",
+            "address": "169.254.0.21"
+          }
+        ]
+      },
+      "passed": true
+    },
+    {
+      "id": "N3_LOOK_ALIKE_FORWARDER_NOT_ROOT_REFUSED",
+      "expected": "refused",
+      "observed": {
+        "accepted": false,
+        "code": "TARGET_LISTENER_MUST_BIND_LOOPBACK_ONLY",
+        "detail": [
+          {
+            "port": 34863,
+            "family": "tcp",
+            "address": "169.254.0.21"
+          }
+        ]
+      },
+      "passed": true,
+      "note": "same command line as the platform forwarder but owned by the probe's user"
+    }
+  ]
+}

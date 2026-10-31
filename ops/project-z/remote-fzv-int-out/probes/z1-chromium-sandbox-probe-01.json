@@ -1,0 +1,8 @@
+{
+  "executable": "/home/factory-user/repos/fzv-browsers/chromium-1228/chrome-linux64/chrome",
+  "chromiumSandbox": true,
+  "title": "probe",
+  "version": "149.0.7827.55",
+  "result": "LAUNCHED_WITH_SANDBOX",
+  "elapsedMs": 320
+}

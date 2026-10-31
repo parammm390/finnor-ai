@@ -1,0 +1,10 @@
+recorded_at=2026-10-30T21:24:30Z
+pid=147338 ppid=1 uid=1002 my_uid=1002
+start=Fri Oct 30 21:00:09 2026
+cmd=~/repos/fzv-z2-pack-w2/toolchain/bin/node --import tsx ~/repos/fzv-z2-pack-w2/install-03/pack/finnor-os/apps/worker/src/index.ts 
+cwd=~/repos/fzv-z2-pack-w2/install-03/pack/finnor-os
+w2-dev-04.exit=1
+w2-dev-04.exit mtime=2026-10-30 21:00:29.292821012
+reason=orphan of finished run w2-dev-04 (parent pid 1); Z5 worker reported it claims run_x1_institution_compiler_v1 jobs from the shared database port 55441
+action=SIGTERM_then_SIGKILL_if_alive_after_10s
+result=EXITED

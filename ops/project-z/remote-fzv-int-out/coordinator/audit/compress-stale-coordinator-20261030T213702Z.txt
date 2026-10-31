@@ -1,0 +1,15 @@
+# compress-stale-coordinator 2026-10-30T21:37:02Z mode=--apply
+/dev/root        53G   46G  7.0G  87% /
+PACKED 1475MB -> 649MB /home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/delivery-20261026/execution-recovery-25/remote/checks/production-artifact-e2e-2/home (62001 entries)
+PACKED 461MB -> 392MB /home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/delivery-20261026/execution-recovery-25/remote/checks/production-artifact-e2e-3/home (7356 entries)
+PACKED 149MB -> 22MB /home/factory-user/repos/finnor-z-coordinator/.centropy-certification/a-native-01/postgres
+PACKED 72MB -> 9MB /home/factory-user/repos/finnor-z-coordinator/.centropy-certification/f29-tls-live-01/postgres
+PACKED 72MB -> 9MB /home/factory-user/repos/finnor-z-coordinator/.centropy-certification/f29-tls-live-02/postgres
+PACKED 149MB -> 22MB /home/factory-user/repos/finnor-z-coordinator/.centropy-certification/fzv-native-02/postgres
+PACKED 149MB -> 23MB /home/factory-user/repos/finnor-z-coordinator/.centropy-certification/h-native-02/postgres
+PACKED 148MB -> 22MB /home/factory-user/repos/finnor-z-coordinator/.centropy-certification/w3-native-01/postgres
+REMOVED regenerable 813MB /home/factory-user/repos/finnor-z-coordinator/node_modules
+REMOVED regenerable 955MB /home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules
+REMOVED regenerable 154MB /home/factory-user/repos/finnor-z-coordinator/.next
+REMOVED regenerable 298MB /home/factory-user/repos/finnor-z-coordinator/finnor-os/apps/api/.next
+/dev/root        53G   43G   11G  81% /
