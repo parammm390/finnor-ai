@@ -256,6 +256,18 @@ overlapping parent/child costs and the incomplete total ledger.
   eleventh run) with swap at 8.2 of 9.2 GB; the non-native part of a use fell
   to about 8.1 s from about 10.8 s. Native page-cache pre-read was not adopted;
   the 28.5 s HTTP invocation limit is unchanged. No current-cut owner pass.
+- Remote main `4a70c643` (PR #164) is merged into the branch as `cc539793`.
+  The release pins moved to `postx_y7_uniform_algorithms.sql`, Y5 now pins
+  `job-heartbeat.ts` and no longer pins `planner-replay-manifest.json` (a digest
+  cycle with the planner manifest), and both workers pass the new heartbeat
+  lease argument. Source checks pass at that cut
+  (`evidence/y5-completion/remote-main-merge-checks/RESULTS.md`); the CI jobs
+  that need PostgreSQL, Docker or a production-artifact build were not run.
+  The owner end-to-end was not rerun after the merge, so the nineteenth run
+  describes the pre-merge cut.
+- Publication: the Y5 commits and the merge are local only. `git push` failed
+  because this environment has no GitHub credential; no remote was written and
+  no pull request exists.
 - Installed, mounted-browser, native-proof, recovery and source-runtime-release
   gates are NOT_RUN at the current cut; Markov uniform is UNPROVED; external
   gates are NOT_ESTABLISHED. Reviewers so far are same-family models. No gate

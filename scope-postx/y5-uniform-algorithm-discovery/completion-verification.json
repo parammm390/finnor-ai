@@ -1,6 +1,7 @@
 {
   "schema": "finnor.postx.y5.completion-verification.v1",
   "baseCommit": "df9111da8c7a1170f1f074e43fdf5984eaa55b8b",
+  "mergedRemoteMain": "4a70c64398f9354b9aab57320301eb5043613c67",
   "sourceCut": "UNSEALED_IMPLEMENTATION_IN_PROGRESS",
   "qualification": "PUBLIC_DEVELOPMENT_ONLY",
   "rules": {
@@ -24,7 +25,22 @@
       "limitSeconds": 600,
       "status": "VERIFIED_BASELINE_ONLY",
       "currentCutResealRequired": true,
-      "note": "Integrated generated contracts, migration upgrade/replay and typechecks passed before later episode/v2 edits. Latest backend typecheck also passes; full current-cut validation remains."
+      "note": "Integrated generated contracts, migration upgrade/replay and typechecks passed before later episode/v2 edits. Latest backend typecheck also passes; full current-cut validation remains. Remote main 4a70c643 was merged afterwards; see remote-main-merge-source-checks."
+    },
+    {
+      "id": "remote-main-merge-source-checks",
+      "commands": [
+        "cd finnor-os && npm run authz:matrix:check && npm run openapi && npm run typecheck && npm run build:inputs:check && npm run release:manifest && npm run release:pe-domain-boundary",
+        "node scripts/release/verify-ci-workflows.mjs && node scripts/release/verify-test-shards.mjs && npm run workspace:check",
+        "npm run centropy:client:check && npm run centropy:manifest:check && npm run centropy:forms:check && npm run centropy:coverage:check && npm run release:p8-zero-resurrection",
+        "npx --no-install tsc --noEmit -p tsconfig.json && npm run lint",
+        "npm run release:truth && npm run test:release && node --test scripts/release/ci-process.e2e.test.mjs"
+      ],
+      "oracle": "The tree that merges remote main into the Y5 branch passes the source-check steps the repository CI runs without PostgreSQL, Docker or a production-artifact build; generated stamps and the planner replay manifest have a fixpoint",
+      "evidence": "evidence/y5-completion/remote-main-merge-checks/",
+      "limitSeconds": 600,
+      "status": "VERIFIED_SOURCE_CHECKS_ONLY",
+      "note": "Merge commit cc539793. All listed steps exit 0 at that cut; release:truth first failed on stale migration-head pins, which were advanced to postx_y7_uniform_algorithms.sql (decisions.tsv, last two rows) and then passed with test:release 81 of 81. NOT run on this host: CI jobs production-artifacts, worker-image, test shards, operating-profit, phase7 and correctness-regressions, and git diff --exit-code on a runner checkout. These checks do not qualify the Y5 owner end-to-end, installed runtime, mounted browser, native proof or recovery gates."
     },
     {
       "id": "complete-s5-episode-cut",
@@ -98,7 +114,7 @@
       "evidence": "evidence/y5-completion/total-owner-s8-nineteenth/",
       "status": "FAIL",
       "currentCutResealRequired": true,
-      "note": "FAIL at the current cut (resolution memo with pre-closing recheck). Nineteenth run (evidence/y5-completion/total-owner-s8-nineteenth/ and its .log) failed at verify-total-s8.mts:144: the winning concurrent evaluate returned 408 Y5_ORIGINAL_REQUEST_DEADLINE at 28500 ms and the other caller returned 200 in 2.8 s. Both consume-total legs PASSED (uses 26117 ms and 20975 ms). Native calls inside them took 18054 ms and 12898 ms against 5646 ms and 3800 ms in the eleventh run, while the non-native part of a use fell to about 8.1 s from about 10.8-11.0 s in the seventeenth run; host swap was 8.2 of 9.2 GB. The winner has no per-phase timeline because the run was unprofiled. Eighteenth run (memo before the recheck) FAIL at verify-total-owner.mts:108 on the first use: UNKNOWN Y5_NATIVE_DEADLINE after about 21 s before native start, while helper commands overlapped the run. Eleventh run PASS in 311564 ms at an EARLIER source cut (evidence/y5-completion/total-owner-s8-eleventh/ and total-owner-s8-eleventh.log): concurrent evaluate winner 26.0 s, only 2.5 s margin; consume-total legs 18.1 s and 12.5 s. Twelfth through seventeenth FAIL, each recorded in decisions.tsv. The 28.5 s limit is unchanged; no current-cut pass is claimed."
+      "note": "FAIL at the resolution-memo-with-recheck cut, which is before the remote-main merge (cc539793); the owner end-to-end was NOT rerun at the merge cut. Nineteenth run (evidence/y5-completion/total-owner-s8-nineteenth/ and its .log) failed at verify-total-s8.mts:144: the winning concurrent evaluate returned 408 Y5_ORIGINAL_REQUEST_DEADLINE at 28500 ms and the other caller returned 200 in 2.8 s. Both consume-total legs PASSED (uses 26117 ms and 20975 ms). Native calls inside them took 18054 ms and 12898 ms against 5646 ms and 3800 ms in the eleventh run, while the non-native part of a use fell to about 8.1 s from about 10.8-11.0 s in the seventeenth run; host swap was 8.2 of 9.2 GB. The winner has no per-phase timeline because the run was unprofiled. Eighteenth run (memo before the recheck) FAIL at verify-total-owner.mts:108 on the first use: UNKNOWN Y5_NATIVE_DEADLINE after about 21 s before native start, while helper commands overlapped the run. Eleventh run PASS in 311564 ms at an EARLIER source cut (evidence/y5-completion/total-owner-s8-eleventh/ and total-owner-s8-eleventh.log): concurrent evaluate winner 26.0 s, only 2.5 s margin; consume-total legs 18.1 s and 12.5 s. Twelfth through seventeenth FAIL, each recorded in decisions.tsv. The 28.5 s limit is unchanged; no current-cut pass is claimed."
     },
     {
       "id": "native-discovery-proof",
