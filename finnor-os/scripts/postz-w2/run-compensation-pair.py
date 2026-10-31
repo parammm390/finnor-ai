@@ -200,6 +200,16 @@ def main():
                 if row.get("kind") == "CONTROLLER_BLOCKED_WITH_RESPONSIBILITY_RETAINED"
                 and isinstance(row.get("body"), dict) and "diagnostic" in row["body"]
             ]
+        checker_log = owner / "checker.log"
+        if checker_log.exists():
+            record["independentCheckerDiagnostics"] = []
+            for line in checker_log.read_text().splitlines():
+                try:
+                    entry = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(entry, dict) and entry.get("event") == "INDEPENDENT_CLOSING_CHECK_FAILED":
+                    record["independentCheckerDiagnostics"].append(entry)
     finally:
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
         signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -225,6 +235,7 @@ def main():
     print(json.dumps({"episode": args.episode, "status": record["status"],
         "error": record.get("error"), "ownerFailure": record.get("ownerFailure"),
         "closingOwnerDiagnostics": record.get("closingOwnerDiagnostics"),
+        "independentCheckerDiagnostics": record.get("independentCheckerDiagnostics"),
         "receipt": str(report / "receipt.json")}))
     return 0 if record["status"] == "PASS" else 1
 
