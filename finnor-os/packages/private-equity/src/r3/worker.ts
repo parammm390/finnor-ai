@@ -113,7 +113,7 @@ export async function runIncentiveRuleSynthesisJob(payload: Record<string, unkno
       await assertR3Current(ctx, row);
       leases = await acquireComputeResourceLeases({ resourceKeys: ['native:r3'], requiredResourceKeys: ['native:r3'],
         tenantId: row.tenant_id, workloadClass: 'INTERACTIVE', ownerId: 'r3:' + x.deliveryAttemptId });
-      x.registerHeartbeat(() => withDatabaseExecutionDeadline(monotone, () => renewComputeResourceLeases(leases)));
+      x.registerHeartbeat(() => withDatabaseExecutionDeadline(monotone, () => renewComputeResourceLeases(leases)), { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
       watch = setInterval(() => {
         if (polling) return; polling = true;
         void withDatabaseExecutionDeadline(monotone, async () => {

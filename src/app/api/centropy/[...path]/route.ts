@@ -5,11 +5,13 @@
 // canApprove RBAC is the sole authorizer, this file makes no authorization decisions
 // beyond "is there a token at all" and "is this path on the allowlist". Only the
 // non-tenant health/liveness path accepts anonymous requests.
+import { ApiRequestError, readTextBody } from "@/lib/api/request"
 import { NextRequest } from "next/server"
 import { z } from "zod"
 import { getServiceToken } from "@/lib/centropy/proxy-auth"
 import { resolveProductRoute, type ProductCapability } from "@/lib/centropy/capability-manifest"
 import { CENTROPY_PROXY_READ_TIMEOUT_MS, CENTROPY_PROXY_WRITE_TIMEOUT_MS } from "./proxy-config"
+import { oauthRequestCookie, oauthResponseHeaders, oauthStartBody, oauthTransport } from "@/lib/centropy/oauth-transport"
 
 // Resolve this per request so a warmed serverless module cannot retain an old
 // upstream URL after configuration changes, and so the boundary is easy to test.
@@ -128,27 +130,36 @@ async function doForward(
     signal: controller.signal,
   };
   try {
+    const connection = oauthTransport(req, method, segments);
+    if (connection) {
+      init.redirect = "manual";
+      const cookie = oauthRequestCookie(req, connection);
+      if (cookie) init.headers = { ...init.headers, cookie };
+    }
     if (method === "POST" || method === "PUT" || method === "DELETE") {
-      const body = await req.text();
-      if (body.length > 2_000_000) return proxyError("Request body too large", 413);
-      try { JSON.parse(body.length > 0 ? body : "{}"); } catch { return proxyError("Invalid JSON body", 400); }
-      init.body = body.length > 0 ? body : "{}";
+      const body = await readTextBody(req, 2_000_000);
+      let parsed: unknown;
+      try { parsed = JSON.parse(body.length > 0 ? body : "{}"); } catch { return proxyError("Invalid JSON body", 400); }
+      init.body = connection?.step === "start" ? JSON.stringify(oauthStartBody(parsed, connection)) : body.length > 0 ? body : "{}";
     }
     const upstream = await fetch(url.toString(), init);
+    const headers = new Headers({
+      "content-type": upstream.headers.get("content-type") ?? "application/json",
+      "cache-control": "no-store",
+      ...(upstream.headers.get("content-disposition") ? { "content-disposition": upstream.headers.get("content-disposition")! } : {}),
+    });
+    if ([401,403].includes(upstream.status) && upstream.headers.get("x-finnor-identity-state") === "denied") headers.set("x-finnor-identity-state", "denied");
+    if (upstream.headers.get("retry-after")) headers.set("retry-after", upstream.headers.get("retry-after")!);
+    if (connection) oauthResponseHeaders(req, connection, upstream, headers);
     // Keep the proxy byte-preserving even though active P8 projections are JSON.
     const body = await upstream.arrayBuffer();
     return new Response(body, {
       status: upstream.status,
-      headers: {
-        "content-type": upstream.headers.get("content-type") ?? "application/json",
-        "cache-control": "no-store",
-        ...([401,403].includes(upstream.status)&&upstream.headers.get("x-finnor-identity-state")==="denied"
-          ?{"x-finnor-identity-state":"denied"}:{}),
-        ...(upstream.headers.get("content-disposition") ? { "content-disposition": upstream.headers.get("content-disposition")! } : {}),
-        ...(upstream.headers.get("retry-after") ? { "retry-after": upstream.headers.get("retry-after")! } : {}),
-      },
+      headers,
+
     });
   } catch (error) {
+    if (error instanceof ApiRequestError) return proxyError(error.message, error.status);
     if (controller.signal.aborted) {
       return proxyError(`Centropy backend timed out after ${timeoutMs / 1000} seconds`, 504);
     }
@@ -208,6 +219,12 @@ export async function GET(req: NextRequest, { params }: CentropyRouteContext): P
 
   const capability = resolveProductRoute("GET", segments);
   if (!capability) return proxyError("Not found", 404);
+  if (oauthTransport(req, "GET", segments)?.step === "callback") {
+    if (!checkRateLimit(clientIp(req))) return proxyError("Rate limit exceeded — slow down and try again shortly.", 429);
+    // Providers return the browser without a bearer header. The owner consumes
+    // its one-time state (and Google's browser PKCE cookie) to authenticate it.
+    return doForward(req, segments, "GET", undefined, capability);
+  }
   if (hasTestKey(req)) return forwardTest(req, segments, "GET", capability);
   const auth = hasBearer(req);
   if (!auth) return proxyError("Sign in required", 401);

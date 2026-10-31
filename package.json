@@ -27,9 +27,11 @@
     "release:verify": "node scripts/release/verify-release.mjs",
     "release:truth": "node scripts/release/validate-deployment-truth.mjs",
     "release:mutation-inventory": "node scripts/release/validate-production-mutation-inventory.mjs",
-    "release:generated-preflight": "npm run authz:matrix:check --prefix finnor-os && npm run openapi --prefix finnor-os && npm run release:manifest --prefix finnor-os && npm run release:pe-domain-boundary --prefix finnor-os && npm run workspace:check && npm run centropy:client:check && npm run centropy:manifest:check && npm run centropy:forms:check && npm run centropy:coverage:check && npm run release:p8-zero-resurrection",
+    "release:generated-preflight": "npm run authz:matrix:check --prefix finnor-os && npm run openapi --prefix finnor-os && npm run release:manifest --prefix finnor-os && npm run release:pe-domain-boundary --prefix finnor-os && npm run workspace:check && npm run centropy:client:check && npm run centropy:manifest:check && npm run centropy:forms:check && npm run centropy:coverage:check && npm run release:p8-zero-resurrection && npm run build:inputs:check --prefix finnor-os",
     "release:preflight": "npm run release:truth && npm run release:generated-preflight && npm run test:release",
-    "test:release": "FINNOR_RELEASE_SOURCE= node --test scripts/release/p8-water-retirement-policy.test.mjs scripts/release/release-policy.test.mjs scripts/release/compute-plane-policy.test.mjs scripts/release/supplier-canary-health.test.mjs scripts/release/production-mutation-guard.test.mjs scripts/release/production-readiness-policy.test.mjs scripts/release/pr-verdict-policy.test.mjs scripts/release/protected-env.test.mjs scripts/release/postgres-connection.test.mjs scripts/release/compute-noop.e2e.test.mjs scripts/release/canary-artifact.e2e.test.mjs scripts/release/vercel-auth.e2e.test.mjs && node scripts/release/validate-production-mutation-inventory.mjs"
+    "test:release": "FINNOR_RELEASE_SOURCE= node --test scripts/release/p8-water-retirement-policy.test.mjs scripts/release/release-policy.test.mjs scripts/release/compute-plane-policy.test.mjs scripts/release/supplier-canary-health.test.mjs scripts/release/production-mutation-guard.test.mjs scripts/release/production-readiness-policy.test.mjs scripts/release/pr-verdict-policy.test.mjs scripts/release/protected-env.test.mjs scripts/release/postgres-connection.test.mjs scripts/release/compute-noop.e2e.test.mjs scripts/release/canary-artifact.e2e.test.mjs scripts/release/vercel-auth.e2e.test.mjs && node scripts/release/validate-production-mutation-inventory.mjs",
+    "release:p0-p4-lineage": "npm run release:truth && npm run test:release",
+    "release:p0-p6-lineage": "npm run release:p0-p4-lineage && npm --prefix finnor-os run release:p8-runtime-contract && npm run centropy:manifest:check"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -61,7 +63,8 @@
     "openapi-typescript": "7.13.0",
     "tailwindcss": "^3.4.1",
     "typescript": "^5",
-    "vitest": "^4.1.12"
+    "vitest": "^4.1.12",
+    "minimatch": "file:vendor/finnor-minimatch-compat-11.0.1-finnor.2.tgz"
   },
   "overrides": {
     "js-yaml": "4.3.2",
@@ -85,6 +88,14 @@
     },
     "fast-uri": "3.1.9",
     "body-parser": "2.4.0",
-    "zod": "$zod"
+    "zod": "$zod",
+    "glob": "14.0.2",
+    "minimatch@^3": "$minimatch",
+    "minimatch@^5": "$minimatch",
+    "minimatch@^10": "11.0.1",
+    "minimatch@^11": "11.0.1",
+    "@redocly/openapi-core": {
+      "minimatch": "file:../../../vendor/finnor-minimatch-compat-11.0.1-finnor.2.tgz"
+    }
   }
 }

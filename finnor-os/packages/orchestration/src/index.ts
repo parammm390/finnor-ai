@@ -236,7 +236,7 @@ async function rememberAnswerTurn(
     actions: [],
     at: new Date().toISOString(),
   };
-  await appendShortTerm(ctx.tenantId, opts.sessionId, turn).catch(() => undefined);
+  await appendShortTerm(ctx.tenantId, ctx.employeeId, opts.sessionId, turn).catch(() => undefined);
 }
 
 function workFailure(error: unknown, fallback: string): Record<string, unknown> & { message: string; timeout: boolean } {
@@ -1067,7 +1067,7 @@ export class FinnorOrchestrator implements Orchestrator {
     // the second one" had nothing to resolve against. TTL'd (30 min), scoped to this
     // session only, never cross-session or cross-tenant.
     if (opts.sessionId && ctx.employeeId) {
-      await appendShortTerm(ctx.tenantId, opts.sessionId, {
+      await appendShortTerm(ctx.tenantId, ctx.employeeId, opts.sessionId, {
         instruction,
         actions: turnResults,
         at: new Date().toISOString(),

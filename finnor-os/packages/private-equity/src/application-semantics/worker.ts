@@ -153,7 +153,7 @@ export async function runApplicationSemanticsJob(payload: Record<string, unknown
     await currentApplicationWork(ctx, row, undefined, true);
     leases = await acquireComputeResourceLeases({ tenantId: row.tenant_id, resourceKeys: ["native:x2"],
       requiredResourceKeys: ["native:x2"], workloadClass: "INTERACTIVE", ownerId: `x2:${execution.deliveryAttemptId}` });
-    execution.registerHeartbeat(async () => released || await renewComputeResourceLeases(leases));
+    execution.registerHeartbeat(async () => released || await renewComputeResourceLeases(leases), { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
     runtime = new NativeApplicationRuntime(ctx, row, execution);
     const recovered = await runtime.reconcilePossibleRequests();
     const unresolved = await tx(ctx, async (c) => (await c.query(

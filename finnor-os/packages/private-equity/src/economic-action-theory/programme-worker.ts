@@ -31,7 +31,7 @@ export async function runEconomicProgrammeJob(raw:Record<string,unknown>,executi
  try{
   leases=await acquireComputeResourceLeases({tenantId:p.tenantId,resourceKeys:['native:y1-owner'],requiredResourceKeys:['native:y1-owner'],
    workloadClass:'INTERACTIVE',ownerId:'y1-owner:'+e.deliveryAttemptId});
-  e.registerHeartbeat(async()=>{try{return await renewComputeResourceLeases(leases)&&await transaction(ctx,async c=>{await fence(c);return true;});}catch{return false;}});
+  e.registerHeartbeat(async()=>{try{return await renewComputeResourceLeases(leases)&&await transaction(ctx,async c=>{await fence(c);return true;});}catch{return false;}}, { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
   await transaction(ctx,async c=>{
    await fence(c);const row=await theoryTx(ctx,c,programme.theoryId);
    await eventTx(c,row,'S6_PROGRAMME_NATIVE_ATTEMPT','programme-attempt:'+e.deliveryAttemptId,{programmeId:programme.id,jobId:e.jobId,

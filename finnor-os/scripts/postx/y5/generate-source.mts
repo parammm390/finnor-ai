@@ -15,8 +15,11 @@ const optionsFor=(file:string)=>{
  return ts.parseJsonConfigFileContent(config.config,ts.sys,dirname(configPath)).options;
 };
 const backendOptions=optionsFor('finnor-os/'),frontendOptions=optionsFor('src/');
+// The planner replay manifest hashes this generator's output, so pinning it here would make each hash depend on the other.
+const hashCycle=new Set(['finnor-os/packages/orchestration/src/capabilities/planner-replay-manifest.json']);
 const paths=new Set<string>(UNIFORM_SOURCE_PATHS);
 if(paths.size!==UNIFORM_SOURCE_PATHS.length||paths.has(output))throw Error('Y5_SOURCE_PATH_DUPLICATE_OR_SELF_HASH');
+for(const path of hashCycle)paths.delete(path);
 async function inventory(directory:string){
  for(const entry of await readdir(resolve(root,directory),{withFileTypes:true})){
   const path=directory+'/'+entry.name;
@@ -32,7 +35,7 @@ const nextGeneratedDeclarations=new Set(['next-env.d.ts','finnor-os/apps/api/nex
 const add=(absolute:string)=>{
  const path=relative(root,absolute).replaceAll('\\','/');
  if(path.startsWith('../')||isAbsolute(path))throw Error('Y5_SOURCE_DEPENDENCY_OUTSIDE_ROOT:'+path);
- if(path===output)return;
+ if(path===output||hashCycle.has(path))return;
  if(!paths.has(path)){paths.add(path);queue.push(path);}
 };
 for(let index=0;index<queue.length;index++){
@@ -66,7 +69,8 @@ for(let index=0;index<queue.length;index++){
   }else if(!direct)throw Error('Y5_SOURCE_IMPORT_UNRESOLVED:'+file+':'+spec);
  }
 }
-const ordered=[...UNIFORM_SOURCE_PATHS,...[...paths].filter(path=>!UNIFORM_SOURCE_PATHS.includes(path as typeof UNIFORM_SOURCE_PATHS[number])).sort()];
+const kept=UNIFORM_SOURCE_PATHS.filter(path=>!hashCycle.has(path));
+const ordered=[...kept,...[...paths].filter(path=>!kept.includes(path as typeof UNIFORM_SOURCE_PATHS[number])).sort()];
 if(check&&ordered.length!==UNIFORM_SOURCE_PATHS.length)
  throw Error('Y5_SOURCE_PATHS_STALE:'+JSON.stringify(ordered.slice(UNIFORM_SOURCE_PATHS.length)));
 if(!check&&ordered.length!==UNIFORM_SOURCE_PATHS.length)

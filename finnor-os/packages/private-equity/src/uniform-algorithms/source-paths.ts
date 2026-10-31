@@ -1098,7 +1098,6 @@ export const UNIFORM_SOURCE_PATHS=[
   "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/checker.py",
   "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/lbo-obligation-checker.py",
   "finnor-os/packages/epistemic-runtime/src/verified-capital-compiler/lbo-v2-checker.py",
-  "finnor-os/packages/orchestration/src/capabilities/planner-replay-manifest.json",
   "finnor-os/packages/private-equity/src/branch-fabric/checker.ts",
   "finnor-os/packages/private-equity/src/branch-fabric/fixtures/allocation.json",
   "finnor-os/packages/private-equity/src/branch-fabric/node-sqlite.d.ts",
@@ -1207,5 +1206,8 @@ export const UNIFORM_SOURCE_PATHS=[
   "finnor-os/scripts/s7/ledger-fixture.mts",
   "finnor-os/scripts/s8/lifecycle-fixture.mts",
   "finnor-os/scripts/x3/s8-installed.mts",
-  "finnor-os/packages/private-equity/src/resolution-memo.ts"
+  "finnor-os/packages/private-equity/src/resolution-memo.ts",
+  "finnor-os/apps/worker/src/job-heartbeat.ts",
+  "finnor-os/packages/private-equity/src/r3/api.ts",
+  "finnor-os/packages/private-equity/src/r3/fallback.ts"
 ] as const;

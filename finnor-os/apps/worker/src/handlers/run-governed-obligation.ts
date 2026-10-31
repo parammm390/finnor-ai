@@ -1,3 +1,4 @@
+import { workflowStepLeaseSeconds } from "@finnor/workflow-runtime";
 /** S6 delivery on the existing command/workflow/job substrate. The worker carries
  * references and signatures; protected provider credentials remain in the broker. */
 import {withTenantTransaction} from '@finnor/db';
@@ -41,7 +42,7 @@ export async function runGovernedObligationStep(tenantId:string,stepId:string,ge
   if(loaded.run_status!=='running'||loaded.command_status!=='running'||loaded.cancellation_requested_at)return;
   const remaining=Date.parse(obligation.deadline.businessStartAt)-Date.now();if(remaining>0)throw new RetryableJobError('S4 business start is not due',remaining);
   const claimed=await claimStep(tenantId,stepId,generation,{workerId:job.workerId,jobDeliveryAttemptId:job.deliveryAttemptId,jobProtocolVersion:3,eligibilityEvidence:{version:1,source:'S4_S5_NATIVE_OBLIGATION_PROTECTED_REVALIDATION_REQUIRED',obligationRef:obligation.ref,requestRef:execution.request.ref,eligibleForDelivery:true,executionAuthorityGranted:false}});
-  if(!claimed)return;fence=stepFence(claimed);job.registerHeartbeat(()=>heartbeatStepClaim(tenantId,stepId,fence!));
+  if(!claimed)return;fence=stepFence(claimed);job.registerHeartbeat(()=>heartbeatStepClaim(tenantId,stepId,fence!),{leaseSeconds:workflowStepLeaseSeconds()});
   const began=await withTenantTransaction(tenantId,{userId:ctx.auth.userId},async(_db,c)=>{
    const won=await c.query("UPDATE finnor_os.workflow_steps s SET execution_state='commit_started',effect_commit_at=clock_timestamp(),updated_at=clock_timestamp() FROM finnor_os.workflow_runs r WHERE s.tenant_id=$1 AND s.id=$2 AND s.workflow_run_id=r.id AND r.tenant_id=s.tenant_id AND r.status='running' AND r.version=$6 AND s.status='leased' AND s.execution_state='claimed' AND s.claim_token=$3 AND s.claim_fence=$4 AND s.dispatch_generation=$5 AND s.lease_expires_at>clock_timestamp() AND s.cancellation_requested_at IS NULL RETURNING s.id",[tenantId,stepId,fence!.claimToken,fence!.claimFence,generation,loaded.run_version]);
    if(won.rowCount)await c.query("UPDATE finnor_os.workflow_step_claims SET outcome='attempted',attempted_at=clock_timestamp() WHERE tenant_id=$1 AND workflow_step_id=$2 AND claim_token=$3 AND finished_at IS NULL",[tenantId,stepId,fence!.claimToken]);return won.rowCount===1;

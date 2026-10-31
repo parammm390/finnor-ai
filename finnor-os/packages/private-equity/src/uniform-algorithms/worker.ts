@@ -35,7 +35,7 @@ export async function discoverUniformAlgorithmJob(raw:Record<string,unknown>,exe
   diagnosticProfile();const initial=await tx(ctx,c=>owned(ctx,c,p,e));if(!initial)return;
   leases=await acquireComputeResourceLeases({tenantId:p.tenantId,resourceKeys:['native:y5-proof'],requiredResourceKeys:['native:y5-proof'],workloadClass:'HEAVY',ownerId:'y5:'+e.deliveryAttemptId});
   const heartbeat=async()=>!!await renewComputeResourceLeases(leases)&&tx(ctx,async c=>!!await owned(ctx,c,p,e));
-  e.registerHeartbeat(heartbeat);
+  e.registerHeartbeat(heartbeat,{leaseSeconds:Math.min(...leases.map(lease=>lease.leaseSeconds))});
   const a=await tx(ctx,async c=>{
    const a=await owned(ctx,c,p,e,true);if(!a)return null;
    if(a.attempt_count>=a.max_attempts)fail('Y5_ORIGINAL_ATTEMPTS_EXHAUSTED');

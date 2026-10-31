@@ -1,6 +1,8 @@
+import { planningCapabilitiesForVertical } from "../../packages/orchestration/src/plugin-registry";
 /** Local, provider-free replay of the planner's actual model input. */
 import { LLMConversationResponder, LLMPlanner, classifyInstructionRoute, createDefaultPluginRegistry, interpretOperationalQuery, isConversationalTurn, type LLMProvider } from "@finnor/orchestration";
 import type { EmployeeConversationContext, MemorySnapshot, OperatingContext } from "@finnor/shared-types";
+import { z } from "zod";
 
 const tenantId = "11111111-1111-4111-8111-111111111111";
 const employeeId = "22222222-2222-4222-8222-222222222222";
@@ -53,21 +55,20 @@ function context(messageChars: number): OperatingContext {
     activeWork: null,
     companyDirectory: { employee: null, teams: [], locations: [], reporting: { manager: null, reports: [], backups: [], assistants: [] }, currentWork: [], currentTasks: [], authorityRoles: [], referencedParties: [], sourceTables: [] },
     identityAccess: { communicationIdentities: [], applicationAccounts: [], authProfiles: [] },
-    universalActions: null,
     referencedEntities: [], canonicalSummaries: [], epistemicWarnings: [],
     memory: { conversation: null, semantic: [], episodic: [] },
     integrationHealth: {},
     authority: { principal: employeeId, employeeId, revision: 1, roles: ["owner"] },
     sources: [], health: { status: "complete", missing: [], errors: [] },
-  } as OperatingContext;
+  };
 }
 
 async function capture(messageChars: number) {
-  let prompt: Record<string, unknown> | null = null;
+  const prompts: Record<string, unknown>[] = [];
   const provider: LLMProvider = {
     name: "local-capture",
     async complete(options) {
-      prompt = JSON.parse(options.user) as Record<string, unknown>;
+      prompts.push(z.record(z.string(), z.unknown()).parse(JSON.parse(options.user)));
       return JSON.stringify({ candidates: [{ version: 1, candidateKey: "capture", nodes: [] }] });
     },
   };
@@ -77,8 +78,9 @@ async function capture(messageChars: number) {
     memory,
     { operatingContext: context(messageChars) },
   );
+  const prompt = prompts.at(-1);
   if (!prompt) throw new Error("The capturing provider was not called");
-  const operatingContext = prompt.operatingContext as Record<string, unknown> | null;
+  const operatingContext = z.record(z.string(), z.unknown()).nullish().parse(prompt.operatingContext);
   const serializedHistory = JSON.stringify(operatingContext?.conversationContext ?? null);
   return {
     messageChars,
@@ -112,7 +114,7 @@ await new LLMConversationResponder(conversationalProvider).answer(
   recallQuestion,
   { tenantId, userId: employeeId, employeeId, role: "owner" },
   memory,
-  { capabilityActionTypes: [] },
+  { capabilityManifest: planningCapabilitiesForVertical(createDefaultPluginRegistry(), "private_equity") },
 );
 process.stdout.write(`${JSON.stringify({
   recallQuestionRoute: route.route,

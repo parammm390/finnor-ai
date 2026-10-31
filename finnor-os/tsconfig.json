@@ -14,6 +14,7 @@
     "apps/**/*.tsx",
     "tests/**/*.ts",
     "scripts/**/*.ts",
+    "scripts/audits/**/*.mts",
     "scripts/postx/y5/**/*.mts"
   ],
   "exclude": [
