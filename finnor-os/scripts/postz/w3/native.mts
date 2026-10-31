@@ -583,10 +583,21 @@ try {
           await fault.query("BEGIN");
           const blocker = (await fault.query("SELECT pg_backend_pid() pid")).rows[0].pid;
           await fault.query("LOCK TABLE finnor_os.w3_service_artifacts IN SHARE MODE");
-          await new Promise(done => setTimeout(done, Math.max(0, Date.parse(outcome.originalDeadlineAt) - Date.now() - 3000)));
-          worker = tick(false, 4).then(result => ({ result }), error => ({ error }));
+          await new Promise(done => setTimeout(done, Math.max(0, Date.parse(outcome.originalDeadlineAt) - Date.now() - 15000)));
+          let firstClaimReleased = false;
+          worker = tick(false, 4, undefined, async () => {
+            if (firstClaimReleased) return true;
+            const readyAt = new Date().toISOString();
+            await new Promise(done => setTimeout(done, Math.max(0, Date.parse(outcome.originalDeadlineAt) - Date.now() - 3000)));
+            assert(Date.now() < Date.parse(outcome.originalDeadlineAt), "W3_READY_WORKER_MUST_PRECEDE_ORIGINAL_DEADLINE");
+            firstClaimReleased = true;
+            await artifact("publication/preclaim-ready.json", { readyAt, releasedAt: new Date().toISOString(),
+              originalDeadlineAt: outcome.originalDeadlineAt, workerPid: activeWorker?.pid,
+              registration: "ACTUAL_PRODUCTION_CREATE_WORKER", originalClaimNotYetMade: true });
+            return true;
+          }).then(result => ({ result }), error => ({ error }));
           let waiting: Record<string, unknown> | undefined;
-          const waitingLimit = Math.min(Date.now() + 15000, Date.parse(outcome.originalDeadlineAt) - 100);
+          const waitingLimit = Date.parse(outcome.originalDeadlineAt) - 100;
           while (Date.now() < waitingLimit) {
             waiting = (await admin!.query(`SELECT pid,usename,state,wait_event_type,wait_event,query_start,
              pg_blocking_pids(pid) blockers FROM pg_stat_activity WHERE datname=current_database()
@@ -1681,16 +1692,35 @@ try {
 } finally {
   loopDelay.disable(); pg.Client.prototype.query = originalQuery;
   const child = activeWorker as ChildProcess | null;
-  if (child && child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
-  if (recipient) await recipient.close();
-  if (auth) await auth.close();
-  if (closePool) await closePool();
-  if (admin) await admin.end();
-  await postgres.stop().catch(() => undefined);
+  const cleanup: Array<{ name: string; status: "PASS" | "FAIL"; errorType?: string; code?: string }> = [];
+  for (const [name, close] of [
+    ["owned-worker", async () => {
+      if (child && child.exitCode === null && child.signalCode === null) {
+        const closed = new Promise<void>(resolve => child.once("close", () => resolve()));
+        child.kill("SIGKILL"); await closed;
+      }
+    }],
+    ["recipient", () => recipient?.close()], ["authentication", () => auth?.close()],
+    ["application-pool", () => closePool?.()], ["database-admin", () => admin?.end()], ["owned-postgres", () => postgres.stop()],
+  ] as const) {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([Promise.resolve().then(close), new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(Object.assign(Error("W3_OWNED_CLEANUP_BOUND"), { code: "W3_OWNED_CLEANUP_BOUND" })), 10000);
+      })]);
+      cleanup.push({ name, status: "PASS" });
+    } catch (error) {
+      const code = error && typeof error === "object" && "code" in error ? String(error.code) : "";
+      cleanup.push({ name, status: "FAIL", errorType: error instanceof Error ? error.name : "Unknown",
+        ...(/^[A-Z][A-Z0-9_]{0,127}$/.test(code) ? { code } : {}) });
+      terminalExit = 1;
+    } finally { if (timer) clearTimeout(timer); }
+  }
+  await artifact("cleanup.json", { status: cleanup.some(row => row.status === "FAIL") ? "FAIL" : "PASS", steps: cleanup });
   await artifact("authentication.json", { authDevBypass: process.env.AUTH_DEV_BYPASS,
     bearerHTTP: true, traffic, credentialsRecorded: false, genuineHumanEstablished: false });
   await artifact("result.json", { schema: "finnor.w3.native-e2e.v1", startedAt, finishedAt: new Date().toISOString(),
-    elapsedMs: performance.now() - start, results, exitCode: terminalExit, fast, invoiceChallenge, commitmentChallenge,
+    elapsedMs: performance.now() - start, results, cleanup, exitCode: terminalExit, fast, invoiceChallenge, commitmentChallenge,
     pauseChallenge, acceptanceChallenge, observationsChallenge, resourceChallenge, resourceSample, dependencyChallenge,
     cancellationChallenge, cancellationSample, currentnessChallenge, publicationChallenge, largeBasis, family,
     command: ["node", "--import=tsx", "scripts/postz/w3/native.mts", "--output", "<new-absolute-output>",

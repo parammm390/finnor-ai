@@ -160,6 +160,23 @@ that original deadline, so the controlled INSERT wait can cross the business
 deadline while its original claim is still live. Independently record and
 require that lease to remain valid beyond release. A statement timeout or
 expired claim is a setup failure, not evidence of the missing deadline fence.
+
+Linux run41250348170 passed the full positive journey but its publication fault
+never observed the actual blocked INSERT. The fixture launched a cold TSX process
+only three seconds before the deadline, conflating imports and worker readiness
+with the original claim interval. Reuse the existing parent-gated worker transport:
+prepare the actual process in the preceding fifteen seconds, observe its real
+restricted-worker readiness, and release its first production queue tick only in
+the original last three seconds. The existing20-second batch timer includes this
+gate wait; the60-second process supervisor and every original business/SQL/claim
+bound remain unchanged. Record readiness and release separately; neither is a
+substitute for the independently observed real INSERT wait and still-live claim.
+
+Independent review also found that finalization swallowed PostgreSQL stop errors.
+Attempt every owned closer in dependency order under a10-second observation bound,
+record success or error type/code, and fail the terminal verdict on any close
+error or timeout. Await the owned worker's exit before stopping its database.
+Do not turn a partial teardown into a passed journey or skip later closers.
 This focused negative case retains its original Work/input/allocation after
 refusal. It does not claim the normal journey's successful-progress occupation;
 the full positive campaign keeps that separate original requirement.
