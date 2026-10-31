@@ -1,13 +1,17 @@
 name: W123 ordinary Linux kernel verification
 on:
   push:
-    branches: [cloud/postz-w1]
+    branches: [cloud/postz-w1, cloud/postz-w2, cloud/postz-w3]
     paths:
       - .github/workflows/w123-native-verification.yml
-      - finnor-os/packages/governed-execution/**
-      - finnor-os/scripts/s6/**
-      - finnor-os/package-lock.json
-      - finnor-os/package.json
+      - finnor-os/**
+      - scripts/**
+      - packages/**
+      - app/**
+      - package.json
+      - package-lock.json
+      - next.config.*
+      - vendor/**
 permissions:
   contents: read
 concurrency:
@@ -55,7 +59,10 @@ jobs:
           path: ${{ runner.temp }}/w123-kernel-comparison/
           if-no-files-found: error
           retention-days: 7
+  source-checks:
+    uses: ./.github/workflows/source-checks.yml
   installed-worker:
+    needs: source-checks
     uses: ./.github/workflows/ci.yml
     with:
       run_worker_image: true

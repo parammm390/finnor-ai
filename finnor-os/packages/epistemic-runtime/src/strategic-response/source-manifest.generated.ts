@@ -68,7 +68,7 @@ export default {
     },
     {
       "path": "../../../private-equity/src/enterprise-control.ts",
-      "sha256": "aa33dcf657cdcb4ef85a059b51b52b646a93a11aabd9801e2436511b22d7ce43"
+      "sha256": "57575d68bc1cadad89ea96cffd18fccdc352043440fba9ba8cd7d9485b684579"
     },
     {
       "path": "../../../capability-evolution/src/strategic-response-port.ts",

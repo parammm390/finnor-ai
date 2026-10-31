@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   CORE_OPERATIONAL_QUERY_INTENTS,
+  ECONOMIC_READ_QUERY_INTENTS,
   CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS,
   PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
   PROGRAM_OPERATIONAL_QUERY_INTENTS,
@@ -20,7 +21,7 @@ import {
 
 const nativeIntents = [...PROGRAM_OPERATIONAL_QUERY_INTENTS, ...CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS];
 
-const publicIntents = [...CORE_OPERATIONAL_QUERY_INTENTS, ...PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS];
+const publicIntents = [...CORE_OPERATIONAL_QUERY_INTENTS, ...PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS, ...ECONOMIC_READ_QUERY_INTENTS];
 
 async function openApi() {
   return JSON.parse(await readFile(new URL("../../openapi.json", import.meta.url), "utf8"));

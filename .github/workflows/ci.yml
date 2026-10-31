@@ -83,7 +83,7 @@ jobs:
       - name: Prepare disposable worker smoke database
         run: |
           npm run db:bundle
-          git diff --exit-code -- packages/db/migrations-bundle.ts
+          git diff --exit-code -- packages/db/migrations-bundle.ts packages/db/migration-head.ts
           npm run db:migrate
           npm run setup:langgraph
         working-directory: finnor-os

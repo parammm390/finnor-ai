@@ -68,6 +68,9 @@ const mocks = vi.hoisted(() => {
   const enforceRouteRateLimit = vi.fn(async () => undefined);
   const enforceBatchBackpressure = vi.fn(async () => ({ action: "admit", saturated: false, reasons: [] }));
   const recordWorkResponse = vi.fn(async () => undefined);
+  const readWorkInputResponse = vi.fn(async () => ({
+    input: { instructionText: "Create a work order" }, queryExecutions: [], response: null,
+  }));
   const transitionWork = vi.fn(async () => undefined);
   const workAggregate = vi.fn<() => Promise<MockWorkAggregate>>(async () => null);
   const ensureObjectiveIterationDelivery = vi.fn(async () => false);
@@ -87,6 +90,7 @@ const mocks = vi.hoisted(() => {
     enforceRouteRateLimit,
     enforceBatchBackpressure,
     recordWorkResponse,
+    readWorkInputResponse,
     transitionWork,
     workAggregate,
     ensureObjectiveIterationDelivery,
@@ -105,8 +109,10 @@ vi.mock("../../apps/api/lib/orchestrator", () => ({ getOrchestrator: mocks.getOr
 vi.mock("@finnor/db", () => ({
   receiveWork: mocks.receiveWork,
   recordWorkResponse: mocks.recordWorkResponse,
+  readWorkInputResponse: mocks.readWorkInputResponse,
   transitionWork: mocks.transitionWork,
   workAggregate: mocks.workAggregate,
+  WorkQueryInProgressError: class WorkQueryInProgressError extends Error {},
 }));
 vi.mock("@finnor/orchestration", () => ({
   interpretOperationalQuery: mocks.interpretOperationalQuery,
@@ -120,6 +126,8 @@ vi.mock("@finnor/orchestration", () => ({
   persistEmployeeAssistantTurn: mocks.persistEmployeeAssistantTurn,
   parseObjectiveSuccessCondition: vi.fn((condition: unknown) => condition),
   ensureObjectiveIterationDelivery: mocks.ensureObjectiveIterationDelivery,
+  economicReadForInput: vi.fn(() => null),
+  assertEconomicReadReplyAccess: vi.fn(async () => undefined),
 }));
 
 import { POST as actionsPOST } from "../../apps/api/app/api/actions/route";

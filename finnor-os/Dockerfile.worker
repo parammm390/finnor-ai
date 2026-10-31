@@ -71,7 +71,7 @@ RUN test -s /etc/ssl/certs/ca-certificates.crt \
 FROM node-runtime AS s6-launcher-build
 RUN apt-get update && apt-get install --yes --no-install-recommends gcc libc6-dev libssl-dev \
     && rm -rf /var/lib/apt/lists/*
-COPY finnor-os/packages/governed-execution/native/linux-launcher.c /opt/linux-launcher.c
+COPY finnor-os/packages/governed-execution/native/linux-launcher.c finnor-os/packages/governed-execution/native/linux-lifetime.h /opt/
 RUN cc -std=c11 -O2 -Wall -Wextra -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 \
     -Wl,-z,relro,-z,now -o /opt/linux-launcher /opt/linux-launcher.c -lcrypto
 
@@ -84,7 +84,7 @@ RUN test "$(uname -m)" = aarch64 \
     && apt-get update \
     && apt-get install --yes --no-install-recommends bubblewrap=0.8.0-2+deb12u1 gcc libc6-dev libssl-dev \
     && rm -rf /var/lib/apt/lists/*
-COPY finnor-os/packages/governed-execution/native/linux-launcher.c /app/finnor-os/packages/governed-execution/native/linux-launcher.c
+COPY finnor-os/packages/governed-execution/native/linux-launcher.c finnor-os/packages/governed-execution/native/linux-lifetime.h /app/finnor-os/packages/governed-execution/native/
 COPY finnor-os/scripts/r3/package-linux-jail.mjs /app/finnor-os/scripts/r3/package-linux-jail.mjs
 RUN cc -std=c11 -O2 -Wall -Wextra -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 \
       -Wl,-z,relro,-z,now -o /opt/linux-launcher /app/finnor-os/packages/governed-execution/native/linux-launcher.c -lcrypto \
