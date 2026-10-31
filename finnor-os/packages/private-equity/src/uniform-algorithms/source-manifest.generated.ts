@@ -4232,7 +4232,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migrations-bundle.ts",
-      "sha256": "a510e95084c6859d511e8c695d8c507465d1af53399b6e242bcccbf5ad76e6f3"
+      "sha256": "6bb4f45ef21f805c38cb0d7f0f306bca3f95eed4708e7be188e00690787d2cc6"
     },
     {
       "path": "finnor-os/packages/db/migrations/0150_portfolio_resource_clearing.sql",
@@ -4843,5 +4843,5 @@ export default {
       "sha256": "08a548ea170f7ef7124aa23572892f39cb103e365c06ab24f68d9a61db880700"
     }
   ],
-  "sourceDigest": "1b28485b2fc67ff51b05d6de2c8225471a4fa9c0e622d7e5ba289aaee5ff13df"
+  "sourceDigest": "495a2c5bb180b4e643cde1f9fa9508256791527583216049a8bf6ca0b3a9914b"
 } as const;
