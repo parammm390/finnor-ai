@@ -31,3 +31,10 @@ controlled receiving-owner readback, driver results, and supervisor receipt as
 shareable evidence. Never upload temporary credentials, full databases, or the
 raw private runtime directory. These results prove the specific software join;
 they confer no protected qualification, admission, field, or economic result.
+
+The first Linux comparison stops at `CLOSING_OWNER_BOUNDARY_UNAVAILABLE` before
+the receiving-join assertion. On this failure, retain the existing closing
+owner's redacted diagnostic code, error class and stack frames from its actual
+canonical event. Do not upload the full canonical snapshot: it includes raw
+queue claim credentials. Missing later success artifacts must not hide the
+earlier owner failure or be counted as the intended baseline regression.

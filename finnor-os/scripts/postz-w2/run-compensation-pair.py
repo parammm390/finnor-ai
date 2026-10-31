@@ -191,6 +191,15 @@ def main():
         if (owner / "results.json").exists():
             result = json.loads((owner / "results.json").read_text())
             record["ownerFailure"] = result.get("failed")
+        canonical_failure = owner / "failed-canonical-readback.json"
+        if canonical_failure.exists():
+            canonical = json.loads(canonical_failure.read_text())
+            record["closingOwnerDiagnostics"] = [
+                {"kind": row["kind"], "diagnostic": row["body"]["diagnostic"]}
+                for row in canonical.get("events", [])
+                if row.get("kind") == "CONTROLLER_BLOCKED_WITH_RESPONSIBILITY_RETAINED"
+                and isinstance(row.get("body"), dict) and "diagnostic" in row["body"]
+            ]
     finally:
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
         signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -214,7 +223,9 @@ def main():
         if heavy_lock:
             heavy_lock.close()
     print(json.dumps({"episode": args.episode, "status": record["status"],
-        "error": record.get("error"), "receipt": str(report / "receipt.json")}))
+        "error": record.get("error"), "ownerFailure": record.get("ownerFailure"),
+        "closingOwnerDiagnostics": record.get("closingOwnerDiagnostics"),
+        "receipt": str(report / "receipt.json")}))
     return 0 if record["status"] == "PASS" else 1
 
 
