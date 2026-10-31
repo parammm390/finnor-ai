@@ -14,7 +14,7 @@ jobs:
         working-directory: finnor-os
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065
+      - uses: grafana/setup-k6-action@43b9fc21641a76002687994433dd586f56e791b1
       - name: Run the configured staging load probe
         env:
           BASE_URL: ${{ secrets.K6_STAGING_BASE_URL }}
@@ -32,7 +32,7 @@ jobs:
         run: |
           test -n "$BASE_URL" -a -n "$TENANT_ID" -a -n "$AUTH_BEARER_TOKEN" -a -n "$K6_FIXTURE_DEAL_ID" -a -n "$K6_FIXTURE_WORKSTREAM_ID"
           k6 run --summary-export k6-nightly-lite-summary.json scripts/k6-load-test.js
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: k6-nightly-lite-summary
