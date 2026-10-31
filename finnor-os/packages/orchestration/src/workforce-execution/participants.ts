@@ -1,18 +1,13 @@
 import { randomUUID } from "node:crypto";
-import { z } from "zod";
+import { workforceParticipantProposalSchema, workforceParticipantDispositionSchema } from "./contracts";
 import type { TenantContext } from "@finnor/shared-types";
 import { canExerciseWorkforceAuthorityTx as canExerciseAuthorityTx } from "@finnor/authority";
 import { workforceDigest } from "../../../workforce/src/execution-program/exact";
 import { activePrincipal, principal, reject, tx } from "./store";
 
-const proposal = z.object({ contactId: z.string().uuid(), recipientPrincipalId: z.string().uuid(),
-  purpose: z.string().min(1).max(256), validUntil: z.string().datetime({ offset: true }),
-  idempotencyKey: z.string().min(1).max(160) }).strict();
-const disposition = z.object({ action: z.enum(["CONFIRM", "REVOKE"]), proposalDigest: z.string().regex(/^[a-f0-9]{64}$/),
-  expectedRevision: z.number().int().nonnegative(), idempotencyKey: z.string().min(1).max(160) }).strict();
 
 export async function proposeWorkforceParticipant(ctx: TenantContext, value: unknown) {
-  const input = proposal.parse(value);
+  const input = workforceParticipantProposalSchema.parse(value);
   return tx(ctx, async c => {
     // One live binding per contact. The per-contact advisory lock serializes
     // concurrent proposals so the live check below can never race an INSERT;
@@ -81,7 +76,7 @@ export async function readWorkforceParticipants(ctx: TenantContext) {
 /** Acknowledges only the identity/purpose binding. Each external assignment
  * still needs its own later exact voluntary recipient disposition. */
 export async function respondWorkforceParticipant(ctx: TenantContext, id: string, value: unknown) {
-  const input = disposition.parse(value);
+  const input = workforceParticipantDispositionSchema.parse(value);
   return tx(ctx, async c => {
     await activePrincipal(ctx, c);
     const row = (await c.query(`SELECT * FROM finnor_os.w2_contact_bindings WHERE tenant_id=$1 AND id=$2 FOR UPDATE`,

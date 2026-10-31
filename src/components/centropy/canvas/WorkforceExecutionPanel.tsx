@@ -43,6 +43,7 @@ const listing = z.object({ workId: z.string().uuid(), complete: z.literal(true),
 type Read = z.infer<typeof programme>
 type Listing = z.infer<typeof listing>
 type Scoped<T> = { key: string; value: T }
+type Mutation = { kind: "SUBMIT" } | { kind: "ACTION"; id: string } | { kind: "RECONCILE"; id: string }
 const label = (value: string) => value.replaceAll("_", " ").toLowerCase()
 const date = (value: string) => new Date(value).toLocaleString()
 
@@ -125,12 +126,16 @@ export function WorkforceExecutionPanel({ workId, participant = false }: { workI
     return () => window.clearTimeout(timer)
   }, [allowed, key, reading, refresh, visible, working])
 
-  async function mutate(path: string, body: unknown) {
+  async function mutate(operation: Mutation, body: unknown) {
     if (working || !isCurrent(key)) return
     const scope = key
     generation.current += 1; setRead(null); setMetadata(null); setBusy(scope); setMessage(null)
     try {
-      await centropyPost(path, body)
+      switch (operation.kind) {
+        case "SUBMIT": await centropyPost("workforce/execution-programs", body); break
+        case "ACTION": await centropyPost(`workforce/execution-programs/${operation.id}/actions`, body); break
+        case "RECONCILE": await centropyPost(`workforce/execution-programs/${operation.id}/reconcile`, body); break
+      }
       if (isCurrent(scope)) await refresh()
     } catch (error) {
       if (isCurrent(scope)) setMessage({ key: scope, value: error instanceof Error ? error.message :
@@ -150,7 +155,7 @@ export function WorkforceExecutionPanel({ workId, participant = false }: { workI
         setMessage({ key, value: "Enter the actual response, revised terms, replacement identities, or bounded child request as JSON before submitting." }); return
       }
     }
-    await mutate(`workforce/execution-programs/${visible.id}/actions`, {
+    await mutate({ kind: "ACTION", id: visible.id }, {
       idempotencyKey: "workforce-ui:" + crypto.randomUUID(), expectedRevision: visible.revision,
       assignmentId: item.id, action, termsDigest: item.termsDigest, termsRevision: item.terms.revision,
       ...extra,
@@ -165,7 +170,7 @@ export function WorkforceExecutionPanel({ workId, participant = false }: { workI
         setMessage({ key, value: "Enter your actual judgment as JSON true or false. No judgment is inferred from silence." }); return
       }
     }
-    await mutate(`workforce/execution-programs/${visible.id}/actions`, {
+    await mutate({ kind: "ACTION", id: visible.id }, {
       idempotencyKey: "workforce-ui:" + crypto.randomUUID(), expectedRevision: visible.revision,
       assignmentId: item.assignmentId, action: "VERIFY", termsDigest: item.termsDigest, termsRevision: item.termsRevision,
       ...(value === undefined ? {} : { value }),
@@ -181,7 +186,7 @@ export function WorkforceExecutionPanel({ workId, participant = false }: { workI
       <button type="button" disabled={working} onClick={() => void refresh()}>Refresh current contracts</button></header>
     <p>Assignments retain the original Work, authority, deadline and resource budget. An offer is not acceptance or completion.</p>
     {sources && !sources.data.length && sources.originalInput ? <button type="button" disabled={working}
-      onClick={() => void mutate("workforce/execution-programs", { workId, workInputId: sources.originalInput!.workInputId,
+      onClick={() => void mutate({ kind: "SUBMIT" }, { workId, workInputId: sources.originalInput!.workInputId,
         idempotencyKey: "workforce-ui:" + crypto.randomUUID() })}>Compile original workforce outcome</button> : null}
     {sources && sources.data.length > 1 ? <label>Original programme<select value={visible?.id ?? chosen ?? sources.data[0]?.id}
       disabled={working} onChange={event => { setRead(null); setInput(null); setSelected({ key, value: event.target.value }) }}>
@@ -192,7 +197,7 @@ export function WorkforceExecutionPanel({ workId, participant = false }: { workI
     {visible?.status === "FENCED" ? <p role="alert">Current authority or evidence no longer supports part of this graph.
       No stale readiness is an execution permit. Existing responsibility and possible use remain retained.</p> : null}
     {visible?.recovery?.required ? <button type="button" disabled={working}
-      onClick={() => void mutate(`workforce/execution-programs/${visible.id}/reconcile`, {
+      onClick={() => void mutate({ kind: "RECONCILE", id: visible.id }, {
         idempotencyKey: "workforce-ui:" + crypto.randomUUID(), expectedRevision: visible.revision })}>
       Reconcile retained attempt, without replay</button> : null}
     {visible ? <>

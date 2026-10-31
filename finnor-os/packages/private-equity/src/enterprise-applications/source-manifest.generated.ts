@@ -192,7 +192,7 @@ export default {
     },
     {
       "path": "src/lib/centropy/capability-manifest.generated.json",
-      "sha256": "4d57f2431eeb9d55587d2f4855b0a323c2d609ada77ccc40ba329fabf916ae83"
+      "sha256": "fb3c1c4d71d0bf71711e315f23ab269d6ef2841f44487cb6927216f6a231f4e4"
     },
     {
       "path": "package-lock.json",

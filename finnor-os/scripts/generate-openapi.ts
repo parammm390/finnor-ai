@@ -1,3 +1,6 @@
+import { submitWorkforceExecutionSchema, intakeWorkforceExecutionSchema, recipientWorkforceActionSchema,
+  workforceParticipantProposalSchema, workforceParticipantDispositionSchema, reconcileWorkforceExecutionSchema,
+} from "../packages/orchestration/src/workforce-execution/contracts";
 import { ExperimentRefSchema } from "@finnor/epistemic-runtime";
 import { CapabilityRequestSchema, PywhyAssessmentRequestSchema } from "../packages/orchestration/src/capabilities/contracts";
 import { NangoConnectInputSchema } from "../packages/orchestration/src/capabilities/nango-bindings";
@@ -6,7 +9,7 @@ import { PlannerActivationRequestSchema } from "../packages/orchestration/src/ca
 // Water webhook payloads are intentionally opaque quarantine receipts and never
 // regain an executable public schema here.
 import {createHash} from "node:crypto";
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { z } from "zod";
 import { EconomicReadReplySchema, RevenueReadRequestSchema, QuoteReadRequestSchema } from "@finnor/shared-types/src/economic-reads";
 import {
@@ -607,6 +610,29 @@ const paths = {
     post: { security: secured, requestBody: json(OperationalQuerySchema), responses: { "201": { description: "Canonical query completed" }, "400": { description: "Invalid or retired query" } } },
   },
   "/api/read-models/workforce-status": { get: { security: secured, parameters: workforcePageParameters, responses: { "200": { description: "Source-backed configured AI workforce, assignments, verified metrics, governed learning state, truthful truncation, and a next cursor" } } } },
+  "/api/workforce/participants": {
+    get: { security: secured, responses: { "200": { description: "Current principal-scoped existing-contact binding proposals and dispositions" } } },
+    post: { security: secured, requestBody: json(workforceParticipantProposalSchema), responses: { "202": { description: "Existing-contact purpose and identity binding proposed; no contact sent or assignment acceptance implied" }, "400": { description: "Invalid binding input" }, "403": { description: "Current enrollment authority required" }, "404": { description: "Existing contact or principal unavailable" }, "409": { description: "Current binding or idempotency conflict" }, "413": { description: "Request bound exceeded" } } },
+  },
+  "/api/workforce/participants/{id}": {
+    post: { security: secured, parameters: [documentIdParameter], requestBody: json(workforceParticipantDispositionSchema), responses: { "200": { description: "Exact recipient binding confirmation or revocation retained; assignment acceptance remains separate" }, "400": { description: "Invalid disposition input" }, "403": { description: "Exact current recipient or original proposer rights required" }, "404": { description: "Binding unavailable" }, "409": { description: "Binding revision, proposal or idempotency changed" }, "413": { description: "Request bound exceeded" } } },
+  },
+  "/api/workforce/execution-programs": {
+    get: { security: secured, parameters: [{ name: "workId", in: "query", required: true, schema: { type: "string", format: "uuid" } }], responses: { "200": { description: "Current principal-visible execution programmes for the exact canonical Work" }, "400": { description: "Work identifier required" }, "404": { description: "Work unavailable" } } },
+    post: { security: secured, requestBody: json(submitWorkforceExecutionSchema), responses: { "202": { description: "Exact Work input submitted to the bounded durable execution owner; not completion" }, "400": { description: "Invalid original input reference" }, "403": { description: "Current execution authority required" }, "404": { description: "Work or input unavailable" }, "409": { description: "Original input, resource or idempotency conflict" }, "413": { description: "Request bound exceeded" } } },
+  },
+  "/api/workforce/execution-programs/intake": {
+    post: { security: secured, requestBody: json(intakeWorkforceExecutionSchema), responses: { "202": { description: "Exact original outcome accepted as canonical Work input before bounded execution" }, "400": { description: "Invalid original outcome" }, "403": { description: "Current Work and actor authority required" }, "404": { description: "Work or actor source unavailable" }, "409": { description: "Original scope, resource or idempotency conflict" }, "413": { description: "Request bound exceeded" } } },
+  },
+  "/api/workforce/execution-programs/{id}": {
+    get: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Exact principal-visible programme, retained assignments and actual execution history" }, "400": { description: "Programme identifier required" }, "404": { description: "Programme unavailable" } } },
+  },
+  "/api/workforce/execution-programs/{id}/actions": {
+    post: { security: secured, parameters: [documentIdParameter], requestBody: json(recipientWorkforceActionSchema), responses: { "200": { description: "Exact authenticated assignment action retained under its original terms and authority" }, "400": { description: "Invalid assignment action" }, "403": { description: "Current exact actor authority required" }, "404": { description: "Programme or assignment unavailable" }, "409": { description: "Terms, revision, deadline, resource or idempotency conflict" }, "413": { description: "Request bound exceeded" } } },
+  },
+  "/api/workforce/execution-programs/{id}/reconcile": {
+    post: { security: secured, parameters: [documentIdParameter], requestBody: json(reconcileWorkforceExecutionSchema), responses: { "202": { description: "Recovery of the quarantined original requested under its retained resources; not a replacement execution" }, "400": { description: "Invalid recovery input" }, "403": { description: "Current original Work authority required" }, "404": { description: "Programme unavailable" }, "409": { description: "Original delivery, revision, recovery bound or idempotency conflict" }, "413": { description: "Request bound exceeded" } } },
+  },
   "/api/workforce/profiles": {
     get: { security: secured, parameters: workforcePageParameters, responses: { "200": { description: "Source-backed governed workforce state with truthful bounded-page metadata" } } },
     post: { security: secured, requestBody: json(WorkforceConfigureProfileSchema), responses: { "200": { description: "New immutable configuration revision created" }, "201": { description: "AgentProfile and first immutable revision created" }, "400": { description: "Invalid capability or bounded configuration" }, "403": { description: "Authenticated employee lacks workforce governance authority" } } },
@@ -1097,5 +1123,9 @@ function rewriteDefinitionReferences(node:unknown){
 }
 rewriteDefinitionReferences(document);
 
-writeFileSync(new URL("../openapi.json", import.meta.url), `${JSON.stringify(document, null, 2)}\n`);
+const output = new URL("../openapi.json", import.meta.url);
+const rendered = `${JSON.stringify(document, null, 2)}\n`;
+if (process.argv.includes("--check")) {
+  if (readFileSync(output, "utf8") !== rendered) throw new Error("OPENAPI_STALE: npm run release:generate");
+} else writeFileSync(output, rendered);
 console.log(`Generated openapi.json with ${Object.keys(paths).length} active/quarantine paths.`);

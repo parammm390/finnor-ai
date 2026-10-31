@@ -98,7 +98,7 @@ jobs:
         run: |
           status=0
           npm run authz:matrix:check || status=1
-          npm run openapi || status=1
+          npm run openapi -- --check || status=1
           npm run typecheck || status=1
           npm run release:manifest || status=1
           npm run release:pe-domain-boundary || status=1
@@ -112,6 +112,7 @@ jobs:
         continue-on-error: true
         run: |
           status=0
+          npm run release:generated:check || status=1
           npm run centropy:client:check || status=1
           npm run centropy:manifest:check || status=1
           npm run centropy:forms:check || status=1

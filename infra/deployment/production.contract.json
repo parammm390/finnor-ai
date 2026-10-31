@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "postx_y6_conversation_memory.sql",
+    "requiredMigrationHead": "postz_w2_protected_child_history.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

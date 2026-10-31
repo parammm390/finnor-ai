@@ -239,10 +239,17 @@ const proofFiles = walk("docs/centropy/evidence").filter((file) => /release-cand
 })
 const document = { schema: "centropy.capability-coverage-audit/v1", generatedAt: new Date().toISOString(), sourceBaseCommit: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(), manifestSha256: digest(read(manifestPath)), formsSha256: digest(read(formPath)), method: "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.", counts: { total: capabilities.length, http: capabilities.filter((c) => c.transport === "http").length, planner: capabilities.filter((c) => c.transport === "planner").length, classified: capabilities.length, classificationCoveragePercent: 100, unclassified: 0, backendApiWithoutMountedFrontend: unmounted.length, dynamicFrontendCalls: dynamicFrontendCalls.length, unresolvedDynamicCalls: unresolvedDynamicCalls.length, disposition: counts }, unclassifiedCapabilities: [], backendApiWithoutMountedFrontend: unmounted, dynamicFrontendCalls, registeredDynamicCalls, unresolvedDynamicCalls, unconfirmedExportedHelpers: [...unusedHelpers].sort(), frontendImportGraph: { entries, files: [...source.keys()].sort(), hashes: [...source].map(([file, text]) => ({ file, sha256: digest(text) })) }, capabilities, executedProofIndex: proofFiles, limitations: ["Classification coverage is not a claim of 100% executed capability coverage", "Backend API without mounted frontend is an unverified path, not a proven malfunction", "Dynamic frontend call expressions cannot certify any named operation without explicit finite bindings", "Registered dynamic form/read expressions are qualified by their separate canonical registries; uncalled exported helpers are not mounted evidence", "Import reachability is file-level; a matched call does not prove its enclosing function executes, conditional eligibility, or a rendered control", "Provider protocol callbacks and real external publication require configured provider systems", "Retained compatibility routes are explicitly outside the active primary product"] }
 const output = "docs/centropy/capability-coverage.json"
+const stable = (value) => JSON.stringify({ ...value, generatedAt: null, sourceBaseCommit: null })
 if (process.argv.includes("--check")) {
   if (unresolvedDynamicCalls.length) throw new Error(`Mounted frontend operations lack finite route bindings: ${JSON.stringify(unresolvedDynamicCalls)}`)
   const existing = JSON.parse(read(output))
-  const stable = (value) => JSON.stringify({ ...value, generatedAt: null, sourceBaseCommit: null })
   if (stable(existing) !== stable(document)) throw new Error("CENTROPY coverage audit is stale; run node scripts/centropy/audit-capability-coverage.mjs")
-} else writeFileSync(join(root, output), JSON.stringify(document, null, 2) + "\n")
+} else {
+  let existing = null
+  if (existsSync(join(root, output))) {
+    try { existing = JSON.parse(read(output)) } catch { /* Regenerate malformed derived output from source. */ }
+  }
+  if (!existing || stable(existing) !== stable(document))
+    writeFileSync(join(root, output), JSON.stringify(document, null, 2) + "\n")
+}
 console.log(JSON.stringify({ output, counts: document.counts }))

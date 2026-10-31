@@ -1293,6 +1293,156 @@
                     "operationKey": {
                       "type": "string",
                       "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "workforceCompensation": {
+                      "type": "object",
+                      "properties": {
+                        "schema": {
+                          "type": "string",
+                          "const": "finnor.s6.closing-workforce-compensation.v1"
+                        },
+                        "obligationRef": {
+                          "type": "object",
+                          "properties": {
+                            "owner": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 512
+                            },
+                            "version": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "contentDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "required": [
+                            "owner",
+                            "id",
+                            "version",
+                            "contentDigest"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "programmeId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "workId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "originalRoot": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "assignmentId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "originalBudget": {
+                          "type": "object",
+                          "properties": {
+                            "owner": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 512
+                            },
+                            "version": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "contentDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "required": [
+                            "owner",
+                            "id",
+                            "version",
+                            "contentDigest"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "originalReservation": {
+                          "type": "object",
+                          "properties": {
+                            "owner": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 512
+                            },
+                            "version": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "contentDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "required": [
+                            "owner",
+                            "id",
+                            "version",
+                            "contentDigest"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "termsDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        "payerPrincipalId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "payeePrincipalId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        }
+                      },
+                      "required": [
+                        "schema",
+                        "obligationRef",
+                        "programmeId",
+                        "workId",
+                        "originalRoot",
+                        "assignmentId",
+                        "originalBudget",
+                        "originalReservation",
+                        "termsDigest",
+                        "payerPrincipalId",
+                        "payeePrincipalId"
+                      ],
+                      "additionalProperties": false
                     }
                   },
                   "required": [
@@ -9189,6 +9339,109 @@
       },
       "source": "finnor-os/apps/api/app/api/workflows/steps/[id]/compensate/route.ts",
       "generatedFrom": "finnor-os/openapi.json#paths//api/workflows/steps/{id}/compensate/post"
+    },
+    {
+      "id": "http.post.workforce.participants",
+      "capabilityId": "http.post.workforce.participants",
+      "group": "workforce",
+      "title": "Workforce participants",
+      "method": "POST",
+      "routePattern": "workforce/participants",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/workforce",
+      "humanOnly": false,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "contactId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "recipientPrincipalId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "contactId",
+          "recipientPrincipalId",
+          "purpose",
+          "validUntil",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/workforce/participants/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/workforce/participants/post"
+    },
+    {
+      "id": "http.post.workforce.participants.$id",
+      "capabilityId": "http.post.workforce.participants.$id",
+      "group": "workforce",
+      "title": "Workforce participants",
+      "method": "POST",
+      "routePattern": "workforce/participants/:id",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/workforce",
+      "humanOnly": false,
+      "pathFields": [
+        "id"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "CONFIRM",
+              "REVOKE"
+            ]
+          },
+          "proposalDigest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "action",
+          "proposalDigest",
+          "expectedRevision",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/workforce/participants/[id]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/workforce/participants/{id}/post"
     },
     {
       "id": "http.post.workforce.profiles",

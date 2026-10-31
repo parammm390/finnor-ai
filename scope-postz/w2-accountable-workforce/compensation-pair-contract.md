@@ -38,3 +38,8 @@ owner's redacted diagnostic code, error class and stack frames from its actual
 canonical event. Do not upload the full canonical snapshot: it includes raw
 queue claim credentials. Missing later success artifacts must not hide the
 earlier owner failure or be counted as the intended baseline regression.
+
+The full repaired exact episode runs first in CI. Its success releases the
+original missing-join baseline and three adverse controls in parallel. All five
+episodes remain mandatory; a skipped control is incomplete verification. This
+keeps a common setup/owner failure from launching four redundant failing runs.

@@ -69,3 +69,13 @@ export type NativeWorkforceTaskCreationRecord = z.infer<typeof nativeWorkforceTa
 export class WorkforceRuntimeError extends Error {
   constructor(readonly code: string, readonly status = 409, readonly detail?: unknown) { super(code); }
 }
+
+export const workforceParticipantProposalSchema = z.object({ contactId: z.string().uuid(), recipientPrincipalId: z.string().uuid(),
+  purpose: z.string().min(1).max(256), validUntil: z.string().datetime({ offset: true }),
+  idempotencyKey: z.string().min(1).max(160) }).strict();
+export const workforceParticipantDispositionSchema = z.object({ action: z.enum(["CONFIRM", "REVOKE"]), proposalDigest: z.string().regex(/^[a-f0-9]{64}$/),
+  expectedRevision: z.number().int().nonnegative(), idempotencyKey: z.string().min(1).max(160) }).strict();
+
+export const reconcileWorkforceExecutionSchema = z.object({
+  idempotencyKey: z.string().min(1).max(160), expectedRevision: z.number().int().nonnegative(),
+}).strict();

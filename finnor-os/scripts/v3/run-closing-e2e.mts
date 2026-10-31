@@ -21,6 +21,7 @@ import { createUpstreamFixtureSupport } from "../s5/owner-fixture.mjs";
 import { ClosingSpecSchema } from "@finnor/shared-types";
 import { compensationCases, prepareCompensationFixture, compensationReadback, compensationFunding,
   type CompensationCase } from "../postz-w2/closing-compensation-fixture.mts";
+import { verifyClosingReaderPrivacy } from "./closing-reader-privacy.mts";
 
 process.umask(0o077); // Includes the database library's transient password file.
 const root = resolve(import.meta.dirname, "../../.."), backend = join(root, "finnor-os");
@@ -593,6 +594,7 @@ try {
   for (const role of ["finnor_app", "finnor_worker", "finnor_closing_checker", "finnor_closing_broker"])
     await admin.query(`ALTER ROLE ${role} LOGIN PASSWORD '${password}'`);
   await admin.query("SET app.test_vertical_mode='explicit'");
+  if (workforceCompensation) await verifyClosingReaderPrivacy(admin, save);
   Object.assign(process.env, baseEnv, { DATABASE_URL: databaseUrl("finnor_app") }); await closePool();
   authServer = createServer((_req, res) => {
     res.setHeader("content-type", "application/json");

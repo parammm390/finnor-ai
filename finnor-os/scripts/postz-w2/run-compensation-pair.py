@@ -177,7 +177,8 @@ def main():
             record["expectedOriginalMissingJoinDemonstrated"] = True
         else:
             assert result["passed"] and child.returncode == 0, "REPAIRED_OWNER_EPISODE_FAILED"
-        for name in ("results.json", "workforce-compensation/settled-owner-before-projection-assertion.json",
+        for name in ("results.json", "closing-reader-privacy-original.json", "closing-reader-privacy-result.json",
+                "workforce-compensation/settled-owner-before-projection-assertion.json",
                 "workforce-compensation/receiving-join-" + selected + ".json"):
             source = owner / name
             if source.exists():

@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 4175fb2f1dce21396fc4251cebda133bd5c3b85b3812b02b2cbae31a6c190665.
+// Generated from finnor-os/openapi.json, SHA-256 5cbfb76814cc92278e0054ecaf6669652aec9c22e780eba73b2152ab25c87e72.
 export interface paths {
     "/api/interventions/assess-pywhy": {
         parameters: {
@@ -3513,7 +3513,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff" | "application-submit" | "application-maintain" | "application-command" | "application-read" | "application-record" | "application-list" | "application-history" | "application-asset" | "application-cancel" | "application-rollback" | "application-impact" | "application-upload" | "application-prepare-effect" | "application-s8-propose" | "application-admission" | "application-acquire" | "application-execute" | "application-projection" | "application-resume" | "institution-submit" | "institution-revise" | "institution-read" | "institution-status" | "institution-cancel" | "institution-resume" | "institution-witness" | "institution-sources" | "institution-inputs" | "institution-mandate" | "institution-register-source" | "institution-consent" | "learning-consent" | "learning-revoke-consent" | "learning-experience" | "learning-submit" | "learning-read" | "learning-list" | "learning-execute" | "learning-evaluate" | "learning-cancel" | "learning-invalidate" | "learning-retry" | "learning-rollback" | "learning-s8-propose" | "learning-admission" | "learning-register-assignment" | "learning-retrain" | "identification-targets" | "identification-consent" | "identification-revoke-consent" | "identification-submit" | "identification-read" | "identification-list" | "identification-history" | "identification-experiment" | "identification-replicate" | "identification-use" | "identification-cancel" | "identification-invalidate" | "identification-retry" | "identification-s8-propose" | "identification-admission" | "economic-theory-submit" | "economic-theory-read" | "economic-theory-list" | "economic-theory-admit" | "economic-theory-resume" | "economic-theory-cancel" | "economic-theory-artifact" | "economic-theory-compare" | "economic-programme-create" | "economic-programme-run" | "economic-programme-read" | "economic-programme-reconcile" | "economic-reservation-create" | "economic-reservation-read" | "response-model-submit" | "response-model-list" | "response-model-read" | "response-model-admit" | "response-model-resume" | "response-model-cancel" | "response-model-artifact" | "response-model-compare" | "response-forecast" | "response-programme" | "response-use-read" | "response-use-resume" | "response-use-cancel" | "interaction-submit" | "interaction-read" | "interaction-list" | "interaction-admit" | "interaction-resume" | "interaction-cancel" | "interaction-artifact" | "interaction-compare" | "interaction-terms" | "interaction-local" | "interaction-consent" | "interaction-start" | "interaction-run-read" | "interaction-observe" | "interaction-action" | "interaction-materialize" | "interaction-run" | "interaction-reconcile" | "confidential-intake" | "confidential-source-handle" | "confidential-plan" | "confidential-submit" | "confidential-read" | "confidential-list" | "confidential-consent" | "confidential-revoke" | "confidential-prepare" | "confidential-commit" | "confidential-import-release" | "confidential-cancel" | "confidential-invalidate" | "confidential-retry" | "confidential-reconcile" | "confidential-underwriting" | "confidential-control-choice" | "confidential-allocation" | "confidential-obligation" | "confidential-s8-propose" | "confidential-s8-current";
+                    operation: "opportunity-promote" | "belief-view" | "belief-pin" | "roots" | "projection" | "search" | "object" | "traverse" | "provenance" | "history" | "evidence-lineage" | "decision-lineage" | "available-actions" | "context" | "evidence-handles" | "evidence-submit" | "evidence-read" | "evidence-witness" | "evidence-replay" | "evidence-cancel" | "evidence-consume" | "program-submit" | "program-read" | "program-witness" | "program-module" | "program-projection" | "program-cancel" | "program-resume" | "program-artifact" | "program-ports" | "program-interface-module" | "compute-search-submit" | "compute-search-read" | "compute-search-projection" | "compute-search-cancel" | "compute-search-resume" | "compute-search-reconcile" | "interface-acquire" | "interface-read" | "interface-projection" | "interface-catalogue" | "interface-module" | "interface-cancel" | "interface-resume" | "interface-reconcile" | "interface-admission" | "interface-invoke" | "interface-ports" | "decision-slice-compile" | "decision-slice-read" | "decision-slice-context" | "decision-slice-patch" | "decision-slice-witness" | "decision-slice-consume" | "decision-slice-cancel" | "decision-slice-recompile" | "decision-slice-changes" | "decision-slice-view" | "continuation-submit" | "continuation-read" | "continuation-projection" | "procedure-experience" | "procedure-induce" | "procedure-induction-read" | "procedure-induction-cancel" | "procedure-read" | "procedure-component" | "procedure-counterexample" | "procedure-projection" | "procedure-admission-request" | "procedure-interface" | "procedure-costs" | "deliberation-submit" | "deliberation-read" | "deliberation-projection" | "deliberation-cancel" | "deliberation-resume" | "deliberation-reconcile" | "deliberation-calibrate" | "deliberation-evidence-read" | "deliberation-module-read" | "economic-orchestration-research" | "economic-orchestration-submit" | "economic-orchestration-read" | "economic-orchestration-projection" | "economic-orchestration-cancel" | "economic-orchestration-resume" | "economic-orchestration-reconcile" | "economic-orchestration-invalidate" | "economic-orchestration-response-refresh" | "capital-formation-submit" | "capital-formation-read" | "capital-formation-list" | "capital-formation-profiles" | "capital-formation-advance" | "capital-formation-event" | "capital-formation-proposal" | "capital-formation-cancel" | "capital-formation-draw-handoff" | "application-submit" | "application-maintain" | "application-command" | "application-read" | "application-record" | "application-list" | "application-history" | "application-asset" | "application-cancel" | "application-rollback" | "application-impact" | "application-upload" | "application-prepare-effect" | "application-s8-propose" | "application-admission" | "application-acquire" | "application-execute" | "application-projection" | "application-resume" | "institution-submit" | "institution-revise" | "institution-read" | "institution-status" | "institution-cancel" | "institution-resume" | "institution-witness" | "institution-sources" | "institution-inputs" | "institution-mandate" | "institution-register-source" | "institution-consent" | "learning-consent" | "learning-revoke-consent" | "learning-experience" | "learning-submit" | "learning-read" | "learning-list" | "learning-execute" | "learning-evaluate" | "learning-cancel" | "learning-invalidate" | "learning-retry" | "learning-rollback" | "learning-s8-propose" | "learning-admission" | "learning-register-assignment" | "learning-retrain" | "identification-targets" | "identification-consent" | "identification-revoke-consent" | "identification-submit" | "identification-read" | "identification-list" | "identification-history" | "identification-experiment" | "identification-replicate" | "identification-use" | "identification-cancel" | "identification-invalidate" | "identification-retry" | "identification-s8-propose" | "identification-admission" | "economic-theory-submit" | "economic-theory-read" | "economic-theory-list" | "economic-theory-admit" | "economic-theory-resume" | "economic-theory-cancel" | "economic-theory-artifact" | "economic-theory-compare" | "economic-programme-create" | "economic-programme-run" | "economic-programme-read" | "economic-programme-reconcile" | "economic-reservation-create" | "economic-reservation-read" | "response-model-submit" | "response-model-list" | "response-model-read" | "response-model-admit" | "response-model-resume" | "response-model-cancel" | "response-model-artifact" | "response-model-compare" | "response-forecast" | "response-programme" | "response-use-read" | "response-use-resume" | "response-use-cancel" | "interaction-submit" | "interaction-read" | "interaction-list" | "interaction-admit" | "interaction-resume" | "interaction-cancel" | "interaction-artifact" | "interaction-compare" | "interaction-terms" | "interaction-local" | "interaction-consent" | "interaction-start" | "interaction-run-read" | "interaction-observe" | "interaction-action" | "interaction-materialize" | "interaction-run" | "interaction-reconcile" | "confidential-intake" | "confidential-source-handle" | "confidential-plan" | "confidential-submit" | "confidential-read" | "confidential-list" | "confidential-consent" | "confidential-revoke" | "confidential-prepare" | "confidential-commit" | "confidential-import-release" | "confidential-cancel" | "confidential-invalidate" | "confidential-retry" | "confidential-reconcile" | "confidential-underwriting" | "confidential-control-choice" | "confidential-allocation" | "confidential-obligation" | "confidential-s8-propose" | "confidential-s8-current";
                 };
                 cookie?: never;
             };
@@ -8481,7 +8481,438 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** @description Original-human private retrieval of one native Objective query; IDs select custody and never authorize it. */
+        get: {
+            parameters: {
+                query: {
+                    workId: string;
+                    workInputId: string;
+                    objectiveStepId: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Immutable original canonical query and native provenance; Cache-Control: no-store */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            query: {
+                                request: {
+                                    /** @constant */
+                                    intent: "company_revenue";
+                                    company: {
+                                        /** @constant */
+                                        kind: "TENANT_DEFAULT";
+                                    } | {
+                                        /** @constant */
+                                        kind: "ID";
+                                        /** Format: uuid */
+                                        id: string;
+                                    } | {
+                                        /** @constant */
+                                        kind: "NAME";
+                                        name: string;
+                                    };
+                                    /** @constant */
+                                    period: "LAST_COMPLETED_MONTH";
+                                    currency?: string;
+                                    /** @enum {string} */
+                                    basis?: "ACCRUAL" | "CASH";
+                                    /** @enum {string} */
+                                    calendar?: "CALENDAR" | "FISCAL";
+                                } | {
+                                    /** @constant */
+                                    intent: "stock_quote";
+                                    instrument: {
+                                        /** @constant */
+                                        kind: "SYMBOL";
+                                        symbol: string;
+                                        exchange?: string;
+                                    } | {
+                                        /** @constant */
+                                        kind: "NAME";
+                                        name: string;
+                                        exchange?: string;
+                                    };
+                                    currency?: string;
+                                };
+                                result: {
+                                    /** @constant */
+                                    kind: "operational_query_result";
+                                    /** @constant */
+                                    version: 1;
+                                    /** @enum {string} */
+                                    status: "ok" | "partial" | "unavailable" | "ambiguous";
+                                    source: {
+                                        /** @constant */
+                                        kind: "canonical_postgres";
+                                        tables: string[];
+                                    };
+                                    /** Format: date-time */
+                                    asOf: string;
+                                    count: 0 | 1;
+                                    /** @constant */
+                                    truncated: false;
+                                    data: {
+                                        /** @enum {string} */
+                                        availability: "AVAILABLE" | "CURRENT" | "DELAYED" | "STALE" | "UNAVAILABLE" | "AMBIGUOUS" | "CONFLICTED";
+                                    };
+                                    page: {
+                                        /** @constant */
+                                        limit: 1;
+                                        returned: 0 | 1;
+                                        totalCount: 0 | 1;
+                                        /** @constant */
+                                        totalCountExact: true;
+                                        /** @constant */
+                                        hasMore: false;
+                                        nextCursor: null;
+                                        /** @constant */
+                                        truncated: false;
+                                    };
+                                    meta: {
+                                        /** @constant */
+                                        version: 1;
+                                        source: {
+                                            /** @constant */
+                                            kind: "canonical_postgres";
+                                            tables: string[];
+                                        };
+                                        /** Format: date-time */
+                                        asOf: string;
+                                    };
+                                    execution: {
+                                        /** Format: uuid */
+                                        id: string;
+                                        /** Format: uuid */
+                                        workId: string;
+                                        /** Format: uuid */
+                                        workInputId: string;
+                                        executionKey: string;
+                                        /** @constant */
+                                        status: "succeeded";
+                                    };
+                                    /** @constant */
+                                    intent: "company_revenue";
+                                    economicRead: {
+                                        /** Format: date-time */
+                                        observedAt: string;
+                                        witnesses: {
+                                            /** Format: uuid */
+                                            sourceId: string;
+                                            /** Format: uuid */
+                                            versionId: string;
+                                            contentHash: string;
+                                            /** Format: date-time */
+                                            asOf: string;
+                                            /** Format: uuid */
+                                            metricSeriesId?: string;
+                                            /** Format: uuid */
+                                            observationId?: string;
+                                        }[];
+                                        /** @constant */
+                                        intent: "company_revenue";
+                                        /** @constant */
+                                        availability: "AVAILABLE";
+                                        statement: {
+                                            /** @constant */
+                                            schema: "finnor.recorded-revenue-statement.v1";
+                                            /** Format: uuid */
+                                            companyId: string;
+                                            metricKey: string;
+                                            monthId: string;
+                                            /** Format: date-time */
+                                            periodStart: string;
+                                            /** Format: date-time */
+                                            periodEnd: string;
+                                            /** @enum {string} */
+                                            basis: "ACCRUAL" | "CASH";
+                                            currency: string;
+                                            calendarRef: string;
+                                            timeZone: string;
+                                            consolidationRef: string;
+                                            /** @enum {string} */
+                                            reportingStatus: "PROVISIONAL" | "CLOSED";
+                                            amount: string;
+                                            /** Format: date-time */
+                                            sourceUpdatedAt: string;
+                                        };
+                                        companyName: string;
+                                    } | {
+                                        /** Format: date-time */
+                                        observedAt: string;
+                                        witnesses: {
+                                            /** Format: uuid */
+                                            sourceId: string;
+                                            /** Format: uuid */
+                                            versionId: string;
+                                            contentHash: string;
+                                            /** Format: date-time */
+                                            asOf: string;
+                                            /** Format: uuid */
+                                            metricSeriesId?: string;
+                                            /** Format: uuid */
+                                            observationId?: string;
+                                        }[];
+                                        /** @constant */
+                                        intent: "company_revenue";
+                                        /** @enum {string} */
+                                        availability: "UNAVAILABLE" | "AMBIGUOUS" | "CONFLICTED";
+                                        reason: string;
+                                    };
+                                } | {
+                                    /** @constant */
+                                    kind: "operational_query_result";
+                                    /** @constant */
+                                    version: 1;
+                                    /** @enum {string} */
+                                    status: "ok" | "partial" | "unavailable" | "ambiguous";
+                                    source: {
+                                        /** @constant */
+                                        kind: "canonical_postgres";
+                                        tables: string[];
+                                    };
+                                    /** Format: date-time */
+                                    asOf: string;
+                                    count: 0 | 1;
+                                    /** @constant */
+                                    truncated: false;
+                                    data: {
+                                        /** @enum {string} */
+                                        availability: "AVAILABLE" | "CURRENT" | "DELAYED" | "STALE" | "UNAVAILABLE" | "AMBIGUOUS" | "CONFLICTED";
+                                    };
+                                    page: {
+                                        /** @constant */
+                                        limit: 1;
+                                        returned: 0 | 1;
+                                        totalCount: 0 | 1;
+                                        /** @constant */
+                                        totalCountExact: true;
+                                        /** @constant */
+                                        hasMore: false;
+                                        nextCursor: null;
+                                        /** @constant */
+                                        truncated: false;
+                                    };
+                                    meta: {
+                                        /** @constant */
+                                        version: 1;
+                                        source: {
+                                            /** @constant */
+                                            kind: "canonical_postgres";
+                                            tables: string[];
+                                        };
+                                        /** Format: date-time */
+                                        asOf: string;
+                                    };
+                                    execution: {
+                                        /** Format: uuid */
+                                        id: string;
+                                        /** Format: uuid */
+                                        workId: string;
+                                        /** Format: uuid */
+                                        workInputId: string;
+                                        executionKey: string;
+                                        /** @constant */
+                                        status: "succeeded";
+                                    };
+                                    /** @constant */
+                                    intent: "stock_quote";
+                                    economicRead: {
+                                        /** Format: date-time */
+                                        observedAt: string;
+                                        witnesses: {
+                                            /** Format: uuid */
+                                            sourceId: string;
+                                            /** Format: uuid */
+                                            versionId: string;
+                                            contentHash: string;
+                                            /** Format: date-time */
+                                            asOf: string;
+                                            /** Format: uuid */
+                                            metricSeriesId?: string;
+                                            /** Format: uuid */
+                                            observationId?: string;
+                                        }[];
+                                        /** @constant */
+                                        intent: "stock_quote";
+                                        /** @enum {string} */
+                                        availability: "CURRENT" | "DELAYED";
+                                        quote: {
+                                            /** @constant */
+                                            schema: "finnor.recorded-market-quote.v1";
+                                            providerRef: string;
+                                            instrument: {
+                                                symbol: string;
+                                                exchange: string;
+                                                currency: string;
+                                                /** Format: uuid */
+                                                issuerCompanyId: string;
+                                            };
+                                            price: string;
+                                            /** Format: date-time */
+                                            providerTimestamp: string;
+                                            /** @enum {string} */
+                                            marketSession: "PRE_MARKET" | "REGULAR" | "AFTER_HOURS" | "CLOSED";
+                                            delaySeconds: number;
+                                            /** Format: date-time */
+                                            validUntil: string;
+                                            license: {
+                                                reference: string;
+                                                displayAllowed: boolean;
+                                                /** Format: date-time */
+                                                startsAt: string;
+                                                /** Format: date-time */
+                                                endsAt: string;
+                                            };
+                                        };
+                                        companyName: string;
+                                    } | {
+                                        /** Format: date-time */
+                                        observedAt: string;
+                                        witnesses: {
+                                            /** Format: uuid */
+                                            sourceId: string;
+                                            /** Format: uuid */
+                                            versionId: string;
+                                            contentHash: string;
+                                            /** Format: date-time */
+                                            asOf: string;
+                                            /** Format: uuid */
+                                            metricSeriesId?: string;
+                                            /** Format: uuid */
+                                            observationId?: string;
+                                        }[];
+                                        /** @constant */
+                                        intent: "stock_quote";
+                                        /** @constant */
+                                        availability: "STALE";
+                                        lastKnown: {
+                                            /** @constant */
+                                            schema: "finnor.recorded-market-quote.v1";
+                                            providerRef: string;
+                                            instrument: {
+                                                symbol: string;
+                                                exchange: string;
+                                                currency: string;
+                                                /** Format: uuid */
+                                                issuerCompanyId: string;
+                                            };
+                                            price: string;
+                                            /** Format: date-time */
+                                            providerTimestamp: string;
+                                            /** @enum {string} */
+                                            marketSession: "PRE_MARKET" | "REGULAR" | "AFTER_HOURS" | "CLOSED";
+                                            delaySeconds: number;
+                                            /** Format: date-time */
+                                            validUntil: string;
+                                            license: {
+                                                reference: string;
+                                                displayAllowed: boolean;
+                                                /** Format: date-time */
+                                                startsAt: string;
+                                                /** Format: date-time */
+                                                endsAt: string;
+                                            };
+                                        };
+                                        reason: string;
+                                    } | {
+                                        /** Format: date-time */
+                                        observedAt: string;
+                                        witnesses: {
+                                            /** Format: uuid */
+                                            sourceId: string;
+                                            /** Format: uuid */
+                                            versionId: string;
+                                            contentHash: string;
+                                            /** Format: date-time */
+                                            asOf: string;
+                                            /** Format: uuid */
+                                            metricSeriesId?: string;
+                                            /** Format: uuid */
+                                            observationId?: string;
+                                        }[];
+                                        /** @constant */
+                                        intent: "stock_quote";
+                                        /** @enum {string} */
+                                        availability: "UNAVAILABLE" | "AMBIGUOUS" | "CONFLICTED";
+                                        reason: string;
+                                    };
+                                };
+                                metadata: {
+                                    /** Format: uuid */
+                                    queryId: string;
+                                    /** @constant */
+                                    source: "postgresql";
+                                    durationMs: number;
+                                    /** Format: date-time */
+                                    startedAt: string;
+                                    /** Format: date-time */
+                                    completedAt: string;
+                                };
+                            };
+                            /** Format: uuid */
+                            workId: string;
+                            /** Format: uuid */
+                            workInputId: string;
+                            /** Format: uuid */
+                            instructionId: string;
+                            objective?: {
+                                /** @constant */
+                                kind: "objective_query";
+                                /** Format: uuid */
+                                objectiveLoopId: string;
+                                objectiveRevision: number;
+                                /** Format: uuid */
+                                planRevisionId: string;
+                                planNodeId: string;
+                                /** Format: uuid */
+                                objectiveStepId: string;
+                                attemptNumber: number;
+                                /** Format: uuid */
+                                originalPrincipalId: string;
+                                /** Format: uuid */
+                                originalWorkInputId: string;
+                                /** Format: uuid */
+                                originalInstructionId: string;
+                                originalInputSha256: string;
+                                planSemanticHash: string;
+                                nodeSemanticHash: string;
+                                goalSemanticHash: string;
+                                acceptanceHash: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid or additional selectors */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unavailable original custody or current query/source rights; no financial payload */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         put?: never;
         post: {
             parameters: {
@@ -8493,6 +8924,52 @@ export interface paths {
             requestBody?: {
                 content: {
                     "application/json": {
+                        /** @constant */
+                        intent: "company_revenue";
+                        company: {
+                            /** @constant */
+                            kind: "TENANT_DEFAULT";
+                        } | {
+                            /** @constant */
+                            kind: "ID";
+                            /** Format: uuid */
+                            id: string;
+                        } | {
+                            /** @constant */
+                            kind: "NAME";
+                            name: string;
+                        };
+                        /** @constant */
+                        period: "LAST_COMPLETED_MONTH";
+                        currency?: string;
+                        /** @enum {string} */
+                        basis?: "ACCRUAL" | "CASH";
+                        /** @enum {string} */
+                        calendar?: "CALENDAR" | "FISCAL";
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                    } | {
+                        /** @constant */
+                        intent: "stock_quote";
+                        instrument: {
+                            /** @constant */
+                            kind: "SYMBOL";
+                            symbol: string;
+                            exchange?: string;
+                        } | {
+                            /** @constant */
+                            kind: "NAME";
+                            name: string;
+                            exchange?: string;
+                        };
+                        currency?: string;
+                        /** Format: uuid */
+                        workId?: string;
+                        executionKey?: string;
+                        idempotencyKey?: string;
+                    } | {
                         /** @constant */
                         intent: "work_list";
                         /** Format: uuid */
@@ -8816,6 +9293,847 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workforce/participants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current principal-scoped existing-contact binding proposals and dispositions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        contactId: string;
+                        /** Format: uuid */
+                        recipientPrincipalId: string;
+                        purpose: string;
+                        /** Format: date-time */
+                        validUntil: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Existing-contact purpose and identity binding proposed; no contact sent or assignment acceptance implied */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid binding input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current enrollment authority required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Existing contact or principal unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current binding or idempotency conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Request bound exceeded */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workforce/participants/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        action: "CONFIRM" | "REVOKE";
+                        proposalDigest: string;
+                        expectedRevision: number;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Exact recipient binding confirmation or revocation retained; assignment acceptance remains separate */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid disposition input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Exact current recipient or original proposer rights required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Binding unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Binding revision, proposal or idempotency changed */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Request bound exceeded */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workforce/execution-programs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    workId: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current principal-visible execution programmes for the exact canonical Work */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Work identifier required */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Work unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        workId: string;
+                        /** Format: uuid */
+                        workInputId: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Exact Work input submitted to the bounded durable execution owner; not completion */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid original input reference */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current execution authority required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Work or input unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original input, resource or idempotency conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Request bound exceeded */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workforce/execution-programs/intake": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        workId: string;
+                        idempotencyKey: string;
+                        original: {
+                            /** @constant */
+                            schema: "finnor.workforce-original-outcome.v1";
+                            /** @enum {string} */
+                            sourceClass: "CONTROLLED_ACTOR_RECORDS" | "NATIVE_RECORDS";
+                            outcome: {
+                                /** Format: date-time */
+                                deadline: string;
+                                tasks: {
+                                    id: string;
+                                    parentTaskId: string | null;
+                                    dependsOn: string[];
+                                    returnTo: string[];
+                                    delegatorActorId: string;
+                                    criterionId: string;
+                                    requiredCapabilities: {
+                                        skill: string;
+                                        scope: string;
+                                    }[];
+                                    allowedActorKinds: ("DETERMINISTIC_SERVICE" | "MODEL_AGENT" | "COMPUTATIONAL_CELL" | "INTERNAL_HUMAN" | "EXTERNAL_PROFESSIONAL" | "PROVIDER")[];
+                                    /** @enum {string} */
+                                    assignmentMode: "INTERNAL_AUTHORIZED" | "EXTERNAL_VOLUNTARY";
+                                    ceiling: {
+                                        capabilities: string[];
+                                        dataScopes: string[];
+                                        purposes: string[];
+                                        effects: string[];
+                                        /** Format: date-time */
+                                        validFrom: string;
+                                        /** Format: date-time */
+                                        validUntil: string;
+                                        allowSubdelegation: boolean;
+                                    };
+                                    terms: {
+                                        revision: number;
+                                        deliverable: string;
+                                        compensation: {
+                                            value: string;
+                                            unit: string;
+                                        };
+                                        subdelegation: boolean;
+                                        /** Format: date-time */
+                                        expiresAt: string;
+                                    };
+                                    /** Format: date-time */
+                                    dueAt: string;
+                                    slot: {
+                                        /** Format: date-time */
+                                        startAt: string;
+                                        /** Format: date-time */
+                                        endAt: string;
+                                    };
+                                    effortSeconds: string;
+                                    demand: {
+                                        resourceId: string;
+                                        unit: string;
+                                        /** @enum {string} */
+                                        kind: "STOCK" | "FLOW" | "OCCUPANCY" | "CUMULATIVE_EXPENDITURE" | "EXPOSURE";
+                                        horizon: {
+                                            /** Format: date-time */
+                                            startAt: string;
+                                            periodMs: number;
+                                            periods: number;
+                                        };
+                                        quantities: string[];
+                                        minimumQuantities: string[];
+                                    }[];
+                                    context: {
+                                        dataScopes: string[];
+                                        purposes: string[];
+                                        includesCredentials: boolean;
+                                    };
+                                    effectId: string | null;
+                                }[];
+                                ceiling: {
+                                    capabilities: string[];
+                                    dataScopes: string[];
+                                    purposes: string[];
+                                    effects: string[];
+                                    /** Format: date-time */
+                                    validFrom: string;
+                                    /** Format: date-time */
+                                    validUntil: string;
+                                    allowSubdelegation: boolean;
+                                };
+                                resourceLimits: {
+                                    resourceId: string;
+                                    unit: string;
+                                    /** @enum {string} */
+                                    kind: "STOCK" | "FLOW" | "OCCUPANCY" | "CUMULATIVE_EXPENDITURE" | "EXPOSURE";
+                                    horizon: {
+                                        /** Format: date-time */
+                                        startAt: string;
+                                        periodMs: number;
+                                        periods: number;
+                                    };
+                                    quantities: string[];
+                                    minimumQuantities: string[];
+                                }[];
+                                criteria: {
+                                    id: string;
+                                    /** Format: uuid */
+                                    checkerActorId: string;
+                                    /** Format: uuid */
+                                    evidenceCustodianActorId: string;
+                                    acceptance: {
+                                        /** @constant */
+                                        kind: "EXACT_JSON";
+                                        expected: unknown;
+                                    } | {
+                                        /** @constant */
+                                        kind: "AUTHENTICATED_HUMAN_JUDGMENT";
+                                        question: string;
+                                    };
+                                }[];
+                            };
+                            actorSourceIds: string[];
+                            resources: {
+                                resourceRefs: {
+                                    owner: string;
+                                    id: string;
+                                    version: string;
+                                    contentDigest: string;
+                                }[];
+                                schedules: {
+                                    resourceId: string;
+                                    quantities: string[];
+                                }[];
+                            };
+                            operations: {
+                                taskId: string;
+                                computation: {
+                                    /** @constant */
+                                    kind: "SUM_INTEGERS";
+                                    values: string[];
+                                } | {
+                                    /** @constant */
+                                    kind: "SORT_STRINGS";
+                                    values: string[];
+                                } | {
+                                    /** @constant */
+                                    kind: "HUMAN_JUDGMENT";
+                                    prompt: string;
+                                } | {
+                                    /** @constant */
+                                    kind: "PARTICIPANT_INPUT";
+                                    prompt: string;
+                                };
+                            }[];
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Exact original outcome accepted as canonical Work input before bounded execution */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid original outcome */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current Work and actor authority required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Work or actor source unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original scope, resource or idempotency conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Request bound exceeded */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workforce/execution-programs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Exact principal-visible programme, retained assignments and actual execution history */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Programme identifier required */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Programme unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workforce/execution-programs/{id}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        idempotencyKey: string;
+                        expectedRevision: number;
+                        assignmentId: string;
+                        /** @enum {string} */
+                        action: "ACCEPT" | "DECLINE" | "START" | "BLOCK" | "RETURN" | "DELIVER" | "DISPUTE" | "CANCEL" | "CONFIRM_CANCEL" | "EXPIRE" | "CLOSE" | "VERIFY" | "REASSIGN" | "REVISE_TERMS" | "RELEASE_LABOR" | "SUBDELEGATE";
+                        termsDigest: string;
+                        termsRevision: number;
+                        reason?: string;
+                        value?: unknown;
+                        /** Format: uuid */
+                        replacementActorId?: string;
+                        replacementAssignmentId?: string;
+                        revisedTerms?: {
+                            revision: number;
+                            deliverable: string;
+                            compensation: {
+                                value: string;
+                                unit: string;
+                            };
+                            subdelegation: boolean;
+                            /** Format: date-time */
+                            expiresAt: string;
+                        };
+                        refinement?: {
+                            /** @enum {string} */
+                            kind: "SUBDELEGATION" | "RECIPROCAL_REQUEST";
+                            /** Format: uuid */
+                            recipientActorId: string;
+                            task: {
+                                id: string;
+                                dependsOn: string[];
+                                returnTo: string[];
+                                requiredCapabilities: {
+                                    skill: string;
+                                    scope: string;
+                                }[];
+                                allowedActorKinds: ("DETERMINISTIC_SERVICE" | "MODEL_AGENT" | "COMPUTATIONAL_CELL" | "INTERNAL_HUMAN" | "EXTERNAL_PROFESSIONAL" | "PROVIDER")[];
+                                /** @enum {string} */
+                                assignmentMode: "INTERNAL_AUTHORIZED" | "EXTERNAL_VOLUNTARY";
+                                ceiling: {
+                                    capabilities: string[];
+                                    dataScopes: string[];
+                                    purposes: string[];
+                                    effects: string[];
+                                    /** Format: date-time */
+                                    validFrom: string;
+                                    /** Format: date-time */
+                                    validUntil: string;
+                                    allowSubdelegation: boolean;
+                                };
+                                terms: {
+                                    revision: number;
+                                    deliverable: string;
+                                    compensation: {
+                                        value: string;
+                                        unit: string;
+                                    };
+                                    subdelegation: boolean;
+                                    /** Format: date-time */
+                                    expiresAt: string;
+                                };
+                                /** Format: date-time */
+                                dueAt: string;
+                                slot: {
+                                    /** Format: date-time */
+                                    startAt: string;
+                                    /** Format: date-time */
+                                    endAt: string;
+                                };
+                                effortSeconds: string;
+                                demand: {
+                                    resourceId: string;
+                                    unit: string;
+                                    /** @enum {string} */
+                                    kind: "STOCK" | "FLOW" | "OCCUPANCY" | "CUMULATIVE_EXPENDITURE" | "EXPOSURE";
+                                    horizon: {
+                                        /** Format: date-time */
+                                        startAt: string;
+                                        periodMs: number;
+                                        periods: number;
+                                    };
+                                    quantities: string[];
+                                    minimumQuantities: string[];
+                                }[];
+                                context: {
+                                    dataScopes: string[];
+                                    purposes: string[];
+                                    includesCredentials: boolean;
+                                };
+                                effectId: string | null;
+                            };
+                            criterion: {
+                                id: string;
+                                /** Format: uuid */
+                                checkerActorId: string;
+                                /** Format: uuid */
+                                evidenceCustodianActorId: string;
+                                acceptance: {
+                                    /** @constant */
+                                    kind: "EXACT_JSON";
+                                    expected: unknown;
+                                } | {
+                                    /** @constant */
+                                    kind: "AUTHENTICATED_HUMAN_JUDGMENT";
+                                    question: string;
+                                };
+                            };
+                            computation: {
+                                /** @constant */
+                                kind: "SUM_INTEGERS";
+                                values: string[];
+                            } | {
+                                /** @constant */
+                                kind: "SORT_STRINGS";
+                                values: string[];
+                            } | {
+                                /** @constant */
+                                kind: "HUMAN_JUDGMENT";
+                                prompt: string;
+                            } | {
+                                /** @constant */
+                                kind: "PARTICIPANT_INPUT";
+                                prompt: string;
+                            };
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Exact authenticated assignment action retained under its original terms and authority */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid assignment action */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current exact actor authority required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Programme or assignment unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Terms, revision, deadline, resource or idempotency conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Request bound exceeded */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/workforce/execution-programs/{id}/reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        idempotencyKey: string;
+                        expectedRevision: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Recovery of the quarantined original requested under its retained resources; not a replacement execution */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid recovery input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current original Work authority required */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Programme unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original delivery, revision, recovery bound or idempotency conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Request bound exceeded */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -23637,6 +24955,21 @@ export interface paths {
                         requestedKinds?: "MODEL_REFINE"[];
                         /** @default [] */
                         routeIds?: string[];
+                        orchestration?: {
+                            /** @constant */
+                            schema: "finnor.economic-orchestration-options.v1";
+                            purposeRef: string;
+                            populationRef: string;
+                            domainRef: string;
+                            /** @default null */
+                            responseRef?: string | null;
+                            continuationRef?: string | null;
+                            /**
+                             * @default TRAIN
+                             * @enum {string}
+                             */
+                            observationSplit?: "TRAIN" | "CALIBRATION";
+                        };
                         deliberation?: {
                             moduleRef: {
                                 owner: string;
@@ -23800,7 +25133,7 @@ export interface paths {
                         /** Format: uuid */
                         workId: string;
                         /** @enum {string} */
-                        methodOwner?: "P2" | "M2";
+                        methodOwner?: "P2" | "M2" | "W1";
                     };
                 };
             };
@@ -24839,6 +26172,850 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/company-brain/economic-orchestration-research": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Existing shared whole-transport attenuation; no new Work deadline or compute grant */
+                    "x-deliberation-deadline-ms"?: number;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @constant */
+                        schema: "finnor.w1.primary-research-request.v1";
+                        /** @constant */
+                        mode: "ordinary_disposable";
+                        root: {
+                            /** @enum {string} */
+                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                        /** Format: uuid */
+                        workId: string;
+                        /** Format: uuid */
+                        workInputId: string;
+                        question: string;
+                        /** Format: date-time */
+                        deadlineAt: string;
+                        /** @default 1 */
+                        maxParallel?: number;
+                        requirements: {
+                            id: string;
+                            question: string;
+                            /** Format: uuid */
+                            sourceId: string;
+                            path: string[];
+                            /** @enum {string} */
+                            valueType: "string" | "number" | "boolean";
+                            /** @default [] */
+                            dependsOn?: string[];
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated principal-scoped native policy, measured response or lifecycle receipt; no protected authority */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original P1/S4/S5-bound ordinary W1 work accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded native contract rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private Work is indistinguishable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited whole-transport deadline exhausted */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner, currentness, unsupported port or resource predicate unpassed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-orchestration-submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Existing shared whole-transport attenuation; no new Work deadline or compute grant */
+                    "x-deliberation-deadline-ms"?: number;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        programId: string;
+                        policyRequest: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        computeGrant: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        idempotencyKey: string;
+                        /** @enum {string} */
+                        mode: "ordinary_disposable" | "protected";
+                        /**
+                         * @default ADAPTIVE
+                         * @enum {string}
+                         */
+                        strategy?: "ADAPTIVE" | "FIXED_SEQUENTIAL" | "FIXED_WIDE";
+                        limits: {
+                            maxUnits: number;
+                            maxParallel: number;
+                        };
+                        /** @default [] */
+                        requestedKinds?: "MODEL_REFINE"[];
+                        /** @default [] */
+                        routeIds?: string[];
+                        orchestration: {
+                            /** @constant */
+                            schema: "finnor.economic-orchestration-options.v1";
+                            purposeRef: string;
+                            populationRef: string;
+                            domainRef: string;
+                            /** @default null */
+                            responseRef?: string | null;
+                            continuationRef?: string | null;
+                            /**
+                             * @default TRAIN
+                             * @enum {string}
+                             */
+                            observationSplit?: "TRAIN" | "CALIBRATION";
+                        };
+                        /** @constant */
+                        schema: "finnor.economic-orchestration-request.v1";
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated principal-scoped native policy, measured response or lifecycle receipt; no protected authority */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original P1/S4/S5-bound ordinary W1 work accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded native contract rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private Work is indistinguishable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited whole-transport deadline exhausted */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner, currentness, unsupported port or resource predicate unpassed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-orchestration-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Existing shared whole-transport attenuation; no new Work deadline or compute grant */
+                    "x-deliberation-deadline-ms"?: number;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        searchId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated principal-scoped native policy, measured response or lifecycle receipt; no protected authority */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original P1/S4/S5-bound ordinary W1 work accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded native contract rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private Work is indistinguishable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited whole-transport deadline exhausted */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner, currentness, unsupported port or resource predicate unpassed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-orchestration-projection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Existing shared whole-transport attenuation; no new Work deadline or compute grant */
+                    "x-deliberation-deadline-ms"?: number;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        root: {
+                            /** @enum {string} */
+                            entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                            /** Format: uuid */
+                            entityId: string;
+                        };
+                        /** Format: uuid */
+                        workId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated principal-scoped native policy, measured response or lifecycle receipt; no protected authority */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original P1/S4/S5-bound ordinary W1 work accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded native contract rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private Work is indistinguishable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited whole-transport deadline exhausted */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner, currentness, unsupported port or resource predicate unpassed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-orchestration-cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Existing shared whole-transport attenuation; no new Work deadline or compute grant */
+                    "x-deliberation-deadline-ms"?: number;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        searchId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated principal-scoped native policy, measured response or lifecycle receipt; no protected authority */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original P1/S4/S5-bound ordinary W1 work accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded native contract rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private Work is indistinguishable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited whole-transport deadline exhausted */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner, currentness, unsupported port or resource predicate unpassed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-orchestration-resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Existing shared whole-transport attenuation; no new Work deadline or compute grant */
+                    "x-deliberation-deadline-ms"?: number;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        searchId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated principal-scoped native policy, measured response or lifecycle receipt; no protected authority */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original P1/S4/S5-bound ordinary W1 work accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded native contract rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private Work is indistinguishable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited whole-transport deadline exhausted */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner, currentness, unsupported port or resource predicate unpassed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-orchestration-reconcile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Existing shared whole-transport attenuation; no new Work deadline or compute grant */
+                    "x-deliberation-deadline-ms"?: number;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        searchId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated principal-scoped native policy, measured response or lifecycle receipt; no protected authority */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original P1/S4/S5-bound ordinary W1 work accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded native contract rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private Work is indistinguishable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited whole-transport deadline exhausted */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner, currentness, unsupported port or resource predicate unpassed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-orchestration-invalidate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Existing shared whole-transport attenuation; no new Work deadline or compute grant */
+                    "x-deliberation-deadline-ms"?: number;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        searchId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated principal-scoped native policy, measured response or lifecycle receipt; no protected authority */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original P1/S4/S5-bound ordinary W1 work accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded native contract rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private Work is indistinguishable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited whole-transport deadline exhausted */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner, currentness, unsupported port or resource predicate unpassed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/company-brain/economic-orchestration-response-refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Existing shared whole-transport attenuation; no new Work deadline or compute grant */
+                    "x-deliberation-deadline-ms"?: number;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        searchId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Authenticated principal-scoped native policy, measured response or lifecycle receipt; no protected authority */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original P1/S4/S5-bound ordinary W1 work accepted */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded native contract rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private Work is indistinguishable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Inherited whole-transport deadline exhausted */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original owner, currentness, unsupported port or resource predicate unpassed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/company-brain/deliberation-submit": {
         parameters: {
             query?: never;
@@ -24891,6 +27068,21 @@ export interface paths {
                         requestedKinds?: "MODEL_REFINE"[];
                         /** @default [] */
                         routeIds?: string[];
+                        orchestration?: {
+                            /** @constant */
+                            schema: "finnor.economic-orchestration-options.v1";
+                            purposeRef: string;
+                            populationRef: string;
+                            domainRef: string;
+                            /** @default null */
+                            responseRef?: string | null;
+                            continuationRef?: string | null;
+                            /**
+                             * @default TRAIN
+                             * @enum {string}
+                             */
+                            observationSplit?: "TRAIN" | "CALIBRATION";
+                        };
                         /** @constant */
                         schema: "finnor.deliberation-request.v1";
                         /** @default null */
@@ -25637,7 +27829,7 @@ export interface paths {
                         /** Format: uuid */
                         workId: string;
                         /** @enum {string} */
-                        methodOwner?: "P2" | "M2";
+                        methodOwner?: "P2" | "M2" | "W1";
                     };
                 };
             };
@@ -42595,6 +44787,40 @@ export interface paths {
                                 /** @enum {string} */
                                 purpose: "PURCHASE_PRICE" | "DEBT_PAYOFF" | "FEE" | "TAX" | "ESCROW" | "RELEASE";
                                 operationKey: string;
+                                workforceCompensation?: {
+                                    /** @constant */
+                                    schema: "finnor.s6.closing-workforce-compensation.v1";
+                                    obligationRef: {
+                                        owner: string;
+                                        id: string;
+                                        version: string;
+                                        contentDigest: string;
+                                    };
+                                    /** Format: uuid */
+                                    programmeId: string;
+                                    /** Format: uuid */
+                                    workId: string;
+                                    /** Format: uuid */
+                                    originalRoot: string;
+                                    assignmentId: string;
+                                    originalBudget: {
+                                        owner: string;
+                                        id: string;
+                                        version: string;
+                                        contentDigest: string;
+                                    };
+                                    originalReservation: {
+                                        owner: string;
+                                        id: string;
+                                        version: string;
+                                        contentDigest: string;
+                                    };
+                                    termsDigest: string;
+                                    /** Format: uuid */
+                                    payerPrincipalId: string;
+                                    /** Format: uuid */
+                                    payeePrincipalId: string;
+                                };
                             }[];
                             rightsTransfers: {
                                 key: string;
