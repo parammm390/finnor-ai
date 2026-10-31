@@ -3,7 +3,7 @@ import { readGit } from "./worktree-state.mjs"
 export function classifyPullRequestFiles(files) {
   return {
     backend: files.some((path) => path.startsWith("finnor-os/") || path.startsWith("scripts/release/") || path.startsWith("infra/") || path.startsWith(".github/workflows/") || /^(package(?:-lock)?\.json|JARVIS-CREDENTIALS-LEDGER\.md|\.gitleaks\.toml)$/.test(path)),
-    root: files.some((path) => /^(src\/|public\/|e2e\/|vendor\/|scripts\/|package(?:-lock)?\.json$|next\.config|next-env\.d\.ts$|tsconfig|(?:playwright|vitest|eslint|postcss|tailwind)\.config|instrumentation(?:-client)?\.[cm]?[jt]s$|\.eslintrc)/.test(path) || path.startsWith(".github/workflows/")),
+    root: files.some((path) => /^finnor-os\/(apps\/api\/app\/api\/|packages\/(shared-types|domain-plugins)\/)/.test(path) || /^(src\/|public\/|e2e\/|vendor\/|scripts\/|package(?:-lock)?\.json$|next\.config|next-env\.d\.ts$|tsconfig|(?:playwright|vitest|eslint|postcss|tailwind)\.config|instrumentation(?:-client)?\.[cm]?[jt]s$|\.eslintrc)/.test(path) || path.startsWith(".github/workflows/")),
     dependencies: files.some((path) => /(^|\/)(package(?:-lock)?\.json|(?:[^/]+-)?requirements(?:[-_.][^/]+)?\.(?:txt|lock)|pyproject\.toml|poetry\.lock|uv\.lock|Pipfile(?:\.lock)?|Dockerfile(?:\.[^/]+)?)$/.test(path) || path.startsWith("vendor/")),
   }
 }

@@ -309,6 +309,20 @@
       "classification": "READ_ONLY",
       "state": "DECLARATIVE_SOURCE_ONLY",
       "reason": "Repository code does not provide an independent apply path; active release mutations consume the contract and separately authorize each write."
+    },
+    {
+      "id": "current-planner-live-evaluation",
+      "path": ".github/workflows/planner-live-evals.yml",
+      "classification": "READ_ONLY",
+      "state": "ACTIVE",
+      "reason": "Plan-only candidate evaluation; no database seed, business execution or deployment. Provider credentials remain scoped to its evaluation step."
+    },
+    {
+      "id": "disposable-staging-load-probe",
+      "path": ".github/workflows/k6-nightly-lite.yml",
+      "classification": "READ_ONLY",
+      "state": "PRODUCTION_BLOCKED",
+      "reason": "Dedicated staging fixture writes only; the driver refuses canonical production origins and requires staging release metadata before any mutation. This classification grants no production mutation authority."
     }
   ]
 }

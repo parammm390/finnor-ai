@@ -84,7 +84,7 @@ async function runCapitalJob(payload:Record<string,unknown>,execution:Readonly<J
      (!robust||await renewComputeResourceLeases(nativeLeases));
    },true));
   }catch{return false;}
- });
+ }, { leaseSeconds: 90 });
  const checkpoint=async()=>{m3CheckTime();await m3Tx(ctx,async c=>{
   const current=await m3Lifecycle(ctx,q.id,c);
   if(current.status!=='RUNNING'||current.generation!==q.generation||current.active_claim_token!==execution!.claimToken||

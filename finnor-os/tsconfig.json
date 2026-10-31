@@ -12,7 +12,8 @@
     "apps/**/*.ts",
     "apps/**/*.tsx",
     "tests/**/*.ts",
-    "scripts/**/*.ts"
+    "scripts/**/*.ts",
+    "scripts/audits/**/*.mts"
   ],
   "exclude": [
     "node_modules",

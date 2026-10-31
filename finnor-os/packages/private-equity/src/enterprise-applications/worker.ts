@@ -102,7 +102,7 @@ export async function buildEnterpriseApplicationJob(raw:Record<string,unknown>,e
    if(!await renewComputeResourceLeases(leases))return false;
    return tx(ctx,async c=>!!await owned(ctx,c,p,e));
   };
-  e.registerHeartbeat(heartbeat);
+  e.registerHeartbeat(heartbeat, { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
   if(p.stage==='BUILD'){
    if(current.b.status==='STAGED'){await tx(ctx,async c=>{const s=await owned(ctx,c,p,e);if(s)await enqueueBuildTx(c,s.a,s.b,'INSTALL');});return;}
    const started=await tx(ctx,async c=>{

@@ -1,9 +1,12 @@
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { join, relative, resolve } from "node:path"
+import { createRequire } from "node:module"
 
 const project = resolve(import.meta.dirname, "../..")
 const apiRoot = join(project, "finnor-os/apps/api/app/api")
 const output = join(project, "src/lib/centropy/capability-manifest.generated.json")
+const require = createRequire(import.meta.url)
+const ts = require(require.resolve("typescript", { paths: [project, join(project, "finnor-os")] }))
 
 function files(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -19,6 +22,28 @@ function block(source, start, end) {
   if (begin < 0 || finish < 0) throw new Error(`Cannot find registry block ${start}`)
   return source.slice(begin + start.length, finish)
 }
+
+function namedOperations(file, source) {
+  const parsed = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true)
+  const operations = new Set()
+  function visit(node) {
+    if (ts.isSwitchStatement(node) && (ts.isIdentifier(node.expression) && node.expression.text === "operation"
+      || ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "operation")) {
+      for (const clause of node.caseBlock.clauses) {
+        if (ts.isCaseClause(clause) && ts.isStringLiteral(clause.expression)) operations.add(clause.expression.text)
+      }
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(parsed)
+  if (operations.size === 0) throw new Error(`No named operation cases found in ${relative(project, file)}`)
+  return [...operations].sort()
+}
+
+// This route delegates its operation switch to its actual domain owner.
+const delegatedOperationSources = new Map([
+  ["elicitation-protocols/:operation", join(project, "finnor-os/packages/private-equity/src/r3/api.ts")],
+])
 
 const companyBrainSource = readFileSync(join(apiRoot, "company-brain/[operation]/route.ts"), "utf8")
 const r1Operations = registeredOperations("finnor-os/packages/private-equity/src/r1/api.ts", "R1_OPERATIONS")
@@ -321,6 +346,9 @@ for (const file of files(apiRoot)) {
   for (const method of methods) {
     if (routeOperations.has(path)) {
       for (const operation of routeOperations.get(path)) routes.push(routeEntry(method, path.replace(":operation", operation), source))
+    } else if (path.endsWith("/:operation") && !path.startsWith("policies/")) {
+      const operationFile = delegatedOperationSources.get(path) ?? file;
+      for (const operation of namedOperations(operationFile, operationFile === file ? code : readFileSync(operationFile, "utf8"))) routes.push(routeEntry(method, path.replace(":operation", operation), source));
     } else if (path === "read-models/:view") {
       for (const view of readModels) routes.push(routeEntry(method, `read-models/${view}`, source))
     } else if (path === "documents/:id/artifact/[...action]") {

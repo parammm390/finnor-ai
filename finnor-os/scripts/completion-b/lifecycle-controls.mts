@@ -97,11 +97,12 @@ export async function queryLifecycleCorrespondence(s:Support){
  queue.register('run_capital_program_v2',async(payload,execution)=>{
   assert(execution);assert.equal(payload.queryId,activeId);actual=execution;registered=undefined;
   const callbacks:Array<()=>Promise<boolean>>=[];
-  await runCapitalProgramJob(payload,Object.freeze({...execution,registerHeartbeat(callback:()=>Promise<boolean>){
+  await runCapitalProgramJob(payload,Object.freeze({...execution,registerHeartbeat(callback:()=>Promise<boolean>,lease:Parameters<typeof execution.registerHeartbeat>[1]){
    callbacks.push(callback);registered=observe('ACTUAL_REGISTERED_RUNNING_'+mode+'_ROW',activeId).then(row=>{
     assert.equal(row.status,'RUNNING');
    });
-   execution.registerHeartbeat(async()=>{await registered;return callback();});
+   const retire=execution.registerHeartbeat(async()=>{await registered;return callback();},lease);
+   return retire;
   }}));
   await registered;
   const row=await observe('ACTUAL_'+mode+'_BEFORE_ACK',activeId);

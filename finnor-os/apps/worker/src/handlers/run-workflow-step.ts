@@ -1,3 +1,4 @@
+import { workflowStepLeaseSeconds } from "@finnor/workflow-runtime";
 import { claimStep, failStep, heartbeatStepClaim, recoverStaleSteps, stepFence } from "@finnor/workflow-runtime/steps";
 import {
   executeAuthorizedEffectStep,
@@ -122,7 +123,7 @@ export const runWorkflowStep: JobHandler = async (payload, jobContext) => {
   } : undefined);
   if (!claimed) return;
   const fence = stepFence(claimed);
-  jobContext?.registerHeartbeat(() => heartbeatStepClaim(tenantId, stepId, fence));
+  jobContext?.registerHeartbeat(() => heartbeatStepClaim(tenantId, stepId, fence), { leaseSeconds: workflowStepLeaseSeconds() });
 
   if (claimed.stepType !== "execute_authorized_effect") {
     await failStep(

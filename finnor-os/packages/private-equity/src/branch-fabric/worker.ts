@@ -119,7 +119,7 @@ async function handleBranchEpisode(payload: Record<string, unknown>, execution: 
       return false;
     }
   };
-  execution.registerHeartbeat(heartbeat);
+  execution.registerHeartbeat(heartbeat, { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
   const timer = setInterval(() => { renewal ??= heartbeat().finally(() => { renewal = null; }); }, 150);
   try {
     const cp = initial.request.checkpointId ? await verifyCheckpoint(ctx, input, initial.request.checkpointId) : null;
