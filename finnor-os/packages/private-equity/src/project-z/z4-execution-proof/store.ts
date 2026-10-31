@@ -18,6 +18,7 @@ import {canonical,acceptedDefinition,planReference,developmentOnly,JOB,sha,safeP
 export {principal,tx,authorize,revisions,unavailable};
 import {codeIdentity} from './identity';
 export {codeIdentity};
+export const EVENT_LIMIT=256;
 export interface Original {
  schema:'finnor.z4.original.v1';sessionId:string;tenantId:string;principalId:string;request:Submit;
  exact:ExactRequest;workInputDigest:string;rightsRevision:number;rightsRef:string;rightsFingerprint:string;ownerSourceDigest:string;
@@ -35,6 +36,9 @@ export interface JobState {
  checkpointDigest?:string;capsuleDigest?:string;failure?:string;attempts:number;events:string[];delivery?:Delivery;
  cpuReservedSeconds:number;cpuLimitSeconds:number;retainedBytes:number;retainedByteLimit:number;
  activeAttempt?:{deliveryAttemptId:string;claimFence:number;workerId:string;startedAt:string};
+ qualificationAttempt?:{attemptId:string;caseId:string;registrationSha256:string;
+  status:'STARTED'|'COMPLETE'|'FAILED';costReserveRemaining:number;costEventSlotsRemaining:number;
+  failureEvidence?:'RECORDED'|'UNKNOWN'};
 }
 export interface JobRow {id:string;tenant_id:string;status:string;payload:{tenantId:string;principalId:string;sessionId:string;workId:string;
  workInputId:string;workRevisionRef:ExperimentRef;definitionDigest:string;z4:JobState};claim_token:string|null;claim_fence:number}
@@ -58,7 +62,8 @@ async function directory(ctx:PeMutationContext,category:string){
  for(const p of [root,tenant,actor,path])await privateDirectory(p);
  return path;
 }
-export async function retain(ctx:PeMutationContext,category:string,body:unknown,c?:PoolClient){
+export async function retain(ctx:PeMutationContext,category:string,body:unknown,c?:PoolClient,
+ reserved?:{qualificationAttemptId:string}){
  const bytes=canonical(body),digest=sha(body),dir=await directory(ctx,category);
  if(Buffer.byteLength(bytes)>12*1024*1024)throw Error('Z4_ARTIFACT_BYTE_BOUND');
  if(category!=='original'){
@@ -66,6 +71,14 @@ export async function retain(ctx:PeMutationContext,category:string,body:unknown,
   if(typeof sessionId!=='string')throw Error('Z4_ARTIFACT_ORIGINAL_SESSION_REQUIRED');
   const reserve=async(client:PoolClient)=>{
    const row=await job(ctx,sessionId,client,true),state=row.payload.z4,n=Buffer.byteLength(bytes);
+   if(reserved){
+    const q=state.qualificationAttempt;
+    if(category!=='event'||!q||q.attemptId!==reserved.qualificationAttemptId||n>8192||n>q.costReserveRemaining||
+     !Number.isSafeInteger(q.costEventSlotsRemaining)||q.costEventSlotsRemaining<1)
+     throw Error('Z4_ORIGINAL_QUALIFICATION_COST_RESERVE_EXHAUSTED');
+    await setState(ctx,row,{...state,qualificationAttempt:{...q,costReserveRemaining:q.costReserveRemaining-n}},client);
+    return;
+   }
    if(state.retainedBytes+n>state.retainedByteLimit)throw Error('Z4_ORIGINAL_RETAINED_BYTE_BUDGET_EXHAUSTED');
    await setState(ctx,row,{...state,retainedBytes:state.retainedBytes+n},client);
   };
@@ -184,13 +197,21 @@ export async function current(ctx:PeMutationContext,o:Original,options:{historic
  if(source.digest!==o.ownerSourceDigest||source.rightsFingerprint!==o.rightsFingerprint||canonical(source.inputs)!==canonical(o.exact.inputs))throw Error('Z4_CURRENT_OWNER_SOURCE_OR_TERMS_CHANGED');
  return source;
 }
-export async function event(ctx:PeMutationContext,id:string,kind:string,detail:unknown,c?:PoolClient){
+export async function event(ctx:PeMutationContext,id:string,kind:string,detail:unknown,c?:PoolClient,
+ reserved?:{qualificationAttemptId:string}){
  const body={schema:'finnor.z4.event.v1',sessionId:id,tenantId:ctx.auth.tenantId,principalId:principal(ctx),kind,
-  at:new Date().toISOString(),nonce:randomUUID(),detail},digest=await retain(ctx,'event',body,c);
+   at:new Date().toISOString(),nonce:randomUUID(),detail},digest=await retain(ctx,'event',body,c,reserved);
  const write=async(client:PoolClient)=>{
-  const row=await job(ctx,id,client,true);
-  if(row.payload.z4.events.length>=256)throw Error('Z4_EVENT_BOUND');
-  await setState(ctx,row,{...row.payload.z4,events:[...row.payload.z4.events,digest]},client);
+  const row=await job(ctx,id,client,true),state=row.payload.z4,q=state.qualificationAttempt,
+   slots=q?.costEventSlotsRemaining??0;
+  if(!Number.isSafeInteger(slots)||slots<0)throw Error('Z4_QUALIFICATION_COST_SLOT_STATE');
+  if(state.events.length>=EVENT_LIMIT||!reserved&&state.events.length+slots>=EVENT_LIMIT)throw Error('Z4_EVENT_BOUND');
+  let next:JobState={...state,events:[...state.events,digest]};
+  if(reserved){
+   if(!q||q.attemptId!==reserved.qualificationAttemptId||slots<1)throw Error('Z4_QUALIFICATION_COST_SLOTS_EXHAUSTED');
+   next={...next,qualificationAttempt:{...q,costEventSlotsRemaining:slots-1}};
+  }
+  await setState(ctx,row,next,client);
  };
  if(c)await write(c);else await tx(ctx,write);
  return digest;
@@ -216,11 +237,18 @@ export async function observe(ctx:PeMutationContext,o:Original,receipt:NativeRec
 }
 export async function costs(ctx:PeMutationContext,o:Original,row:JobRow){
  const recorded=await Promise.all(row.payload.z4.events.map(d=>artifact<{kind:string;detail:unknown;at:string}>(ctx,'event',d)));
- const events=recorded.map(e=>({kind:e.kind,at:e.at,...(e.kind==='NATIVE_COST_OBSERVED'?{process:e.detail}:{})}));
+ const events=recorded.map(e=>({kind:e.kind,at:e.at,...(e.kind==='NATIVE_COST_OBSERVED'?{process:e.detail}:{}),
+  ...(e.kind.startsWith('QUALIFICATION_')?{qualification:e.detail}:{})}));
  return {events,charges:await applicationParentCharges(ctx,o.allocation.certificate.ref),money:null,tokens:null,humanSeconds:null,
   aggregateRSS:null,eligibleReuseN:0,eligibleReuseBasis:'NO_INDEPENDENT_ELIGIBLE_DEMAND_REGISTRATION',
   observedAnalyticalDeliveries:recorded.filter(e=>e.kind==='NATIVE_OWNER_ACKNOWLEDGED').length,
-  releaseSufficient:false,unknownAttemptCosts:events.filter(e=>e.kind==='LOST_PHYSICAL_ATTEMPT').length};
+  releaseSufficient:false,unknownAttemptCosts:events.filter(e=>e.kind==='LOST_PHYSICAL_ATTEMPT').length,
+  qualificationAttempt:row.payload.z4.qualificationAttempt??null,
+  retention:{usedAndReservedBytes:row.payload.z4.retainedBytes,
+   qualificationCostReserveRemaining:row.payload.z4.qualificationAttempt?.costReserveRemaining??0,
+   indexedEvents:row.payload.z4.events.length,eventLimit:EVENT_LIMIT,
+   qualificationCostEventSlotsRemaining:row.payload.z4.qualificationAttempt?.costEventSlotsRemaining??0,
+   basis:'ORIGINAL_BYTE_AND_EVENT_LIMITS_INCLUDE_UNSPENT_QUALIFICATION_COST_RESERVES_NOT_EXTRA_ALLOWANCE'}};
 }
 export async function failureEvent(ctx:PeMutationContext,id:string,error:unknown){
  await event(ctx,id,'INCOMPLETE',{predicate:safePredicate(error),usableProof:false,money:null,remainingObligations:'RETAINED_BY_ORIGINAL_S6'});

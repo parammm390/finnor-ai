@@ -5,12 +5,17 @@ import type {PeMutationContext} from '../../types';
 import {checkExecutionProof,type ExecutionLimits,type ProofProduction} from '../../../../epistemic-runtime/src/project-z/z4-execution-proof/engine';
 import {originalExecution} from '../../../../epistemic-runtime/src/project-z/z4-execution-proof/original';
 import {checkCorrespondence} from '../../../../epistemic-runtime/src/project-z/z4-execution-proof/correspondence';
-import {runNative} from '../../../../epistemic-runtime/src/project-z/z4-execution-proof/native';
-import {artifact,charge,claim,current,event,failureEvent,job,obligations,observe,original,principal,retain,setState,tx,type Capsule,type Original} from './store';
+import {runNative,type NativeReceipt} from '../../../../epistemic-runtime/src/project-z/z4-execution-proof/native';
+import {artifact,charge,claim,current,event,failureEvent,job,obligations,observe,original,principal,retain,setState,tx,type Capsule,type JobState,type Original} from './store';
 import {PRODUCT_LOCK,VERSION,canonical,developmentOnly,safePredicate,sha} from './contracts';
 import {nativeReplayProcessObserver,physicalRecoveryBoundary} from './recovery-boundary';
 
 export const cpuCeiling=(op:string)=>op==='prove'?600:op==='verify'?60:10;
+function unusedQualification(state:JobState){
+ if(state.status!=='QUEUED'||state.attempts!==0||state.cpuReservedSeconds!==0||state.checkpointDigest||
+  state.capsuleDigest||state.delivery||state.activeAttempt||state.qualificationAttempt)
+  throw Error('Z4_QUALIFICATION_ORIGINAL_ATTEMPT_CONSUMED');
+}
 export function nativeLimits(ctx:PeMutationContext,o:Original,stillCurrent:()=>Promise<boolean>):ExecutionLimits{
  let leases:ComputeResourceLease[]=[];
  return {deadlineAt:o.request.deadlineAt,maxMemoryBytes:o.request.maxMemoryBytes,cpuSeconds:cpuCeiling,
@@ -46,9 +51,21 @@ export async function runExecutionProofJob(payload:Record<string,unknown>,execut
   }catch{return false;}
  };
  execution.registerHeartbeat(alive);
- const limits=nativeLimits(ctx,o,alive);
+ let limits=nativeLimits(ctx,o,alive);
  try{
   await current(ctx,o);
+  if(o.request.qualification){
+   const previous=initial.payload.z4.activeAttempt;
+   if(initial.payload.z4.status!=='CHECKED'&&previous&&previous.deliveryAttemptId!==execution.deliveryAttemptId){
+    await claim(ctx,initial,execution);
+    const costAttempt=initial.payload.z4.qualificationAttempt;
+    await event(ctx,o.sessionId,'LOST_PHYSICAL_ATTEMPT',{previous,finalPhysicalCostUnknown:true,
+     chargesRetained:true,noQualificationRetry:true,originalReservationRef:o.allocation.reservation.ref,
+     unresolvedObligations:await obligations(ctx)},undefined,
+     costAttempt?{qualificationAttemptId:costAttempt.attemptId}:undefined);
+   }
+   unusedQualification(initial.payload.z4);
+  }
   if(initial.payload.z4.status==='CHECKED'){
    const saved=await artifact<Capsule>(ctx,'capsule',initial.payload.z4.capsuleDigest??'');
    if(saved.schema!=='finnor.z4.execution-proof-capsule.v2'||saved.checked.schema!=='finnor.z4.checked-execution.v2'||
@@ -64,6 +81,7 @@ export async function runExecutionProofJob(payload:Record<string,unknown>,execut
   }
   await tx(ctx,async c=>{
    const row=await claim(ctx,initial,execution,c),state=row.payload.z4;
+   if(o.request.qualification)unusedQualification(state);
    if(state.attempts>=o.request.maxAttempts)throw Error('Z4_ORIGINAL_ATTEMPT_BUDGET_EXHAUSTED');
    await setState(ctx,row,{...state,status:'RUNNING',attempts:state.attempts+1,
     activeAttempt:{deliveryAttemptId:execution.deliveryAttemptId,claimFence:execution.claimFence,workerId:execution.workerId,startedAt:new Date().toISOString()}},c);
@@ -80,15 +98,22 @@ export async function runExecutionProofJob(payload:Record<string,unknown>,execut
    production=checkpoint.production;
    await event(ctx,o.sessionId,'CHECKPOINT_RECHECK_STARTED',{checkpointDigest:state.checkpointDigest,claimFence:execution.claimFence,noNewReservation:true});
   }else{
+   let produced:NativeReceipt<ProofProduction>;
+   if(o.request.qualification){
+    const {qualifyClaimedNativeJob}=await import('./qualification-host');
+    const qualified=await qualifyClaimedNativeJob(ctx,initial,o,execution);
+    produced=qualified.produced;limits=qualified.limits;production=produced.data;
+   }else{
    await charge(ctx,o,'ORIGINAL_INTEGER_INTERPRETER',1);const full=originalExecution(o.exact);
    await event(ctx,o.sessionId,'ORIGINAL_INTEGER_EXECUTED',{finalState:full.finalState,steps:full.steps,wallMs:full.wallMs,
     sourceIdentity:o.code.digest,checkedScope:'ORIGINAL_INTEGER_NOT_FIELD_REPLAY'});
    const plan=await runNative('plan',o.exact,limits);checkCorrespondence(o.exact.program,o.exact.binding,plan.data);
-   const produced=await runNative<ProofProduction>('prove',o.exact,limits);
+   produced=await runNative<ProofProduction>('prove',o.exact,limits);
    production=produced.data;
    if(canonical(full.finalState)!==canonical(production.statement.finalState))throw Error('Z4_ORIGINAL_STATEMENT_MISMATCH');
    await event(ctx,o.sessionId,'PRODUCER_ORIGINAL_REFERENCE_MATCHED',{finalState:full.finalState,
     statementDigest:sha(production.statement),notConsumerReplay:true});
+   }
    const checkpointDigest=await retain(ctx,'checkpoint',{schema:'finnor.z4.prover-checkpoint.v1',sessionId:o.sessionId,
     originalDigest:state.originalDigest,production,proverProcess:{meters:produced.meters,binarySha256:produced.binarySha256,sourceDigest:produced.sourceDigest}});
    await tx(ctx,async c=>{const row=await claim(ctx,initial,execution,c);await setState(ctx,row,{...row.payload.z4,checkpointDigest},c);});
@@ -134,10 +159,12 @@ export async function runExecutionProofJob(payload:Record<string,unknown>,execut
   await event(ctx,o.sessionId,'CAPSULE_CHECKED_PUBLISHED',{capsuleDigest,claimFence:execution.claimFence,
    statementDigest:checked.verifier.data.statementDigest,executionAuthorityGranted:false,securityAdmission:'NOT_RUN'});
  }catch(error){
+  // Refusing a consumed qualification must not destroy its checked capsule.
+  if(o.request.qualification&&initial.payload.z4.status==='CHECKED')throw error;
   const predicate=safePredicate(error);
   try{
    if(await alive()){
-    if(/TIMEOUT|PROCESS_FAILED|CPU_BOUND|MEMORY/.test(predicate)){
+    if(!o.request.qualification&&/TIMEOUT|PROCESS_FAILED|CPU_BOUND|MEMORY/.test(predicate)){
      try{
       await current(ctx,o);await charge(ctx,o,'FULL_ORIGINAL_FALLBACK',1);
       const full=originalExecution(o.exact),other=await runNative<{finalState:string[]}>('interpret',o.exact,limits);

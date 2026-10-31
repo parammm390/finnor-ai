@@ -5,7 +5,8 @@ import {fileURLToPath} from 'node:url';
 import {spawn} from 'node:child_process';
 import {canonical,sha,LENGTHS,type ExactRequest} from '../../../packages/epistemic-runtime/src/project-z/z4-execution-proof/contracts';
 import {originalExecution} from '../../../packages/epistemic-runtime/src/project-z/z4-execution-proof/original';
-import {produceExecutionProof} from '../../../packages/epistemic-runtime/src/project-z/z4-execution-proof/engine';
+import {produceExecutionProof,checkExecutionProof} from '../../../packages/epistemic-runtime/src/project-z/z4-execution-proof/engine';
+import {measureExecution,type ExecutionInterval} from '../../../packages/epistemic-runtime/src/project-z/z4-execution-proof/costs';
 import {NativeFailure,nativeIdentity} from '../../../packages/epistemic-runtime/src/project-z/z4-execution-proof/native';
 const repository=resolve(dirname(fileURLToPath(import.meta.url)),'../../../..');
 const arg=(n:string)=>process.argv[process.argv.indexOf(n)+1];
@@ -23,6 +24,7 @@ const report:Record<string,unknown>={schema:'finnor.z4.scaling-observation.v1',s
  protectedAdmission:'NOT_RUN',money:null,humanSeconds:null,aggregateRSS:null,status:'RUNNING'};
 const nativeObservations:Array<Record<string,unknown>>=[];report.nativeObservations=nativeObservations;
 const save=()=>writeFile(resolve(evidence,'report.json'),JSON.stringify(report,null,2)+'\n',{mode:0o600});
+const intervals:ExecutionInterval[]=[];report.intervals=intervals;
 const full=()=>{
  const start=performance.now(),cpu=process.cpuUsage(),original=originalExecution(request);
  if(canonical(original.finalState)!==canonical(expected))throw Error('Z4_SCALING_INDEPENDENT_CLOSED_FORM_MISMATCH');
@@ -32,16 +34,35 @@ const full=()=>{
 try{
  report.identity=await nativeIdentity();await save();
  if(observation%2===0)report.fullOriginal=full();
- const start=performance.now(),checked=await produceExecutionProof(request,{deadlineAt:new Date(Date.now()+900000).toISOString(),
+ const deadlineAt=arg('--deadline');
+ if(!deadlineAt||!Number.isFinite(Date.parse(deadlineAt))||Date.parse(deadlineAt)<=Date.now())
+  throw Error('Z4_ORIGINAL_MEASUREMENT_DEADLINE_REQUIRED');
+ const limits={deadlineAt:new Date(Math.min(Date.parse(deadlineAt),Date.now()+600000)).toISOString(),
   maxMemoryBytes:2*1024**3,cpuSeconds:(op:string)=>op==='prove'?600:op==='verify'?90:10,
+ };
+ const production=await measureExecution('fresh-proof-production',observe=>produceExecutionProof(request,{...limits,
   observed:async receipt=>{
+   observe(receipt.meters);
    nativeObservations.push({operation:receipt.operation,meters:receipt.meters,
     ...('failure'in receipt?{failure:receipt.failure}:{binarySha256:receipt.binarySha256,sourceDigest:receipt.sourceDigest})});
    await save();
-  }});
- report.fullProofLifecycleWallMs=performance.now()-start;
+  }}),async interval=>{intervals.push(interval);await save();});
+ const checked=production.value;
+ report.fullProofLifecycleWallMs=production.interval.wallMs;
+ report.producerBreakdown=checked.productionMeters;
  if(canonical(checked.statement.finalState)!==canonical(expected))throw Error('Z4_SCALING_LITERAL_MISMATCH');
  if(observation%2===1)report.fullOriginal=full();
+ const fullCheck=await measureExecution('complete-independent-proof-check',observe=>checkExecutionProof(request,checked,{...limits,
+  observed:async receipt=>{
+   observe(receipt.meters);nativeObservations.push({scope:'complete-independent-proof-check',operation:receipt.operation,
+    meters:receipt.meters,...('failure'in receipt?{failure:receipt.failure}:{binarySha256:receipt.binarySha256,sourceDigest:receipt.sourceDigest})});
+   await save();
+  }}),async interval=>{intervals.push(interval);await save();});
+ report.fullIndependentProofCheck=fullCheck.interval;
+ report.fullIndependentVerifierReplayedOriginal=fullCheck.value.originalExecutionReplayed;
+ report.crossover='NOT_ESTABLISHED_AT_ACTUAL_ELIGIBLE_N_ZERO';
+ report.fullCostGaps=['process-tree total supplied by outer controller only','build','learning','storage','invalidation',
+  'recovery','native install','provider money','human effort','matched eligible original owner demand'];
  const candidate={statement:checked.statement,artifact:checked.artifact},path=resolve(evidence,'candidate.json');
  await writeFile(path,canonical(candidate)+'\n',{mode:0o600,flag:'wx'});
  const native=resolve(repository,'finnor-os/packages/epistemic-runtime/native/z4-execution-proof');
@@ -56,6 +77,7 @@ try{
  if(warm.readings.length!==2||warm.readings.some((r:{response:{statementDigest:string;status:string}})=>
   r.response.status!=='VERIFIED_COMPUTATION_ONLY'||r.response.statementDigest!==sha(checked.statement)))throw Error('Z4_WARM_VERIFIER_PUBLIC_BINDING');
  report.coldAndWarmVerifier=warm;report.checkedDigest=sha(checked);report.proofBytes=checked.artifact.proofHex.length/2;
+ report.warmVerifierScope='BARE_CRYPTOGRAPHIC_VERIFIER_NOT_END_TO_END_CHECKING';
  report.processes=checked.processes.map(p=>({operation:p.operation,meters:p.meters}));
  report.endToEndCheckingIsLinear=true;report.verifierExecutesOriginalProgramme=false;
  report.linearCheckingWork='ORIGINAL_INPUT_VALIDATION_COMMITMENT_AND_REQUEST_BINDING_NOT_VM_REPLAY';

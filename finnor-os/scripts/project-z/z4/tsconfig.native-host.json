@@ -1,0 +1,13 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false,
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "../../../packages/private-equity/src/project-z/z4-execution-proof/*.ts",
+    "../../../packages/epistemic-runtime/src/project-z/z4-execution-proof/*.ts"
+  ],
+  "exclude": []
+}

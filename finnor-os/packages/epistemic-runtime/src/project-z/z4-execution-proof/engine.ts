@@ -18,7 +18,8 @@ export async function produceExecutionProof(raw:unknown,limits:ExecutionLimits){
  const production=await runNative<ProofProduction>('prove',request,limits);
  const checked=await checkExecutionProof(request,production.data,limits);
  if(canonical(checked.statement.finalState)!==canonical(original.finalState))fail('Z4_ORIGINAL_STATEMENT_MISMATCH');
- return {...checked,referenceAudit:original,processes:[plan,production,...checked.processes]};
+ return {...checked,referenceAudit:original,productionMeters:production.data.meters,
+  processes:[plan,production,...checked.processes]};
 }
 /** Verify the original relation and input binding, never its execution trace.
  * A claimed output is accepted only by the separate pinned native verifier. */

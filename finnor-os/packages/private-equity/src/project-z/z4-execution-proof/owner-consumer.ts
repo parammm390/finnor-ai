@@ -12,13 +12,12 @@ import {exactInteger} from '../../../../epistemic-runtime/src/project-z/z4-execu
 import {nativeLimits} from './worker';
 import {artifact,authorize,charge,codeIdentity,current,event,job,obligations,original,retain,setState,tx,workSnapshot,type Capsule,type Delivery,type Original} from './store';
 import {assertDependencies} from '../../owner-context';
-import {canonical,consumeSchema,developmentOnly,guardSchema,sessionSchema,sha,type OwnerContract,type OwnerGuard} from './contracts';
+import {canonical,consumeSchema,developmentOnly,guardSchema,ownerTargetInput,sessionSchema,sha,type OwnerContract,type OwnerGuard} from './contracts';
 import {wakeProofObjective} from './plan';
 import {physicalRecoveryBoundary} from './recovery-boundary';
 
 export function targetInput(c:OwnerContract){
- return c.owner==='S3'?{modelRef:c.modelRef,query:c.query}:
-  {policyRef:c.policyRef,decision:c.decision,allocationRef:c.allocationRef,measurements:[]};
+ return ownerTargetInput(c);
 }
 function targetDigest(owner:'S3'|'S4',raw:unknown){
  if(!raw||typeof raw!=='object')throw Error('Z4_EXACT_OWNER_INVOCATION_REQUIRED');

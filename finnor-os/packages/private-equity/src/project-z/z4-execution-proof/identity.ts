@@ -8,8 +8,9 @@ import {runtimePath} from '../../../../epistemic-runtime/src/project-z/z4-execut
 
 const repository=runtimePath(import.meta.url,'../../../../../..','.');
 const codeFiles=[
- ...['contracts','original','correspondence','native','process-groups','runtime-paths','engine'].map(p=>`finnor-os/packages/epistemic-runtime/src/project-z/z4-execution-proof/${p}.ts`),
- ...['contracts','identity','store','source','plan','api','worker','owner-consumer','operational-query','recovery-boundary'].map(p=>`finnor-os/packages/private-equity/src/project-z/z4-execution-proof/${p}.ts`),
+ ...['contracts','original','correspondence','native','process-groups','runtime-paths','engine','costs','qualification','public-population'].map(p=>`finnor-os/packages/epistemic-runtime/src/project-z/z4-execution-proof/${p}.ts`),
+ ...['contracts','identity','store','source','plan','api','worker','qualification-host','owner-consumer','operational-query','recovery-boundary'].map(p=>`finnor-os/packages/private-equity/src/project-z/z4-execution-proof/${p}.ts`),
+ 'finnor-os/scripts/project-z/z4/supplementary-positive.v3.json',
  'finnor-os/packages/orchestration/src/project-z/z4-execution-proof/index.ts',
  'finnor-os/packages/private-equity/src/owner-context.ts','finnor-os/packages/private-equity/src/enterprise-beliefs.ts',
  'finnor-os/packages/private-equity/src/enterprise-interventions.ts','finnor-os/packages/private-equity/src/enterprise-control.ts',

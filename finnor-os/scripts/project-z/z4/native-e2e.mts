@@ -189,6 +189,10 @@ if(authority){
    const full=originalExecution(original.exact);
    check(canonical(full.finalState)===canonical(expected.finalState),'Z4_INDEPENDENT_LITERAL_ORIGINAL_ORACLE_MISMATCH');
    const before=await snapshot(sessionId);
+   if(request.qualification)check(!c.recoverProducer&&before.queueStatus==='queued'&&before.z4.status==='QUEUED'&&
+    before.z4.attempts===0&&before.z4.cpuReservedSeconds===0&&!before.z4.checkpointDigest&&
+    !before.z4.capsuleDigest&&!before.z4.delivery&&!before.z4.qualificationAttempt,
+   'Z4_NATIVE_QUALIFICATION_REQUIRES_GENUINE_UNUSED_ORIGINAL');
    if(c.recoverProducer){
     check(before.queueStatus==='queued'&&before.z4.attempts===0,'Z4_RECOVERY_REQUIRES_UNDISPATCHED_ORIGINAL_JOB');
     await child(index,sessionId,'queue','CLAIM');
@@ -198,6 +202,21 @@ if(authority){
    const afterProduction=await snapshot(sessionId),view=await read(sessionId);
    check(afterProduction.z4.status==='CHECKED'&&view.currentness==='CURRENT'&&view.capsule&&
     canonical(view.capsule.statement.finalState)===canonical(expected.finalState),'Z4_ACTUAL_PROOF_ORIGINAL_OUTPUT_MISMATCH');
+   if(request.qualification){
+    const q=afterProduction.z4.qualificationAttempt;
+    const events=await Promise.all(afterProduction.z4.events.map(d=>store.artifact<{
+     kind:string;detail:{attemptId?:string;detail?:{operation?:string;newProofs?:number;failure?:string}}
+    }>(ctx,'event',d)));
+    const owned=events.filter(e=>e.detail.attemptId===q?.attemptId);
+    check(q?.status==='COMPLETE'&&q.caseId===request.qualification.caseId&&
+     q.registrationSha256===request.qualification.registrationSha256&&afterProduction.z4.attempts===1&&
+     Number.isSafeInteger(q.costEventSlotsRemaining)&&q.costEventSlotsRemaining>=0&&
+     afterProduction.z4.events.length+q.costEventSlotsRemaining<=store.EVENT_LIMIT&&
+     owned.filter(e=>e.kind==='QUALIFICATION_STARTED').length===1&&
+     owned.filter(e=>e.kind==='QUALIFICATION_COMPLETE'&&e.detail.detail?.newProofs===1).length===1&&
+     owned.filter(e=>e.kind==='QUALIFICATION_NATIVE_COST'&&e.detail.detail?.operation==='prove'&&
+      e.detail.detail.failure===undefined).length===1,'Z4_ACTUAL_FRESH_QUALIFICATION_EVIDENCE_REQUIRED');
+   }
    if(c.recoverProducer)check(afterProduction.claimFence>=before.claimFence+3&&afterProduction.attempts.length>=3&&
     afterProduction.z4.events.length>before.z4.events.length,'Z4_ORIGINAL_FENCE_OR_RECOVERY_EVIDENCE_MISSING');
    const audit=await post(owner.page,owner.bearer,'execution-proof-audit',{sessionId});
@@ -248,10 +267,16 @@ if(authority){
     sha(before.allocationRef)===sha(after.allocationRef)&&before.deadlineAt===after.deadlineAt&&
     after.z4.cpuReservedSeconds>=before.z4.cpuReservedSeconds&&after.z4.retainedBytes>=before.z4.retainedBytes,
    'Z4_ORIGINAL_RESPONSIBILITY_OR_REMAINING_BUDGET_RESET');
+   if(request.qualification)check(after.z4.qualificationAttempt?.attemptId===afterProduction.z4.qualificationAttempt!.attemptId&&
+    after.z4.qualificationAttempt.costEventSlotsRemaining<=afterProduction.z4.qualificationAttempt!.costEventSlotsRemaining&&
+    after.z4.events.length+after.z4.qualificationAttempt.costEventSlotsRemaining<=store.EVENT_LIMIT,
+   'Z4_ORIGINAL_QUALIFICATION_EVENT_RESERVE_RESET');
    check(view.currentObligations.refs.every(r=>readAfter.currentObligations.refs.some(n=>n.id===r.id&&n.status===r.status)),
     'Z4_EXISTING_S6_OBLIGATION_CHANGED');
    owners.add(request.ownerContract.owner);
    report.cases.push({name:c.name,owner:request.ownerContract.owner,sessionId,workId:c.workId,workInputId:c.workInputId,
+    qualification:request.qualification?{caseId:request.qualification.caseId,freshProofs:1,
+     attemptId:afterProduction.z4.qualificationAttempt!.attemptId,protectedAdmission:'NOT_RUN',eligibleReuseN:0}:null,
     definitionDigest:sha(acceptedDefinition(request)),expectedFileSha256:c.expectedSha256,expectedProvenance:expected.provenance,
     originalInteger:full,before,after,completedWorkSha256:sha(completed),screenshotSha256:sha(screenshot),status:'PASSED_NATIVE_ORDINARY_ONLY'});
    await flush();

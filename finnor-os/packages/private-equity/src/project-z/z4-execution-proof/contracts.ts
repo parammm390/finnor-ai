@@ -25,6 +25,9 @@ const requestObject=z.object({
  maxMemoryBytes:z.number().int().min(128*1024*1024).max(2*1024*1024*1024),
  maxCpuSeconds:z.number().int().min(30).max(3600),maxAttempts:z.number().int().min(1).max(3),
  maxRetainedBytes:z.number().int().min(1024*1024).max(64*1024*1024),
+ qualification:z.object({schema:z.literal('finnor.z4.public-qualification.v1'),
+  registrationSha256:z.literal('4479bce31a46945067d88b262bcb549040c20d91b2dc57e788e6b335bda4f163'),
+  caseId:z.string().min(1).max(128),compilerFrozenAt:z.string().datetime({offset:true})}).strict().optional(),
 }).strict();
 export const intakeSchema=requestObject.omit({workId:true,workInputId:true,workRevisionRef:true});
 export const planSchema=requestObject.omit({workRevisionRef:true});
@@ -54,7 +57,8 @@ export const EXECUTION_PROOF_OPERATIONS=Object.keys(OPERATION_SCHEMAS) as Array<
 export type Submit=z.infer<typeof submitSchema>;
 export type Intake=z.infer<typeof intakeSchema>;
 export function acceptedDefinition(value:Intake|Submit|z.infer<typeof planSchema>){
- const fields=Object.fromEntries(Object.keys(intakeSchema.shape).map(k=>[k,(value as Record<string,unknown>)[k]]));
+ const fields=Object.fromEntries(Object.keys(intakeSchema.shape).filter(k=>(value as Record<string,unknown>)[k]!==undefined)
+  .map(k=>[k,(value as Record<string,unknown>)[k]]));
  const {idempotencyKey:_,...definition}=intakeSchema.parse(fields);
  return definition;
 }
@@ -62,6 +66,10 @@ export function planReference(p:{id:string;revision:string|number;semantic_hash:
  return {owner:'WorkPlanRevision',id:p.id,version:String(p.revision),contentDigest:digestSchema.parse(p.semantic_hash.replace(/^sha256:/,''))};
 }
 export type OwnerContract=z.infer<typeof ownerContractSchema>;
+export function ownerTargetInput(c:OwnerContract){
+ return c.owner==='S3'?{modelRef:c.modelRef,query:c.query}:
+  {policyRef:c.policyRef,decision:c.decision,allocationRef:c.allocationRef,measurements:[]};
+}
 export type OwnerGuard=z.infer<typeof guardSchema>;
 export const safePredicate=(e:unknown)=>String((e as Error)?.message).match(/^[A-Z][A-Z0-9_]{0,159}$/)?.[0]??'Z4_PREDICATE_UNPASSED';
 export const ref=(kind:string,body:unknown)=>({owner:'Z4',id:`${kind}:${sha(body)}`,version:VERSION,contentDigest:sha(body)});

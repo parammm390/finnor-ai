@@ -81,7 +81,8 @@ export async function runNative<T=unknown>(operation:'identity'|'plan'|'commit'|
  cpuSeconds?:number|((operation:string)=>number);charge?:(operation:string,cpuSeconds:number)=>Promise<void>;
  capacity?:(operation:string)=>Promise<()=>Promise<void>>;
  processGroup?:(notice:ProcessGroupNotice)=>Promise<void>;
- observed?:(receipt:NativeReceipt|{operation:string;failure:string;meters:NativeMeters|null})=>Promise<void>}):Promise<NativeReceipt<T>>{
+ observed?:(receipt:NativeReceipt|{operation:string;failure:string;meters:NativeMeters|null;
+ physical?:NativeFailure['physical']})=>Promise<void>}):Promise<NativeReceipt<T>>{
  const remaining=Date.parse(limits.deadlineAt)-Date.now();
  if(!Number.isFinite(remaining)||remaining<=0)fail('Z4_ORIGINAL_DEADLINE_EXHAUSTED');
  if(!Number.isSafeInteger(limits.maxMemoryBytes)||limits.maxMemoryBytes<128*1024*1024||limits.maxMemoryBytes>2*1024*1024*1024)fail('Z4_PROCESS_MEMORY_BOUND');
@@ -131,18 +132,24 @@ export async function runNative<T=unknown>(operation:'identity'|'plan'|'commit'|
   child.once('close',(code,signal)=>{void(async()=>{
    clearTimeout(timer);if(killTimer)clearTimeout(killTimer);if(heartbeat)clearInterval(heartbeat);
    limits.signal?.removeEventListener('abort',abort);
+   const physical={pid:child.pid??null,exitCode:code,signal};
+   let body:{ok:boolean;code:string;native:{ok:boolean;body:T}|null;meters:NativeMeters|null}|undefined;
+   try{body=JSON.parse(Buffer.concat(output).toString('utf8'));}
+   catch{/* Missing/partial supervisor output has UNKNOWN meters. */}
+   const meters=body?.meters??null;
    try{
     if(group)await limits.processGroup?.({stage:'CLOSE',group});
-    const physical={pid:child.pid??null,exitCode:code,signal};
-    if(stopped)throw new NativeFailure(stopped,null,physical);
-    const body=JSON.parse(Buffer.concat(output).toString('utf8')) as {ok:boolean;code:string;native:{ok:boolean;body:T}|null;meters:NativeMeters|null};
+    if(stopped)throw new NativeFailure(stopped,meters,physical);
+    if(!body)throw new NativeFailure('Z4_NATIVE_PROTOCOL_FAILED',meters,physical);
     if(code!==0||body.ok!==true||body.native?.ok!==true||!body.meters)
      throw new NativeFailure(/^Z4_[A-Z0-9_]{1,156}$/.test(body.code)?body.code:'Z4_NATIVE_FAILED',body.meters,physical);
     done({data:body.native.body,meters:body.meters,binarySha256:identity.binarySha256,sourceDigest:identity.sourceDigest,operation});
-   }catch(e){reject(e instanceof NativeFailure?e:new NativeFailure('Z4_NATIVE_PROTOCOL_FAILED',null));}
+   }catch(e){reject(e instanceof NativeFailure?e:new NativeFailure(stopped??'Z4_NATIVE_PROTOCOL_FAILED',meters,physical));}
   })();});
  }).catch(async(error:unknown)=>{
-  await limits.observed?.({operation,failure:error instanceof NativeFailure?error.message:'Z4_NATIVE_FAILED',meters:error instanceof NativeFailure?error.meters:null});
+  await limits.observed?.({operation,failure:error instanceof NativeFailure?error.message:'Z4_NATIVE_FAILED',
+   meters:error instanceof NativeFailure?error.meters:null,
+   ...(error instanceof NativeFailure&&error.physical?{physical:error.physical}:{})});
   throw error;
  });
  await limits.observed?.(receipt);
