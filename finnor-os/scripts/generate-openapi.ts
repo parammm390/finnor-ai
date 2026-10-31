@@ -96,6 +96,21 @@ import { R4_OPERATIONS, R4_OPERATION_SCHEMAS } from "../packages/private-equity/
 import { OperationSchemas as DecisionAtlasOperationSchemas } from "../packages/private-equity/src/r7/contracts";
 import { CalibrationRequestSchema, DeliberationRequestSchema, DeliberationEvidenceReadSchema, DeliberationCurrentReaderSchema, DeliberationProjectionSchema, DeliberationModuleReaderSchema } from "../packages/private-equity/src/deliberation/contracts";
 import { LIVE_CONTROL_OPERATION_SCHEMAS } from "../packages/private-equity/src/live-controls/contracts";
+import {OperationSchemas as UniformAlgorithmOperationSchemas} from "../packages/private-equity/src/uniform-algorithms/contracts";
+import {AssignSchema as UniformAssignSchema,EvaluateSchema as UniformEvaluateSchema,AdmissionRequestSchema as UniformAdmissionRequestSchema,AdmissionCurrentSchema as UniformAdmissionCurrentSchema} from "../packages/private-equity/src/uniform-algorithms/admission";
+import {SpecificationReadSchema} from "../packages/private-equity/src/uniform-algorithms/specification";
+import {TotalSubmitSchema,TotalConsumeSchema,TotalReadSchema} from "../packages/private-equity/src/uniform-algorithms/total-contracts";
+import {RecordTotalTaskSchema} from "../packages/private-equity/src/allocation-total-episodes";
+
+const uniformAlgorithmOperations={
+ ...UniformAlgorithmOperationSchemas,
+ specification:SpecificationReadSchema,
+ 'record-task-episode':RecordTotalTaskSchema,
+ 'submit-total':TotalSubmitSchema,'consume-total':TotalConsumeSchema,
+ read:TotalReadSchema,
+ 'assign-evaluation':UniformAssignSchema,evaluate:UniformEvaluateSchema,
+ 's8-propose':UniformAdmissionRequestSchema,admission:UniformAdmissionCurrentSchema,
+};
 
 const page = z.object({ limit: z.number().int().min(1).max(100).optional(), cursor: z.string().min(1).max(4096).optional() }).strict();
 const workforcePage = z.object({ limit: z.number().int().min(1).max(100).optional(), cursor: z.string().uuid().optional() }).strict();
@@ -327,6 +342,7 @@ const applicationComponents={schemas:Object.fromEntries([
  ...Object.entries(StrategicOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(CONFIDENTIAL_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(InteractionOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
+ ...Object.entries(uniformAlgorithmOperations).map(([name,schema])=>['Y5Uniform-'+name,applicationSchema(schema)]),
  ["X3Expression",applicationSchema((ApplicationExpressionSchema instanceof z.ZodLazy ? ApplicationExpressionSchema.unwrap() : ApplicationExpressionSchema))],
 ])};
 const secured = [{ bearerAuth: [] }];
@@ -853,6 +869,35 @@ for(const operation of APPLICATION_OPERATIONS){
   "422":{description:"Unsupported business semantics or independently checked construction failed."},
   "503":{description:"Native capacity or independent owner configuration unavailable. Retry never renews resources."},
  }}}});
+}
+
+for (const operation of Object.keys(uniformAlgorithmOperations)) {
+ const submission=operation==='submit'||operation==='submit-total';
+ Object.assign(paths,{['/api/uniform-algorithms/'+operation]:{post:{
+  security:secured,requestBody:{required:true,content:{'application/json':{schema:{$ref:'#/components/schemas/Y5Uniform-'+operation}}}},
+  responses:{
+   [submission?'202':'200']:{description:submission
+    ?'Original principal/Work-bound finite discovery accepted for durable native proof search. No checked result or admission yet.'
+    :operation==='record-task-episode'
+     ?'Canonical S5 model-only task request, result and cost episode recorded or replayed from authenticated specification/task Work references under the original invocation deadline. No inline values, answer, acceptance, protected family credit, reservation or S6 effects.'
+    :operation==='specification'
+     ?'Current authenticated specification Work resolved to its immutable typed definition and separately qualified semantic acceptance. Public development is not protected family credit.'
+     :operation==='read'
+      ?'Current authorized lightweight status by default for v2. Capsule and retained history require explicit includeCapsule/includeHistory; bound payloads are withheld when source authorization is unavailable.'
+      :operation==='consume-total'
+       ?'Same kernel-checked typed definition applied to a separate original S5 task Work under the original finite use allowance. No inline values, algorithm, reservation, S6 effects or protected admission.'
+       :'Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority.'},
+   '400':{description:'Strict bounded request or original S4/S5 semantic contract rejected.'},
+   '401':{description:'Current signed bearer required.'},
+   '403':{description:'Current owner or distinct evaluator authority absent.'},
+   '404':{description:'Absent or unauthorized private owner, Work or assignment.'},
+   '408':{description:'Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance.'},
+   '409':{description:'Original source, rights, Work, generation, instance, deadline or idempotency preimage changed.'},
+   '413':{description:'Original request, storage or finite resource bound exceeded.'},
+   '422':{description:'Required original semantic-owner predicate unavailable.'},
+   '503':{description:'Native capacity, diagnostic profile or independently configured S8 owner unavailable.'},
+  },
+ }}});
 }
 
 for (const [operation,schema] of Object.entries(DecisionAtlasOperationSchemas)) {
