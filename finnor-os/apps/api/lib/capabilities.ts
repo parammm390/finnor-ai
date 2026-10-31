@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { CapabilityEngineError } from "../../../packages/tools/src/capabilities/python-runner";
-import { errorResponse } from "./auth";
+import type { CapabilityActor } from "../../../packages/orchestration/src/capabilities/contracts";
+import { errorResponse, requireContext } from "./auth";
+
+export async function requireCapabilityOwner(request: Request): Promise<CapabilityActor> {
+  const actor = await requireContext(request);
+  if (actor.role !== "owner") throw new CapabilityEngineError("CAPABILITY_OWNER_DENIED");
+  return { ...actor, role: actor.role };
+}
 
 export async function capabilityBody(request: Request): Promise<unknown> {
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) throw new CapabilityEngineError("CAPABILITY_JSON_REQUIRED");

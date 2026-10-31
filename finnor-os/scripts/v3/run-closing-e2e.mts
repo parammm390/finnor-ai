@@ -777,8 +777,41 @@ try {
     const nativeCompletion = await completedNativeWork(f);
     const compensation = await compensationReadback({ f, request }), funding = await compensationFunding({ f });
     const portfolio = ok(await request(f, "/api/allocations/resources", {}));
+    const compensationJoinEvidence: Record<string, unknown> = {};
+    for (const [name, sql] of Object.entries({
+      programme: `SELECT id,principal_id,status,last_check_id,spec_digest,profile_digest,
+        finnor_os.pe_closing_cut_digest(tenant_id,id) current_cut FROM finnor_os.pe_closing_programmes WHERE tenant_id=$1 AND id=$2`,
+      payments: `SELECT h.operation,h.body FROM finnor_os.s5_history h WHERE h.tenant_id=$1
+        AND h.operation IN('WORKFORCE_CLOSING_PAYMENT','WORKFORCE_COMPENSATION_ACCEPTANCE','WORKFORCE_BUDGET')
+        AND h.body->>'programmeId'=(SELECT spec->'fundsFlows'->0->'workforceCompensation'->>'programmeId'
+          FROM finnor_os.pe_closing_programmes WHERE tenant_id=$1 AND id=$2)
+        ORDER BY h.subject_id,h.revision LIMIT 16`,
+      financial: `SELECT l.node_key,l.business_effect_id,l.consumption_ref,e.semantic_hash,o.verification_status,
+        o.observation,co.body consumption,st.status consumption_status,st.effect_ref,ro.body financial_origin,r.status reservation_status
+        FROM finnor_os.pe_closing_node_links l JOIN finnor_os.business_effects e ON e.tenant_id=l.tenant_id AND e.id=l.business_effect_id
+        JOIN finnor_os.external_operations o ON o.tenant_id=e.tenant_id AND o.business_effect_id=e.id
+        JOIN finnor_os.s5_consumptions co ON co.tenant_id=l.tenant_id AND co.consumption_id=l.consumption_ref->>'id'
+        JOIN finnor_os.s5_consumption_states st ON st.tenant_id=co.tenant_id AND st.consumption_id=co.consumption_id
+        JOIN finnor_os.s5_reservation_origins ro ON ro.tenant_id=co.tenant_id AND ro.reservation_id=co.reservation_id
+        JOIN finnor_os.s5_reservations r ON r.tenant_id=ro.tenant_id AND r.reservation_id=ro.reservation_id
+        WHERE l.tenant_id=$1 AND l.programme_id=$2 AND l.node_key='pay-seller' LIMIT 2`,
+      check: `SELECT ch.id,ch.body,ch.checker_digest,ch.observation_cut_digest,ch.valid_until FROM finnor_os.pe_closing_checks ch
+        JOIN finnor_os.pe_closing_programmes q ON q.tenant_id=ch.tenant_id AND q.last_check_id=ch.id
+        WHERE q.tenant_id=$1 AND q.id=$2`,
+      receipt: `SELECT v.id,v.content,v.content_hash,v.snapshot->'closingObservation' observation
+        FROM finnor_os.evidence_source_versions v JOIN finnor_os.external_operations o
+        ON o.tenant_id=v.tenant_id AND o.observation->'closingEvidenceRef'->>'versionId'=v.id::text
+        JOIN finnor_os.pe_closing_node_links l ON l.tenant_id=o.tenant_id AND l.business_effect_id=o.business_effect_id
+        WHERE l.tenant_id=$1 AND l.programme_id=$2 AND l.node_key='pay-seller' LIMIT 2`,
+      roleBindings: `SELECT p.status,p.valid_until,p.body->'roleBindings' bindings,
+        (SELECT jsonb_agg(jsonb_build_object('assignment',to_jsonb(a),'definition',to_jsonb(r)))
+        FROM finnor_os.employee_role_assignments a JOIN finnor_os.employee_roles r ON r.tenant_id=a.tenant_id AND r.id=a.role_id
+        WHERE a.tenant_id=q.tenant_id AND a.id::text IN(SELECT x->>'assignmentId' FROM jsonb_array_elements(p.body->'roleBindings') x)) roles
+        FROM finnor_os.pe_closing_profiles p JOIN finnor_os.pe_closing_programmes q ON q.tenant_id=p.tenant_id AND q.profile_id=p.id
+        WHERE q.tenant_id=$1 AND q.id=$2`,
+    })) compensationJoinEvidence[name] = (await admin!.query(sql, [f.tenant, f.programmeId])).rows;
     await save("workforce-compensation/settled-owner-before-projection-assertion.json",
-      { completed, nativeCompletion, compensation, funding, portfolio });
+      { completed, nativeCompletion, compensation, funding, portfolio, compensationJoinEvidence });
     assert.equal(JSON.stringify(compensation.records[0]), f.compensationFixture.acceptedBytes, "Immutable acceptance was rewritten");
     assert.equal(compensation.observations[0].status, compensationCase === "exact" ? "SETTLED" : "OPEN",
       "Exact receiving receipt join must pay only the original amount, payee and reservation");

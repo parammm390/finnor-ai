@@ -43,3 +43,24 @@ The full repaired exact episode runs first in CI. Its success releases the
 original missing-join baseline and three adverse controls in parallel. All five
 episodes remain mandatory; a skipped control is incomplete verification. This
 keeps a common setup/owner failure from launching four redundant failing runs.
+
+# Failure-safe evidence retention
+
+Independent code review found that the comparison wrapper copied its controlled
+input and observed settlement only after its final assertion. Linux run
+41250103762 closed the financial transaction but reported the original promise
+OPEN; its uploaded archive contained only the outer receipt. Keep that failure.
+Move the exact existing output whitelist into finalization after owned processes
+stop, so both passes and failures retain the original obligation, observed owner
+readback and process result. Never copy raw failed canonical snapshots, database
+files, private configuration, bearer material or queue claim tokens. An evidence
+copy or teardown error must make the run fail. Do not alter the original positive
+or wrong-amount/payee/receipt assertions or1200-second limit.
+
+At the existing pre-assertion observation, retain the bounded actual financial
+join rows (payment node, immutable consumption/origin, checker receipt, public
+signed observation, role-binding hashes and controlled payment history). This
+diagnostic uses the existing fixture admin only to read; it must never edit a
+financial receipt, forge a link, add test exports to production, or upload queue
+claims, provider credentials or raw profile configuration. It distinguishes a
+missing historical payment link from a link rejected by currentness.

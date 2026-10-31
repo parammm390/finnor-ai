@@ -177,15 +177,8 @@ def main():
             record["expectedOriginalMissingJoinDemonstrated"] = True
         else:
             assert result["passed"] and child.returncode == 0, "REPAIRED_OWNER_EPISODE_FAILED"
-        for name in ("results.json", "closing-reader-privacy-original.json", "closing-reader-privacy-result.json",
-                "workforce-compensation/settled-owner-before-projection-assertion.json",
-                "workforce-compensation/receiving-join-" + selected + ".json"):
-            source = owner / name
-            if source.exists():
-                shutil.copyfile(source, report / Path(name).name)
         originals = list(owner.glob("*/w2-original-obligation.json"))
         assert len(originals) == 1, "ONE_ORIGINAL_CONTROLLED_OBLIGATION_REQUIRED"
-        shutil.copyfile(originals[0], report / "original-obligation.json")
         record["status"] = "PASS"
     except BaseException as error:
         record.update(status="FAIL", errorType=type(error).__name__, error=str(error))
@@ -218,6 +211,20 @@ def main():
             stop_owned()
         except BaseException as error:
             record.update(status="FAIL", cleanupError=str(error))
+        try:
+            for name in ("results.json", "closing-reader-privacy-original.json", "closing-reader-privacy-result.json",
+                    "workforce-compensation/settled-owner-before-projection-assertion.json",
+                    "workforce-compensation/receiving-join-" + selected + ".json"):
+                source = owner / name
+                if source.exists():
+                    shutil.copyfile(source, report / Path(name).name)
+            originals = list(owner.glob("*/w2-original-obligation.json"))
+            if len(originals) == 1:
+                shutil.copyfile(originals[0], report / "original-obligation.json")
+            elif len(originals) > 1:
+                raise AssertionError("AMBIGUOUS_ORIGINAL_CONTROLLED_OBLIGATION")
+        except BaseException as error:
+            record.update(status="FAIL", evidenceError=str(error))
         try:
             if source_reversed:
                 for path, data in fixed.items():
