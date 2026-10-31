@@ -1,0 +1,161 @@
+{
+  "schema": "finnor.postx.y5.completion-verification.v1",
+  "baseCommit": "df9111da8c7a1170f1f074e43fdf5984eaa55b8b",
+  "sourceCut": "UNSEALED_IMPLEMENTATION_IN_PROGRESS",
+  "qualification": "PUBLIC_DEVELOPMENT_ONLY",
+  "rules": {
+    "maxUndiagnosedTrialsPerPredicate": 2,
+    "serialNativeAndInstalledRuns": true,
+    "preserveFailedEvidence": true,
+    "productionMutationAuthorized": false,
+    "protectedAcceptanceAuthorized": false
+  },
+  "cases": [
+    {
+      "id": "current-main-integration",
+      "commands": [
+        "cd finnor-os && npm run db:bundle && npm run openapi",
+        "npm run centropy:client && npm run centropy:manifest && npm run centropy:coverage",
+        "cd finnor-os && npm run typecheck",
+        "node_modules/.bin/tsc --noEmit"
+      ],
+      "oracle": "Y1–Y4 registries and source semantics remain; complete appended migration identity; zero new type or generated-contract errors",
+      "evidence": "evidence/y5-completion/current-main-integration/",
+      "limitSeconds": 600,
+      "status": "VERIFIED_BASELINE_ONLY",
+      "currentCutResealRequired": true,
+      "note": "Integrated generated contracts, migration upgrade/replay and typechecks passed before later episode/v2 edits. Latest backend typecheck also passes; full current-cut validation remains."
+    },
+    {
+      "id": "complete-s5-episode-cut",
+      "driver": "finnor-os/scripts/postx/y5/verify-episode-cut.mts",
+      "oracle": "Original authenticated principal census includes adverse siblings, immutable commit cut, original certificate recheck and current source/rights visibility; caller selections and future knowledge are refused",
+      "limitSeconds": 300,
+      "status": "VERIFIED_AUTHENTICATED_SOURCE_BOUNDARY",
+      "evidence": "evidence/y5-completion/episode-cut-second/results.json",
+      "currentCutResealRequired": true,
+      "note": "PASS in 24530 ms, including contradictory siblings, source visibility and immutable historical/future cut checks. The first fixture failure lacked the S3 artifact-store configuration and remains retained."
+    },
+    {
+      "id": "total-typed-boundary",
+      "driver": "finnor-os/scripts/postx/y5/verify-total-boundary.mts",
+      "oracle": "Closed typed scalar/product/list programs and general proposition constructors; task/code separation, bounded syntax, typed variables, canonical exact integers, no injected source",
+      "evidence": "evidence/y5-completion/total-boundary-second/results.json",
+      "limitSeconds": 30,
+      "status": "VERIFIED_PUBLIC_LIBRARY_BOUNDARY_ONLY"
+    },
+    {
+      "id": "total-owner-specification",
+      "driver": "finnor-os/scripts/postx/y5/verify-specification-owner.mts",
+      "oracle": "Native authenticated Work source resolution; no caller-supplied algorithm; immutable source and configured acceptance-policy signature/revocation binding",
+      "evidence": "evidence/y5-completion/specification-owner-first/results.json",
+      "limitSeconds": 300,
+      "status": "VERIFIED_PUBLIC_DISPOSABLE_POLICY_ONLY",
+      "note": "No genuine independently accepted or protected specification was manufactured."
+    },
+    {
+      "id": "total-discovery-finite-search",
+      "driver": "finnor-os/scripts/postx/y5/verify-total-search.mts",
+      "oracle": "Bounded typed program/state and generic proposition enumeration; genuine refutations, multiple state types, independent exhaustive small-input comparison and cancellation",
+      "evidence": "evidence/y5-completion/total-search-first/results.json",
+      "limitSeconds": 30,
+      "status": "VERIFIED_FINITE_DEVELOPMENT_ONLY",
+      "note": "1937 programs and 4970 propositions examined. Subsequent invariant ranking and cost changes are also exercised through the native end-to-end driver."
+    },
+    {
+      "id": "total-discovery-all-size",
+      "driver": "finnor-os/scripts/postx/y5/verify-total-native.mts",
+      "oracle": "Runtime synthesis of a nontrivial recurrence and a load-bearing structural theorem; independent owner target, all-prefix leastness, all-size counted denotation agreement, same Lean definition execution and hostile substitution refusals",
+      "limitSeconds": 3600,
+      "evidence": "evidence/y5-completion/total-native-fourth/results.json",
+      "status": "VERIFIED_PUBLIC_LIBRARY_NATIVE_ALL_SIZE",
+      "currentCutResealRequired": true,
+      "note": "PASS in 102277 ms. Runtime-enumerated recurrence and load-bearing invariant; exact expected type and explicit additive prefix-sum correspondence; supplied proof-object replay; counted agreement and 11*n+5 operation bound; same Lean definition execution and substitutions rejected. Not authenticated owner queue/use, protected discovery, sandbox qualification, complete accounting or independent trust-policy approval. Earlier failed and superseded cuts are retained."
+    },
+    {
+      "id": "total-model-reference-replay",
+      "driver": "finnor-os/scripts/postx/y5/verify-total-model-reference.mts --phase=green",
+      "oracle": "Pure S5 reference: structural equality, necessary bounds, honest UNKNOWN limits, unchanged exported bounds, and a recorded MODEL_ACCEPTED result replays to the same digest bounded by its recorded steps with zero clock reads",
+      "limitSeconds": 30,
+      "evidence": "evidence/y5-completion/model-reference-replay-first/green.json",
+      "status": "VERIFIED_MODEL_ISOLATION_ONLY",
+      "note": "24 cases PASS. The replay case was written after the change that followed the fourteenth owner run; the contract addendum says so. Synthetic bindings, not an authenticated Work."
+    },
+    {
+      "id": "execution-deadline-client",
+      "driver": "finnor-os/scripts/postx/y5/verify-execution-deadline.mts",
+      "oracle": "Disposable PostgreSQL: statement_timeout is armed per transaction and re-armed after slack or when a nested deadline changes; an explicit SET LOCAL is replaced; the server ends a sleeping statement shortly after the deadline",
+      "limitSeconds": 120,
+      "evidence": "evidence/y5-completion/execution-deadline-first/results.json",
+      "status": "VERIFIED_DISPOSABLE_POSTGRESQL_ONLY",
+      "note": "A 303-statement burst armed once; outer/inner/after deadlines 19999/499/19998 ms; the server ended a sleeping statement 23 ms after the deadline. Known pre-existing limits remain: the slack check happens before pg queueing and ROLLBACK TO SAVEPOINT is classified as a transaction end."
+    },
+    {
+      "id": "total-owner-s8",
+      "driver": "finnor-os/scripts/postx/y5/verify-total-owner.mts --with-total-s8",
+      "oracle": "Public authenticated owner flow with verify-total-s8.mts; both consume-total legs and concurrent evaluate retain the unchanged 28.5 s HTTP invocation limit; no earlier-cut pass qualifies the current cut",
+      "limitSeconds": 3600,
+      "evidence": "evidence/y5-completion/total-owner-s8-nineteenth/",
+      "status": "FAIL",
+      "currentCutResealRequired": true,
+      "note": "FAIL at the current cut (resolution memo with pre-closing recheck). Nineteenth run (evidence/y5-completion/total-owner-s8-nineteenth/ and its .log) failed at verify-total-s8.mts:144: the winning concurrent evaluate returned 408 Y5_ORIGINAL_REQUEST_DEADLINE at 28500 ms and the other caller returned 200 in 2.8 s. Both consume-total legs PASSED (uses 26117 ms and 20975 ms). Native calls inside them took 18054 ms and 12898 ms against 5646 ms and 3800 ms in the eleventh run, while the non-native part of a use fell to about 8.1 s from about 10.8-11.0 s in the seventeenth run; host swap was 8.2 of 9.2 GB. The winner has no per-phase timeline because the run was unprofiled. Eighteenth run (memo before the recheck) FAIL at verify-total-owner.mts:108 on the first use: UNKNOWN Y5_NATIVE_DEADLINE after about 21 s before native start, while helper commands overlapped the run. Eleventh run PASS in 311564 ms at an EARLIER source cut (evidence/y5-completion/total-owner-s8-eleventh/ and total-owner-s8-eleventh.log): concurrent evaluate winner 26.0 s, only 2.5 s margin; consume-total legs 18.1 s and 12.5 s. Twelfth through seventeenth FAIL, each recorded in decisions.tsv. The 28.5 s limit is unchanged; no current-cut pass is claimed."
+    },
+    {
+      "id": "native-discovery-proof",
+      "driver": "finnor-os/scripts/postx/y5/verify-native.mts",
+      "oracle": "Independent Lean/kernel/type/assumption checks reject invalid structure and bind the exact executable source, arbitrary instance sizes and original applicability",
+      "limitSeconds": 3600,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "public-markov-uniform",
+      "oracle": "Uniform absorbing-process and bounded-martingale reasoning; harmonic formula (2^i-1)/(2^N-1); N=8, i=1 yields 1/255; reject finite-only or assumed absorption",
+      "limitSeconds": 3600,
+      "status": "UNPROVED",
+      "evidence": "/Users/paramdave/.factory/worktrees/postx-y5-public-markov-2026-10-31/FINNOR/evidence/y5-public-markov/verification-final.json",
+      "note": "Delegate established exact rational mechanics only. Absorption, bounded martingale and infinite-event limit remain unproved. The selected ordinary uncompressed acquisition cap stopped the attempted dependency route; alternative routes are not ruled out. Artifacts are not yet integrated."
+    },
+    {
+      "id": "authenticated-owner-installed",
+      "driver": "finnor-os/scripts/postx/y5/verify-owner.mts",
+      "oracle": "Compiled API and installed worker, durable proofs and claims, original S5 acceptance and deadlines, independent disposable S8 authority, P7 invalidation and S6 UNKNOWN preservation",
+      "limitSeconds": 3600,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "recovery-and-native-faults",
+      "drivers": [
+        "finnor-os/scripts/postx/y5/verify-recovery.mts",
+        "finnor-os/scripts/postx/y5/verify-native-faults.mts",
+        "finnor-os/scripts/postx/y5/verify-native-parent-loss.mts",
+        "finnor-os/scripts/postx/y5/verify-review-repairs.mts"
+      ],
+      "oracle": "Claim-fenced late output, cancellation, native process cleanup and resource recovery; no false complete/current state after source, tenant, rights or owner movement",
+      "limitSeconds": 3600,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "mounted-work",
+      "drivers": [
+        "finnor-os/scripts/postx/y5/mounted-session.mts",
+        "finnor-os/scripts/postx/y5/verify-mounted-browser.py"
+      ],
+      "oracle": "Assigned visible browser, actual production frontend and compiled owner: opening, draft typing, polling, lazy evidence, Work switch, revocation, cancellation and cleanup",
+      "limitSeconds": 600,
+      "status": "NOT_RUN"
+    },
+    {
+      "id": "source-runtime-release",
+      "driver": "finnor-os/scripts/postx/y5/build-installed.mjs",
+      "oracle": "Exact source closure and locks; independently verifiable installed assets; no source/header development identity substituted; required release and boundary checks pass",
+      "limitSeconds": 3600,
+      "status": "NOT_RUN"
+    }
+  ],
+  "externalGates": {
+    "protectedTwelveUnseenFamiliesEightAcceptedTwoNewStructures": "NOT_ESTABLISHED",
+    "independentTrustPolicyAndCustody": "NOT_ESTABLISHED",
+    "equippedComparatorAndCompleteAccounting": "NOT_ESTABLISHED",
+    "ninetyDayOperationalAndH2Economics": "NOT_ESTABLISHED"
+  }
+}
