@@ -58,7 +58,7 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
    // Re-enter this same captured deadline rather than creating a fresh window.
    if(monotoneDeadline===null)return renewComputeResourceLeases(leases);
    return withDatabaseExecutionDeadline(monotoneDeadline,async()=>{executionDeadlineMilliseconds();return renewComputeResourceLeases(leases);});
-  });
+  }, { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
   const steps=u.kind==='CONTROL_M2'?256:u.kind==='EXECUTE_P1'?(module?.bounds.steps??0)+1:1;
   // Conservative byte ceiling for this local diagnostic protocol; actual
   // returned token counts must fit it. No general provider tokenizer is assumed.

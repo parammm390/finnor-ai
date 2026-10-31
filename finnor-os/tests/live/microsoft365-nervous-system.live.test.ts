@@ -14,6 +14,7 @@ import {
   inspectMicrosoftGraphAppOnlyToken,
   Microsoft365SubscriptionTransport,
   MicrosoftGraphClient,
+  allMicrosoft365SourceCapabilities,
   microsoft365SourceCapability,
   microsoft365SubscriptionChangeTypes,
   type Microsoft365SourceScope,
@@ -45,6 +46,8 @@ function sourceScopeIds(): string[] {
 }
 
 function sourceScope(row: typeof integrationSourceScopes.$inferSelect): Microsoft365SourceScope {
+  const capability = allMicrosoft365SourceCapabilities().find(capability => capability.sourceKind === row.sourceKind);
+  if (!capability) throw new Error(`Source scope ${row.id} is not a supported Microsoft 365 source`);
   return {
     id: row.id,
     tenantId: row.tenantId,
@@ -110,7 +113,7 @@ describe.skipIf(!enabled)("Microsoft 365 live nervous-system certification", () 
 
     let provedDeltaCursor = false;
     for (const row of scopes) {
-      const capability = microsoft365SourceCapability(row.sourceKind);
+      const capability = microsoft365SourceCapability(sourceScope(row).sourceKind);
       if (capability.supportsChangeNotifications) {
         await maintainIntegrationSubscriptions({
           tenantId,
@@ -204,7 +207,7 @@ describe.skipIf(!enabled)("Microsoft 365 live nervous-system certification", () 
     expect(before.observedEvidence.map((item) => item.evidenceVersionId)).not.toContain(temporalProof!.evidence_version_id);
     expect(after.observedEvidence.map((item) => item.evidenceVersionId)).toContain(temporalProof!.evidence_version_id);
 
-    const subscriptionScopeRow = scopes.find((scope) => microsoft365SourceCapability(scope.sourceKind).supportsChangeNotifications);
+    const subscriptionScopeRow = scopes.find((scope) => microsoft365SourceCapability(sourceScope(scope).sourceKind).supportsChangeNotifications);
     expect(subscriptionScopeRow).toBeTruthy();
     const liveScope = sourceScope(subscriptionScopeRow!);
     const auth = authByIntegration.get(liveScope.integrationId)!;

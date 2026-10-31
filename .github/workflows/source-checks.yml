@@ -100,6 +100,7 @@ jobs:
           npm run authz:matrix:check || status=1
           npm run openapi || status=1
           npm run typecheck || status=1
+          npm run build:inputs:check || status=1
           npm run release:manifest || status=1
           npm run release:pe-domain-boundary || status=1
           exit "$status"

@@ -219,7 +219,7 @@ export async function identifyDigitalSystemJob(raw:Record<string,unknown>,execut
   requireDisposableIdentification();
   const initial=await tx(ctx,c=>access(c));if(!initial)return;
   leases=await acquireComputeResourceLeases({tenantId:p.tenantId,resourceKeys:['native:x4-experiment'],requiredResourceKeys:['native:x4-experiment'],workloadClass:'INTERACTIVE',ownerId:'x4:'+e.deliveryAttemptId});
-  e.registerHeartbeat(current);
+  e.registerHeartbeat(current, { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
   await tx(ctx,async c=>{
    const a=await access(c);if(!a)return;
    if(p.stage==='DISCOVER')await c.query("UPDATE finnor_os.x4_identifications SET status='DISCOVERING' WHERE tenant_id=$1 AND id=$2",[a.tenant_id,a.id]);

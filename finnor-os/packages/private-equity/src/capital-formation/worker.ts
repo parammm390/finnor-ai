@@ -164,7 +164,7 @@ export async function runCapitalFormationJob(payload: Record<string, unknown>, e
         const q = await capitalProgramme(ctx, parsed.programmeId, c, false); return q.active_claim_token === null
           || q.active_claim_token === execution.claimToken && Number(q.active_claim_fence) === Number(execution.claimFence); }); }
       catch { return false; }
-    });
+    }, { leaseSeconds: 90 });
     const choice = await capitalTx(ctx, async c => {
       const q = await capitalProgramme(ctx, parsed.programmeId, c); await activeFence(ctx, q, execution, c);
       if (parsed.monitor) return null;

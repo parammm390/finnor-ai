@@ -333,3 +333,49 @@ jobs:
           path: ${{ runner.temp }}/p7-certification.log
           if-no-files-found: warn
           retention-days: 7
+
+  correctness-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: .
+    services:
+      redis:
+        image: redis:7-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+        ports: ["6379:6379"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - run: npm run centropy:manifest:check
+      - name: Verify atomic principal-scoped memory
+        env:
+          REDIS_URL: redis://127.0.0.1:6379
+          FINNOR_TEST_REDIS_DISPOSABLE: "1"
+        run: npm --prefix finnor-os run verify:memory -- --out "$RUNNER_TEMP/correctness/memory"
+      - run: npm --prefix finnor-os run verify:job-heartbeats -- --out "$RUNNER_TEMP/correctness/leases"
+      - run: npm --prefix finnor-os run verify:tenant-probe -- --out "$RUNNER_TEMP/correctness/tenant"
+      - run: npm --prefix finnor-os run verify:planner-eval -- --out "$RUNNER_TEMP/correctness/planner"
+      - run: node scripts/audits/verify-capability-proxy.mjs --out "$RUNNER_TEMP"
+      - run: npx --no-install playwright install --with-deps chromium
+      - run: npm --prefix finnor-os run verify:oauth-proxy -- --out "$RUNNER_TEMP/correctness/oauth"
+      - uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065
+      - run: node scripts/audits/verify-k6-probe.mjs --k6 "$(command -v k6)" --out "$RUNNER_TEMP/correctness/load"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: ${{ always() }}
+        with:
+          name: correctness-regressions-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/correctness
+            ${{ runner.temp }}/proxy-*/proof.json
+          if-no-files-found: warn

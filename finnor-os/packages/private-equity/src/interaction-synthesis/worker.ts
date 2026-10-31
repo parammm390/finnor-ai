@@ -47,7 +47,7 @@ export async function constructInteractionProtocolJob(raw:Record<string,unknown>
   if(!await transaction(ctx,c=>owned(c)))return;
   leases=await acquireComputeResourceLeases({tenantId:p.tenantId,resourceKeys:['native:y3-construction'],
    requiredResourceKeys:['native:y3-construction'],workloadClass:'INTERACTIVE',ownerId:'y3:'+e.deliveryAttemptId});
-  e.registerHeartbeat(heartbeat);
+  e.registerHeartbeat(heartbeat, { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
   original=await transaction(ctx,async c=>{
    const row=await owned(c);if(!row)return undefined;
    if(row.attempts_used>=LIMITS.maxAttempts){

@@ -293,7 +293,7 @@ export async function runClosingProgrammeJob(payload: Record<string, unknown>, e
     return (await c.query<ClosingProgrammeRow>("UPDATE finnor_os.pe_closing_programmes SET controller_lease_token=$4,controller_lease_until=clock_timestamp()+interval '90 seconds' WHERE tenant_id=$1 AND id=$2 AND generation=$3 AND (controller_lease_until IS NULL OR controller_lease_until<clock_timestamp()) RETURNING *", [request.tenantId, request.programmeId, request.generation, token])).rows[0];
   });
   if (!q) return;
-  execution.registerHeartbeat(async () => tx(ctx, async c => Boolean((await c.query("UPDATE finnor_os.pe_closing_programmes SET controller_lease_until=clock_timestamp()+interval '90 seconds' WHERE tenant_id=$1 AND id=$2 AND controller_lease_token=$3 AND generation=$4 RETURNING id", [q.tenant_id, q.id, token, q.generation])).rowCount)));
+  execution.registerHeartbeat(async () => tx(ctx, async c => Boolean((await c.query("UPDATE finnor_os.pe_closing_programmes SET controller_lease_until=clock_timestamp()+interval '90 seconds' WHERE tenant_id=$1 AND id=$2 AND controller_lease_token=$3 AND generation=$4 RETURNING id", [q.tenant_id, q.id, token, q.generation])).rowCount)), { leaseSeconds: 90 });
   try {
     const projection = await readClosingProgramme(ctx, q.id);
     if (projection.status === "CLOSED") {

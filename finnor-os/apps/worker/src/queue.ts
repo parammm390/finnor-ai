@@ -8,6 +8,7 @@ import { randomUUID } from "node:crypto";
 import { hostname } from "node:os";
 import type { PoolClient } from "pg";
 import { RETIRED_WATER_JOB_TYPES, RetiredVerticalError, isRetiredWaterJob } from "@finnor/shared-types";
+import { startJobHeartbeat, type HeartbeatLease } from "./job-heartbeat";
 
 export type JobRetrySafety = "pure" | "locally_idempotent" | "durably_effect_guarded" | "reconcilable" | "unsafe_legacy";
 
@@ -20,7 +21,7 @@ export interface JobExecutionContext {
   protocolVersion: number;
   workerId: string;
   retrySafety: JobRetrySafety;
-  registerHeartbeat(callback: () => Promise<boolean>): void;
+  registerHeartbeat(callback: () => Promise<boolean>, lease: HeartbeatLease): () => void;
 }
 
 export type JobHandler = (payload: Record<string, unknown>, context?: Readonly<JobExecutionContext>) => Promise<void>;
@@ -491,32 +492,26 @@ export class JobQueue {
       jobId: job.id,
     });
     const start = Date.now();
-    const claimHeartbeatCallbacks = new Set<() => Promise<boolean>>();
-    const renewEveryMs = Math.max(1_000, Math.floor(this.leaseSeconds * 1_000 / 3));
-    let leaseLost = false;
-    const renewLease = async (): Promise<void> => {
-      const result = await getPool().query(
+    const heartbeat = startJobHeartbeat({
+      leaseSeconds: this.leaseSeconds,
+      renew: async (): Promise<boolean> => {
+        const result = await getPool().query(
         `WITH renewed AS (
            UPDATE jobs SET lease_expires_at=now()+($5 || ' seconds')::interval,lease_heartbeat_at=now()
             WHERE id=$1 AND status='running' AND lease_owner=$2 AND claim_token=$3 AND claim_fence=$4
+              AND lease_expires_at>clock_timestamp()
             RETURNING id
          )
          UPDATE job_delivery_attempts SET heartbeat_at=now()
           WHERE id=$6 AND claim_token=$3 AND EXISTS (SELECT 1 FROM renewed)`,
         [job!.id, this.instanceId, job!.claimToken, job!.claimFence, String(this.leaseSeconds), job!.deliveryAttemptId],
-      );
-      if (result.rowCount !== 1) leaseLost = true;
-      if (!leaseLost) {
-        const outcomes = await Promise.all([...claimHeartbeatCallbacks].map((callback) => callback().catch(() => false)));
-        if (outcomes.some((owned) => !owned)) leaseLost = true;
-      }
-    };
-    const renewal = setInterval(() => {
-      void renewLease().catch((error) => {
-        leaseLost = true;
+        );
+        return result.rowCount === 1;
+      },
+      onError: (error) => {
         log.error({ err: error instanceof Error ? error.message : String(error) }, "job lease renewal failed");
-      });
-    }, renewEveryMs);
+      },
+    });
     try {
       await Sentry.withScope(async (scope) => {
         scope.setTag("correlation_id", correlationId);
@@ -532,18 +527,20 @@ export class JobQueue {
           protocolVersion: job!.protocolVersion,
           workerId: this.instanceId,
           retrySafety: job!.retrySafety,
-          registerHeartbeat: (callback: () => Promise<boolean>) => { claimHeartbeatCallbacks.add(callback); },
+          registerHeartbeat: heartbeat.register,
         }));
       });
+      await heartbeat.stop();
       const ms = Date.now() - start;
       Sentry.addBreadcrumb({ category: "job", message: job.type, data: { ok: true, ms, correlationId } });
       log.info({ ok: true, ms }, `job ${job.type} completed`);
-      if (leaseLost) throw new Error("Worker lost the durable job lease before completion could be committed");
+      if (heartbeat.lost) throw new Error("Worker lost the durable job lease before completion could be committed");
       const completed = await getPool().query(
         `WITH finished AS (
            UPDATE jobs SET status='completed',completed_at=now(),started_at=NULL,
                            lease_owner=NULL,lease_expires_at=NULL,lease_heartbeat_at=NULL,claim_token=NULL
             WHERE id=$1 AND status='running' AND lease_owner=$2 AND claim_token=$3 AND claim_fence=$4
+              AND lease_expires_at>clock_timestamp()
             RETURNING id
          )
          UPDATE job_delivery_attempts SET outcome='completed',finished_at=clock_timestamp(),heartbeat_at=clock_timestamp()
@@ -552,6 +549,7 @@ export class JobQueue {
       );
       if (completed.rowCount !== 1) throw new Error("Worker no longer owns the durable job lease");
     } catch (err) {
+      await heartbeat.stop();
       const ms = Date.now() - start;
       if (err instanceof WorkerDrainBeforeDispatchError) {
         // A shutdown can race the COMMIT response. No business handler ran, so
@@ -695,7 +693,7 @@ export class JobQueue {
           err instanceof Error ? err.message : String(err), job.deliveryAttemptId],
       );
     } finally {
-      clearInterval(renewal);
+      await heartbeat.stop();
     }
     return true;
   }
