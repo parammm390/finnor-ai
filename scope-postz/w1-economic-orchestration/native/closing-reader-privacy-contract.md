@@ -39,3 +39,31 @@ must fail before the positive financial journey if a dependency is absent.
 Diagnostic output may name only a PostgreSQL permission object's identifier
 and kind from the exact permission-denied syntax; never emit arbitrary SQL
 error messages, statements, parameters, request data or database credentials.
+
+The full query preflight now reproduces the exact remaining refusal: job
+124637078371 reports permission denied for table capability_nango_bindings.
+Y5's PUBLIC restrictive evidence-source policy embeds a direct bindings-table
+subquery; PostgreSQL checks its table privileges even for ordinary non-Nango
+records. Do not grant closing readers access to bindings, connection identities
+or source scopes. Put the same currentness test behind a SECURITY INVOKER
+PL/pgSQL predicate: ordinary source types return true without preparing a
+private-table query, closing reader roles always reject Nango records, and
+existing other callers retain their own original table privileges and RLS.
+Preserve public ordinary sources and all other source privacy policies.
+
+Actual rolled-back evidence-source rows must prove ordinary visibility, Nango
+refusal, no binding-table SELECT privilege and foreign-context refusal. Re-run
+the complete material-cut permission preflight and unchanged full closing
+positive. No empty-cut or privacy result is a financial closure claim.
+
+The local full-cut probe additionally reproduces missing EXECUTE on
+s5_institution_visible. The existing institution reservation/state/history
+policies explicitly return true for every role except finnor_app, yet their
+function references still require planning permissions. Scope those three
+unchanged predicates TO finnor_app: other roles retain exactly their prior
+policy truth without acquiring an institution function or private read right.
+Audit every existing checker/broker-readable table with real EXPLAIN under
+that role, collecting all permission failures in savepoints before failing.
+The inventory grants nothing and executes no selected rows. Retain catalog
+relation identifiers, exact bounded permission identifiers and SQLSTATE only.
+This planning audit supplements populated privacy and the actual closing query.

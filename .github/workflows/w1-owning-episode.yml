@@ -34,6 +34,18 @@ jobs:
           "$RUNNER_TEMP/w1-uv" python install 3.12.13
           "$RUNNER_TEMP/w1-uv" venv --python 3.12.13 "$RUNNER_TEMP/w1-scientific"
           "$RUNNER_TEMP/w1-uv" pip sync --require-hashes --only-binary :all: --python "$RUNNER_TEMP/w1-scientific/bin/python" finnor-os/scripts/postz-w1/requirements-native.txt
+      - name: Prepare the existing fixed-root callee on this disposable runner
+        run: |
+          set -euo pipefail
+          cc -std=c11 -O2 -Wall -Wextra -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -Wl,-z,relro,-z,now -o "$RUNNER_TEMP/w1-linux-launcher" finnor-os/packages/governed-execution/native/linux-launcher.c -lcrypto
+          w1_node="$(command -v node)"
+          w1_arch="$(node -p process.arch)"
+          sudo "$w1_node" finnor-os/scripts/r3/package-linux-jail.mjs "$w1_node" "$RUNNER_TEMP/w1-linux-launcher" "/opt/finnor-s6-jail-$w1_arch"
+      - name: Verify the actual isolation boundary before native owners
+        working-directory: finnor-os
+        env:
+          FINNOR_S6_EXECUTOR_EVIDENCE_DIR: ${{ runner.temp }}/w1-executor
+        run: node --import=tsx scripts/s6/run-executor-e2e.mts
       - name: Run original owning driver under its original finite bounds
         env:
           FINNOR_W1_EPISODE: ${{ inputs.mode }}

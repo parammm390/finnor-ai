@@ -16,3 +16,14 @@ exact commands and the original case input/predicate references remain replayabl
 
 This supplements the frozen campaign; it does not replace installed, cold,
 headed, structural, protected or field gates. No runner exit alone is a pass.
+
+The initial ordinary-host native run fails W1_NO_ORIGINAL_SCHEDULED_CONTINUATION
+after its original physical jobs stop. The job installed dependencies but not
+the existing fixed-root Linux callee required by actual P1 execution. Prepare
+the unchanged trusted launcher and sealed jail on the disposable GitHub runner
+before launching any native owner. Compile without privilege, then use the
+existing root-only packager for its root-owned jail/device nodes and exact
+SYS_CHROOT file capability; scored owners remain the ordinary runner user.
+Record setup output and run the existing S6 executor boundary first. No local
+Mac or Factory host setup, protected admission, new solver or fallback runtime
+is authorized by this CI preparation. Missing prerequisites fail before owners.

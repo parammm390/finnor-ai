@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "postz_w1_z_closing_reader_privacy.sql",
+    "requiredMigrationHead": "postz_w1_zz_ordinary_source_reader.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",
