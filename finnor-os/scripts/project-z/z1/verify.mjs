@@ -20,9 +20,14 @@ const codeFiles = [
   "finnor-os/packages/epistemic-runtime/src/project-z/z1-shared-work/producer-child.ts",
   "finnor-os/packages/private-equity/src/project-z/z1-shared-work/processes.ts",
   "finnor-os/packages/private-equity/src/project-z/z1-shared-work/owner.ts",
+  "finnor-os/packages/epistemic-runtime/src/project-z/z1-shared-work/portfolio-population.ts",
+  "finnor-os/packages/epistemic-runtime/src/project-z/z1-shared-work/portfolio-capacity.ts",
+  "finnor-os/packages/private-equity/src/project-z/z1-shared-work/deliveries.ts",
   "finnor-os/packages/orchestration/src/project-z/z1-shared-work/worker.ts",
   "finnor-os/package-lock.json",
   "finnor-os/scripts/project-z/z1/fixtures.mjs",
+  "finnor-os/scripts/project-z/z1/structural-fixtures.mjs",
+  "finnor-os/scripts/project-z/z1/original-expectations.py",
   "finnor-os/scripts/project-z/z1/verify.mjs",
   "finnor-os/scripts/project-z/z1/edge-cases.mjs",
   "finnor-os/scripts/project-z/z1/physical-recovery.mjs",
@@ -79,8 +84,17 @@ if (engine) {
       const request = freshRequest(family, obligation, buildIdentity);
       const observation = { family, specification: familySpecifications[family], obligation, request, actions: [], nativeOwnerFlow: "NOT_RUN" };
       try {
+        const originalBefore = spawnSync("python3", [resolve(here, "original-expectations.py")], {
+          input: JSON.stringify({ request }), encoding: "utf8", timeout: 15000, maxBuffer: 134217728,
+          env: { PATH: process.env.PATH, LANG: "C.UTF-8", PYTHONDONTWRITEBYTECODE: "1" },
+        });
+        assert.equal(originalBefore.status, 0, "INDEPENDENT_ORIGINAL_EXPECTATION_BEFORE_PRODUCER");
+        const expected = JSON.parse(originalBefore.stdout);
+        await writeFile(resolve(evidence, `original-before-${family}-${obligation}.json`),
+          JSON.stringify({ request, expected, exitCode: originalBefore.status }) + "\n", { flag: "wx", mode: 0o600 });
         const produced = engine.produce(request);
         const candidate = accepted(produced);
+        for (const p of candidate.workProjections) assert.deepEqual(p.result, expected.outputs[p.workId]);
         const checked = independentlyCheck(request, candidate);
         assert.equal(checked.disposition, "CHECKED_CANDIDATE", checked.reason);
         observation.actions.push({ kind: "initial", candidate, independent: checked });
@@ -88,12 +102,13 @@ if (engine) {
           const direct = engine.produce(request, { mode: "DIRECT" });
           assert.equal(independentlyCheck(request, accepted(direct)).disposition, "CHECKED_CANDIDATE");
           const row = structuredClone(request.sources[0].rows[0]);
-          const change = { sourceChanges: [{ sourceId: "ledger", fromRevision: request.sources[0].revision, toRevision: "inserted", insert: [row], retract: [] }] };
+          const sourceId = request.sources[0].id;
+          const change = { sourceChanges: [{ sourceId, fromRevision: request.sources[0].revision, toRevision: "inserted", insert: [row], retract: [] }] };
           const updated = engine.applyChanges(produced.checkpoint, change);
           const updateCheck = independentlyCheck(updated.checkpoint.request, accepted(updated));
           assert.equal(updateCheck.disposition, "CHECKED_CANDIDATE");
           const retracted = engine.applyChanges(updated.checkpoint, {
-            sourceChanges: [{ sourceId: "ledger", fromRevision: "inserted", toRevision: "retracted", insert: [], retract: [row] }],
+            sourceChanges: [{ sourceId, fromRevision: "inserted", toRevision: "retracted", insert: [], retract: [row] }],
           });
           assert.equal(independentlyCheck(retracted.checkpoint.request, accepted(retracted)).disposition, "CHECKED_CANDIDATE");
           const editedWork = structuredClone(request.works[0]);
@@ -107,12 +122,17 @@ if (engine) {
             fields: { revised: { op: "add", left: { op: "field", name: "amount" }, right: { op: "literal", type: money, value: "1" } } },
           });
           editedWork.programme.output = "edited-output";
+          if (family === 29) {
+            editedWork.programme = structuredClone(request.works[0].programme);
+            editedWork.programme.nodes.unshift({ id: "added-original-branch", op: "source", sourceId: "objectiveAdded" });
+            editedWork.programme.nodes.find(n => n.id === "objectiveBranches").inputs.push("added-original-branch");
+          }
           const edited = engine.applyChanges(retracted.checkpoint, {
             workEdits: [{ workId: editedWork.id, expectedProgrammeRevision: "programme-1", replacement: editedWork }],
           });
           assert.equal(independentlyCheck(edited.checkpoint.request, accepted(edited)).disposition, "CHECKED_CANDIDATE");
           const badRetraction = engine.applyChanges(edited.checkpoint, {
-            sourceChanges: [{ sourceId: "ledger", fromRevision: "retracted", toRevision: "bad", insert: [], retract: [{ ...row, amount: "-999999" }] }],
+            sourceChanges: [{ sourceId, fromRevision: "retracted", toRevision: "bad", insert: [], retract: [{ ...row, amount: "-999999" }] }],
           });
           assert.equal(badRetraction.disposition, "COUNTEREXAMPLE");
           const withdrawn = engine.applyChanges(edited.checkpoint, { withdrawWorkIds: [request.works[1].id] });
@@ -144,8 +164,7 @@ if (engine) {
           observation.actions.push({ kind: "out-of-profile-no-infeasibility-claim" });
         } else if (obligation === 4) {
           const unauthorized = structuredClone(request);
-          unauthorized.sources.find((s) => s.id === "ledger").partition.principalId = "other-private-principal";
-          // Some original families do not use ledger at all; mutate their actual first source.
+          // Mutate the source actually used by this original family.
           const firstSourceId = unauthorized.works[0].programme.nodes.find((n) => n.op === "source").sourceId;
           unauthorized.sources.find((s) => s.id === firstSourceId).partition.principalId = "other-private-principal";
           assert.equal(engine.produce(unauthorized).disposition, "REVOKED");

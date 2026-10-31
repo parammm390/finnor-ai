@@ -4,7 +4,7 @@ import { isAbsolute, resolve } from "node:path";
 import { produce, applyChanges, currentness } from "../../../packages/epistemic-runtime/src/project-z/z1-shared-work/engine.ts";
 import { digest } from "../../../packages/epistemic-runtime/src/project-z/z1-shared-work/contracts.ts";
 import { checkOriginal, runProducer, runtimeIdentity, Z1ProcessFailure } from "../../../packages/private-equity/src/project-z/z1-shared-work/processes.ts";
-import { freshRequest, money, scalar } from "./fixtures.mjs";
+import { freshHistoricalRequest as freshRequest, money, scalar } from "./fixtures.mjs";
 
 const evidence = process.argv[2];
 if (!evidence || !isAbsolute(evidence)) throw Error("ABSOLUTE_NEW_EVIDENCE_DIRECTORY_REQUIRED");

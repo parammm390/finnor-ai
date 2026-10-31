@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { freshStructuralRequest } from "./structural-fixtures.mjs";
 
 export const money = { kind: "rational", unit: "money", currency: "USD" };
 export const scalar = { kind: "rational", unit: "1", currency: null };
@@ -199,6 +200,12 @@ function topology(family, w) {
 }
 
 export function freshRequest(family, freshCase, sourceIdentity = "public-development-build") {
+  return freshStructuralRequest(family, freshCase, sourceIdentity);
+}
+
+// Historical obligation/edge/recovery episodes retain their original inputs.
+// These are not part of the new eight-shape structural denominator.
+export function freshHistoricalRequest(family, freshCase, sourceIdentity = "public-development-build") {
   const scale = 1 + family * 9 + freshCase;
   const columns = { company: text, amount: money, period: scalar };
   const rows = [

@@ -6,6 +6,109 @@ Source implementation, compiled installation and authenticated native execution
 have separate evidence. No driver creates a database, tenant, Auth project, Work,
 resource, source, grant, listener or effect.
 
+## 1000-original portfolio and complete delivery batch
+
+The owned implementation distinguishes at most 1000 canonical Z1 original
+parents from at most 256 unrelated S5 commitments. It does not split Works,
+aggregate their parents, omit opaque/UNKNOWN reservations, renew original
+budgets or enlarge the general 32-policy/16-resource solver. Structural
+reference checks are not authority: the integrated S5 definer must independently
+bind every native origin and return a complete population receipt.
+
+Delivery inserts all eligible original artifacts and deliveries in one fenced
+transaction. S8 queues nothing unless that complete persisted batch matches its
+immutable publication and original parents. Each original owner acknowledges
+exactly one canonical delivery. Consumer payloads name only that original;
+claim fencing, S8, currentness and the four-attempt bound remain mandatory.
+
+`portfolio-episode.mjs /absolute/new-output` drives actual bounded producer and
+independent original-checker processes for 2/256/257/1000 distinct originals.
+`portfolio-original.py` freezes direct Fraction expectations first. Its capacity
+inputs and delivery/job plans are public synthetic data, not S5 SQL execution,
+S8 admission, queue recovery or native owner proof.
+
+The coordinator adopted the 17 owned and six shared existing-slot proposals,
+plus an explicit forward-only migration for already initialized databases.
+Current evidence is under `scope-z/orchestration/delivery-20261026/`:
+`z1-integrated-check-08/` passed both carried full type checks, SQL/PLpgSQL
+grammar, exact forward bodies, the complete 233-entry generated bundle, this
+2/256/257/1000-original episode with23 rejects, and required public256 CI.
+`z1-owned-catalog-replay-07/` applied only the forward bridge; its controller
+failure remains retained. Catalog-only continuation08 verified all three
+actual bodies, fixed search paths, restricted grants, three DB-role rejects,
+an independently empty portfolio, unchanged27 table counts/RLS and owned PG
+exit0/closed port. No valid reservation, S8 acknowledgement, native admission,
+physical mechanism recovery or installed owner path ran. Do not infer authority
+to launch those from these engineering receipts.
+
+## Bounded native occupation stream, implemented but unverified
+
+`portfolio-stream.sql` is a new forward-only proposal, not either adopted
+migration. Its new coordinator migration filename is not assigned. Do not edit
+the adopted base/v2 or execute this proposal against the retained coordinator DB.
+The coordinator must review the exact bytes, assign an absent filename and
+regenerate the ordinary migration bundle before any integration.
+
+The concrete `portfolio-store.ts` opens a transaction-local, WITHOUT HOLD S5
+cursor on the same native PoolClient. It fetches 64 frames per page. The strict
+`portfolio-stream.ts` reader folds all non-released original and other
+occupation, with independent canonical counts, ordered member digests, current
+resource heads, tenant/principal/transaction/rights fences and a terminal seal.
+Frames stay within 64 KiB and pages within the unchanged 8 MiB bound. Large
+unselected vectors remain committed opaque witnesses, not zero selected use.
+No effect-history inventory, S6 settlement or capacity source is manufactured.
+The existing full-snapshot API and its 8 MiB limit remain unchanged.
+
+Original-budget validation visits one immutable parent at a time, with a
+transaction-local cache of at most 16 current resources. Delivery verification
+compares complete immutable preimages in SQL and returns bounded booleans,
+including identical consumed owner receipts. Current S8 reads recheck that
+barrier. A proposed state CHECK/relationship trigger requires an already-issued
+current admission and immutable owner use before acknowledgement. It does not
+create S8 admission or replace the independent original checker.
+
+`portfolio-stream-original.py` freezes public direct Fraction results before
+`portfolio-stream-replay.mjs` invokes the actual reader in separate processes.
+The planned inputs contain 1000 originals, 128 generic and 128 institution
+commitments, all 16 resources, 24/64-period vectors, mixed retained statuses and
+an admitted `__proto__` resource ID. They include byte counterexamples, 29
+malformed-stream recipes and 16 one-unit-short refusals. These are new public
+data-path controllers, not authenticated S5 records, SQL cursor execution or
+native owner evidence.
+
+The sealed stream packet and original refusals remain under
+`scope-z/phase-evidence/z1/implementation-20261026-17/`. The native E2E adapter
+continuation and superseding review packet are under
+`scope-z/phase-evidence/z1/implementation-20261026-18/`.
+Types, SQL grammar and public data-path attempts 1 all exited 2 at the unchanged
+4 GiB disk guard, before starting any check child. Sources changed after those
+guard observations. No current-source pass is claimed, and no unchanged retry,
+cleanup, new native claim, S8 admission or coordinator DB action occurred.
+The affected grammar controller now binds seven production SQL statements and
+five native driver statements. Its guarded `syntax` mode checks only the changed
+driver with Node 22 `--check`; neither mode establishes execution.
+
+## Fresh structural population and historical compatibility
+
+`freshRequest` selects `structural-fixtures.mjs`. Its 32 public family labels
+each supply eight varying original motifs. Labels, literal changes and opaque
+IDs do not establish independent structural qualification. Current-source
+process receipts, independent original results and a label-free structural
+audit are required separately; neither an older installed replay nor passing
+public cases establishes native, protected, equipped-X/Y or financial gates.
+
+`freshHistoricalRequest` preserves the earlier edge, original-episode and
+local-file recovery inputs. Those callers select it explicitly and do not
+count their legacy slots as the new structural population. `verify.mjs`
+freezes independent original results before production, binds the generator
+and oracle bytes, uses actual source IDs, and edits a real objective branch.
+
+The bounded terminal-reuse process cases cover filter/bag-union and
+unique-dimension aggregate/join equality, false side conditions and separate
+tenant batches. PUBLIC classification grants no cross-principal sharing.
+Current composition evidence belongs under
+`scope-z/orchestration/evidence/coordinator-integration-04/`; remote retained
+installed evidence binds its recorded earlier source, not this composition.
 ## Canonical path and shared ownership
 
 The six strict operations in `private-equity/.../api.ts` delegate from the existing
@@ -29,17 +132,23 @@ delegate, two registry entries, compute contracts, complete S5 snapshot integrat
 existing WORLD Work mount, proxy body bound, OpenAPI/manifest generators and build
 tracing must be integrated together. The coordinator owns collisions and acceptance.
 
-`shared-schema.sql` is an unexecuted proposal. The coordinator must assign its exact
-complete migration filename and regenerate the ordinary migration bundle. Do not
-pick an ordinal here, run SQL, change privileges or launch a stack. If an exact
-coordinator-assigned name is delivered later, request emission accepts
-`--coordinator-assigned-migration`; this still emits a request, not an application.
+`shared-schema.sql` matches the integrated fresh-install base
+`postz_z1_shared_work.sql`. The explicit
+`postz_z1_shared_work_portfolio_v2.sql` upgrades three functions on an existing
+tracked installation without replaying the base or rewriting history. Both are
+in the byte-checked ordinary migration bundle. The current complete fresh base
+has grammar/bundle checks; the actual catalog receipt is the existing-target
+forward upgrade, not a newly initialized complete-schema or populated1000 run.
+`integration-request.py --coordinator-assigned-migration` still emits proposals;
+it grants no SQL execution, privilege, stack or native allowance.
 
 ## Reconstructible installation, no native authority
 
 Use Node 22, the configured npm and Python 3.12. Bound full-graph checks to 4096
-MiB under the shared heavy lock; other commands use 1536 MiB. Freeze the own native
-source in a local ordinary commit first.
+MiB under the shared heavy lock; other commands use 1536 MiB. The reconstruction
+command below expects a frozen ordinary commit. Current delivery authority is
+prepare locally and wait to publish: no commit or reconstruction is authorized
+merely by this documentation.
 
 ```sh
 cd /absolute/source &&
@@ -66,10 +175,22 @@ flock -x /home/factory-user/repos/finnor-z-shared-heavy.lock \
   --replay /absolute/package/package.json --output /absolute/new-replay
 ```
 
+The shown shared lock is for the original Computer. On the existing
+`zphasefinnor` Computer, use
+`/home/factory-user/repos/finnor-z-remote-heavy.lock` instead; do not mix the two
+locks for heavy work on the same host.
+
 `stamp-installed.mjs` binds all declared owner source files and the requested patch,
 not just the kernel. New workers rehash the complete cut; subsequent probes stat
 and rehash changed files. This is source consistency under the trusted filesystem,
 not an attestation of OS, compiler, DB administrator or dependency correctness.
+
+The commands above retain their committed-lane input contract. They do not turn
+a dirty combined integration tree into a final source commit. The resumed remote
+continuation records the delivered Git base separately from the exact combined
+source manifest and generated-source proposals under
+`scope-z/phase-evidence/z1/remote-reverification-01/`. Its single cold-4 replay is
+separate from current combined-source reconstruction and native owner execution.
 
 The optional `requirements-sql.lock` pins the offline parser wheel. `parse-sql.py`
 checks SQL/PLpgSQL grammar with the parser's recorded PostgreSQL version. Catalog
@@ -85,14 +206,21 @@ drives and observes it.
 
 The operator must deliver an explicitly authorized existing disposable database
 and exclusive queue, matching real disposable frontend/API Auth project, real
-local owner credentials, three existing rooted original Works/inputs, an existing
-negative-scope Work/root, four existing permitted S5 resource heads, existing
-canonical S1 sources, existing S4 cases and an existing unresolved S6 obligation.
+local owner credentials, 2–1000 existing rooted original Works/inputs, an existing
+negative-scope Work/root, four existing permitted S5 resource heads per original
+(at most 16 overall), existing canonical S1 sources, existing S4 cases and an
+existing unresolved S6 obligation.
 Deadlines need more than ten minutes for the real bounded recovery waits; neither
 budgets nor deadlines are renewed. No such delivery is implied by these files.
 
 Public fixture bindings use the strict
-`finnor.z1.existing-public-fixture-bindings.v1` schema in `make-native-fixture.mjs`:
+`finnor.z1.existing-public-fixture-bindings.v1` schema in `make-native-fixture.mjs`.
+That existing generator builds the original three-Work example, not a larger
+native cohort. The strict episode schema in `native-e2e-run.mjs` separately
+accepts 2–1000 actual distinct originals, combined DAG <=4096 and source rows
+<=100000. Larger fixtures still require actual existing canonical bindings,
+not repeated labels, invented owners or a newly renewed proof allowance.
+The three-Work generator's input is:
 
 - `dataClass`: `PUBLIC_DETERMINISTIC_FIXTURE_NO_PII`; `episodeId`, actual
   `tenantId`, actual `principalId`, `root`, `foreignRoot`, `foreignWorkId`.
@@ -148,11 +276,22 @@ The target manifest has schema `finnor.z1.authorized-native-target.v1` and exact
   `PASSED_BOUNDED_NEGATIVE_ONLY`, not a source/installed owner-flow pass.
   An existing current checked publication remains readable/replayable; this
   never grants a new computation beyond the original episode limits.
-- Actual coordinator-applied `appliedMigration` filename, exact
-  `nativeSchemaSha256`, installed canonical `schemaCatalogSha256`, owned installed
-  `browserExecutableSha256`. The catalog digest uses canonical Z1 `digest()` on
+- Actual coordinator-applied occupation forward `appliedMigration` filename,
+  a safe numeric or `postz_` SQL basename. Its bytes must exactly match
+  `portfolio-stream.sql` and `nativeOccupationSchemaSha256`; the runner also
+  requires its real migration-tracker receipt. This does not assign a filename.
+  `nativeSchemaSha256` still pins the adopted base `shared-schema.sql`.
+- Installed canonical `schemaCatalogSha256`, owned installed
+  `browserExecutableSha256`. The function catalog digest uses canonical Z1 `digest()` on
   rows `(proname, args, body)` from `pg_proc`/`pg_get_functiondef`, ordered by
-  function name and identity arguments for `finnor_os.z1_%`.
+  function name and identity arguments for `finnor_os.z1_%`. The occupation
+  cursor and delivery-relationship functions must both be present.
+- `nativeDeliveryCatalogSha256`: canonical `digest()` of rows
+  `(kind, name, definition)`, ordered by kind/name, for the validated
+  `z1_delivery_receipt_state` CHECK (`CONSTRAINT`, `pg_get_constraintdef`) and
+  normally enabled noninternal `z1_delivery_consumption_link` trigger
+  (`TRIGGER`, `pg_get_triggerdef`) on `finnor_os.z1_deliveries`. Missing or stale
+  custody refuses before mounted mutations. Catalog custody is not execution.
 - 3–8 actual listener `processes`, covering frontend/API/DB: `pid`, `/proc`
   `startTicks`, `uid`, `executableSha256`, explicit `port`, `commandLineSha256`
   (raw `/proc/PID/cmdline`), and absolute `cwd`. Driver checks every actual
@@ -165,12 +304,17 @@ Supply locally, never print or archive values:
 `FINNOR_Z1_TARGET_MANIFEST`, `FINNOR_Z1_TARGET_SHA256`,
 `FINNOR_Z1_NATIVE_AUTHORIZED=DISPOSABLE_ORIGINAL_Z1_EPISODE_ONLY`,
 `TEST_OWNER_EMAIL`, `TEST_OWNER_PASSWORD`, `DATABASE_URL`,
-`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_URL`, `FINNOR_ENVIRONMENT=ordinary_disposable`,
+`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_URL`, `FINNOR_ENVIRONMENT=staging`
+(converged runtime) or the legacy standalone `ordinary_disposable`,
 `FINNOR_Z1_PROFILE=ordinary_disposable`, `P3_GOVERNORS=1`. No Auth bypass or named
 live provider credentials may be present in the driver or actual application
 processes. A compiled API additionally requires
 `FINNOR_Z1_INSTALLED_DEVELOPMENT=1`; `NODE_ENV=production` is a framework build
-mode, not production activation. Public Auth URL/key configuration must already
+mode, not production activation. `VERCEL_ENV=production` is refused. The
+driver, existing frontend/API and newly owned worker must agree on the chosen
+global profile. Converged staging retains the normal frontend CSP; use its
+configured TLS Auth project rather than broadening the legacy disposable CSP
+exception. Public Auth URL/key configuration must already
 match the real installed browser build. The runner does not configure it.
 
 The finite native episode records direct-original expected values before shared
@@ -179,6 +323,18 @@ use and reloaded original projections; initial/insert/retract/objective edit/
 withdraw/explicit revision reactivation/revocation; and three real worker
 SIGKILL/restarts at durable claim, checkpoint and delivery boundaries. It observes
 both the 30-second job and 90-second serial-permit expiry without editing either.
+
+The driver retains compact budget references, not 1000 complete 8 MiB budget
+responses. Snapshots retain complete bounded parent/owner-use/attempt identity
+and digest rosters, not every historical result body. Overflow, missing or
+duplicate originals refuse; all prior owner-use headers and parent original/
+envelope digests must remain unchanged. The actual S3/S4 body is read by its
+exact immutable key, checked against the snapshot digests/reference and compared
+with the direct-original oracle, one result at a time, under the existing native
+artifact byte bound. This source adaptation is not a measured memory/throughput
+bound or a completed native/physical/installed proof. The three physical fault
+boundaries, seven stages, original budgets/deadlines and UNKNOWN retention remain
+unchanged.
 Only the driver's own workers are stopped. Existing DB/stack/fixtures, costs,
 UNKNOWN, reservations and obligations remain.
 
@@ -188,9 +344,11 @@ The kernel retains the locked 2–1000 Work / 4096 original-node / 100000 source
 1000000 newly derived-row / 512-bit rational / 128 MiB bounded request domain.
 Native S1 append uses the existing smaller per-version storage boundary; this
 does not certify a 128 MiB S1 write or a full native boundary episode.
-Admission also respects the existing S5 limit of 256 outstanding commitments.
-Resource exhaustion returns INCOMPLETE; no 1000-Work native capacity qualification
-or increase to canonical portfolio limits is claimed.
+The integrated S5 population distinguishes up to1000 independently canonical
+original Z1 parents from up to256 other commitments. The generic allocation
+solver's32-policy/16-resource domain is unchanged. Resource exhaustion returns
+INCOMPLETE; the public1000 episode and empty DB-role catalog replay do not prove
+populated1000 native capacity, hidden/private completeness or contention.
 
 Complete exited-child `wait4` CPU/RSS is observed, with a separate pre-FINISH
 supervisor meter. Parent intervals, logical allocations, JSON write occupation and

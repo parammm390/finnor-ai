@@ -4,19 +4,20 @@ import type { ExperimentRef } from '@finnor/shared-types';
 import type { PeMutationContext } from '../../types';
 import type { JobExecutionContext } from '../../../../../apps/worker/src/queue';
 import { principal, tx } from '../../owner-context';
-import { allocationSnapshotInTransaction } from '../../allocation-store';
 import { withGovernedProviderInvocation } from '../../../../db/compute-governor';
 import { withDatabaseExecutionDeadline } from '../../../../db/execution-deadline';
 import { digest, requireZ1, type Production } from '../../../../epistemic-runtime/src/project-z/z1-shared-work/contracts.js';
 import { quantity } from '../../../../epistemic-runtime/src/project-z/z1-shared-work/relational.js';
+import { originalProjectionDeliveries } from './deliveries.js';
 import { nativeRef, same, assertOriginalBudget, developmentOnly, type NativeRow } from './native-contracts.js';
 import {
   artifactTx, eventTx, rowTx, assertRowCurrentTx, fenceTx, contextForNativeClaim, loadNativeClaim,
-  readPublishedTx, recordNativeCostTx, refuseExhaustedEpisodeTx,
+  readPublishedTx, recordNativeCostTx, refuseExhaustedEpisodeTx, assertProjectionDeliveryBatchTx,
 } from './native-store.js';
-import { assertBudgetCurrentTx, chargeOriginalBudgetTx, holdOriginalCpuTx, withNativeTransaction as withS5PortfolioTransaction } from './resources.js';
+import { assertBudgetCurrentTx, assertBudgetsCurrentTx, chargeOriginalBudgetTx, holdOriginalCpuTx, withNativeTransaction as withS5PortfolioTransaction } from './resources.js';
 import { currentSharedWorkAdmissionTx } from './admission.js';
 import { consumeOriginalOwnerTx } from './owners.js';
+import { assertNativePortfolioContextTx } from './portfolio-store.js';
 import { consumeSharedWorkProjectionTx, type ClaimPayload, type ClaimedSnapshot, type Z1NativePorts, type PublishedProgram } from './owner.js';
 import type { ProcessReceipt } from './processes.js';
 
@@ -63,7 +64,7 @@ async function assertNativeMemoryTx(ctx: PeMutationContext, c: PoolClient, row: 
   const cuts = row.cuts.filter(cut => originalWorkId ? cut.workId === originalWorkId :
     !row.request.works.find(work => work.id === cut.workId)!.withdrawn);
   let maximum = 0;
-  for (const cut of cuts) maximum += (await assertBudgetCurrentTx(ctx, c, cut.parent)).original.maximumMemoryBytes;
+  await assertBudgetsCurrentTx(ctx, c, cuts.map(cut => cut.parent), budget => { maximum += budget.original.maximumMemoryBytes; });
   const attempt = (await c.query<AttemptRow>(
     'SELECT * FROM finnor_os.z1_attempts WHERE tenant_id=$1 AND principal_id=$2 AND delivery_id=$3',
     [ctx.auth.tenantId, principal(ctx), claim.deliveryAttemptId])).rows[0];
@@ -235,11 +236,16 @@ export const nativeSharedWorkPorts: Z1NativePorts = {
               databaseWalIndexesCompactionAndBilling: 'UNKNOWN', settlementTailCpu: 'UNKNOWN',
               retainedTailHolds: held.holds.map(item => item.tailHold), tailHoldMaximumCpuMicros: 6000000,
               settled, originalCpuHoldsRetained: !settled };
+            const { retainedTailHolds, ...perOriginalAllocation } = allocation;
+            const tailInventory = { requestId: row.id, attemptRef: attempt.reference, eventKey: `parent-finish:${attempt.id}`,
+              digest: digest(retainedTailHolds), count: retainedTailHolds.length };
             if (settled) for (const item of held.holds) await chargeOriginalBudgetTx(ctx, c, item.parent, {
               key: `physical:${attempt.id}`, role: 'cpu', units: Math.ceil(totalCpu / held.holds.length),
-              cpuHold: item.hold, exactAllocation: allocation, recovery: true });
+              cpuHold: item.hold, exactAllocation: { ...perOriginalAllocation, tailInventory,
+                originalTailHold: item.tailHold }, recovery: true });
             await eventTx(ctx, c, row.id, attempt.id, `parent-finish:${attempt.id}`, allocation);
-            await recordNativeCostTx(ctx, c, row, `parent:${attempt.id}`, { attemptRef: attempt.reference, ...allocation });
+            await recordNativeCostTx(ctx, c, row, `parent:${attempt.id}`,
+              { attemptRef: attempt.reference, ...perOriginalAllocation, tailInventory });
             if (settled) {
               await c.query(`UPDATE finnor_os.z1_requests SET wall_reserved_ms=wall_reserved_ms-$4,
                 wall_used_ms=wall_used_ms+$5 WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
@@ -298,17 +304,23 @@ export const nativeSharedWorkPorts: Z1NativePorts = {
       return publication;
     });
   },
-  async enqueueOriginalProjection(ctx, claim, snapshot, publication, projection) {
+  async enqueueOriginalProjections(ctx, claim, snapshot, publication) {
     return transaction(ctx, async c => {
       const row = await claimRowTx(ctx, c, claim, snapshot); await assertRowCurrentTx(ctx, c, row);
-      const reference = await artifactTx(ctx, c, row.id, 'S3', 'z1-original-projection-delivery',
-        { publicationRef: publication.reference, workId: projection.workId, bindingDigest: projection.bindingDigest,
-          resultDigest: digest(projection.result), originalParent: projection.binding.original.resources.parentReservationRef,
-          pendingS8: true, executionAuthorityGranted: false });
+      requireZ1(row.publication && same(row.publication, publication), 'Z1_DELIVERY_CURRENT_PUBLICATION_REQUIRED', 'STALE');
+      const records = originalProjectionDeliveries(publication, row.cuts);
+      await c.query(`INSERT INTO finnor_os.z1_artifacts(tenant_id,principal_id,request_id,artifact_id,kind,reference,body)
+        SELECT $1,$2,$3,r.reference->>'id','z1-original-projection-delivery',r.reference,r.body
+        FROM jsonb_to_recordset($4::jsonb) r(reference jsonb,body jsonb)
+        ON CONFLICT(tenant_id,artifact_id) DO NOTHING`,
+      [ctx.auth.tenantId, principal(ctx), row.id, JSON.stringify(records)]);
       await c.query(`INSERT INTO finnor_os.z1_deliveries(tenant_id,principal_id,request_id,publication_id,work_id,reference)
-        VALUES($1,$2,$3,$4,$5,$6::jsonb) ON CONFLICT(tenant_id,publication_id,work_id) DO NOTHING`,
-      [ctx.auth.tenantId, principal(ctx), row.id, publication.reference.id, projection.workId, JSON.stringify(reference)]);
-      return reference;
+        SELECT $1,$2,$3,$4,r."workId"::uuid,r.reference
+        FROM jsonb_to_recordset($5::jsonb) r("workId" text,reference jsonb)
+        ON CONFLICT(tenant_id,publication_id,work_id) DO NOTHING`,
+      [ctx.auth.tenantId, principal(ctx), row.id, publication.reference.id, JSON.stringify(records)]);
+      await assertProjectionDeliveryBatchTx(ctx, c, row, publication);
+      return records.map(record => record.reference);
     });
   },
   async finishAttempt(ctx, attemptRef, publication) {
@@ -320,28 +332,28 @@ export const nativeSharedWorkPorts: Z1NativePorts = {
   },
   async loadPublishedTx(ctx, c, reference, workId) { return readPublishedTx(ctx, c, reference, workId); },
   async assertOriginalCapacityTx(ctx, c, projection) {
-    await allocationSnapshotInTransaction(c, ctx.auth.tenantId);
+    await assertNativePortfolioContextTx(ctx, c);
     const ref = (await c.query<{ body: { ref: ExperimentRef } }>(
       'SELECT body FROM finnor_os.s5_reservation_origins WHERE tenant_id=$1 AND principal_id=$2 AND reservation_id=$3',
       [ctx.auth.tenantId, principal(ctx), projection.binding.original.resources.parentReservationRef])).rows[0]?.body.ref;
     requireZ1(ref, 'Z1_ORIGINAL_S5_PARENT_REQUIRED');
     assertOriginalBudget(projection.binding.original, await assertBudgetCurrentTx(ctx, c, ref));
   },
-  async assertExistingS8ConsumptionAdmissionTx(ctx, c, publication, projection) {
-    const { row } = await readPublishedTx(ctx, c, publication.reference, projection.workId);
+  async assertExistingS8ConsumptionAdmissionTx(ctx, c, publication, _projection, row) {
     await currentSharedWorkAdmissionTx(ctx, c, row, publication);
   },
-  async consumeS3OrS4Tx(ctx, c, publication, projection) {
-    const { row } = await readPublishedTx(ctx, c, publication.reference, projection.workId);
+  async consumeS3OrS4Tx(ctx, c, publication, projection, row) {
     return consumeOriginalOwnerTx(ctx, c, row, publication, projection);
   },
-  async recordS7AndConsumptionTx(ctx, c, publication, receipt) {
-    const { row } = await readPublishedTx(ctx, c, publication.reference, receipt.workId);
+  async recordS7AndConsumptionTx(ctx, c, publication, receipt, row) {
     await recordNativeCostTx(ctx, c, row, `owner:${digest(receipt)}`, { originalWorkId: receipt.workId,
       ownerReceipt: receipt, logicalAllocation: publication.body.candidate.costs.byWork[receipt.workId] ?? '0',
-      observation: 'UNKNOWN_NO_BUSINESS_COMPLETION', effectPrepared: false });
-    await c.query("UPDATE finnor_os.z1_deliveries SET status='CONSUMED',receipt=$5::jsonb WHERE tenant_id=$1 AND principal_id=$2 AND publication_id=$3 AND work_id=$4",
-      [ctx.auth.tenantId, principal(ctx), publication.reference.id, receipt.workId, JSON.stringify(receipt)]);
+      observation: 'UNKNOWN_NO_BUSINESS_COMPLETION', effectPrepared: false }, receipt.workId);
+    const acknowledged = await c.query(`UPDATE finnor_os.z1_deliveries SET status='CONSUMED',receipt=$5::jsonb
+      WHERE tenant_id=$1 AND principal_id=$2 AND publication_id=$3 AND work_id=$4 AND request_id=$6
+      AND (status='PENDING_S8' AND receipt IS NULL OR status='CONSUMED' AND receipt=$5::jsonb)`,
+      [ctx.auth.tenantId, principal(ctx), publication.reference.id, receipt.workId, JSON.stringify(receipt), row.id]);
+    requireZ1(acknowledged.rowCount === 1, 'Z1_CANONICAL_ORIGINAL_DELIVERY_REQUIRED', 'COUNTEREXAMPLE');
   },
 };
 
@@ -380,7 +392,7 @@ export async function runNativeProjectionClaim(payload: ClaimPayload & { workId:
           await recordNativeCostTx(ctx, c, row, `owner-physical:${claim.deliveryAttemptId}`, {
             workId: payload.workId, cpuMicros, wallMs, settled, originalHoldRetained: !settled,
             settlementAndMeterTail: 'UNKNOWN', retainedTailHold: original.tailHold,
-            scope: 'ORIGINAL_OWNER_PARENT_PROCESS_INTERVAL_INCLUSIVE_NOT_EXCLUSIVE', money: null });
+            scope: 'ORIGINAL_OWNER_PARENT_PROCESS_INTERVAL_INCLUSIVE_NOT_EXCLUSIVE', money: null }, payload.workId);
         });
       }
     });

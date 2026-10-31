@@ -121,9 +121,10 @@ async function run(
 }
 export async function runtimeIdentity(): Promise<{ digest: string; files: Array<{ path: string; sha256: string }>; node: string }> {
   const assets = [
-    ...['contracts.ts', 'relational.ts', 'engine.ts', 'producer-child.ts', 'original_checker.py', 'process_supervisor.py'].map(name => new URL(name, engineBase)),
+    ...['contracts.ts', 'relational.ts', 'engine.ts', 'producer-child.ts', 'original_checker.py', 'process_supervisor.py',
+      'portfolio-population.ts', 'portfolio-capacity.ts', 'portfolio-stream.ts'].map(name => new URL(name, engineBase)),
     ...['processes.ts', 'owner.ts', 'native-contracts.ts', 'resources.ts', 'native-store.ts', 'admission.ts',
-      'owners.ts', 'native.ts', 'api.ts', 'work-panel.tsx', 'recovery.ts'].map(name => new URL(name, import.meta.url)),
+      'owners.ts', 'native.ts', 'api.ts', 'work-panel.tsx', 'recovery.ts', 'deliveries.ts', 'portfolio-store.ts'].map(name => new URL(name, import.meta.url)),
     new URL('../../../../orchestration/src/project-z/z1-shared-work/worker.ts', import.meta.url),
     new URL('../../../../../package-lock.json', import.meta.url),
     ...['allocation-store.ts', 'owner-context.ts', 'enterprise-beliefs.ts', 'economic-store.ts',
@@ -134,6 +135,12 @@ export async function runtimeIdentity(): Promise<{ digest: string; files: Array<
     new URL('../../../../authority/src/index.ts', import.meta.url),
     new URL('../../../../memory/src/evidence.ts', import.meta.url),
     new URL('../../../../epistemic-runtime/src/source-precedence.ts', import.meta.url),
+    ...['allocation-contracts.ts', 'allocation-resource-check.ts'].map(name =>
+      new URL(`../../../../epistemic-runtime/src/${name}`, import.meta.url)),
+    new URL('../../../../../scripts/project-z/z1/shared-schema.sql', import.meta.url),
+    new URL('../../../../../scripts/project-z/z1/portfolio-stream.sql', import.meta.url),
+    ...['postz_z1_shared_work.sql', 'postz_z1_shared_work_portfolio_v2.sql'].map(name =>
+      new URL(`../../../../db/migrations/${name}`, import.meta.url)),
   ];
   const files = await Promise.all(assets.map(async url => ({
     path: fileURLToPath(url).split('/finnor-os/')[1]!,

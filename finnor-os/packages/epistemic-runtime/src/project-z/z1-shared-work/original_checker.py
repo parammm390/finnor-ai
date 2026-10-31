@@ -75,6 +75,25 @@ def normalize(row, columns):
     return {k: scalar(row[k], t) for k, t in columns.items()}
 
 
+def operator_parameters(node, parameters):
+    pending = ([node["predicate"]] if node["op"] == "filter" else
+               list(node["fields"].values()) if node["op"] == "project" else
+               list(node["values"].values()) if node["op"] == "sum" else [])
+    names = set()
+    while pending:
+        item = pending.pop()
+        op = item["op"]
+        if op == "param":
+            names.add(item["name"])
+        elif op in ("and", "or"):
+            pending.extend(item["args"])
+        elif op in ("round", "not"):
+            pending.append(item["value"] if op == "round" else item["arg"])
+        elif op not in ("field", "literal"):
+            pending.extend((item["left"], item["right"]))
+    return {name: parameters[name] for name in sorted(names, key=lexical)}
+
+
 def expression_type(e, columns, parameters):
     op = e["op"]
     if op == "field":
@@ -265,6 +284,71 @@ def original_operator(n, values, sources, parameters):
     return canonical(columns, sorted(rows, key=functools.cmp_to_key(order))[:n["limit"]], True)
 
 
+def lawful_output_rewrites(request):
+    """Independently reconstruct two exact laws from the original programmes."""
+    sources = {s["id"]: s for s in request["sources"]}
+    first, proofs = {}, []
+    body = lambda n: {k: v for k, v in n.items() if k not in ("id", "input", "inputs", "left", "right")}
+    for work in request["works"]:
+        nodes = {n["id"]: n for n in work["programme"]["nodes"]}
+        if work["withdrawn"] or any(sources[n["sourceId"]]["revoked"] for n in nodes.values() if n["op"] == "source"):
+            continue
+        fingerprints = {}
+        for key in TopologicalSorter({key: inputs(n) for key, n in nodes.items()}).static_order():
+            n = nodes[key]
+            fingerprints[key] = sha({"operator": body(n), "inputs": [fingerprints[i] for i in inputs(n)],
+                                     "source": sha(sources[n["sourceId"]]) if n["op"] == "source" else None})
+        root = nodes[work["programme"]["output"]]
+        rule, side, shape = None, None, None
+        if root["op"] == "sum":
+            child = nodes[root["input"]]
+            if child["op"] == "filter":
+                union = nodes[child["input"]]
+                if union["op"] == "union" and union["semantics"] == "bag" and len(union["inputs"]) >= 2:
+                    rule, side = "FILTER_BAG_UNION_EXACT_V1", "AFTER"
+                    shape = {"aggregate": body(root), "predicate": child["predicate"],
+                             "branches": [fingerprints[i] for i in union["inputs"]]}
+            elif child["op"] == "union" and child["semantics"] == "bag" and len(child["inputs"]) >= 2:
+                branches = [nodes[i] for i in child["inputs"]]
+                if all(n["op"] == "filter" and n["predicate"] == branches[0].get("predicate") for n in branches):
+                    rule, side = "FILTER_BAG_UNION_EXACT_V1", "BEFORE"
+                    shape = {"aggregate": body(root), "predicate": branches[0]["predicate"],
+                             "branches": [fingerprints[n["input"]] for n in branches]}
+        if rule is None:
+            aggregate, joined, base = None, None, None
+            if root["op"] == "sum" and nodes[root["input"]]["op"] == "join":
+                aggregate, joined, side = root, nodes[root["input"]], "AFTER"
+                base = joined["left"]
+            elif root["op"] == "project" and root["semantics"] == "bag":
+                child = nodes[root["input"]]
+                if child["op"] == "join":
+                    grouped = nodes[child["left"]]
+                    if grouped["op"] == "sum":
+                        fields = grouped["keys"] + list(grouped["values"])
+                        if set(root["fields"]) == set(fields) and all(root["fields"][k] == {"op": "field", "name": k} for k in fields):
+                            aggregate, joined, base, side = grouped, child, grouped["input"], "BEFORE"
+            if (aggregate is not None and aggregate["keys"] and
+                    joined["on"] == [{"left": k, "right": k} for k in aggregate["keys"]]):
+                dimension = nodes[joined["right"]]
+                if dimension["op"] == "source":
+                    source = sources[dimension["sourceId"]]
+                    normalized = [normalize(row, source["columns"]) for row in source["rows"]]
+                    keys = [stable([row[k] for k in aggregate["keys"]]) for row in normalized]
+                    if len(keys) == len(set(keys)):
+                        rule = "SUM_UNIQUE_DIMENSION_JOIN_EXACT_V1"
+                        shape = {"aggregate": body(aggregate), "join": body(joined),
+                                 "base": fingerprints[base], "dimension": fingerprints[joined["right"]]}
+        if rule is None:
+            continue
+        signature = sha({"rule": rule, "shape": shape, "partition": work["partition"], "parameters": work["parameters"]})
+        old = first.get(signature)
+        if old is not None and old[1] != side:
+            proofs.append({"rule": rule, "fromWorkId": old[0], "toWorkId": work["id"]})
+        elif old is None:
+            first[signature] = (work["id"], side)
+    return proofs
+
+
 def check(request, candidate):
     need(request["schema"] == "finnor.z1.request.v1" and 2 <= len(request["works"]) <= 1000 and
          sum(len(w["programme"]["nodes"]) for w in request["works"]) <= 4096 and
@@ -277,7 +361,10 @@ def check(request, candidate):
     need(candidate["envelope"]["immutableArtifactDigest"] == sha(unsigned), "ARTIFACT_CONTENT_DIGEST")
     need(candidate["envelope"]["productLockDigest"] == request["identity"]["productLockDigest"], "PRODUCT_LOCK")
     need(candidate["envelope"]["checkerIdentityAndResultReferences"]["resultReference"] is None, "FORGED_CHECKER_RECEIPT")
-    need(not candidate["rules"]["rewrites"], "UNREGISTERED_REWRITE")
+    permitted_rewrites = {stable(proof): proof for proof in lawful_output_rewrites(request)}
+    declared_rewrites = candidate["rules"]["rewrites"]
+    need(len(declared_rewrites) == len(set(declared_rewrites)) and
+         all(proof in permitted_rewrites for proof in declared_rewrites), "UNREGISTERED_OR_UNLAWFUL_REWRITE")
     sources = {s["id"]: s for s in request["sources"]}
     works = {w["id"]: w for w in request["works"]}
     need(len(sources) == len(request["sources"]) and len(works) == len(request["works"]), "ORIGINAL_IDENTITY_COVERAGE")
@@ -333,7 +420,7 @@ def check(request, candidate):
             operator = {k: v for k, v in n.items() if k not in ("id", "input", "inputs", "left", "right")}
             child_keys = [keys[i] for i in inputs(n)]
             payload = {"partition": w["partition"], "build": request["identity"]["producerBuildIdentity"],
-                       "parameters": w["parameters"], "operator": operator, "inputs": child_keys,
+                       "parameters": operator_parameters(n, w["parameters"]), "operator": operator, "inputs": child_keys,
                        "source": sha(sources[n["sourceId"]]) if n["op"] == "source" else None, "mode": None}
             possible = [sha(payload), sha(dict(payload, mode=work_id))]
             key = p["originalNodeKeys"][node_id]
@@ -362,6 +449,13 @@ def check(request, candidate):
     need(set(graph_users) == set(shared_nodes), "EXTRA_OR_MISSING_SHARED_OPERATOR")
     for key, users in graph_users.items():
         need(shared_nodes[key]["workIds"] == sorted(users, key=lexical), "LAWFUL_SHARED_CONSUMER_COVERAGE")
+    for encoded in declared_rewrites:
+        proof = permitted_rewrites[encoded]
+        source, destination = proof["fromWorkId"], proof["toWorkId"]
+        need(expected[source] == expected[destination], "CHECKED_REWRITE_ORIGINAL_RESULT_MISMATCH")
+        source_key, destination_key = projections[source]["outputKey"], projections[destination]["outputKey"]
+        if source_key != destination_key:
+            execution_floor[destination_key] = 0
     costs = candidate["costs"]
     meter_gaps = [
         "TICKS_ARE_DETERMINISTIC_OPERATION_ACCOUNTING_NOT_CPU_OR_USD",

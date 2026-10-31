@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { mkdir, open, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { freshRequest } from "./fixtures.mjs";
+import { freshHistoricalRequest as freshRequest } from "./fixtures.mjs";
 import { runProducer, checkOriginal, runtimeIdentity } from "../../../packages/private-equity/src/project-z/z1-shared-work/processes.ts";
 
 // This is a physical local transport/checkpoint E2E. Its file fixture is

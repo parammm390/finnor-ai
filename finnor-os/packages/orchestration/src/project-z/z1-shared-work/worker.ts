@@ -21,7 +21,8 @@ export function createSharedWorkJobHandler(): JobHandler {
   };
 }
 export function createSharedWorkProjectionJobHandler(): JobHandler {
-  const schema = PayloadSchema.extend({ workId: z.string().uuid(), publication: RefSchema }).strict();
+  const schema = PayloadSchema.extend({ workIds: z.array(z.string().uuid()).min(1).max(1000),
+    workId: z.string().uuid(), publication: RefSchema }).strict();
   return async (value, claim) => {
     requireZ1(claim, 'ACTUAL_CANONICAL_JOB_CLAIM_REQUIRED', 'REVOKED');
     const parsed = schema.safeParse(value);

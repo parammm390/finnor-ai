@@ -14,10 +14,11 @@ import {
 import { requestAfterChanges, currentness } from '../../../../epistemic-runtime/src/project-z/z1-shared-work/engine.js';
 import { epistemicHash } from '../../../../epistemic-runtime/src/source-precedence';
 import { runtimeIdentity, installedSourceIdentity } from './processes.js';
-import { assertBudgetCurrentTx, currentWorkInputTx } from './resources.js';
+import { assertBudgetsCurrentTx, currentWorkInputTx } from './resources.js';
+import { originalProjectionDeliveries, originalProjectionJobs } from './deliveries.js';
 import {
   DeclarationSchema, SourceDeclarationSchema, SubmitSchema, developmentOnly, parsed, same, nativeRef,
-  assertOriginalBudget, type Submit, type NativeCut, type NativeRow, type OriginalBudget,
+  assertOriginalBudget, type Submit, type NativeCut, type NativeRow,
 } from './native-contracts.js';
 import type { ClaimPayload, ClaimedSnapshot, PublishedProgram } from './owner.js';
 
@@ -83,12 +84,12 @@ export async function originalObligationsTx(ctx: PeMutationContext, c: PoolClien
   return rows.map(row => row.obligation_id);
 }
 async function resolveTx(ctx: PeMutationContext, c: PoolClient, input: Submit, identity: SharedWorkRequest['identity'],
-  originalDeadline: string, originalWorkId?: string): Promise<{ request: SharedWorkRequest; cuts: NativeCut[]; budgets: OriginalBudget[]; rights: string }> {
+  originalDeadline: string, originalWorkId?: string): Promise<{ request: SharedWorkRequest; cuts: NativeCut[]; earliestDeadline: number; rights: string }> {
   const workPins = input.works.filter(work => !originalWorkId || work.workId === originalWorkId);
   requireZ1(!originalWorkId || workPins.length === 1, 'Z1_ORIGINAL_WORK_REQUIRED', 'REVOKED');
   await authorize(ctx, input.root, workPins.map(work => ({ type: 'work', id: work.workId })), [], c);
   requireZ1(new Set(input.works.map(work => work.workId)).size === input.works.length, 'Z1_DISTINCT_ORIGINAL_WORKS_REQUIRED');
-  const rights = String((await employeeAuthoritySnapshotTx(ctx.auth, c)).revision), cuts: NativeCut[] = [], budgets: OriginalBudget[] = [];
+  const rights = String((await employeeAuthoritySnapshotTx(ctx.auth, c)).revision), cuts: NativeCut[] = [];
   const works: SharedWorkRequest['works'] = [], sources = new Map<string, SharedWorkRequest['sources'][number]>();
   const evidence = new Map<string, Awaited<ReturnType<typeof evidenceTx>>>();
   const resolveEvidence = async (pin: Submit['works'][number]['declaration']) => {
@@ -105,8 +106,6 @@ async function resolveTx(ctx: PeMutationContext, c: PoolClient, input: Submit, i
       work.partition.tenantId === ctx.auth.tenantId && work.partition.principalId === principal(ctx) &&
       work.partition.rightsRevision === rights && work.partition.permittedUse === 'Z1_EXACT_DERIVATION_FOR_ORIGINAL_WORK',
     'Z1_ORIGINAL_WORK_MEANING_AND_CURRENT_INPUT_REQUIRED', 'REVOKED');
-    const budget = await assertBudgetCurrentTx(ctx, c, declaration.parentReservation);
-    assertOriginalBudget(work, budget); budgets.push(budget);
     const obligations = await originalObligationsTx(ctx, c, work.id);
     requireZ1(same([...work.unresolvedObligationRefs].sort(), obligations), 'Z1_ORIGINAL_S6_RESPONSIBILITY_COVERAGE_REQUIRED', 'REVOKED');
     const workSources: string[] = [];
@@ -126,6 +125,14 @@ async function resolveTx(ctx: PeMutationContext, c: PoolClient, input: Submit, i
       declaration: workPin.declaration, sourcePins: declaration.sourcePins,
       consumer: declaration.consumer, parent: declaration.parentReservation });
   }
+  const byParent = new Map(cuts.map((cut, i) => [cut.parent.id, works[i]!]));
+  let earliestDeadline = Infinity;
+  await assertBudgetsCurrentTx(ctx, c, cuts.map(cut => cut.parent), budget => {
+    const work = byParent.get(budget.ref.id);
+    requireZ1(work, 'Z1_ORIGINAL_S5_PARENT_BINDING_REQUIRED', 'REVOKED');
+    assertOriginalBudget(work, budget);
+    earliestDeadline = Math.min(earliestDeadline, Date.parse(budget.original.deadlineAt));
+  });
   const content: SharedWorkRequest = { schema: 'finnor.z1.request.v1', identity, works,
     sources: [...sources.values()].sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
     limits: { ...input.limits, deadlineAt: originalDeadline } };
@@ -136,7 +143,7 @@ async function resolveTx(ctx: PeMutationContext, c: PoolClient, input: Submit, i
     request.sources.reduce((n, source) => n + source.rows.length, 0) <= 100000,
   'Z1_COMBINED_ORIGINAL_DOMAIN_BOUND', 'INCOMPLETE');
   boundedJSON(request, request.limits.maxBytes);
-  return { request, cuts, budgets, rights };
+  return { request, cuts, earliestDeadline, rights };
 }
 export async function assertRowCurrentTx(ctx: PeMutationContext, c: PoolClient, row: NativeRow, originalWorkId?: string): Promise<void> {
   requireZ1(row.status !== 'CANCELLED' && (originalWorkId || row.status !== 'INVALIDATED') && row.deadline_at.getTime() > Date.now(),
@@ -166,16 +173,76 @@ export async function fenceTx(ctx: PeMutationContext, c: PoolClient, row: Native
       claim.deliveryAttemptId, row.id, row.generation])).rows[0];
   requireZ1(owned && claim.tenantId === row.tenant_id, 'Z1_ACTUAL_CANONICAL_JOB_FENCED', 'REVOKED');
 }
-export async function enqueueTx(ctx: PeMutationContext, c: PoolClient, row: NativeRow, workId?: string, publication?: ExperimentRef) {
+export async function enqueueTx(ctx: PeMutationContext, c: PoolClient, row: NativeRow) {
   const payload = { tenantId: ctx.auth.tenantId, principalId: principal(ctx), requestId: row.id, generation: row.generation,
-    workIds: row.request.works.map(work => work.id), ...(workId ? { workId, publication } : {}) };
-  const type = workId ? 'consume_shared_work_projection_v1' : 'run_shared_work_program_v1';
-  const key = `z1:${ctx.auth.tenantId}:${row.id}:${row.generation}:${workId ?? 'produce'}:${publication?.contentDigest ?? ''}`;
+    workIds: row.request.works.map(work => work.id) };
+  const key = `z1:${ctx.auth.tenantId}:${row.id}:${row.generation}:produce:`;
   return (await c.query<{ id: string }>(
     `INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,protocol_version,max_attempts,lane,retry_safety)
      VALUES($1,$2,$3::jsonb,$4,1,4,'interactive','locally_idempotent')
      ON CONFLICT(idempotency_key) DO UPDATE SET idempotency_key=EXCLUDED.idempotency_key RETURNING id`,
-    [ctx.auth.tenantId, type, JSON.stringify(payload), key])).rows[0]!.id;
+    [ctx.auth.tenantId, 'run_shared_work_program_v1', JSON.stringify(payload), key])).rows[0]!.id;
+}
+export async function enqueueProjectionJobsTx(ctx: PeMutationContext, c: PoolClient, row: NativeRow, publication: PublishedProgram) {
+  requireZ1(same(row.publication, publication), 'Z1_CURRENT_PUBLICATION_QUEUE_REQUIRED', 'STALE');
+  await assertProjectionDeliveryBatchTx(ctx, c, row, publication);
+  const records = originalProjectionJobs(publication, row.cuts, { tenantId: ctx.auth.tenantId,
+    principalId: principal(ctx), requestId: row.id, generation: row.generation });
+  const jobs = (await c.query<{ id: string; tenant_id: string; type: string; idempotency_key: string;
+    payload: unknown; protocol_version: number; max_attempts: number; lane: string; retry_safety: string }>(
+    `INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,protocol_version,max_attempts,lane,retry_safety)
+     SELECT $1,'consume_shared_work_projection_v1',r.payload,r.key,1,4,'interactive','locally_idempotent'
+     FROM jsonb_to_recordset($2::jsonb) r(key text,payload jsonb)
+     ON CONFLICT(idempotency_key) DO UPDATE SET idempotency_key=EXCLUDED.idempotency_key
+     RETURNING id,tenant_id,type,idempotency_key,payload,protocol_version,max_attempts,lane,retry_safety`,
+    [ctx.auth.tenantId, JSON.stringify(records)])).rows;
+  const byKey = new Map(jobs.map(job => [job.idempotency_key, job]));
+  requireZ1(jobs.length === records.length && records.every(record => {
+    const job = byKey.get(record.key);
+    return job?.tenant_id === ctx.auth.tenantId && job.type === 'consume_shared_work_projection_v1' &&
+      job.protocol_version === 1 && job.max_attempts === 4 && job.lane === 'interactive' &&
+      job.retry_safety === 'locally_idempotent' && same(job.payload, record.payload);
+  }), 'Z1_ORIGINAL_CONSUMER_QUEUE_PREIMAGE_CONFLICT', 'COUNTEREXAMPLE');
+  return records.map(record => byKey.get(record.key)!.id);
+}
+export async function assertProjectionDeliveryBatchTx(ctx: PeMutationContext, c: PoolClient, row: NativeRow, publication: PublishedProgram) {
+  const records = originalProjectionDeliveries(publication, row.cuts);
+  const cuts = new Map(row.cuts.map(cut => [cut.workId, cut]));
+  const expected = records.map(record => ({ work_id: record.workId, reference: record.reference, body: record.body,
+    semantic_owner: cuts.get(record.workId)!.consumer.owner, input_id: cuts.get(record.workId)!.inputId }));
+  boundedJSON(expected, 8388608);
+  const persisted = (await c.query<{ work_id: string; preimage_current: boolean; receipt_current: boolean }>(
+    `WITH expected AS (SELECT * FROM jsonb_to_recordset($5::jsonb)
+      AS e(work_id uuid,reference jsonb,body jsonb,semantic_owner text,input_id text))
+     SELECT d.work_id::text,
+      (d.request_id=$4::uuid AND d.reference=e.reference AND a.reference=e.reference AND a.body=e.body
+       AND a.principal_id=$2::uuid AND a.request_id=$4::uuid AND a.kind='z1-original-projection-delivery') IS TRUE preimage_current,
+      CASE WHEN d.status='PENDING_S8' THEN d.receipt IS NULL AND u.receipt IS NULL
+       WHEN d.status='CONSUMED' THEN (d.receipt=u.receipt AND u.request_id=d.request_id AND u.semantic_owner=e.semantic_owner
+        AND d.receipt->>'owner'=e.semantic_owner AND d.receipt->>'workId'=d.work_id::text
+        AND d.receipt->'artifactRef'=e.body->'publicationRef' AND d.receipt->'nativeResultRef'=u.reference
+        AND d.receipt->>'originalParentReservationRef'=e.body->>'originalParent'
+        AND d.receipt->>'resultDigest'=e.body->>'resultDigest' AND d.receipt->'executionAuthorityGranted'='false'::jsonb
+        AND u.body->>'originalInputId'=e.input_id AND u.body->>'originalBindingDigest'=e.body->>'bindingDigest'
+        AND u.body->>'originalWorkId'=d.work_id::text AND u.body->'publicationRef'=e.body->'publicationRef'
+        AND u.body->'parentReservationRef'->>'id'=e.body->>'originalParent'
+        AND u.body->>'resultDigest'=e.body->>'resultDigest'
+        AND u.body->'unresolvedObligationRefs'=d.receipt->'unresolvedObligationRefs'
+        AND n.principal_id=$2::uuid AND n.request_id=d.request_id AND n.reference=u.reference AND n.body=u.body
+        AND n.kind=CASE u.semantic_owner WHEN 'S3' THEN 'z1-original-exact-model' ELSE 'z1-original-exact-choice' END) IS TRUE
+       ELSE false END receipt_current
+     FROM finnor_os.z1_deliveries d LEFT JOIN expected e ON e.work_id=d.work_id
+     LEFT JOIN finnor_os.z1_artifacts a ON a.tenant_id=d.tenant_id AND a.artifact_id=d.reference->>'id'
+     LEFT JOIN finnor_os.z1_owner_uses u ON u.tenant_id=d.tenant_id AND u.principal_id=d.principal_id
+      AND u.publication_id=d.publication_id AND u.work_id=d.work_id
+     LEFT JOIN finnor_os.z1_artifacts n ON n.tenant_id=u.tenant_id AND n.artifact_id=u.reference->>'id'
+     WHERE d.tenant_id=$1 AND d.principal_id=$2 AND d.publication_id=$3 ORDER BY d.work_id LIMIT 1001`,
+    [ctx.auth.tenantId, principal(ctx), publication.reference.id, row.id, JSON.stringify(expected)])).rows;
+  const byWork = new Map(persisted.map(record => [record.work_id, record]));
+  requireZ1(persisted.length === records.length && byWork.size === persisted.length && records.every(record => {
+    const prior = byWork.get(record.workId);
+    return prior?.preimage_current === true && prior.receipt_current === true;
+  }), 'Z1_NATIVE_DELIVERY_BATCH_PREIMAGE_CONFLICT', 'COUNTEREXAMPLE');
 }
 export async function submitNativeSharedWork(ctx: PeMutationContext, value: unknown) {
   developmentOnly(); const input = parsed(SubmitSchema, value, 134217728), runtime = await runtimeIdentity();
@@ -203,7 +270,7 @@ export async function submitNativeSharedWork(ctx: PeMutationContext, value: unkn
     };
     const resolved = await resolveTx(ctx, c, input, identity, deadline);
     if (!original) {
-      deadline = new Date(Math.min(...resolved.budgets.map(budget => Date.parse(budget.original.deadlineAt)))).toISOString();
+      deadline = new Date(resolved.earliestDeadline).toISOString();
       resolved.request.limits.deadlineAt = deadline;
     }
     if (original) {
@@ -254,6 +321,10 @@ export async function contextForNativeClaim(payload: ClaimPayload & { workId?: s
   requireZ1(user?.role === 'owner', 'Z1_CURRENT_CANONICAL_OWNER_REQUIRED', 'REVOKED');
   const ctx: PeMutationContext = { auth: { tenantId: payload.tenantId, userId: payload.principalId, employeeId: payload.principalId, role: 'owner' } };
   await withS5PortfolioTransaction(ctx, async c => { const row = await rowTx(ctx, c, payload.requestId, true, payload.workId);
+    if (payload.workId) requireZ1(
+      same(payload.workIds, [payload.workId]) ||
+      same([...payload.workIds].sort(), row.cuts.map(cut => cut.workId).sort()),
+    'Z1_EXACT_ORIGINAL_CONSUMER_JOB_COVERAGE_REQUIRED', 'REVOKED');
     requireZ1(row.generation === payload.generation, 'Z1_ORIGINAL_GENERATION_FENCED', 'STALE'); await fenceTx(ctx, c, row, claim); });
   return ctx;
 }
@@ -321,13 +392,16 @@ export async function readPublishedTx(ctx: PeMutationContext, c: PoolClient, ref
     currentness(stored.body.candidate, row.request, workId) === 'CURRENT', 'Z1_ORIGINAL_PUBLICATION_NOT_CURRENT', 'STALE');
   return { publication: { reference, body: stored.body }, currentRequest: row.request, row };
 }
-export async function recordNativeCostTx(ctx: PeMutationContext, c: PoolClient, row: NativeRow, key: string, payload: Record<string, unknown>) {
+export async function recordNativeCostTx(ctx: PeMutationContext, c: PoolClient, row: NativeRow, key: string, payload: Record<string, unknown>, originalWorkId?: string) {
+  const cohort = row.request.works.map(work => work.id);
+  requireZ1(!originalWorkId || cohort.includes(originalWorkId), 'Z1_ORIGINAL_COST_IDENTITY_REQUIRED', 'REVOKED');
   const result = await persistEconomicRecordTx(ctx, { kind: 'COMPUTE', rightsRef: row.rights_revision,
     idempotencyKey: `z1:${digest([row.id, key])}`, validAt: new Date().toISOString(), horizon: 'H0',
     uncertainty: 'EXACT_LOGICAL_ALLOCATION_WITH_OBSERVED_PHYSICAL_SCOPE_AND_EXPLICIT_MONEY_GAPS',
     semanticRequestDigest: digest([row.id, key, payload]),
     payload: { schema: 'finnor.s7.z1-native-cost.v1', requestId: row.id, generation: row.generation,
-      originalWorkIds: row.request.works.map(work => work.id), ...payload, money: null, currency: 'USD',
+      originalWorkIds: originalWorkId ? [originalWorkId] : cohort, originalCohortDigest: digest(cohort),
+      ...payload, money: null, currency: 'USD',
       lifecycleFinancialCostComplete: false, protectedAdmission: false, executionAuthorityGranted: false } }, c);
   await eventTx(ctx, c, row.id, null, `s7:${digest(key)}`, { kind: 'CANONICAL_S7_COMPUTE_REFERENCE',
     reference: result.record.ref, physicalFinancialGapsRetained: true, executionAuthorityGranted: false });

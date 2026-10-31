@@ -5,6 +5,14 @@ distinct original Works. `applyChanges(checkpoint, changes)` atomically applies
 signed bag insertions/retractions, programme/objective edits and withdrawal.
 It reuses exact unchanged nodes and recomputes dirty dependents. There are no
 implicit algebraic rewrites or claims of differential-join asymptotic behavior.
+Two explicit, source/parameter/partition-bound terminal equality laws permit
+reuse: a pure filter distributes over the same bag union, and a grouped sum
+pulls through an equijoin only with unique dimension keys and exactly retained
+group/value fields. The Python checker reconstructs the side conditions and
+executes every original programme independently. Original DAG coverage,
+discovery, storage and the source computation remain charged. Only the
+certified destination terminal's initial execution floor can be waived.
+Intermediate operators are not eliminated by this narrow implementation.
 `DIRECT` mode uses the same indexed operators and per-Work caches without
 cross-Work nodes. It is diagnostic baseline equipment, not qualified full X/Y.
 
@@ -45,7 +53,10 @@ fallback computation carries the same charge history, parent and deadline.
 principal. Only `projectForWork` is a per-Work projection helper; its identity
 argument is **not authentication**. Native callers must resolve real authority
 and current canonical sources before invoking it. Cache keys include the full
-lawful partition, source bytes/revision/rights/types, parameters and build.
+lawful partition, source bytes/revision/rights/types, each operator's referenced
+typed parameters and build. Child keys carry upstream parameter dependencies;
+unrelated original parameters do not partition a shared source or prefix.
+The full original parameter map remains in the currentness/admission binding.
 Different tenants/principals cannot be combined in one authenticated batch.
 Public source classification does not grant cross-principal access.
 
@@ -53,20 +64,47 @@ Withdrawal preserves original programme, provenance, charge history and S6
 references. It releases no native liability. Revocation suppresses affected
 results while independent unaffected projections remain current.
 
-## Native seam, not a completed installed feature
+## Ordinary native integration, execution gated
 
 `private-equity/.../z1-shared-work/owner.ts` implements claim orchestration,
 separate owned producer/checker processes, checked-publication binding and
 per-Work consumption inside the **existing** S5 portfolio transaction.
 The orchestration leaf supplies a strict canonical `JobHandler` factory.
 
-Its required `Z1NativePorts` have **no concrete/default implementation here**.
-The coordinator must implement canonical intake/persistence/claim fencing,
-original-parent debits, S8 checks, actual S3/S4 typed consumption, outbox/S7
-delivery and mounted Work. Registration alone is not a positive owner flow.
-Native entry points require `FINNOR_Z1_PROFILE=ordinary_disposable`,
-`FINNOR_ENVIRONMENT=ordinary_disposable` and nonproduction mode. Those settings
-neither create disposable authority nor replace real authentication.
+`native.ts`, `native-store.ts`, `resources.ts`, `admission.ts` and `owners.ts`
+provide the concrete ordinary ports for canonical intake/persistence/claim
+fencing, original-parent debits, separate S8 checks and typed S3/S4 consumption.
+`api.ts` and `work-panel.tsx` integrate with the existing authenticated route
+and original Work mount through coordinator-owned shared changes.
+The coordinator adopted the prior base/portfolio migrations and shared source
+integration. Its empty existing-database catalog upgrade is not a populated
+reservation, owner flow or authenticated installed-execution receipt. The new
+occupation-stream/receipt-state forward proposal remains unassigned and
+unapplied, separately requiring coordinator review.
+Native entry points require `FINNOR_Z1_PROFILE=ordinary_disposable` and
+`FINNOR_ENVIRONMENT=staging` for the converged runtime, or the legacy standalone
+`FINNOR_ENVIRONMENT=ordinary_disposable`. Both require nonproduction mode or
+the explicit `FINNOR_Z1_INSTALLED_DEVELOPMENT=1` compiled-development setting.
+`VERCEL_ENV=production` is always refused. The native driver checks the chosen
+global profile matches the existing frontend/API and its owned worker.
+These settings neither create disposable authority nor replace real authentication.
+
+`portfolio-stream.ts` folds the complete canonical S5 occupation projection
+through strict bounded MANIFEST/DATA/SEAL frames. The concrete native adapter
+holds the same transaction and S5 serializer across fixed-size cursor fetches.
+It checks independent original/other/envelope counts, canonical membership
+order/digests, scope fences, selected current heads and exact prefix/occupancy
+capacity before returning a receipt. All retained statuses, including UNKNOWN,
+contribute their upper envelopes. Unselected quantities stay opaque witnesses;
+this grants no S6 settlement. The legacy full-snapshot limit remains 8 MiB.
+
+This new data path and persisted-delivery refinements are implemented but
+unverified. The new narrow type, SQL-grammar and public stream-process attempts
+all stopped before check children at the unchanged 4 GiB disk guard. Their
+source inventories precede further review edits. Existing earlier producer/
+checker passes do not validate the stream, SQL cursor or receipt transitions.
+See `scope-z/phase-evidence/z1/implementation-20261026-17/` and the scripts README
+for the bound argument, proposed migration and separate qualification states.
 
 Child processes receive no inherited credential environment. Memory/input/
 output/time bounds and actual PID/exit/process receipts are retained. This
@@ -108,4 +146,9 @@ or runtime Git objects, then removes the temporary target. It proves only
 this installed development kernel, not authenticated FINNOR installation.
 On the shared host, put installs/typechecks/heavy runs under
 `flock /home/factory-user/repos/finnor-z-shared-heavy.lock`, and keep
-`NODE_OPTIONS=--max-old-space-size=1536`. Do not start another person's stack.
+`NODE_OPTIONS=--max-old-space-size=1536` for these bounded kernel runners.
+On the existing `zphasefinnor` Computer, use
+`/home/factory-user/repos/finnor-z-remote-heavy.lock` instead. Never use two
+different heavy locks for concurrent work on the same host. Full graph
+checks/builds have a separate maximum of 4096 MiB. Preserve the existing
+4/6/8 GiB entry guards. Do not start another person's stack.

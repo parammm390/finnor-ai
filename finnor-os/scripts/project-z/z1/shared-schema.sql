@@ -200,12 +200,64 @@ BEGIN
  END IF;
  RETURN b;
 END $$;
+-- Count canonical original parents separately from the finite generic clearing
+-- population. This definer sees every principal's opaque occupation; callers
+-- cannot earn the extra original slots by asserting a schema or reference label.
+CREATE FUNCTION finnor_os.z1_s5_portfolio_population()
+ RETURNS TABLE(original_count integer,other_count integer)
+ LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
+DECLARE t uuid:=finnor_os.request_tenant_id();u uuid:=finnor_os.z1_s5_actor();
+ v_valid boolean;v_distinct_work_count integer;
+BEGIN
+ IF NOT finnor_os.y4_allocation_context_complete() OR
+  (SELECT count(*) FROM finnor_os.s5_reservations WHERE tenant_id=t AND status<>'RELEASED')>1256
+  THEN RAISE EXCEPTION 'Z1 S5 complete bounded shared portfolio required'; END IF;
+ WITH occupation AS (
+  SELECT s.*,o.body,o.principal_id origin_principal,p.problem,p.certificate,p.demand,
+   o.reservation_id origin_id,o.allocation_digest origin_allocation,p.content_digest proposal_digest,
+   coalesce(s.reservation_id LIKE 'z1-original-budget:%'
+    OR o.body->>'schema'='finnor.s5.z1-original-budget.v1'
+    OR p.problem->>'schema'='finnor.s5.z1-original-work-problem.v1'
+    OR p.certificate->>'schema'='finnor.s5.z1-original-work-certificate.v1',false) claimed
+  FROM finnor_os.s5_reservations s
+  LEFT JOIN finnor_os.s5_reservation_origins o USING(tenant_id,reservation_id)
+  LEFT JOIN finnor_os.s5_proposals p ON p.tenant_id=s.tenant_id AND p.content_digest=s.allocation_digest
+  WHERE s.tenant_id=t AND s.status<>'RELEASED'
+ )
+ SELECT count(*) FILTER(WHERE claimed)::integer,count(*) FILTER(WHERE NOT claimed)::integer,
+  count(DISTINCT body#>>'{original,workId}') FILTER(WHERE claimed)::integer,
+  coalesce(bool_and(origin_id IS NOT NULL AND proposal_digest IS NOT NULL
+   AND origin_allocation=allocation_digest AND CASE WHEN claimed THEN (
+    body->>'schema'='finnor.s5.z1-original-budget.v1'
+    AND problem->>'schema'='finnor.s5.z1-original-work-problem.v1'
+    AND certificate->>'schema'='finnor.s5.z1-original-work-certificate.v1' AND demand IS NULL
+    AND body->>'tenantId'=t::text AND body->>'principalId'=origin_principal::text
+    AND certificate->>'tenantId'=t::text AND certificate->>'principalId'=origin_principal::text
+    AND body#>>'{ref,owner}'='S5' AND body#>>'{ref,version}'='z1-native-owner-v1'
+    AND body#>>'{ref,contentDigest}' ~ '^[a-f0-9]{64}$'
+    AND reservation_id='z1-original-budget:'||(body#>>'{ref,contentDigest}')
+    AND body#>>'{ref,id}'=reservation_id
+    AND certificate#>>'{ref,owner}'='S5' AND certificate#>>'{ref,version}'='z1-native-owner-v1'
+    AND certificate#>>'{ref,contentDigest}' ~ '^[a-f0-9]{64}$'
+    AND certificate#>>'{ref,id}'='z1-original-certificate:'||(certificate#>>'{ref,contentDigest}')
+    AND body->'certificateRef'=certificate->'ref' AND allocation_digest=certificate#>>'{ref,contentDigest}'
+    AND body->'envelopes'=envelopes AND certificate#>'{check,envelopes}'=envelopes
+    AND jsonb_array_length(envelopes)=4 AND certificate->'policyBindings'='[]'::jsonb
+    AND body#>>'{original,workId}'=problem->>'originalWorkId'
+    AND body#>>'{original,workId}'=certificate->>'originalWorkId'
+   ) IS TRUE ELSE true END),true)
+ INTO original_count,other_count,v_distinct_work_count,v_valid FROM occupation;
+ IF NOT v_valid OR original_count>1000 OR other_count>256 OR original_count<>v_distinct_work_count
+  THEN RAISE EXCEPTION 'Z1 S5 canonical original and generic populations required'; END IF;
+ RETURN NEXT;
+END $$;
 CREATE FUNCTION finnor_os.z1_s5_reserve(p_problem jsonb,p_certificate jsonb,p_budget jsonb,p_digest text,
  p_budget_preimage text,p_certificate_preimage text)
  RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
 DECLARE t uuid:=finnor_os.request_tenant_id();u uuid:=finnor_os.z1_s5_actor();r jsonb;e jsonb;
  current_resource jsonb;v_deadline timestamptz;v_max numeric;v_used numeric;v_period integer;v_index integer;
  v_available jsonb;v_kind text;v_unit text;v_work uuid;v_prior jsonb;v_row record;v_permission_resources jsonb;v_input jsonb;
+ v_population record;v_occupation numeric[];
 BEGIN
  v_work:=(p_budget#>>'{original,workId}')::uuid;v_deadline:=(p_budget#>>'{original,deadlineAt}')::timestamptz;
  IF (p_problem->>'schema' IS DISTINCT FROM 'finnor.s5.z1-original-work-problem.v1'
@@ -285,9 +337,9 @@ BEGIN
   IF v_prior IS DISTINCT FROM p_budget THEN RAISE EXCEPTION 'Z1 S5 original parent cannot renew'; END IF;
   RETURN finnor_os.z1_s5_budget(v_prior->'ref'->>'id');
  END IF;
- IF NOT finnor_os.y4_allocation_context_complete() OR
-  (SELECT count(*) FROM finnor_os.s5_reservations WHERE tenant_id=t AND status<>'RELEASED')>=256
-  THEN RAISE EXCEPTION 'Z1 S5 complete bounded shared portfolio required'; END IF;
+ SELECT * INTO v_population FROM finnor_os.z1_s5_portfolio_population();
+ IF v_population.original_count>=1000
+  THEN RAISE EXCEPTION 'Z1 S5 original parent population exhausted'; END IF;
  FOR v_index IN 0..3 LOOP
   r:=p_budget->'resources'->v_index;e:=p_budget->'envelopes'->v_index;
   v_kind:=CASE WHEN v_index=3 THEN 'OCCUPANCY' ELSE 'CUMULATIVE_EXPENDITURE' END;
@@ -329,6 +381,7 @@ BEGIN
    AND a.evidence->'resources'=jsonb_build_array(jsonb_build_object('type','allocation_resource','id',r->'scopeRef'->>'id'))
    FOR SHARE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Z1 S5 fresh exact resource read authority required';END IF;
+  v_occupation:=array_fill(0::numeric,ARRAY[(r#>>'{horizon,periods}')::integer+1]);
   FOR v_period IN 0..(r#>>'{horizon,periods}')::integer LOOP
    IF e->'quantities'->>v_period IS DISTINCT FROM (CASE WHEN v_index=3 OR v_period=0 THEN v_max::text ELSE '0' END)
     OR e->'minimumQuantities'->>v_period IS DISTINCT FROM '0'
@@ -338,17 +391,30 @@ BEGIN
    IF v_available->>'basis' IS DISTINCT FROM 'REPORTED_AVAILABLE'
     OR (v_available->>'amount' ~ '^(0|[1-9][0-9]{0,15})$') IS DISTINCT FROM true
     THEN RAISE EXCEPTION 'Z1 S5 capacity is unknown'; END IF;
-   SELECT coalesce(sum(value::numeric),0) INTO v_used FROM jsonb_array_elements_text(r->'existingUse') WITH ORDINALITY
-    WHERE CASE WHEN v_index=3 THEN ordinality=v_period+1 ELSE ordinality<=v_period+1 END;
-   FOR v_row IN SELECT held.value env FROM finnor_os.s5_reservations s
+   v_occupation[v_period+1]:=(r->'existingUse'->>v_period)::numeric;
+  END LOOP;
+  FOR v_row IN SELECT held.value env FROM finnor_os.s5_reservations s
     CROSS JOIN LATERAL jsonb_array_elements(s.envelopes) held
     WHERE s.tenant_id=t AND s.status<>'RELEASED' AND held.value->>'resourceId'=r->>'resourceId' LOOP
-    IF v_row.env->'horizon' IS DISTINCT FROM r->'horizon' OR v_row.env->>'kind'<>v_kind OR v_row.env->>'unit'<>v_unit
+    IF (v_row.env->'horizon' IS DISTINCT FROM r->'horizon' OR v_row.env->>'kind'<>v_kind OR v_row.env->>'unit'<>v_unit
+     OR jsonb_array_length(v_row.env->'quantities')<>(r#>>'{horizon,periods}')::integer+1
+     OR jsonb_array_length(v_row.env->'minimumQuantities')<>(r#>>'{horizon,periods}')::integer+1
+     OR EXISTS(SELECT 1 FROM jsonb_array_elements_text(v_row.env->'quantities') q
+      WHERE (q.value ~ '^(0|[1-9][0-9]{0,15})$') IS DISTINCT FROM true)
+     OR EXISTS(SELECT 1 FROM jsonb_array_elements_text(v_row.env->'minimumQuantities') q
+      WHERE (q.value ~ '^(0|[1-9][0-9]{0,15})$') IS DISTINCT FROM true)
+     ) IS DISTINCT FROM false
      THEN RAISE EXCEPTION 'Z1 S5 complete common resource horizon required'; END IF;
-    SELECT v_used+coalesce(sum(value::numeric),0) INTO v_used
-     FROM jsonb_array_elements_text(v_row.env->'quantities') WITH ORDINALITY
-     WHERE CASE WHEN v_index=3 THEN ordinality=v_period+1 ELSE ordinality<=v_period+1 END;
-   END LOOP;
+    FOR v_period IN 0..(r#>>'{horizon,periods}')::integer LOOP
+     IF (v_row.env->'minimumQuantities'->>v_period)::numeric>(v_row.env->'quantities'->>v_period)::numeric
+      THEN RAISE EXCEPTION 'Z1 S5 original occupation interval required'; END IF;
+     v_occupation[v_period+1]:=v_occupation[v_period+1]+(v_row.env->'quantities'->>v_period)::numeric;
+    END LOOP;
+  END LOOP;
+  v_used:=0;
+  FOR v_period IN 0..(r#>>'{horizon,periods}')::integer LOOP
+   v_used:=CASE WHEN v_index=3 THEN v_occupation[v_period+1] ELSE v_used+v_occupation[v_period+1] END;
+   v_available:=r->'availability'->v_period;
    IF v_used+v_max>(v_available->>'amount')::numeric-(r->>'safetyMargin')::numeric
     THEN RAISE EXCEPTION 'Z1 S5 shared portfolio exhausted'; END IF;
   END LOOP;
@@ -522,10 +588,11 @@ CREATE FUNCTION finnor_os.z1_s5_outstanding()
  LANGUAGE plpgsql SECURITY DEFINER SET search_path=pg_catalog,finnor_os AS $$
 DECLARE u uuid:=finnor_os.z1_s5_actor();
 BEGIN
+ PERFORM * FROM finnor_os.z1_s5_portfolio_population();
  RETURN QUERY SELECT o.body->'ref',o.body->'certificateRef',s.envelopes,s.status
   FROM finnor_os.s5_reservations s JOIN finnor_os.s5_reservation_origins o USING(tenant_id,reservation_id)
   WHERE s.tenant_id=finnor_os.request_tenant_id() AND s.status<>'RELEASED'
-   AND o.body->>'schema'='finnor.s5.z1-original-budget.v1' ORDER BY s.reservation_id LIMIT 257;
+   AND o.body->>'schema'='finnor.s5.z1-original-budget.v1' ORDER BY s.reservation_id LIMIT 1001;
 END $$;
 
 -- Native JSON write occupation, including repeated checkpoint/publication bodies.
@@ -637,13 +704,14 @@ INSERT INTO finnor_os.compute_resource_policies
 REVOKE ALL ON FUNCTION finnor_os.z1_s5_actor() FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.z1_budget_json(jsonb) FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.z1_s5_budget(text,boolean) FROM PUBLIC;
+REVOKE ALL ON FUNCTION finnor_os.z1_s5_portfolio_population() FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.z1_s5_reserve(jsonb,jsonb,jsonb,text,text,text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.z1_s5_hold_cpu(jsonb,text,text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.z1_s5_charge(jsonb,text,text,jsonb,boolean) FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.z1_s5_visible(text) FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.z1_s5_outstanding() FROM PUBLIC;
 REVOKE ALL ON FUNCTION finnor_os.z1_lock_source_cut(uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION finnor_os.z1_s5_actor(),finnor_os.z1_s5_budget(text,boolean),
+GRANT EXECUTE ON FUNCTION finnor_os.z1_s5_actor(),finnor_os.z1_s5_budget(text,boolean),finnor_os.z1_s5_portfolio_population(),
  finnor_os.z1_s5_reserve(jsonb,jsonb,jsonb,text,text,text),finnor_os.z1_s5_hold_cpu(jsonb,text,text),
  finnor_os.z1_s5_charge(jsonb,text,text,jsonb,boolean),finnor_os.z1_s5_visible(text),finnor_os.z1_s5_outstanding(),
  finnor_os.z1_lock_source_cut(uuid) TO finnor_app;

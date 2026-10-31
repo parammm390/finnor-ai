@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { freshRequest, money, scalar } from "./fixtures.mjs";
+import { freshHistoricalRequest as freshRequest, money, scalar } from "./fixtures.mjs";
 import { digest, RequestSchema } from "../../../packages/epistemic-runtime/src/project-z/z1-shared-work/contracts.ts";
 import { runProducer, checkOriginal, runtimeIdentity } from "../../../packages/private-equity/src/project-z/z1-shared-work/processes.ts";
 

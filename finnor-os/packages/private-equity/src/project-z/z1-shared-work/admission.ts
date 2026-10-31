@@ -9,7 +9,7 @@ import { checkedPublication, type PublishedProgram } from './owner.js';
 import { runtimeIdentity } from './processes.js';
 import { requireZ1, digest } from '../../../../epistemic-runtime/src/project-z/z1-shared-work/contracts.js';
 import { developmentOnly, nativeRef, same, type NativeRow, type Submit } from './native-contracts.js';
-import { readPublishedTx, enqueueTx, eventTx, assertRowCurrentTx } from './native-store.js';
+import { readPublishedTx, enqueueProjectionJobsTx, eventTx, assertRowCurrentTx, assertProjectionDeliveryBatchTx } from './native-store.js';
 
 interface Admission {
   schema: 'finnor.s8.z1-exact-derivation-admission.v1'; ref: ExperimentRef;
@@ -47,6 +47,7 @@ export async function currentSharedWorkAdmissionTx(ctx: PeMutationContext, c: Po
     body.runtimeDigest === row.runtime.digest && Date.parse(body.validUntil) > Date.now() &&
     body.protectedAdmission === false && body.productionActivated === false && body.executionAuthorityGranted === false,
   'Z1_S8_CURRENT_NATIVE_ADMISSION_BINDING_REQUIRED', 'STALE');
+  await assertProjectionDeliveryBatchTx(ctx, c, row, publication);
   return admission;
 }
 /** Explicit authenticated S8 owner operation, never called by producer publish. */
@@ -81,8 +82,7 @@ export async function admitSharedWorkProgram(ctx: PeMutationContext, reference: 
       await eventTx(ctx, c, row.id, null, `s8:${reference.contentDigest}`, { admissionRef: admission.ref, protectedAdmission: false,
         qualification: 'ORDINARY_EXACT_DERIVATION_ONLY_NO_ECONOMIC_OR_EFFECT_ADMISSION' });
     }
-    for (const projection of publication.body.candidate.workProjections) if (projection.result && projection.lifecycle === 'ACTIVE')
-      await enqueueTx(ctx, c, row, projection.workId, reference);
+    await enqueueProjectionJobsTx(ctx, c, row, publication);
     return admission;
   });
 }

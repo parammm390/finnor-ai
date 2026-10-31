@@ -45,7 +45,8 @@ export async function guardTarget() {
   need(/^v22\./.test(process.version), "NODE_22_REQUIRED");
   need(required.every(key => process.env[key]), "EXPLICIT_NATIVE_TARGET_AUTH_AND_LOCAL_CREDENTIALS_NOT_DELIVERED");
   need(process.env.FINNOR_Z1_NATIVE_AUTHORIZED === "DISPOSABLE_ORIGINAL_Z1_EPISODE_ONLY" &&
-    process.env.FINNOR_ENVIRONMENT === "ordinary_disposable" && process.env.FINNOR_Z1_PROFILE === "ordinary_disposable" &&
+    ["staging", "ordinary_disposable"].includes(process.env.FINNOR_ENVIRONMENT) &&
+    process.env.FINNOR_Z1_PROFILE === "ordinary_disposable" && process.env.VERCEL_ENV !== "production" &&
     process.env.P3_GOVERNORS === "1", "EXPLICIT_DISPOSABLE_EPISODE_AUTHORITY_REQUIRED");
   const bypasses = ["AUTH_DEV_BYPASS", "CENTROPY_TEST_MODE", "NEXT_PUBLIC_CENTROPY_TEST_MODE", "NEXT_PUBLIC_JARVIS_TEST_MODE"];
   need(!bypasses.some(key => process.env[key] === "1"),
@@ -101,7 +102,8 @@ export async function guardTarget() {
       need(expected.cwd === resolve(root) || expected.cwd.startsWith(resolve(root) + "/"), "EXACT_OWNED_APPLICATION_SOURCE_REQUIRED");
       const environment = Object.fromEntries((await readFile(`/proc/${expected.pid}/environ`, "utf8"))
         .split("\0").filter(Boolean).map(entry => { const i = entry.indexOf("="); return [entry.slice(0, i), entry.slice(i + 1)]; }));
-      need(environment.FINNOR_ENVIRONMENT === "ordinary_disposable" && environment.FINNOR_Z1_PROFILE === "ordinary_disposable" &&
+      need(environment.FINNOR_ENVIRONMENT === process.env.FINNOR_ENVIRONMENT && environment.FINNOR_Z1_PROFILE === "ordinary_disposable" &&
+        environment.VERCEL_ENV !== "production" &&
         environment.P3_GOVERNORS === "1" && !bypasses.some(key => environment[key] === "1") &&
         !Object.keys(environment).some(key => forbidden.test(key) && environment[key]),
         "ACTUAL_TARGET_ENVIRONMENT_MUST_DISABLE_BYPASSES_AND_EXTERNAL_PROVIDERS");

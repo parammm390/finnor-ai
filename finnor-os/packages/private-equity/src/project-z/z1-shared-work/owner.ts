@@ -12,7 +12,7 @@ import {
   checkOriginal, runProducer, runtimeIdentity, Z1ProcessFailure, type OriginalCheckReceipt, type ProcessReceipt,
 } from './processes.js';
 import { nativeRecoveryBoundary } from './recovery.js';
-import { developmentOnly } from './native-contracts.js';
+import { developmentOnly, type NativeRow } from './native-contracts.js';
 
 export const Z1_OWNER_CONTRACT = 'z1-per-original-work-v1';
 export const Z1_JOB_TYPE = 'run_shared_work_program_v1';
@@ -68,18 +68,19 @@ export interface Z1NativePorts {
   retainCheck(ctx: PeMutationContext, claim: Readonly<JobExecutionContext>, snapshot: ClaimedSnapshot, check: OriginalCheckReceipt): Promise<ExperimentRef>;
   publishChecked(ctx: PeMutationContext, claim: Readonly<JobExecutionContext>, snapshot: ClaimedSnapshot,
     checkpointVersion: number, body: CheckedPublicationBody): Promise<PublishedProgram>;
-  // Existing native outbox; idempotent by original publication + original Work.
+  // One complete atomic batch in the existing native outbox, idempotent by
+  // original publication + original Work, not one whole-cohort check per Work.
   // Delivery responsibility is not an assertion that S3/S4 consumed it.
-  enqueueOriginalProjection(ctx: PeMutationContext, claim: Readonly<JobExecutionContext>, snapshot: ClaimedSnapshot,
-    publication: PublishedProgram, projection: WorkProjection): Promise<ExperimentRef>;
+  enqueueOriginalProjections(ctx: PeMutationContext, claim: Readonly<JobExecutionContext>, snapshot: ClaimedSnapshot,
+    publication: PublishedProgram): Promise<ExperimentRef[]>;
   finishAttempt(ctx: PeMutationContext, attempt: ExperimentRef, publication: ExperimentRef | null): Promise<void>;
   // These are invoked inside the actual existing S5 portfolio transaction.
   loadPublishedTx(ctx: PeMutationContext, client: PoolClient, reference: ExperimentRef, workId: string):
-    Promise<{ publication: PublishedProgram; currentRequest: SharedWorkRequest }>;
+    Promise<{ publication: PublishedProgram; currentRequest: SharedWorkRequest; row: NativeRow }>;
   assertOriginalCapacityTx(ctx: PeMutationContext, client: PoolClient, projection: WorkProjection): Promise<void>;
-  assertExistingS8ConsumptionAdmissionTx(ctx: PeMutationContext, client: PoolClient, publication: PublishedProgram, projection: WorkProjection): Promise<void>;
-  consumeS3OrS4Tx(ctx: PeMutationContext, client: PoolClient, publication: PublishedProgram, projection: WorkProjection): Promise<NativeOwnerReceipt>;
-  recordS7AndConsumptionTx(ctx: PeMutationContext, client: PoolClient, publication: PublishedProgram, receipt: NativeOwnerReceipt): Promise<void>;
+  assertExistingS8ConsumptionAdmissionTx(ctx: PeMutationContext, client: PoolClient, publication: PublishedProgram, projection: WorkProjection, row: NativeRow): Promise<void>;
+  consumeS3OrS4Tx(ctx: PeMutationContext, client: PoolClient, publication: PublishedProgram, projection: WorkProjection, row: NativeRow): Promise<NativeOwnerReceipt>;
+  recordS7AndConsumptionTx(ctx: PeMutationContext, client: PoolClient, publication: PublishedProgram, receipt: NativeOwnerReceipt, row: NativeRow): Promise<void>;
 }
 function actor(ctx: PeMutationContext): string { return ctx.auth.employeeId ?? ctx.auth.userId; }
 function assertPrincipal(ctx: PeMutationContext, request: SharedWorkRequest): void {
@@ -169,10 +170,7 @@ export async function runSharedWorkClaim(
         assertPublication(publication);
       }
       await ports.assertCurrent(ctx, claim, snapshot, 'DELIVERY');
-      for (const projection of publication.body.candidate.workProjections) {
-        if (!projection.result || projection.lifecycle !== 'ACTIVE' || projection.disposition === 'REVOKED') continue;
-        await ports.enqueueOriginalProjection(ctx, claim, snapshot, publication, projection);
-      }
+      await ports.enqueueOriginalProjections(ctx, claim, snapshot, publication);
       await nativeRecoveryBoundary('DELIVERY', claim, payload.requestId);
       await ports.finishAttempt(ctx, attempt, publication.reference);
     });
@@ -196,21 +194,23 @@ export async function consumeSharedWorkProjectionTx(
 ): Promise<NativeOwnerReceipt> {
     developmentOnly();
     requireZ1(ports.contract === Z1_OWNER_CONTRACT, 'NATIVE_Z1_OWNER_BINDINGS_REQUIRED');
-    const { publication, currentRequest } = await ports.loadPublishedTx(ctx, client, reference, workId);
+    const { publication, currentRequest, row } = await ports.loadPublishedTx(ctx, client, reference, workId);
     assertPublication(publication); assertPrincipal(ctx, currentRequest);
     requireZ1(currentness(publication.body.candidate, currentRequest, workId) === 'CURRENT', 'ORIGINAL_WORK_PROJECTION_NOT_CURRENT', 'STALE');
     requireZ1((await runtimeIdentity()).digest === publication.body.candidate.envelope.producerBuildIdentity, 'INSTALLED_Z1_BUILD_CHANGED', 'STALE');
     const projection = projectForWork(publication.body.candidate, workId, { tenantId: ctx.auth.tenantId, principalId: actor(ctx) });
     requireZ1(projection.result && projection.lifecycle === 'ACTIVE', 'USABLE_ORIGINAL_WORK_RESULT_REQUIRED');
     await ports.assertOriginalCapacityTx(ctx, client, projection);
-    await ports.assertExistingS8ConsumptionAdmissionTx(ctx, client, publication, projection);
-    const receipt = await ports.consumeS3OrS4Tx(ctx, client, publication, projection);
+    // The canonical row/source/authority locks remain held through this entire
+    // transaction. Reuse that explicit cut, never a cross-transaction cache.
+    await ports.assertExistingS8ConsumptionAdmissionTx(ctx, client, publication, projection, row);
+    const receipt = await ports.consumeS3OrS4Tx(ctx, client, publication, projection, row);
     requireZ1(['S3', 'S4'].includes(receipt.owner) && receipt.workId === workId &&
       receipt.originalParentReservationRef === projection.binding.original.resources.parentReservationRef &&
       receipt.resultDigest === digest(projection.result) && epistemicHash(receipt.artifactRef) === epistemicHash(reference) &&
       ['INDEPENDENTLY_OBSERVED', 'UNKNOWN'].includes(receipt.observation) &&
       receipt.executionAuthorityGranted === false && projection.unresolvedObligationRefs.every(ref => receipt.unresolvedObligationRefs.includes(ref)),
     'SEPARATE_NATIVE_OWNER_CONSUMPTION_BINDING', 'COUNTEREXAMPLE');
-    await ports.recordS7AndConsumptionTx(ctx, client, publication, receipt);
+    await ports.recordS7AndConsumptionTx(ctx, client, publication, receipt, row);
     return receipt;
 }

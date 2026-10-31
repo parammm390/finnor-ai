@@ -12,8 +12,8 @@ import { appendEvidenceVersionTx } from "../../../packages/memory/src/evidence.t
 import { authorize } from "../../../packages/private-equity/src/owner-context.ts";
 import { originalObligationsTx, fenceTx, rowTx } from "../../../packages/private-equity/src/project-z/z1-shared-work/native-store.ts";
 import { currentWorkInputTx } from "../../../packages/private-equity/src/project-z/z1-shared-work/resources.ts";
-import { UUID, PinSchema, RootSchema, BudgetSchema, ConsumerSchema, DeclarationSchema, SourceDeclarationSchema } from "../../../packages/private-equity/src/project-z/z1-shared-work/native-contracts.ts";
-import { WorkSchema, SourceSchema, ChangesSchema, RequestSchema, digest, stable, Z1_LOCK } from "../../../packages/epistemic-runtime/src/project-z/z1-shared-work/contracts.ts";
+import { UUID, PinSchema, RootSchema, BudgetSchema, ConsumerSchema, DeclarationSchema, SourceDeclarationSchema, nativeRef } from "../../../packages/private-equity/src/project-z/z1-shared-work/native-contracts.ts";
+import { WorkSchema, SourceSchema, ChangesSchema, RequestSchema, RefSchema, boundedJSON, digest, stable, Z1_LOCK } from "../../../packages/epistemic-runtime/src/project-z/z1-shared-work/contracts.ts";
 import { runtimeIdentity } from "../../../packages/private-equity/src/project-z/z1-shared-work/processes.ts";
 import { PRODUCTION_JOB_CONTRACTS } from "../../../packages/db/compute-contract.ts";
 
@@ -22,8 +22,8 @@ const stageSchema = z.object({
   name: z.enum(["INITIAL", "INSERT", "RETRACT", "OBJECTIVE_EDIT", "WITHDRAW", "REACTIVATE", "REVOKE"]),
   sourceChanges: ChangesSchema.shape.sourceChanges,
   workEdits: z.array(z.object({ workId: UUID, expectedProgrammeRevision: z.string(),
-    replacement: workWithoutResources }).strict()).max(3).optional(),
-  withdrawWorkIds: z.array(UUID).max(3).optional(),
+    replacement: workWithoutResources }).strict()).max(1000).optional(),
+  withdrawWorkIds: z.array(UUID).max(1000).optional(),
 }).strict();
 const fixtureSchema = z.object({
   schema: z.literal("finnor.z1.public-native-episode.v1"), dataClass: z.literal("PUBLIC_DETERMINISTIC_FIXTURE_NO_PII"),
@@ -31,8 +31,8 @@ const fixtureSchema = z.object({
   tenantId: UUID, principalId: UUID, root: RootSchema, foreignRoot: RootSchema, foreignWorkId: UUID,
   works: z.array(z.object({ work: workWithoutResources, consumer: ConsumerSchema,
     declarationSourceId: UUID, expectedDeclarationHead: PinSchema, inputDigest: z.string().regex(/^[a-f0-9]{64}$/),
-    budget: BudgetSchema }).strict()).length(3),
-  sources: z.array(z.object({ source: SourceSchema, sourceId: UUID, expectedHead: PinSchema }).strict()).min(1).max(8),
+    budget: BudgetSchema }).strict()).min(2).max(1000),
+  sources: z.array(z.object({ source: SourceSchema, sourceId: UUID, expectedHead: PinSchema }).strict()).min(1).max(4096),
   limits: z.object({ maxTicks: z.number().int().positive().max(1000000000),
     maxBytes: z.number().int().positive().max(134217728) }).strict(),
   stages: z.array(stageSchema).length(7),
@@ -69,9 +69,13 @@ export async function runNativeEpisode(guarded, output, report) {
   const { target, root, installed, need, privateJSON, sha, processIdentity, scenario } = guarded;
   try {
   const fixture = fixtureSchema.parse(guarded.fixture), ids = fixture.works.map(item => item.work.id);
+  const originals = new Map(fixture.works.map(item => [item.work.id, item]));
+  const maximumOwnerUses = ids.length * fixture.stages.length;
   need(fixture.stages.map(stage => stage.name).join(",") === "INITIAL,INSERT,RETRACT,OBJECTIVE_EDIT,WITHDRAW,REACTIVATE,REVOKE" &&
-    new Set(ids).size === 3 && new Set(fixture.works.map(item => item.work.inputRef)).size === 3 &&
-    new Set(fixture.works.map(item => digest(item.work.programme))).size === 3 &&
+    new Set(ids).size === ids.length && new Set(fixture.works.map(item => item.work.inputRef)).size === ids.length &&
+    new Set(fixture.works.map(item => digest({ programme: item.work.programme, parameters: item.work.parameters }))).size === ids.length &&
+    fixture.works.reduce((sum, item) => sum + item.work.programme.nodes.length, 0) <= 4096 &&
+    fixture.sources.reduce((sum, item) => sum + item.source.rows.length, 0) <= 100000 &&
     fixture.works.some(item => item.consumer.owner === "S3") && fixture.works.some(item => item.consumer.owner === "S4") &&
     fixture.works.some(item => item.work.unresolvedObligationRefs.length > 0), "COMPLETE_DISTINCT_ORIGINAL_NATIVE_EPISODE_REQUIRED");
   need(fixture.sources.every(item => item.expectedHead.sourceId === item.sourceId) &&
@@ -85,9 +89,13 @@ export async function runNativeEpisode(guarded, output, report) {
     "COORDINATOR_NATIVE_JOB_CONTRACT_NOT_INSTALLED");
   need(target.authorization.noOtherWorkers === true && target.authorization.realDisposableAuthProject === true &&
     /^[a-f0-9]{64}$/.test(target.schemaCatalogSha256 ?? "") && /^[a-f0-9]{64}$/.test(target.browserExecutableSha256 ?? "") &&
-    /^[0-9]{4}[a-z]?_[a-z0-9_]+\.sql$/.test(target.appliedMigration ?? "") &&
-    target.nativeSchemaSha256 === sha(await readFile(new URL("./shared-schema.sql", import.meta.url))),
+    /^[a-f0-9]{64}$/.test(target.nativeDeliveryCatalogSha256 ?? "") &&
+    /^(?:[0-9]{4}[a-z]?|postz)_[a-z0-9_]+\.sql$/.test(target.appliedMigration ?? "") &&
+    target.nativeSchemaSha256 === sha(await readFile(new URL("./shared-schema.sql", import.meta.url))) &&
+    target.nativeOccupationSchemaSha256 === sha(await readFile(new URL("./portfolio-stream.sql", import.meta.url))),
     "EXPLICIT_INSTALLED_SCHEMA_BROWSER_AND_EXCLUSIVE_WORKER_CUSTODY_REQUIRED");
+  need(sha(await readFile(resolve(root, "finnor-os/packages/db/migrations", target.appliedMigration))) ===
+    target.nativeOccupationSchemaSha256, "EXACT_COORDINATOR_ASSIGNED_OCCUPATION_MIGRATION_REQUIRED");
   const runtime = await runtimeIdentity(); need(runtime.digest === installed.nativeRuntimeDigest, "CURRENT_NATIVE_BUILD_REQUIRED");
   const scoped = (fn, readOnly = false) => withTenantTransaction(fixture.tenantId,
     { userId: fixture.principalId, readOnly }, (db, client) => fn(client, db));
@@ -104,14 +112,28 @@ export async function runNativeEpisode(guarded, output, report) {
   const catalog = (await getPool().query(`SELECT p.proname,pg_get_function_identity_arguments(p.oid) args,
     pg_get_functiondef(p.oid) body FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
     WHERE n.nspname='finnor_os' AND p.proname LIKE 'z1_%' ORDER BY p.proname,args`)).rows;
-  need(catalog.length >= 10 && digest(catalog) === target.schemaCatalogSha256, "EXACT_INSTALLED_NATIVE_SCHEMA_CATALOG_REQUIRED");
+  need(catalog.length >= 10 && ["z1_s5_open_occupation", "z1_delivery_consumption_link"].every(name =>
+    catalog.some(item => item.proname === name)) && digest(catalog) === target.schemaCatalogSha256,
+    "EXACT_INSTALLED_NATIVE_SCHEMA_CATALOG_REQUIRED");
+  const deliveryCatalog = (await getPool().query(`SELECT 'CONSTRAINT' kind,c.conname name,
+    pg_get_constraintdef(c.oid) definition FROM pg_constraint c JOIN pg_class t ON t.oid=c.conrelid
+    JOIN pg_namespace n ON n.oid=t.relnamespace
+    WHERE n.nspname='finnor_os' AND t.relname='z1_deliveries'
+      AND c.conname='z1_delivery_receipt_state' AND c.contype='c' AND c.convalidated
+    UNION ALL SELECT 'TRIGGER' kind,g.tgname name,pg_get_triggerdef(g.oid) definition
+    FROM pg_trigger g JOIN pg_class t ON t.oid=g.tgrelid JOIN pg_namespace n ON n.oid=t.relnamespace
+    WHERE n.nspname='finnor_os' AND t.relname='z1_deliveries'
+      AND g.tgname='z1_delivery_consumption_link' AND NOT g.tgisinternal AND g.tgenabled='O'
+    ORDER BY kind,name`)).rows;
+  need(deliveryCatalog.length === 2 && digest(deliveryCatalog) === target.nativeDeliveryCatalogSha256,
+    "EXACT_INSTALLED_DELIVERY_CONSTRAINT_AND_TRIGGER_REQUIRED");
   need((await getPool().query("SELECT name FROM finnor_os._migrations WHERE name=$1", [target.appliedMigration])).rowCount === 1,
     "COORDINATOR_APPLIED_SCHEMA_RECEIPT_REQUIRED");
   const assertQueueOwned = async () => {
     const rows = (await getPool().query(`SELECT id,type,tenant_id,payload->>'principalId' principal,
       payload->>'requestId' request_id FROM finnor_os.jobs
-      WHERE status IN('queued','running','failed','dead_letter') ORDER BY id LIMIT 257`)).rows;
-    need(rows.length <= 256 && rows.every(row => jobTypes.includes(row.type) && row.tenant_id === fixture.tenantId &&
+      WHERE status IN('queued','running','failed','dead_letter') ORDER BY id LIMIT $1`, [ids.length + 2])).rows;
+    need(rows.length <= ids.length + 1 && rows.every(row => jobTypes.includes(row.type) && row.tenant_id === fixture.tenantId &&
       row.principal === fixture.principalId && row.request_id === report.requestId), "EXCLUSIVE_OWN_NATIVE_QUEUE_REQUIRED");
   };
   await assertQueueOwned();
@@ -148,6 +170,7 @@ export async function runNativeEpisode(guarded, output, report) {
   });
   await privateJSON(resolve(output, "native-doctor.json"), { runtime, database: dbIdentity, policies, provider,
     catalogSha256: digest(catalog), migration: target.appliedMigration, originalWorkIds: ids,
+    nativeOccupationSchemaSha256: target.nativeOccupationSchemaSha256, nativeDeliveryCatalogSha256: digest(deliveryCatalog),
     originalInputs: fixture.works.map(item => ({ workId: item.work.id, inputId: item.work.inputRef, inputDigest: item.inputDigest })),
     canonicalSourceIds: sourceIds, actionsStillUntouched: true });
 
@@ -197,7 +220,9 @@ export async function runNativeEpisode(guarded, output, report) {
         wall_reserved_ms,retained_bytes::text,storage_charged_bytes::text,checkpoint->'charges' logical_charges
         FROM finnor_os.z1_requests WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
       [fixture.tenantId, fixture.principalId, report.requestId])).rows[0];
-      const parents = (await c.query(`SELECT s.reservation_id,s.status,s.envelopes,o.body->'original' original,
+      const parents = (await c.query(`SELECT s.reservation_id,s.status,o.body#>>'{original,workId}' original_work_id,
+        encode(sha256(convert_to(s.envelopes::text,'UTF8')),'hex') envelopes_digest,
+        encode(sha256(convert_to((o.body->'original')::text,'UTF8')),'hex') original_digest,
         coalesce((SELECT jsonb_object_agg(resource_id,used) FROM (SELECT resource_id,sum(units)::text used
           FROM finnor_os.s5_governed_resource_charges g WHERE g.tenant_id=s.tenant_id AND g.reservation_id=s.reservation_id
           GROUP BY resource_id) q),'{}'::jsonb) used,
@@ -207,27 +232,45 @@ export async function runNativeEpisode(guarded, output, report) {
           AND co.body->>'schema'='finnor.s5.z1-compute-hold.v1' AND st.status<>'RECONCILED'),'0') pending_cpu
         FROM finnor_os.s5_reservations s JOIN finnor_os.s5_reservation_origins o USING(tenant_id,reservation_id)
         WHERE s.tenant_id=$1 AND o.principal_id=$2 AND o.body->>'schema'='finnor.s5.z1-original-budget.v1'
-          AND o.body#>>'{original,workId}'=ANY($3::text[]) ORDER BY s.reservation_id`,
-      [fixture.tenantId, fixture.principalId, ids])).rows;
+          AND o.body#>>'{original,workId}'=ANY($3::text[]) ORDER BY s.reservation_id LIMIT $4`,
+      [fixture.tenantId, fixture.principalId, ids, ids.length + 1])).rows;
+      need(parents.length === ids.length && new Set(parents.map(item => item.reservation_id)).size === ids.length &&
+        new Set(parents.map(item => item.original_work_id)).size === ids.length &&
+        parents.every(item => originals.has(item.original_work_id) &&
+          /^[a-f0-9]{64}$/.test(item.original_digest ?? "") && /^[a-f0-9]{64}$/.test(item.envelopes_digest ?? "")),
+        "COMPLETE_DISTINCT_ORIGINAL_PARENT_ROSTER_REQUIRED");
       const obligations = {};
       for (const id of ids) obligations[id] = await originalObligationsTx(ctx, c, id);
-      const uses = (await c.query("SELECT publication_id,work_id,semantic_owner,reference,body,receipt FROM finnor_os.z1_owner_uses WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3 ORDER BY publication_id,work_id",
+      const uses = (await c.query(`SELECT publication_id,work_id,semantic_owner,reference,
+        encode(sha256(convert_to(body::text,'UTF8')),'hex') body_digest,
+        encode(sha256(convert_to(receipt::text,'UTF8')),'hex') receipt_digest
+        FROM finnor_os.z1_owner_uses WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3
+        ORDER BY publication_id,work_id LIMIT $4`,
+        [fixture.tenantId, fixture.principalId, report.requestId, maximumOwnerUses + 1])).rows;
+      need(uses.length <= maximumOwnerUses &&
+        new Set(uses.map(item => stable([item.publication_id, item.work_id]))).size === uses.length &&
+        uses.every(item => originals.get(item.work_id)?.consumer.owner === item.semantic_owner &&
+          RefSchema.safeParse(item.reference).success && /^[a-f0-9]{64}$/.test(item.body_digest ?? "") &&
+          /^[a-f0-9]{64}$/.test(item.receipt_digest ?? "")), "COMPLETE_BOUNDED_ORIGINAL_OWNER_USE_ROSTER_REQUIRED");
+      const attempts = (await c.query(`SELECT id,delivery_id,status,costs_unknown,reserved_wall_ms,
+        encode(sha256(convert_to(body::text,'UTF8')),'hex') body_digest
+        FROM finnor_os.z1_attempts WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3 ORDER BY created_at,id LIMIT 17`,
         [fixture.tenantId, fixture.principalId, report.requestId])).rows;
-      const attempts = (await c.query("SELECT id,delivery_id,status,costs_unknown,body,reserved_wall_ms FROM finnor_os.z1_attempts WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3 ORDER BY created_at,id",
-        [fixture.tenantId, fixture.principalId, report.requestId])).rows;
+      need(attempts.length <= 16, "ORIGINAL_NATIVE_ATTEMPT_ROSTER_BOUND");
       const workStates = (await c.query("SELECT id,status,final_outcome FROM finnor_os.works WHERE tenant_id=$1 AND id=ANY($2::uuid[]) ORDER BY id",
         [fixture.tenantId, ids])).rows.map(item => ({ id: item.id, status: item.status, finalOutcomeDigest: digest(item.final_outcome) }));
       const effects = (await c.query("SELECT id,status,semantic_hash FROM finnor_os.business_effects WHERE tenant_id=$1 ORDER BY id LIMIT 4097",
         [fixture.tenantId])).rows;
       const actions = (await c.query("SELECT id,status FROM finnor_os.domain_actions WHERE tenant_id=$1 ORDER BY id LIMIT 4097",
         [fixture.tenantId])).rows;
-      need(effects.length <= 4096 && actions.length <= 4096, "COMPLETE_FINITE_DISPOSABLE_EFFECT_INVENTORY_REQUIRED");
+      need(workStates.length === ids.length && effects.length <= 4096 && actions.length <= 4096,
+        "COMPLETE_FINITE_DISPOSABLE_EFFECT_INVENTORY_REQUIRED");
       return { row, parents, obligations, uses, attempts, workStates, effectInventoryDigest: digest(effects),
         actionInventoryDigest: digest(actions), effectCount: effects.length, actionCount: actions.length };
     }, true);
   }
   const assertConserved = (before, after) => {
-    need(before.parents.length === 3 && after.parents.length === 3 && isSame(before.obligations, after.obligations),
+    need(before.parents.length === ids.length && after.parents.length === ids.length && isSame(before.obligations, after.obligations),
       "ORIGINAL_S5_S6_IDENTITY_CONSERVATION_FAILED");
     need(isSame(before.workStates, after.workStates) && before.effectInventoryDigest === after.effectInventoryDigest &&
       before.actionInventoryDigest === after.actionInventoryDigest, "UNAUTHORIZED_WORK_COMPLETION_OR_EFFECT_CHANGE_OBSERVED");
@@ -237,12 +280,32 @@ export async function runNativeEpisode(guarded, output, report) {
       "ORIGINAL_EPISODE_DEADLINE_OR_WALL_RENEWED");
     for (const parent of before.parents) {
       const next = after.parents.find(item => item.reservation_id === parent.reservation_id);
-      need(next && next.status !== "RELEASED" && isSame(parent.original, next.original) && isSame(parent.envelopes, next.envelopes),
+      need(next && next.status !== "RELEASED" && parent.original_work_id === next.original_work_id &&
+        parent.original_digest === next.original_digest && parent.envelopes_digest === next.envelopes_digest,
         "ORIGINAL_PARENT_RESERVATION_RENEWED_OR_RELEASED");
       for (const [resourceId, used] of Object.entries(parent.used))
-        need(BigInt(next.used[resourceId] ?? "0") >= BigInt(used), "ORIGINAL_RESOURCE_CHARGE_DECREASED");
+        need(BigInt(Object.hasOwn(next.used, resourceId) ? next.used[resourceId] : "0") >= BigInt(used),
+          "ORIGINAL_RESOURCE_CHARGE_DECREASED");
     }
+    const nextUses = new Map(after.uses.map(item => [stable([item.publication_id, item.work_id]), item]));
+    for (const use of before.uses) need(isSame(use, nextUses.get(stable([use.publication_id, use.work_id])) ?? null),
+      "IMMUTABLE_ORIGINAL_OWNER_USE_CHANGED_OR_REMOVED");
   };
+  async function ownerUseBody(header) {
+    return scoped(async c => {
+      const rows = (await c.query(`SELECT reference,
+        CASE WHEN octet_length(body::text)<=150994944 THEN body ELSE NULL END body,
+        encode(sha256(convert_to(body::text,'UTF8')),'hex') body_digest,
+        encode(sha256(convert_to(receipt::text,'UTF8')),'hex') receipt_digest
+        FROM finnor_os.z1_owner_uses WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3
+          AND publication_id=$4 AND work_id=$5 AND semantic_owner=$6 LIMIT 2`,
+        [fixture.tenantId, fixture.principalId, report.requestId, header.publication_id, header.work_id, header.semantic_owner])).rows;
+      need(rows.length === 1 && rows[0].body !== null && rows[0].body_digest === header.body_digest &&
+        rows[0].receipt_digest === header.receipt_digest && isSame(rows[0].reference, header.reference),
+        "IMMUTABLE_ORIGINAL_OWNER_USE_PREIMAGE_REQUIRED");
+      boundedJSON(rows[0].body, 150994944); return rows[0].body;
+    }, true);
+  }
   async function appendFixture(sourceId, property, declaration) {
     const previous = sourceHeads.get(sourceId);
     const result = await scoped(async (c, db) => {
@@ -262,6 +325,7 @@ export async function runNativeEpisode(guarded, output, report) {
   }
   async function worker(boundary = null, expectLogicalRefusal = false, recoverTerminalOnly = false) {
     await assertQueueOwned();
+    const workerWallMs = ids.length > 192 ? 590000 : 120000;
     const nonce = randomBytes(32).toString("hex"), loader = resolve(root, "finnor-os/node_modules/tsx/dist/loader.mjs");
     const child = spawn(process.execPath, ["--max-old-space-size=1536", "--import", loader,
       fileURLToPath(new URL("./native-worker.mjs", import.meta.url))], { cwd: resolve(root, "finnor-os"),
@@ -269,14 +333,16 @@ export async function runNativeEpisode(guarded, output, report) {
         TSX_DISABLE_CACHE: "1", TSX_TSCONFIG_PATH: resolve(root, "finnor-os/tsconfig.json"),
         DATABASE_URL: process.env.DATABASE_URL, PGAPPNAME: "z1-owned-native-proof",
         FINNOR_Z1_NATIVE_AUTHORIZED: "DISPOSABLE_ORIGINAL_Z1_EPISODE_ONLY",
-        FINNOR_ENVIRONMENT: "ordinary_disposable", FINNOR_Z1_PROFILE: "ordinary_disposable", P3_GOVERNORS: "1",
+        FINNOR_ENVIRONMENT: process.env.FINNOR_ENVIRONMENT, FINNOR_Z1_PROFILE: "ordinary_disposable", P3_GOVERNORS: "1",
+        FINNOR_Z1_ORIGINAL_WORK_COUNT: String(ids.length),
+        ...(process.env.VERCEL_ENV ? { VERCEL_ENV: process.env.VERCEL_ENV } : {}),
         FINNOR_Z1_RECOVERY_NONCE: nonce, FINNOR_Z1_RECOVERY_BOUNDARY: boundary ?? "",
         FINNOR_Z1_RECOVERY_REQUEST: report.requestId },
       stdio: ["ignore", "pipe", "pipe", "ipc"] });
     workers.add(child);
     let diagnosticBytes = 0, killed = false, owned, failure = null, capturedClaim, crashSnapshot, logicalRefusalObserved = false;
     const exited = new Promise((resolveExit, reject) => {
-      const timer = setTimeout(() => { failure = "OWNED_NATIVE_WORKER_BOUND"; child.kill("SIGKILL"); }, 125000);
+      const timer = setTimeout(() => { failure = "OWNED_NATIVE_WORKER_BOUND"; child.kill("SIGKILL"); }, workerWallMs + 5000);
       child.stdout.on("data", chunk => { diagnosticBytes += chunk.length; if (diagnosticBytes > 1048576) child.kill("SIGKILL"); });
       child.stderr.on("data", chunk => { diagnosticBytes += chunk.length; if (diagnosticBytes > 1048576) child.kill("SIGKILL"); });
       child.on("error", () => { failure = "OWNED_NATIVE_WORKER_LAUNCH_FAILED"; });
@@ -313,7 +379,7 @@ export async function runNativeEpisode(guarded, output, report) {
     });
     void exited.catch(() => {});
     if (!boundary) {
-      for (let poll = 0; poll < 200; poll++) {
+      for (let poll = 0; poll < Math.floor(workerWallMs / 250) - 4; poll++) {
         if (expectLogicalRefusal) {
           logicalRefusalObserved = await scoped(async c => Boolean((await c.query(
             `SELECT q.id FROM finnor_os.z1_requests q WHERE q.tenant_id=$1 AND q.principal_id=$2 AND q.id=$3
@@ -388,7 +454,18 @@ export async function runNativeEpisode(guarded, output, report) {
     await audit({ kind: "AUTHENTICATED_FOREIGN_SCOPE_RAW_ROLE_AND_ANONYMOUS_REFUSED" });
     report.mutationsStarted = true;
     const budgets = [];
-    for (const item of fixture.works) budgets.push(await uiWrite(item.work.id, "z1-reserve-original-budget", item.budget));
+    for (const item of fixture.works) {
+      const value = await uiWrite(item.work.id, "z1-reserve-original-budget", item.budget);
+      boundedJSON(value, 8388608);
+      const { ref, ...body } = value;
+      need(value.schema === "finnor.s5.z1-original-budget.v1" && value.tenantId === fixture.tenantId &&
+        value.principalId === fixture.principalId && isSame(value.original, item.budget) &&
+        value.inputId === item.work.inputRef && value.inputDigest === item.inputDigest &&
+        value.executionAuthorityGranted === false && value.protectedReceipt === null &&
+        isSame(RefSchema.parse(ref), nativeRef("S5", "z1-original-budget", body)), "EXACT_AUTHENTICATED_ORIGINAL_BUDGET_REQUIRED");
+      budgets.push({ ref, inputId: value.inputId,
+        original: { deadlineAt: value.original.deadlineAt, maximumTicks: value.original.maximumTicks } });
+    }
     const initial = RequestSchema.parse({ schema: "finnor.z1.request.v1",
       identity: { productLockDigest: Z1_LOCK, sourceCommit: installed.sourceCommit, sourceTree: installed.sourceTree,
         producerBuildIdentity: runtime.digest, checkerIdentity: "z1-original-fraction-v1",
@@ -570,14 +647,15 @@ export async function runNativeEpisode(guarded, output, report) {
         const expected = oracle.expected.ownerUses[workId], use = after.uses.find(item =>
           item.publication_id === latestPublication.reference.id && item.work_id === workId);
         need(expected ? Boolean(use) : !use, "EXACT_ORIGINAL_OWNER_USE_COVERAGE_REQUIRED");
-        if (expected?.owner === "S3") need(use.body.analyticalUse.value === expected.value &&
-          isSame(use.body.analyticalUse.type, expected.type) && use.body.originalResultActuallyUsed === true,
+        const body = use ? await ownerUseBody(use) : null;
+        if (expected?.owner === "S3") need(body.analyticalUse.value === expected.value &&
+          isSame(body.analyticalUse.type, expected.type) && body.originalResultActuallyUsed === true,
           "ACTUAL_S3_USE_DIFFERS_FROM_INDEPENDENT_ORIGINAL");
         if (expected?.owner === "S4") {
-          need(use.body.choice === expected.choice && isSame(use.body.selected, expected.selected), "ACTUAL_S4_USE_DIFFERS_FROM_INDEPENDENT_ORIGINAL");
+          need(body.choice === expected.choice && isSame(body.selected, expected.selected), "ACTUAL_S4_USE_DIFFERS_FROM_INDEPENDENT_ORIGINAL");
           const decision = await scoped(async c => (await c.query(
             "SELECT decision,state,deal_id,investment_case_id FROM finnor_os.pe_decisions WHERE tenant_id=$1 AND id=$2",
-            [fixture.tenantId, use.body.decisionId])).rows[0], true);
+            [fixture.tenantId, body.decisionId])).rows[0], true);
           need(decision?.decision === expected.choice && decision.state === "final" && decision.deal_id === fixture.root.entityId,
             "CANONICAL_S4_FINAL_DECISION_NOT_OBSERVED");
         }
@@ -596,7 +674,7 @@ export async function runNativeEpisode(guarded, output, report) {
           await panel.getByRole("button", { name: "Read current retained request trace", exact: true }).click();
           const response = await traceResponse, value = await response.json();
           need(response.status() === 200 && value.current === true && value.requestId === report.requestId &&
-            value.lifecycleFinancialCostComplete === false && value.parents.length === 3, "MOUNTED_RETAINED_NATIVE_TRACE_REQUIRED");
+            value.lifecycleFinancialCostComplete === false && value.parents.length === ids.length, "MOUNTED_RETAINED_NATIVE_TRACE_REQUIRED");
           await expect(panel.getByText("At most 64 events.", { exact: false })).toBeVisible();
           await audit({ kind: "AUTHENTICATED_MOUNTED_TRACE_READ", responseDigest: digest(value),
             eventsReturned: value.events.length, moreHistory: value.nextEventId !== null });

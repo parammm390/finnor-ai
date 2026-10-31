@@ -78,7 +78,8 @@ export function parsed<T>(schema: z.ZodType<T>, value: unknown, maxBytes = 26214
 }
 export function developmentOnly(): void {
   requireZ1(process.env.FINNOR_Z1_PROFILE === 'ordinary_disposable' &&
-    process.env.FINNOR_ENVIRONMENT === 'ordinary_disposable' &&
+    ['staging', 'ordinary_disposable'].includes(process.env.FINNOR_ENVIRONMENT ?? '') &&
+    process.env.VERCEL_ENV !== 'production' &&
     (process.env.NODE_ENV !== 'production' || process.env.FINNOR_Z1_INSTALLED_DEVELOPMENT === '1'),
   'Z1_AUTHORIZED_DISPOSABLE_NATIVE_PROFILE_REQUIRED');
 }

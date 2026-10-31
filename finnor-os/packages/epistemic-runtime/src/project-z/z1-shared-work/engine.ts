@@ -1,7 +1,7 @@
 import {
   boundedJSON, ChangesSchema, digest, inputNodes, operatorBody, RequestSchema, requireZ1, stable, Z1Fault,
-  type Binding, type Charge, type Checkpoint, type Columns, type Node, type OriginalWork,
-  type Production, type ProgrammeChanges, type Relation, type Row, type SharedNode, type SharedWorkProgram,
+  type Binding, type Charge, type Checkpoint, type Columns, type Expression, type Node, type OriginalWork,
+  type Predicate, type Production, type ProgrammeChanges, type Relation, type Row, type SharedNode, type SharedWorkProgram,
   type SharedWorkRequest, type Source, type WorkProjection,
 } from './contracts.js';
 import { execute, infer, normalizeRow, normalizeScalar, qadd, qcmp, qdiv, qsub, qtext, quantity, type Rational } from './relational.js';
@@ -36,6 +36,29 @@ function allowed(source: Source, work: OriginalWork): boolean {
   const { classification: workClass, ...workPartition } = work.partition;
   return same(sourcePartition, workPartition) && (sourceClass === 'PUBLIC' || sourceClass === workClass);
 }
+function parametersReadBy(node: Node, parameters: OriginalWork['parameters']): OriginalWork['parameters'] {
+  const names = new Set<string>();
+  const expression = (value: Expression): void => {
+    switch (value.op) {
+      case 'param': names.add(value.name); break;
+      case 'field': case 'literal': break;
+      case 'round': expression(value.value); break;
+      default: expression(value.left); expression(value.right);
+    }
+  };
+  const predicate = (value: Predicate): void => {
+    if ('args' in value) value.args.forEach(predicate);
+    else if (value.op === 'not') predicate(value.arg);
+    else { expression(value.left); expression(value.right); }
+  };
+  switch (node.op) {
+    case 'filter': predicate(node.predicate); break;
+    case 'project': Object.values(node.fields).forEach(expression); break;
+    case 'sum': Object.values(node.values).forEach(expression); break;
+    case 'source': case 'join': case 'union': case 'select': break;
+  }
+  return Object.fromEntries(sorted(names).map(name => [name, parameters[name]!]));
+}
 function topological(work: OriginalWork): Node[] {
   const byId = new Map(work.programme.nodes.map(node => [node.id, node]));
   requireZ1(byId.size === work.programme.nodes.length && byId.has(work.programme.output), 'DUPLICATE_OR_MISSING_ORIGINAL_NODE');
@@ -65,6 +88,86 @@ function topological(work: OriginalWork): Node[] {
   }
   requireZ1(order.length === byId.size, 'ORIGINAL_DAG_CYCLE');
   return order;
+}
+interface OutputRewrite { rule: string; fromWorkId: string; toWorkId: string }
+/** Narrow exact laws only. Original nodes/bindings remain covered and charged;
+ * the certificate licenses reuse of an equal terminal relation, not admission. */
+function checkedOutputRewrites(request: SharedWorkRequest): OutputRewrite[] {
+  const sources = new Map(request.sources.map(source => [source.id, source]));
+  const first = new Map<string, { workId: string; side: string }>(), proofs: OutputRewrite[] = [];
+  for (const work of request.works) {
+    if (work.withdrawn || sourcesUsed(work).some(id => sources.get(id)!.revoked)) continue;
+    const nodes = new Map(work.programme.nodes.map(node => [node.id, node]));
+    const root = nodes.get(work.programme.output)!;
+    const fingerprints = new Map<string, string>();
+    for (const node of topological(work)) fingerprints.set(node.id, digest({
+      operator: operatorBody(node), inputs: inputNodes(node).map(id => fingerprints.get(id)!),
+      source: node.op === 'source' ? digest(sources.get(node.sourceId)!) : null,
+    }));
+    let rule = '', side = '', shape: unknown = null;
+    if (root.op === 'sum') {
+      const input = nodes.get(root.input)!;
+      if (input.op === 'filter') {
+        const union = nodes.get(input.input)!;
+        if (union.op === 'union' && union.semantics === 'bag' && union.inputs.length >= 2) {
+          rule = 'FILTER_BAG_UNION_EXACT_V1'; side = 'AFTER';
+          shape = { aggregate: operatorBody(root), predicate: input.predicate,
+            branches: union.inputs.map(id => fingerprints.get(id)!) };
+        }
+      } else if (input.op === 'union' && input.semantics === 'bag' && input.inputs.length >= 2) {
+        const branches = input.inputs.map(id => nodes.get(id)!);
+        const filter = branches[0]!;
+        if (filter.op === 'filter' && branches.every(node => node.op === 'filter' && same(node.predicate, filter.predicate))) {
+          rule = 'FILTER_BAG_UNION_EXACT_V1'; side = 'BEFORE';
+          shape = { aggregate: operatorBody(root), predicate: filter.predicate,
+            branches: branches.map(node => fingerprints.get((node as Extract<Node, { op: 'filter' }>).input)!) };
+        }
+      }
+    }
+    if (!rule) {
+      let aggregate: Extract<Node, { op: 'sum' }> | undefined;
+      let joined: Extract<Node, { op: 'join' }> | undefined, base: string | undefined;
+      if (root.op === 'sum') {
+        const input = nodes.get(root.input)!;
+        if (input.op === 'join') { aggregate = root; joined = input; base = input.left; side = 'AFTER'; }
+      } else if (root.op === 'project' && root.semantics === 'bag') {
+        const input = nodes.get(root.input)!;
+        if (input.op === 'join') {
+          const sum = nodes.get(input.left)!;
+          if (sum.op === 'sum') {
+            const fields = [...sum.keys, ...Object.keys(sum.values)].sort();
+            if (same(Object.keys(root.fields).sort(), fields) &&
+                fields.every(name => same(root.fields[name], { op: 'field', name }))) {
+              aggregate = sum; joined = input; base = sum.input; side = 'BEFORE';
+            }
+          }
+        }
+      }
+      if (aggregate?.op === 'sum' && joined?.op === 'join' && base &&
+          aggregate.keys.length > 0 && aggregate.keys.length === joined.on.length &&
+          joined.on.every((key, index) => key.left === aggregate!.keys[index] && key.right === key.left)) {
+        const dimension = nodes.get(joined.right)!;
+        if (dimension.op === 'source') {
+          const source = sources.get(dimension.sourceId)!;
+          const keys = source.rows.map(row => {
+            const normalized = normalizeRow(row, source.columns);
+            return stable(aggregate!.keys.map(name => normalized[name]!));
+          });
+          if (new Set(keys).size === keys.length) {
+            rule = 'SUM_UNIQUE_DIMENSION_JOIN_EXACT_V1';
+            shape = { aggregate: operatorBody(aggregate), join: operatorBody(joined),
+              base: fingerprints.get(base)!, dimension: fingerprints.get(joined.right)! };
+          }
+        }
+      }
+    }
+    if (!rule) continue;
+    const signature = digest({ rule, shape, partition: work.partition, parameters: work.parameters });
+    const old = first.get(signature);
+    if (old && old.side !== side) proofs.push({ rule, fromWorkId: old.workId, toWorkId: work.id });
+    else if (!old) first.set(signature, { workId: work.id, side });
+  }
+  return proofs;
 }
 function continuity(previous: Checkpoint, request: SharedWorkRequest): void {
   requireZ1(previous.schema === 'finnor.z1.checkpoint.v1', 'CHECKPOINT_VERSION_UNSUPPORTED');
@@ -202,7 +305,7 @@ export function produce(value: unknown, options: { previous?: Checkpoint; mode?:
         const outputSchema: Columns = infer(node, inputs, work.parameters, source);
         const inputKeys = inputNodes(node).map(id => projection.originalNodeKeys[id]!);
         const operator = operatorBody(node), key = digest({
-          partition: work.partition, build: request.identity.producerBuildIdentity, parameters: work.parameters,
+          partition: work.partition, build: request.identity.producerBuildIdentity, parameters: parametersReadBy(node, work.parameters),
           operator, inputs: inputKeys, source: source ? digest(source) : null, mode: mode === 'DIRECT' ? work.id : null,
         });
         projection.originalNodeKeys[node.id] = key;
@@ -212,6 +315,13 @@ export function produce(value: unknown, options: { previous?: Checkpoint; mode?:
         else plan.set(key, { key, node, work, source, operator, inputs: inputKeys, workIds: [work.id], outputSchema });
       }
       projection.outputKey = projection.originalNodeKeys[work.programme.output]!;
+    }
+    const rewrites = mode === 'SHARED' ? checkedOutputRewrites(request) : [];
+    const aliases = new Map<string, string>();
+    for (const proof of rewrites) {
+      const from = projections.find(p => p.workId === proof.fromWorkId)!.outputKey!;
+      const to = projections.find(p => p.workId === proof.toWorkId)!.outputKey!;
+      if (from !== to) aliases.set(to, from);
     }
     for (const entry of plan.values()) {
       timeCheck();
@@ -223,6 +333,16 @@ export function produce(value: unknown, options: { previous?: Checkpoint; mode?:
         requireZ1(bytes <= request.limits.maxBytes, 'RETAINED_BYTE_BOUND', 'INCOMPLETE');
         values.set(entry.key, old.value);
         checkpoint.cache[entry.key] = old;
+        continue;
+      }
+      const aliasKey = aliases.get(entry.key), alias = aliasKey ? values.get(aliasKey) : undefined;
+      if (alias) {
+        requireZ1(same(alias.columns, entry.outputSchema), 'CHECKED_REWRITE_OUTPUT_TYPE', 'COUNTEREXAMPLE');
+        bytes += Buffer.byteLength(stable(alias));
+        requireZ1(bytes <= request.limits.maxBytes, 'RETAINED_BYTE_BOUND', 'INCOMPLETE');
+        charge(entry.workIds, 1, 'STORAGE', entry.key);
+        values.set(entry.key, alias);
+        checkpoint.cache[entry.key] = { value: alias, digest: digest(alias) };
         continue;
       }
       const result = execute(entry.node, entry.inputs.map(key => values.get(key)!), entry.work.parameters, {
@@ -278,7 +398,7 @@ export function produce(value: unknown, options: { previous?: Checkpoint; mode?:
         initial: 'EXACT_STRUCTURAL_HASH_CONS_WITHIN_COMPLETE_LAWFUL_PARTITION',
         delta: 'RECOMPUTE_DIRTY_DEPENDENT_OPERATORS; REUSE_EXACT_UNCHANGED_VALUES',
         edits: 'RECOMPILE_ORIGINAL_CHANGED_GRAPH; PRESERVE_PARENT_HISTORY_COSTS_AND_OBLIGATIONS',
-        retractions: 'ATOMIC_EXACT_BAG_SUBTRACTION_BEFORE_DEPENDENT_RECOMPUTATION', rewrites: [],
+        retractions: 'ATOMIC_EXACT_BAG_SUBTRACTION_BEFORE_DEPENDENT_RECOMPUTATION', rewrites: rewrites.map(proof => stable(proof)),
       },
       costs: incurred, predecessorDigest: options.previous?.program?.envelope.immutableArtifactDigest ?? null,
       history: [...checkpoint.history], executionAuthorityGranted: false, protectedAdmission: false,
