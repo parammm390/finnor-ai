@@ -1,0 +1,33 @@
+name: W1 economic owning verification
+on:
+  push:
+    branches: [cloud/postz-w1]
+    paths:
+      - .github/workflows/w1-owning-*.yml
+      - finnor-os/**
+      - packages/**
+      - scripts/**
+      - package.json
+      - package-lock.json
+      - vendor/**
+permissions:
+  contents: read
+concurrency:
+  group: w1-owning-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-checks:
+    uses: ./.github/workflows/source-checks.yml
+  native-positive:
+    uses: ./.github/workflows/w1-owning-episode.yml
+    with:
+      mode: native
+  owning-regressions:
+    needs: native-positive
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [abc, internal-read-standing, internal-pressure, internal-revocation, internal-sequential, internal-drift]
+    uses: ./.github/workflows/w1-owning-episode.yml
+    with:
+      mode: ${{ matrix.mode }}

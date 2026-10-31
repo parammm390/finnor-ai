@@ -134,7 +134,7 @@ try {
   for (const [i, id] of people.entries()) {
     await admin.query(`INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name)
       VALUES($1,$2,$3,$4,'active','Controlled canonical actor, not a genuine consenting human')`,
-      [id, tenant, id + "@test.invalid", i === 2 || i === 3 ? "technician" : "owner"]);
+      [id, tenant, id + "@test.invalid", i === 2 || i === 3 ? "participant" : "owner"]);
     await admin.query(`INSERT INTO finnor_os.employee_actor_profiles(tenant_id,principal_id,actor_kind)
       VALUES($1,$2,$3)`, [tenant, id, [0, 2, 3].includes(i) ? "HUMAN" : "SERVICE"]);
   }
@@ -333,7 +333,7 @@ try {
   const workDone = await api("works/" + works[3]); assert.equal(workDone.body.work.work.status, "completed");
   await save("actual-nonowner-external-recipient-and-independent-verification.json", { scoped, otherParticipantStatus: foreign.status,
     ownerConsentStatus: ownerConsent.status, verified, final: providerDone.body, originalWork: workDone.body, genuineHumanQualified: false });
-  pass("actual-nonowner-external-acceptance-delivery-independent-verification", { canonicalRole: "technician", voluntaryRecipient: true,
+  pass("actual-nonowner-external-acceptance-delivery-independent-verification", { canonicalRole: "participant", voluntaryRecipient: true,
     ownerConsentStatus: 403, foreignParticipantStatus: 404, originalWorkCompleted: true, genuineHumanQualified: false });
   const changedSnapshot = structuredClone(snapshots[125]); changedSnapshot.actor.capabilities = [];
   await withTenantTransaction(tenant, { userId: principal }, async (_db, c) =>

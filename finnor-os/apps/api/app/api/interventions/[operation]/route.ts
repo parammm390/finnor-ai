@@ -43,11 +43,13 @@ async function boundedJson(req: Request): Promise<unknown> {
 }
 export async function POST(req: Request, { params }: { params: Promise<{ operation: string }> }): Promise<Response> {
   try {
-    const [auth, route] = await Promise.all([requireContext(req), params]), ctx = { auth };
+    const [auth, route] = await Promise.all([requireContext(req), params]);
+    if (auth.role !== 'owner') return response({ error: 'Current institutional owner required', code: 'FORBIDDEN' }, 403);
+    const ctx = { auth }, capabilityActor = { ...auth, role: auth.role };
     const body = await boundedJson(req);
     switch (route.operation) {
-      case 'assess-pywhy': { const accepted = await createCapabilityRun(auth, conditionalAssessment.parse(body)); return response({ ...accepted, owner: 'S3', assessmentRole: 'CONDITIONAL_ASSESSMENT_NOT_TEMPORAL_MODEL' }, accepted.replayed ? 200 : 202); }
-      case 'read-pywhy-assessment': { const input = conditionalRead.parse(body), run = await readCapabilityRun(auth, input.runId); if (!run || run.request.kind !== 'pywhy_assess' || !run.request.interventionModelRef) throw new CapabilityEngineError('PYWHY_S3_ASSESSMENT_NOT_FOUND'); return response({ run, owner: 'S3', temporalModelReplaced: false }); }
+      case 'assess-pywhy': { const accepted = await createCapabilityRun(capabilityActor, conditionalAssessment.parse(body)); return response({ ...accepted, owner: 'S3', assessmentRole: 'CONDITIONAL_ASSESSMENT_NOT_TEMPORAL_MODEL' }, accepted.replayed ? 200 : 202); }
+      case 'read-pywhy-assessment': { const input = conditionalRead.parse(body), run = await readCapabilityRun(capabilityActor, input.runId); if (!run || run.request.kind !== 'pywhy_assess' || !run.request.interventionModelRef) throw new CapabilityEngineError('PYWHY_S3_ASSESSMENT_NOT_FOUND'); return response({ run, owner: 'S3', temporalModelReplaced: false }); }
       case 'exact-control-model': return response(await prepareEnterpriseExactControlModel(ctx,z.object({workId:z.string().uuid(),workRevision:z.string().uuid(),modelBytes:z.string().max(2*1024*1024),mandate:z.unknown()}).strict().parse(body)));
       case 'fit': return response(await fitEnterpriseInterventionModel(ctx, fit.parse(body).request));
       case 'refit': { const input = refit.parse(body); return response(await fitEnterpriseInterventionModel(ctx, input.request, input.priorRef)); }

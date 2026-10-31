@@ -30,8 +30,8 @@
     },
     {
       "file": "apps/api/next.config.mjs",
-      "bytes": 6779,
-      "sha256": "e862207e53d1e67ebf3df8e8f6c29304a5c60179600cb5c671239e09414cf189"
+      "bytes": 6874,
+      "sha256": "341a40aa95b1cb2798ec0dc5a56e5d476ea74fcc724fc50e4fabb879fcb6ece1"
     },
     {
       "file": "apps/api/package.json",
@@ -120,8 +120,8 @@
     },
     {
       "file": "packages/authority/src/index.ts",
-      "bytes": 64283,
-      "sha256": "a1a76c6af95f6d5326f8ee46b826a1ed9ed7384919c7fa67927d8de312d270a4"
+      "bytes": 64690,
+      "sha256": "921fe66b8fcd4febb2713ef7ce8b1bd421d482681ee61e8cd51342fe7ffa4668"
     },
     {
       "file": "packages/authority/src/relationship-policy.ts",
@@ -450,8 +450,8 @@
     },
     {
       "file": "packages/db/migration-head.ts",
-      "bytes": 153,
-      "sha256": "ca5040d3bd2cb49800f59aa32451d92101e68d3448712b9f9344f23fd215a145"
+      "bytes": 152,
+      "sha256": "e6159f3699e9a9ca49ca3afef1653ee7041bd80ee3ac75f6950d60c3a72a27a9"
     },
     {
       "file": "packages/db/migrations/0150_portfolio_resource_clearing.sql",
@@ -480,8 +480,8 @@
     },
     {
       "file": "packages/db/schema.ts",
-      "bytes": 324471,
-      "sha256": "66eb9e70d9f4ae2e0d1c89b5f5d13de604814d31856258f7caf4ac974224aee1"
+      "bytes": 324486,
+      "sha256": "b55b923fc2a96b8f7099f6d67f895e99591037fb4764688d7fb384971118d343"
     },
     {
       "file": "packages/document-ir/package.json",
@@ -985,13 +985,13 @@
     },
     {
       "file": "packages/governed-execution/src/executor-linux.ts",
-      "bytes": 8758,
-      "sha256": "10f5af219b13cec03d4b20773237fe6fa59fca97905c7c07e1a82fe6e99c88f6"
+      "bytes": 8865,
+      "sha256": "b4c1bc8323c7106415c0c999586f642d821ef29a9876dd74305b916e878b4366"
     },
     {
       "file": "packages/governed-execution/src/executor.ts",
-      "bytes": 8321,
-      "sha256": "a19ba246f8c9f62640124ae7f2eb865c3326fc716d67aa34011a7b3e93efeeda"
+      "bytes": 8370,
+      "sha256": "86cd0e8bf4982f7f8648a0493419d99f93d316a05b15875b2f554b82cea1c034"
     },
     {
       "file": "packages/governed-execution/src/linux-node-policy.ts",
@@ -1650,8 +1650,8 @@
     },
     {
       "file": "packages/private-equity/src/capital-program/r2-native.ts",
-      "bytes": 22729,
-      "sha256": "7f2252d264c916400a84803441de12664e55d36307a834dad1b7e69c8c3bad6c"
+      "bytes": 22784,
+      "sha256": "d441139b1c613715fb1cd8a8dc70a885e2432a0f19e4c37e2464e32419e8f383"
     },
     {
       "file": "packages/private-equity/src/capital-program/r2-owners.ts",
@@ -2181,7 +2181,7 @@
     {
       "file": "packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
       "bytes": 8649,
-      "sha256": "8003a0a042e9ce4dc2b097cbe79707f19030e62b43261e935b5929ebc5f4b56e"
+      "sha256": "87d8a10a80c4af2ab73c4f471ee2a361614857d109fe64e40c3288a049486575"
     },
     {
       "file": "packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2551,7 +2551,7 @@
     {
       "file": "packages/private-equity/src/policy-learning/source-manifest.generated.ts",
       "bytes": 13612,
-      "sha256": "74df543bd11a5763905d715b4a5dae062c5b38dbcfb4e87ee1dafc2743714ab9"
+      "sha256": "8fd6b056f671baa93f37a31d823a137c1351ac00db42de7e1c1bcbe8991b0254"
     },
     {
       "file": "packages/private-equity/src/policy-learning/source-paths.ts",
@@ -2891,7 +2891,7 @@
     {
       "file": "packages/private-equity/src/system-identification/source-manifest.generated.ts",
       "bytes": 19556,
-      "sha256": "dbd85119d60bc0bd1e883e25b6b3c78345d7a4829e87dfbaa947382b695c9554"
+      "sha256": "0adb45dba098f70dd27ba83a2a99c14a37840b3e22f64292965cbf50d628791e"
     },
     {
       "file": "packages/private-equity/src/system-identification/source-paths.ts",
@@ -3080,8 +3080,8 @@
     },
     {
       "file": "packages/security/src/auth.ts",
-      "bytes": 6024,
-      "sha256": "2a770168e34c67705f2ff9aca4c552e2818806368c5784f738cace7e78d4d25a"
+      "bytes": 6145,
+      "sha256": "a718ebd54324745f00f79d59ab380bfd2665c566b9a5c23ba5bf45e132ea319d"
     },
     {
       "file": "packages/security/src/connections.ts",
@@ -3270,8 +3270,8 @@
     },
     {
       "file": "packages/shared-types/src/index.ts",
-      "bytes": 17428,
-      "sha256": "434fa1e3da3a04816485bb0b18efbc05b0e8a08da5609f9f1bdc824ae02d45de"
+      "bytes": 17444,
+      "sha256": "5b7467e49ce15e512fa436d6c87388035744c40fcc3bfed737a6a3f24234e2bf"
     },
     {
       "file": "packages/shared-types/src/interventions.ts",

@@ -1,7 +1,7 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-10-31T19:13:06.661Z",
-  "sourceBaseCommit": "f3a83ba7a2d193d81150db0ef29ab618a201774c",
+  "generatedAt": "2026-10-31T19:27:20.579Z",
+  "sourceBaseCommit": "d48af5ef367d04f81912e4e21ac6cd03162cbde8",
   "manifestSha256": "fb3c1c4d71d0bf71711e315f23ab269d6ef2841f44487cb6927216f6a231f4e4",
   "formsSha256": "75706ba9ac99c79ed7f485e001b401d01fd91d6dd7df43d3fe9aa9c941fbea8c",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -1025,7 +1025,7 @@
       },
       {
         "file": "src/components/centropy/lib/centropy-auth.tsx",
-        "sha256": "6334246bb88b234b28896bea124ea359608a676273b44c0b7997c3cc30035d34"
+        "sha256": "93992a61c3951c89360585268dada4cdbee0cd1f8f84c01c9812f3515d2b88e8"
       },
       {
         "file": "src/lib/centropy/supabase-browser.ts",

@@ -157,7 +157,7 @@ async function lockCanonicalAuthorityTx(ctx: TenantContext, client: PoolClient, 
        JOIN finnor_os.users u ON u.tenant_id=a.tenant_id
       WHERE a.tenant_id=$1 AND u.id=$2 AND u.status='active' AND u.role=ANY($3::text[])
       ${lock ? 'FOR SHARE OF a,u' : ''}`, [ctx.tenantId, ctx.employeeId ?? ctx.userId,
-        workforceParticipant ? ["owner", "dispatcher", "technician"] : ["owner"]]);
+        workforceParticipant ? ["owner", "participant"] : ["owner"]]);
   if (result.rowCount !== 1 || ctx.employeeId && ctx.employeeId !== ctx.userId) throw new Error("CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE");
   return result.rows[0]!.revision;
 }
@@ -242,7 +242,7 @@ async function loadAuthorities(db: AuthorityReadDb, tenantId: string, employeeId
     return [employeeId, {
       revision: state?.revision ?? 1,
       employee: employee && (employee.role === "owner" || workforceParticipant &&
-        ["dispatcher", "technician"].includes(employee.role)) ? employee : null,
+        employee.role === "participant") ? employee : null,
       assignments,
       grants: grants.filter((grant) => employeeRoleIds.has(grant.roleId)),
     }] as const;
@@ -361,6 +361,12 @@ export async function evaluateAuthorityTx(ctx: TenantContext, request: Authority
 }
 
 async function evaluateAuthorityOnDb(ctx: TenantContext, request: AuthorityRequest, db: Db): Promise<AuthorityDecision> {
+    if (ctx.role !== "owner") {
+      const [state] = await db.select({ revision: authorityStates.revision }).from(authorityStates)
+        .where(eq(authorityStates.tenantId, ctx.tenantId)).limit(1);
+      return insertDecision(db, { ctx, request, employeeId: ctx.employeeId ?? null,
+        revision: state?.revision ?? 1, outcome: "denied", reasonCode: "participant_requires_scoped_workforce_authority", evidence: {} });
+    }
     const employeeId = ctx.employeeId ?? (UUID.test(ctx.userId) ? ctx.userId : null);
     // Service principals are explicit and never synthesized from a human role.
     if (!employeeId) {
@@ -740,7 +746,7 @@ export async function readWorkforceAuthoritySourcesTx(ctx: TenantContext,
        JOIN finnor_os.users u ON u.tenant_id=a.tenant_id
       WHERE a.tenant_id=$1 AND u.id=ANY($2::uuid[]) AND u.status='active'
         AND u.role=ANY($3::text[]) ORDER BY u.id FOR SHARE OF a,u`,
-    [ctx.tenantId, ids, ["owner", "dispatcher", "technician"]]);
+    [ctx.tenantId, ids, ["owner", "participant"]]);
   const revisions = new Map(locked.rows.map(row => [row.id, row.revision]));
   let pending = ids.filter(id => revisions.has(id));
   for (let attempt = 0; attempt < 2 && pending.length; attempt++) {
@@ -859,7 +865,7 @@ async function canExerciseAuthorityOnDb(ctx: TenantContext, request: AuthorityRe
   workforceParticipant = false, preloaded?: LoadedAuthority): Promise<boolean> {
     const employeeId = ctx.employeeId ?? (UUID.test(ctx.userId) ? ctx.userId : null);
     const legacyApprovalAllowed = async (): Promise<boolean> => {
-      if (process.env.NODE_ENV === "production" || request.operation !== "approval") return false;
+      if (process.env.NODE_ENV === "production" || request.operation !== "approval" || ctx.role !== "owner") return false;
       const actionType = request.capability.replace(/^approve:/, "");
       const permissions = await db.select({ actionType: rolePermissions.actionType, canApprove: rolePermissions.canApprove }).from(rolePermissions).where(and(
         eq(rolePermissions.tenantId, ctx.tenantId),

@@ -13,7 +13,7 @@
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { getPool, queryWithExecutionDeadline, executionDeadlineMilliseconds } from "@finnor/db";
-import type { TenantContext, Role } from "@finnor/shared-types";
+import type { TenantContext } from "@finnor/shared-types";
 
 export class AuthVerificationError extends Error {
   constructor(
@@ -93,11 +93,13 @@ export async function resolveTenantContextByEmail(email: string): Promise<Identi
   const row = rows[0];
   if (!row) return null;
   if (row.employee_status !== "active") throw new AuthVerificationError("Employee access is suspended", 403);
+  if (row.role !== "owner" && row.role !== "participant")
+    throw new AuthVerificationError("Product identity is unavailable", 403);
   return {
     userId: row.id,
     employeeId: row.id,
     tenantId: row.tenant_id,
-    role: row.role as Role,
+    role: row.role,
     authorityRevision: Number(row.authority_revision ?? 1),
   };
 }

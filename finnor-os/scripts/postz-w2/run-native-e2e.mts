@@ -138,7 +138,7 @@ try {
   for (const [id, tenantId] of [[principal, tenant], [recipient, tenant], [unrelated, tenant], [outsider, otherTenant]]) {
     await admin.query(`INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name)
       VALUES($1,$2,$3,$4,'active','Controlled service identity, not a human')`,
-      [id, tenantId, id + "@test.invalid", id === recipient ? "technician" : "owner"]);
+      [id, tenantId, id + "@test.invalid", id === recipient ? "participant" : "owner"]);
     await admin.query("INSERT INTO finnor_os.employee_actor_profiles(tenant_id,principal_id,actor_kind) VALUES($1,$2,'SERVICE')", [tenantId, id]);
   }
   // Explicit disposable standing authority, NOT an enrollment side effect or
@@ -229,8 +229,23 @@ try {
       body: await response.json() as any };
   };
   {
+    await save("participant-retired-role-original.json", { recipient,
+      existingRetiredRoles: ["dispatcher", "technician"], expectedStatus: 403,
+      currentRole: "participant", grantsAdded: false });
+    const denied = [];
+    try {
+      for (const retired of ["dispatcher", "technician"]) {
+        await admin.query("UPDATE finnor_os.users SET role=$2 WHERE id=$1", [recipient, retired]);
+        const response = await api("me", undefined, recipient);
+        assert.equal(response.status, 403);
+        denied.push({ role: retired, status: response.status });
+      }
+    } finally {
+      await admin.query("UPDATE finnor_os.users SET role='participant' WHERE id=$1", [recipient]);
+    }
+    await save("participant-retired-role-result.json", { status: "PASS", denied, restoredRole: "participant" });
     const me = await api("me", undefined, recipient);
-    assert.equal(me.status, 200, JSON.stringify(me.body)); assert.equal(me.body.role, "technician");
+    assert.equal(me.status, 200, JSON.stringify(me.body)); assert.equal(me.body.role, "participant");
     const authority = await withTenantTransaction(tenant, { userId: recipient }, async (_db, c) => {
       const ctx = { ...auth, userId: recipient, employeeId: recipient };
       const request = { operation: "query" as const, capability: "query:work", resource: { type: "work", id: workIds[0]! }, risk: "low" as const };
@@ -242,7 +257,7 @@ try {
     });
     assert.deepEqual(authority, { generic: "CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE", workforce: true, unrelatedProtected: false });
     await save("actual-nonowner-same-canonical-grants-without-owner-promotion.json",
-      { me, authority, canonicalRole: "technician", ordinaryIdentity: true, enrollmentMintedGrant: false,
+      { me, authority, canonicalRole: "participant", ordinaryIdentity: true, enrollmentMintedGrant: false,
         genericRetiredRoleStillRefused: true, realHumanQualified: false });
     pass("actual-nonowner-identity-and-workforce-only-canonical-standing-authority", authority);
   }

@@ -1,7 +1,7 @@
 /** Build/seal the ordinary callee root. Run as image-build root only. */
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
-import {chmod,copyFile,lstat,mkdir,readFile,readdir,realpath,writeFile} from 'node:fs/promises';
+import {chmod,chown,copyFile,lstat,mkdir,readFile,readdir,realpath,writeFile} from 'node:fs/promises';
 import {dirname,join} from 'node:path';
 const [node,launcher,base,mode]=process.argv.slice(2);
 if(process.getuid()!==0||!node||!launcher||base!==`/opt/finnor-s6-jail-${process.arch}`||!['x64','arm64'].includes(process.arch))throw Error('JAIL_BUILD_IDENTITY');
@@ -9,17 +9,17 @@ const root=base+'/root',hash=bytes=>createHash('sha256').update(bytes).digest('h
 await mkdir(base,{recursive:true,mode:0o755});
 await mkdir(root,{mode:0o755});
 for(const path of ['lib','lib64','usr/lib','dev','jobs'])await mkdir(root+'/'+path,{recursive:true,mode:0o755});
-await copyFile(await realpath(node),root+'/node');await chmod(root+'/node',0o555);
+await copyFile(await realpath(node),root+'/node');await chown(root+'/node',0,0);await chmod(root+'/node',0o555);
 const listing=execFileSync('/usr/bin/ldd',[node],{encoding:'utf8',timeout:10000,env:{PATH:'/usr/bin:/bin',LANG:'C'}});
 const dependencies=[...new Set([...listing.matchAll(/(?:=>\s*)?(\/[^\s()]+)/g)].map(match=>match[1]))];
 if(!dependencies.length||dependencies.length>32)throw Error('JAIL_DYNAMIC_RUNTIME_INVENTORY');
 for(const path of dependencies){
  if(!/^\/(?:lib|lib64|usr\/lib)\//.test(path)||path.split('/').includes('..'))throw Error('JAIL_LIBRARY_PATH');
  await mkdir(dirname(root+path),{recursive:true,mode:0o755});
- await copyFile(await realpath(path),root+path);await chmod(root+path,0o555);
+ await copyFile(await realpath(path),root+path);await chown(root+path,0,0);await chmod(root+path,0o555);
 }
 if(launcher!==base+'/launcher')await copyFile(launcher,base+'/launcher');
-await chmod(base+'/launcher',0o555);
+await chown(base+'/launcher',0,0);await chmod(base+'/launcher',0o555);
 await chmod(root+'/jobs',0o1733);
 const files=[];
 async function visit(path){
@@ -28,7 +28,7 @@ async function visit(path){
   if(full===root+'/jobs'||full===root+'/dev')continue;
   if(st.isDirectory()){if(st.uid!==0||(st.mode&0o022))throw Error('JAIL_DIRECTORY_CUSTODY');await visit(full);await chmod(full,0o555);}
   else if(st.isFile()&&st.uid===0&&!(st.mode&0o6022))files.push({path:full.slice(base.length+1),sha256:hash(await readFile(full))});
-  else throw Error('JAIL_UNSEALED_ENTRY');
+  else throw Object.assign(Error('JAIL_UNSEALED_ENTRY'),{path:full.slice(base.length+1),ownerUid:st.uid,mode:st.mode&0o7777});
  }
 }
 await visit(root);files.push({path:'launcher',sha256:hash(await readFile(base+'/launcher'))});

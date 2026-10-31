@@ -31,7 +31,7 @@ const nextConfig = {
   // The separately compiled S6 runtime uses Node ESM .js specifiers. Resolve
   // those same imports to original TS when bundling the ordinary API client.
   experimental: { extensionAlias: { ".js": [".ts", ".tsx", ".js"] } },
-  webpack: (config, { webpack, isServer }) => {
+  webpack: (config, { webpack, isServer, dev }) => {
     // Native numerical workers read and hash their original files. Webpack's
     // asset URL wrapper is not a Node file URL and cannot replace that binding.
     config.module.parser = {
@@ -44,7 +44,8 @@ const nextConfig = {
     if (isServer) {
       // API release builds use an isolated context once. Avoid writing a large
       // disposable disk cache alongside the immutable function artifacts.
-      config.cache = { type: "memory" };
+      // Development retains Next's bounded cache across repeated compilations.
+      if (!dev) config.cache = { type: "memory" };
       // These four imports deliberately load retained, hashed TS producer
       // files. A webpack expression-context module cannot represent file URLs.
       config.module.rules.push({

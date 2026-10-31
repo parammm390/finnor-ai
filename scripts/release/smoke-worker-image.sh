@@ -310,7 +310,8 @@ if [[ -f finnor-os/scripts/r3/run-owner-e2e.mts ]]; then
     --env FINNOR_R3_INSTALLED_SOURCE_COMMIT="$FINNOR_COMMIT_SHA" \
     --env FINNOR_R3_EVIDENCE_DIR=/r3-evidence/owner \
     --mount "type=bind,source=$evidence/linux-r3-runtime,target=/r3-evidence" \
-    "$image" node --import=tsx scripts/r3/run-owner-e2e.mts \
+    --memory=4g \
+    "$image" node --max-old-space-size=2048 --import=tsx scripts/r3/run-owner-e2e.mts \
     > "$evidence/linux-r3-runtime/owner.log" 2>&1; then
     :
   else

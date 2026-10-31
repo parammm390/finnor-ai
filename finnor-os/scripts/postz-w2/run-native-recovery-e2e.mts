@@ -116,7 +116,7 @@ try {
   for (const [i, id] of people.entries()) {
     await admin.query(`INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name)
       VALUES($1,$2,$3,$4,'active','Controlled principal, not genuine human qualification')`,
-    [id, tenant, id + "@test.invalid", i === 1 || i === 2 ? "technician" : "owner"]);
+    [id, tenant, id + "@test.invalid", i === 1 || i === 2 ? "participant" : "owner"]);
     await admin.query("INSERT INTO finnor_os.employee_actor_profiles(tenant_id,principal_id,actor_kind) VALUES($1,$2,$3)",
       [tenant, id, i === 1 || i === 2 ? "HUMAN" : "SERVICE"]);
   }

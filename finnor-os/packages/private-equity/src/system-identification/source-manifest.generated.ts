@@ -140,11 +140,11 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "8003a0a042e9ce4dc2b097cbe79707f19030e62b43261e935b5929ebc5f4b56e"
+      "sha256": "87d8a10a80c4af2ab73c4f471ee2a361614857d109fe64e40c3288a049486575"
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
-      "sha256": "a1a76c6af95f6d5326f8ee46b826a1ed9ed7384919c7fa67927d8de312d270a4"
+      "sha256": "921fe66b8fcd4febb2713ef7ce8b1bd421d482681ee61e8cd51342fe7ffa4668"
     },
     {
       "path": "finnor-os/packages/private-equity/src/owner-context.ts",
@@ -172,7 +172,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "ca5040d3bd2cb49800f59aa32451d92101e68d3448712b9f9344f23fd215a145"
+      "sha256": "e6159f3699e9a9ca49ca3afef1653ee7041bd80ee3ac75f6950d60c3a72a27a9"
     },
     {
       "path": "finnor-os/packages/db/migrations/0190_x5_experience_policy.sql",
@@ -236,7 +236,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/shared-types/src/index.ts",
-      "sha256": "434fa1e3da3a04816485bb0b18efbc05b0e8a08da5609f9f1bdc824ae02d45de"
+      "sha256": "5b7467e49ce15e512fa436d6c87388035744c40fcc3bfed737a6a3f24234e2bf"
     },
     {
       "path": "finnor-os/packages/shared-types/src/primary-diligence.ts",
@@ -288,7 +288,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/security/src/auth.ts",
-      "sha256": "2a770168e34c67705f2ff9aca4c552e2818806368c5784f738cace7e78d4d25a"
+      "sha256": "a718ebd54324745f00f79d59ab380bfd2665c566b9a5c23ba5bf45e132ea319d"
     },
     {
       "path": "src/components/centropy/canvas/EnterpriseApplicationPanel.tsx",
@@ -368,7 +368,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "sha256": "74df543bd11a5763905d715b4a5dae062c5b38dbcfb4e87ee1dafc2743714ab9"
+      "sha256": "8fd6b056f671baa93f37a31d823a137c1351ac00db42de7e1c1bcbe8991b0254"
     },
     {
       "path": "finnor-os/packages/epistemic-runtime/src/identification.ts",
@@ -444,7 +444,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/api/next.config.mjs",
-      "sha256": "e862207e53d1e67ebf3df8e8f6c29304a5c60179600cb5c671239e09414cf189"
+      "sha256": "341a40aa95b1cb2798ec0dc5a56e5d476ea74fcc724fc50e4fabb879fcb6ece1"
     },
     {
       "path": "finnor-os/packages/governed-execution/src/canonical.ts",

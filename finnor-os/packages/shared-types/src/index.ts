@@ -30,7 +30,7 @@ export * from "./elicitation-protocol";
 export * from "./primary-diligence";
 export * from "./bilateral-opportunities";
 
-export type Role = "owner";
+export type Role = "owner" | "participant";
 
 export interface TenantContext {
   tenantId: string;

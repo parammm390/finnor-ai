@@ -14,7 +14,7 @@ import { centropyGet } from "./api"
 // The institutional shell remains owner-only. Existing non-owner canonical
 // roles may open the separate, recipient-scoped workforce workspace; this union
 // grants no backend capability and never falls back to the owner presentation.
-export type CentropyRole = "owner" | "dispatcher" | "technician"
+export type CentropyRole = "owner" | "participant"
 
 // Mirrors the old getCentropyKey() shape: a synchronous getter usable outside React
 // (api.ts isn't a component) that always reflects the latest session from the one
@@ -68,7 +68,7 @@ async function withTimeout<T>(promise: Promise<T>): Promise<T> {
 }
 
 function isCentropyRole(value: unknown): value is CentropyRole {
-  return value === "owner" || value === "dispatcher" || value === "technician"
+  return value === "owner" || value === "participant"
 }
 
 interface CentropyAuthState {

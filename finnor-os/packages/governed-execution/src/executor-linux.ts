@@ -107,11 +107,12 @@ const linuxBootstrapSchema=z.object({
  fixedJail:z.literal(true),landlockAbi:z.number().int().min(2),filterSha256:z.string().regex(/^[a-f0-9]{64}$/),
 }).strict();
 
-export async function readLinuxBootstrap(path:string,pid:number|undefined,filterSha256:string){
+export async function readLinuxBootstrap(path:string,expected:{guardianPid:number|undefined;parentPid:number|null|undefined;filterSha256:string}){
+ const {guardianPid:pid,parentPid,filterSha256}=expected;
  const fd=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW);
  try{const st=await fd.stat();if(!st.isFile()||st.size>4096||st.uid!==process.getuid?.()||st.nlink!==1)throw Error('ISOLATION_BOOTSTRAP_RECEIPT_CUSTODY');
   const value=linuxBootstrapSchema.parse(JSON.parse(await fd.readFile('utf8')));
-  if(value.pid!==pid||value.guardianPid!==pid||value.guestPid===pid||value.guestParentPid!==pid||value.processGroupId!==pid||value.parentPid!==process.pid||value.uid!==process.getuid?.()||value.filterSha256!==filterSha256||!/^[a-f0-9]{64}$/.test(filterSha256))throw Error('ISOLATION_BOOTSTRAP_RECEIPT_INVALID');
+  if(value.pid!==pid||value.guardianPid!==pid||value.guestPid===pid||value.guestParentPid!==pid||value.processGroupId!==pid||value.parentPid!==parentPid||value.uid!==process.getuid?.()||value.filterSha256!==filterSha256||!/^[a-f0-9]{64}$/.test(filterSha256))throw Error('ISOLATION_BOOTSTRAP_RECEIPT_INVALID');
   return value;
  }finally{await fd.close();}
 }

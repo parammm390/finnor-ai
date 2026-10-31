@@ -236,7 +236,7 @@ export const users = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
     email: text("email").notNull().unique(),
-    role: text("role", { enum: ["owner", "dispatcher", "technician"] }).notNull(),
+    role: text("role", { enum: ["owner", "participant", "dispatcher", "technician"] }).notNull(),
     displayName: text("display_name"),
     phoneNumber: text("phone_number"),
     status: text("status", { enum: ["active", "suspended"] }).notNull().default("active"),
