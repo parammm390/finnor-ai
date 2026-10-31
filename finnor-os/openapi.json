@@ -17180,6 +17180,1226 @@
         ],
         "additionalProperties": false
       },
+      "Y5Uniform-submit": {
+        "type": "object",
+        "properties": {
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "allocation": {
+            "type": "object",
+            "properties": {
+              "mandate": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              },
+              "policyRefs": {
+                "maxItems": 128,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "owner": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "version": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "contentDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  },
+                  "required": [
+                    "owner",
+                    "id",
+                    "version",
+                    "contentDigest"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "resourceRefs": {
+                "maxItems": 16,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "owner": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "version": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "contentDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  },
+                  "required": [
+                    "owner",
+                    "id",
+                    "version",
+                    "contentDigest"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "jointModel": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              },
+              "demandBindings": {
+                "maxItems": 1024,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "policyRef": {
+                      "type": "object",
+                      "properties": {
+                        "owner": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "version": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "contentDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        }
+                      },
+                      "required": [
+                        "owner",
+                        "id",
+                        "version",
+                        "contentDigest"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "dimensionId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "component": {
+                      "type": "string",
+                      "enum": [
+                        "TOTAL",
+                        "OCCUPANCY"
+                      ]
+                    },
+                    "resourceId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "conversion": {
+                      "type": "string",
+                      "const": "IDENTICAL_UNIT_NO_CONVERSION"
+                    }
+                  },
+                  "required": [
+                    "policyRef",
+                    "dimensionId",
+                    "component",
+                    "resourceId",
+                    "conversion"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "funding": {
+                "maxItems": 128,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "policyRef": {
+                      "type": "object",
+                      "properties": {
+                        "owner": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "version": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "contentDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        }
+                      },
+                      "required": [
+                        "owner",
+                        "id",
+                        "version",
+                        "contentDigest"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "actionCostResourceId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "terminalLiabilityResourceId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "humanSecondsResourceId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "operatingCash": {
+                      "type": "object",
+                      "properties": {
+                        "schema": {
+                          "type": "string",
+                          "const": "finnor.s5.operating-cash-binding.v1"
+                        },
+                        "resourceId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "basis": {
+                          "type": "string",
+                          "const": "GROSS_OUTFLOWS_NO_FORECAST_PROCEEDS"
+                        }
+                      },
+                      "required": [
+                        "schema",
+                        "resourceId",
+                        "basis"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "policyRef",
+                    "actionCostResourceId",
+                    "terminalLiabilityResourceId",
+                    "humanSecondsResourceId"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "idempotencyKey": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            },
+            "required": [
+              "mandate",
+              "policyRefs",
+              "resourceRefs",
+              "jointModel",
+              "demandBindings",
+              "funding",
+              "idempotencyKey"
+            ],
+            "additionalProperties": false
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "limits": {
+            "type": "object",
+            "properties": {
+              "wallMs": {
+                "type": "integer",
+                "minimum": 30000,
+                "maximum": 3600000
+              },
+              "maxAttempts": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2
+              },
+              "maxUses": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16
+              }
+            },
+            "required": [
+              "wallMs",
+              "maxAttempts",
+              "maxUses"
+            ],
+            "additionalProperties": false
+          },
+          "baselineManifestRef": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "owner": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "version": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "contentDigest": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                },
+                "required": [
+                  "owner",
+                  "id",
+                  "version",
+                  "contentDigest"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "root",
+          "workId",
+          "allocation",
+          "idempotencyKey",
+          "limits",
+          "baselineManifestRef"
+        ],
+        "additionalProperties": false
+      },
+      "Y5Uniform-read": {
+        "type": "object",
+        "properties": {
+          "discoveryId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "includeCapsule": {
+            "type": "boolean"
+          },
+          "includeHistory": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "discoveryId"
+        ],
+        "additionalProperties": false
+      },
+      "Y5Uniform-list": {
+        "type": "object",
+        "properties": {
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "root",
+          "workId"
+        ],
+        "additionalProperties": false
+      },
+      "Y5Uniform-consume": {
+        "type": "object",
+        "properties": {
+          "discoveryId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "allocation": {
+            "type": "object",
+            "properties": {
+              "mandate": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              },
+              "policyRefs": {
+                "maxItems": 128,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "owner": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "version": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "contentDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  },
+                  "required": [
+                    "owner",
+                    "id",
+                    "version",
+                    "contentDigest"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "resourceRefs": {
+                "maxItems": 16,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "owner": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "id": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "version": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "contentDigest": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  },
+                  "required": [
+                    "owner",
+                    "id",
+                    "version",
+                    "contentDigest"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "jointModel": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              },
+              "demandBindings": {
+                "maxItems": 1024,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "policyRef": {
+                      "type": "object",
+                      "properties": {
+                        "owner": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "version": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "contentDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        }
+                      },
+                      "required": [
+                        "owner",
+                        "id",
+                        "version",
+                        "contentDigest"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "dimensionId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "component": {
+                      "type": "string",
+                      "enum": [
+                        "TOTAL",
+                        "OCCUPANCY"
+                      ]
+                    },
+                    "resourceId": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "conversion": {
+                      "type": "string",
+                      "const": "IDENTICAL_UNIT_NO_CONVERSION"
+                    }
+                  },
+                  "required": [
+                    "policyRef",
+                    "dimensionId",
+                    "component",
+                    "resourceId",
+                    "conversion"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "funding": {
+                "maxItems": 128,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "policyRef": {
+                      "type": "object",
+                      "properties": {
+                        "owner": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "id": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "version": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "contentDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        }
+                      },
+                      "required": [
+                        "owner",
+                        "id",
+                        "version",
+                        "contentDigest"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "actionCostResourceId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "terminalLiabilityResourceId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "humanSecondsResourceId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "operatingCash": {
+                      "type": "object",
+                      "properties": {
+                        "schema": {
+                          "type": "string",
+                          "const": "finnor.s5.operating-cash-binding.v1"
+                        },
+                        "resourceId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "basis": {
+                          "type": "string",
+                          "const": "GROSS_OUTFLOWS_NO_FORECAST_PROCEEDS"
+                        }
+                      },
+                      "required": [
+                        "schema",
+                        "resourceId",
+                        "basis"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "policyRef",
+                    "actionCostResourceId",
+                    "terminalLiabilityResourceId",
+                    "humanSecondsResourceId"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "idempotencyKey": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            },
+            "required": [
+              "mandate",
+              "policyRefs",
+              "resourceRefs",
+              "jointModel",
+              "demandBindings",
+              "funding",
+              "idempotencyKey"
+            ],
+            "additionalProperties": false
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "fallback": {
+            "type": "string",
+            "enum": [
+              "NONE",
+              "EXISTING_S5_PRODUCER"
+            ]
+          }
+        },
+        "required": [
+          "discoveryId",
+          "allocation",
+          "idempotencyKey",
+          "fallback"
+        ],
+        "additionalProperties": false
+      },
+      "Y5Uniform-cancel": {
+        "type": "object",
+        "properties": {
+          "discoveryId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "discoveryId"
+        ],
+        "additionalProperties": false
+      },
+      "Y5Uniform-invalidate": {
+        "type": "object",
+        "properties": {
+          "discoveryId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "dependency": {
+            "type": "string",
+            "enum": [
+              "specification",
+              "implementation",
+              "runtime",
+              "rights",
+              "instance",
+              "admission"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "discoveryId",
+          "dependency",
+          "reason",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "Y5Uniform-specification": {
+        "type": "object",
+        "properties": {
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "expectedSourceRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "root",
+          "workId"
+        ],
+        "additionalProperties": false
+      },
+      "Y5Uniform-record-task-episode": {
+        "type": "object",
+        "properties": {
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "taskWorkId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "root",
+          "workId",
+          "taskWorkId",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "Y5Uniform-submit-total": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "finnor.y5.total-discovery-request.v2"
+          },
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "taskWorkId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "limits": {
+            "type": "object",
+            "properties": {
+              "wallMs": {
+                "type": "integer",
+                "minimum": 30000,
+                "maximum": 3600000
+              },
+              "maxAttempts": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2
+              },
+              "maxUses": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16
+              },
+              "maxPrograms": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 20000
+              },
+              "maxPropositions": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10000
+              },
+              "maxProofAttempts": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 12
+              },
+              "maxRetainedBytes": {
+                "type": "integer",
+                "minimum": 1024,
+                "maximum": 8388608
+              }
+            },
+            "required": [
+              "wallMs",
+              "maxAttempts",
+              "maxUses",
+              "maxPrograms",
+              "maxPropositions",
+              "maxProofAttempts",
+              "maxRetainedBytes"
+            ],
+            "additionalProperties": false
+          },
+          "baselineManifestRef": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "owner": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "version": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256
+                  },
+                  "contentDigest": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                },
+                "required": [
+                  "owner",
+                  "id",
+                  "version",
+                  "contentDigest"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "schema",
+          "root",
+          "workId",
+          "taskWorkId",
+          "idempotencyKey",
+          "limits",
+          "baselineManifestRef"
+        ],
+        "additionalProperties": false
+      },
+      "Y5Uniform-consume-total": {
+        "type": "object",
+        "properties": {
+          "discoveryId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "taskWorkId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "discoveryId",
+          "taskWorkId",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "Y5Uniform-assign-evaluation": {
+        "type": "object",
+        "properties": {
+          "discoveryId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "evaluatorId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "discoveryId",
+          "evaluatorId",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "Y5Uniform-evaluate": {
+        "type": "object",
+        "properties": {
+          "evaluationId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "evaluationId"
+        ],
+        "additionalProperties": false
+      },
+      "Y5Uniform-s8-propose": {
+        "type": "object",
+        "properties": {
+          "discoveryId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "discoveryId",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "Y5Uniform-admission": {
+        "type": "object",
+        "properties": {
+          "discoveryId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "revisionRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "const": "S8"
+              },
+              "id": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "contentDigest": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "discoveryId",
+          "revisionRef"
+        ],
+        "additionalProperties": false
+      },
       "X3Expression": {
         "oneOf": [
           {
@@ -45150,6 +46370,720 @@
           },
           "503": {
             "description": "Native capacity or independent owner configuration unavailable. Retry never renews resources."
+          }
+        }
+      }
+    },
+    "/api/uniform-algorithms/submit": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Y5Uniform-submit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Original principal/Work-bound finite discovery accepted for durable native proof search. No checked result or admission yet."
+          },
+          "400": {
+            "description": "Strict bounded request or original S4/S5 semantic contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current owner or distinct evaluator authority absent."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner, Work or assignment."
+          },
+          "408": {
+            "description": "Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance."
+          },
+          "409": {
+            "description": "Original source, rights, Work, generation, instance, deadline or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request, storage or finite resource bound exceeded."
+          },
+          "422": {
+            "description": "Required original semantic-owner predicate unavailable."
+          },
+          "503": {
+            "description": "Native capacity, diagnostic profile or independently configured S8 owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/uniform-algorithms/read": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Y5Uniform-read"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized lightweight status by default for v2. Capsule and retained history require explicit includeCapsule/includeHistory; bound payloads are withheld when source authorization is unavailable."
+          },
+          "400": {
+            "description": "Strict bounded request or original S4/S5 semantic contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current owner or distinct evaluator authority absent."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner, Work or assignment."
+          },
+          "408": {
+            "description": "Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance."
+          },
+          "409": {
+            "description": "Original source, rights, Work, generation, instance, deadline or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request, storage or finite resource bound exceeded."
+          },
+          "422": {
+            "description": "Required original semantic-owner predicate unavailable."
+          },
+          "503": {
+            "description": "Native capacity, diagnostic profile or independently configured S8 owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/uniform-algorithms/list": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Y5Uniform-list"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority."
+          },
+          "400": {
+            "description": "Strict bounded request or original S4/S5 semantic contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current owner or distinct evaluator authority absent."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner, Work or assignment."
+          },
+          "408": {
+            "description": "Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance."
+          },
+          "409": {
+            "description": "Original source, rights, Work, generation, instance, deadline or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request, storage or finite resource bound exceeded."
+          },
+          "422": {
+            "description": "Required original semantic-owner predicate unavailable."
+          },
+          "503": {
+            "description": "Native capacity, diagnostic profile or independently configured S8 owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/uniform-algorithms/consume": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Y5Uniform-consume"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority."
+          },
+          "400": {
+            "description": "Strict bounded request or original S4/S5 semantic contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current owner or distinct evaluator authority absent."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner, Work or assignment."
+          },
+          "408": {
+            "description": "Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance."
+          },
+          "409": {
+            "description": "Original source, rights, Work, generation, instance, deadline or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request, storage or finite resource bound exceeded."
+          },
+          "422": {
+            "description": "Required original semantic-owner predicate unavailable."
+          },
+          "503": {
+            "description": "Native capacity, diagnostic profile or independently configured S8 owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/uniform-algorithms/cancel": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Y5Uniform-cancel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority."
+          },
+          "400": {
+            "description": "Strict bounded request or original S4/S5 semantic contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current owner or distinct evaluator authority absent."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner, Work or assignment."
+          },
+          "408": {
+            "description": "Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance."
+          },
+          "409": {
+            "description": "Original source, rights, Work, generation, instance, deadline or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request, storage or finite resource bound exceeded."
+          },
+          "422": {
+            "description": "Required original semantic-owner predicate unavailable."
+          },
+          "503": {
+            "description": "Native capacity, diagnostic profile or independently configured S8 owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/uniform-algorithms/invalidate": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Y5Uniform-invalidate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority."
+          },
+          "400": {
+            "description": "Strict bounded request or original S4/S5 semantic contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current owner or distinct evaluator authority absent."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner, Work or assignment."
+          },
+          "408": {
+            "description": "Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance."
+          },
+          "409": {
+            "description": "Original source, rights, Work, generation, instance, deadline or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request, storage or finite resource bound exceeded."
+          },
+          "422": {
+            "description": "Required original semantic-owner predicate unavailable."
+          },
+          "503": {
+            "description": "Native capacity, diagnostic profile or independently configured S8 owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/uniform-algorithms/specification": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Y5Uniform-specification"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authenticated specification Work resolved to its immutable typed definition and separately qualified semantic acceptance. Public development is not protected family credit."
+          },
+          "400": {
+            "description": "Strict bounded request or original S4/S5 semantic contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current owner or distinct evaluator authority absent."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner, Work or assignment."
+          },
+          "408": {
+            "description": "Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance."
+          },
+          "409": {
+            "description": "Original source, rights, Work, generation, instance, deadline or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request, storage or finite resource bound exceeded."
+          },
+          "422": {
+            "description": "Required original semantic-owner predicate unavailable."
+          },
+          "503": {
+            "description": "Native capacity, diagnostic profile or independently configured S8 owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/uniform-algorithms/record-task-episode": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Y5Uniform-record-task-episode"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Canonical S5 model-only task request, result and cost episode recorded or replayed from authenticated specification/task Work references under the original invocation deadline. No inline values, answer, acceptance, protected family credit, reservation or S6 effects."
+          },
+          "400": {
+            "description": "Strict bounded request or original S4/S5 semantic contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current owner or distinct evaluator authority absent."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner, Work or assignment."
+          },
+          "408": {
+            "description": "Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance."
+          },
+          "409": {
+            "description": "Original source, rights, Work, generation, instance, deadline or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request, storage or finite resource bound exceeded."
+          },
+          "422": {
+            "description": "Required original semantic-owner predicate unavailable."
+          },
+          "503": {
+            "description": "Native capacity, diagnostic profile or independently configured S8 owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/uniform-algorithms/submit-total": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Y5Uniform-submit-total"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Original principal/Work-bound finite discovery accepted for durable native proof search. No checked result or admission yet."
+          },
+          "400": {
+            "description": "Strict bounded request or original S4/S5 semantic contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current owner or distinct evaluator authority absent."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner, Work or assignment."
+          },
+          "408": {
+            "description": "Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance."
+          },
+          "409": {
+            "description": "Original source, rights, Work, generation, instance, deadline or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request, storage or finite resource bound exceeded."
+          },
+          "422": {
+            "description": "Required original semantic-owner predicate unavailable."
+          },
+          "503": {
+            "description": "Native capacity, diagnostic profile or independently configured S8 owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/uniform-algorithms/consume-total": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Y5Uniform-consume-total"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Same kernel-checked typed definition applied to a separate original S5 task Work under the original finite use allowance. No inline values, algorithm, reservation, S6 effects or protected admission."
+          },
+          "400": {
+            "description": "Strict bounded request or original S4/S5 semantic contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current owner or distinct evaluator authority absent."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner, Work or assignment."
+          },
+          "408": {
+            "description": "Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance."
+          },
+          "409": {
+            "description": "Original source, rights, Work, generation, instance, deadline or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request, storage or finite resource bound exceeded."
+          },
+          "422": {
+            "description": "Required original semantic-owner predicate unavailable."
+          },
+          "503": {
+            "description": "Native capacity, diagnostic profile or independently configured S8 owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/uniform-algorithms/assign-evaluation": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Y5Uniform-assign-evaluation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority."
+          },
+          "400": {
+            "description": "Strict bounded request or original S4/S5 semantic contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current owner or distinct evaluator authority absent."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner, Work or assignment."
+          },
+          "408": {
+            "description": "Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance."
+          },
+          "409": {
+            "description": "Original source, rights, Work, generation, instance, deadline or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request, storage or finite resource bound exceeded."
+          },
+          "422": {
+            "description": "Required original semantic-owner predicate unavailable."
+          },
+          "503": {
+            "description": "Native capacity, diagnostic profile or independently configured S8 owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/uniform-algorithms/evaluate": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Y5Uniform-evaluate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority."
+          },
+          "400": {
+            "description": "Strict bounded request or original S4/S5 semantic contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current owner or distinct evaluator authority absent."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner, Work or assignment."
+          },
+          "408": {
+            "description": "Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance."
+          },
+          "409": {
+            "description": "Original source, rights, Work, generation, instance, deadline or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request, storage or finite resource bound exceeded."
+          },
+          "422": {
+            "description": "Required original semantic-owner predicate unavailable."
+          },
+          "503": {
+            "description": "Native capacity, diagnostic profile or independently configured S8 owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/uniform-algorithms/s8-propose": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Y5Uniform-s8-propose"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority."
+          },
+          "400": {
+            "description": "Strict bounded request or original S4/S5 semantic contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current owner or distinct evaluator authority absent."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner, Work or assignment."
+          },
+          "408": {
+            "description": "Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance."
+          },
+          "409": {
+            "description": "Original source, rights, Work, generation, instance, deadline or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request, storage or finite resource bound exceeded."
+          },
+          "422": {
+            "description": "Required original semantic-owner predicate unavailable."
+          },
+          "503": {
+            "description": "Native capacity, diagnostic profile or independently configured S8 owner unavailable."
+          }
+        }
+      }
+    },
+    "/api/uniform-algorithms/admission": {
+      "post": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Y5Uniform-admission"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority."
+          },
+          "400": {
+            "description": "Strict bounded request or original S4/S5 semantic contract rejected."
+          },
+          "401": {
+            "description": "Current signed bearer required."
+          },
+          "403": {
+            "description": "Current owner or distinct evaluator authority absent."
+          },
+          "404": {
+            "description": "Absent or unauthorized private owner, Work or assignment."
+          },
+          "408": {
+            "description": "Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance."
+          },
+          "409": {
+            "description": "Original source, rights, Work, generation, instance, deadline or idempotency preimage changed."
+          },
+          "413": {
+            "description": "Original request, storage or finite resource bound exceeded."
+          },
+          "422": {
+            "description": "Required original semantic-owner predicate unavailable."
+          },
+          "503": {
+            "description": "Native capacity, diagnostic profile or independently configured S8 owner unavailable."
           }
         }
       }

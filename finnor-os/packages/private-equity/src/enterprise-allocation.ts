@@ -7,9 +7,9 @@ import { allocationSourcesCurrent, produceAllocationCandidate } from '../../epis
 import { parseEconomicMandate, immutableControl, parseControlDecision } from '../../epistemic-runtime/src/control-contracts';
 import { epistemicHash } from '../../epistemic-runtime/src/source-precedence';
 import { ExperimentRefSchema } from '../../epistemic-runtime/src/experiments';
-import { readEnterpriseContingentPolicy, chooseEnterpriseControlBranch } from './enterprise-control';
-import { validateBeliefViewPin } from './enterprise-beliefs';
-import { readAllocationSnapshot, putAllocationResource, persistAllocationProposal, readStoredAllocation, readAllocationReplay, commitAllocationReservation, readAllocationConsumptions, recordAllocationConsumption, releaseUntouchedAllocation, retainAllocationReconciliation, persistAllocationExperience,applyProtectedAllocationSettlement,retainProtectedAllocationAttempt,allocationAuthorityRequest } from './allocation-store';
+import { readEnterpriseContingentPolicy, readEnterpriseContingentPolicySources, chooseEnterpriseControlBranch } from './enterprise-control';
+import { assertEnterpriseBeliefViewPinSourceVisibility, validateBeliefViewPin } from './enterprise-beliefs';
+import { readAllocationSnapshot, putAllocationResource, persistAllocationProposal, readStoredAllocation, readAllocationReplay, commitAllocationReservation, readAllocationConsumptions, recordAllocationConsumption, releaseUntouchedAllocation, retainAllocationReconciliation, persistAllocationExperience,applyProtectedAllocationSettlement,retainProtectedAllocationAttempt,allocationAuthorityRequest,authorizeAllocationResourceReads,withS5PortfolioTransaction } from './allocation-store';
 import {readOwnerTransportEvent} from '../../governed-execution/src/owner-transport';
 import type { PeMutationContext } from './types';
 import {recheckAllocationCapability} from '../../capability-evolution/src/consumer';
@@ -18,18 +18,20 @@ import type {ExactContingentPolicy} from '@finnor/shared-types/src/robust-progra
 import {readEnterpriseExactControlPolicy} from './enterprise-control';
 import {R2NativeSession,r2Ref} from './capital-program/r2-native';
 import type {AllocationCommitFence} from './allocation-store';
+import {sharedWithinResolution} from './resolution-memo';
 export {proposeEnterpriseSameDealAlternatives,readEnterpriseAllocationCandidateProblem} from './allocation-proposal';
 export interface R3AllocationClearingInput {schema:'finnor.s5.r3-clearing-request.v1';requestId:string;idempotencyKey:string}
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 const denied=()=>new AllocationContractError('PERMITTED_CONTEXT_UNAVAILABLE','Permitted S5 context is unavailable');
-/** Bound independent owner reads without skipping their current rights/source
- * checks. Await the whole batch on refusal so no detached read outlives clearing. */
-async function readCurrentPolicies(ctx:PeMutationContext,refs:ExperimentRef[]):Promise<ContingentPolicy[]>{
+/** Bound independent owner reads without skipping their rights/source checks.
+ * Await the whole batch on refusal so no detached read outlives clearing. */
+async function readPolicies(ctx:PeMutationContext,refs:ExperimentRef[],read:(ctx:PeMutationContext,ref:ExperimentRef)=>Promise<ContingentPolicy>):Promise<ContingentPolicy[]>{
  const policies:ContingentPolicy[]=[];
- for(let start=0;start<refs.length;start+=4){const batch=await Promise.allSettled(refs.slice(start,start+4).map(ref=>readEnterpriseContingentPolicy(ctx,ref)));const failure=batch.find(r=>r.status==='rejected');if(failure?.status==='rejected')throw failure.reason;for(const read of batch)if(read.status==='fulfilled')policies.push(read.value);}
+ for(let start=0;start<refs.length;start+=4){const batch=await Promise.allSettled(refs.slice(start,start+4).map(ref=>read(ctx,ref)));const failure=batch.find(r=>r.status==='rejected');if(failure?.status==='rejected')throw failure.reason;for(const result of batch)if(result.status==='fulfilled')policies.push(result.value);}
  return policies;
 }
+const readCurrentPolicies=(ctx:PeMutationContext,refs:ExperimentRef[])=>readPolicies(ctx,refs,readEnterpriseContingentPolicy);
 function rebuilt(problem:CanonicalAllocationProblem,resources:AllocationResource[],outstanding:AllocationOutstandingCommitment[],knowledgeAt=problem.knowledgeAt):CanonicalAllocationProblem {
   const {ref,...body}=problem;
   const exactEncoding=body.quantityEncoding==='DECIMAL_OR_RATIONAL_V2'||outstanding.some(row=>row.envelopes.some(e=>[...e.quantities,...e.minimumQuantities].some(q=>q.includes('/'))));
@@ -48,6 +50,40 @@ async function currentPins(ctx:PeMutationContext,resources:AllocationResource[])
   }
   for(const pin of pins.values())if((await validateBeliefViewPin(ctx,pin)).status!=='CURRENT')
     throw new AllocationContractError('STALE_INPUT','Resource source or rights witness is no longer current');
+}
+/** Preserve distinct original cuts even when resources share an S1 root. */
+async function authorizedPins(ctx:PeMutationContext,resources:AllocationResource[]):Promise<void>{
+  const pins=new Map<string,AllocationResource['beliefPins'][number]>();
+  for(const resource of resources){
+    if(resource.tenantId!==ctx.auth.tenantId)throw denied();
+    for(const pin of resource.beliefPins){if(pin.tenantId!==ctx.auth.tenantId)throw denied();pins.set(epistemicHash(pin),pin);}
+  }
+  for(const pin of pins.values())await assertEnterpriseBeliefViewPinSourceVisibility(ctx,pin);
+}
+/** Historical payload visibility still requires the consumer's original source
+ * owner reads, not their currentness. It resolves no new instance or admission. */
+export async function assertEnterpriseAllocationSourceVisibility(ctx:PeMutationContext,problem:CanonicalAllocationProblem):Promise<void>{
+  await sharedWithinResolution(ctx,'allocation-resource-reads',problem.resources,
+    ()=>withS5PortfolioTransaction(ctx,c=>authorizeAllocationResourceReads(ctx,c,problem.resources)));
+  await readPolicies(ctx,problem.policies.map(policy=>policy.ref),readEnterpriseContingentPolicySources);
+  await authorizedPins(ctx,problem.resources);
+  await (await import('./confidential-computation/owner-consumer')).assertConfidentialAllocationCurrent(ctx,problem);
+}
+/** Currentness is independent of authorized historical payload visibility. */
+export async function assertEnterpriseAllocationSourcesCurrent(ctx:PeMutationContext,problem:CanonicalAllocationProblem):Promise<void>{
+  await readCurrentPolicies(ctx,problem.policies.map(policy=>policy.ref));await currentPins(ctx,problem.resources);
+  await (await import('./confidential-computation/owner-consumer')).assertConfidentialAllocationCurrent(ctx,problem);
+}
+/** Source visibility of immutable requests does not renew their expired mandate. */
+export async function assertEnterpriseAllocationInputVisibility(ctx:PeMutationContext,input:AllocationClearingInput,resources:AllocationResource[]):Promise<void>{
+  const mandate=parseEconomicMandate(input.mandate,{operatingProfit:true}),jointModel=parseJointAllocationModel(input.jointModel);
+  if(ctx.auth.role!=='owner'||mandate.tenantId!==ctx.auth.tenantId||mandate.principalId!==actor(ctx)||mandate.businessOwnerRef.id!==actor(ctx)||
+    input.resourceRefs.length!==resources.length||input.resourceRefs.some(ref=>!resources.some(r=>sameAllocationRef(ref,r.ref)))||
+    resources.some(r=>!input.resourceRefs.some(ref=>sameAllocationRef(ref,r.ref))))throw denied();
+  await sharedWithinResolution(ctx,'allocation-resource-reads',resources,
+    ()=>withS5PortfolioTransaction(ctx,c=>authorizeAllocationResourceReads(ctx,c,resources)));
+  const policies=await readPolicies(ctx,input.policyRefs,readEnterpriseContingentPolicySources);await authorizedPins(ctx,resources);
+  await (await import('./confidential-computation/owner-consumer')).assertConfidentialAllocationCurrent(ctx,{mandate,jointModel,policies});
 }
 export async function registerEnterpriseAllocationResource(ctx:PeMutationContext,input:{resource:unknown;expectedRef?:ExperimentRef|null}){
   const resource=parseAllocationResource(input.resource);if(resource.tenantId!==ctx.auth.tenantId||resource.ownerRef.id!==actor(ctx)||Date.parse(resource.knowledgeAt)>Date.now())throw denied();await currentPins(ctx,[resource as AllocationResource]);
@@ -91,6 +127,32 @@ async function unaccountedNativeEffects(ctx:PeMutationContext):Promise<number>{
     const rows=await c.query("SELECT count(*)::int AS n FROM finnor_os.business_effects WHERE tenant_id=$1 AND status NOT IN ('verified','cancelled','compensated')",[ctx.auth.tenantId]);return rows.rows[0].n;
   });
 }
+async function resolveCanonicalAllocationInputs(ctx:PeMutationContext,input:AllocationClearingInput,
+  m:ReturnType<typeof parseEconomicMandate>,joint:ReturnType<typeof parseJointAllocationModel>):Promise<CanonicalAllocationProblem>{
+  const snapshot=await readAllocationSnapshot(ctx);await currentPins(ctx,snapshot.resources);
+  if(input.resourceRefs.length!==snapshot.resources.length||input.resourceRefs.some(ref=>!snapshot.resources.some(r=>sameAllocationRef(r.ref,ref))))
+    throw new AllocationContractError('STALE_INPUT','CURRENT_COMPLETE_RESOURCE_REGISTRY_REQUIRED');
+  const policies=await readCurrentPolicies(ctx,input.policyRefs),knowledgeAt=new Date().toISOString();
+  const validUntil=new Date(Math.min(Date.parse(m.validUntil),Date.parse(joint.validUntil),
+    ...policies.map(p=>Date.parse(p.validUntil)),...snapshot.resources.map(r=>Date.parse(r.validUntil)))).toISOString();
+  const exactEncoding=policies.some(p=>p.exactProfile)||joint.schema==='finnor.joint-allocation-model.exact.v2'||
+    snapshot.outstanding.some(row=>row.envelopes.some(e=>[...e.quantities,...e.minimumQuantities].some(q=>q.includes('/'))));
+  const body:Omit<CanonicalAllocationProblem,'ref'>={schema:'finnor.allocation-problem.v1',tenantId:ctx.auth.tenantId,
+    principalId:actor(ctx),episodeId:m.episodeId,mandate:m,policies,resources:snapshot.resources,jointModel:joint,
+    demandBindings:input.demandBindings,funding:input.funding,outstanding:snapshot.outstanding,snapshotDigest:snapshot.snapshotDigest,
+    knowledgeAt,validUntil,methodVersion:S5_VERSION,...(exactEncoding?{quantityEncoding:'DECIMAL_OR_RATIONAL_V2' as const}:{})};
+  const problem={...body,ref:allocationRef('S5','allocation-problem',body)};assertAllocationProblem(problem);
+  await (await import('./confidential-computation/owner-consumer')).assertConfidentialAllocationCurrent(ctx,problem);
+  return problem;
+}
+export async function resolveEnterpriseAllocationProblem(ctx:PeMutationContext,input:AllocationClearingInput):Promise<CanonicalAllocationProblem>{
+  const m=parseEconomicMandate(input.mandate,{operatingProfit:true}),joint=parseJointAllocationModel(input.jointModel);
+  if(ctx.auth.role!=='owner'||m.tenantId!==ctx.auth.tenantId||m.principalId!==actor(ctx)||m.businessOwnerRef.id!==actor(ctx))throw denied();
+  if(Date.now()>=Date.parse(m.validUntil)||Date.now()<Date.parse(m.knowledgeAt))
+    throw new AllocationContractError('STALE_INPUT','MANDATE_KNOWLEDGE_OR_VALIDITY_CHANGED');
+  if(await unaccountedNativeEffects(ctx))throw new AllocationContractError('BLOCKED_AUTHORITY','NATIVE_UNRECONCILED_EFFECTS_REQUIRE_S6_QUALIFIED_RESOURCE_ACCOUNTING');
+  return resolveCanonicalAllocationInputs(ctx,input,m,joint);
+}
 export async function clearEnterprisePortfolio(ctx:PeMutationContext,input:R3AllocationClearingInput):Promise<Awaited<ReturnType<typeof import('./r3/allocation').clearR3Portfolio>>>;
 export async function clearEnterprisePortfolio(ctx:PeMutationContext,input:AllocationClearingInput,fence?:AllocationCommitFence):Promise<AllocationClearingResult>;
 export async function clearEnterprisePortfolio(ctx:PeMutationContext,input:R3AllocationClearingInput|AllocationClearingInput,fence?:AllocationCommitFence){
@@ -115,14 +177,11 @@ async function clearNumericEnterprisePortfolio(ctx:PeMutationContext,input:Alloc
   };
   if(Date.now()>=Date.parse(m.validUntil)||Date.now()<Date.parse(m.knowledgeAt))return failure('STALE_INPUT',['MANDATE_KNOWLEDGE_OR_VALIDITY_CHANGED']);
   if(await unaccountedNativeEffects(ctx))return failure('UNCERTAINTY_UNRESOLVED',['NATIVE_UNRECONCILED_EFFECTS_REQUIRE_S6_QUALIFIED_RESOURCE_ACCOUNTING']);
-  const snapshot=await readAllocationSnapshot(ctx);await currentPins(ctx,snapshot.resources);
-  if(input.resourceRefs.length!==snapshot.resources.length||input.resourceRefs.some(ref=>!snapshot.resources.some(r=>sameAllocationRef(r.ref,ref))))return failure('STALE_INPUT',['CURRENT_COMPLETE_RESOURCE_REGISTRY_REQUIRED']);
-  const policies=await readCurrentPolicies(ctx,input.policyRefs);
-  const now=new Date().toISOString(),validUntil=new Date(Math.min(Date.parse(m.validUntil),Date.parse(joint.validUntil),...policies.map(p=>Date.parse(p.validUntil)),...snapshot.resources.map(r=>Date.parse(r.validUntil)))).toISOString();
-  const exactEncoding=policies.some(p=>p.exactProfile)||joint.schema==='finnor.joint-allocation-model.exact.v2'||snapshot.outstanding.some(row=>row.envelopes.some(e=>[...e.quantities,...e.minimumQuantities].some(q=>q.includes('/'))));
-  const body:Omit<CanonicalAllocationProblem,'ref'>={schema:'finnor.allocation-problem.v1',tenantId:ctx.auth.tenantId,principalId:actor(ctx),episodeId:m.episodeId,mandate:m,policies,resources:snapshot.resources,jointModel:joint,demandBindings:input.demandBindings,funding:input.funding,outstanding:snapshot.outstanding,snapshotDigest:snapshot.snapshotDigest,knowledgeAt:now,validUntil,methodVersion:S5_VERSION,...(exactEncoding?{quantityEncoding:'DECIMAL_OR_RATIONAL_V2' as const}:{})};
-  const problem:CanonicalAllocationProblem={...body,ref:allocationRef('S5','allocation-problem',body)};assertAllocationProblem(problem);
-  await (await import('./confidential-computation/owner-consumer')).assertConfidentialAllocationCurrent(ctx,problem);
+  let problem:CanonicalAllocationProblem;
+  try{problem=await resolveCanonicalAllocationInputs(ctx,input,m,joint);}
+  catch(error){if(error instanceof AllocationContractError&&error.code==='STALE_INPUT'&&error.message==='CURRENT_COMPLETE_RESOURCE_REGISTRY_REQUIRED')return failure('STALE_INPUT',[error.message]);throw error;}
+  const snapshot={resources:problem.resources,outstanding:problem.outstanding,snapshotDigest:problem.snapshotDigest},
+    policies=problem.policies,now=problem.knowledgeAt,validUntil=problem.validUntil;
   if(snapshot.resources.some(r=>r.revoked||r.availability.some(a=>a.amount===null||a.basis!=='REPORTED_AVAILABLE')))return failure('UNCERTAINTY_UNRESOLVED',['RESOURCE_RIGHTS_OR_AVAILABILITY_UNRESOLVED']);
   // Existing obligations must be feasible in their own right. An empty selected
   // portfolio never conceals a resource/covenant breach requiring owner recovery.
@@ -173,16 +232,8 @@ export async function previewEnterprisePortfolio(ctx:PeMutationContext,input:All
  if(Date.now()>=Date.parse(m.validUntil)||Date.now()<Date.parse(m.knowledgeAt))throw new AllocationContractError('STALE_INPUT','Original mandate is no longer current');
  if(await unaccountedNativeEffects(ctx))return {status:'PARTIAL' as const,check:null,problemRef:null,
   materialGaps:['NATIVE_UNRECONCILED_EFFECTS_REQUIRE_S6_QUALIFIED_RESOURCE_ACCOUNTING'],elapsedMs:performance.now()-started,reservesCapital:false as const};
- const snapshot=await readAllocationSnapshot(ctx);await currentPins(ctx,snapshot.resources);
- if(exact.resourceRefs.length!==snapshot.resources.length||exact.resourceRefs.some(ref=>!snapshot.resources.some(r=>sameAllocationRef(r.ref,ref))))throw new AllocationContractError('STALE_INPUT','Current complete canonical resource registry required');
- const policies=await readCurrentPolicies(ctx,exact.policyRefs),knowledgeAt=new Date().toISOString();
- const validUntil=new Date(Math.min(Date.parse(m.validUntil),Date.parse(joint.validUntil),
-  ...policies.map(p=>Date.parse(p.validUntil)),...snapshot.resources.map(r=>Date.parse(r.validUntil)))).toISOString();
- const exactEncoding=policies.some(p=>p.exactProfile)||joint.schema==='finnor.joint-allocation-model.exact.v2'||snapshot.outstanding.some(row=>row.envelopes.some(e=>[...e.quantities,...e.minimumQuantities].some(q=>q.includes('/'))));
- const body:Omit<CanonicalAllocationProblem,'ref'>={schema:'finnor.allocation-problem.v1',tenantId:ctx.auth.tenantId,principalId:actor(ctx),
-  episodeId:m.episodeId,mandate:m,policies,resources:snapshot.resources,jointModel:joint,demandBindings:exact.demandBindings,
-  funding:exact.funding,outstanding:snapshot.outstanding,snapshotDigest:snapshot.snapshotDigest,knowledgeAt,validUntil,methodVersion:S5_VERSION,...(exactEncoding?{quantityEncoding:'DECIMAL_OR_RATIONAL_V2' as const}:{})};
- const problem={...body,ref:allocationRef('S5','allocation-problem',body)};assertAllocationProblem(problem);
+ const problem=await resolveCanonicalAllocationInputs(ctx,exact,m,joint),
+  snapshot={resources:problem.resources},validUntil=problem.validUntil;
  const check=verifyCanonicalAllocation(problem,selectedPolicyIds);
  await currentPins(ctx,snapshot.resources);await readCurrentPolicies(ctx,exact.policyRefs);
  if(performance.now()-started>=m.search.deadlineMs)throw new AllocationContractError('LIMIT_EXCEEDED','Original owner decision budget exhausted');

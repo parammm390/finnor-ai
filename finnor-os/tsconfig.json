@@ -1,7 +1,8 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    "allowImportingTsExtensions": true
   },
   "include": [
     "packages/**/*.ts",
@@ -13,7 +14,8 @@
     "apps/**/*.tsx",
     "tests/**/*.ts",
     "scripts/**/*.ts",
-    "scripts/audits/**/*.mts"
+    "scripts/audits/**/*.mts",
+    "scripts/postx/y5/**/*.mts"
   ],
   "exclude": [
     "node_modules",

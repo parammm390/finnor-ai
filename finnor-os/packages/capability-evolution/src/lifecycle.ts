@@ -21,6 +21,7 @@ import { ApplicationCapabilityPort as ApplicationSemanticsCapabilityPort, Applic
 import { LearnedPolicyCapabilityPort } from './learned-policy-port';
 import type {IdentifiedSystemCapabilityPort} from './identified-system-port';
 import type {ConfidentialCapabilityPort} from './confidential-port';
+import type {UniformAlgorithmCapabilityPort} from './uniform-algorithm-port';
 import { digest, byteDigest, fault, parseRevision, makeRef, sameRef, RefSchema, ProtocolSchema, EvaluationSummarySchema, AllocationMethodAdmissionSchema, assertSignature, S8_VERSION, type Signed, type AuthorityKey, type CapabilityRevision, type EvaluationProtocol, type EvaluationSummary, type CapabilityRef, type AllocationMethodAdmission } from './contracts';
 const Text = z.string().min(1).max(4096), Instant = z.string().datetime({ offset: true });
 const KeySchema = z.object({ id: Text, principalId: Text, publicKey: Text, validAfter: Instant, validUntil: Instant, revoked: z.boolean() }).strict();
@@ -78,6 +79,8 @@ export class CapabilityEvolution {
     private identifiedReplay: JournalEntry[]=[];
     private confidential:ConfidentialCapabilityPort|null=null;
     private confidentialReplay:JournalEntry[]=[];
+    private uniformAlgorithms: UniformAlgorithmCapabilityPort|null=null;
+    private uniformReplay: JournalEntry[]=[];
     private institutions: InstitutionCapabilityPort;
     private states = new Map<string, RevisionState>();
     private active: string | null = null;
@@ -440,6 +443,9 @@ export class CapabilityEvolution {
         if(entry.operation.startsWith('CONFIDENTIAL_')){
             this.confidentialReplay.push(entry);this.confidential?.replay(entry);return;
         }
+        if(entry.operation.startsWith('UNIFORM_ALGORITHM_')){
+            this.uniformReplay.push(entry);this.uniformAlgorithms?.replay(entry);return;
+        }
         if(entry.operation.startsWith('IDENTIFIED_SYSTEM_')){
             this.identifiedReplay.push(entry);this.identifiedSystems?.replay(entry);return;
         }
@@ -597,7 +603,7 @@ export class CapabilityEvolution {
                     fault('S8_IDEMPOTENCY_SUBSTITUTION');
                 // Interface current-use reads are deliberately never journaled or
                 // replayed from a cached admission. Every serve checks current use.
-                if (input.operation.startsWith('INTERFACE_') || input.operation.startsWith('APPLICATION_') || input.operation.startsWith('LEARNED_POLICY_') || input.operation.startsWith('IDENTIFIED_SYSTEM_') || input.operation.startsWith('CONFIDENTIAL_'))
+                if (input.operation.startsWith('INTERFACE_') || input.operation.startsWith('APPLICATION_') || input.operation.startsWith('LEARNED_POLICY_') || input.operation.startsWith('IDENTIFIED_SYSTEM_') || input.operation.startsWith('CONFIDENTIAL_') || input.operation.startsWith('UNIFORM_ALGORITHM_'))
                     await CapabilityEvolution.sources(this.policy.sourcePins);
                 if (input.operation.startsWith('APPLICATION_SEMANTICS_')) {
                     await this.applicationSemantics.revalidateReplay(a, input.operation, input.body, prior.result);
@@ -639,6 +645,17 @@ export class CapabilityEvolution {
                     await this.persist({requestId:input.requestId,requestDigest,actorId:a.id,operation:input.operation,body:b,result:answer.result});
                     await port.revalidateReplay(a,input.operation,b);
                 }
+                return answer.result;
+            }
+            if(input.operation.startsWith('UNIFORM_ALGORITHM_')){
+                if(!this.uniformAlgorithms){
+                    const {UniformAlgorithmCapabilityPort}=await import('./uniform-algorithm-port');
+                    const port=new UniformAlgorithmCapabilityPort(this.policy);
+                    for(const entry of this.uniformReplay)port.replay(entry);
+                    this.uniformAlgorithms=port;
+                }
+                const answer=await this.uniformAlgorithms.command(a,input.operation,b,(ref,content)=>this.commitNamedReference(ref,content));
+                if(!answer.readOnly)await this.persist({requestId:input.requestId,requestDigest,actorId:a.id,operation:input.operation,body:b,result:answer.result});
                 return answer.result;
             }
             if(input.operation.startsWith('IDENTIFIED_SYSTEM_')){

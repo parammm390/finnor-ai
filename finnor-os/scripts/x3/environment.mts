@@ -33,7 +33,7 @@ export async function recordPriorReleaseProbeRefusal(evidence:string,admin:pg.Cl
 }
 export async function startEnvironment(evidence:string,options:{builtApi?:boolean;migrationsOnly?:boolean;commitClock?:boolean;baseHead?:string;keepDatabase?:boolean}={}){
  await mkdir(evidence,{recursive:true});
- process.env.NODE_ENV='test';process.env.AUTH_DEV_BYPASS='0';
+ Object.assign(process.env,{NODE_ENV:'test'});process.env.AUTH_DEV_BYPASS='0';
  process.env.FINNOR_TEST_MANAGED_EXTENSIONS='omit';process.env.FINNOR_P4_PROFILE='ordinary_disposable';
  process.env.FINNOR_ENVIRONMENT='ordinary_disposable';
  const directory=await mkdtemp(join(tmpdir(),'finnor-x3-')),password=randomBytes(24).toString('hex');

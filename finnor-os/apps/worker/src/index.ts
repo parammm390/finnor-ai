@@ -1,4 +1,5 @@
 import {runDecisionAtlasJob} from '../../../packages/private-equity/src/r7/worker';
+import {discoverUniformAlgorithmJob} from '../../../packages/private-equity/src/uniform-algorithms/worker';
 import {buildEnterpriseApplicationJob} from '../../../packages/private-equity/src/enterprise-applications/worker';
 import {compileLearnedPolicyJob} from '../../../packages/private-equity/src/policy-learning/worker';
 import {runConfidentialEconomicJob} from '../../../packages/private-equity/src/confidential-computation/worker';
@@ -77,6 +78,7 @@ export function createWorker(): JobQueue {
   queue.register('construct_economic_action_theory_v1',constructEconomicActionTheoryJob,PRODUCTION_JOB_CONTRACTS.construct_economic_action_theory_v1);
   queue.register('run_economic_programme_v1',runEconomicProgrammeJob,PRODUCTION_JOB_CONTRACTS.run_economic_programme_v1);
   queue.register('run_confidential_economic_computation_v1',runConfidentialEconomicJob,PRODUCTION_JOB_CONTRACTS.run_confidential_economic_computation_v1);
+  queue.register('discover_uniform_algorithm_v1',discoverUniformAlgorithmJob,PRODUCTION_JOB_CONTRACTS.discover_uniform_algorithm_v1);
   queue.register('identify_digital_system_v1',identifyDigitalSystemJob,PRODUCTION_JOB_CONTRACTS.identify_digital_system_v1);
   queue.register('compile_learned_policy_v1',compileLearnedPolicyJob,PRODUCTION_JOB_CONTRACTS.compile_learned_policy_v1);
   queue.register('build_enterprise_application_v1',buildEnterpriseApplicationJob,PRODUCTION_JOB_CONTRACTS.build_enterprise_application_v1);

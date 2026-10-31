@@ -42,6 +42,8 @@ vercel_output.txt
 /.r3-runtime/
 /.r3-upstream-runtime/
 /.r3-scratch
+/.y5-tools/
+/.y5-scratch/
 /scope-r/r3-incentive-rule-synthesis/evidence/
 /scope-r/r3-incentive-rule-synthesis/handoff/*.bundle
 /scope-r/r3-incentive-rule-synthesis/handoff/*.patch

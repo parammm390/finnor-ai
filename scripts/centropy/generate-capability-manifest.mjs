@@ -148,19 +148,32 @@ const companyBrainReads = new Set([
 ])
 const elicitationOperations=registeredOperations("finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts","ELICITATION_OPERATIONS")
 const elicitationReads=new Set(["context","read","status","history"])
+const uniformAlgorithmClasses=new Map([
+ ["specification","READ"],["submit","MUTATION"],["submit-total","MUTATION"],
+ ["record-task-episode","MUTATION"],
+ ["read","READ"],["list","READ"],["consume","MUTATION"],["consume-total","MUTATION"],
+ ["cancel","CONTROL"],["invalidate","CONTROL"],["assign-evaluation","MUTATION"],
+ ["evaluate","MUTATION"],["s8-propose","MUTATION"],["admission","READ"],
+])
 const ownerLeafOperations=new Map()
-for(const family of ["interventions","policies","allocations","obligations","experiments","economic-outcomes","coalition-programmes"]){
+for(const family of ["interventions","policies","allocations","obligations","experiments","economic-outcomes","coalition-programmes","uniform-algorithms"]){
  const source=readFileSync(join(apiRoot,`${family}/[operation]/route.ts`),"utf8")
  const operations = new Set([
    ...[...source.matchAll(/case\s+['"]([a-z][a-z0-9-]*)['"]\s*:/g)].map(m=>m[1]),
    ...[...source.matchAll(/route\.operation\s*===?\s*['"]([a-z][a-z0-9-]*)['"]/g)].map(m=>m[1]),
  ])
  if (!operations.size) throw new Error(`Missing owner operation dispatch: ${family}`)
+ if(family==="uniform-algorithms"){
+  for(const operation of operations)if(!uniformAlgorithmClasses.has(operation))throw new Error(`Unclassified uniform owner operation: ${operation}`)
+  if(process.argv.includes("--check"))for(const operation of uniformAlgorithmClasses.keys())
+   if(!operations.has(operation))throw new Error(`Registered uniform owner operation is not dispatched: ${operation}`)
+  for(const operation of uniformAlgorithmClasses.keys())operations.add(operation)
+ }
  ownerLeafOperations.set(family,[...operations])
 }
 const ownerLeafReads=new Set(["read-pywhy-assessment","query","validate","finite-preference","experiment-projection","read","read-mechanism",
  "resources","budget-status","read-commitment","read-execution-handoff","check-budget","check-dispatch",
- "history","execution-evidence","learning-assessment"])
+ "history","execution-evidence","learning-assessment","list","admission"])
 const readModelsSource = readFileSync(join(apiRoot, "read-models/[view]/route.ts"), "utf8")
 const readModels = ["attention", ...[...block(readModelsSource, "const VIEWS:", "export async function GET").matchAll(/^[ \t]+"([a-z-]+)":/gm)].map((match) => match[1])]
 const artifactOperations = {
@@ -181,8 +194,9 @@ for (const operation of ["response-model-cancel", "response-model-resume", "resp
   operationClasses.set(`company-brain/${operation}`, "CONTROL")
 for (const [family, operations] of ownerLeafOperations) for (const operation of operations)
   operationClasses.set(`${family}/${operation}`, ownerLeafReads.has(operation) ? "READ" :
-    ["cancel-delivery", "reconcile-request", "reconcile"].includes(operation) ? "CONTROL" : "MUTATION")
+    ["cancel-delivery", "reconcile-request", "reconcile", "cancel", "invalidate"].includes(operation) ? "CONTROL" : "MUTATION")
 for (const [family, operations] of [
+  ["uniform-algorithms", uniformAlgorithmClasses],
   ["branches", branchOperations], ["decision-atlases", atlasOperations], ["company-brain", m4Operations],
   ["identification-plans", new Map(identificationOperations.map(operation => [operation,
     identificationReads.has(operation) ? "READ" : operation === "cancel" ? "CONTROL" : "MUTATION"]))],
@@ -207,6 +221,7 @@ for (const [path, operations] of [
 
 const familyRules = [
   [/^capabilities\//, "capability-upgrades", "@finnor/orchestration", ["CANVAS"]],
+  [/^uniform-algorithms\//, "uniform-algorithm", "@finnor/private-equity", ["CANVAS"]],
   [/^policies\/r1-/, "exact-control", "@finnor/private-equity", ["CANVAS"]],
   [/^identification-plans\//, "identification-plan", "@finnor/private-equity", ["CANVAS"]],
   [/^decision-atlases\//, "decision-atlas", "@finnor/private-equity", ["CANVAS"]],
@@ -277,6 +292,7 @@ function familyFor(path) {
 
 function tags(family) {
   const byFamily = {
+    "uniform-algorithm": ["work", "company-brain"],
     "exact-control": ["work", "company-brain"],
     "coalition-programme": ["work", "company-brain", "authority"],
     "decision-atlas": ["work", "company-brain"],

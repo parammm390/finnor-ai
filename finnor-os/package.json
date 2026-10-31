@@ -12,6 +12,7 @@
     "packages/domain-plugins/*"
   ],
   "scripts": {
+    "y5:toolchain:install": "python3 scripts/postx/y5/install-toolchain.py",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",

@@ -12,7 +12,7 @@ import type { InterventionModel, ContingentPolicy, ContingentChoiceHandoff, Cont
 import { assertContingentPolicy, AllocationContractError, ControlContractError, createInterventionControlAdapter, controlInstrumentSupports, controlSourcesCurrent, decideContingentPolicy, epistemicHash,
  ExperimentRefSchema, immutableControl, interventionSpecificationRef, parseControlDecision, parseControlProblem, parseEconomicMandate, prepareS4Experience, restoreInterventionControlAdapter, synthesizeContingentControl, checkPolicyAllocation, type InterventionControlSnapshot } from '@finnor/epistemic-runtime';
 import { readEnterpriseInterventionMetadataForObservation, resolveEnterpriseInterventionModelForControl } from './enterprise-interventions';
-import { loadEnterpriseBeliefView, validateBeliefViewPin } from './enterprise-beliefs';
+import { loadEnterpriseBeliefView, validateBeliefViewPin, assertEnterpriseBeliefViewPinSourceVisibility } from './enterprise-beliefs';
 import { validateEnterpriseExperiment, projectEnterpriseExperiment, projectEnterpriseControlObservation } from './enterprise-experiments';
 import { PeDomainError, type PeMutationContext, type PeWorldRootRef } from './types';
 import {enqueueNativeReferences,enqueueNativePreparedEvents,enqueueNativeMandate,nativeRecordReference,nativeReference,nativeOwnerTransportConfigured} from './native-experience-transport';
@@ -27,6 +27,7 @@ import type {CoalitionSelection} from '@finnor/shared-types/src/coalition-progra
 import {R5_VERSION} from '@finnor/shared-types/src/coalition-programme';
 import {coalitionCheckerIdentity} from './capital-program/r2-native';
 import {assertR5SelectionCurrent} from './capital-program/r5-owners';
+import {sharedWithinResolution} from './resolution-memo';
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 /** S4-owned finite sourcing policy. The score is registered mandate coverage per
@@ -235,6 +236,15 @@ export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value
   throw unavailable();
  }
  await recoverPolicyExperience(ctx,policy);return immutableControl(policy);
+}
+/** Historical readback authorizes the original policy's bound S1 sources only.
+ * A stale method, model or pin is a currentness result, not source withdrawal. */
+export function readEnterpriseContingentPolicySources(ctx:PeMutationContext,value:unknown):Promise<ContingentPolicy>{
+ return sharedWithinResolution(ctx,'contingent-policy-sources',value,async()=>{
+  const policy=await readPolicy(ctx,value),pins=new Map([...policy.bindings.beliefPins,...(policy.exactProfile?.beliefPins??[])].map(pin=>[epistemicHash(pin),pin]));
+  for(const pin of pins.values())await assertEnterpriseBeliefViewPinSourceVisibility(ctx,pin);
+  await recoverPolicyExperience(ctx,policy);return immutableControl(policy);
+ });
 }
 /** Narrow current S4-owned reader. A caller cannot add terms to a P2 request
  * or mistake supplied utility conversion for independently reconciled money. */

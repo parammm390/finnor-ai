@@ -6,7 +6,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import type { AllocationDualProposal, AllocationResultState, CanonicalAllocationProblem, S5ComputeInvocation } from '@finnor/shared-types';
 import { ExperimentRational, ER_ZERO } from './experiment-numerics';
-import { allocationDecimal, allocationNumber as number, allocationDerivedQuantity as quantity, assertAllocationProblem, AllocationContractError } from './allocation-contracts';
+import { allocationDecimal, allocationNumber as number, allocationDerivedQuantity as quantity, allocationQuantity, assertAllocationProblem, AllocationContractError } from './allocation-contracts';
 import { epistemicHash } from './source-precedence';
 
 interface MatrixRow {id:string;coefficients:Record<string,string>;lower:string|null;upper:string|null}
@@ -36,7 +36,7 @@ export function compileAllocationMilp(p:CanonicalAllocationProblem,deadlineMs:nu
   const productColumns=new Map<string,number>();for(const key of monomials.keys())productColumns.set(key,ids.length+productColumns.size);
   const z=ids.length+productColumns.size,rows:MatrixRow[]=[],totalColumns=z+1;
   const c=Array<string>(totalColumns).fill('0'),integrality=Array<number>(totalColumns).fill(1),lowerBounds:Array<string|null>=Array<string>(totalColumns).fill('0'),upperBounds:Array<string|null>=Array<string>(totalColumns).fill('1');
-  c[z]='-1';integrality[z]=0;lowerBounds[z]=decimal(p.jointModel.scenarios.map(s=>s.terms.reduce((v,t)=>quantity(t.value).n<0n?v.add(quantity(t.value)):v,quantity(s.baseValue))).reduce((a,b)=>a.compare(b)<0?a:b));upperBounds[z]=decimal(p.jointModel.scenarios.map(s=>s.terms.reduce((v,t)=>quantity(t.value).n>0n?v.add(quantity(t.value)):v,quantity(s.baseValue))).reduce((a,b)=>a.compare(b)>0?a:b));
+  c[z]='-1';integrality[z]=0;lowerBounds[z]=decimal(p.jointModel.scenarios.map(s=>s.terms.reduce((v,t)=>allocationQuantity(t.value).n<0n?v.add(allocationQuantity(t.value)):v,allocationQuantity(s.baseValue))).reduce((a,b)=>a.compare(b)<0?a:b));upperBounds[z]=decimal(p.jointModel.scenarios.map(s=>s.terms.reduce((v,t)=>allocationQuantity(t.value).n>0n?v.add(allocationQuantity(t.value)):v,allocationQuantity(s.baseValue))).reduce((a,b)=>a.compare(b)>0?a:b));
   const add=(id:string,coefficients:Record<string,ExperimentRational>,upper:ExperimentRational|null,lower:ExperimentRational|null=null)=>rows.push({id,coefficients:Object.fromEntries(Object.entries(coefficients).filter(([,q])=>q.n!==0n).map(([k,q])=>[k,decimal(q)])),lower:lower?decimal(lower):null,upper:upper?decimal(upper):null});
   for(const [key,components]of monomials){const y=productColumns.get(key)!;
     for(const id of components)add(`product:${key}:${id}`,{[y]:number(1),[columns.get(id)!]:number(-1)},ER_ZERO);
@@ -83,8 +83,8 @@ export function compileAllocationMilp(p:CanonicalAllocationProblem,deadlineMs:nu
       add(`mandate-coupling:${coupling.id}:${scenario.id}:${t}`,coeffs,number(coupling.maxPerPeriod));}
     add(`mandate-human:${scenario.id}`,Object.fromEntries(p.policies.map(policy=>[String(columns.get(policy.ref.id)!),sum(scenario.policyPaths.find(path=>path.policyRef.id===policy.ref.id)!.nodeIds.map(id=>exactPolicyActionQuantity(policy,policy.problem.actions.find(a=>a.id===policy.nodes.find(n=>n.id===id)!.actionId)!,'humanSeconds')??number(policy.problem.actions.find(a=>a.id===policy.nodes.find(n=>n.id===id)!.actionId)!.humanSeconds)))])),number(p.mandate.search.maxHumanSeconds));
     const value:Record<string,ExperimentRational>={[z]:number(1)};
-    for(const term of scenario.terms){const col=term.policyIds.length===1?columns.get(term.policyIds[0]!)!:productColumns.get([...term.policyIds].sort().join('|'))!;value[col]=(value[col]??ER_ZERO).sub(quantity(term.value));}
-    add(`worst-path:${scenario.id}`,value,quantity(scenario.baseValue));add(`risk-floor:${scenario.id}`,{...value,[z]:ER_ZERO},quantity(scenario.baseValue).sub(number(p.mandate.risk.minimumUtility)));
+    for(const term of scenario.terms){const col=term.policyIds.length===1?columns.get(term.policyIds[0]!)!:productColumns.get([...term.policyIds].sort().join('|'))!;value[col]=(value[col]??ER_ZERO).sub(allocationQuantity(term.value));}
+    add(`worst-path:${scenario.id}`,value,allocationQuantity(scenario.baseValue));add(`risk-floor:${scenario.id}`,{...value,[z]:ER_ZERO},allocationQuantity(scenario.baseValue).sub(number(p.mandate.risk.minimumUtility)));
   }
   if(rows.length>30000||totalColumns>1024)throw new AllocationContractError('LIMIT_EXCEEDED','MILP formulation exceeds registered structural limit');
   return {input:{schema:p.quantityEncoding==='DECIMAL_OR_RATIONAL_V2'?'finnor.s5.milp.rational.v2':'finnor.s5.milp.v1',...(p.quantityEncoding==='DECIMAL_OR_RATIONAL_V2'?{quantityEncoding:'DECIMAL_OR_RATIONAL_V2' as const}:{}),c,integrality,lowerBounds,upperBounds,rows,budget:{deadlineMs:Math.max(1,Math.floor(deadlineMs)),nodeLimit:p.mandate.search.maxExpansions}},policyColumns:ids};
