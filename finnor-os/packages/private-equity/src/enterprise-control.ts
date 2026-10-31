@@ -115,7 +115,21 @@ async function readPolicy(ctx:PeMutationContext,value:unknown):Promise<Contingen
   if(policy.tenantId!==ctx.auth.tenantId||policy.principalId!==actor(ctx)||epistemicHash(policy.ref)!==epistemicHash(parsed.data))throw unavailable();return policy;
  }catch{throw unavailable();}}
 async function readable(ctx:PeMutationContext,policy:ContingentPolicy,client?:PoolClient):Promise<void>{for(const pin of policy.bindings.beliefPins)await loadEnterpriseBeliefView(ctx,{root:pin.root as PeWorldRootRef},client);await recoverPolicyExperience(ctx,policy);}
-async function current(ctx:PeMutationContext,policy:ContingentPolicy,client?:PoolClient):Promise<string|null>{
+function currentReadBatch(ctx:PeMutationContext,client?:PoolClient){
+ const methods=new Map<string,ReturnType<typeof controlSourcesCurrent>>();
+ const pins=new Map<string,ReturnType<typeof validateBeliefViewPin>>();
+ const models=new Map<string,ReturnType<typeof resolveEnterpriseInterventionModelForControl>>();
+ const once=<T>(cache:Map<string,Promise<T>>,value:unknown,read:()=>Promise<T>):Promise<T>=>{
+  const key=epistemicHash(value),existing=cache.get(key);if(existing)return existing;
+  const pending=read();cache.set(key,pending);return pending;
+ };
+ return {
+  method:(digests:Parameters<typeof controlSourcesCurrent>[0])=>once(methods,digests,()=>controlSourcesCurrent(digests)),
+  pin:(pin:Parameters<typeof validateBeliefViewPin>[1])=>once(pins,pin,()=>validateBeliefViewPin(ctx,pin,client)),
+  model:(ref:ExperimentRef)=>once(models,ref,()=>resolveEnterpriseInterventionModelForControl(ctx,ref)),
+ };
+}
+async function current(ctx:PeMutationContext,policy:ContingentPolicy,client?:PoolClient,reads=currentReadBatch(ctx,client)):Promise<string|null>{
  if(policy.bindings.modelRef.version==='postx-y2-strategic-response-v1'){
   try{await (await import('./strategic-response/store')).assertStrategicPolicyCurrent(ctx,policy);return null;}
   catch{return 'Y2_STRATEGIC_MODEL_POLICY_OR_ADMISSION_NOT_CURRENT';}
@@ -131,9 +145,9 @@ async function current(ctx:PeMutationContext,policy:ContingentPolicy,client?:Poo
   if(policy.exactProfile.durableRunId)await (await import('./r1/api')).assertR1PolicyPublished(ctx,policy.exactProfile.durableRunId,policy.ref);
   return null;
  }catch(error){return (error as Error).message.match(/^[A-Z][A-Z0-9_]+$/)?.[0]??'R1_CURRENT_OWNER_BINDING_UNPASSED';}}
- if(Date.now()>=Date.parse(policy.validUntil))return 'POLICY_EXPIRED';if(!await controlSourcesCurrent(policy.compute.backend.sourceDigests))return 'S4_LOADED_METHOD_CHANGED';
- for(const pin of policy.bindings.beliefPins)if((await validateBeliefViewPin(ctx,pin,client)).status!=='CURRENT')return 'S1_SOURCE_RIGHTS_COVERAGE_OR_INTERPRETATION_CHANGED';
- try{await resolveEnterpriseInterventionModelForControl(ctx,policy.bindings.modelRef);}catch{return 'S3_MODEL_REVISED_REVOKED_OR_UNSUPPORTED';}
+ if(Date.now()>=Date.parse(policy.validUntil))return 'POLICY_EXPIRED';if(!await reads.method(policy.compute.backend.sourceDigests))return 'S4_LOADED_METHOD_CHANGED';
+ for(const pin of policy.bindings.beliefPins)if((await reads.pin(pin)).status!=='CURRENT')return 'S1_SOURCE_RIGHTS_COVERAGE_OR_INTERPRETATION_CHANGED';
+ try{await reads.model(policy.bindings.modelRef);}catch{return 'S3_MODEL_REVISED_REVOKED_OR_UNSUPPORTED';}
  return null;
 }
 /** Existing durable effects are independently read. A caller cannot hide an
@@ -226,12 +240,27 @@ export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value
 export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown,client?:PoolClient){
  if(value&&typeof value==='object'&&'schema' in value&&value.schema==='finnor.s4.r3-policy-read.v1')
   return (await import('./r3/control')).readR3UsePolicy(ctx,ExperimentRefSchema.parse((value as R3ControlPolicyRead).policyRef));
+ return readCurrentPolicy(ctx,value,currentReadBatch(ctx,client),client);
+}
+/** One S5 owner read shares only identical immutable dependency tuples. Each
+ * subsequent call gets fresh source, rights, model and method checks. */
+export async function readEnterpriseCurrentContingentPolicies(ctx:PeMutationContext,refs:ExperimentRef[],client?:PoolClient):Promise<ContingentPolicy[]>{
+ const reads=currentReadBatch(ctx,client),policies:ContingentPolicy[]=[];
+ for(let start=0;start<refs.length;start+=4){
+  const batch=await Promise.allSettled(refs.slice(start,start+4).map(ref=>readCurrentPolicy(ctx,ref,reads,client)));
+  const failure=batch.find(result=>result.status==='rejected');if(failure?.status==='rejected')throw failure.reason;
+  for(const result of batch)if(result.status==='fulfilled')policies.push(result.value);
+ }
+ return policies;
+}
+async function readCurrentPolicy(ctx:PeMutationContext,value:unknown,reads:ReturnType<typeof currentReadBatch>,client?:PoolClient){
  const policy=await readPolicy(ctx,value);
- // Exact source resolution already authorizes and validates these same S1
- // pins. Keep that canonical current read and its durable publication fence.
- if(!policy.exactProfile)await readable(ctx,policy,client);
- if(await current(ctx,policy,client)){
-  if(policy.exactProfile)await readable(ctx,policy,client);
+ // The canonical current predicate authorizes the S1 pins and model itself.
+ // Do not repeat that full world read or prepared-history recovery on success.
+ const strategic=policy.bindings.modelRef.version==='postx-y2-strategic-response-v1';
+ if(strategic)await readable(ctx,policy,client);
+ if(await current(ctx,policy,client,reads)){
+  if(!strategic)await readable(ctx,policy,client);
   throw unavailable();
  }
  await recoverPolicyExperience(ctx,policy);return immutableControl(policy);

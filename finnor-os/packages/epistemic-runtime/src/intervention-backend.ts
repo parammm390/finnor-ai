@@ -53,6 +53,9 @@ export async function invokeInterventionBackend(payload: Record<string, unknown>
     active++;
     try {
       const attempt = await new Promise<{ data: string; error: string | null }>(resolve => {
+        // -B keeps the isolated interpreter from writing new bytecode caches
+        // beside declared sources; the closed scientific namespace refuses any
+        // unlisted file before this spawn (X1_INSTALLATION_UNLISTED_SCIENTIFIC_INPUT).
         const child = spawn(process.env.FINNOR_S3_PYTHON!, ['-I', '-B', script], { shell: false, stdio: ['pipe', 'pipe', 'pipe'],
           env: { NODE_ENV: process.env.NODE_ENV ?? 'production', PATH: process.env.PATH, PYTHONDONTWRITEBYTECODE: '1', OPENBLAS_NUM_THREADS: '1', OMP_NUM_THREADS: '1', MKL_NUM_THREADS: '1', LC_ALL: 'C' } });
         const chunks: Buffer[] = []; let size = 0, failure: string | null = null, stderr = '';

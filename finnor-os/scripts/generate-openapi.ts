@@ -95,6 +95,7 @@ import { DELIBERATION_OPERATIONS } from "../packages/private-equity/src/delibera
 import { ECONOMIC_ORCHESTRATION_OPERATIONS, ECONOMIC_ORCHESTRATION_OPERATION_SCHEMAS } from "../packages/private-equity/src/economic-orchestration/api";
 import { ElicitationOperationSchemas } from "../packages/epistemic-runtime/src/incentive-rule-synthesis/contracts";
 import { R3OwnerOperationSchemas, R3WorkReviewSchema } from "../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts";
+import { ServiceOperationSchemas } from "../packages/private-equity/src/real-world-service/boundaries";
 import { ObligationOperationSchemas } from "../packages/private-equity/src/obligation-contracts";
 import { ComputeSearchRequestSchema, SearchIdSchema, SearchProjectionSchema } from "../packages/private-equity/src/compute-search/contracts";
 import { R4_OPERATIONS, R4_OPERATION_SCHEMAS } from "../packages/private-equity/src/r4/contracts";
@@ -1022,6 +1023,15 @@ for (const [operation,{schema}] of Object.entries(M4Operations)) {
   }}});
 }
 
+for (const [operation, schema] of Object.entries(ServiceOperationSchemas)) {
+ Object.assign(paths, {["/api/real-world-services/"+operation]: {post: {security: secured, requestBody: json(schema),
+  responses: {"200": {description: "Current original Work service programme, purpose-bound participant original or native coordination. CONTROLLED development only; no admission or physical truth granted."},
+   "400": {description: "Strict bounded input rejected"}, "401": {description: "Bearer identity required"},
+   "404": {description: "Permitted original Work or participant protocol unavailable"},
+   "409": {description: "Original terms, source, claim, resources or deadline fenced"},
+   "413": {description: "Byte or declared scope bound exceeded"},
+   "422": {description: "Profile unadmitted"}, "504": {description: "Initial response bound exhausted"}}}}});
+}
 for (const [operation,schema] of Object.entries(ElicitationOperationSchemas)) {
  Object.assign(paths,{["/api/elicitation-protocols/"+operation]:{post:{security:secured,requestBody:json(schema),
   responses:{"200":{description:"Current exact proposed finite mechanism, owner receipt or historical responsibility. Not private truth, consent, admission or settlement.",

@@ -23,6 +23,7 @@ function block(source, start, end) {
 const companyBrainSource = readFileSync(join(apiRoot, "company-brain/[operation]/route.ts"), "utf8")
 const r1Operations = registeredOperations("finnor-os/packages/private-equity/src/r1/api.ts", "R1_OPERATIONS")
 const r1Reads=new Set(["r1-read","r1-review","r1-projection","r1-history","r1-record"])
+const serviceOperations = registeredOperations("finnor-os/packages/private-equity/src/real-world-service/api.ts", "SERVICE_OPERATIONS")
 function registeredOperations(path, name) {
   const source = readFileSync(join(project, path), "utf8")
   const match = source.match(new RegExp(`export\\s+const\\s+${name}\\s*=\\s*(?:new\\s+Set\\s*\\(\\s*)?\\[([\\s\\S]*?)\\]`))
@@ -167,6 +168,8 @@ for (const [family, operations] of [
     r1Reads.has(operation) ? "READ" : ["r1-cancel", "r1-reconcile"].includes(operation) ? "CONTROL" : "MUTATION"]))],
   ["elicitation-protocols", new Map(elicitationOperations.map(operation => [operation,
     elicitationReads.has(operation) ? "READ" : operation === "cancel" ? "CONTROL" : "MUTATION"]))],
+  ["real-world-services", new Map(serviceOperations.map(operation => [operation,
+    ["read", "inbox"].includes(operation) ? "READ" : operation === "advance" ? "CONTROL" : "MUTATION"]))],
 ]) for (const [operation, classification] of operations) operationClasses.set(`${family}/${operation}`, classification)
 for (const [path, classification] of coalitionOperations) {
   if (!ownerLeafOperations.get(path.split("/")[0])?.includes(path.split("/")[1]))
@@ -176,6 +179,7 @@ for (const [path, classification] of coalitionOperations) {
 const routeOperations = new Map([...ownerLeafOperations].map(([family, operations]) => [`${family}/:operation`, operations]))
 for (const [path, operations] of [
   ["company-brain/:operation", companyBrainOperations], ["elicitation-protocols/:operation", elicitationOperations],
+  ["real-world-services/:operation", serviceOperations],
   ["closing/:operation", closingOperations], ["branches/:operation", [...branchOperations.keys()]],
   ["identification-plans/:operation", identificationOperations], ["decision-atlases/:operation", [...atlasOperations.keys()]],
   ["policies/:operation", [...new Set([...ownerLeafOperations.get("policies"), ...r1Operations])]],
@@ -185,6 +189,7 @@ for (const [path, operations] of [
 const familyRules = [
   [/^capabilities\//, "capability-upgrades", "@finnor/orchestration", ["CANVAS"]],
   [/^workforce\/execution-programs/, "workforce-execution", "@finnor/orchestration", ["CANVAS"]],
+  [/^real-world-services\//, "real-world-service", "@finnor/private-equity", ["WORLD"]],
   [/^policies\/r1-/, "exact-control", "@finnor/private-equity", ["CANVAS"]],
   [/^identification-plans\//, "identification-plan", "@finnor/private-equity", ["CANVAS"]],
   [/^decision-atlases\//, "decision-atlas", "@finnor/private-equity", ["CANVAS"]],
@@ -228,6 +233,7 @@ const denyPrefixes = [
 ]
 const restrictedOperations = new Set(["allocations/coalition-release", "obligations/coalition-consent"])
 const humanOnlyPatterns = [
+  /^real-world-services\/(?:intake|prepare-native|source|submit|invite|consent|report)$/,
   /^company-brain\/confidential-(?:consent|revoke|import-release)$/,
   /^company-brain\/interaction-(?:consent|observe|action)$/,
   /^elicitation-protocols\/(?:report|event|review|close|use)$/,
@@ -256,6 +262,7 @@ function familyFor(path) {
 function tags(family) {
   const byFamily = {
     "workforce-execution": ["workforce", "agents", "work", "authority"],
+    "real-world-service": ["work", "source", "authority", "company-brain"],
     "exact-control": ["work", "company-brain"],
     "coalition-programme": ["work", "company-brain", "authority"],
     "decision-atlas": ["work", "company-brain"],

@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 5cbfb76814cc92278e0054ecaf6669652aec9c22e780eba73b2152ab25c87e72.
+// Generated from finnor-os/openapi.json, SHA-256 6db6fdc59744df7461b53c47428fad28477fee47bc63830b1f4901280acdeeee.
 export interface paths {
     "/api/interventions/assess-pywhy": {
         parameters: {
@@ -40022,6 +40022,1834 @@ export interface paths {
                 };
                 /** @description Required authentic runtime configuration unavailable. */
                 503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/real-world-services/intake": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        companyId: string;
+                        instruction: string;
+                        idempotencyKey: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current original Work service programme, purpose-bound participant original or native coordination. CONTROLLED development only; no admission or physical truth granted. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted original Work or participant protocol unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original terms, source, claim, resources or deadline fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte or declared scope bound exceeded */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Profile unadmitted */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Initial response bound exhausted */
+                504: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/real-world-services/prepare-native": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        workId: string;
+                        mandateSource: {
+                            /** Format: uuid */
+                            sourceId: string;
+                            /** Format: uuid */
+                            versionId: string;
+                            contentDigest: string;
+                        };
+                        preparationRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        allocationRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        consumptionRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Current original Work service programme, purpose-bound participant original or native coordination. CONTROLLED development only; no admission or physical truth granted. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted original Work or participant protocol unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original terms, source, claim, resources or deadline fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte or declared scope bound exceeded */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Profile unadmitted */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Initial response bound exhausted */
+                504: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/real-world-services/source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        workId: string;
+                        idempotencyKey: string;
+                        purpose: string;
+                        protocolId: string | null;
+                        body: {
+                            /** @constant */
+                            schema: "finnor.service-outcome.v1";
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            /** @enum {string} */
+                            family: "COOK_CONTINUITY" | "FACILITY_REPAIR" | "INVENTORY_REPLENISHMENT" | "EQUIPMENT_ONBOARDING" | "CUSTOMER_RECOVERY" | "TRAVEL_EVENT_SITE" | "RECURRENT_SERVICE";
+                            /** @enum {string} */
+                            enterpriseArchetype: "OPERATING_COMPANY" | "PROFESSIONAL_SERVICES" | "CAPITAL_INVESTMENT";
+                            trigger: {
+                                /** @constant */
+                                kind: "EXPLICIT_OUTCOME";
+                                /** Format: uuid */
+                                requesterId: string;
+                                originalSource: {
+                                    /** Format: uuid */
+                                    sourceId: string;
+                                    /** Format: uuid */
+                                    versionId: string;
+                                    contentDigest: string;
+                                };
+                            } | {
+                                /** @constant */
+                                kind: "STANDING_EVENT";
+                                eventSource: {
+                                    /** Format: uuid */
+                                    sourceId: string;
+                                    /** Format: uuid */
+                                    versionId: string;
+                                    contentDigest: string;
+                                };
+                                mandateSource: {
+                                    /** Format: uuid */
+                                    sourceId: string;
+                                    /** Format: uuid */
+                                    versionId: string;
+                                    contentDigest: string;
+                                };
+                            };
+                            originalMeaning: string;
+                            /** Format: uuid */
+                            acceptanceOwnerId: string;
+                            mandateSource: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            };
+                            /** Format: date-time */
+                            originalDeadlineAt: string;
+                            fromDate: string;
+                            throughDate: string;
+                            sites: {
+                                id: string;
+                                timeZone: string;
+                            }[];
+                            demands: {
+                                id: string;
+                                siteId: string;
+                                localDate: string;
+                                /** Format: date-time */
+                                startAt: string;
+                                /** Format: date-time */
+                                endAt: string;
+                                quantity: {
+                                    value: string;
+                                    unit: string;
+                                };
+                                criterionIds: string[];
+                                prerequisites: string[];
+                            }[];
+                            criteria: {
+                                id: string;
+                                /** @enum {string} */
+                                phase: "READINESS" | "TRIAL" | "SERVICE" | "HANDBACK" | "ACCESS_RETIREMENT";
+                                /** @enum {string} */
+                                kind: "OBSERVED_EVENT" | "INSPECTION" | "SENSORY" | "PROFESSIONAL" | "ORIGINAL_ACCEPTANCE";
+                                hard: boolean;
+                                independentOfProvider: boolean;
+                                qualificationIds: string[];
+                                maximumAgeSeconds: number;
+                                description: string;
+                            }[];
+                            disclosure: {
+                                purpose: string;
+                                operationalRequirements: string[];
+                                prohibitedData: string[];
+                            };
+                            currency: string;
+                            parentPolicy: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                            parentAllocation: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                            reservedDecisions: {
+                                id: string;
+                                /** Format: uuid */
+                                ownerId: string;
+                                reason: string;
+                            }[];
+                            permittedOperations: ("OFFER" | "TRIAL" | "BOOK" | "ACCESS" | "CANCEL" | "PAY" | "RETIRE_ACCESS")[];
+                            assumptions: string[];
+                        } | {
+                            /** @constant */
+                            schema: "finnor.service-provider-evidence.v1";
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            /** Format: uuid */
+                            providerId: string;
+                            /** Format: uuid */
+                            reportingPrincipalId: string;
+                            /** @enum {string} */
+                            provisionKind: "INTERNAL" | "EXISTING_VENDOR_EXPANSION" | "TEMPORARY_PROVIDER" | "PARTIAL_COVERAGE" | "BACKUP";
+                            /** @enum {string} */
+                            classification: "SERVICE_PROCUREMENT" | "EMPLOYMENT_RESERVED" | "UNRESOLVED";
+                            classificationBasis: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                            lawfulDiscoveryBasis: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                            qualifications: {
+                                id: string;
+                                /** Format: date-time */
+                                validUntil: string;
+                                evidence: {
+                                    /** Format: uuid */
+                                    sourceId: string;
+                                    /** Format: uuid */
+                                    versionId: string;
+                                    contentDigest: string;
+                                };
+                                /** Format: uuid */
+                                verifiedByPrincipalId: string;
+                                limitation: string;
+                            }[];
+                            availability: {
+                                id: string;
+                                siteId: string;
+                                /** Format: date-time */
+                                startAt: string;
+                                /** Format: date-time */
+                                endAt: string;
+                                capacity: {
+                                    value: string;
+                                    unit: string;
+                                };
+                                basis: {
+                                    /** Format: uuid */
+                                    sourceId: string;
+                                    /** Format: uuid */
+                                    versionId: string;
+                                    contentDigest: string;
+                                };
+                                /** Format: date-time */
+                                validUntil: string;
+                            }[];
+                            quote: {
+                                revision: string;
+                                /** Format: date-time */
+                                validUntil: string;
+                                cancellation: string;
+                                compensation: string;
+                                acceptance: string;
+                                perInstanceCosts: {
+                                    id: string;
+                                    /** @enum {string} */
+                                    category: "PROVIDER" | "MATERIAL" | "TRIAL" | "EVALUATOR" | "LOGISTICS" | "ACCESS" | "INSPECTION" | "CANCELLATION" | "BACKUP" | "WASTE" | "COORDINATION" | "SUPERVISION" | "RESCUE" | "MODEL_TOOL_COMPUTE" | "STORAGE_MAINTENANCE" | "TAX_FINANCING" | "RESIDUAL_LIABILITY";
+                                    amount: {
+                                        currency: string;
+                                        minor: string;
+                                    } | null;
+                                    /** @enum {string} */
+                                    basis: "QUOTE" | "ACCRUED" | "CASH" | "EXPOSURE" | "UNKNOWN";
+                                    evidence: {
+                                        /** Format: uuid */
+                                        sourceId: string;
+                                        /** Format: uuid */
+                                        versionId: string;
+                                        contentDigest: string;
+                                    }[];
+                                    reason: string;
+                                }[];
+                                unresolvedTerms: string[];
+                            };
+                            /** Format: date-time */
+                            evidenceValidUntil: string;
+                            /** @constant */
+                            claimsNotIndependentPhysicalTruth: true;
+                        } | {
+                            /** @constant */
+                            schema: "finnor.service-mandate.v1";
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            /** Format: uuid */
+                            authorizedByPrincipalId: string;
+                            purpose: string;
+                            permittedOperations: ("OFFER" | "TRIAL" | "BOOK" | "ACCESS" | "CANCEL" | "PAY" | "RETIRE_ACCESS")[];
+                            /** Format: date-time */
+                            validFrom: string;
+                            /** Format: date-time */
+                            expiresAt: string;
+                            revoked: boolean;
+                            /** @enum {string} */
+                            originalTrigger: "EXPLICIT_OUTCOME" | "STANDING_EVENT";
+                            eventSource: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            } | null;
+                        } | {
+                            /** @constant */
+                            schema: "finnor.service-qualification.v1";
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            /** Format: uuid */
+                            subjectPrincipalId: string;
+                            qualificationId: string;
+                            process: string;
+                            /** Format: uuid */
+                            verifiedByPrincipalId: string;
+                            /** Format: date-time */
+                            expiresAt: string;
+                            evidence: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                            limitations: string[];
+                        } | {
+                            /** @constant */
+                            schema: "finnor.service-trigger.v1";
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            /** @enum {string} */
+                            kind: "EXPLICIT_OUTCOME" | "STANDING_EVENT";
+                            description: string;
+                            /** Format: date-time */
+                            occurredAt: string;
+                            basis: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                        } | {
+                            /** @constant */
+                            schema: "finnor.service-native-execution.v1";
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            instanceId: string;
+                            /** Format: uuid */
+                            providerId: string;
+                            termsDigest: string;
+                            /** @enum {string} */
+                            operation: "OFFER" | "TRIAL" | "BOOK" | "ACCESS" | "CANCEL" | "PAY" | "RETIRE_ACCESS";
+                            coveredTerms: {
+                                instanceId: string;
+                                /** Format: uuid */
+                                providerId: string;
+                                termsDigest: string;
+                            }[];
+                            paymentPlan: {
+                                instanceId: string;
+                                /** Format: uuid */
+                                providerId: string;
+                                termsDigest: string;
+                                invoiceSource: {
+                                    /** Format: uuid */
+                                    sourceId: string;
+                                    /** Format: uuid */
+                                    versionId: string;
+                                    contentDigest: string;
+                                };
+                                invoiceId: string;
+                                amount: {
+                                    currency: string;
+                                    minor: string;
+                                };
+                            }[];
+                            obligationRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                            parentAllocation: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                            execution: {
+                                request: {
+                                    ref: {
+                                        owner: string;
+                                        id: string;
+                                        version: string;
+                                        contentDigest: string;
+                                    };
+                                    ir: {
+                                        [key: string]: unknown;
+                                    };
+                                    admissions: unknown[];
+                                };
+                                authorization: {
+                                    body: {
+                                        [key: string]: unknown;
+                                    };
+                                    signature: string;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Current original Work service programme, purpose-bound participant original or native coordination. CONTROLLED development only; no admission or physical truth granted. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted original Work or participant protocol unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original terms, source, claim, resources or deadline fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte or declared scope bound exceeded */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Profile unadmitted */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Initial response bound exhausted */
+                504: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/real-world-services/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        workId: string;
+                        /** Format: uuid */
+                        workInputId: string;
+                        idempotencyKey: string;
+                        outcomeSource: {
+                            /** Format: uuid */
+                            sourceId: string;
+                            /** Format: uuid */
+                            versionId: string;
+                            contentDigest: string;
+                        };
+                        providerSources: {
+                            /** Format: uuid */
+                            sourceId: string;
+                            /** Format: uuid */
+                            versionId: string;
+                            contentDigest: string;
+                        }[];
+                        budgetObligationRef: {
+                            owner: string;
+                            id: string;
+                            version: string;
+                            contentDigest: string;
+                        };
+                        s7EstimandId: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current original Work service programme, purpose-bound participant original or native coordination. CONTROLLED development only; no admission or physical truth granted. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted original Work or participant protocol unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original terms, source, claim, resources or deadline fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte or declared scope bound exceeded */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Profile unadmitted */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Initial response bound exhausted */
+                504: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/real-world-services/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        workId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current original Work service programme, purpose-bound participant original or native coordination. CONTROLLED development only; no admission or physical truth granted. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted original Work or participant protocol unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original terms, source, claim, resources or deadline fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte or declared scope bound exceeded */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Profile unadmitted */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Initial response bound exhausted */
+                504: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/real-world-services/advance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        requestId: string;
+                        expectedArtifactDigest: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current original Work service programme, purpose-bound participant original or native coordination. CONTROLLED development only; no admission or physical truth granted. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted original Work or participant protocol unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original terms, source, claim, resources or deadline fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte or declared scope bound exceeded */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Profile unadmitted */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Initial response bound exhausted */
+                504: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/real-world-services/invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        requestId: string;
+                        /** Format: uuid */
+                        participantId: string;
+                        instanceId: string;
+                        /** Format: uuid */
+                        providerId: string;
+                        termsDigest: string;
+                        /** @enum {string} */
+                        role: "PROVIDER" | "RECIPIENT" | "INSPECTOR" | "PROFESSIONAL" | "ACCEPTANCE_OWNER";
+                        criterionIds: string[];
+                        permittedKinds: ("PROVIDER_EVIDENCE" | "QUOTE" | "ACCEPTED" | "STARTED" | "DELIVERED" | "OBSERVATION" | "MISSED" | "DISPUTED" | "CANCELLATION_REQUESTED" | "CANCELLED" | "ORIGINAL_ACCEPTANCE" | "INVOICE" | "PAYMENT" | "COST")[];
+                        qualificationRefs: {
+                            /** Format: uuid */
+                            sourceId: string;
+                            /** Format: uuid */
+                            versionId: string;
+                            contentDigest: string;
+                        }[];
+                        incentiveRef: {
+                            /** Format: uuid */
+                            sourceId: string;
+                            /** Format: uuid */
+                            versionId: string;
+                            contentDigest: string;
+                        } | null;
+                        /** Format: date-time */
+                        expiresAt: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current original Work service programme, purpose-bound participant original or native coordination. CONTROLLED development only; no admission or physical truth granted. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted original Work or participant protocol unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original terms, source, claim, resources or deadline fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte or declared scope bound exceeded */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Profile unadmitted */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Initial response bound exhausted */
+                504: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/real-world-services/inbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description Current original Work service programme, purpose-bound participant original or native coordination. CONTROLLED development only; no admission or physical truth granted. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted original Work or participant protocol unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original terms, source, claim, resources or deadline fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte or declared scope bound exceeded */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Profile unadmitted */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Initial response bound exhausted */
+                504: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/real-world-services/consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        protocolId: string;
+                        revoke: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Current original Work service programme, purpose-bound participant original or native coordination. CONTROLLED development only; no admission or physical truth granted. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted original Work or participant protocol unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original terms, source, claim, resources or deadline fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte or declared scope bound exceeded */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Profile unadmitted */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Initial response bound exhausted */
+                504: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/real-world-services/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        protocolId: string;
+                        idempotencyKey: string;
+                        observation: {
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            instanceId: string;
+                            /** Format: uuid */
+                            providerId: string;
+                            termsDigest: string;
+                            /** Format: date-time */
+                            at: string;
+                            limits: string[];
+                            unobserved: string[];
+                            basis: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                            /** @constant */
+                            kind: "QUOTE";
+                            quoteRevision: string;
+                        } | {
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            instanceId: string;
+                            /** Format: uuid */
+                            providerId: string;
+                            termsDigest: string;
+                            /** Format: date-time */
+                            at: string;
+                            limits: string[];
+                            unobserved: string[];
+                            basis: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                            /** @constant */
+                            kind: "ACCEPTED";
+                            quoteRevision: string;
+                            effectRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                        } | {
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            instanceId: string;
+                            /** Format: uuid */
+                            providerId: string;
+                            termsDigest: string;
+                            /** Format: date-time */
+                            at: string;
+                            limits: string[];
+                            unobserved: string[];
+                            basis: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                            /** @constant */
+                            kind: "STARTED";
+                        } | {
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            instanceId: string;
+                            /** Format: uuid */
+                            providerId: string;
+                            termsDigest: string;
+                            /** Format: date-time */
+                            at: string;
+                            limits: string[];
+                            unobserved: string[];
+                            basis: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                            /** @constant */
+                            kind: "DELIVERED";
+                            quantity: {
+                                value: string;
+                                unit: string;
+                            };
+                        } | {
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            instanceId: string;
+                            /** Format: uuid */
+                            providerId: string;
+                            termsDigest: string;
+                            /** Format: date-time */
+                            at: string;
+                            limits: string[];
+                            unobserved: string[];
+                            basis: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                            criterionId: string;
+                            /** @enum {string} */
+                            result: "PASS" | "FAIL" | "CONFLICTING" | "UNOBSERVED";
+                            note: string;
+                            /** @constant */
+                            kind: "OBSERVATION";
+                        } | {
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            instanceId: string;
+                            /** Format: uuid */
+                            providerId: string;
+                            termsDigest: string;
+                            /** Format: date-time */
+                            at: string;
+                            limits: string[];
+                            unobserved: string[];
+                            basis: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                            /** @constant */
+                            kind: "MISSED";
+                            reason: string;
+                        } | {
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            instanceId: string;
+                            /** Format: uuid */
+                            providerId: string;
+                            termsDigest: string;
+                            /** Format: date-time */
+                            at: string;
+                            limits: string[];
+                            unobserved: string[];
+                            basis: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                            /** @constant */
+                            kind: "DISPUTED";
+                            reason: string;
+                        } | {
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            instanceId: string;
+                            /** Format: uuid */
+                            providerId: string;
+                            termsDigest: string;
+                            /** Format: date-time */
+                            at: string;
+                            limits: string[];
+                            unobserved: string[];
+                            basis: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                            /** @constant */
+                            kind: "CANCELLATION_REQUESTED";
+                            effectRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                        } | {
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            instanceId: string;
+                            /** Format: uuid */
+                            providerId: string;
+                            termsDigest: string;
+                            /** Format: date-time */
+                            at: string;
+                            limits: string[];
+                            unobserved: string[];
+                            basis: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                            /** @constant */
+                            kind: "CANCELLED";
+                            effectRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                            residualCosts: {
+                                id: string;
+                                /** @enum {string} */
+                                category: "PROVIDER" | "MATERIAL" | "TRIAL" | "EVALUATOR" | "LOGISTICS" | "ACCESS" | "INSPECTION" | "CANCELLATION" | "BACKUP" | "WASTE" | "COORDINATION" | "SUPERVISION" | "RESCUE" | "MODEL_TOOL_COMPUTE" | "STORAGE_MAINTENANCE" | "TAX_FINANCING" | "RESIDUAL_LIABILITY";
+                                amount: {
+                                    currency: string;
+                                    minor: string;
+                                } | null;
+                                /** @enum {string} */
+                                basis: "QUOTE" | "ACCRUED" | "CASH" | "EXPOSURE" | "UNKNOWN";
+                                evidence: {
+                                    /** Format: uuid */
+                                    sourceId: string;
+                                    /** Format: uuid */
+                                    versionId: string;
+                                    contentDigest: string;
+                                }[];
+                                reason: string;
+                            }[];
+                        } | {
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            instanceId: string;
+                            /** Format: uuid */
+                            providerId: string;
+                            termsDigest: string;
+                            /** Format: date-time */
+                            at: string;
+                            limits: string[];
+                            unobserved: string[];
+                            basis: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                            /** @constant */
+                            kind: "ORIGINAL_ACCEPTANCE";
+                            accepted: boolean;
+                            observedSourceIds: string[];
+                        } | {
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            instanceId: string;
+                            /** Format: uuid */
+                            providerId: string;
+                            termsDigest: string;
+                            /** Format: date-time */
+                            at: string;
+                            limits: string[];
+                            unobserved: string[];
+                            basis: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                            /** @constant */
+                            kind: "INVOICE";
+                            invoiceId: string;
+                            quantity: {
+                                value: string;
+                                unit: string;
+                            };
+                            amount: {
+                                currency: string;
+                                minor: string;
+                            };
+                        } | {
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            instanceId: string;
+                            /** Format: uuid */
+                            providerId: string;
+                            termsDigest: string;
+                            /** Format: date-time */
+                            at: string;
+                            limits: string[];
+                            unobserved: string[];
+                            basis: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                            /** @constant */
+                            kind: "PAYMENT";
+                            invoiceId: string;
+                            effectRef: {
+                                owner: string;
+                                id: string;
+                                version: string;
+                                contentDigest: string;
+                            };
+                            /** @enum {string} */
+                            status: "UNKNOWN" | "SETTLED" | "DISPUTED";
+                            amount: {
+                                currency: string;
+                                minor: string;
+                            };
+                        } | {
+                            scope: {
+                                /** Format: uuid */
+                                tenantId: string;
+                                /** Format: uuid */
+                                principalId: string;
+                                /** Format: uuid */
+                                companyId: string;
+                                /** Format: uuid */
+                                workId: string;
+                                businessAssignmentId: string;
+                            };
+                            instanceId: string;
+                            /** Format: uuid */
+                            providerId: string;
+                            termsDigest: string;
+                            /** Format: date-time */
+                            at: string;
+                            limits: string[];
+                            unobserved: string[];
+                            basis: {
+                                /** Format: uuid */
+                                sourceId: string;
+                                /** Format: uuid */
+                                versionId: string;
+                                contentDigest: string;
+                            }[];
+                            /** @constant */
+                            kind: "COST";
+                            cost: {
+                                id: string;
+                                /** @enum {string} */
+                                category: "PROVIDER" | "MATERIAL" | "TRIAL" | "EVALUATOR" | "LOGISTICS" | "ACCESS" | "INSPECTION" | "CANCELLATION" | "BACKUP" | "WASTE" | "COORDINATION" | "SUPERVISION" | "RESCUE" | "MODEL_TOOL_COMPUTE" | "STORAGE_MAINTENANCE" | "TAX_FINANCING" | "RESIDUAL_LIABILITY";
+                                amount: {
+                                    currency: string;
+                                    minor: string;
+                                } | null;
+                                /** @enum {string} */
+                                basis: "QUOTE" | "ACCRUED" | "CASH" | "EXPOSURE" | "UNKNOWN";
+                                evidence: {
+                                    /** Format: uuid */
+                                    sourceId: string;
+                                    /** Format: uuid */
+                                    versionId: string;
+                                    contentDigest: string;
+                                }[];
+                                reason: string;
+                            };
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Current original Work service programme, purpose-bound participant original or native coordination. CONTROLLED development only; no admission or physical truth granted. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded input rejected */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bearer identity required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Permitted original Work or participant protocol unavailable */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original terms, source, claim, resources or deadline fenced */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Byte or declared scope bound exceeded */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Profile unadmitted */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Initial response bound exhausted */
+                504: {
                     headers: {
                         [name: string]: unknown;
                     };

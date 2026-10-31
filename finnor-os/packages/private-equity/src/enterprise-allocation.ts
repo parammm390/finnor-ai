@@ -8,7 +8,7 @@ import { allocationSourcesCurrent, produceAllocationCandidate } from '../../epis
 import { parseEconomicMandate, immutableControl, parseControlDecision } from '../../epistemic-runtime/src/control-contracts';
 import { epistemicHash } from '../../epistemic-runtime/src/source-precedence';
 import { ExperimentRefSchema } from '../../epistemic-runtime/src/experiments';
-import { readEnterpriseContingentPolicy, chooseEnterpriseControlBranch } from './enterprise-control';
+import { readEnterpriseContingentPolicy, readEnterpriseCurrentContingentPolicies, chooseEnterpriseControlBranch } from './enterprise-control';
 import { validateBeliefViewPin } from './enterprise-beliefs';
 import { readAllocationSnapshot, putAllocationResource, persistAllocationProposal, readStoredAllocation, readAllocationReplay, commitAllocationReservation, readAllocationConsumptions, recordAllocationConsumption, releaseUntouchedAllocation, retainAllocationReconciliation, persistAllocationExperience,applyProtectedAllocationSettlement,retainProtectedAllocationAttempt,allocationAuthorityRequest } from './allocation-store';
 import {readOwnerTransportEvent} from '../../governed-execution/src/owner-transport';
@@ -24,13 +24,7 @@ export interface R3AllocationClearingInput {schema:'finnor.s5.r3-clearing-reques
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 const denied=()=>new AllocationContractError('PERMITTED_CONTEXT_UNAVAILABLE','Permitted S5 context is unavailable');
-/** Bound independent owner reads without skipping their current rights/source
- * checks. Await the whole batch on refusal so no detached read outlives clearing. */
-async function readCurrentPolicies(ctx:PeMutationContext,refs:ExperimentRef[]):Promise<ContingentPolicy[]>{
- const policies:ContingentPolicy[]=[];
- for(let start=0;start<refs.length;start+=4){const batch=await Promise.allSettled(refs.slice(start,start+4).map(ref=>readEnterpriseContingentPolicy(ctx,ref)));const failure=batch.find(r=>r.status==='rejected');if(failure?.status==='rejected')throw failure.reason;for(const read of batch)if(read.status==='fulfilled')policies.push(read.value);}
- return policies;
-}
+const readCurrentPolicies=readEnterpriseCurrentContingentPolicies;
 function rebuilt(problem:CanonicalAllocationProblem,resources:AllocationResource[],outstanding:AllocationOutstandingCommitment[],knowledgeAt=problem.knowledgeAt):CanonicalAllocationProblem {
   const {ref,...body}=problem;
   const exactEncoding=body.quantityEncoding==='DECIMAL_OR_RATIONAL_V2'||outstanding.some(row=>row.envelopes.some(e=>[...e.quantities,...e.minimumQuantities].some(q=>q.includes('/'))));
@@ -232,7 +226,8 @@ async function validateAllocationState(ctx:PeMutationContext,value:unknown,clien
   const capability=issued.certificate.compute.usage.backend.capabilityLease as CapabilityUseLease|undefined;
   if(capability&&capability.mode!=='SHADOW')try{await recheckAllocationCapability(issued.problem,capability);}catch{reasons.push('S8_CAPABILITY_REVOKED_OR_CHANGED_ACCOUNTABLE_EXPOSURE_RETAINED');}
   const current=await readAllocationSnapshot(ctx,client);if(!sameAllocationRef(current.resources,issued.problem.resources))reasons.push('RESOURCE_REVISION_OR_RIGHTS_CHANGED');
-  for(const policy of issued.problem.policies)try{await readEnterpriseContingentPolicy(ctx,policy.ref,client);}catch{reasons.push('POLICY_MODEL_SOURCE_OR_RIGHTS_CHANGED');}
+  try{await readCurrentPolicies(ctx,issued.problem.policies.map(policy=>policy.ref),client);}
+  catch{reasons.push('POLICY_MODEL_SOURCE_OR_RIGHTS_CHANGED');}
   try{await currentPins(ctx,current.resources,client);const other=current.outstanding.filter(o=>!sameAllocationRef(o.reservationRef,issued.reservation?.ref)),check=verifyCanonicalAllocation(rebuilt(issued.problem,current.resources,other,new Date().toISOString()),issued.certificate.check.selectedPolicyIds);
     if(!check.feasible||!sameAllocationRef(check.envelopes,issued.certificate.check.envelopes))reasons.push(...check.reasons.length?check.reasons:['CURRENT_RESERVED_ENVELOPE_CHANGED']);}
   catch(e){reasons.push(e instanceof Error?e.message:'CURRENT_RESOURCE_CHECK_UNAVAILABLE');}
@@ -330,15 +325,36 @@ export async function settleEnterpriseAllocation(ctx:PeMutationContext,input:{al
  * original envelope. This does not grant spending, release or effect authority. */
 export async function assessEnterpriseAllocationContinuation(ctx:PeMutationContext,obligation:DurableObligation){
  const issued=await readEnterpriseAllocation(ctx,obligation.allocationRef),r=issued.reservation,use=issued.consumptions.find(u=>sameAllocationRef(u.ref,obligation.consumptionRef));
- if(!r||r.revocationReason||r.status!=='UNKNOWN_OUTCOME'||r.revision!==obligation.preconditions.reservationRevision+1||!use||use.status!=='UNKNOWN_OUTCOME'||!sameAllocationRef(r.ref,obligation.reservationRef)||!sameAllocationRef(use.envelope,obligation.resourceEnvelope)||use.effectRef?.id!==obligation.effectRef.id||use.effectRef?.contentDigest!==obligation.effectRef.semanticHash)throw denied();
- const rows=await withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx),readOnly:true},async(_db,c)=>(await c.query("SELECT body FROM finnor_os.s5_history WHERE tenant_id=$1 AND subject_id=$2 AND operation='PROTECTED_S6_ATTEMPT' ORDER BY revision LIMIT 64",[ctx.auth.tenantId,use.ref.id])).rows);
- const proof=rows.map(row=>row.body).find(p=>{
-  const t=p.reservationTransition;
-  return t?.schema==='finnor.s5.retained-attempt-transition.v1'&&sameAllocationRef(p.obligationRef,obligation.ref)&&sameAllocationRef(t.reservationRef,r.ref)&&t.before?.revision===obligation.preconditions.reservationRevision&&['RESERVED','CONSUMPTION_PENDING'].includes(t.before.status)&&t.after?.revision===r.revision&&t.after.status==='UNKNOWN_OUTCOME'&&sameAllocationRef(t.before.envelopes,t.after.envelopes)&&sameAllocationRef(t.after.envelopes,r.envelopes)&&sameAllocationRef(t.consumptionEnvelope,obligation.resourceEnvelope)&&p.resourceEnvelopeRetained===true&&p.qualifiedActualConsumption===null&&p.qualifiedSettlement===null;
- });
- if(!proof)throw denied();
+ if(!r||r.revocationReason||r.status!=='UNKNOWN_OUTCOME'||r.revision!==obligation.preconditions.reservationRevision+1||!use||!['INTENDED_PENDING_S6','UNKNOWN_OUTCOME'].includes(use.status)||!sameAllocationRef(r.ref,obligation.reservationRef)||!sameAllocationRef(r.envelopes,obligation.resourceEnvelope)||!sameAllocationRef(use.envelope,obligation.resourceEnvelope)||use.effectRef?.id!==obligation.effectRef.id||use.effectRef?.contentDigest!==obligation.effectRef.semanticHash)throw denied();
+ // A protected attempt changes the joint reservation once, not only its own
+ // consumption. Untouched original siblings need the same S5 transition proof.
+ const rows=await withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx),readOnly:true},async(_db,c)=>(await c.query(`SELECT h.body
+  FROM finnor_os.s5_history h JOIN finnor_os.s5_consumptions co
+   ON co.tenant_id=h.tenant_id AND co.consumption_id=h.subject_id
+  WHERE h.tenant_id=$1 AND co.principal_id=$2 AND co.reservation_id=$3
+   AND h.operation='PROTECTED_S6_ATTEMPT'
+   AND h.body->'reservationTransition'->'before'->>'revision'=$4
+   AND h.body->'reservationTransition'->'after'->>'revision'=$5
+  ORDER BY h.subject_id,h.revision LIMIT 2`,
+  [ctx.auth.tenantId,actor(ctx),r.ref.id,String(obligation.preconditions.reservationRevision),String(r.revision)])).rows);
+ if(rows.length!==1)throw denied();
+ const proof=rows[0]!.body,t=proof.reservationTransition;
+ const witnessUse=issued.consumptions.find(u=>sameAllocationRef(u.ref,proof.event?.detail?.consumptionRef));
+ const {readEnterpriseDurableObligation}=await import('./enterprise-obligations');
+ const witness=await readEnterpriseDurableObligation(ctx,proof.obligationRef);
+ if(!witnessUse||!witnessUse.effectRef||!issued.certificate.check.selectedPolicyIds.includes(witness.policyRef.id)||!issued.certificate.check.selectedPolicyIds.includes(obligation.policyRef.id)
+  ||!issued.problem.policies.some(p=>sameAllocationRef(p.ref,witness.policyRef))||!issued.problem.policies.some(p=>sameAllocationRef(p.ref,obligation.policyRef))
+  ||!sameAllocationRef(witness.allocationRef,obligation.allocationRef)||!sameAllocationRef(witness.reservationRef,r.ref)||!sameAllocationRef(witness.consumptionRef,witnessUse.ref)
+  ||!sameAllocationRef(witness.mandateRef,obligation.mandateRef)||witness.rightsRef!==obligation.rightsRef||witness.episodeId!==obligation.episodeId
+  ||witness.workLineage?.workId!==obligation.workLineage?.workId||witness.workLineage?.workInputId!==obligation.workLineage?.workInputId
+  ||witnessUse.effectRef.id!==witness.effectRef.id||witnessUse.effectRef.contentDigest!==witness.effectRef.semanticHash
+  ||!sameAllocationRef(witnessUse.envelope,obligation.resourceEnvelope)||!sameAllocationRef(witness.resourceEnvelope,obligation.resourceEnvelope)
+  ||t?.schema!=='finnor.s5.retained-attempt-transition.v1'||!sameAllocationRef(t.reservationRef,r.ref)||t.before?.revision!==obligation.preconditions.reservationRevision
+  ||!['RESERVED','CONSUMPTION_PENDING'].includes(t.before.status)||t.after?.revision!==r.revision||t.after.status!=='UNKNOWN_OUTCOME'
+  ||!sameAllocationRef(t.before.envelopes,t.after.envelopes)||!sameAllocationRef(t.after.envelopes,r.envelopes)||!sameAllocationRef(t.consumptionEnvelope,witnessUse.envelope)
+  ||proof.resourceEnvelopeRetained!==true||proof.qualifiedActualConsumption!==null||proof.qualifiedSettlement!==null)throw denied();
  const accepted=await readOwnerTransportEvent({semanticOwner:'S5',tenantId:ctx.auth.tenantId,principalId:actor(ctx)},proof.event.eventId),d=accepted.event.detail;
- if(accepted.receipt.protectedExecution!==true||accepted.receipt.semanticOwner!=='S6'||accepted.event.type!=='ATTEMPT'||!sameAllocationRef(accepted.event,proof.event)||!sameAllocationRef(accepted.receipt,proof.receipt)||d?.schema!=='finnor.s6.protected-execution.v1'||!sameAllocationRef(d.obligationRef,obligation.ref)||!sameAllocationRef(d.allocationRef,obligation.allocationRef)||!sameAllocationRef(d.reservationRef,r.ref)||!sameAllocationRef(d.consumptionRef,use.ref)||!sameAllocationRef(d.effectRef,obligation.effectRef)||!sameAllocationRef(d.resourceEnvelope,obligation.resourceEnvelope)||!obligation.intervention.channels.some(c=>d.memberId===`request-member:${epistemicHash([obligation.ref,c.exposureId])}`))throw denied();
+ if(accepted.receipt.protectedExecution!==true||accepted.receipt.semanticOwner!=='S6'||accepted.event.type!=='ATTEMPT'||!sameAllocationRef(accepted.event,proof.event)||!sameAllocationRef(accepted.receipt,proof.receipt)||d?.schema!=='finnor.s6.protected-execution.v1'||!sameAllocationRef(d.obligationRef,witness.ref)||!sameAllocationRef(d.allocationRef,obligation.allocationRef)||!sameAllocationRef(d.reservationRef,r.ref)||!sameAllocationRef(d.consumptionRef,witnessUse.ref)||!sameAllocationRef(d.effectRef,witness.effectRef)||!sameAllocationRef(d.resourceEnvelope,obligation.resourceEnvelope)||!witness.intervention.channels.some(c=>d.memberId===`request-member:${epistemicHash([witness.ref,c.exposureId])}`))throw denied();
  return {reservationRevision:r.revision,attemptEventId:accepted.event.eventId,resourceEnvelopeRetained:true as const,releaseGranted:false as const};
 }
 

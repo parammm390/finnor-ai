@@ -9,13 +9,13 @@ import { spawn } from 'node:child_process';
 
 export async function authenticatedApiFixture(repo: string, actor: string, record: (entry: unknown) => void,
   options: { frontendOrigin?: string; installation?: string; installationProfile?: "POSTZ_W2";
-    additionalActors?:string[];
-    maximumActors?:2|4;
-    afterResponse?: (path:string,body:string,status:number,request:{method:string;observer:boolean})=>Promise<void> } = {}) {
+    additionalActors?:string[]; maximumActors?:number;
+    afterResponse?: (path:string,body:string,status:number,request:{method:string;observer:boolean;body:string})=>Promise<void> } = {}) {
   const secret = randomBytes(32), password = randomBytes(24).toString("hex"), email = actor + "@test.invalid";
   const actors=[actor,...(options.additionalActors??[])];
-  if(![2,4].includes(options.maximumActors??2)||actors.length>(options.maximumActors??2)||
-    new Set(actors).size!==actors.length)throw Error('X1_LOCAL_AUTH_IDENTITY_BOUND');
+  const maximumActors=options.maximumActors??2;
+  if(!Number.isInteger(maximumActors)||maximumActors<1||maximumActors>16||actors.length>maximumActors
+    ||new Set(actors).size!==actors.length)throw Error('X1_LOCAL_AUTH_IDENTITY_BOUND');
   const refreshTokens=new Map(actors.map(subject=>[subject,randomBytes(32).toString('base64url')]));
   if(options.frontendOrigin&&!/^http:\/\/127\.0\.0\.1:[0-9]{2,5}$/.test(options.frontendOrigin))
     throw Error('X1_OWNED_LOOPBACK_FRONTEND_REQUIRED');
@@ -134,7 +134,7 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
           ...(!['GET','HEAD'].includes(req.method??'GET')?{body}:{})});
         const bytes=Buffer.from(await response.arrayBuffer()),out:Record<string,string>={};response.headers.forEach((v,k)=>{out[k]=v;});
         await options.afterResponse?.(url.pathname,bytes.toString('utf8'),response.status,
-          {method:req.method??'GET',observer:req.headers['x-x1-observer']==='1'});
+          {method:req.method??'GET',observer:req.headers['x-x1-observer']==='1',body});
         finish(url.pathname,response.status,out,bytes);
         record({path:url.pathname,method:req.method,status:response.status,bearer:Boolean(req.headers.authorization),
           elapsedMs:performance.now()-started,compiledApi:true});return;
@@ -160,7 +160,7 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
       const out: Record<string, string> = {}; response.headers.forEach((v, k) => { out[k] = v; });
       const responseBytes=Buffer.from(await response.arrayBuffer());
       await options.afterResponse?.(url.pathname,responseBytes.toString('utf8'),response.status,
-        {method:req.method??'GET',observer:req.headers['x-x1-observer']==='1'});
+        {method:req.method??'GET',observer:req.headers['x-x1-observer']==='1',body});
       finish(url.pathname,response.status,out,responseBytes);
       record({ path: url.pathname, method: req.method, status: response.status, bearer: Boolean(req.headers.authorization), elapsedMs: performance.now() - started });
     } catch (error) { record({ path: req.url, status: 500, predicate: String((error as Error).message) });

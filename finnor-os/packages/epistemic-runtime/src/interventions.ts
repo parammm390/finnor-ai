@@ -12,7 +12,7 @@ export class InterventionContractError extends Error {
 const text = z.string().min(1).max(256), instant = z.string().datetime({ offset: true });
 const finite = z.number().finite().min(-1e9).max(1e9);
 const root = z.object({ entityType: text, entityId: z.string().uuid() }).strict();
-const operation = z.enum(['PRICE_CHANGE', 'WORKING_CAPITAL', 'SUPPLIER_SWITCH', 'FINANCING_CHANGE', 'DISCLOSURE']);
+const operation = z.enum(['PRICE_CHANGE', 'WORKING_CAPITAL', 'SUPPLIER_SWITCH', 'FINANCING_CHANGE', 'DISCLOSURE', 'SERVICE_TRANSITION_V1']);
 const atom = z.union([z.object({ kind: z.literal('CONSTANT') }).strict(), z.object({ kind: z.enum(['STATE', 'EXPOSURE']), id: text, lag: z.number().int().min(0).max(3) }).strict()]);
 const feature = z.union([atom, z.object({ kind: z.literal('PRODUCT'), left: atom, right: atom }).strict()]);
 const categories = ['SEQUENTIAL_EXCHANGEABILITY', 'POSITIVITY', 'CONSISTENCY', 'MEASUREMENT', 'SELECTION', 'INTERFERENCE', 'STATIONARITY', 'FUNCTIONAL_FORM', 'ACTOR_INFORMATION'] as const;

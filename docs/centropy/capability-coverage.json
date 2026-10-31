@@ -1,15 +1,15 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-10-31T19:27:20.579Z",
-  "sourceBaseCommit": "d48af5ef367d04f81912e4e21ac6cd03162cbde8",
-  "manifestSha256": "fb3c1c4d71d0bf71711e315f23ab269d6ef2841f44487cb6927216f6a231f4e4",
+  "generatedAt": "2026-10-31T22:42:19.720Z",
+  "sourceBaseCommit": "7ac8614fb4f432358c942842f9f82d94f10418ed",
+  "manifestSha256": "baf73d0d5f15431ae0d4c8bde9a6d5218cf53b1c8fd618811077e635ab19ff1c",
   "formsSha256": "75706ba9ac99c79ed7f485e001b401d01fd91d6dd7df43d3fe9aa9c941fbea8c",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
   "counts": {
-    "total": 682,
-    "http": 609,
+    "total": 692,
+    "http": 619,
     "planner": 73,
-    "classified": 682,
+    "classified": 692,
     "classificationCoveragePercent": 100,
     "unclassified": 0,
     "backendApiWithoutMountedFrontend": 98,
@@ -18,7 +18,7 @@
     "disposition": {
       "ACTIVE_TYPED_HUMAN_CONTROL": 67,
       "INTENTIONAL_COMPATIBILITY": 25,
-      "ACTIVE_DIRECT_FRONTEND_PATH": 355,
+      "ACTIVE_DIRECT_FRONTEND_PATH": 365,
       "RESTRICTED_SYSTEM_OR_ADMIN": 59,
       "PROVIDER_PROTOCOL_CALLBACK": 2,
       "INTENTIONAL_ALTERNATE_CANONICAL_INTAKE": 3,
@@ -574,7 +574,7 @@
       "file": "src/components/centropy/world/WorldWorkRecord.tsx",
       "route": "works/:ref",
       "method": "GET",
-      "line": 50,
+      "line": 51,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
@@ -963,6 +963,7 @@
       "src/components/centropy/thread/thread-contract.ts",
       "src/components/centropy/thread/use-investigation.ts",
       "src/components/centropy/world/ConfidentialComputationPanel.tsx",
+      "src/components/centropy/world/RealWorldServicePanel.tsx",
       "src/components/centropy/world/WorldExplorer.tsx",
       "src/components/centropy/world/WorldRelationships.tsx",
       "src/components/centropy/world/WorldWorkRecord.tsx",
@@ -1045,7 +1046,7 @@
       },
       {
         "file": "src/lib/centropy/capability-manifest.generated.json",
-        "sha256": "fb3c1c4d71d0bf71711e315f23ab269d6ef2841f44487cb6927216f6a231f4e4"
+        "sha256": "baf73d0d5f15431ae0d4c8bde9a6d5218cf53b1c8fd618811077e635ab19ff1c"
       },
       {
         "file": "src/components/centropy/lib/private-read-generation.ts",
@@ -1225,7 +1226,7 @@
       },
       {
         "file": "src/lib/jarvis/openapi-types.ts",
-        "sha256": "1ee63abcda7b7ad18a3d46e9e5128936a967de94cd9b18bda7a88a37af60175d"
+        "sha256": "d8eb1a4afd0ec6a4f470ecdc738ea0734c42287215b50c028a29bb6f989eba16"
       },
       {
         "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
@@ -1305,7 +1306,7 @@
       },
       {
         "file": "finnor-os/packages/shared-types/src/interventions.ts",
-        "sha256": "8918f8bb7ac439cccc6911ee98ef83d88e97ae7969ad809a9d035a5131a62578"
+        "sha256": "37b182b453a63f562ecb38bd87752e8807cfeeeb15a432bd02a729043c85e3d3"
       },
       {
         "file": "finnor-os/packages/shared-types/src/certified-state-reduction.ts",
@@ -1453,7 +1454,7 @@
       },
       {
         "file": "src/components/centropy/world/WorldExplorer.tsx",
-        "sha256": "312a4b31b18a3048641b83be6121ac5082cf5421a54041dc86a5349e2f0f935a"
+        "sha256": "863db6c1a93983f98b4fb603a43adc85d86f8e7dad0b9f20797c29e189158b20"
       },
       {
         "file": "src/components/centropy/pe/use-pe-data.ts",
@@ -1461,7 +1462,7 @@
       },
       {
         "file": "src/components/centropy/world/WorldWorkRecord.tsx",
-        "sha256": "06b7adb4a5ed940105c8af088e649da459dcde6fe0d48e0173896e0e841f6da5"
+        "sha256": "4e7c54c2768cc8c4ef806bee016e817b52c37e4e269c3d047ac604f7431c4003"
       },
       {
         "file": "src/components/centropy/thread/PendingEffects.tsx",
@@ -1506,6 +1507,10 @@
       {
         "file": "src/components/centropy/world/ConfidentialComputationPanel.tsx",
         "sha256": "5c167d820413119387abcc80427b3bb7368fbfa4e5c0097f53f062679826f196"
+      },
+      {
+        "file": "src/components/centropy/world/RealWorldServicePanel.tsx",
+        "sha256": "b925a5c8881892af59fcd1fe34afc4d8442ac412619112124b3aacc16171f16b"
       },
       {
         "file": "src/components/centropy/world/WorldRelationships.tsx",
@@ -7807,7 +7812,7 @@
           "file": "src/components/centropy/world/WorldWorkRecord.tsx",
           "route": "works/:ref",
           "method": "GET",
-          "line": 50,
+          "line": 51,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -12565,7 +12570,7 @@
           "file": "src/components/centropy/world/WorldExplorer.tsx",
           "route": "company-brain/available-actions",
           "method": "POST",
-          "line": 124,
+          "line": 125,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -17540,7 +17545,7 @@
           "file": "src/components/centropy/world/WorldExplorer.tsx",
           "route": "company-brain/decision-lineage",
           "method": "POST",
-          "line": 124,
+          "line": 125,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -20501,7 +20506,7 @@
           "file": "src/components/centropy/world/WorldExplorer.tsx",
           "route": "company-brain/evidence-lineage",
           "method": "POST",
-          "line": 124,
+          "line": 125,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -20830,7 +20835,7 @@
           "file": "src/components/centropy/world/WorldExplorer.tsx",
           "route": "company-brain/history",
           "method": "POST",
-          "line": 124,
+          "line": 125,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -27773,7 +27778,7 @@
           "file": "src/components/centropy/world/WorldExplorer.tsx",
           "route": "company-brain/provenance",
           "method": "POST",
-          "line": 124,
+          "line": 125,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -28793,7 +28798,7 @@
           "file": "src/components/centropy/world/WorldExplorer.tsx",
           "route": "company-brain/search",
           "method": "POST",
-          "line": 101,
+          "line": 102,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -28858,7 +28863,7 @@
           "file": "src/components/centropy/world/WorldExplorer.tsx",
           "route": "company-brain/traverse",
           "method": "POST",
-          "line": 124,
+          "line": 125,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -38418,6 +38423,676 @@
       },
       "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
       "compatibilityReason": "Alternate canonical read intake API. CENTROPY submits ordinary questions through actions intake and renders the canonical query answer in the employee Thread.",
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.real-world-services.advance",
+      "family": "real-world-service",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "real-world-services/advance",
+      "routeDepth": 2,
+      "classification": "CONTROL",
+      "kind": "control",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "runtime_control",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD"
+      ],
+      "invalidationTags": [
+        "work",
+        "source",
+        "authority",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/real-world-services/advance",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/world/RealWorldServicePanel.tsx",
+          "route": "real-world-services/advance",
+          "method": "POST",
+          "line": 60,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/RealWorldServicePanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.real-world-services.consent",
+      "family": "real-world-service",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "real-world-services/consent",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": true,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "human_attestation",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD"
+      ],
+      "invalidationTags": [
+        "work",
+        "source",
+        "authority",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/real-world-services/consent",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/world/RealWorldServicePanel.tsx",
+          "route": "real-world-services/consent",
+          "method": "POST",
+          "line": 59,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "human_attestation",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/RealWorldServicePanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.real-world-services.inbox",
+      "family": "real-world-service",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "real-world-services/inbox",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/real-world-services/inbox",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/world/RealWorldServicePanel.tsx",
+          "route": "real-world-services/inbox",
+          "method": "POST",
+          "line": 100,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/RealWorldServicePanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.real-world-services.intake",
+      "family": "real-world-service",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "real-world-services/intake",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": true,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "human_attestation",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD"
+      ],
+      "invalidationTags": [
+        "work",
+        "source",
+        "authority",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/real-world-services/intake",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/world/RealWorldServicePanel.tsx",
+          "route": "real-world-services/intake",
+          "method": "POST",
+          "line": 53,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "human_attestation",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/RealWorldServicePanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.real-world-services.invite",
+      "family": "real-world-service",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "real-world-services/invite",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": true,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "human_attestation",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD"
+      ],
+      "invalidationTags": [
+        "work",
+        "source",
+        "authority",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/real-world-services/invite",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/world/RealWorldServicePanel.tsx",
+          "route": "real-world-services/invite",
+          "method": "POST",
+          "line": 57,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "human_attestation",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/RealWorldServicePanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.real-world-services.prepare-native",
+      "family": "real-world-service",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "real-world-services/prepare-native",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": true,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "human_attestation",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD"
+      ],
+      "invalidationTags": [
+        "work",
+        "source",
+        "authority",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/real-world-services/prepare-native",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/world/RealWorldServicePanel.tsx",
+          "route": "real-world-services/prepare-native",
+          "method": "POST",
+          "line": 55,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "human_attestation",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/RealWorldServicePanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.real-world-services.read",
+      "family": "real-world-service",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "real-world-services/read",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "WORLD"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/real-world-services/read",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/world/RealWorldServicePanel.tsx",
+          "route": "real-world-services/read",
+          "method": "POST",
+          "line": 99,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/RealWorldServicePanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.real-world-services.report",
+      "family": "real-world-service",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "real-world-services/report",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": true,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "human_attestation",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD"
+      ],
+      "invalidationTags": [
+        "work",
+        "source",
+        "authority",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/real-world-services/report",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/world/RealWorldServicePanel.tsx",
+          "route": "real-world-services/report",
+          "method": "POST",
+          "line": 58,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "human_attestation",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/RealWorldServicePanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.real-world-services.source",
+      "family": "real-world-service",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "real-world-services/source",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": true,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "human_attestation",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD"
+      ],
+      "invalidationTags": [
+        "work",
+        "source",
+        "authority",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/real-world-services/source",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/world/RealWorldServicePanel.tsx",
+          "route": "real-world-services/source",
+          "method": "POST",
+          "line": 54,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "human_attestation",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/RealWorldServicePanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.real-world-services.submit",
+      "family": "real-world-service",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "real-world-services/submit",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": true,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "human_attestation",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "WORLD"
+      ],
+      "invalidationTags": [
+        "work",
+        "source",
+        "authority",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/real-world-services/submit",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/world/RealWorldServicePanel.tsx",
+          "route": "real-world-services/submit",
+          "method": "POST",
+          "line": 56,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "human_attestation",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/real-world-services/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "WORLD"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/world/RealWorldServicePanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
       "externalConfiguration": null
     },
     {

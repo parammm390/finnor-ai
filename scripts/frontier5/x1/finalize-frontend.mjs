@@ -6,6 +6,7 @@ import { readFile, writeFile, readdir, lstat, realpath, readlink, unlink, symlin
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {frontendTracingLayout} from './frontend-tracing-root.mjs';
+import {assertKnownNextTypeInput} from './frontend-generated-inputs.mjs';
 
 const repo=fileURLToPath(new URL('../../../',import.meta.url)),args=process.argv.slice(2);
 const w2=args.length===6&&args[4]==='--profile'&&args[5]==='postz-w2';
@@ -29,17 +30,7 @@ for(const path of paths){
     &&!['package.json','package-lock.json','next.config.mjs','next-env.d.ts','tsconfig.json','tailwind.config.ts','postcss.config.mjs'].includes(path))continue;
   const original=git('show',source.commit+':'+path),current=await readFile(join(repo,path));
   if(sha(original)!==sha(current)){
-    if(path==='tsconfig.json'){
-      const old=JSON.parse(original),next=JSON.parse(current);
-      const additions=[`${distDir}/types/**/*.ts`,`${distDir}/dev/types/**/*.ts`];
-      assert.deepEqual(next.include.filter(p=>!additions.includes(p)),old.include);
-      assert.ok(additions.every(p=>next.include.filter(v=>v===p).length===1));
-      next.include=old.include;assert.deepEqual(next,old);
-    }else if(path==='next-env.d.ts'){
-      assert.equal(current.toString(),original.toString()
-        .replaceAll('./.next/dev/types/',`./${distDir}/types/`)
-        .replaceAll('./.next/types/',`./${distDir}/types/`));
-    }else throw Error('X1_FRONTEND_ORIGINAL_SOURCE_CHANGED:'+path);
+    assertKnownNextTypeInput(path,original,current,distDir);
     generatedInputDeltas.push({path,originalSha256:sha(original),generatedSha256:sha(current),basis:'EXACT_OBSERVED_NEXT_GENERATED_TYPE_INPUT'});
   }
   sourcePreimages.push({path,sha256:sha(original),...(generatedInputDeltas.some(p=>p.path===path)?{generatedSha256:sha(current)}:{})});

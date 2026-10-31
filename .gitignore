@@ -69,3 +69,10 @@ vercel_output.txt
 
 # Synthetic memory verification transcripts and provider evidence.
 /memory-evidence/
+# W3 disposable databases, local signing material, builds and verification logs.
+/scope-postz/w3-real-world-fulfillment/evidence/
+/scope-postz/w3-real-world-fulfillment/handoff/
+/scope-postz/w3-real-world-fulfillment/*.log
+/finnor-os/.w3-venv/
+/finnor-os/.w3-s5-venv/
+/finnor-os/dist-w3/

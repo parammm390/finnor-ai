@@ -1,6 +1,6 @@
 const { createHash } = require("node:crypto");
-const { readFileSync, readSync, readlinkSync, existsSync, realpathSync, lstatSync, openSync, fstatSync, closeSync, constants } = require("node:fs");
-const { resolve, dirname, sep } = require("node:path");
+const { readFileSync, readSync, readlinkSync, existsSync, realpathSync, lstatSync, openSync, fstatSync, closeSync, readdirSync, constants } = require("node:fs");
+const { resolve, dirname, sep, join } = require("node:path");
 
 // The fixed sibling manifest belongs to this installation. Neither CWD nor an
 // environment variable can select a different source tree or artifact.
@@ -110,6 +110,30 @@ function installedRuntime(required = false) {
     if (!declared.has(entry)) throw Error("X1_INSTALLATION_ENTRYPOINT_UNPINNED");
   }
   for (const path of manifest.checkerPins) if (!declared.has(path)) throw Error("X1_INSTALLATION_CHECKER_CLOSURE_UNPINNED");
+  // Closed import namespace for the declared scientific interpreter roots:
+  // every loadable entry beneath them must be a declared file or a declared
+  // link. An undeclared bytecode cache or any other unlisted payload beside
+  // declared sources refuses custody here, before any interpreter spawn.
+  // Directory entries themselves carry no payload; every real directory
+  // under the root is reached through its own real path, so declared links
+  // (whose targets remain inside their root) need no traversal.
+  const declaredLinks = new Set(manifest.links.map(link => link.path));
+  const scientificRoots = [...new Set(Object.values(manifest.entrypoints)
+    .filter(entry => typeof entry === "string" && entry.startsWith("finnor-os/scientific/"))
+    .map(entry => entry.split("/").slice(0, 3).join("/")))];
+  for (const relativeRoot of scientificRoots) {
+    const pending = [pathInRoot(relativeRoot)];
+    while (pending.length) {
+      const directory = pending.pop();
+      for (const entry of readdirSync(directory, { withFileTypes: true })) {
+        const absolute = join(directory, entry.name);
+        if (entry.isDirectory()) { pending.push(absolute); continue; }
+        const relative = absolute.slice(root.length + 1);
+        const listed = entry.isSymbolicLink() ? declaredLinks.has(relative) : declared.has(relative);
+        if (!listed) throw Error("X1_INSTALLATION_UNLISTED_SCIENTIFIC_INPUT:" + relative);
+      }
+    }
+  }
   loadedDigest = manifestDigest;
   return { root, manifestPath, manifestDigest, manifest,
     entrypoint: name => safeFile(manifest.entrypoints[name]),

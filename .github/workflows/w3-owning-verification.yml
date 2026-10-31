@@ -1,0 +1,32 @@
+name: W3 real-world fulfillment owning verification
+on:
+  push:
+    branches: [cloud/postz-w3]
+    paths:
+      - .github/workflows/w3-owning-*.yml
+      - finnor-os/**
+      - packages/**
+      - scripts/**
+      - src/**
+      - package.json
+      - package-lock.json
+      - vendor/**
+permissions:
+  contents: read
+concurrency:
+  group: w3-owning-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  fast-owner:
+    uses: ./.github/workflows/w3-owning-episode.yml
+    with:
+      episode: fast
+  full-positive-and-publication:
+    needs: fast-owner
+    strategy:
+      fail-fast: false
+      matrix:
+        episode: [native, publication]
+    uses: ./.github/workflows/w3-owning-episode.yml
+    with:
+      episode: ${{ matrix.episode }}

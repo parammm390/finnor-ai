@@ -7,6 +7,7 @@ import { usePrivateRequestScope } from "../lib/use-private-request-scope"
 import { useCompanyBrainRoots } from "@/components/centropy/pe/use-pe-data"
 import { refKey, type CandidateCompanyBrainAction, type CompanyBrainEdge, type CompanyBrainFact, type CompanyBrainNode, type CompanyBrainObjectRef, type CompanyBrainProjection, type CompanyBrainSearchResult, type CompanyBrainSourceRef, type PeWorldRootRef } from "@/components/centropy/pe/contracts"
 import { WorldWorkRecord } from "./WorldWorkRecord"
+import { RealWorldServicePanel } from "./RealWorldServicePanel"
 import { ConfidentialComputationPanel } from "./ConfidentialComputationPanel"
 import { ClosingProgrammePanel } from "../closing/ClosingProgrammePanel"
 import { LiveInstitutionalControl } from "../controls/LiveInstitutionalControl"
@@ -144,6 +145,7 @@ function WorldExplorerContent({ root, projection, projectionStatus, projectionEr
 
   return <div className="ct-world">
     <header className="ct-world__header"><div><span className="ct-eyebrow">WORLD / COMPANY BRAIN</span><button type="button" onClick={onRefresh} disabled={projectionStatus === "loading"} aria-label="Refresh WORLD projection"><RefreshCw size={15} /> Refresh WORLD</button></div><h2>{root ? projection?.nodes.find((node) => node.ref.type === root.entityType && node.ref.id === root.entityId)?.label ?? "Explore this context" : "Explore institutional truth"}</h2><p>Select a canonical object to propose exact changes and inspect consequences. Chat remains available for explanation.</p></header>
+    <details><summary>My purpose-bound service invitations</summary><RealWorldServicePanel /></details>
     <div className="ct-world__toolbar"><label><Search size={17} aria-hidden /><span className="ct-visually-hidden">Search WORLD</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={root ? "Search this context…" : "Search all roots…"} /></label><select aria-label="Choose WORLD root" value={root ? rootKey(root) : ""} onChange={(event) => { const found = rootsList.find((item) => rootKey(item.root) === event.target.value); if (found) selectRoot(found.root) }}><option value="">Choose a root</option>{rootsList.map((item) => <option value={rootKey(item.root)} key={rootKey(item.root)}>{item.label}</option>)}</select></div>
     {searching ? <p className="ct-world__status" role="status">Searching canonical records…</p> : null}
     {searchError ? <p className="ct-world__error" role="alert">{searchError}</p> : null}

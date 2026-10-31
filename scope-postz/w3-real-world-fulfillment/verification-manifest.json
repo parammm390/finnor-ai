@@ -1,0 +1,567 @@
+{
+  "schema": "finnor.postz.w3.verification-manifest.v1",
+  "frozenBeforeCriticalCode": true,
+  "source": {
+    "base": "f4c2e41c8a0222c9d83ca1be821b3aef888da08a",
+    "tree": "1ea863a81e2244ea9da6f9378d9db994950caf8b",
+    "requirementsSha256": "86eb185341f87ee3e54d1cbdb8f12657465322ff1d5385bde9b1db99f619ebbe"
+  },
+  "model": {
+    "model": "gpt-6.1-sol",
+    "reasoningEffort": "max",
+    "roles": "inline only"
+  },
+  "limits": {
+    "sites": 3,
+    "calendarDays": 30,
+    "serviceInstances": 2048,
+    "providers": 128,
+    "dependencies": 16384,
+    "criteria": 128,
+    "sourceBytes": 262144,
+    "requestBytes": 8388608,
+    "artifactBytes": 8388608,
+    "observations": 50000,
+    "searchNodes": 100000,
+    "fastSeconds": 120,
+    "integrationSeconds": 1200,
+    "coldSeconds": 5400,
+    "campaignSeconds": 28800,
+    "simultaneousMemoryGiB": 16,
+    "minimumFreeDiskGiB": 4,
+    "maximumGeneratedDiskGiB": 6,
+    "paidProductLLMCalls": 0,
+    "realProviderContacts": 0,
+    "genuineHumanSeconds": 0
+  },
+  "originalEpisodeFloors": {
+    "computeDataIntegrationUSD": 100,
+    "humanSeconds": 900,
+    "aggregatePeakGiB": 16,
+    "initialResponseSeconds": 30,
+    "episodeWallSeconds": 3600,
+    "actorPreparationHours": 80,
+    "actorPreparationUSD": 10000,
+    "businessServiceDates": "original, never replaced by local stop"
+  },
+  "independentOracle": {
+    "spec": "failure-model.md",
+    "producerFlagsTrusted": false,
+    "originalCoverage": "all sites/dates/windows/quantity/unit/terms and all graph edges, never sampled",
+    "physicalTruth": "actual independent required evidence, not signatures or simulation",
+    "unitArithmetic": "same-unit exact integers/decimal coordinates",
+    "custody": "public development only; independent protected custody remains external"
+  },
+  "commandContract": {
+    "fast": "node --import=tsx scripts/postz/w3/verify.mts --output <new-absolute-evidence-directory>",
+    "native": "node --import=tsx scripts/postz/w3/native.mts --output <new-absolute-evidence-directory>",
+    "build": "node scripts/postz/w3/build.mjs --output <new-absolute-installation-directory>",
+    "cold": "node scripts/postz/w3/reconstruct.mjs --source <sealed-source-packet> --output <new-absolute-reconstruction-directory>",
+    "status": "PLANNED_RUNNERS_NOT_YET_IMPLEMENTED"
+  },
+  "requiredEvidence": [
+    "source/tree/dirty/lock/runtime/schema/ordered-migrations/checker/model identities",
+    "original inputs/rights/terms/participants and CONTROLLED/Genuine/Field class",
+    "actual API/queue/claim/fence/SQL/worker/provider/observer/browser transitions",
+    "independent expected and observed predicate",
+    "all failures, repairs, exit/duration/cleanup and exact rerun",
+    "full resources/costs/exposure and named unmetered coordinates"
+  ],
+  "cases": [
+    {
+      "id": "W001",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W002",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W003",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W004",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W005",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W006",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W007",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W008",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W009",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W010",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W011",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W012",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W013",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W014",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W015",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W016",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W017",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W018",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W019",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W020",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W021",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W022",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W023",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W024",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W025",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W026",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W027",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W028",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W029",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W030",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W031",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W032",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W033",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W034",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W035",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W036",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W037",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W038",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W039",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W040",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W041",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W042",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W043",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W044",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W045",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W046",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W047",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W048",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W049",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W050",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W051",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W052",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W053",
+      "status": "NOT_RUN",
+      "scope": "W3 affected slice",
+      "evidence": []
+    },
+    {
+      "id": "W054",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W055",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W056",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W057",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W058",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W059",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    },
+    {
+      "id": "W060",
+      "status": "NOT_RUN",
+      "scope": "preserved other-phase/comparative/economic identity",
+      "evidence": []
+    }
+  ],
+  "structuralFamilies": [
+    {
+      "id": "F01",
+      "name": "original authority/read-only routing",
+      "freshCasesMinimum": 8,
+      "protectedStatus": "NOT_EXPOSED",
+      "developmentStatus": "NOT_RUN"
+    },
+    {
+      "id": "F02",
+      "name": "site/date/time-zone/calendar coverage",
+      "freshCasesMinimum": 8,
+      "protectedStatus": "NOT_EXPOSED",
+      "developmentStatus": "NOT_RUN"
+    },
+    {
+      "id": "F03",
+      "name": "quantity/unit/currency/accounting identity",
+      "freshCasesMinimum": 8,
+      "protectedStatus": "NOT_EXPOSED",
+      "developmentStatus": "NOT_RUN"
+    },
+    {
+      "id": "F04",
+      "name": "provider alternatives and partial availability",
+      "freshCasesMinimum": 8,
+      "protectedStatus": "NOT_EXPOSED",
+      "developmentStatus": "NOT_RUN"
+    },
+    {
+      "id": "F05",
+      "name": "qualification and lawful purpose",
+      "freshCasesMinimum": 8,
+      "protectedStatus": "NOT_EXPOSED",
+      "developmentStatus": "NOT_RUN"
+    },
+    {
+      "id": "F06",
+      "name": "same-version offer and authenticated acceptance",
+      "freshCasesMinimum": 8,
+      "protectedStatus": "NOT_EXPOSED",
+      "developmentStatus": "NOT_RUN"
+    },
+    {
+      "id": "F07",
+      "name": "trial identity/consent/missing/conflicting feedback",
+      "freshCasesMinimum": 8,
+      "protectedStatus": "NOT_EXPOSED",
+      "developmentStatus": "NOT_RUN"
+    },
+    {
+      "id": "F08",
+      "name": "hard safety and professional observation limits",
+      "freshCasesMinimum": 8,
+      "protectedStatus": "NOT_EXPOSED",
+      "developmentStatus": "NOT_RUN"
+    },
+    {
+      "id": "F09",
+      "name": "inventory/access/logistics/readiness dependencies",
+      "freshCasesMinimum": 8,
+      "protectedStatus": "NOT_EXPOSED",
+      "developmentStatus": "NOT_RUN"
+    },
+    {
+      "id": "F10",
+      "name": "original no-show and missed-service preservation",
+      "freshCasesMinimum": 8,
+      "protectedStatus": "NOT_EXPOSED",
+      "developmentStatus": "NOT_RUN"
+    },
+    {
+      "id": "F11",
+      "name": "substitution and recurrent cancellation",
+      "freshCasesMinimum": 8,
+      "protectedStatus": "NOT_EXPOSED",
+      "developmentStatus": "NOT_RUN"
+    },
+    {
+      "id": "F12",
+      "name": "UNKNOWN and late dual-commitment reconciliation",
+      "freshCasesMinimum": 8,
+      "protectedStatus": "NOT_EXPOSED",
+      "developmentStatus": "NOT_RUN"
+    },
+    {
+      "id": "F13",
+      "name": "same-parent capacity/exposure and lawful fallback",
+      "freshCasesMinimum": 8,
+      "protectedStatus": "NOT_EXPOSED",
+      "developmentStatus": "NOT_RUN"
+    },
+    {
+      "id": "F14",
+      "name": "invoice quantities/payment identity/access retirement",
+      "freshCasesMinimum": 8,
+      "protectedStatus": "NOT_EXPOSED",
+      "developmentStatus": "NOT_RUN"
+    },
+    {
+      "id": "F15",
+      "name": "currentness fences/minimal dependent invalidation",
+      "freshCasesMinimum": 8,
+      "protectedStatus": "NOT_EXPOSED",
+      "developmentStatus": "NOT_RUN"
+    },
+    {
+      "id": "F16",
+      "name": "worker kill/restart/installed/mounted privacy",
+      "freshCasesMinimum": 8,
+      "protectedStatus": "NOT_EXPOSED",
+      "developmentStatus": "NOT_RUN"
+    }
+  ],
+  "qualification": {
+    "minimumIndependentlyAcceptedUsefulPositive": 0.95,
+    "registeredCriticalFalsifiersAllowed": 0,
+    "protectedSamplesMinimum": 128,
+    "positiveEstimator": "frozen exact accepted/eligible count, simultaneous independent clustered interval required for protected claim",
+    "genuineHumanSeparate": true,
+    "fieldSeparate": true,
+    "developmentDoesNotAdmit": true
+  },
+  "gates": {
+    "DESIGNED": "IN_PROGRESS",
+    "CODE_COMPLETE": "INCOMPLETE",
+    "E2E_DEV_VERIFIED": "NOT_RUN",
+    "DOMAIN_QUALIFIED": "NOT_RUN",
+    "ADMITTED": "NOT_RUN",
+    "PRODUCTION_ACTIVE": "NOT_AUTHORIZED",
+    "FIELD_VALIDATED": "NOT_AUTHORIZED",
+    "POSTZ_OPERATIONAL_100X": "BLOCKED",
+    "COMPETITIVE_ORCHESTRATION_10X": "BLOCKED",
+    "economics": "UNKNOWN"
+  }
+}

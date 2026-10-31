@@ -140,7 +140,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "87d8a10a80c4af2ab73c4f471ee2a361614857d109fe64e40c3288a049486575"
+      "sha256": "b2fc9b8793b263d14251935a34af42d802c681b5a9e534801966b59d9972bbdd"
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
@@ -152,7 +152,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/worker/src/index.ts",
-      "sha256": "f98987752f2a2c9f016621de2503dd3fc89348a895605ad08f7d855b2df7eae3"
+      "sha256": "36c46ab8cfa52fdffc30516f3a3bcc5766e97953c48739d6bfb09a6a4259da14"
     },
     {
       "path": "finnor-os/apps/worker/src/queue.ts",
@@ -164,7 +164,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/compute-contract.ts",
-      "sha256": "0dd8341592d74d9f10ceec46c0151916a9fede77e4e2603847286a69ca4d3d9c"
+      "sha256": "71c2685f9162160bfa06cf842dea390dbb0d370f79bd18cbcd4120994c654732"
     },
     {
       "path": "finnor-os/packages/db/compute-governor.ts",
@@ -264,15 +264,15 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
-      "sha256": "57575d68bc1cadad89ea96cffd18fccdc352043440fba9ba8cd7d9485b684579"
+      "sha256": "00012e4c3d0aa8bac305182a67eafabc39925298c1414310429767b81841a0bf"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
-      "sha256": "5a554d4f3d876fea3d413c73fac78e87c0bd09e832df3e4a0bcadf9eb4cdfd24"
+      "sha256": "075399d12b13615303f96caf523725194e00776b80d44ec925a4cabf769efd80"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-obligations.ts",
-      "sha256": "90c80ae14f948b4474a006a440ae562a7c594f79a549391c213c25af3e8418dc"
+      "sha256": "4ec4b62d56f526bb2cacb71706d7adcd7415ce88d32f9ddb913acd75e930ac60"
     },
     {
       "path": "finnor-os/packages/capability-evolution/src/application-port.ts",
@@ -308,7 +308,7 @@ export default {
     },
     {
       "path": "src/lib/centropy/capability-manifest.generated.json",
-      "sha256": "fb3c1c4d71d0bf71711e315f23ab269d6ef2841f44487cb6927216f6a231f4e4"
+      "sha256": "baf73d0d5f15431ae0d4c8bde9a6d5218cf53b1c8fd618811077e635ab19ff1c"
     },
     {
       "path": "finnor-os/scripts/x3/stamp-source.mts",

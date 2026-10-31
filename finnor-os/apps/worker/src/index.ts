@@ -13,6 +13,7 @@ import {runComputeSearchUnitJob} from '@finnor/private-equity/src/compute-search
 import {runHarnessProgramJob,runX1InstitutionContinuationJob} from '@finnor/private-equity/src/program-synthesis/worker';
 import {runInstitutionCompilerJob} from '@finnor/private-equity/src/institution-program/worker';
 import {runInstitutionUpdateJob} from '@finnor/private-equity/src/live-recompilation/institution-worker';
+import {compileRealWorldServiceJob,advanceRealWorldServiceJob} from '@finnor/private-equity/src/real-world-service/worker';
 import {runInterfaceAcquisitionJob} from '@finnor/private-equity/src/interface-synthesis/worker';
 import {runApplicationSemanticsJob} from '@finnor/private-equity/src/application-semantics/worker';
 import {runProgrammeContinuationJob} from '@finnor/private-equity/src/live-recompilation/worker';
@@ -73,6 +74,8 @@ import { installWorkerDrainSignals } from "./drain-signals";
 export function createWorker(): JobQueue {
   const queue = new JobQueue();
   queue.register('run_workforce_execution_v1',runWorkforceExecutionJob,PRODUCTION_JOB_CONTRACTS.run_workforce_execution_v1);
+  queue.register('compile_real_world_service_v1',compileRealWorldServiceJob,PRODUCTION_JOB_CONTRACTS.compile_real_world_service_v1);
+  queue.register('advance_real_world_service_v1',advanceRealWorldServiceJob,PRODUCTION_JOB_CONTRACTS.advance_real_world_service_v1);
   queue.register('learn_strategic_response_model_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.learn_strategic_response_model_v1);
   queue.register('evaluate_strategic_response_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.evaluate_strategic_response_v1);
   queue.register('construct_interaction_protocol_v1',constructInteractionProtocolJob,PRODUCTION_JOB_CONTRACTS.construct_interaction_protocol_v1);

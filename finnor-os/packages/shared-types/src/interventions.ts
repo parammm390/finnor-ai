@@ -2,7 +2,8 @@ import type { BeliefOwnerRef, BeliefView, BeliefViewPin } from './enterprise-bel
 import type { ExperimentRef } from './experiments';
 
 export interface InterventionRoot { entityType: string; entityId: string }
-export type InterventionOperation = 'PRICE_CHANGE' | 'WORKING_CAPITAL' | 'SUPPLIER_SWITCH' | 'FINANCING_CHANGE' | 'DISCLOSURE';
+export type InterventionOperation = 'PRICE_CHANGE' | 'WORKING_CAPITAL' | 'SUPPLIER_SWITCH' | 'FINANCING_CHANGE' | 'DISCLOSURE'
+  | 'SERVICE_TRANSITION_V1';
 export interface InterventionSpecification {
   schema: 'finnor.intervention-specification.v1';
   vocabularyVersion: 's3-intervention-v1';
