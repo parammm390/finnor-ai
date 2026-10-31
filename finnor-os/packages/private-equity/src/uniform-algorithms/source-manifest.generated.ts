@@ -248,7 +248,7 @@ export default {
     },
     {
       "path": "finnor-os/scripts/postx/y5/generate-source.mts",
-      "sha256": "44bf58eb9f9c9c39d0a94681f699e93dc26088526e4cdd27a6403c58ccce0e0c"
+      "sha256": "7472443fa2e0dd62573f852e97b1aef1d7c06d4b87f26525e4fcd372f11147dc"
     },
     {
       "path": "finnor-os/scripts/postx/y5/prepare-total-model.mts",
@@ -4564,7 +4564,7 @@ export default {
     },
     {
       "path": "infra/deployment/production.contract.json",
-      "sha256": "b2d0dd325184b53f4c66475018bc9a50cd0cbd4cf852e29490afc393da92cc03"
+      "sha256": "a889fec3a4f7b890f704ec25616642650991f02d1826c75fc9f6c2697b311ee3"
     },
     {
       "path": "next.config.mjs",
@@ -4843,5 +4843,5 @@ export default {
       "sha256": "08a548ea170f7ef7124aa23572892f39cb103e365c06ab24f68d9a61db880700"
     }
   ],
-  "sourceDigest": "df417235bc572cd89f2f3f64a11a13d77067d49f3b6443017106232f2d772312"
+  "sourceDigest": "1b28485b2fc67ff51b05d6de2c8225471a4fa9c0e622d7e5ba289aaee5ff13df"
 } as const;

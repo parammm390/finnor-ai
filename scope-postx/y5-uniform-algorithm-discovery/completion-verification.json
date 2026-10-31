@@ -40,7 +40,7 @@
       "evidence": "evidence/y5-completion/remote-main-merge-checks/",
       "limitSeconds": 600,
       "status": "VERIFIED_SOURCE_CHECKS_ONLY",
-      "note": "Merge commit cc539793. All listed steps exit 0 at that cut; release:truth first failed on stale migration-head pins, which were advanced to postx_y7_uniform_algorithms.sql (decisions.tsv, last two rows) and then passed with test:release 81 of 81. NOT run on this host: CI jobs production-artifacts, worker-image, test shards, operating-profit, phase7 and correctness-regressions, and git diff --exit-code on a runner checkout. These checks do not qualify the Y5 owner end-to-end, installed runtime, mounted browser, native proof or recovery gates."
+      "note": "Merge commit cc539793 plus a refresh commit that regenerated the Y5 and planner manifests after the release-pin edit changed the Y5 source digest (now 1b28485b2fc67ff51b05d6de2c8225471a4fa9c0e622d7e5ba289aaee5ff13df). All listed steps exit 0 at that cut; release:truth first failed on stale migration-head pins, which were advanced to postx_y7_uniform_algorithms.sql (decisions.tsv, last two rows) and then passed with test:release 81 of 81. NOT run on this host: CI jobs production-artifacts, worker-image, test shards, operating-profit, phase7 and correctness-regressions, and git diff --exit-code on a runner checkout. These checks do not qualify the Y5 owner end-to-end, installed runtime, mounted browser, native proof or recovery gates."
     },
     {
       "id": "complete-s5-episode-cut",

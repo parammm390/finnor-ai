@@ -83,5 +83,5 @@ if(check){
  if(await readFile(resolve(root,output),'utf8')!==document)throw Error('Y5_EMITTED_SOURCE_STALE');
 }else await writeFile(resolve(root,output),document);
 console.log(JSON.stringify({status:check?'CURRENT':'GENERATED',sourceDigest:jsonHash(files),files:files.length,
- closure:'LOCAL_STATIC_IMPORTS_EXISTING_LITERAL_ASSETS_AND_OWNED_ENGINE_OWNER_FILES',selfHashException:output,
+ closure:'LOCAL_STATIC_IMPORTS_EXISTING_LITERAL_ASSETS_AND_OWNED_ENGINE_OWNER_FILES',selfHashException:output,hashCycleExceptions:[...hashCycle],
  qualification:'SOURCE_INVENTORY_NOT_RUNTIME_OR_PROTECTED_QUALIFICATION'}));
