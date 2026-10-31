@@ -6,7 +6,7 @@ import { PlannerActivationRequestSchema } from "../packages/orchestration/src/ca
 // Water webhook payloads are intentionally opaque quarantine receipts and never
 // regain an executable public schema here.
 import {createHash} from "node:crypto";
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { z } from "zod";
 import { EconomicReadReplySchema, RevenueReadRequestSchema, QuoteReadRequestSchema } from "@finnor/shared-types/src/economic-reads";
 import {
@@ -1097,5 +1097,9 @@ function rewriteDefinitionReferences(node:unknown){
 }
 rewriteDefinitionReferences(document);
 
-writeFileSync(new URL("../openapi.json", import.meta.url), `${JSON.stringify(document, null, 2)}\n`);
+const output = new URL("../openapi.json", import.meta.url);
+const rendered = `${JSON.stringify(document, null, 2)}\n`;
+if (process.argv.includes("--check")) {
+  if (readFileSync(output, "utf8") !== rendered) throw new Error("OPENAPI_STALE: npm run release:generate");
+} else writeFileSync(output, rendered);
 console.log(`Generated openapi.json with ${Object.keys(paths).length} active/quarantine paths.`);

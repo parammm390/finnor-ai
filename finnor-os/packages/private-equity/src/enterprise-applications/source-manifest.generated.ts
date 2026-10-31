@@ -96,7 +96,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "1766bb87fbc25efa2c5a39c4ccacc1c084d6d48b0ec3bba2fc7a56065873a149"
+      "sha256": "9af5cba25672e43351303d7aa9288dacb12058783b9340e57ecf1e362cef279c"
     },
     {
       "path": "finnor-os/packages/db/migrations/0189_x3_enterprise_applications.sql",
@@ -192,7 +192,7 @@ export default {
     },
     {
       "path": "src/lib/centropy/capability-manifest.generated.json",
-      "sha256": "ad69e07f9eb9bc59c8cebc6b813862a1c3aab671c5e3aae386d689f787c09bd9"
+      "sha256": "89c82f263e664544c6f80c10a162f2f4c5070d7e04de61774ae694fb3aac82bf"
     },
     {
       "path": "package-lock.json",

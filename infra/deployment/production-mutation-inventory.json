@@ -292,7 +292,8 @@
         ".github/workflows/source-checks.yml",
         ".github/workflows/release-readiness.yml",
         ".github/workflows/dealer-zero-replay.yml",
-        ".github/workflows/tenant-isolation-nightly.yml"
+        ".github/workflows/tenant-isolation-nightly.yml",
+        ".github/workflows/w123-native-verification.yml"
       ],
       "classification": "READ_ONLY",
       "state": "ACTIVE"
@@ -309,6 +310,15 @@
       "classification": "READ_ONLY",
       "state": "DECLARATIVE_SOURCE_ONLY",
       "reason": "Repository code does not provide an independent apply path; active release mutations consume the contract and separately authorize each write."
+    },
+    {
+      "id": "repository-release-input-generation",
+      "paths": [
+        "scripts/release/generate-release-inputs.mjs"
+      ],
+      "classification": "READ_ONLY",
+      "state": "DECLARATIVE_SOURCE_ONLY",
+      "reason": "Generates and checks repository build inputs and intended release metadata; no external target, deployment, production database or independent production mutation entry point."
     }
   ]
 }

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { readFileSync, mkdtempSync, writeFileSync, utimesSync, mkdirSync, rmSync } from "node:fs"
+import { readFileSync, readdirSync, mkdtempSync, writeFileSync, utimesSync, mkdirSync, rmSync } from "node:fs"
 import { execFileSync } from "node:child_process"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -66,7 +66,9 @@ test("the Phase 8 production contract adds four independently required compute s
   assert.equal(worker.clusterName, "finnor-production")
   assert.equal(worker.serviceName, "finnor-worker")
   assert.equal(worker.sseGatewayUrl, "https://realtime.finnorai.com")
-  assert.equal(contract.release.requiredMigrationHead, "postx_y6_conversation_memory.sql")
+  const migrations = readdirSync(new URL("../../finnor-os/packages/db/migrations/", import.meta.url))
+    .filter(name => name.endsWith(".sql")).sort()
+  assert.equal(contract.release.requiredMigrationHead, migrations.at(-1))
   assert.ok(!contract.release.mutationAuthorization.allowedOperations.includes("product-authority-update"))
   assert.ok(!contract.release.mutationAuthorization.allowedOperations.includes("epistemic-impact-activate"))
   assert.deepEqual(contract.release.requiredComponents, ["frontend", "api", "computeRealtime", "computeInteractive", "computeBackground", "computeHeavy", "supplierCanaryApp", "supplierCanaryAuth"])
