@@ -7,6 +7,7 @@ export * from "./closing";
 // Every subsystem (orchestration, plugins, memory, tools, workers) compiles against these.
 
 export * from "./operational-queries";
+export * from "./economic-reads";
 export * from "./company-graph";
 export * from "./operating-context";
 export * from "./operating-interaction";

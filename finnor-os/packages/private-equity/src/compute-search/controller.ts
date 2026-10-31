@@ -1,4 +1,5 @@
 import {randomUUID} from 'node:crypto';
+import {replanEconomicOrchestrationTx} from '../economic-orchestration/controller';
 import type {PoolClient} from 'pg';
 import type {PeMutationContext} from '../types';
 import {sha,stable,tx} from '../evidence-execution/store';
@@ -35,7 +36,8 @@ export async function replan(ctx:PeMutationContext,s:SearchRow,q:ProgramRow,c:Po
  let frontier=await units(ctx,s,c);
  for(const u of frontier.filter(u=>u.status==='PENDING'&&u.body.prerequisites.some(id=>frontier.some(p=>p.id===id&&['FAILED','CANCELLED'].includes(p.status)))))await c.query("UPDATE finnor_os.p2_units SET status='CANCELLED' WHERE id=$1",[u.id]);
  frontier=await units(ctx,s,c);
- if(frontier.some(u=>u.status==='UNKNOWN')){s.status='WAITING';s.reason='UNKNOWN_PHYSICAL_ATTEMPT_REQUIRES_RECONCILIATION';}
+ if(s.request.orchestration){await replanEconomicOrchestrationTx(ctx,s,q,c);}
+ else if(frontier.some(u=>u.status==='UNKNOWN')){s.status='WAITING';s.reason='UNKNOWN_PHYSICAL_ATTEMPT_REQUIRES_RECONCILIATION';}
  else if(s.request.deliberation){
   // M2 is executed as ordinary P2 work. This branch applies a current bounded
   // proposal or resumes one ongoing CONTROL_M2 through the same job/admission

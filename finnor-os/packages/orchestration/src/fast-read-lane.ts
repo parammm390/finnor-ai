@@ -2,6 +2,8 @@ import { createHash } from "node:crypto";
 import { performance } from "node:perf_hooks";
 import {
   OPERATIONAL_QUERY_INTENTS,
+  EconomicReadRequestSchema,
+  storedEconomicQuery,
   PE_WORLD_ROOT_TYPES,
   PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
   isRetiredWaterCanonicalEntity,
@@ -17,6 +19,11 @@ import {
 } from "@finnor/shared-types";
 import type { OperationalQueryOptions } from "@finnor/read-models";
 import { executeTenantOperationalQuery } from "./operational-query-runtime";
+import { interpretEconomicRead } from "./economic-read-intake";
+import { answerEconomicQuery } from "./economic-query-answer";
+import { readWorkInputResponse } from "@finnor/db";
+import { isDeepStrictEqual } from "node:util";
+import { MUTATION, EXECUTION_COMMAND, EXECUTION_NAME_LIST, requestsPositiveInstructionEffect } from "./instruction-effects";
 
 export type OperationalQueryIntent = CanonicalOperationalQueryIntent;
 export type OperationalQueryRequest = CanonicalOperationalQueryRequest;
@@ -138,10 +145,6 @@ export interface FastReadOnlyRouterDeps {
 
 const ACTIVE_INTENTS = new Set<string>(OPERATIONAL_QUERY_INTENTS);
 const PE_INTENTS = new Set<string>(PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS);
-const MUTATION = /\b(?:send|email|message|call|create|update|delete|remove|assign|handoff|delegate|schedule|reschedule|share|approve|reject|close|waive|execute|change)\b/i;
-const EXECUTION_COMMAND = /(?:^|[.!?,;\n]\s*|\b(?:and|then)\s+)(?:(?:please|also)\s+){0,2}(?:run|start|launch)\b|\b(?:can|could|would|will)\s+you\s+(?:please\s+)?(?:run|start|launch)\b/i;
-// Exclude nominal lists without suppressing a later clause's command and object.
-const EXECUTION_NAME_LIST = /\b(?:for|between|of)\s+(?:run|start|launch)(?:\s*,\s*(?:run|start|launch))*(?:\s*,?\s+(?:and|or)\s+(?:run|start|launch))\b/gi;
 const QUESTION = /\?|\b(?:what|which|who|why|show|list|give|are|is|how|status|context|readiness|open|find)\b/i;
 const UUID = /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i;
 const WORLD_ROOT_NAMES: ReadonlyArray<readonly [RegExp, PeWorldRootRef["entityType"]]> = [
@@ -177,6 +180,10 @@ function dealRequest(
 
 export function interpretOperationalQuery(instruction: string, scope?: { businessRoot?: PeWorldRootRef | null; dealId?: string }): OperationalQueryDecision {
   const text = instruction.trim();
+  const economic = interpretEconomicRead(text);
+  if (economic) return { route: "fast_read", confidence: "high", request: economic };
+  if (/\b(?:revenue|quote|stock price|share price|trading at)\b/i.test(text) && requestsPositiveInstructionEffect(text))
+    return { route: "planner", reason: "mutation_or_advice" };
   const scopedDealId = scope?.dealId ?? (scope?.businessRoot?.entityType === "pe_deal" ? scope.businessRoot.entityId : undefined);
   const scopedRoot = scope?.businessRoot ?? (scopedDealId ? { entityType: "pe_deal" as const, entityId: scopedDealId } : undefined);
   if (!text) return { route: "planner", reason: "not_question" };
@@ -261,6 +268,10 @@ export function validateOperationalQueryRequest(
   if (!intent) return { success: false, error: "Operational query intent is required" };
   if (isRetiredWaterQuery(intent)) return { success: false, error: "Operational query intent belongs to the retired Water vertical" };
   if (!ACTIVE_INTENTS.has(intent)) return { success: false, error: "Unsupported operational query intent" };
+  if (intent === "company_revenue" || intent === "stock_quote") {
+    const parsed = EconomicReadRequestSchema.safeParse(value);
+    return parsed.success ? { success: true, request: parsed.data } : { success: false, error: "An exact economic read request is required; identity comes from authentication" };
+  }
 
   if (intent === "economic_programme_v1") {
     if (Object.keys(value!).some(key=>!["intent","programmeId","workId"].includes(key)) || typeof value?.programmeId!=="string" || !UUID.test(value.programmeId) || typeof value?.workId!=="string" || !UUID.test(value.workId)) return {success:false,error:"Economic query requires exact programme and Work IDs"};
@@ -365,6 +376,8 @@ function title(intent: OperationalQueryIntent): string {
 }
 
 function answerOperationalQuery(execution: OperationalQueryExecution): AnswerEnvelope {
+  const economic = answerEconomicQuery(execution);
+  if (economic) return economic;
   const { result } = execution;
   const facts: AnswerDisplayFact[] = [
     { label: "Status", value: result.status },
@@ -518,6 +531,15 @@ export function createFastReadOnlyRouter(
       employeeId: ctx.employeeId,
       userId: ctx.userId,
     });
+    if (validation.request.intent === "company_revenue" || validation.request.intent === "stock_quote") {
+      if (!ctx.userId || !options.workId || !options.workInputId) throw Error("Authenticated exact economic input is required");
+      const owned = await readWorkInputResponse({ tenantId: ctx.tenantId, userId: ctx.userId,
+        workId: options.workId, workInputId: options.workInputId });
+      const original = storedEconomicQuery(owned.response);
+      if (!original || !isDeepStrictEqual(original.request, validation.request) || !isDeepStrictEqual(original.result, result))
+        throw Error("The complete original economic execution is unavailable");
+      return original;
+    }
     const completedAt = new Date();
     return {
       request: validation.request,

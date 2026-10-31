@@ -169,6 +169,9 @@ jobs:
           cache: npm
           cache-dependency-path: finnor-os/package-lock.json
       - run: npm ci
+      - name: Verify ordinary Linux kernel policy against controlled native attacks
+        if: ${{ matrix.shard == 1 }}
+        run: node --import=tsx scripts/s6/run-linux-policy-e2e.mts "$RUNNER_TEMP/finnor-s6-kernel-policy"
       # Historical S1 proofs require actual database commit visibility. Configure
       # only this disposable CI service before any migration/source fixture exists.
       - name: Enable commit timestamps on disposable PostgreSQL
@@ -220,6 +223,7 @@ jobs:
             ${{ runner.temp }}/finnor-s7-evidence/**/runner.log
             ${{ runner.temp }}/finnor-production-query-evidence/*.json
             ${{ runner.temp }}/finnor-pe-objective-evidence/**
+            ${{ runner.temp }}/finnor-s6-kernel-policy/**
           if-no-files-found: warn
           retention-days: 7
 

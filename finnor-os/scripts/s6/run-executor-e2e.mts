@@ -9,7 +9,7 @@ import {launchIsolatedNodeExecutor} from '../../packages/governed-execution/src/
 const root=await realpath(await mkdtemp(join(tmpdir(),'finnor-s6-executor-'))),output=resolve(process.env.FINNOR_S6_EXECUTOR_EVIDENCE_DIR??'../scope-6/scope-evidence/executor-local');await mkdir(dirname(output),{recursive:true});await mkdir(output);
 const secretPath=join(root,'protected-key'),outside=join(root,'outside-write');const sentinel=randomUUID();await writeFile(secretPath,sentinel,{mode:0o600});await writeFile(outside,'UNCHANGED');
 let connections=0;const listener=createServer(socket=>{connections++;socket.end('FORBIDDEN');});await new Promise<void>(done=>listener.listen(0,'127.0.0.1',done));const port=(listener.address() as any).port;
-const sourcePaths=['packages/governed-execution/src/executor.ts','packages/governed-execution/src/executor-linux.ts','packages/governed-execution/src/adapter-contract.ts','packages/governed-execution/src/protocol.ts','packages/governed-execution/native/linux-launcher.c','scripts/r3/package-linux-jail.mjs','scripts/s6/run-executor-e2e.mts'];
+const sourcePaths=['packages/governed-execution/src/executor.ts','packages/governed-execution/src/executor-linux.ts','packages/governed-execution/src/linux-node-policy.ts','packages/governed-execution/src/adapter-contract.ts','packages/governed-execution/src/protocol.ts','packages/governed-execution/native/linux-launcher.c','packages/governed-execution/native/linux-lifetime.h','scripts/r3/package-linux-jail.mjs','scripts/s6/run-executor-e2e.mts'];
 async function sourceSnapshot(){return Promise.all(sourcePaths.map(async path=>({path:resolve(path),sha256:createHash('sha256').update(await readFile(path)).digest('hex')})));}
 const sourcesBefore=await sourceSnapshot(),source=(await readFile(sourcePaths[0]!)).toString();const results:any[]=[];
 async function processObservation(args:string[]){
@@ -33,7 +33,11 @@ try{
   await writeFile(join(output,'linux-fixed-jail.json'),JSON.stringify({script,execution},null,2)+'\n');
   assert.equal(execution.exitCode,0,JSON.stringify(execution));assert(JSON.parse(execution.stdout).every((x:any)=>x.denied));assert.equal(await readFile(outside,'utf8'),'UNCHANGED');
   const bootstrap=execution.provenance.linuxBootstrap as any;
-  assert.equal(bootstrap?.schema,'finnor.s6.linux-bootstrap.v1');assert.equal(bootstrap.parentPid,process.pid);assert.equal(bootstrap.capabilities,0);assert.equal(bootstrap.noNewPrivileges,1);assert.equal(bootstrap.fixedJail,true);assert(bootstrap.landlockAbi>=2);
+  assert.equal(bootstrap?.schema,'finnor.s6.linux-bootstrap.v2');assert.equal(bootstrap.parentPid,process.pid);
+  assert.equal(bootstrap.guardianPid,bootstrap.pid);assert.equal(bootstrap.guestParentPid,bootstrap.guardianPid);
+  assert.equal(bootstrap.processGroupId,bootstrap.guardianPid);assert.notEqual(bootstrap.guestPid,bootstrap.guardianPid);
+  assert.equal(bootstrap.lifetimeGuard,'TRUSTED_NONEXECUTING_PROCESS_GROUP_GUARD');
+  assert.equal(bootstrap.capabilities,0);assert.equal(bootstrap.noNewPrivileges,1);assert.equal(bootstrap.fixedJail,true);assert(bootstrap.landlockAbi>=2);
   return execution;
  });
  await challenge('hostile-secret-files-network-write-and-child',async()=>{const script=`import {readFile,writeFile,symlink} from 'node:fs/promises';import {connect} from 'node:net';import {spawnSync} from 'node:child_process';const attempts=[];for(const [name,fn] of [['secret',()=>readFile(${JSON.stringify(secretPath)},'utf8')],['host-write',()=>writeFile(${JSON.stringify(outside)},'COMPROMISED')],['parent-write',()=>writeFile('../escaped','COMPROMISED')],['symlink',async()=>{await symlink(${JSON.stringify(secretPath)},'key-link');return readFile('key-link','utf8');}],['network',()=>new Promise((yes,no)=>{const s=connect(${port},'127.0.0.1');s.once('connect',()=>{s.end();yes('CONNECTED')});s.once('error',no);})]]){try{attempts.push({name,result:await fn()});}catch(e){attempts.push({name,error:e.code??String(e)});}}const child=spawnSync(process.execPath,['-e',${JSON.stringify(`require('fs').writeFileSync(${JSON.stringify(outside)},'CHILD_COMPROMISED')`)}],{encoding:'utf8'});console.log(JSON.stringify({attempts,child:{status:child.status,stderr:child.stderr}}));`;

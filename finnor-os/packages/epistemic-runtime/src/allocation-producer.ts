@@ -109,7 +109,7 @@ export async function produceAllocationCandidate(problem:CanonicalAllocationProb
     compute.actualRoute='SCIPY_HIGHS_ROBUST_MILP';activeSolvers++;
     const result=await new Promise<SolverResult>((resolve,reject)=>{
       let child:ReturnType<typeof spawn>;
-      try{child=spawn(python,[fileURLToPath(new URL('./allocation-solver.py',import.meta.url))],{env:{NODE_ENV:process.env.NODE_ENV,PATH:process.env.PATH,TMPDIR:process.env.TMPDIR,OMP_NUM_THREADS:'1',OPENBLAS_NUM_THREADS:'1',MKL_NUM_THREADS:'1'},stdio:['pipe','pipe','pipe']});}
+      try{child=spawn(python,['-B',fileURLToPath(new URL('./allocation-solver.py',import.meta.url))],{env:{NODE_ENV:process.env.NODE_ENV,PATH:process.env.PATH,TMPDIR:process.env.TMPDIR,OMP_NUM_THREADS:'1',OPENBLAS_NUM_THREADS:'1',MKL_NUM_THREADS:'1'},stdio:['pipe','pipe','pipe']});}
       catch(error){activeSolvers--;reject(error);return;}
       let stdout='',stderr='',closed=false,settled=false,failed:Error|null=null;
       const fail=(error:Error)=>{const first=!failed;failed??=error;if(!settled){settled=true;reject(failed);}if(first){clearTimeout(timer);child.kill('SIGKILL');}};

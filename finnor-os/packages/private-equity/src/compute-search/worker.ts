@@ -1,5 +1,11 @@
 import {env as runtimeEnvironment} from 'node:process';
-import {acquireComputeResourceLeases,renewComputeResourceLeases,releaseComputeResourceLeases,ComputeCapacityUnavailableError,DatabaseExecutionDeadlineError,executionDeadlineMilliseconds,withDatabaseExecutionDeadline} from '@finnor/db';
+import {executeEconomicControl} from '../economic-orchestration/capsules';
+import {beginNativeMeter} from '../economic-orchestration/meter';
+import {economicEpisodeDeadlineTx} from '../economic-orchestration/snapshot';
+import {W1_NATIVE_LIMITS,W1_NATIVE_VERSION} from '../economic-orchestration/contracts';
+import {assertEconomicUnitBoundaryTx} from '../economic-orchestration/currentness';
+import {issueEconomicOrchestrationDevelopmentCheckTx} from '../../../capability-evolution/src/economic-orchestration-port';
+import {acquireComputeResourceLeases,renewComputeResourceLeases,releaseComputeResourceLeases,ComputeCapacityUnavailableError,DatabaseExecutionDeadlineError,executionDeadlineMilliseconds,withDatabaseExecutionDeadline,lockTenantMaterialCutTx} from '@finnor/db';
 import {z} from 'zod';
 import type {JobExecutionContext} from '../../../../apps/worker/src/queue';
 import type {PeMutationContext} from '../types';
@@ -21,9 +27,9 @@ const replySchema=z.object({model:z.string().min(1).max(128),usage:z.object({inp
 type UnitPayload=Record<string,unknown>&{tenantId:string;principalId:string;searchId:string;unitId:string};
 async function boundedResponse(response:Response,signal:AbortSignal){if(!response.body)throw Error('P2_EMPTY_PROVIDER_BODY');const reader=response.body.getReader();let size=0;const chunks:Uint8Array[]=[];try{for(;;){signal.throwIfAborted();const {value,done}=await reader.read();if(done)break;size+=value.length;if(size>16384)throw Error('P2_PROVIDER_OUTPUT_BYTE_BOUND');chunks.push(value);}}finally{await reader.cancel().catch(()=>undefined);}return Buffer.concat(chunks).toString('utf8');}
 export async function runComputeSearchUnitJob(payload:Record<string,unknown>,x?:Readonly<JobExecutionContext>):Promise<void>{
- if(!x||![1,2].includes(x.protocolVersion)||typeof payload.tenantId!=='string'||x.tenantId!==payload.tenantId||typeof payload.principalId!=='string'||typeof payload.searchId!=='string'||typeof payload.unitId!=='string')throw Error('P2_ACTUAL_DURABLE_JOB_CONTEXT_REQUIRED');
+ if(!x||![1,2,3].includes(x.protocolVersion)||typeof payload.tenantId!=='string'||x.tenantId!==payload.tenantId||typeof payload.principalId!=='string'||typeof payload.searchId!=='string'||typeof payload.unitId!=='string')throw Error('P2_ACTUAL_DURABLE_JOB_CONTEXT_REQUIRED');
  const delivery=payload as UnitPayload;
- if(x.protocolVersion===2){
+ if(x.protocolVersion===2||x.protocolVersion===3){
   const absolute=z.string().datetime().parse(payload.originalDeadlineAt),deadline=Date.parse(absolute);
   if(!Number.isFinite(deadline))throw Error('M2_ORIGINAL_DELIVERY_DEADLINE_REQUIRED');
   // The producer carries the parent's original absolute deadline through the
@@ -36,15 +42,23 @@ export async function runComputeSearchUnitJob(payload:Record<string,unknown>,x?:
 }
 async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliveryDeadline:number|null,monotoneDeadline:number|null):Promise<void>{
  const ctx:PeMutationContext={auth:{tenantId:payload.tenantId,userId:payload.principalId,employeeId:payload.principalId,role:'owner'},provenance:{sourceSystem:'P2:compute-unit',createdBy:payload.principalId}};
- let s=await searchRow(ctx,payload.searchId);if(x.protocolVersion!==(s.request.deliberation?2:1))throw Error('P2_M2_EXACT_DELIVERY_PROTOCOL_REQUIRED');if(payload.generation!==s.generation||['CANCELLED','INVALIDATED','FAILED','STOPPED'].includes(s.status))return;
+ let s=await searchRow(ctx,payload.searchId);if(x.protocolVersion!==(s.request.orchestration?3:s.request.deliberation?2:1))throw Error('P2_M2_EXACT_DELIVERY_PROTOCOL_REQUIRED');if(payload.generation!==s.generation||['CANCELLED','INVALIDATED','FAILED','STOPPED'].includes(s.status))return;
  let u=await tx(ctx,async c=>(await units(ctx,s,c)).find(u=>u.id===payload.unitId),true);if(!u||['COMPLETED','FAILED','CANCELLED','UNKNOWN'].includes(u.status))return;
  let attempt:{id:string;body:any}|null=null,leases:Awaited<ReturnType<typeof acquireComputeResourceLeases>>=[],released=false;
- const started=performance.now();let physicalCompleted=false,result:any=null,endpoint:any=null;
+ const started=performance.now(),finishW1Meter=s.request.orchestration?beginNativeMeter():null;let physicalCompleted=false,result:any=null,endpoint:any=null;
  try{
   if(s.request.mode!=='ordinary_disposable'||runtimeEnvironment.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('P2_PROTECTED_FUNDING_AND_RUNTIME_UNAVAILABLE');
+  if(s.request.orchestration){
+   const boundary=await tx(ctx,async c=>{
+    const locked=await searchRow(ctx,s.id,c,true),parent=await requestRow(ctx,s.program_id,c);
+    if(locked.generation!==payload.generation||locked.status!=='RUNNING')return 'RESCHEDULED';
+    const live=(await units(ctx,locked,c)).find(row=>row.id===u!.id);if(!live)return 'RESCHEDULED';
+    return assertEconomicUnitBoundaryTx(ctx,locked,parent,live,'CLAIM',c,x.jobId);
+   });if(boundary!=='CURRENT')return;
+  }
   const q=await currentSearch(ctx,s);if(!s.context)throw Error('P2_CURRENT_SOURCE_CONTEXT_REQUIRED');
   if(deliveryDeadline!==null&&deliveryDeadline>Date.parse(q.proposed.bounds.deadlineAt))throw Error('M2_ORIGINAL_DELIVERY_DEADLINE_CANNOT_EXTEND_PARENT');
-  const originalDeadline=Math.min(deliveryDeadline??Infinity,Date.parse(q.proposed.bounds.deadlineAt));
+  const originalDeadline=Math.min(deliveryDeadline??Infinity,Date.parse(q.proposed.bounds.deadlineAt),s.request.orchestration?await tx(ctx,c=>economicEpisodeDeadlineTx(s,q,c)):Infinity);
   const d=await currentDerivation(ctx,s.context.derivationId),request=parseHarnessRequest(q.request);
   if(isInstitutionRequest(request))throw Error('P2_ANALYTICAL_HARNESS_REQUIRED');
   if(u.body.sourceDigest!==d.result?.digest||u.body.inputDigest!==s.context.inputDigest)throw Error('P2_EXACT_UNIT_SOURCE_CUT_MISMATCH');
@@ -59,13 +73,17 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
    if(monotoneDeadline===null)return renewComputeResourceLeases(leases);
    return withDatabaseExecutionDeadline(monotoneDeadline,async()=>{executionDeadlineMilliseconds();return renewComputeResourceLeases(leases);});
   });
-  const steps=u.kind==='CONTROL_M2'?256:u.kind==='EXECUTE_P1'?(module?.bounds.steps??0)+1:1;
+  const steps=u.kind==='CONTROL_W1'?W1_NATIVE_LIMITS.controllerSteps:u.kind==='CONTROL_M2'?256:u.kind==='EXECUTE_P1'?(module?.bounds.steps??0)+1:1;
   // Conservative byte ceiling for this local diagnostic protocol; actual
   // returned token counts must fit it. No general provider tokenizer is assumed.
   const providerBody=stable({instruction:request.instruction,accepted:request.acceptance,acceptanceDigest:s.context.acceptanceDigest,sourceSchemas:request.sources});
-  const inputTokens=endpoint?Buffer.byteLength(providerBody):0;attempt=await admit(ctx,s,u,x,steps,endpoint,inputTokens);
+  const inputTokens=endpoint?Buffer.byteLength(providerBody):0;const admission=await admit(ctx,s,u,x,steps,endpoint,inputTokens);if('w1Superseded' in admission)return;attempt=admission;
   await updateAttempt(ctx,s,attempt.id,'SUBMITTED',{submittedAt:new Date().toISOString(),originalDeadlineAt:q.proposed.bounds.deadlineAt,deliveryDeadlineAt:new Date(originalDeadline).toISOString(),physicalDeadlineAt:new Date(Math.min(originalDeadline,Date.now()+10000)).toISOString(),leases:leases.map(l=>({resourceKey:l.resourceKey,fence:l.fence,token:l.token}))});
-  if(u.kind==='CONTROL_M2'){
+  if(s.request.orchestration)await tx(ctx,c=>assertEconomicUnitBoundaryTx(ctx,s,q,u!,'USE',c));
+  if(u.kind==='CONTROL_W1'){
+   if(!s.request.orchestration||u.body.moduleId!==W1_NATIVE_VERSION)throw Error('W1_EXACT_NATIVE_CONTROL_UNIT_REQUIRED');
+   try{result=await executeEconomicControl(ctx,s,u,q,attempt,x);}finally{physicalCompleted=true;}
+  }else if(u.kind==='CONTROL_M2'){
    if(!s.request.deliberation||u.body.moduleId!==s.request.deliberation.moduleRef.id)throw Error('M2_CURRENT_REGISTERED_CONTROL_UNIT_REQUIRED');
    const input=await tx(ctx,c=>controlSnapshot(ctx,s,c),true);
    try{const run=executeMetacontroller(input);if(stable(run.module.ref)!==stable(s.request.deliberation.moduleRef))throw Error('M2_EXECUTED_MODULE_CHANGED');
@@ -86,7 +104,12 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
   }else if(u.kind==='VERIFY_P1'){
    const parent=await tx(ctx,async c=>(await units(ctx,s,c)).find(p=>p.id===u!.body.prerequisites[0]),true);
    if(!parent?.result?.values||parent.status!=='COMPLETED'||parent.result.moduleId!==u.body.moduleId)throw Error('P2_INDEPENDENT_CHECK_INPUT_BARRIER');
-   const checks=await tx(ctx,c=>checkNumericalAcceptance(c,request.acceptance,s.context.input,parent.result.values),true);
+   const checks=await tx(ctx,async(c,db)=>{
+    if(s.request.orchestration)await lockTenantMaterialCutTx(db,s.tenant_id);
+    if(s.request.orchestration)await assertEconomicUnitBoundaryTx(ctx,s,q,u!,'CHECK',c);
+    const checked=await checkNumericalAcceptance(c,request.acceptance,s.context.input,parent.result.values);
+    return checked;
+   },!s.request.orchestration);
    result={moduleId:parent.result.moduleId,values:parent.result.values,checks};if(checks.some(c=>c.status!=='PASS'))throw Object.assign(Error('P2_INDEPENDENT_ACCEPTANCE_CHECK_FAILED'),{checkResult:result});
   }else{
    const controller=new AbortController(),deadline=Math.min(originalDeadline,Date.now()+8000),timer=setTimeout(()=>controller.abort(Error('P2_SHARED_PROVIDER_DEADLINE')),Math.max(1,deadline-Date.now()));
@@ -99,7 +122,7 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
     await tx(ctx,async c=>{await c.query('UPDATE finnor_os.p2_endpoint_windows SET active=active-1 WHERE endpoint_key=$1 AND active>0',[endpoint.key]);const locked=await searchRow(ctx,s.id,c,true);const current=(await units(ctx,locked,c)).find(v=>v.id===u!.id)!;
      if(current.attempts<2&&locked.status==='RUNNING'&&Date.now()+retryAfterMs<Date.parse(q.proposed.bounds.deadlineAt)){
       await c.query("UPDATE finnor_os.p2_units SET status='QUEUED' WHERE id=$1",[u!.id]);
-      await c.query("INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,protocol_version,retry_safety,run_at) VALUES($1,'run_compute_search_unit_v1',$2::jsonb,$3,'interactive',$5,'reconcilable',clock_timestamp()+$4::int*interval '1 millisecond') ON CONFLICT(idempotency_key) DO NOTHING",[s.tenant_id,stable(payload),'p2:'+u!.id+':retry:'+current.attempts,retryAfterMs,s.request.deliberation?2:1]);
+      await c.query("INSERT INTO finnor_os.jobs(tenant_id,type,payload,idempotency_key,lane,protocol_version,retry_safety,run_at) VALUES($1,'run_compute_search_unit_v1',$2::jsonb,$3,'interactive',$5,'reconcilable',clock_timestamp()+$4::int*interval '1 millisecond') ON CONFLICT(idempotency_key) DO NOTHING",[s.tenant_id,stable(payload),'p2:'+u!.id+':retry:'+current.attempts,retryAfterMs,s.request.orchestration?3:s.request.deliberation?2:1]);
       await append(ctx,locked,'THROTTLE_BACKOFF',{unitId:u!.id,attemptId:attempt!.id,retryAfterMs,originalDeadline:q.proposed.bounds.deadlineAt,priorDebitRetained:true,nextRoute:u!.body.routeIds[Math.min(current.attempts,u!.body.routeIds.length-1)],routingBasis:'BOUNDED_PREDECLARED_FALLBACK_AFTER_OBSERVED_THROTTLE_NOT_CALIBRATED_ECONOMIC_ROUTING'},c);await snapshot(ctx,locked,q,c);
      }else {await c.query("UPDATE finnor_os.p2_units SET status='FAILED' WHERE id=$1",[u!.id]);await replan(ctx,locked,q,c);}
     });return;
@@ -123,8 +146,14 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
    const reservation=(await c.query('SELECT status,revocation_reason FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND allocation_digest=$2 FOR SHARE',[s.tenant_id,s.request.computeGrant.contentDigest])).rows[0];
    if(!reservation||reservation.status==='RELEASED'||reservation.revocation_reason||Date.parse(s.binding.validUntil)<=Date.now())throw Error('P2_S5_PUBLICATION_FENCED');
    const current=(await units(ctx,locked,c)).find(v=>v.id===u!.id)!;
-   const claim=(await c.query("SELECT id FROM finnor_os.jobs WHERE id=$1 AND tenant_id=$2 AND status='running' AND claim_token=$3 AND claim_fence=$4 FOR SHARE",[x.jobId,s.tenant_id,x.claimToken,x.claimFence])).rows[0];
-   if(!claim||locked.generation!==s.generation||locked.status!=='RUNNING'||current.claim_token!==x.claimToken||Number(current.claim_fence)!==Number(x.claimFence)||current.status!=='RUNNING')throw Error('P2_UNIT_PUBLICATION_FENCED');
+   if(locked.generation!==s.generation||locked.status!=='RUNNING'||current.claim_token!==x.claimToken||Number(current.claim_fence)!==Number(x.claimFence)||current.status!=='RUNNING')throw Error('P2_UNIT_PUBLICATION_FENCED');
+   if(locked.request.orchestration){
+    await assertEconomicUnitBoundaryTx(ctx,locked,qNow,current,'PUBLISH',c);
+    if(u!.kind==='CONTROL_W1'&&result.w1ProposalStatus==='CHECKED_POLICY'){
+     const checked=await issueEconomicOrchestrationDevelopmentCheckTx(ctx,locked,qNow,result.w1CapsuleDigest,c);
+     result={...result,w1DevelopmentCheckDigest:sha(checked)};
+    }
+   }
    if(u!.kind==='MODEL_REFINE'&&!result.duplicate){
     if(locked.context.program.modules.length>=q.proposed.bounds.maxCandidates||(await units(ctx,locked,c)).length+2>locked.request.limits.maxUnits)throw Error('P2_ORIGINAL_CANDIDATE_OR_UNIT_BOUND');
     const debit=await c.query('UPDATE finnor_os.p1_episodes SET candidates_used=candidates_used+1 WHERE id=$1 AND tenant_id=$2 AND principal_id=$3 AND candidates_used<max_candidates AND deadline_at>clock_timestamp() RETURNING id',[q.episode_id,s.tenant_id,s.principal_id]);if(!debit.rowCount)throw Error('P2_ORIGINAL_P1_CANDIDATE_BOUND');
@@ -132,11 +161,15 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
     await c.query('UPDATE finnor_os.p2_requests SET context=$4::jsonb WHERE tenant_id=$1 AND principal_id=$2 AND id=$3',[s.tenant_id,s.principal_id,s.id,stable(locked.context)]);await addCandidateUnits(ctx,locked,result.proposal,c);
    }
    result={...result,completedAt:Date.now()};
-   await updateAttempt(ctx,s,attempt!.id,'COMPLETED',{...result,proposal:result.proposal?{id:result.proposal.id,compiledDigest:result.proposal.compiledDigest}:undefined,elapsedMs:performance.now()-started,costUSD:null},c);
+   await updateAttempt(ctx,s,attempt!.id,'COMPLETED',{...result,proposal:result.proposal?{id:result.proposal.id,compiledDigest:result.proposal.compiledDigest}:undefined,elapsedMs:performance.now()-started,...(finishW1Meter?{w1Meter:finishW1Meter()}:{}),costUSD:null},c);
    if(endpoint)await c.query('UPDATE finnor_os.p2_endpoint_windows SET active=active-1 WHERE endpoint_key=$1 AND active>0',[endpoint.key]);
    const disposition=u!.kind==='CONTROL_M2'?'PENDING':'COMPLETED';
    await c.query("UPDATE finnor_os.p2_units SET status=$4,result=$2::jsonb,result_digest=$3,claim_token=NULL,updated_at=clock_timestamp() WHERE id=$1",[u!.id,stable(result),sha(result),disposition]);
    await append(ctx,locked,u!.kind==='CONTROL_M2'?'M2_CONTROL_INVOCATION_COMPLETED':'UNIT_COMPLETED',{unitId:u!.id,kind:u!.kind,attemptId:attempt!.id,logicalDisposition:disposition,resultDigest:sha(result),sourceResultDigest:s.context.sourceResultDigest,acceptanceDigest:s.context.acceptanceDigest},c);await replan(ctx,locked,qNow,c);
+   // Fence the complete publication at commit, after slow owner reads/replan.
+   // Holding this job row earlier blocks the queue's own lease heartbeats.
+   const claim=(await c.query("SELECT id FROM finnor_os.jobs WHERE id=$1 AND tenant_id=$2 AND status='running' AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE",[x.jobId,s.tenant_id,x.claimToken,x.claimFence])).rows[0];
+   if(!claim)throw Error('P2_UNIT_PUBLICATION_FENCED');
   });
  }catch(error){
   // An expired execution cannot begin a fresh owner transaction in its catch
@@ -148,7 +181,7 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
   await tx(ctx,async c=>{
    const locked=await searchRow(ctx,s.id,c,true),q=await requestRow(ctx,s.program_id,c),current=(await units(ctx,locked,c)).find(v=>v.id===u!.id);
    const late=locked.generation!==s.generation||['CANCELLED','INVALIDATED','STOPPED'].includes(locked.status)||!current||!!attempt&&current.claim_token!==x.claimToken;
-   if(attempt){await updateAttempt(ctx,s,attempt.id,!physicalCompleted?'UNKNOWN':late?'LATE':'FAILED',{predicate:reason,physicalOutcome:physicalCompleted?'RETURNED':'UNKNOWN',elapsedMs:performance.now()-started,actualProvider:endpoint?.provider??null,partialResultDigest:result?sha(result):null,checkResult:(error as any).checkResult??null,costUSD:null,liabilityRetained:true},c);if(endpoint&&physicalCompleted)await c.query('UPDATE finnor_os.p2_endpoint_windows SET active=active-1 WHERE endpoint_key=$1 AND active>0',[endpoint.key]);}
+   if(attempt){await updateAttempt(ctx,s,attempt.id,!physicalCompleted?'UNKNOWN':late?'LATE':'FAILED',{predicate:reason,physicalOutcome:physicalCompleted?'RETURNED':'UNKNOWN',elapsedMs:performance.now()-started,actualProvider:endpoint?.provider??null,partialResultDigest:result?sha(result):null,checkResult:(error as any).checkResult??null,...(finishW1Meter?{w1Meter:finishW1Meter()}:{}),costUSD:null,liabilityRetained:true},c);if(endpoint&&physicalCompleted)await c.query('UPDATE finnor_os.p2_endpoint_windows SET active=active-1 WHERE endpoint_key=$1 AND active>0',[endpoint.key]);}
    if(!late){const unknown=!!attempt&&!physicalCompleted;await c.query("UPDATE finnor_os.p2_units SET status=$2,result=$3::jsonb,result_digest=$4,updated_at=clock_timestamp() WHERE id=$1",[u!.id,unknown?'UNKNOWN':'FAILED',stable({predicate:reason,checks:(error as any).checkResult?.checks??null}),sha({predicate:reason,checks:(error as any).checkResult?.checks??null})]);await replan(ctx,locked,q,c);}
    else {await append(ctx,locked,'LATE_COMPLETION_FENCED',{unitId:u!.id,attemptId:attempt?.id??null,predicate:reason,privateResultPublished:false,liabilityRetained:true},c);await snapshot(ctx,locked,q,c);}
   });

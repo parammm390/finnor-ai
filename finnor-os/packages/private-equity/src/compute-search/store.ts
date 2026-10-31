@@ -5,13 +5,21 @@ import {authorize,principal,sha,stable,tx,unavailable,assertDependencies,current
 import {assertProgramCurrent,requestRow,episodeCosts,costWitness,type ProgramRow} from '../program-synthesis/store';
 import type {SearchRow,UnitRow,ComputeSearchPlan,CheckedIncumbent} from './contracts';
 import {P2_VERSION} from './contracts';
+import {latestPublishedEconomicCapsuleTx} from '../economic-orchestration/capsules';
+import {W1_NATIVE_VERSION} from '../economic-orchestration/contracts';
 import {marginalWorkProtocol} from './calibration';
 import {canonicalExact} from '../evidence-execution/exact';
 import {recheckSearchOwners} from './owners';
 import {readEndpointConfig,endpointProjection,nativeCapacitySnapshot} from './endpoints';
 import {buildPolicy,persistPolicy,validateDeliberationBinding} from '../deliberation/store';
+import {validateEconomicBinding} from '../economic-orchestration/currentness';
 export async function searchRow(ctx:PeMutationContext,id:string,c?:PoolClient,lock=false):Promise<SearchRow>{
- const read=async(client:PoolClient)=>{const row=(await client.query<SearchRow>('SELECT * FROM finnor_os.p2_requests WHERE tenant_id=$1 AND principal_id=$2 AND id=$3'+(lock?' FOR UPDATE':''),[ctx.auth.tenantId,principal(ctx),id])).rows[0];if(!row)throw unavailable();if(sha(row.request)!==row.request_digest)throw Error('P2_REQUEST_DIGEST_MISMATCH');return row;};return c?read(c):tx(ctx,read,true);
+ const read=async(client:PoolClient)=>{
+  // Admission, publication and replanning share the original S5 writer order.
+  // Taking a domain row first can deadlock a current projection with publication.
+  if(lock)await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',['s5-portfolio:'+ctx.auth.tenantId]);
+  const row=(await client.query<SearchRow>('SELECT * FROM finnor_os.p2_requests WHERE tenant_id=$1 AND principal_id=$2 AND id=$3'+(lock?' FOR UPDATE':''),[ctx.auth.tenantId,principal(ctx),id])).rows[0];if(!row)throw unavailable();if(sha(row.request)!==row.request_digest)throw Error('P2_REQUEST_DIGEST_MISMATCH');return row;
+ };return c?read(c):tx(ctx,read,!lock);
 }
 export async function searchForProgram(ctx:PeMutationContext,programId:string):Promise<SearchRow|null>{return tx(ctx,async c=>(await c.query<SearchRow>('SELECT * FROM finnor_os.p2_requests WHERE tenant_id=$1 AND principal_id=$2 AND program_id=$3',[ctx.auth.tenantId,principal(ctx),programId])).rows[0]??null,true);}
 export async function units(ctx:PeMutationContext,s:SearchRow,c:PoolClient):Promise<UnitRow[]>{const rows=(await c.query<UnitRow>('SELECT * FROM finnor_os.p2_units WHERE tenant_id=$1 AND principal_id=$2 AND search_id=$3 ORDER BY created_at,id',[s.tenant_id,s.principal_id,s.id])).rows;
@@ -23,7 +31,7 @@ export async function currentSearch(ctx:PeMutationContext,s:SearchRow,q?:Program
  if(['CANCELLED','INVALIDATED'].includes(s.status))throw Error('P2_TERMINAL_CURRENTNESS_FENCED');
  await assertProgramCurrent(ctx,q);
  await recheckSearchOwners(ctx,q,s);
- await validateDeliberationBinding(ctx,q,s.request);
+ await validateDeliberationBinding(ctx,q,s.request);await validateEconomicBinding(ctx,q,s.request);
  if(s.context){const d=await currentDerivation(ctx,s.context.derivationId);if(d.result?.digest!==s.context.sourceResultDigest||q.generation!==s.context.programGeneration)throw Error('P2_SOURCE_OR_PROGRAM_GENERATION_CHANGED');await assertDependencies(ctx,s.context.dependencies);if(s.context.physicalCapacity.digest!==(await nativeCapacitySnapshot(ctx,s.request.requestedKinds.includes('MODEL_REFINE'))).digest)throw Error('P2_SHARED_PHYSICAL_CAPACITY_POLICY_CHANGED');}
  const endpoints=await readEndpointConfig();
  for(const pinned of s.context?.endpoints??[])if(!endpoints.some(e=>e.id===pinned.id&&e.digest===pinned.digest))throw Error('P2_ENDPOINT_QUOTA_SNAPSHOT_CHANGED');
@@ -49,11 +57,21 @@ export async function snapshot(ctx:PeMutationContext,s:SearchRow,q:ProgramRow,c:
   quotaProfile:[...(s.context?.physicalCapacity?[s.context.physicalCapacity]:[]),...(s.context?.endpoints??[]).map(endpointProjection)],incumbent,
   stop:{heuristic:true,reason:s.reason,lossUnit:s.binding.loss.unit,remainingPredicates:remaining},
   outstanding:all.filter(a=>['INTENT','SUBMITTED','UNKNOWN'].includes(a.status)).map(a=>({attemptId:a.id,unitId:a.unit_id,status:a.status,disposition:s.status==='RUNNING'?'AWAIT':'RECONCILE',liabilityRetained:true,mayRetry:false,submittedAt:a.body.submittedAt??null,endpointKey:a.endpoint_key})),
-  costs:{usd:null,status:'UNMETERED',physicalAttempts:all.length,nativeAttempts:all.filter(a=>!a.endpoint_key).length,modelAttempts:all.filter(a=>a.endpoint_key).length,recoveryAttempts:all.filter(a=>a.body.recovery).length,usage:all.map(a=>({attemptId:a.id,status:a.status,actualProvider:a.body.actualProvider??null,actualModel:a.body.actualModel??null,usage:a.body.usage??null,elapsedMs:a.body.elapsedMs??null,costUSD:null,receiptDigest:sha(a.body)})),parent:costWitness(await episodeCosts(ctx,q,c)),accountingScope:'P2_PHYSICAL_ATTEMPTS_AND_NONADDITIVE_ORIGINAL_P1_EPISODE_WITNESS_OVERLAP_NOT_SUMMED'},
+  costs:{usd:null,status:'UNMETERED',physicalAttempts:all.length,nativeAttempts:all.filter(a=>!a.endpoint_key).length,modelAttempts:all.filter(a=>a.endpoint_key).length,recoveryAttempts:all.filter(a=>a.body.recovery).length,usage:all.map(a=>({attemptId:a.id,status:a.status,actualProvider:a.body.actualProvider??null,actualModel:a.body.actualModel??null,usage:a.body.usage??null,elapsedMs:a.body.elapsedMs??null,...(a.body.w1Meter?{w1Meter:a.body.w1Meter}:{}),costUSD:null,receiptDigest:sha(a.body)})),parent:costWitness(await episodeCosts(ctx,q,c)),accountingScope:'P2_PHYSICAL_ATTEMPTS_AND_NONADDITIVE_ORIGINAL_P1_EPISODE_WITNESS_OVERLAP_NOT_SUMMED'},
   bottleneck:{kind:incumbent?'EXPLORATION_OR_MODEL_AMBIGUITY':frontier.some(u=>u.kind==='VERIFY_P1'&&u.status==='FAILED')?'CHECKER_FAILURE':s.context?'VERIFICATION':'DATA_OR_SOURCE_UNCERTAINTY',source:'CURRENT_OWNER_AND_COMPLETED_UNIT_RESULTS',effectAuthority:false},
   topology:{strategy:s.request.strategy,maxParallel:s.request.limits.maxParallel,active:active.length,kind:active.length>1?'PARALLEL_INDEPENDENT':frontier.some(u=>u.body.prerequisites.length)?'COORDINATED_WITH_CHECK_BARRIER':'SEQUENTIAL',economicBenefit:null,selection:'VERSIONED_HEURISTIC_WITHOUT_CALIBRATED_VALUE'},
   bindings:{...s.binding,marginalWorkEstimate:estimate,sourceResultDigest:s.context?.sourceResultDigest??null,acceptanceDigest:q.proposed.acceptanceDigest,producer:q.proposed.producer,originalEpisode:q.episode_id},
   qualifications:['ORDINARY_EXECUTED_P1_SEARCH_NO_PROTECTED_ADMISSION','NO_MODEL_OPINION_COUNT_IS_INFORMATION','NATIVE_GRANT_DOES_NOT_FUND_DOLLARS_OR_TOKENS','COMPLETE_BILLING_AND_AGGREGATE_CONTAINER_BOUND_UNAVAILABLE','CALIBRATED_TOPOLOGY_AND_ROUTING_GATE_UNPASSED',...remaining]};
+ if(s.request.orchestration&&s.context&&!terminal){
+  const capsule=await latestPublishedEconomicCapsuleTx(ctx,s,c);
+  if(capsule)plan.orchestrationPolicyRef={owner:'W1',id:capsule.id,version:W1_NATIVE_VERSION,contentDigest:sha(capsule)};
+  plan.topology={owner:'W1',strategy:'EMPIRICAL_FULL_HISTORY_CONTINUATION_WITH_ORIGINAL_NATIVE_FALLBACK',
+   maxParallel:s.request.limits.maxParallel,active:active.length,capsuleDigest:capsule?sha(capsule):null,
+   proposalStatus:capsule?.proposal.status??'PENDING_OR_BYPASS',independence:'COMMON_PREMISE_NOT_INDEPENDENT_VOTES',
+   economicBenefit:null,completeCatalogueOptimalityQualified:false,protectedAdmission:false};
+  plan.qualifications.push('W1_MODEL_RELATIVE_NATIVE_POLICY_NOT_FIELD_OR_PROTECTED_QUALIFICATION',
+   'W1_UNIDENTIFIED_TREATMENTS_AND_CHILD_USAGE_REMAIN_UNQUALIFIED');
+ }
  const planId=randomUUID(),policy=s.request.deliberation?await buildPolicy(ctx,s,q,plan,planId,c):null;
  if(policy)plan.deliberationPolicyRef=policy.ref;
  const head=(await c.query('INSERT INTO finnor_os.p2_plans(id,tenant_id,principal_id,search_id,revision,body,digest) VALUES($1,$2,$3,$4,$5,$6::jsonb,$7) RETURNING id',[planId,s.tenant_id,s.principal_id,s.id,plan.revision,stable(plan),sha(plan)])).rows[0].id;

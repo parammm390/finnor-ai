@@ -8,6 +8,7 @@ import { PlannerActivationRequestSchema } from "../packages/orchestration/src/ca
 import {createHash} from "node:crypto";
 import { writeFileSync } from "node:fs";
 import { z } from "zod";
+import { EconomicReadReplySchema, RevenueReadRequestSchema, QuoteReadRequestSchema } from "@finnor/shared-types/src/economic-reads";
 import {
   SubmitInstructionSchema,
   StartObjectiveSchema,
@@ -88,6 +89,7 @@ import { PROCEDURE_OPERATIONS, PROCEDURE_OPERATION_SCHEMAS } from "../packages/p
 import { APPLICATION_OPERATIONS as APPLICATION_SEMANTICS_OPERATIONS, APPLICATION_OPERATION_SCHEMAS as APPLICATION_SEMANTICS_OPERATION_SCHEMAS } from "../packages/private-equity/src/application-semantics/api";
 import { INSTITUTION_OPERATIONS } from "../packages/private-equity/src/institution-program/api";
 import { DELIBERATION_OPERATIONS } from "../packages/private-equity/src/deliberation/api";
+import { ECONOMIC_ORCHESTRATION_OPERATIONS, ECONOMIC_ORCHESTRATION_OPERATION_SCHEMAS } from "../packages/private-equity/src/economic-orchestration/api";
 import { ElicitationOperationSchemas } from "../packages/epistemic-runtime/src/incentive-rule-synthesis/contracts";
 import { R3OwnerOperationSchemas, R3WorkReviewSchema } from "../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts";
 import { ObligationOperationSchemas } from "../packages/private-equity/src/obligation-contracts";
@@ -239,6 +241,8 @@ const ArtifactTemplateSchema = z.object({ documentId: z.string().uuid(), version
 const ArtifactTemplateInstantiateSchema = z.object({ title: z.string().trim().min(1).max(500) }).strict();
 
 const OperationalQuerySchema = z.discriminatedUnion("intent", [
+  RevenueReadRequestSchema.extend(queryEnvelope),
+  QuoteReadRequestSchema.extend(queryEnvelope),
   z.object({ intent: z.literal("work_list"), ...queryEnvelope, section: z.enum(["all", "works", "tasks"]).optional(), openOnly: z.boolean().optional(), statuses: z.array(z.string().min(1).max(80)).max(20).optional(), recordId: z.string().uuid().optional(), page: page.optional() }).strict(),
   // Employee/tenant identity is injected from the authenticated context. In
   // particular, this branch deliberately exposes no selector that could turn
@@ -457,7 +461,7 @@ const paths = {
   "/api/vitals": { get: { security: secured, responses: { "200": { description: "Queue and runtime vitals" } } } },
   "/api/activity": { get: { security: secured, responses: { "200": { description: "Tenant-scoped raw diagnostic activity", ...json(RawActivityPageSchema) } } } },
   "/api/semantic-activity": { post: { security: secured, requestBody: json(SemanticActivityInputSchema), responses: { "200": { description: "Deterministic tenant-scoped PE semantic activity from P1-P7 canonical records" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "PE root absent from the authenticated tenant" } } } },
-  "/api/company-brain/{operation}": { post: { security: secured, parameters: [{ name: "operation", in: "path", required: true, schema: { type: "string", enum: ["opportunity-promote", "belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context", ...EVIDENCE_OPERATIONS, ...PROGRAM_OPERATIONS, ...COMPUTE_SEARCH_OPERATIONS, ...INTERFACE_OPERATIONS, ...M1_OPERATIONS, ...CONTINUATION_OPERATIONS, ...PROCEDURE_OPERATIONS, ...DELIBERATION_OPERATIONS, ...Object.keys(CAPITAL_FORMATION_OPERATIONS)] } }], responses: { "200": { description: "Tenant-scoped Company Brain operation. Owner request schemas and current authority are checked by each delegated handler." }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Root or object absent from the authenticated tenant" } } } },
+  "/api/company-brain/{operation}": { post: { security: secured, parameters: [{ name: "operation", in: "path", required: true, schema: { type: "string", enum: ["opportunity-promote", "belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context", ...EVIDENCE_OPERATIONS, ...PROGRAM_OPERATIONS, ...COMPUTE_SEARCH_OPERATIONS, ...INTERFACE_OPERATIONS, ...M1_OPERATIONS, ...CONTINUATION_OPERATIONS, ...PROCEDURE_OPERATIONS, ...DELIBERATION_OPERATIONS, ...ECONOMIC_ORCHESTRATION_OPERATIONS, ...Object.keys(CAPITAL_FORMATION_OPERATIONS)] } }], responses: { "200": { description: "Tenant-scoped Company Brain operation. Owner request schemas and current authority are checked by each delegated handler." }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Root or object absent from the authenticated tenant" } } } },
   "/api/private-equity/digital-twin": { post: { security: secured, requestBody: json(PeDigitalTwinRequestSchema), responses: { "200": { description: "Tenant-scoped PE Digital Twin query or transition" }, "201": { description: "Evidence-backed canonical PE fact, identity, observation, or exact relation created" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Canonical reference absent from the authenticated tenant" }, "409": { description: "Expected version or concurrent canonical truth conflict" }, "422": { description: "Canonical invariant rejected the requested fact" } } } },
   "/api/workflows/runs": { get: { security: secured, responses: { "200": { description: "Tenant-scoped workflow runs" } } } },
   "/api/workflows/runs/{id}/pause": { post: { security: secured, parameters: [documentIdParameter], requestBody: json(WorkflowRunControlSchema), responses: { "200": { description: "Authorized workflow pause" } } } },
@@ -594,7 +598,14 @@ const paths = {
   "/api/objectives/{id}/control": { post: { security: secured, parameters: [{name:"id",in:"path",required:true,schema:{type:"string",format:"uuid"}}], requestBody: json(ControlObjectiveSchema), responses: { "200": { description: "Control recorded" } } } },
   "/api/works/{id}/handoff": { post: { security: secured, parameters: [documentIdParameter], requestBody: json(HandoffWorkSchema), responses: { "200": { description: "Handoff recorded" } } } },
   "/api/outcome-packs": { post: { security: secured, requestBody: json(StartOutcomePackSchema), responses: { "201": { description: "Outcome pack started" } } } },
-  "/api/queries": { post: { security: secured, requestBody: json(OperationalQuerySchema), responses: { "201": { description: "Canonical query completed" }, "400": { description: "Invalid or retired query" } } } },
+  "/api/queries": {
+    get: { security: secured, description: "Original-human private retrieval of one native Objective query; IDs select custody and never authorize it.",
+      parameters: ["workId","workInputId","objectiveStepId"].map(name => ({name,in:"query",required:true,schema:{type:"string",format:"uuid"}})),
+      responses: { "200": {description:"Immutable original canonical query and native provenance; Cache-Control: no-store",...json(EconomicReadReplySchema)},
+        "400": {description:"Invalid or additional selectors"}, "401": {description:"Authentication required"},
+        "404": {description:"Unavailable original custody or current query/source rights; no financial payload"} } },
+    post: { security: secured, requestBody: json(OperationalQuerySchema), responses: { "201": { description: "Canonical query completed" }, "400": { description: "Invalid or retired query" } } },
+  },
   "/api/read-models/workforce-status": { get: { security: secured, parameters: workforcePageParameters, responses: { "200": { description: "Source-backed configured AI workforce, assignments, verified metrics, governed learning state, truthful truncation, and a next cursor" } } } },
   "/api/workforce/profiles": {
     get: { security: secured, parameters: workforcePageParameters, responses: { "200": { description: "Source-backed governed workforce state with truthful bounded-page metadata" } } },
@@ -905,6 +916,23 @@ for (const operation of PROCEDURE_OPERATIONS) {
       "400": { description: "Strict bounded procedure schema rejected" },
       "404": { description: "Absent or unauthorized principal-scoped procedure resource" },
       "422": { description: "Rights, currentness, grant or unsupported protected-port predicate unpassed" },
+    },
+  } } });
+}
+
+for (const operation of ECONOMIC_ORCHESTRATION_OPERATIONS) {
+  Object.assign(paths, { ["/api/company-brain/" + operation]: { post: {
+    security: secured, parameters: [{ in: "header", name: "x-deliberation-deadline-ms", required: false,
+      description: "Existing shared whole-transport attenuation; no new Work deadline or compute grant",
+      schema: { type: "integer", minimum: 1, maximum: 30000, default: 30000 } }],
+    requestBody: json(ECONOMIC_ORCHESTRATION_OPERATION_SCHEMAS[operation]), responses: {
+      "200": { description: "Authenticated principal-scoped native policy, measured response or lifecycle receipt; no protected authority" },
+      "202": { description: "Original P1/S4/S5-bound ordinary W1 work accepted" },
+      "400": { description: "Strict bounded native contract rejected" },
+      "401": { description: "Authentication required" },
+      "404": { description: "Absent or unauthorized private Work is indistinguishable" },
+      "413": { description: "Inherited whole-transport deadline exhausted" },
+      "422": { description: "Original owner, currentness, unsupported port or resource predicate unpassed" },
     },
   } } });
 }

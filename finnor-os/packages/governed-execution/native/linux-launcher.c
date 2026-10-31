@@ -20,6 +20,7 @@
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "linux-lifetime.h"
 
 #if defined(__x86_64__)
 #define JAIL "/opt/finnor-s6-jail-x64/root"
@@ -101,10 +102,12 @@ int main(int argc,char **argv) {
   allow_path(rules,job,rights);
   if(syscall(SYS_landlock_restrict_self,rules,0)||close(rules)||chdir(job))refuse("LANDLOCK_ENFORCE");
   if(syscall(SYS_close_range,5,~0U,0))refuse("EXTRA_DESCRIPTORS");
+  struct finnor_lifetime lifetime;
+  if(finnor_start_lifetime_guard(parent,4,&lifetime))refuse("LIFETIME_GUARD");
   struct sock_fprog program={.len=(unsigned short)(bytes/sizeof(struct sock_filter)),.filter=instructions};
   if(prctl(PR_SET_SECCOMP,SECCOMP_MODE_FILTER,&program))refuse("SECCOMP");
   if(prctl(PR_GET_NO_NEW_PRIVS,0,0,0,0)!=1)refuse("PRIVILEGE_RECHECK");
-  if(dprintf(4,"{\"schema\":\"finnor.s6.linux-bootstrap.v1\",\"pid\":%ld,\"parentPid\":%ld,\"uid\":%lu,\"capabilities\":0,\"noNewPrivileges\":1,\"fixedJail\":true,\"landlockAbi\":%d,\"filterSha256\":\"%s\"}\n",(long)getpid(),(long)parent,(unsigned long)uid,abi,filter_hash)<0||close(4))refuse("BOOTSTRAP_RECEIPT");
+  if(dprintf(4,"{\"schema\":\"finnor.s6.linux-bootstrap.v2\",\"pid\":%ld,\"parentPid\":%ld,\"guardianPid\":%ld,\"guestPid\":%ld,\"guestParentPid\":%ld,\"processGroupId\":%ld,\"lifetimeGuard\":\"TRUSTED_NONEXECUTING_PROCESS_GROUP_GUARD\",\"uid\":%lu,\"capabilities\":0,\"noNewPrivileges\":1,\"fixedJail\":true,\"landlockAbi\":%d,\"filterSha256\":\"%s\"}\n",(long)lifetime.guardian_pid,(long)lifetime.original_parent,(long)lifetime.guardian_pid,(long)getpid(),(long)getppid(),(long)getpgrp(),(unsigned long)uid,abi,filter_hash)<0||close(4))refuse("BOOTSTRAP_RECEIPT");
   if(snprintf(script,sizeof(script),"%s/worker.mjs",job)>=(int)sizeof(script)||snprintf(home,sizeof(home),"HOME=%s",job)>=(int)sizeof(home)||snprintf(temporary,sizeof(temporary),"TMPDIR=%s",job)>=(int)sizeof(temporary))refuse("PATH_LENGTH");
   char *const arguments[]={"/node","--max-old-space-size=128","--no-addons",script,NULL};
   char *const environment[]={home,temporary,"LANG=C","TZ=UTC","NODE_ENV=production",NULL};

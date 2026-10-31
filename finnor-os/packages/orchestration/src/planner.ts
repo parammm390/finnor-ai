@@ -5,6 +5,9 @@ import { buildConversationModelInput } from "./conversation-prompt";
 
 import { and, desc, eq, inArray, lte } from "drizzle-orm";
 import { z } from "zod";
+import { EconomicReadRequestSchema, economicReadAcceptanceRequests, isEconomicReadIntent, redactEconomicReadPayload } from "@finnor/shared-types";
+import { canReadEconomicQuery } from "@finnor/private-equity/src/economic-reads/reader";
+import { economicObjectiveRequestsPositiveEffect } from "./objective-economic-reads";
 import {
   OPERATIONAL_QUERY_INTENTS,
   PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
@@ -140,6 +143,7 @@ export interface CompileCandidatePlansInput {
 }
 
 function boundedPromptValue(value: unknown, maxChars: number): unknown {
+  value = redactEconomicReadPayload(value);
   const serialized = JSON.stringify(value);
   if (serialized !== undefined && serialized.length <= maxChars) return value;
   if (maxChars < 16 || value === null || value === undefined) return null;
@@ -1110,6 +1114,7 @@ export class LLMPlanner implements Planner {
 
   private async compilationFacts(params: {
     candidates: unknown[];
+    goal: GoalSpec;
     tenantContext: TenantContext;
     verticalKey: string;
     snapshot: PlanningWorldSnapshot;
@@ -1244,15 +1249,24 @@ export class LLMPlanner implements Planner {
           const capability = manifest.get(capabilityKey);
           const validation = validateOperationalQueryRequest(node.request);
           const wrongVertical = validation.success
-            && PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS.includes(validation.request.intent as (typeof PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS)[number])
+            && (isEconomicReadIntent(validation.request.intent)
+              || PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS.includes(validation.request.intent as (typeof PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS)[number]))
             && params.verticalKey !== PRIVATE_EQUITY_VERTICAL;
+          const financial = validation.success && isEconomicReadIntent(validation.request.intent);
+          const readAcceptance = economicReadAcceptanceRequests(params.goal.successCondition);
+          const nativeRead = financial && readAcceptance?.some(request => sha256(request) === sha256(node.request)) === true
+            && !economicObjectiveRequestsPositiveEffect(params.goal.statement, readAcceptance);
           const queryAuthority = params.useDatabase && validation.success && !wrongVertical
-            ? await canExerciseAuthority(params.tenantContext, queryAuthorityRequest(validation.request, params.operatingContext?.activeWork?.id)).catch(() => false)
-            : validation.success && !wrongVertical;
+            ? financial
+              ? nativeRead && await canReadEconomicQuery({ auth: params.tenantContext,
+                provenance: { sourceSystem: "POSTZ.W1:objective-query-compiler-preflight" } }, EconomicReadRequestSchema.parse(validation.request))
+              : await canExerciseAuthority(params.tenantContext, queryAuthorityRequest(validation.request, params.operatingContext?.activeWork?.id)).catch(() => false)
+            : !financial && validation.success && !wrongVertical;
           nodes[node.key] = {
             registered: Boolean(capability?.available),
-            schemaValid: validation.success && !wrongVertical,
-            schemaErrors: validation.success ? (wrongVertical ? ["Private Equity query is not available for this tenant vertical"] : []) : [validation.error],
+            schemaValid: validation.success && !wrongVertical && (!financial || nativeRead),
+            schemaErrors: validation.success ? (wrongVertical ? ["Private Equity query is not available for this tenant vertical"]
+              : financial && !nativeRead ? ["Financial queries require unchanged explicit native read acceptance, not a general or fact-dependent Objective"] : []) : [validation.error],
             grounded: validation.success && !wrongVertical,
             crossTenant: false,
             stale: false,
@@ -1261,7 +1275,7 @@ export class LLMPlanner implements Planner {
             risk: "low",
             irreversible: false,
             wrongVerticalRoot: wrongVertical,
-            policyAllowed: true,
+            policyAllowed: !financial || nativeRead,
             preconditionsSatisfied: true,
             deadlineFeasible: true,
             supportedRecoveryModes: capability?.supportedRecoveryModes ?? [],
@@ -1304,6 +1318,7 @@ export class LLMPlanner implements Planner {
   async compileCandidatePlans(input: CompileCandidatePlansInput): Promise<PlanningResult> {
     const facts = await this.compilationFacts({
       candidates: input.candidates,
+      goal: input.goal,
       tenantContext: input.tenantContext,
       verticalKey: input.verticalKey,
       snapshot: input.snapshot,

@@ -178,6 +178,8 @@ export function queryAuthorityRequest(request: OperationalQueryRequest, workId?:
   const params = raw.params && typeof raw.params === "object" ? raw.params as Record<string, unknown> : raw;
   let resource: AuthorityResource = { type: "*" };
   switch (request.intent) {
+    case "company_revenue": resource = { type: "external_organization", ...(request.company.kind === "ID" ? { id: request.company.id } : {}) }; break;
+    case "stock_quote": resource = { type: "external_organization" }; break;
     case "pe_world_state": resource = { type: request.root.entityType, id: request.root.entityId }; break;
     case "work_list": resource = { type: "work", ...(typeof params.recordId === "string" ? { id: params.recordId } : {}) }; break;
     case "attention_queue": resource = { type: "attention_queue" }; break;

@@ -10,10 +10,12 @@ import type { EmployeeConversationContext } from "@finnor/shared-types";
 // and ends in one explicit state before another job may be scheduled.
 
 import { createHash, randomUUID } from "node:crypto";
+import { EconomicReadRequestSchema, economicReadAcceptanceRequests, isEconomicReadIntent, redactEconomicReadPayload } from "@finnor/shared-types";
+import { economicObjectiveRequestsPositiveEffect, originalEconomicObjectiveContext, readObjectiveEconomicQueryReply } from "./objective-economic-reads";
 import { z } from "zod";
 import { assembleOperatingContext } from "./operating-context";
 import { and, asc, desc, eq, inArray, isNotNull, lt, lte, sql } from "drizzle-orm";
-import { PE_WORLD_ROOT_TYPES, type ClosingWorkContinuation, type DomainAction, type ExecutionResult, type MemorySnapshot, type ObjectiveSuccessCondition, type ObjectiveSuccessVerification, type OperatingInteractionContext, type OperationalQueryRequest, type OutcomePackStartBinding, type PeWorldRootRef, type Role, type TenantContext } from "@finnor/shared-types";
+import { PE_WORLD_ROOT_TYPES, type ClosingWorkContinuation, type DomainAction, type ExecutionResult, type MemorySnapshot, type ObjectiveSuccessCondition, type ObjectiveSuccessCriterionResult, type ObjectiveSuccessVerification, type OperatingInteractionContext, type OperationalQueryRequest, type OutcomePackStartBinding, type PeWorldRootRef, type Role, type TenantContext } from "@finnor/shared-types";
 import { OperatingInteractionContextSchema } from "@finnor/policy-schema";
 import {
   MAX_HIGH_EGRESS_ROWS,
@@ -21,6 +23,7 @@ import {
   assertInstitutionPlanContinuationTx,
   beginWorkPlannerAttempt as beginCanonicalWorkPlannerAttempt,
   completeWorkPlanRevision,
+  completeWorkPlanRevisionTx,
   finishWorkPlannerAttempt as finishCanonicalWorkPlannerAttempt,
   domainActions,
   decisionReceipts,
@@ -32,6 +35,7 @@ import {
   canonicalRefsFromContext,
   attachValidatedWorkInputContext,
   latestWorkInput,
+  lockTenantMaterialCutTx,
   computerArtifacts,
   computerRuns,
   createWorkEventWaitTx,
@@ -53,6 +57,7 @@ import {
   workInputs,
   workPlannerAttempts,
   workPlanRevisions,
+  workQueryExecutions,
   workRecoveryDecisions,
   workforceAssignments,
   works,
@@ -103,6 +108,7 @@ import {
   defaultObjectiveSuccessCondition,
   redirectedObjectiveSuccessCondition,
   evaluateObjectiveSuccessCondition,
+  evaluateObjectiveQueryCriterion,
   icReviewCompletionEvidence,
   icDeckCompletionEvidence,
   underwritingCompletionEvidence,
@@ -124,6 +130,8 @@ import {
 
 export const OBJECTIVE_ITERATION_OUTCOMES = ["continue", "awaiting_approval", "waiting", "blocked", "completed", "failed", "cancelled"] as const;
 export type ObjectiveIterationOutcome = (typeof OBJECTIVE_ITERATION_OUTCOMES)[number];
+
+class EconomicReadCompletionSuperseded extends Error {}
 
 const PE_OBJECTIVE_ENTITY_TYPES = new Set<string>([...PE_WORLD_ROOT_TYPES, "pe_request", "pe_finding", "pe_deal_risk", "pe_closing_condition", "pe_closing_item"]);
 
@@ -535,7 +543,8 @@ export class LLMObjectiveDecisionPlanner implements ObjectiveDecisionPlanner {
         "Complete only when the persisted business success condition appears true in current canonical state, including when a previously expected action is no longer necessary. Include evidence using exact query/effect/event/delegation/computer ids or a typed canonical query assertion.",
         "Wait only for a future business condition. Use waitFor with exact canonical refs and optionally deadlineAt for 'event X OR deadline Y'. Never correlate by similar names or message text. A timer-only wait may use deadlineAt without waitFor. Block when safe progress requires a human fact/integration. Fail only for a terminal objective failure.",
         `Allowed action types: ${input.allowedActionTypes.join(", ")}`,
-        `Typed operational query intents: work_list, attention_queue, agent_activity, workforce_status, company_context, party_lookup, party_context, team_roster, pe_world_state, deal_context, deal_workstreams, open_requests, open_findings, open_deal_risks, critical_dependencies, closing_readiness.`,
+        `Typed operational query intents: work_list, attention_queue, agent_activity, workforce_status, company_context, party_lookup, party_context, team_roster, pe_world_state, deal_context, deal_workstreams, open_requests, open_findings, open_deal_risks, critical_dependencies, closing_readiness, company_revenue, stock_quote.`,
+        "Financial queries require an explicit metadata-only read acceptance. Propose exact typed requests; private financial outcomes never belong in model context, evidence, reasons or shared state.",
         "Deal-scoped operational queries require the exact dealId from canonical state. Never infer a deal, company, fund, party, request, finding, risk, condition, or workstream from a similar label.",
         "Action payload schemas follow. Field names and required fields are strict:",
         input.actionPayloadSpec,
@@ -543,7 +552,7 @@ export class LLMObjectiveDecisionPlanner implements ObjectiveDecisionPlanner {
         'For governed external diligence evidence, computer_task requires all six typed fields: application (copy the exact configured application), authProfileRef (copy the exact active profile ref), task, target {kind:"diligence_record",identifier:<exact reference>}, mode:"READ_ONLY", and a non-empty successCriteria array. Never invent a URL, account, profile, or reference.',
         'Return one JSON object. query/action/wait may include recoveryMode: retry|replan|recover|compensate|escalate. Shapes: {"kind":"query","request":{"intent":"..."},"reason":"...","nextStep":"..."}; {"kind":"action","actionType":"...","payload":{},"reason":"...","nextStep":"..."}; {"kind":"wait","waitFor":{"eventType":"delegation.acknowledged","delegationId":"exact UUID","subject":{"type":"employee","id":"exact UUID"}},"deadlineAt":"optional ISO","condition":"short label","reason":"..."}; {"kind":"complete","outcome":{},"evidence":[{"kind":"canonical_query","request":{"intent":"..."},"assertion":{"path":["rows"],"operator":"array_contains","expected":{}}}],"reason":"..."}; {"kind":"block","reason":"...","recovery":"..."}; {"kind":"fail","reason":"...","failure":{}}.',
       ].join("\n"),
-      required: { objective: input.objective, remainingBudget: input.remaining, canonicalInspection: input.inspection },
+      required: { objective: input.objective, remainingBudget: input.remaining, canonicalInspection: redactEconomicReadPayload(input.inspection) },
     });
     this.lastProvider = contextProvider;
     const raw = await contextProvider.complete({
@@ -685,10 +694,12 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
   });
   const vertical = await resolveTenantVertical(ctx.tenantId);
   const activeRefs = effectiveInteractionTargets(interaction);
-  const businessRoot = await validateInteractionBusinessScope(ctx, interaction);
-  const activeDeal = businessRoot ? businessRoot.entityType === "pe_deal" ? businessRoot.entityId : null
+  const financialAcceptance = options.successCondition?.criteria.some(criterion =>
+    criterion.kind === "canonical_query" && isEconomicReadIntent(criterion.request.intent));
+  const businessRoot = financialAcceptance ? null : await validateInteractionBusinessScope(ctx, interaction);
+  const activeDeal = financialAcceptance ? undefined : businessRoot ? businessRoot.entityType === "pe_deal" ? businessRoot.entityId : null
     : activeRefs.find((ref) => ref.entityType === "pe_deal")?.entityId;
-  const resolution = vertical.verticalKey === "private_equity" && !businessRoot && !activeDeal
+  const resolution = !financialAcceptance && vertical.verticalKey === "private_equity" && !businessRoot && !activeDeal
     ? await resolvePrivateEquityDealReference(ctx.tenantId, objective, { workId: input.workId, userId: ctx.userId })
     : null;
   const dealId = activeDeal ?? (resolution?.status === "resolved" ? resolution.dealId : null);
@@ -713,6 +724,7 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
       : businessRoot ? privateEquityWorldObjectiveSuccessCondition(objective) : defaultObjectiveSuccessCondition(objective);
   }
   const loopClaim = await withTenant(ctx.tenantId, async (db) => {
+    await lockTenantMaterialCutTx(db, ctx.tenantId);
     await db.execute(sql`SELECT id FROM ${works} WHERE ${works.id}=${input.workId} AND ${works.tenantId}=${ctx.tenantId} FOR NO KEY UPDATE`);
     const [currentWork] = await db.select().from(works).where(and(eq(works.tenantId, ctx.tenantId), eq(works.id, input.workId))).limit(1);
     const [latestInput] = await db.select({ id: workInputs.id }).from(workInputs)
@@ -1261,10 +1273,15 @@ async function workerContext(tenantId: string, workId: string): Promise<{ ctx: T
 
 async function claimStep(tenantId: string, loopId: string, leaseOwner: string, expectedRevision?: number, expectedStepNumber?: number, controllerOnly = false, workforceRecoveryAssignmentId?: string) {
   return withTenant(tenantId, async (db) => {
+    await lockTenantMaterialCutTx(db, tenantId);
     await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.id}=${loopId} AND ${workObjectiveLoops.tenantId}=${tenantId} FOR NO KEY UPDATE`);
     const [loop] = await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, tenantId), eq(workObjectiveLoops.id, loopId))).limit(1);
     if (!loop) throw new Error("Objective loop not found");
     if (["blocked", "completed", "failed", "cancelled"].includes(loop.state)) return { loop, step: null, terminal: true } as const;
+    // A duplicate completed-node wake cannot create a controller that steals
+    // the persisted lease from another inline financial node still in flight.
+    if (economicReadAcceptanceRequests(loop.successCondition) && loop.leaseUntil && loop.leaseUntil > new Date()
+        && loop.leaseOwner !== leaseOwner) return { loop, step: null, terminal: true } as const;
     // Periodic recovery and already queued deliveries cannot race P1's frozen
     // obligation IDs. The observation-only handoff above is the native wake.
     if(loop.state==='waiting'){
@@ -1302,10 +1319,17 @@ async function claimStep(tenantId: string, loopId: string, leaseOwner: string, e
           if (!recoveryOwner) return { loop, step: null, terminal: true } as const;
         }
         if (unfinished.objectiveRevision !== loop.revision || !unfinished.planRevisionId || !unfinished.planNodeId) return { loop, step: null, terminal: true } as const;
-        const [activePlan] = await db.select({ id: workPlanRevisions.id }).from(workPlanRevisions).where(and(
-          eq(workPlanRevisions.tenantId, tenantId), eq(workPlanRevisions.id, unfinished.planRevisionId), eq(workPlanRevisions.status, "active"),
+        const [activePlan] = await db.select().from(workPlanRevisions).where(and(
+          eq(workPlanRevisions.tenantId, tenantId), eq(workPlanRevisions.id, unfinished.planRevisionId),
         )).limit(1);
-        if (!activePlan || ["cancelled", "superseded", "completed", "failed", "reconciliation_required"].includes(unfinished.executionState ?? "")) return { loop, step: null, terminal: true } as const;
+        const proof = isRecord(activePlan?.completionProof) ? activePlan.completionProof : null;
+        const completedReadCheck = activePlan?.status === "completed" && economicReadAcceptanceRequests(loop.successCondition)
+          && proof?.verified === true && proof.successConditionHash === planningHash(loop.successCondition)
+          && graphFromPersistence(activePlan.planGraph).nodes.some(node => node.id === unfinished.planNodeId && node.kind === "check")
+          && !(await db.select({ id: workPlanRevisions.id }).from(workPlanRevisions).where(and(
+            eq(workPlanRevisions.tenantId, tenantId), eq(workPlanRevisions.workId, loop.workId), eq(workPlanRevisions.status, "active"))).limit(1)).length;
+        if (!activePlan || activePlan.status !== "active" && !completedReadCheck
+            || ["cancelled", "superseded", "completed", "failed", "reconciliation_required"].includes(unfinished.executionState ?? "")) return { loop, step: null, terminal: true } as const;
         if (unfinished.claimUntil && unfinished.claimUntil > new Date() && unfinished.claimOwner !== leaseOwner) return { loop, step: null, terminal: true } as const;
         const [claimedStep] = await db.update(workObjectiveSteps).set({
           executionState: "claimed", claimOwner: leaseOwner, claimUntil: leaseUntil,
@@ -1315,9 +1339,15 @@ async function claimStep(tenantId: string, loopId: string, leaseOwner: string, e
           eq(workObjectiveSteps.objectiveRevision, loop.revision), sql`${workObjectiveSteps.completedAt} IS NULL`,
           sql`(${workObjectiveSteps.claimUntil} IS NULL OR ${workObjectiveSteps.claimUntil} <= now() OR ${workObjectiveSteps.claimOwner}=${leaseOwner})`,
         )).returning();
-        return claimedStep
-          ? { loop: { ...loop, leaseOwner, leaseUntil }, step: claimedStep, terminal: false } as const
-          : { loop, step: null, terminal: true } as const;
+        if (!claimedStep) return { loop, step: null, terminal: true } as const;
+        if (economicReadAcceptanceRequests(loop.successCondition)) {
+          const [leased] = await db.update(workObjectiveLoops).set({ leaseOwner, leaseUntil, updatedAt: new Date() })
+            .where(and(eq(workObjectiveLoops.tenantId, tenantId), eq(workObjectiveLoops.id, loop.id),
+              eq(workObjectiveLoops.revision, loop.revision))).returning();
+          if (!leased) throw new Error("The native private read loop lost its current lease.");
+          return { loop: leased, step: claimedStep, terminal: false } as const;
+        }
+        return { loop: { ...loop, leaseOwner, leaseUntil }, step: claimedStep, terminal: false } as const;
       }
       if (loop.leaseUntil && loop.leaseUntil > new Date() && loop.leaseOwner !== leaseOwner) return { loop, step: null, terminal: true } as const;
       const [leased] = await db.update(workObjectiveLoops).set({ leaseOwner, leaseUntil, updatedAt: new Date() }).where(eq(workObjectiveLoops.id, loop.id)).returning();
@@ -1367,6 +1397,35 @@ async function currentIterationState(tenantId: string, loopId: string, stepId: s
 }
 
 async function inspectCanonicalState(tenantId: string, workId: string, loop: typeof workObjectiveLoops.$inferSelect, step: typeof workObjectiveSteps.$inferSelect, ctx: TenantContext): Promise<{ inspection: ObjectiveInspection; inspectionHash: string }> {
+  if (economicReadAcceptanceRequests(loop.successCondition)) {
+    const original = await originalEconomicObjectiveContext(tenantId, workId, loop.id);
+    if (ctx.userId !== original.ctx.userId) throw new Error("Original financial read principal is unavailable.");
+    const rows = await withTenant(tenantId, async db => {
+      const queries = await db.select({ id: workQueryExecutions.id, intent: workQueryExecutions.intent, status: workQueryExecutions.status })
+        .from(workQueryExecutions).where(and(eq(workQueryExecutions.tenantId, tenantId), eq(workQueryExecutions.workId, workId)))
+        .orderBy(asc(workQueryExecutions.startedAt), asc(workQueryExecutions.id)).limit(MAX_HIGH_EGRESS_ROWS + 1);
+      const prior = await db.select({ stepNumber: workObjectiveSteps.stepNumber, queryExecutionId: workObjectiveSteps.queryExecutionId,
+        outcome: workObjectiveSteps.iterationOutcome, executionState: workObjectiveSteps.executionState })
+        .from(workObjectiveSteps).where(and(eq(workObjectiveSteps.tenantId, tenantId), eq(workObjectiveSteps.objectiveLoopId, loop.id)))
+        .orderBy(desc(workObjectiveSteps.stepNumber)).limit(8);
+      if (queries.length > MAX_HIGH_EGRESS_ROWS) throw new Error("Financial Objective query history exceeded its finite inspection bound.");
+      return { queries, prior };
+    });
+    const inspection: ObjectiveInspection = {
+      inspectedAt: new Date().toISOString(),
+      work: { id: workId, status: original.work.status, businessRoot: null, activeContext: null, workInputId: original.input.id },
+      objective: { id: loop.id, revision: loop.revision, state: loop.state, successCondition: loop.successCondition,
+        stepCount: loop.stepCount, actionCount: loop.actionCount, queryCount: loop.queryCount,
+        maxSteps: loop.maxSteps, maxActions: loop.maxActions, maxQueries: loop.maxQueries, deadlineAt: loop.deadlineAt.toISOString() },
+      companyGraph: { entities: [], relations: [] },
+      businessState: { kind: "private_economic_query_references", queryExecutionIds: rows.queries.map(row => row.id) },
+      executionAccess: {}, computerRuns: [], delegations: [], acknowledgementRequests: [],
+      eventWake: null, eventWaits: [], integrationEvents: [], queryExecutions: rows.queries,
+      actions: [], businessEffects: [], operations: [], receipts: [], priorIterations: rows.prior,
+      inspectionAuthority: { businessState: null, companyContext: null },
+    };
+    return { inspection, inspectionHash: hash(inspection) };
+  }
   const aggregate = await workAggregate(tenantId, workId);
   if (!aggregate) throw new Error("Objective Work aggregate not found");
   const work = isRecord(aggregate.work) ? aggregate.work : {};
@@ -1589,7 +1648,7 @@ async function inspectCanonicalState(tenantId: string, workId: string, loop: typ
     receipts,
     priorIterations: objectiveSteps.filter((item) => item.id !== step.id).slice(-8).map((item) => ({
       stepNumber: item.stepNumber, decisionKind: item.decisionKind, decisionReason: item.decisionReason,
-      outcome: item.iterationOutcome, observation: bounded(item.observation, 8_000), progressMade: item.progressMade,
+      outcome: item.iterationOutcome, observation: bounded(redactEconomicReadPayload(item.observation), 8_000), progressMade: item.progressMade,
     })),
     inspectionAuthority: { businessState: businessAuthority.id, companyContext: null },
   };
@@ -1659,6 +1718,7 @@ async function deriveVerificationResultTx(db: Db, params: {
   queryExecutionId?: string | null;
   domainActionId?: string | null;
   successVerification?: ObjectiveSuccessVerification;
+  criterionVerification?: ObjectiveSuccessCriterionResult;
   failure?: unknown;
 }): Promise<{ result: VerificationResult | null; authorityDecisionId: string | null }> {
   const planRevisionId = params.step.planRevisionId;
@@ -1679,6 +1739,20 @@ async function deriveVerificationResultTx(db: Db, params: {
         verifier: { kind: "objective_condition", rule: "accepted_objective_success_condition_v1" },
         establishedAt,
         evidence: params.successVerification,
+      }),
+      authorityDecisionId: null,
+    };
+  }
+  if (params.criterionVerification) {
+    const criterion = params.criterionVerification;
+    return {
+      result: buildVerificationResult({
+        state: criterion.satisfied ? "verified" : "inconclusive",
+        planRevisionId, planNodeId, attemptNumber,
+        subject: { kind: "objective", id: params.step.objectiveLoopId },
+        observationRefs: criterion.evidenceRefs ?? [],
+        verifier: { kind: "objective_condition", rule: "accepted_objective_query_criterion_v1" },
+        establishedAt, evidence: criterion,
       }),
       authorityDecisionId: null,
     };
@@ -1760,6 +1834,17 @@ async function finishIteration(params: {
   actionIncrement?: number;
   queryIncrement?: number;
   successVerification?: ObjectiveSuccessVerification;
+  criterionVerification?: ObjectiveSuccessCriterionResult;
+  economicReadBoundary?: boolean;
+  // A native private read can finish only as the checked discriminated
+  // variant: the original accepted input, its original CompletionProof and
+  // the verified result arrive together, or the completion is rejected.
+  economicReadCompletion?: {
+    kind: "NATIVE_READ_COMPLETED_VERIFIED";
+    workInputId: string;
+    proof: CompletionProof;
+    verification: ObjectiveSuccessVerification;
+  };
   durableWait?: {
     waitFor: z.infer<typeof WaitForSchema>;
     conditionSummary: string;
@@ -1772,6 +1857,7 @@ async function finishIteration(params: {
   wakeClaimedDuringWaitCreation?: boolean;
 }> {
   const result = await withTenant(params.tenantId, async (db) => {
+    await lockTenantMaterialCutTx(db, params.tenantId);
     // Loop identity is immutable. Serialize state/fencing changes while allowing
     // concurrent PlanRevision/assignment foreign-key KEY SHARE checks.
     await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.id}=${params.loop.id} FOR NO KEY UPDATE`);
@@ -1786,6 +1872,10 @@ async function finishIteration(params: {
       id: workPlanRevisions.id,
       status: workPlanRevisions.status,
       completionProof: workPlanRevisions.completionProof,
+      workId: workPlanRevisions.workId,
+      workInputId: workPlanRevisions.workInputId,
+      objectiveLoopId: workPlanRevisions.objectiveLoopId,
+      goalSpec: workPlanRevisions.goalSpec,
     }).from(workPlanRevisions).where(and(
       eq(workPlanRevisions.tenantId, params.tenantId), eq(workPlanRevisions.id, currentStep.planRevisionId),
     )).limit(1) : [];
@@ -1794,13 +1884,54 @@ async function finishIteration(params: {
     // current; every other non-active revision remains fenced.
     const boundCompletion = isRecord(boundPlan?.completionProof) ? boundPlan.completionProof : null;
     const planCurrent = !currentStep?.planRevisionId || boundPlan?.status === "active"
-      || (params.outcome === "completed" && boundPlan?.status === "completed" && boundCompletion?.verified === true);
+      || ((params.outcome === "completed" || params.economicReadBoundary && ["blocked", "failed"].includes(params.outcome))
+        && boundPlan?.status === "completed" && boundCompletion?.verified === true);
     const ownsAttempt = nodeAttempt
       ? currentStep?.objectiveRevision === current.revision && currentStep?.claimOwner === params.loop.leaseOwner
         && Boolean(currentStep.claimUntil && currentStep.claimUntil > new Date())
       : current.leaseOwner === params.loop.leaseOwner;
-    if (current.revision !== params.loop.revision || !ownsAttempt || !planCurrent || currentStep?.completedAt) {
+    if (current.revision !== params.loop.revision || !ownsAttempt || !planCurrent || currentStep?.completedAt
+        || params.economicReadBoundary && current.state !== "continue") {
       return { outcome: current.state, loop: current, superseded: true as const };
+    }
+    if (params.economicReadBoundary && params.outcome === "completed") {
+      const completion = params.economicReadCompletion;
+      if (completion?.kind !== "NATIVE_READ_COMPLETED_VERIFIED"
+          || completion.proof.verified !== true
+          || completion.verification.state !== "verified"
+          || params.successVerification?.state !== "verified") {
+        throw new Error("Native private read completion requires its original accepted proof.");
+      }
+      const [input] = await db.select().from(workInputs).where(and(
+        eq(workInputs.tenantId, params.tenantId), eq(workInputs.workId, current.workId)))
+        .orderBy(desc(workInputs.createdAt), desc(workInputs.id)).limit(1);
+      const [principal] = input?.createdBy ? await db.select({ id: users.id }).from(users).where(and(
+        eq(users.tenantId, params.tenantId), eq(users.id, input.createdBy), eq(users.status, "active"))).limit(1) : [];
+      const [live] = await db.select({ id: workObjectiveLoops.id }).from(workObjectiveLoops).where(and(
+        eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.id, current.id),
+        eq(workObjectiveLoops.leaseOwner, params.loop.leaseOwner!),
+        sql`${workObjectiveLoops.leaseUntil} > clock_timestamp()`,
+        sql`${workObjectiveLoops.deadlineAt} > clock_timestamp()`)).limit(1);
+      const goal = isRecord(boundPlan?.goalSpec) ? boundPlan.goalSpec : null;
+      if (!live || !input || input.id !== completion.workInputId || !principal || principal.id !== current.createdBy
+          || input.instructionText !== current.objective || boundPlan?.workId !== current.workId
+          || boundPlan.workInputId !== input.id || boundPlan.objectiveLoopId !== current.id
+          || boundPlan.id !== completion.proof.planRevisionId
+          || planningHash(goal?.successCondition) !== planningHash(current.successCondition)
+          || completion.proof.successConditionHash !== planningHash(current.successCondition)) {
+        return { outcome: current.state, loop: current, superseded: true as const };
+      }
+      // Work is locked above, so intake cannot change its latest input between
+      // this fence, canonical plan sealing, final step and Work publication.
+      // Recovery re-completion is idempotent: when the bound PlanRevision was
+      // already sealed with exactly this proof before the prior worker
+      // stopped, the fence has already fired and must not be re-run.
+      const alreadySealed = boundPlan.status === "completed" && boundCompletion
+        && planningHash(boundCompletion) === planningHash(completion.proof);
+      if (!alreadySealed && !await completeWorkPlanRevisionTx(db, { tenantId: params.tenantId, planRevisionId: boundPlan.id,
+        completionProof: completion.proof as unknown as Record<string, unknown> })) {
+        return { outcome: current.state, loop: current, superseded: true as const };
+      }
     }
     const nextNoProgress = nodeAttempt ? current.consecutiveNoProgress : params.outcome === "continue"
       ? (params.progressMade ? 0 : current.consecutiveNoProgress + 1)
@@ -1817,7 +1948,7 @@ async function finishIteration(params: {
     // A node-level failure/wait is durable evidence for the next controller
     // recovery/frontier decision. It must not overwrite the whole Objective while
     // independent branches are still running.
-    let outcome: ObjectiveIterationOutcome = nodeAttempt && ["blocked", "failed", "waiting", "awaiting_approval"].includes(stepOutcome)
+    let outcome: ObjectiveIterationOutcome = nodeAttempt && !params.economicReadBoundary && ["blocked", "failed", "waiting", "awaiting_approval"].includes(stepOutcome)
       ? "continue"
       : stepOutcome;
     // The ObjectiveLoop lease owner is also the P7 assignment fencing token.
@@ -1847,7 +1978,7 @@ async function finishIteration(params: {
         eq(workforceAssignments.leaseOwner, params.loop.leaseOwner!),
       ));
     }
-    if (!nodeAttempt && params.step.planRevisionId && (outcome === "blocked" || outcome === "failed" || outcome === "cancelled")) {
+    if ((!nodeAttempt || params.economicReadBoundary) && params.step.planRevisionId && (outcome === "blocked" || outcome === "failed" || outcome === "cancelled")) {
       await db.update(workPlanRevisions).set({ status: outcome === "failed" ? "failed" : "blocked" }).where(and(
         eq(workPlanRevisions.tenantId, params.tenantId),
         eq(workPlanRevisions.id, params.step.planRevisionId),
@@ -1860,6 +1991,7 @@ async function finishIteration(params: {
       queryExecutionId: params.queryExecutionId,
       domainActionId: params.domainActionId,
       successVerification: params.successVerification,
+      criterionVerification: params.criterionVerification,
       failure: params.failure,
     });
     const executionState = stepOutcome === "cancelled" ? "cancelled"
@@ -1877,7 +2009,7 @@ async function finishIteration(params: {
       domainActionId: params.domainActionId ?? null,
       planRevisionId: params.planRevisionId ?? params.step.planRevisionId ?? null,
       planNodeId: params.planNodeId ?? params.step.planNodeId ?? null,
-      observation: bounded(params.observation),
+      observation: bounded(redactEconomicReadPayload(params.observation)),
       progressMade: params.progressMade,
       iterationOutcome: stepOutcome,
       scheduledFor: params.scheduledFor ?? null,
@@ -1898,7 +2030,7 @@ async function finishIteration(params: {
       nextRunAt: params.scheduledFor ?? null,
       reason,
       nextStep: params.nextStep ?? null,
-      lastObservation: bounded(params.observation),
+      lastObservation: bounded(redactEconomicReadPayload(params.observation)),
       successVerification: params.successVerification ?? current.successVerification,
       successVerifiedAt: outcome === "completed" ? new Date() : current.successVerifiedAt,
       completedAt: outcome === "completed" || outcome === "failed" || outcome === "cancelled" ? new Date() : null,
@@ -1908,6 +2040,11 @@ async function finishIteration(params: {
       updatedAt: new Date(),
     }).where(eq(workObjectiveLoops.id, current.id)).returning();
     if (["completed", "blocked", "failed", "cancelled"].includes(outcome)) {
+      if (params.economicReadBoundary) await db.update(workObjectiveSteps).set({
+        phase: "finished", executionState: "cancelled", iterationOutcome: "cancelled",
+        decisionReason: "The accepted private read boundary is terminal.", completedAt: new Date(),
+      }).where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.objectiveLoopId, current.id),
+        eq(workObjectiveSteps.executionState, "scheduled"), sql`${workObjectiveSteps.completedAt} IS NULL`));
       // A PlanGraph may reserve several check nodes before the first one
       // completes the Objective. Its unused queued assignments must release
       // capacity atomically with the terminal loop transition. Keep claimed
@@ -1963,15 +2100,26 @@ async function finishIteration(params: {
         outcome,
         reason: finalLoop.reason,
       }, outcome === "completed"
-        ? { finalOutcome: { kind: "objective", objectiveLoopId: params.loop.id, successVerification: params.successVerification, observation: bounded(params.observation), reason: finalLoop.reason } }
+        ? { ...(params.economicReadCompletion ? { expectedWorkInputId: params.economicReadCompletion.workInputId } : {}),
+          finalOutcome: { kind: "objective", objectiveLoopId: params.loop.id, successVerification: params.successVerification,
+            observation: bounded(redactEconomicReadPayload(params.observation)), reason: finalLoop.reason } }
         : outcome === "failed" ? { failure: { kind: "objective", objectiveLoopId: params.loop.id, reason: finalLoop.reason, detail: bounded(params.failure) } }
           : outcome === "cancelled" ? { finalOutcome: { kind: "objective", objectiveLoopId: params.loop.id, state: "cancelled", reason: finalLoop.reason } } : {});
+    }
+    if (params.economicReadCompletion && outcome === "completed") {
+      const [live] = await db.select({ id: workObjectiveLoops.id }).from(workObjectiveLoops).where(and(
+        eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.id, current.id),
+        eq(workObjectiveLoops.revision, params.loop.revision), eq(workObjectiveLoops.leaseOwner, params.loop.leaseOwner!),
+        sql`${workObjectiveLoops.leaseUntil} > clock_timestamp()`, sql`${workObjectiveLoops.deadlineAt} > clock_timestamp()`)).limit(1);
+      // Plan locking, step writes and Work publication can themselves await.
+      // Roll back every tentative terminal row if their final fence was lost.
+      if (!live) throw new EconomicReadCompletionSuperseded();
     }
     return { outcome, loop: finalLoop, superseded: false as const, wakeClaimedDuringWaitCreation, finalizedAssignmentId: activeAssignment?.id ?? null };
   });
   if (result.superseded) return result;
   if (result.wakeClaimedDuringWaitCreation) return result;
-  if (result.outcome === "continue") await scheduleIteration(result.loop, new Date(), params.loop.workId);
+  if (result.outcome === "continue" && !economicReadAcceptanceRequests(params.loop.successCondition)) await scheduleIteration(result.loop, new Date(), params.loop.workId);
   if (result.finalizedAssignmentId) await recordLearningObservationForAssignment(params.tenantId, result.finalizedAssignmentId);
   return result;
 }
@@ -2366,6 +2514,190 @@ export class ObjectiveLoopRuntime {
     private canonicalPlanner: Planner = new LLMPlanner(plugins),
   ) {}
 
+  /** Inline interpretation of a read-only admitted P6 frontier. Logical step and
+   * query budgets remain canonical; no P7 owner, child job or effect is created. */
+  private async runEconomicReadPlan(params: {
+    tenantId: string; workId: string; objectiveLoopId: string; signal?: AbortSignal; workforceAssignmentId?: string;
+  }, initialLoop: typeof workObjectiveLoops.$inferSelect, controller: typeof workObjectiveSteps.$inferSelect,
+  plan: typeof workPlanRevisions.$inferSelect, leaseOwner: string): Promise<ObjectiveIterationOutcome> {
+    const condition = parseObjectiveSuccessCondition(initialLoop.successCondition);
+    const accepted = economicReadAcceptanceRequests(condition), graph = graphFromPersistence(plan.planGraph);
+    const goal = isRecord(plan.goalSpec) ? plan.goalSpec : {};
+    const matchesAccepted = (request: unknown) => accepted?.some(item => planningHash(item) === planningHash(request)) === true;
+    // A terminal read boundary may be reached after its last query step already
+    // finished. Close the parent through its existing Work transition owner,
+    // without rewriting a completed query step or inventing an execution child.
+    const block = async (reason: string): Promise<ObjectiveIterationOutcome> => withTenant(params.tenantId, async db => {
+      await lockTenantMaterialCutTx(db, params.tenantId);
+      await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE tenant_id=${params.tenantId} AND id=${initialLoop.id} FOR NO KEY UPDATE`);
+      await db.execute(sql`SELECT id FROM ${works} WHERE tenant_id=${params.tenantId} AND id=${params.workId} FOR NO KEY UPDATE`);
+      const [current] = await db.select().from(workObjectiveLoops).where(and(
+        eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.id, initialLoop.id))).limit(1);
+      if (!current || current.revision !== initialLoop.revision || current.leaseOwner !== leaseOwner
+          || ["completed", "cancelled", "failed", "blocked"].includes(current.state)) return current?.state ?? "blocked";
+      const [selected] = await db.select({ id: workPlanRevisions.id }).from(workPlanRevisions).where(and(
+        eq(workPlanRevisions.tenantId, params.tenantId), eq(workPlanRevisions.workId, params.workId),
+        eq(workPlanRevisions.status, "active"))).limit(1);
+      if (selected?.id !== plan.id) return current.state;
+      await db.update(workObjectiveLoops).set({ state: "blocked", reason, nextStep: "Repair the original native read boundary or explicitly redirect it.",
+        nextRunAt: null, leaseOwner: null, leaseUntil: null, updatedAt: new Date() }).where(eq(workObjectiveLoops.id, current.id));
+      await db.update(workPlanRevisions).set({ status: "blocked" }).where(and(
+        eq(workPlanRevisions.tenantId, params.tenantId), eq(workPlanRevisions.id, plan.id), eq(workPlanRevisions.status, "active")));
+      await db.update(workObjectiveSteps).set({ phase: "finished", executionState: "cancelled", iterationOutcome: "cancelled",
+        decisionReason: "The original private financial read boundary is blocked.", claimOwner: null, claimUntil: null,
+        completedAt: new Date() }).where(and(eq(workObjectiveSteps.tenantId, params.tenantId),
+        eq(workObjectiveSteps.objectiveLoopId, current.id), sql`${workObjectiveSteps.completedAt} IS NULL`,
+        sql`(${workObjectiveSteps.claimOwner}=${leaseOwner} OR ${workObjectiveSteps.executionState}='scheduled')`));
+      await db.update(outcomePackRuns).set({ status: "blocked", blockedReason: reason, updatedAt: new Date() })
+        .where(and(eq(outcomePackRuns.tenantId, params.tenantId), eq(outcomePackRuns.objectiveLoopId, current.id)));
+      await transitionWorkTx(db, params.tenantId, params.workId, "blocked", "objective_economic_read_blocked",
+        { objectiveLoopId: current.id, planRevisionId: plan.id, code: "OBJECTIVE_ECONOMIC_READ_BOUNDARY_UNAVAILABLE", reason });
+      return "blocked";
+    });
+    let firstController = controller.executionRole !== "node" && !controller.planNodeId ? controller.id : undefined;
+    const maxRounds = Math.min(256, initialLoop.maxNodeAttempts + initialLoop.maxQueries + 1);
+    try {
+      const acquired = await withTenant(params.tenantId, db => db.update(workObjectiveLoops).set({
+        leaseOwner, leaseUntil: new Date(Date.now() + 30_000), updatedAt: new Date(),
+      }).where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.id, initialLoop.id),
+        eq(workObjectiveLoops.revision, initialLoop.revision), eq(workObjectiveLoops.state, "continue"),
+        sql`(${workObjectiveLoops.leaseOwner}=${leaseOwner} OR ${workObjectiveLoops.leaseUntil} IS NULL OR ${workObjectiveLoops.leaseUntil}<=now())`))
+        .returning({ id: workObjectiveLoops.id }));
+      if (!acquired.length) return initialLoop.state;
+      if (!accepted || economicObjectiveRequestsPositiveEffect(initialLoop.objective, accepted)
+          || params.workforceAssignmentId || plan.objectiveLoopId !== initialLoop.id
+          || planningHash(goal.successCondition) !== planningHash(condition)
+          || graph.nodes.some(node => node.kind === "query" ? !matchesAccepted(node.request) : node.kind !== "check")
+          || controller.executionRole !== "node" && controller.planNodeId) {
+        return await block("Financial Objective reads require an unchanged explicit metadata-only acceptance and native inline provenance; general or legacy assigned paths are blocked.");
+      }
+      const original = await originalEconomicObjectiveContext(params.tenantId, params.workId, initialLoop.id);
+      if (plan.workInputId !== original.input.id || goal.workInputId !== original.input.id || goal.workId !== params.workId)
+        return await block("The selected financial plan is not bound to its original accepted human input.");
+      const priorAssignments = await withTenant(params.tenantId, db => db.select({ id: workforceAssignments.id }).from(workforceAssignments)
+        .where(and(eq(workforceAssignments.tenantId, params.tenantId), eq(workforceAssignments.objectiveLoopId, initialLoop.id),
+          sql`${workforceAssignments.state} NOT IN ('completed','failed','cancelled','reassigned')`)).limit(1));
+      if (priorAssignments.length) return await block("A legacy physical assignment cannot be substituted for native private read custody.");
+      for (let round = 0; round < maxRounds; round++) {
+        if (params.signal?.aborted) throw new Error("Financial Objective read was aborted.");
+        const [loop] = await withTenant(params.tenantId, db => db.select().from(workObjectiveLoops).where(and(
+          eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.id, initialLoop.id))).limit(1));
+        const active = await activeWorkPlanRevision(params.tenantId, params.workId);
+        if (!loop || loop.revision !== initialLoop.revision || active?.id !== plan.id) return loop?.state ?? "blocked";
+        if (["blocked", "completed", "failed", "cancelled"].includes(loop.state)) return loop.state;
+        if (loop.deadlineAt <= new Date()) return await block("The original Objective read deadline expired.");
+        const renewed = await withTenant(params.tenantId, db => db.update(workObjectiveLoops).set({
+          leaseUntil: new Date(Date.now() + 30_000), updatedAt: new Date(),
+        }).where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.id, loop.id),
+          eq(workObjectiveLoops.revision, loop.revision), eq(workObjectiveLoops.leaseOwner, leaseOwner)))
+          .returning({ id: workObjectiveLoops.id }));
+        if (!renewed.length) return loop.state;
+        let pending = await withTenant(params.tenantId, db => db.select().from(workObjectiveSteps).where(and(
+          eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.objectiveLoopId, loop.id),
+          eq(workObjectiveSteps.planRevisionId, plan.id), eq(workObjectiveSteps.objectiveRevision, loop.revision),
+          eq(workObjectiveSteps.executionRole, "node"), sql`${workObjectiveSteps.completedAt} IS NULL`))
+          .orderBy(asc(workObjectiveSteps.stepNumber)).limit(257));
+        if (pending.length > 256) return await block("The native read frontier exceeds its finite step bound.");
+        if (!pending.length) {
+          const slots = loop.maxSteps - loop.stepCount + (firstController ? 1 : 0);
+          if (slots <= 0) return await block("The original Objective step budget is exhausted.");
+          const reservation = await reserveReadyPlanFrontier({
+            tenantId: params.tenantId, workId: params.workId, objectiveLoopId: loop.id,
+            expectedObjectiveRevision: loop.revision, planRevisionId: plan.id,
+            controllerStepId: firstController, maxReady: Math.min(loop.maxParallelNodes, slots),
+          });
+          firstController = undefined;
+          if (reservation.state !== "reserved") return await block(
+            "The canonical financial read frontier is not dispatchable within its original plan, budget, deadline and recovery fences.");
+          pending = reservation.reservations.map(item => item.step);
+        }
+        for (const reserved of pending) {
+          const claimed = await claimStep(params.tenantId, loop.id, leaseOwner, loop.revision, reserved.stepNumber);
+          if (claimed.terminal || !claimed.step) return claimed.loop.state;
+          const node = graph.nodes.find(item => item.id === claimed.step!.planNodeId);
+          if (!node) return await block("The financial read step is outside its immutable PlanGraph.");
+          const currency = await currentIterationState(params.tenantId, loop.id, claimed.step.id, loop.revision, leaseOwner);
+          if (!currency.current) return currency.state;
+          if (node.kind === "query") {
+            const request = EconomicReadRequestSchema.parse(node.request);
+            await executeTenantOperationalQuery(params.tenantId, request, {
+              workId: params.workId, workInputId: original.input.id,
+              userId: original.ctx.userId, employeeId: original.ctx.employeeId,
+              objectiveClaim: { stepId: claimed.step.id, leaseOwner },
+            });
+            const reply = await readObjectiveEconomicQueryReply(original.ctx, {
+              workId: params.workId, workInputId: original.input.id, objectiveStepId: claimed.step.id,
+            });
+            await finishIteration({
+              tenantId: params.tenantId, loop: claimed.loop, step: claimed.step, outcome: "continue",
+              reason: "The selected query has an original-principal private canonical reply.",
+              decision: planDecision(node), queryExecutionId: reply.query.result.execution.id,
+              observation: { kind: "private_economic_query", intent: request.intent,
+                queryExecutionId: reply.query.result.execution.id, status: "succeeded" },
+              progressMade: true, economicReadBoundary: true,
+            });
+            continue;
+          }
+          if (node.kind !== "check") return await block("Financial facts cannot be consumed by an ordinary action or model context.");
+          const completedQueries = await withTenant(params.tenantId, db => db.select({ nodeId: workObjectiveSteps.planNodeId })
+            .from(workObjectiveSteps).where(and(eq(workObjectiveSteps.tenantId, params.tenantId),
+              eq(workObjectiveSteps.objectiveLoopId, loop.id), eq(workObjectiveSteps.planRevisionId, plan.id),
+              eq(workObjectiveSteps.objectiveRevision, loop.revision), eq(workObjectiveSteps.executionState, "completed"),
+              sql`${workObjectiveSteps.completedAt} IS NOT NULL`, sql`${workObjectiveSteps.queryExecutionId} IS NOT NULL`)).limit(257));
+          const completedQueryIds = new Set(completedQueries.map(item => item.nodeId));
+          if (graph.nodes.some(item => item.kind === "query" && !completedQueryIds.has(item.id))) {
+            // A check may be a causal predecessor of another accepted query.
+            // Verify its exact criterion, not a premature whole-goal proof.
+            const criterionIndex = Array.isArray(goal.criteria)
+              ? goal.criteria.findIndex(item => isRecord(item) && item.id === node.criterionId) : -1;
+            const criterion = condition.criteria[criterionIndex];
+            if (criterion?.kind !== "canonical_query") return await block("The native check has no original accepted query criterion.");
+            const local = await evaluateObjectiveQueryCriterion({ tenantId: params.tenantId, workId: params.workId,
+              loopId: loop.id, request: criterion.request, assertion: criterion.assertion, criterionIndex,
+              executionKey: `objective:${loop.id}:step:${claimed.step.stepNumber}:success:criterion:${criterionIndex}` });
+            if (!local.satisfied || !local.queryExecutionId) return await block("The check's original native query criterion is not currently verified.");
+            await finishIteration({
+              tenantId: params.tenantId, loop: claimed.loop, step: claimed.step, outcome: "continue",
+              reason: "The original query criterion is verified; other accepted query branches remain.",
+              decision: planDecision(node),
+              criterionVerification: { index: criterionIndex, kind: "canonical_query", satisfied: local.satisfied,
+                basis: local.basis, evidenceRefs: local.evidenceRefs, observed: local.observed },
+              observation: { kind: "private_economic_criterion", criterionId: node.criterionId, criterionIndex,
+                queryExecutionId: local.queryExecutionId, satisfied: true },
+              progressMade: true, economicReadBoundary: true,
+            });
+            continue;
+          }
+          const inspection = await inspectCurrentObjectiveSuccessState(params.tenantId, params.workId, loop.id);
+          const verification = await evaluateObjectiveSuccessCondition({ tenantId: params.tenantId, workId: params.workId,
+            loopId: loop.id, stepNumber: claimed.step.stepNumber, condition, inspection, evidence: [] });
+          if (verification.state !== "verified") return await block(
+            "The original accepted read condition is not currently verified; it was not replaced with a weaker condition.");
+          const current = await currentIterationState(params.tenantId, loop.id, claimed.step.id, loop.revision, leaseOwner);
+          if (!current.current) return current.state;
+          const proof: CompletionProof = { version: 1, finalPlanRevisionId: plan.id, planRevisionId: plan.id,
+            planSemanticHash: plan.semanticHash, goalSemanticHash: graph.goalHash,
+            successConditionHash: planningHash(condition), verified: true, verifiedAt: verification.checkedAt,
+            verification: verification as unknown as Record<string, unknown>, evidenceRefs: completionEvidenceRefs(verification) };
+          return (await finishIteration({
+            tenantId: params.tenantId, loop: claimed.loop, step: claimed.step, outcome: "completed",
+            reason: "The unchanged accepted private-query condition is currently verified.",
+            decision: planDecision(node), successVerification: verification,
+            observation: { privateQueryExecutionIds: verification.queryExecutionIds, completionProof: proof },
+            progressMade: true, economicReadBoundary: true,
+            economicReadCompletion: { kind: "NATIVE_READ_COMPLETED_VERIFIED", workInputId: original.input.id, proof, verification },
+          })).outcome;
+        }
+      }
+      return await block("The finite native financial read iteration bound was exhausted.");
+    } catch (failure) {
+      if (failure instanceof EconomicReadCompletionSuperseded) return "continue";
+      // A real private INSERT or post-commit finalization fault leaves the exact
+      // unfinished node recoverable. Never persist financial SQL parameters.
+      throw new Error("The native private economic read could not finish; resume its original current step explicitly.");
+    } finally { await releaseLease(params.tenantId, initialLoop.id, leaseOwner); }
+  }
+
   async runIteration(params: {
     tenantId: string;
     workId: string;
@@ -2381,14 +2713,62 @@ export class ObjectiveLoopRuntime {
     signal?: AbortSignal;
   }): Promise<ObjectiveIterationOutcome> {
     const leaseOwner = params.workforceLeaseOwner ?? randomUUID();
-    const claimed = await claimStep(params.tenantId, params.objectiveLoopId, leaseOwner, params.expectedRevision, params.expectedStepNumber,
-      params.deferToWorkforceJob === true && !params.workforceAssignmentId, params.workforceRecoveryAssignmentId);
+    const economicPlan = await activeWorkPlanRevision(params.tenantId, params.workId);
+    const financialPlan = economicPlan && graphFromPersistence(economicPlan.planGraph).nodes.some(node =>
+      node.kind === "query" && isEconomicReadIntent(node.request.intent));
+    let expectedStepNumber = params.expectedStepNumber;
+    let controllerOnly = params.deferToWorkforceJob === true && !params.workforceAssignmentId;
+    if (!economicPlan) {
+      // Exact post-CompletionProof/pre-loop-commit recovery; never reopen a
+      // historical plan or replace its accepted condition with a new query.
+      const recovery = await withTenant(params.tenantId, db => db.select({ step: workObjectiveSteps, plan: workPlanRevisions,
+        condition: workObjectiveLoops.successCondition }).from(workObjectiveSteps)
+        .innerJoin(workPlanRevisions, and(eq(workPlanRevisions.tenantId, params.tenantId), eq(workPlanRevisions.id, workObjectiveSteps.planRevisionId)))
+        .innerJoin(workObjectiveLoops, and(eq(workObjectiveLoops.tenantId, params.tenantId),
+          eq(workObjectiveLoops.id, workObjectiveSteps.objectiveLoopId), eq(workObjectiveLoops.revision, workObjectiveSteps.objectiveRevision)))
+        .where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.workId, params.workId),
+          eq(workObjectiveSteps.objectiveLoopId, params.objectiveLoopId), eq(workObjectiveSteps.executionRole, "node"),
+          eq(workPlanRevisions.status, "completed"), sql`${workObjectiveSteps.completedAt} IS NULL`,
+          sql`EXISTS(SELECT 1 FROM jsonb_array_elements(${workPlanRevisions.planGraph}->'nodes') n
+            WHERE n->>'id'=${workObjectiveSteps.planNodeId} AND n->>'kind'='check')`))
+        .orderBy(asc(workObjectiveSteps.stepNumber)).limit(1));
+      const candidate = recovery[0];
+      if (candidate && economicReadAcceptanceRequests(candidate.condition)
+          && isRecord(candidate.plan.completionProof) && candidate.plan.completionProof.verified === true) {
+        const [expected] = expectedStepNumber === undefined ? [] : await withTenant(params.tenantId, db => db.select().from(workObjectiveSteps)
+          .where(and(eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.objectiveLoopId, params.objectiveLoopId),
+            eq(workObjectiveSteps.stepNumber, expectedStepNumber!))).limit(1));
+        if (expectedStepNumber === undefined || expected?.planRevisionId === candidate.plan.id && (expected.completedAt || expected.id === candidate.step.id)) {
+          expectedStepNumber = candidate.step.stepNumber; controllerOnly = false;
+        }
+      }
+    }
+    if (financialPlan && expectedStepNumber !== undefined) {
+      const [expected] = await withTenant(params.tenantId, db => db.select().from(workObjectiveSteps).where(and(
+        eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.objectiveLoopId, params.objectiveLoopId),
+        eq(workObjectiveSteps.stepNumber, expectedStepNumber!))).limit(1));
+      if (expected?.planRevisionId === economicPlan!.id && expected.executionRole === "node" && expected.objectiveRevision !== null) {
+        if (expected.completedAt) {
+          const objectiveRevision = expected.objectiveRevision;
+          const [pending] = await withTenant(params.tenantId, db => db.select().from(workObjectiveSteps).where(and(
+            eq(workObjectiveSteps.tenantId, params.tenantId), eq(workObjectiveSteps.objectiveLoopId, params.objectiveLoopId),
+            eq(workObjectiveSteps.planRevisionId, economicPlan!.id), eq(workObjectiveSteps.objectiveRevision, objectiveRevision),
+            eq(workObjectiveSteps.executionRole, "node"), sql`${workObjectiveSteps.completedAt} IS NULL`))
+            .orderBy(asc(workObjectiveSteps.stepNumber)).limit(1));
+          expectedStepNumber = pending?.stepNumber;
+          if (pending) controllerOnly = false;
+        } else controllerOnly = false;
+      }
+    }
+    const claimed = await claimStep(params.tenantId, params.objectiveLoopId, leaseOwner, params.expectedRevision, expectedStepNumber,
+      controllerOnly, params.workforceRecoveryAssignmentId);
     if (claimed.terminal || !claimed.step) return claimed.loop.state;
     const loop = claimed.loop;
     const step = claimed.step;
     if (loop.workId !== params.workId) throw new Error("Objective job Work does not match its loop");
     if (step.executionRole !== "node" && step.stepNumber > loop.maxSteps) {
-      return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: `Objective stopped at the configured ${loop.maxSteps}-step limit.`, progressMade: false })).outcome;
+      return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: `Objective stopped at the configured ${loop.maxSteps}-step limit.`, progressMade: false,
+        economicReadBoundary: Boolean(economicReadAcceptanceRequests(loop.successCondition)) })).outcome;
     }
     if (new Date() >= loop.deadlineAt) {
       const deadlinePlan = await activeWorkPlanRevision(params.tenantId, params.workId);
@@ -2406,9 +2786,23 @@ export class ObjectiveLoopRuntime {
           maxReady: loop.maxParallelNodes,
         });
       }
-      return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "failed", reason: "Objective deadline expired before another safe step could begin.", progressMade: false, failure: { deadlineAt: loop.deadlineAt.toISOString() } })).outcome;
+      return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "failed", reason: "Objective deadline expired before another safe step could begin.", progressMade: false,
+        economicReadBoundary: Boolean(economicReadAcceptanceRequests(loop.successCondition)), failure: { deadlineAt: loop.deadlineAt.toISOString() } })).outcome;
     }
-    const { ctx, work } = await workerContext(params.tenantId, params.workId);
+    const hasFinancialCondition = parseObjectiveSuccessCondition(loop.successCondition).criteria.some(criterion =>
+      criterion.kind === "canonical_query" && isEconomicReadIntent(criterion.request.intent));
+    if (hasFinancialCondition && (!economicReadAcceptanceRequests(loop.successCondition)
+        || economicObjectiveRequestsPositiveEffect(loop.objective, economicReadAcceptanceRequests(loop.successCondition)))) return (await finishIteration({
+      tenantId: params.tenantId, loop, step, outcome: "blocked",
+      reason: "This financial Objective has no safely authorizable metadata-only native acceptance; its original condition is unchanged.",
+      observation: { code: "OBJECTIVE_ECONOMIC_READ_PROVENANCE_REQUIRED" }, progressMade: false,
+      economicReadBoundary: true,
+    })).outcome;
+    if (economicPlan && (financialPlan || economicReadAcceptanceRequests(loop.successCondition)))
+      return this.runEconomicReadPlan(params, loop, step, economicPlan, leaseOwner);
+    const { ctx, work } = economicReadAcceptanceRequests(loop.successCondition)
+      ? await originalEconomicObjectiveContext(params.tenantId, params.workId, loop.id)
+      : await workerContext(params.tenantId, params.workId);
     let inspection: ObjectiveInspection;
     let inspectionHash: string;
     try {
@@ -2421,6 +2815,7 @@ export class ObjectiveLoopRuntime {
         return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: String(failure.message), progressMade: false, failure })).outcome;
       }
       const [updated] = await withTenant(params.tenantId, async (db) => {
+        await lockTenantMaterialCutTx(db, params.tenantId);
         await db.update(workObjectiveSteps).set({ phase: "inspecting", failure }).where(eq(workObjectiveSteps.id, step.id));
         return db.update(workObjectiveLoops).set({ plannerFailureCount: sql`${workObjectiveLoops.plannerFailureCount} + 1`, reason: `Canonical inspection failed: ${String(failure.message)}`, updatedAt: new Date() }).where(eq(workObjectiveLoops.id, loop.id)).returning();
       });
@@ -2443,6 +2838,17 @@ export class ObjectiveLoopRuntime {
       const proof = isRecord(completedPlan?.completionProof) ? completedPlan.completionProof : null;
       const verification = proof && isRecord(proof.verification) ? proof.verification as unknown as ObjectiveSuccessVerification : null;
       if (proof?.verified === true && verification?.state === "verified") {
+        if (economicReadAcceptanceRequests(loop.successCondition)) {
+          const current = await evaluateObjectiveSuccessCondition({ tenantId: params.tenantId, workId: params.workId,
+            loopId: loop.id, stepNumber: step.stepNumber, condition: parseObjectiveSuccessCondition(loop.successCondition),
+            inspection: await inspectCurrentObjectiveSuccessState(params.tenantId, params.workId, loop.id), evidence: [] });
+          if (current.state !== "verified" || proof.successConditionHash !== planningHash(loop.successCondition)
+              || completedPlan?.workInputId !== inspection.work.workInputId
+              || planningHash(current.queryExecutionIds) !== planningHash(verification.queryExecutionIds))
+            return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked",
+              reason: "The original private read CompletionProof cannot finish without current original-principal/source rights.",
+              progressMade: false, economicReadBoundary: true })).outcome;
+        }
         return (await finishIteration({
           tenantId: params.tenantId,
           loop,
@@ -2453,6 +2859,12 @@ export class ObjectiveLoopRuntime {
           observation: { recoveredCompletionProof: proof },
           successVerification: verification,
           progressMade: true,
+          economicReadBoundary: Boolean(economicReadAcceptanceRequests(loop.successCondition)),
+          ...(economicReadAcceptanceRequests(loop.successCondition)
+            ? { economicReadCompletion: { kind: "NATIVE_READ_COMPLETED_VERIFIED" as const,
+                workInputId: String(completedPlan?.workInputId ?? inspection.work.workInputId),
+                proof: proof as unknown as CompletionProof, verification } }
+            : {}),
         })).outcome;
       }
     }
@@ -2693,7 +3105,7 @@ export class ObjectiveLoopRuntime {
             isNotNull(workPlannerAttempts.candidatePlans),
           )).orderBy(desc(workPlannerAttempts.attempt)).limit(1));
           const previousCompilation = previousRejected?.compilationResult as { candidates?: Array<{ candidateKey?: string; violations?: unknown[] }> } | null | undefined;
-          const operating = await assembleOperatingContext(ctx, {
+          const operating = economicReadAcceptanceRequests(loop.successCondition) ? null : await assembleOperatingContext(ctx, {
             conversationContext: conversationContext ?? undefined,
             instruction: loop.objective,
             workId: params.workId,
@@ -2715,7 +3127,7 @@ export class ObjectiveLoopRuntime {
             constraints: inputs.constraints,
             planningSnapshot: inputs.snapshot,
             planningContext: inspection,
-            operatingContext: operating.context,
+            operatingContext: operating?.context,
             proposalFeedback: previousRejected ? {
               candidates: previousRejected.candidatePlans,
               violations: previousCompilation?.candidates?.map((candidate) => ({ candidateKey: candidate.candidateKey, violations: candidate.violations })) ?? [],
@@ -2742,7 +3154,7 @@ export class ObjectiveLoopRuntime {
         decision = planNode.kind === "check" && compatibilityDecision && ["complete", "block", "fail"].includes(compatibilityDecision.kind)
           ? compatibilityDecision
           : planDecision(planNode);
-        if (!params.deferToWorkforceJob || params.workforceAssignmentId || this.compatibilityPlanner) {
+        if (!economicReadAcceptanceRequests(loop.successCondition) && (!params.deferToWorkforceJob || params.workforceAssignmentId || this.compatibilityPlanner)) {
           await withTenant(params.tenantId, (db) => db.update(workObjectiveSteps).set({
             planRevisionId,
             planNodeId: planNode.id,
@@ -2778,6 +3190,11 @@ export class ObjectiveLoopRuntime {
       }
     }
 
+    const selectedEconomicPlan = await activeWorkPlanRevision(params.tenantId, params.workId);
+    if (selectedEconomicPlan?.id === planRevisionId && (economicReadAcceptanceRequests(loop.successCondition)
+      || graphFromPersistence(selectedEconomicPlan.planGraph).nodes.some(node => node.kind === "query" && isEconomicReadIntent(node.request.intent)))) {
+      return this.runEconomicReadPlan(params, loop, step, selectedEconomicPlan, leaseOwner);
+    }
     if (params.deferToWorkforceJob && !params.workforceAssignmentId && !this.compatibilityPlanner && step.executionRole !== "node") {
       const reservation = prefetchedReservation ?? await reserveReadyPlanFrontier({
         tenantId: params.tenantId,
@@ -2862,6 +3279,7 @@ export class ObjectiveLoopRuntime {
       // inspection. Retire this controller without advancing canonical Work; node
       // completion or an exact wake owns the next delivery.
       await withTenant(params.tenantId, async (db) => {
+        await lockTenantMaterialCutTx(db, params.tenantId);
         await db.update(workObjectiveSteps).set({
           phase: "finished",
           executionState: "completed",
@@ -3100,6 +3518,11 @@ export class ObjectiveLoopRuntime {
         return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: `Objective exhausted its ${loop.maxQueries}-query budget.`, decision, progressMade: false })).outcome;
       }
       const validated = validateOperationalQueryRequest(decision.request);
+      if (validated.success && isEconomicReadIntent(validated.request.intent)) return (await finishIteration({
+        tenantId: params.tenantId, loop, step, outcome: "blocked",
+        reason: "Financial Objective queries require the native private inline custody boundary.",
+        progressMade: false, economicReadBoundary: true,
+      })).outcome;
       if (!validated.success) {
         return (await finishIteration({ tenantId: params.tenantId, loop, step, outcome: "blocked", reason: `Model selected an invalid typed query: ${validated.error}`, decision, progressMade: false })).outcome;
       }
@@ -3235,7 +3658,8 @@ export async function controlWorkObjective(params: {
 }): Promise<typeof workObjectiveLoops.$inferSelect> {
   let cancellationAlreadyRecorded = false;
   const loop = await withTenant(params.tenantId, async (db) => {
-    // Global Objective lock order is ObjectiveLoop -> PlanRevision -> logical /
+    await lockTenantMaterialCutTx(db, params.tenantId);
+    // Within the material cut, order is ObjectiveLoop -> PlanRevision -> logical /
     // physical attempts. Scheduler reservation and iteration finalization already
     // use this order; worker claims take compatible shared generation locks.
     await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.workId}=${params.workId} AND ${workObjectiveLoops.tenantId}=${params.tenantId} FOR NO KEY UPDATE`);

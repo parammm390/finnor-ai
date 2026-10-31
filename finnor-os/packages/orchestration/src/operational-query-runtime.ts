@@ -6,6 +6,7 @@ import {
 import { executeHarnessProgramQuery } from "@finnor/private-equity/src/program-synthesis/operational-query";
 import { executeEconomicProgrammeQuery } from "@finnor/private-equity/src/program-synthesis/economic-query";
 import {executeConfidentialComputationQuery} from "@finnor/private-equity/src/confidential-computation/operational-query";
+import { executeEconomicReadQuery } from "@finnor/private-equity/src/economic-reads/operational-query";
 import {
   executeOperationalQuery as executeCoreOperationalQuery,
   type OperationalQueryOptions,
@@ -15,6 +16,7 @@ import {
   PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
   PROGRAM_OPERATIONAL_QUERY_INTENTS,
   CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS,
+  ECONOMIC_READ_QUERY_INTENTS,
   assertExecutableVertical,
   type CanonicalOperationalQueryRequest,
   type CanonicalOperationalQueryIntent,
@@ -32,7 +34,7 @@ export function operationalQueryIntentsForVertical(verticalKey: string): Canonic
   assertExecutableVertical(verticalKey);
   return [
     ...CORE_OPERATIONAL_QUERY_INTENTS,
-    ...(verticalKey === PRIVATE_EQUITY_VERTICAL ? [...PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,...PROGRAM_OPERATIONAL_QUERY_INTENTS,...CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS] : []),
+    ...(verticalKey === PRIVATE_EQUITY_VERTICAL ? [...PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,...PROGRAM_OPERATIONAL_QUERY_INTENTS,...CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS,...ECONOMIC_READ_QUERY_INTENTS] : []),
   ];
 }
 
@@ -47,6 +49,7 @@ export async function executeTenantOperationalQuery<T extends CanonicalOperation
   const vertical = await resolveTenantVertical(tenantId);
   const allowed = operationalQueryIntentsForVertical(vertical.verticalKey);
   if (!allowed.includes(request.intent)) throw new Error("Operational query intent is unavailable for this tenant vertical");
+  if (request.intent === "company_revenue" || request.intent === "stock_quote") return executeEconomicReadQuery(tenantId, request, options) as Promise<OperationalQueryResultFor<T>>;
   if (request.intent === "harness_program_v1") return executeHarnessProgramQuery(tenantId, request, options) as Promise<OperationalQueryResultFor<T>>;
   if (request.intent === "economic_programme_v1") return executeEconomicProgrammeQuery(tenantId, request, options) as Promise<OperationalQueryResultFor<T>>;
   if(request.intent==="confidential_economic_computation_v1")return executeConfidentialComputationQuery(tenantId,request,options) as Promise<OperationalQueryResultFor<T>>;

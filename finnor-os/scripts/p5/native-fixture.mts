@@ -9,16 +9,19 @@ import {tmpdir} from 'node:os';
 import {migrate} from '../../packages/db/migrate';
 import {closePool,configureTenantVertical,receiveWork,attachWorkEntity} from '@finnor/db';
 import {physicalNativeQueue} from './native-worker-client.mts';
+import {ownDisposablePostgres,closeDisposablePostgres} from '../postz-w1/disposable-postgres.mjs';
 export async function nativeFixture(){
  process.env.NODE_ENV='test';process.env.AUTH_DEV_BYPASS='1';
  process.env.FINNOR_P4_PROFILE='ordinary_disposable';
  process.env.FINNOR_TEST_MANAGED_EXTENSIONS='omit';
  const directory=await realpath(await mkdtemp(join(tmpdir(),'p5-native-db-')));
- const port=await new Promise<number>((yes,no)=>{const socket=createServer();socket.once('error',no);socket.listen(0,'127.0.0.1',()=>{const address=socket.address();if(!address||typeof address==='string')return no(Error('PORT_UNAVAILABLE'));socket.close(()=>yes(address.port));});});
- const database=new EmbeddedPostgres({databaseDir:directory,user:'p5_test',password:'p5_test',port,persistent:false,onLog:()=>{}});
+ const disposable=ownDisposablePostgres(directory,directory,process.env.FINNOR_P5_EVIDENCE_DIR
+  ?join(process.env.FINNOR_P5_EVIDENCE_DIR,'disposable-postgres-cleanup.json'):undefined);
  let admin:pg.Client|undefined;
  let queue:Awaited<ReturnType<typeof physicalNativeQueue>>|undefined;
  try{
+  const port=await new Promise<number>((yes,no)=>{const socket=createServer();socket.once('error',no);socket.listen(0,'127.0.0.1',()=>{const address=socket.address();if(!address||typeof address==='string')return no(Error('PORT_UNAVAILABLE'));socket.close(()=>yes(address.port));});});
+  const database=disposable.attach(new EmbeddedPostgres({databaseDir:directory,user:'p5_test',password:'p5_test',port,persistent:true,onLog:()=>{}}));
   await database.initialise();await appendFile(join(directory,'postgresql.conf'),'\ntrack_commit_timestamp=on\n');await database.start();await database.createDatabase('p5_test');
   const url=`postgres://p5_test:p5_test@127.0.0.1:${port}/p5_test`;
   const migrations=await migrate(url);
@@ -59,6 +62,10 @@ export async function nativeFixture(){
    throw Error('QUEUE_DID_NOT_COMPLETE');
   };
   return {admin,database,directory,tenant,actor,foreignTenant,foreignActor,root,migrations,api,queue,work,finish,
-   close:async()=>{await queue!.close();await closePool();await admin!.end();await database.stop();}};
- }catch(error){await queue?.close().catch(()=>{});await closePool();await admin?.end();await database.stop().catch(()=>{});throw error;}
+   close:async()=>closeDisposablePostgres(disposable,[()=>queue!.close(),closePool,()=>admin!.end()])};
+ }catch(error){
+  try{await closeDisposablePostgres(disposable,[async()=>queue?.close(),closePool,async()=>admin?.end()]);}
+  catch(cleanupError){throw new AggregateError([error,cleanupError],'P5_FIXTURE_SETUP_AND_CLEANUP_FAILED');}
+  throw error;
+ }
 }

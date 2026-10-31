@@ -1,0 +1,595 @@
+{
+  "binding": {
+    "catalogueRef": "ce142a29-452b-53da-b347-8b30be6a0364",
+    "checkerRef": "4d418dde-6c6e-53d1-95c1-12230f856b57",
+    "deadline": "2099-01-01T00:00:00.000Z",
+    "mandateRef": "933af499-a6f1-5a57-95fe-a5b659a48e85",
+    "modelRef": "ed4445d5-1333-5b2a-be45-969804c60ace",
+    "outcomeRef": "d854d466-5880-5b6a-8ff3-b8598fecd89a",
+    "parentGrantRef": "b87e4a08-928b-587e-b516-f9d3afca6c50",
+    "priceRef": "a7db73dc-266a-5931-a5dd-507cfbf2f8dd",
+    "principalId": "e2d532de-79f4-51ab-a7f1-562b46e6e83b",
+    "responseRef": "39d14af9-9c4d-5989-a93b-13744422b4a7",
+    "rightsRef": "9422c756-06d4-59be-8e2d-9516c94b2527",
+    "runtimeRef": "af6f6b8a-de19-5017-9e60-31950f6d0f79",
+    "sourceRef": "e18475ff-1555-54cb-aa4b-6ee060ce39aa",
+    "tenantId": "64e20614-e22f-5119-8378-c85d375b738e",
+    "workId": "1c5f080e-1bf6-527e-b558-2754f000cc78"
+  },
+  "id": "observation-contingent-choice-02:public-development-W1-20261029-structural-v1-c73e957c",
+  "maxDecisions": 2,
+  "rootStateId": "root",
+  "schema": "finnor.metalevel-model.v1",
+  "states": [
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        },
+        {
+          "computationRef": "admitted-development-method:probe",
+          "contextRefs": [
+            "lawful-original-context"
+          ],
+          "dependsOn": [],
+          "id": "probe",
+          "kind": "COMPUTE",
+          "outcomes": [
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "LEFT",
+              "observation": "LEFT",
+              "probability": "1/2",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "RIGHT",
+              "observation": "RIGHT",
+              "probability": "1/2",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "INVALID",
+              "nextStateId": "INVALID",
+              "observation": "INVALID",
+              "probability": "0",
+              "utilityDelta": "0"
+            }
+          ],
+          "reservation": {
+            "computeUnits": "1"
+          },
+          "utilityCost": "1",
+          "verifierRefs": [
+            "original-check"
+          ]
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 0,
+      "history": [],
+      "id": "root",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "2"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        },
+        {
+          "computationRef": "admitted-development-method:left-method",
+          "contextRefs": [
+            "lawful-original-context"
+          ],
+          "dependsOn": [
+            "probe"
+          ],
+          "id": "left-method",
+          "kind": "COMPUTE",
+          "outcomes": [
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "LEFT-left-method-OK",
+              "observation": "OK",
+              "probability": "1",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "INVALID",
+              "nextStateId": "LEFT-left-method-INVALID",
+              "observation": "INVALID",
+              "probability": "0",
+              "utilityDelta": "0"
+            }
+          ],
+          "reservation": {
+            "computeUnits": "1"
+          },
+          "utilityCost": "1",
+          "verifierRefs": [
+            "original-check"
+          ]
+        },
+        {
+          "computationRef": "admitted-development-method:right-method",
+          "contextRefs": [
+            "lawful-original-context"
+          ],
+          "dependsOn": [
+            "probe"
+          ],
+          "id": "right-method",
+          "kind": "COMPUTE",
+          "outcomes": [
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "LEFT-right-method-OK",
+              "observation": "OK",
+              "probability": "1",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "INVALID",
+              "nextStateId": "LEFT-right-method-INVALID",
+              "observation": "INVALID",
+              "probability": "0",
+              "utilityDelta": "0"
+            }
+          ],
+          "reservation": {
+            "computeUnits": "1"
+          },
+          "utilityCost": "1",
+          "verifierRefs": [
+            "original-check"
+          ]
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 1,
+      "history": [
+        {
+          "choiceId": "probe",
+          "observation": "LEFT"
+        }
+      ],
+      "id": "LEFT",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "1"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": "original-model-acceptance:LEFT-left-method-OK",
+      "choices": [
+        {
+          "disposition": "ACCEPTED",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": "original-result:LEFT-left-method-OK",
+          "utility": "101"
+        }
+      ],
+      "completedChecks": [
+        "original-check"
+      ],
+      "decisionIndex": 2,
+      "history": [
+        {
+          "choiceId": "probe",
+          "observation": "LEFT"
+        },
+        {
+          "choiceId": "left-method",
+          "observation": "OK"
+        }
+      ],
+      "id": "LEFT-left-method-OK",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "0"
+      },
+      "requiredChecks": [
+        "original-check"
+      ]
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 2,
+      "history": [
+        {
+          "choiceId": "probe",
+          "observation": "LEFT"
+        },
+        {
+          "choiceId": "left-method",
+          "observation": "INVALID"
+        }
+      ],
+      "id": "LEFT-left-method-INVALID",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "0"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": "original-model-acceptance:LEFT-right-method-OK",
+      "choices": [
+        {
+          "disposition": "ACCEPTED",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": "original-result:LEFT-right-method-OK",
+          "utility": "0"
+        }
+      ],
+      "completedChecks": [
+        "original-check"
+      ],
+      "decisionIndex": 2,
+      "history": [
+        {
+          "choiceId": "probe",
+          "observation": "LEFT"
+        },
+        {
+          "choiceId": "right-method",
+          "observation": "OK"
+        }
+      ],
+      "id": "LEFT-right-method-OK",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "0"
+      },
+      "requiredChecks": [
+        "original-check"
+      ]
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 2,
+      "history": [
+        {
+          "choiceId": "probe",
+          "observation": "LEFT"
+        },
+        {
+          "choiceId": "right-method",
+          "observation": "INVALID"
+        }
+      ],
+      "id": "LEFT-right-method-INVALID",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "0"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        },
+        {
+          "computationRef": "admitted-development-method:left-method",
+          "contextRefs": [
+            "lawful-original-context"
+          ],
+          "dependsOn": [
+            "probe"
+          ],
+          "id": "left-method",
+          "kind": "COMPUTE",
+          "outcomes": [
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "RIGHT-left-method-OK",
+              "observation": "OK",
+              "probability": "1",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "INVALID",
+              "nextStateId": "RIGHT-left-method-INVALID",
+              "observation": "INVALID",
+              "probability": "0",
+              "utilityDelta": "0"
+            }
+          ],
+          "reservation": {
+            "computeUnits": "1"
+          },
+          "utilityCost": "1",
+          "verifierRefs": [
+            "original-check"
+          ]
+        },
+        {
+          "computationRef": "admitted-development-method:right-method",
+          "contextRefs": [
+            "lawful-original-context"
+          ],
+          "dependsOn": [
+            "probe"
+          ],
+          "id": "right-method",
+          "kind": "COMPUTE",
+          "outcomes": [
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "RIGHT-right-method-OK",
+              "observation": "OK",
+              "probability": "1",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "INVALID",
+              "nextStateId": "RIGHT-right-method-INVALID",
+              "observation": "INVALID",
+              "probability": "0",
+              "utilityDelta": "0"
+            }
+          ],
+          "reservation": {
+            "computeUnits": "1"
+          },
+          "utilityCost": "1",
+          "verifierRefs": [
+            "original-check"
+          ]
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 1,
+      "history": [
+        {
+          "choiceId": "probe",
+          "observation": "RIGHT"
+        }
+      ],
+      "id": "RIGHT",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "1"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": "original-model-acceptance:RIGHT-left-method-OK",
+      "choices": [
+        {
+          "disposition": "ACCEPTED",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": "original-result:RIGHT-left-method-OK",
+          "utility": "0"
+        }
+      ],
+      "completedChecks": [
+        "original-check"
+      ],
+      "decisionIndex": 2,
+      "history": [
+        {
+          "choiceId": "probe",
+          "observation": "RIGHT"
+        },
+        {
+          "choiceId": "left-method",
+          "observation": "OK"
+        }
+      ],
+      "id": "RIGHT-left-method-OK",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "0"
+      },
+      "requiredChecks": [
+        "original-check"
+      ]
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 2,
+      "history": [
+        {
+          "choiceId": "probe",
+          "observation": "RIGHT"
+        },
+        {
+          "choiceId": "left-method",
+          "observation": "INVALID"
+        }
+      ],
+      "id": "RIGHT-left-method-INVALID",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "0"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": "original-model-acceptance:RIGHT-right-method-OK",
+      "choices": [
+        {
+          "disposition": "ACCEPTED",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": "original-result:RIGHT-right-method-OK",
+          "utility": "101"
+        }
+      ],
+      "completedChecks": [
+        "original-check"
+      ],
+      "decisionIndex": 2,
+      "history": [
+        {
+          "choiceId": "probe",
+          "observation": "RIGHT"
+        },
+        {
+          "choiceId": "right-method",
+          "observation": "OK"
+        }
+      ],
+      "id": "RIGHT-right-method-OK",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "0"
+      },
+      "requiredChecks": [
+        "original-check"
+      ]
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 2,
+      "history": [
+        {
+          "choiceId": "probe",
+          "observation": "RIGHT"
+        },
+        {
+          "choiceId": "right-method",
+          "observation": "INVALID"
+        }
+      ],
+      "id": "RIGHT-right-method-INVALID",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "0"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 1,
+      "history": [
+        {
+          "choiceId": "probe",
+          "observation": "INVALID"
+        }
+      ],
+      "id": "INVALID",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "1"
+      },
+      "requiredChecks": []
+    }
+  ],
+  "tieOrder": [
+    "stop",
+    "probe",
+    "left-method",
+    "right-method"
+  ],
+  "utilityUnit": "synthetic-utility"
+}

@@ -137,6 +137,7 @@ export async function POST(req: Request): Promise<Response> {
             instructionId: started.instructionId,
             channel: parsed.data.channel,
             text: `I started ${binding.objective}. Progress and completion depend on the recorded Work and verification evidence.`,
+            referenceText: `Started outcome pack ${started.pack.packId} (${started.pack.mode}); detail is available after a current authorization check.`,
             workId: started.workId,
             workInputId: started.workInputId,
             outcomeRefs: [

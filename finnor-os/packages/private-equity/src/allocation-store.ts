@@ -78,7 +78,11 @@ async function appendExperience(ctx:PeMutationContext,c:pg.PoolClient,events:S5E
 /** Every aggregate mutation participates in one tenant-wide lock. READ
  * COMMITTED obtains fresh snapshots AFTER this lock; serializable/deadlock aborts
  * retry the complete transaction, never a partial resource acquisition. */
-async function locked<T>(ctx:PeMutationContext,fn:(c:pg.PoolClient)=>Promise<T>):Promise<T>{
+async function locked<T>(ctx:PeMutationContext,fn:(c:pg.PoolClient)=>Promise<T>,client?:pg.PoolClient):Promise<T>{
+  if(client){
+    await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`s5-portfolio:${ctx.auth.tenantId}`]);
+    await authorize(ctx,client);return fn(client);
+  }
   for(let attempt=0;;attempt++)try{return await withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx)},async(_db,c)=>{
     await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`s5-portfolio:${ctx.auth.tenantId}`]);await authorize(ctx,c);return fn(c);
   });}catch(e){if(attempt<2&&['40001','40P01'].includes((e as {code?:string}).code??''))continue;throw e;}
@@ -109,9 +113,9 @@ async function snapshot(c:pg.PoolClient,tenantId:string):Promise<AllocationSnaps
   if(outstanding.length>256)throw new AllocationContractError('LIMIT_EXCEEDED','S5 shared occupation bound exceeded');
   const value={resources,outstanding};bounded(value);return {...value,snapshotDigest:epistemicHash(value)};
 }
-export async function readAllocationSnapshot(ctx:PeMutationContext):Promise<AllocationSnapshot>{return locked(ctx,async c=>{
+export async function readAllocationSnapshot(ctx:PeMutationContext,client?:pg.PoolClient):Promise<AllocationSnapshot>{return locked(ctx,async c=>{
  const result=await snapshot(c,ctx.auth.tenantId);await authorizeResources(ctx,c,result.resources);return result;
-});}
+},client);}
 
 /** S5 ordinary fixed-cost acquisition specialization. No causal model or
  * contingent payoff is fabricated to reserve a known, owner-authorized read.
@@ -490,7 +494,7 @@ export async function persistAllocationProposal(ctx:PeMutationContext,problem:Ca
     await appendExperience(ctx,c,[prepareS5Experience(problem.mandate,'CANDIDATE',certificate.ref.id,{certificateRef:certificate.ref,check:certificate.check,optimization:certificate.optimization},[problem.ref.id]),prepareS5Experience(problem.mandate,'COST',certificate.compute.id,{compute:certificate.compute})]);
   });
 }
-export async function readStoredAllocation(ctx:PeMutationContext,ref:ExperimentRef){return locked(ctx,c=>stored(ctx,c,ref));}
+export async function readStoredAllocation(ctx:PeMutationContext,ref:ExperimentRef,client?:pg.PoolClient){return locked(ctx,c=>stored(ctx,c,ref),client);}
 export async function readAllocationReplay(ctx:PeMutationContext,key:string,digest:string){
   return locked(ctx,async c=>{const r=(await c.query('SELECT request_digest,allocation_digest FROM finnor_os.s5_requests WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3',[ctx.auth.tenantId,actor(ctx),key])).rows[0];
     if(r&&r.request_digest!==digest)throw conflict();if(r?.allocation_digest)return finiteStored(ctx,c,{owner:'S5',version:S5_VERSION,id:`allocation-certificate:${r.allocation_digest}`,contentDigest:r.allocation_digest});
@@ -550,10 +554,10 @@ async function institutionConsumptions(ctx:PeMutationContext,c:pg.PoolClient,res
  if(rows.length>limit)throw new AllocationContractError('LIMIT_EXCEEDED','S5 institution consumption bound exceeded');
  return rows.map(row=>({...row.body,status:row.status,effectRef:row.effect_ref}));
 }
-export async function readAllocationConsumptions(ctx:PeMutationContext,ref:ExperimentRef){
+export async function readAllocationConsumptions(ctx:PeMutationContext,ref:ExperimentRef,client?:pg.PoolClient){
  return locked(ctx,async c=>ref.id.startsWith('institution-reservation:')
    ? institutionConsumptions(ctx,c,await institutionState(ctx,c,ref))
-   : consumptions(ctx,c,ref));
+   : consumptions(ctx,c,ref),client);
 }
 export function recordAllocationConsumption(ctx:PeMutationContext,reservationRef:ExperimentRef,
   request:InstitutionChargeRequest):ReturnType<typeof chargeInstitutionDemand>;
@@ -609,7 +613,7 @@ export async function retainAllocationReconciliation(ctx:PeMutationContext,ref:E
     await appendExperience(ctx,c,[prepareS5Experience(issued.problem.mandate,'RECONCILIATION',r.ref.id,{observations,reservation:retained,exposureRetained:true,qualifiedSettlement:null,requiredOwner:'S6'},[ref.id,...uses.map(u=>u.ref.id)],'H0')]);return retained;
   });
 }
-export async function persistAllocationExperience(ctx:PeMutationContext,events:S5ExperienceEvent[]):Promise<void>{await locked(ctx,c=>appendExperience(ctx,c,events));}
+export async function persistAllocationExperience(ctx:PeMutationContext,events:S5ExperienceEvent[],client?:pg.PoolClient):Promise<void>{await locked(ctx,c=>appendExperience(ctx,c,events),client);}
 
 /** Versioned owner adapters share the canonical lock/snapshot/history, not
  * another allocation ledger. Their own schema validators remain mandatory. */

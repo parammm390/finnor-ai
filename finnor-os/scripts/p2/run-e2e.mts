@@ -11,11 +11,18 @@ import {createServer} from 'node:net';
 import {performance} from 'node:perf_hooks';
 import {spawn,spawnSync} from 'node:child_process';
 import {migrate} from '../../packages/db/migrate';
-import {closePool,configureTenantVertical,withTenantTransaction} from '@finnor/db';
+import {closePool,getPool,configureTenantVertical,withTenantTransaction} from '@finnor/db';
 import {createEvidenceSource,appendEvidenceVersion} from '@finnor/memory';
 import {createMetricSeries,recordMetricObservation,restateMetricObservation,type PeMutationContext} from '@finnor/private-equity';
+import {ownDisposablePostgres,closeDisposablePostgres} from '../postz-w1/disposable-postgres.mjs';
 
 const repo=resolve(import.meta.dirname,'../../..');
+const selectedW1Story=process.env.FINNOR_W1_NATIVE_STORY;
+if(selectedW1Story&&!['comparison','1','mounted','internal-read-standing','internal-pressure',
+ 'internal-revocation','internal-sequential','internal-drift'].includes(selectedW1Story))
+ throw Error('UNKNOWN_W1_OWNING_STORY_MUST_NOT_FALL_THROUGH_TO_ABC');
+if(selectedW1Story?.startsWith('internal-')&&process.env.FINNOR_P2_CASE_FILTER)
+ throw Error('INTERNAL_NINE_ORIGINAL_POPULATION_CANNOT_BE_FILTERED');
 const evidence=resolve(process.env.FINNOR_P2_EVIDENCE_DIR??join(repo,'scope-pm/phase-07-p2-compute-search/scope-evidence',`run-${new Date().toISOString().replace(/[:.]/g,'-')}`));
 await mkdir(evidence,{recursive:true});
 const productionIdentity=await (await import('../../packages/private-equity/src/evidence-execution/store')).currentCodeIdentity();
@@ -34,9 +41,18 @@ const series:Record<string,string>={},observations:Record<string,string>={};
 const fixture={A:{EV:'120',EBITDA:'20',debt:'70'},B:{EV:'100',EBITDA:'25',debt:'50'},C:{EV:'90',EBITDA:'15',debt:'45'}};
 const expected={A:{equity:'50',leverage:'3.5'},B:{equity:'50',leverage:'2'},C:{equity:'45',leverage:'3'}};
 let postgres!:EmbeddedPostgres,admin!:pg.Client,post:any,queue:any,handler:any,migrationCount=0;
+let migrationNames:string[]=[],observedMigrationNames:string[]=[];
+const physicalQueues:Array<{close:()=>Promise<void>}>=[];
+async function createPhysicalQueue(){
+ const queue=await (await import('../p5/native-worker-client.mts')).physicalNativeQueue(process.env.FINNOR_P2_WORKER_DATABASE_URL!,evidence,'P2');
+ physicalQueues.push(queue);return queue;
+}
 const directory=await mkdtemp(join(tmpdir(),'finnor-p1-'));
+const disposable=ownDisposablePostgres(directory,directory,join(evidence,'disposable-postgres-cleanup.json'));
+let shutdownComplete=false;
 const save=async()=>writeFile(join(evidence,'results.json'),JSON.stringify({schema:'finnor.p2.e2e.v1',startedAt,generatedAt:new Date().toISOString(),durationMs:performance.now()-start,
- status:results.some(x=>x.status==='FAIL')?'FAIL':results.some(x=>x.status==='PASS')?'PASS_LOCAL':'NOT_EXECUTED',runtime:process.version,migrationCount,profile:'disposable actual PostgreSQL ordinary finnor_app / existing nonproduction auth bypass / actual Company Brain POST / actual JobQueue',
+ status:results.some(x=>x.status==='FAIL')?'FAIL':!shutdownComplete?'INCOMPLETE':results.some(x=>x.status==='PASS')?'PASS_LOCAL':'NOT_EXECUTED',runtime:process.version,migrationCount,migrationNames,observedMigrationNames,profile:'disposable actual PostgreSQL ordinary finnor_app / existing nonproduction auth bypass / actual Company Brain POST / actual JobQueue',
+ shutdown:{complete:shutdownComplete,postgres:disposable.observation},
  independentAdmission:false,billingUSD:null,costStatus:'LOCAL_COST_UNMETERED',fixture,expected,results,rerun:'cd finnor-os && node --import=tsx scripts/p2/run-e2e.mts'},null,2)+'\n');
 async function test(id:string,input:unknown,predicate:string,fn:()=>Promise<unknown>){if(process.env.FINNOR_P2_CASE_FILTER&&!process.env.FINNOR_P2_CASE_FILTER.split(',').some(filter=>id.includes(filter))){results.push({id,status:'NOT_RUN',predicate,input});await save();return;}const t=performance.now();try{results.push({id,input,predicate,status:'PASS',observed:await fn(),durationMs:performance.now()-t});}catch(e){results.push({id,input,predicate,status:'FAIL',observed:{message:String((e as Error).message),cause:(e as any).cause?{message:(e as any).cause.message,code:(e as any).cause.code,constraint:(e as any).cause.constraint}:null,stack:(e as Error).stack},durationMs:performance.now()-t});}await save();}
 async function api(operation:string,body:unknown,identity={tenant,actor}){const response=await post(new Request('http://localhost/api/company-brain/'+operation,{method:'POST',headers:{'content-type':'application/json','x-tenant-id':identity.tenant,'x-user-id':identity.actor},body:JSON.stringify(body)}),{params:Promise.resolve({operation})});return {status:response.status,body:await response.json()};}
@@ -49,12 +65,14 @@ const value=(result:any,key:string)=>result.derivation?.result?.outputs?.[key]?.
 try{
  process.env.FINNOR_TEST_MANAGED_EXTENSIONS='omit'; process.env.AUTH_DEV_BYPASS='1';process.env.NODE_ENV='test'; process.env.FINNOR_P4_PROFILE='ordinary_disposable';
  const port=await new Promise<number>((yes,no)=>{const s=createServer();s.once('error',no);s.listen(0,'127.0.0.1',()=>{const a=s.address();if(!a||typeof a==='string')return no(Error('port'));s.close(()=>yes(a.port));});});
- postgres=new EmbeddedPostgres({databaseDir:directory,user:'finnor',password:'finnor',port,persistent:false,onLog:()=>undefined});
+ postgres=disposable.attach(new EmbeddedPostgres({databaseDir:directory,user:'finnor',password:'finnor',port,persistent:true,onLog:()=>undefined}));
  await postgres.initialise();await appendFile(join(directory,'postgresql.conf'),'\ntrack_commit_timestamp='+(process.env.FINNOR_P4_TRACK_COMMITS==='off'?'off':'on')+'\n');await postgres.start();await postgres.createDatabase('p4_e2e');
- const adminUrl=`postgres://finnor:finnor@127.0.0.1:${port}/p4_e2e`;migrationCount=(await migrate(adminUrl)).length;
- admin=new pg.Client({connectionString:adminUrl});await admin.connect();await admin.query("INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,source) VALUES('native:p4',2,2,0,60,'explicit disposable P4 fixture; unmetered engineering capacity, not protected funding')");await admin.query("INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,source) VALUES('native:p2',2,2,0,60,'predeclared local P2 fixture capacity; not S5 funding'),('model:global',2,2,0,120,'local fixture model capacity'),('model-provider:LOCAL_HTTP_FIXTURE',2,2,0,120,'loopback observer capacity; endpoint cap1 is independently contested') ON CONFLICT(resource_key) DO NOTHING");await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD 'finnor_app'");await admin.query("SET app.test_vertical_mode='explicit'");
+ const adminUrl=`postgres://finnor:finnor@127.0.0.1:${port}/p4_e2e`;migrationNames=await migrate(adminUrl);migrationCount=migrationNames.length;
+ admin=new pg.Client({connectionString:adminUrl});await admin.connect();observedMigrationNames=(await admin.query<{name:string}>("SELECT name FROM finnor_os._migrations ORDER BY name")).rows.map(row=>row.name);assert.deepEqual(observedMigrationNames,migrationNames);await admin.query("INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,source) VALUES('native:p4',2,2,0,60,'explicit disposable P4 fixture; unmetered engineering capacity, not protected funding')");await admin.query("INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,source) VALUES('native:p2',2,2,0,60,'predeclared local P2 fixture capacity; not S5 funding'),('model:global',2,2,0,120,'local fixture model capacity'),('model-provider:LOCAL_HTTP_FIXTURE',2,2,0,120,'loopback observer capacity; endpoint cap1 is independently contested') ON CONFLICT(resource_key) DO NOTHING");await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD 'finnor_app'");await admin.query("SET app.test_vertical_mode='explicit'");
  await admin.query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,'P4 ordinary'),($3,$4,'P4 foreign')",[tenant,randomUUID(),foreignTenant,randomUUID()]);
  await admin.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name) VALUES($1,$2,$3,'owner','active','P4 ordinary'),($4,$5,$6,'owner','active','P4 foreign')",[actor,tenant,`${actor}@test.invalid`,foreignActor,foreignTenant,`${foreignActor}@test.invalid`]);
+ const workerPassword=randomUUID();await admin.query('ALTER ROLE finnor_worker LOGIN PASSWORD '+admin.escapeLiteral(workerPassword));
+ process.env.FINNOR_P2_WORKER_DATABASE_URL=`postgres://finnor_worker:${workerPassword}@127.0.0.1:${port}/p4_e2e`;
  process.env.DATABASE_URL=`postgres://finnor_app:finnor_app@127.0.0.1:${port}/p4_e2e`;await closePool();
  await configureTenantVertical({tenantId:tenant,verticalKey:'private_equity',expectedVersion:0,createdBy:actor,sourceSystem:'p4:e2e'});await configureTenantVertical({tenantId:foreignTenant,verticalKey:'private_equity',expectedVersion:0,createdBy:foreignActor,sourceSystem:'p4:e2e'});
  const executionProfile=await (await import('../../packages/orchestration/src/workforce-runtime')).configureAgentProfile(tenant,(await import('../../packages/orchestration/src/plugin-registry')).createDefaultPluginRegistry(),{key:'p1-disposable-native',name:'Explicit disposable P1 query/check executor',actor:ctx.auth as any,capabilityGrants:[{kind:'query',capability:'query:harness_program_v1'},{kind:'check',capability:'check:objective_success'},{kind:'wait',capability:'wait:event'}],autonomyLimits:{maxActions:1,maxQueries:8,maxReplans:6,maxPlannerCalls:8,maxWallClockMs:3600000},planningHints:{qualification:'DISPOSABLE_ORDINARY_UNMETERED_NO_PROTECTED_ADMISSION'}});
@@ -73,7 +91,7 @@ try{
  const request=()=>({schema:'finnor.harness-request.v1',instruction:'Produce a source-cited analytical draft of equity after debt and all recorded liabilities, with leverage. No IC approval or external effect is requested.',root:root('A'),validAt,mode:'ordinary_disposable',idempotencyKey:randomUUID(),sources:['EV','debt','EBITDA','liability'].map(source),acceptance:{requiredSourceKeys:['EV','debt','EBITDA','liability'],targets:[{key:'netEquity',expression:sub(sub(ref('EV'),ref('debt')),ref('liability')),unit:'currency',currencyCode:'USD'},{key:'leverage',expression:{kind:'ratio',left:ref('debt'),right:ref('EBITDA')},unit:'multiple',currencyCode:null}],deliverable:{kind:'analytical_draft',title:'Liability complete analytical draft'}}});
  const liabilities=String((await createMetricSeries(ctx,{subjectType:'external_organization',subjectId:companies.A,metricKey:'liability',name:'Material liability',unit:'currency',currencyCode:'USD',frequency:'annual'})).row.id);
  await recordMetricObservation(ctx,{metricSeriesId:liabilities,periodStart:new Date(periodStart),periodEnd:new Date(periodEnd),value:{type:'number',value:'7'},evidence:sourceRef});
- const {JobQueue}=await import('../../apps/worker/src/queue'); queue=new JobQueue('p1-e2e-worker',3);
+ queue=await createPhysicalQueue();
  queue.register('run_evidence_derivation_v1',(await import('../../packages/private-equity/src/evidence-execution/worker')).runEvidenceDerivationJob,(await import('../../packages/db/compute-contract')).PRODUCTION_JOB_CONTRACTS.run_evidence_derivation_v1);
  try{const h=await import('../../packages/private-equity/src/program-synthesis/worker');queue.register('run_harness_program_v1',h.runHarnessProgramJob,(await import('../../packages/db/compute-contract')).PRODUCTION_JOB_CONTRACTS.run_harness_program_v1);}catch(error){results.push({id:'producer-module-resolution',status:'NOT_RUN',observed:String(error),qualification:'Baseline before production implementation'});}
  async function create(body:any=request()){const r=await api('program-submit',body);assert.equal(r.status,202,JSON.stringify(r));return r.body;}
@@ -84,8 +102,37 @@ try{
 
  try { const p2=await import('../../packages/private-equity/src/compute-search/worker'); queue.register('run_compute_search_unit_v1',p2.runComputeSearchUnitJob,(await import('../../packages/db/compute-contract')).PRODUCTION_JOB_CONTRACTS.run_compute_search_unit_v1); } catch (error) { await writeFile(join(evidence,'producer-resolution.json'),JSON.stringify({error:String(error),qualification:'Failure-first baseline'},null,2)); }
  const story=await import('./stories.mts');
- const environment={admin,queue,evidence,repo,api,request,create,complete,ctx,tenant,actor,foreignTenant,foreignActor,companies,sourceRef,periodStart,periodEnd,validAt};
- if(process.env.FINNOR_P2_BROWSER_FIXTURE==='1'){
+ const applicationRole=(await getPool().query("SELECT current_user AS role,rolsuper,rolbypassrls,pg_has_role('finnor_app','finnor_worker','MEMBER') app_inherits_worker FROM pg_roles WHERE rolname=current_user")).rows[0];
+ assert.equal(applicationRole.role,'finnor_app');assert(!applicationRole.rolsuper&&!applicationRole.rolbypassrls&&!applicationRole.app_inherits_worker);
+ assert.equal(queue.identity.identity.role,'finnor_worker');assert.equal(queue.identity.authBypass,'0');
+ await writeFile(join(evidence,'actual-api-worker-role-boundary.json'),JSON.stringify({applicationRole,worker:queue.identity,registeredTypes:queue.registeredTypes()},null,2)+'\n');
+ const environment={admin,queue,createQueue:createPhysicalQueue,evidence,repo,api,request,create,complete,ctx,tenant,actor,foreignTenant,foreignActor,companies,sourceRef,periodStart,periodEnd,validAt};
+ if(selectedW1Story==='internal-read-standing'){
+  let primary:Awaited<ReturnType<typeof import('../postz-w1/native-research-stories.mjs').nativeResearchStory>>|undefined;
+  await test('W1-internal-primary-research',{},'W003/W012/W013 actual signed primary-source breadth, original withheld denominator, repeated wrong premise, canonical correction race and independent original-fact oracle',
+   async()=>primary=await (await import('../postz-w1/native-research-stories.mjs')).nativeResearchStory(environment));
+  if(primary)await test('W1-internal-standing',{},'W004 separate real standing mandate, original P6 wait, exact integration event, durable canonical wake, actual admitted query and zero informational activation',
+   ()=>(import('../postz-w1/native-standing-story.mjs')).then(m=>m.nativeStandingStory(environment,primary!.sourceFixture)));
+  else results.push({id:'W1-internal-standing',status:'NOT_RUN',reason:'Required canonical research fixture failed before standing admission'});
+ }else if(selectedW1Story==='internal-pressure'){
+  await test('W1-internal-pressure',{},'W006/W015 three actual Works, one unchanged grant/physical permit, original class-aware aged priority order, capacity deferral, paid cancellation, original deadline miss and unaffected acceptance',
+   ()=>import('../postz-w1/native-pressure-story.mjs').then(m=>m.nativePressureStory(environment)));
+ }else if(selectedW1Story==='internal-revocation'){
+  await test('W1-internal-revocation',{},'W007 all six actual SUBMIT/CLAIM/USE/CHECK/PUBLISH/DISPATCH Work-revision races with exact committed boundaries, retained physical liabilities and unaffected original-owner progress',
+   ()=>import('../postz-w1/native-revocation-story.mjs').then(m=>m.nativeRevocationStory(environment)));
+ }else if(selectedW1Story==='internal-sequential'){
+  await test('W1-internal-sequential',{},'W011 actual native two-call execute/check floor and actual equipped original P1 reference, same original episode/grant/deadline, independent Fraction acceptance and honest unknown complete costs',
+   ()=>import('../postz-w1/native-sequential-story.mjs').then(m=>m.nativeSequentialStory(environment)));
+ }else if(selectedW1Story==='internal-drift'){
+  await test('W1-internal-drift',{},'W014 separately revised original P3 price/model/measured-latency capability sources, rejected old selection, actual fresh fallback or STOP, immutable paid history and independent original-record oracle',
+   ()=>import('../postz-w1/native-drift-story.mjs').then(m=>m.nativeDriftStory(environment)));
+ }else if(process.env.FINNOR_W1_NATIVE_STORY==='comparison'){
+  await test('W1-native-on-off',{},'Matched actual W1 on/off; same admitted P1/S4/S5/P2 equipment, exact original quantities/criteria/limits, actual signed calls and physical descendants, independently reconstructed counters and honest unknown dollars',()=>import('../postz-w1/native-on-off.mjs').then(m=>m.nativeOnOffStory(environment)));
+ }else if(process.env.FINNOR_W1_NATIVE_STORY==='1'||process.env.FINNOR_W1_NATIVE_STORY==='mounted'){
+  const mounted=process.env.FINNOR_W1_NATIVE_STORY==='mounted';
+  const run=mounted?(await import('../postz-w1/mounted-story.mjs')).mountedOwnerStory:(await import('../postz-w1/native-stories.mjs')).nativeOwnerStory;
+  await test(mounted?'W1-native-mounted-owner-proof':'W1-native-owner-proof',{},'Signed bearer with bypass0; actual original P1/S4/S5/P2 warm and scored continuation without renewing episode/grant/deadline; actual capsule consumption, SQL acceptance and separate Fraction oracle'+(mounted?'; all twelve assigned-Desktop Work/session predicates':''),()=>run(environment));
+ }else if(process.env.FINNOR_P2_BROWSER_FIXTURE==='1'){
   await test('C-recovery-currentness-browser',{},'Actual local bearer/RLS/Work canvas executes owner-bound computation, displays exact accepted values and allocation/cost evidence, reloads and refuses delayed cross-thread, corrected-source and revoked-access data',()=>story.browserStory(environment));
  }else{
  await test('A-owner-backed-adaptive-P1',{},'Current genuine S4/S5 native grant drives actual bounded P1 module/independent-check work; SQL and parsed DOCX independently prove43 and3.5; barriers, topology, no forged grants/counter renewal',()=>story.ownerBackedSearch(environment));
@@ -93,5 +140,11 @@ try{
  await test('C-recovery-currentness-outstanding',{},'Cold worker, cancellation/Work/fence races preserve every physical attempt and liability while late results cannot publish private/current incumbent',()=>story.recoveryCurrentness(environment));
  }
 } catch(e) { results.push({id:'setup',status:'FAIL',observed:{message:String(e),stack:(e as Error).stack}}); }
-finally { await save(); await closePool(); await admin?.end(); await postgres?.stop(); await rm(directory,{recursive:true,force:true}); }
+finally {
+ try{await closeDisposablePostgres(disposable,[
+  ...physicalQueues.reverse().map(physical=>()=>physical.close()),closePool,async()=>admin?.end()
+ ]);shutdownComplete=true;}
+ catch(error){results.push({id:'owned-resource-shutdown',status:'FAIL',observed:String(error)});}
+ await save();
+}
 process.exitCode=results.some(r=>r.status==='FAIL')?1:results.some(r=>r.status==='PASS')?0:1;

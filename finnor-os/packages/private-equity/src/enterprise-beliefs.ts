@@ -134,8 +134,8 @@ export function worldBeliefView(ctx: PeMutationContext, world: PeWorldState, rec
 
 export async function loadEnterpriseBeliefView(ctx: PeMutationContext, input: {
   root: PeWorldRootRef; validAt?: string; knowledgeAt?: string; decisionContext?: BeliefDecisionContext; maxClaims?: number;
-}): Promise<BeliefView> {
-  const world = await loadPrivateEquityWorldState(ctx, input.root, { validAt: input.validAt, knowledgeAt: input.knowledgeAt });
+}, client?: PoolClient): Promise<BeliefView> {
+  const world = await loadPrivateEquityWorldState(ctx, input.root, { validAt: input.validAt, knowledgeAt: input.knowledgeAt }, client);
   if (!world.beliefView) throw new Error("S1 world integration did not emit BeliefView");
   try { const view=boundBeliefView(world.beliefView, input.maxClaims ?? 1000, input.decisionContext);await enqueueNativeBelief(ctx,view,world);return view; }
   catch { throw new PeDomainError("PE_INVALID_BELIEF_CONTEXT", "S1 decision context or permitted serialization envelope is unsupported"); }
@@ -143,12 +143,12 @@ export async function loadEnterpriseBeliefView(ctx: PeMutationContext, input: {
 
 /** Current-use validation is separate from immutable historical reconstruction.
  * No source/rights/interpretation witness is accepted merely because it is pinned. */
-export async function validateBeliefViewPin(ctx: PeMutationContext, pin: BeliefViewPin): Promise<BeliefViewPinValidation> {
+export async function validateBeliefViewPin(ctx: PeMutationContext, pin: BeliefViewPin, client?: PoolClient): Promise<BeliefViewPinValidation> {
   if (pin.tenantId !== ctx.auth.tenantId || pin.principalId !== (ctx.auth.employeeId ?? ctx.auth.userId)) return { status: "UNAVAILABLE", reason: "PERMITTED_VIEW_UNAVAILABLE", executionAuthorityGranted: false };
   if (!Number.isSafeInteger(pin.rightsRevision) || pin.rightsRevision < 1 || !Number.isFinite(Date.parse(pin.knowledgeAt)) || !/^[a-f0-9]{64}$/.test(pin.dependencyDigest))
     return { status: "UNAVAILABLE", reason: "INVALID_PIN_WITNESS", executionAuthorityGranted: false };
   try {
-    const view = await loadEnterpriseBeliefView(ctx, { root: pin.root as PeWorldRootRef, validAt: pin.validAt });
+    const view = await loadEnterpriseBeliefView(ctx, { root: pin.root as PeWorldRootRef, validAt: pin.validAt }, client);
     if (Date.parse(pin.knowledgeAt) > Date.parse(view.knowledgeAt)) return { status: "UNAVAILABLE", reason: "INVALID_PIN_WITNESS", executionAuthorityGranted: false };
     const invalidated = async(reason: string) => {
       const invalidation = { priorDependencyDigest: pin.dependencyDigest, currentDependencyDigest: view.dependencyDigest, pinWitnessDigest: epistemicHash(pin), reason };

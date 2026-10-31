@@ -7,8 +7,10 @@
 import { performance } from "node:perf_hooks";
 import { requireContext, errorResponse } from "../../../lib/auth";
 import { getOrchestrator } from "../../../lib/orchestrator";
-import { OperationalQueryReplayUnavailable, validateOperationalQueryRequest, type OperationalQueryRequest } from "@finnor/orchestration";
+import { OperationalQueryReplayUnavailable, readObjectiveEconomicQueryReply, validateOperationalQueryRequest, type OperationalQueryRequest } from "@finnor/orchestration";
 import { EconomicFault } from "@finnor/private-equity/src/economic-action-theory/contracts";
+import { PeDomainError } from "@finnor/private-equity/src/types";
+import { WorkQueryInProgressError } from "@finnor/db";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
@@ -26,6 +28,27 @@ function uuid(value: unknown): value is string {
 // internal to orchestration; accepting them here would create an undocumented
 // second wire contract.
 const ENVELOPE_KEYS = new Set(["workId", "idempotencyKey", "executionKey"]);
+
+/** Only the original authenticated input principal may retrieve a native private
+ * query. These IDs select persisted custody; they cannot create or claim it. */
+export async function GET(req: Request): Promise<Response> {
+  const headers = { "Cache-Control": "no-store" };
+  let ctx;
+  try { ctx = await requireContext(req); }
+  catch (error) { const response = errorResponse(error); response.headers.set("Cache-Control", "no-store"); return response; }
+  const params = new URL(req.url).searchParams, keys = ["workId", "workInputId", "objectiveStepId"] as const;
+  if ([...params.keys()].some(key => !(keys as readonly string[]).includes(key))
+      || keys.some(key => params.getAll(key).length !== 1 || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(params.get(key) ?? "")))
+    return Response.json({ error: "Exact Work, original input and Objective step UUID selectors are required." }, { status: 400, headers });
+  try {
+    const reply = await readObjectiveEconomicQueryReply(ctx, { workId: params.get("workId")!.toLowerCase(),
+      workInputId: params.get("workInputId")!.toLowerCase(), objectiveStepId: params.get("objectiveStepId")!.toLowerCase() });
+    return Response.json(reply, { status: 200, headers });
+  } catch {
+    return Response.json({ code: "ECONOMIC_READ_UNAVAILABLE", error: "The original private economic read is unavailable under current custody and permissions." },
+      { status: 404, headers });
+  }
+}
 
 function parseRequestBody(input: unknown): {
   success: true;
@@ -88,6 +111,11 @@ export async function POST(req: Request): Promise<Response> {
       },
     });
   } catch (err) {
+    if (err instanceof WorkQueryInProgressError) return Response.json({ error: err.message, workId: err.workId,
+      workInputId: err.workInputId, duplicate: true, inProgress: true }, { status: 202, headers: { "Cache-Control": "no-store" } });
+    if ((intent === "company_revenue" || intent === "stock_quote") && err instanceof PeDomainError && err.code === "PE_ENTITY_NOT_FOUND")
+      return Response.json({ code: "ECONOMIC_READ_UNAVAILABLE", error: "The economic read is unavailable under current source and permissions. Request a new read." },
+        { status: 404, headers: { "Cache-Control": "no-store" } });
     if (err instanceof EconomicFault) return Response.json({ code: err.code }, {
       status: err.status, headers: { "Cache-Control": "no-store" },
     });

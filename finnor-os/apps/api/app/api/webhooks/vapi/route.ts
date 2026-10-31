@@ -169,6 +169,7 @@ async function handleTools(
           instructionId,
           channel: "voice",
           text: spoken,
+          ...(handled.actions.length ? { referenceText: "Voice action outcome recorded; detail is available after a current authorization check." } : {}),
           ...(handled.workId ? { workId: handled.workId } : {}),
           ...(handled.workInputId ? { workInputId: handled.workInputId } : {}),
           outcomeRefs: handled.actions.map((action) => ({

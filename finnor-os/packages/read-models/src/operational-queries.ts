@@ -61,6 +61,10 @@ export interface OperationalQueryOptions {
   workId?: string;
   workInputId?: string | null;
   executionKey?: string;
+  /** Existing Work recovery lease, never a read authorization override. */
+  recoveryAttemptKey?: string;
+  /** Internal, current native Objective step claim; never accepted by POST /queries. */
+  objectiveClaim?: import("@finnor/shared-types").ObjectiveEconomicReadClaim;
   now?: (() => Date) | Date;
   maxRows?: number;
   employeeId?: string;

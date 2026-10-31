@@ -1,0 +1,2 @@
+--require-hashes
+-r ../r3/upstream-requirements.lock

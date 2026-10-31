@@ -33,8 +33,9 @@ async function visit(path){
 }
 await visit(root);files.push({path:'launcher',sha256:hash(await readFile(base+'/launcher'))});
 const source=new URL('../../packages/governed-execution/native/linux-launcher.c',import.meta.url);
+const lifetimeSource=new URL('../../packages/governed-execution/native/linux-lifetime.h',import.meta.url);
 await writeFile(base+'/manifest.json',JSON.stringify({schema:'finnor.s6.fixed-jail.v1',architecture:process.arch,files:files.sort((a,b)=>a.path.localeCompare(b.path)),
- launcherSourceSha256:hash(await readFile(source)),bootstrapCapability:'CAP_SYS_CHROOT_ONLY_THEN_ZERO',landlockMinimumAbi:2,
+ launcherSourceSha256:hash(await readFile(source)),launcherLifetimeSourceSha256:hash(await readFile(lifetimeSource)),bootstrapCapability:'CAP_SYS_CHROOT_ONLY_THEN_ZERO',landlockMinimumAbi:2,
  authority:'NONE_OUTPUT_UNTRUSTED',protectedExecution:'UNADMITTED'},null,2)+'\n',{mode:0o444,flag:'wx'});
 await chmod(root,0o555);
 if(mode!=='stage'){

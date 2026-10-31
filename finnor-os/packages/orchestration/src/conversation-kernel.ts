@@ -428,14 +428,19 @@ export async function persistEmployeeAssistantTurn(params: {
   workId?: string;
   workInputId?: string;
   outcomeRefs: Array<Record<string, unknown>>;
+  /** Non-sensitive stand-in REQUIRED for outcome-bearing turns (R1). */
+  referenceText?: string;
 }): Promise<EmployeeConversationMessage> {
+  if (params.outcomeRefs.length > 0 && !params.referenceText?.trim())
+    throw new Error("Outcome-bearing assistant turns persist a non-sensitive reference, never the financial prose (R1)");
+  const storedText = params.outcomeRefs.length > 0 ? params.referenceText!.trim() : params.text;
   const appended = await appendEmployeeConversationMessage({
     tenantId: params.tenantId,
     ownerEmployeeId: params.employeeId,
     threadId: params.threadId,
     role: "assistant",
     channel: params.channel,
-    originalText: params.text,
+    originalText: storedText,
     instructionId: params.instructionId,
     workId: params.workId,
     workInputId: params.workInputId,
@@ -456,7 +461,7 @@ export async function persistEmployeeAssistantTurn(params: {
     threadId: params.threadId,
     messageId: appended.message.id,
     role: "assistant",
-    content: params.text,
+    content: storedText,
     createdAt: appended.message.createdAt,
   });
   return appended.message;

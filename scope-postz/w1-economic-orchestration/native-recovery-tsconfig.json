@@ -1,0 +1,11 @@
+{
+  "extends": "./read-tsconfig.json",
+  "compilerOptions": { "incremental": false },
+  "files": [
+    "../../finnor-os/scripts/postz-w1/recovery-bootstrap.mts",
+    "../../finnor-os/scripts/postz-w1/recovery-e2e.mts",
+    "../../finnor-os/scripts/postz-w1/recovery-observe.mts",
+    "../../finnor-os/scripts/postz-w1/recovery-worker.mts"
+  ],
+  "include": []
+}

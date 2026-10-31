@@ -1,0 +1,145 @@
+{
+  "binding": {
+    "catalogueRef": "8d14f16e-b3c9-598e-ad72-b6ccd319f84c",
+    "checkerRef": "4d5c3362-4e22-5e8e-a2c1-45472238406b",
+    "deadline": "2099-01-01T00:00:00.000Z",
+    "mandateRef": "ea889203-e9aa-5688-a11c-d679a4b15660",
+    "modelRef": "a22f5ea6-809e-5df4-8d3d-bbfbb9bf8335",
+    "outcomeRef": "fe02efa4-ec96-522a-92a1-fbeaf4334b63",
+    "parentGrantRef": "c07f3ba6-38ff-5692-9e41-42ad03637adb",
+    "priceRef": "65780ea3-66e8-50bc-b2f3-7b78e19c57f3",
+    "principalId": "59573f3e-aab4-55ef-a1f1-116ce2c17439",
+    "responseRef": "6a7fddc4-86d8-5bb3-a832-ec86909cde87",
+    "rightsRef": "0bcd2b29-17b9-5f55-88d9-c7a77fd635a7",
+    "runtimeRef": "1eafb3b8-38dc-5ccb-a6c9-875ef5b069de",
+    "sourceRef": "aac1a704-7c72-5505-a169-38039e1ddb5a",
+    "tenantId": "8186dd30-e3e6-502a-bc59-813305b5f622",
+    "workId": "af687819-f016-5771-a38f-4e192e3ad1a6"
+  },
+  "id": "exact-rational-ties-01:public-development-W1-20261029-structural-v1-c73e957c",
+  "maxDecisions": 1,
+  "rootStateId": "root",
+  "schema": "finnor.metalevel-model.v1",
+  "states": [
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "1/3"
+        },
+        {
+          "computationRef": "admitted-development-method:equal",
+          "contextRefs": [
+            "lawful-original-context"
+          ],
+          "dependsOn": [],
+          "id": "equal",
+          "kind": "COMPUTE",
+          "outcomes": [
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "ok",
+              "observation": "OK",
+              "probability": "1",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "INVALID",
+              "nextStateId": "invalid",
+              "observation": "INVALID",
+              "probability": "0",
+              "utilityDelta": "0"
+            }
+          ],
+          "reservation": {
+            "computeUnits": "1"
+          },
+          "utilityCost": "1/3",
+          "verifierRefs": [
+            "original-check"
+          ]
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 0,
+      "history": [],
+      "id": "root",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "1"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": "original-model-acceptance:ok",
+      "choices": [
+        {
+          "disposition": "ACCEPTED",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": "original-result:ok",
+          "utility": "2/3"
+        }
+      ],
+      "completedChecks": [
+        "original-check"
+      ],
+      "decisionIndex": 1,
+      "history": [
+        {
+          "choiceId": "equal",
+          "observation": "OK"
+        }
+      ],
+      "id": "ok",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "0"
+      },
+      "requiredChecks": [
+        "original-check"
+      ]
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 1,
+      "history": [
+        {
+          "choiceId": "equal",
+          "observation": "INVALID"
+        }
+      ],
+      "id": "invalid",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "0"
+      },
+      "requiredChecks": []
+    }
+  ],
+  "tieOrder": [
+    "equal",
+    "stop"
+  ],
+  "utilityUnit": "synthetic-utility"
+}

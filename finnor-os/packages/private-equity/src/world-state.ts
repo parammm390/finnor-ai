@@ -783,8 +783,9 @@ export async function loadPrivateEquityWorldState(
   ctx: PeMutationContext,
   root: PeWorldRootRef,
   at?: Date | string | PeWorldTemporalQuery,
+  client?: PeClient,
 ): Promise<PeWorldState> {
-  return readAuthorizedWorldState(ctx, root, at, true);
+  return readAuthorizedWorldState(ctx, root, at, true, client);
 }
 
 /** Reconstruct and authorize the same current owner cut without serializing a
@@ -818,6 +819,7 @@ async function readAuthorizedWorldState(
   root: PeWorldRootRef,
   at: Date | string | PeWorldTemporalQuery | undefined,
   buildBelief: boolean,
+  client?: PeClient,
 ): Promise<PeWorldState> {
   if (!ROOT_TYPES.has(root.entityType)) throw new PeDomainError("PE_UNSUPPORTED_WORLD_ROOT", `Unsupported PE world root ${root.entityType}`);
   assertPeUuid(root.entityId, "world root entityId");
@@ -825,9 +827,9 @@ async function readAuthorizedWorldState(
   // that cut before scanning; a root-only grant must not learn forbidden scope
   // through global truncation/coverage signals. Fine-grained federation needs a
   // permission-filtered source adapter before it can enter this query class.
-  const authorization = await authorizeBeliefResources(ctx, [{ type: root.entityType, id: root.entityId }, { type: "tenant", id: ctx.auth.tenantId }]);
-  await authorizeBeliefCandidateCut(ctx);
-  const world = await reconstructPrivateEquityWorldState(ctx, root, at, authorization, buildBelief);
+  const authorization = await authorizeBeliefResources(ctx, [{ type: root.entityType, id: root.entityId }, { type: "tenant", id: ctx.auth.tenantId }], client);
+  await authorizeBeliefCandidateCut(ctx, client);
+  const world = await reconstructPrivateEquityWorldState(ctx, root, at, authorization, buildBelief, client);
   const resources = [
     { type: root.entityType, id: root.entityId },
     { type: "tenant", id: ctx.auth.tenantId },
@@ -836,9 +838,9 @@ async function readAuthorizedWorldState(
     ...world.documents.map(ref => ({ type: "document", id: String(ref.id) })),
     ...world.sourceCoverage.map(ref => ({ type: "integration_source_scope", id: String(ref.sourceScopeId) })),
   ];
-  const current = await authorizeBeliefResources(ctx, resources);
-  await authorizeBeliefCandidateCut(ctx);
-  await authorizeBeliefSourceScopes(ctx, root, world.evidence.map(ref => String(ref.sourceId)));
+  const current = await authorizeBeliefResources(ctx, resources, client);
+  await authorizeBeliefCandidateCut(ctx, client);
+  await authorizeBeliefSourceScopes(ctx, root, world.evidence.map(ref => String(ref.sourceId)), client);
   if (current.revision !== authorization.revision) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE world root was not found in the authenticated tenant");
   return world;
 }
@@ -849,6 +851,7 @@ async function reconstructPrivateEquityWorldState(
   at: Date | string | PeWorldTemporalQuery | undefined,
   authorization: WorldReadAuthorization,
   buildBelief: boolean,
+  scopedClient?: PeClient,
 ): Promise<PeWorldState> {
   if (!ROOT_TYPES.has(root.entityType)) throw new PeDomainError("PE_UNSUPPORTED_WORLD_ROOT", `Unsupported PE world root ${root.entityType}`);
   assertPeUuid(root.entityId, "world root entityId");
@@ -860,7 +863,7 @@ async function reconstructPrivateEquityWorldState(
     throw new PeDomainError("PE_INVALID_TEMPORAL_TIMESTAMP", "PE world-state validAt or knowledgeAt timestamp is malformed");
   }
 
-  return peClientTransaction(ctx, async (client) => {
+  const execute = async (client: PeClient): Promise<PeWorldState> => {
     const transactionAt = (await client.query<{ at: Date }>("SELECT clock_timestamp() AS at")).rows[0]!.at;
     if (requestedKnowledgeAt && requestedKnowledgeAt > transactionAt) throw new PeDomainError("PE_INVALID_TEMPORAL_TIMESTAMP", "Knowledge time cannot be in the future");
     const clock = requestedKnowledgeAt ?? transactionAt;
@@ -1377,5 +1380,6 @@ async function reconstructPrivateEquityWorldState(
       version: row.entity_version, owner: ownerByType.get(row.entity_type)!, snapshotHash: row.snapshot_hash,
       recordedAt: new Date(Math.max(row.recorded_at.getTime(), row.committed_at?.getTime() ?? clock.getTime())).toISOString(), snapshot: shaped(row), snapshotJson: row.snapshot_json })), authorization, ownerByType.get("evidence_source_version"));
     return world;
-  }, { readOnly: true });
+  };
+  return scopedClient ? execute(scopedClient) : peClientTransaction(ctx, execute, { readOnly: true });
 }

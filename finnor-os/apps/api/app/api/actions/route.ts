@@ -5,11 +5,14 @@ import { requireContext, errorResponse, enforceRouteRateLimit } from "../../../l
 import { getOrchestrator } from "../../../lib/orchestrator";
 import { enforceBatchBackpressure } from "../../../lib/backpressure";
 import { requireWorkerFleetReady } from "../../../lib/worker-readiness";
-import { receiveWork, attachValidatedWorkInputContext, recordWorkResponse, transitionWork, workAggregate, withTenant, domainActions, businessEffects } from "@finnor/db";
-import { and, eq, inArray } from "drizzle-orm";
+import { receiveWork, attachValidatedWorkInputContext, recordWorkResponse, readWorkInputResponse, transitionWork, workAggregate, withTenant, workEvents, domainActions, businessEffects, WorkQueryInProgressError } from "@finnor/db";
+import { and, eq, inArray, sql } from "drizzle-orm";
+import { EconomicReadReplySchema } from "@finnor/shared-types";
 import { classifyInstructionRoute, interactionAwareOperationalDecision, interpretOperationalQuery, isConversationalTurn, OperatingInteractionContextError, resolveOperatingInteractionContext } from "@finnor/orchestration";
 import { linkEmployeeConversationTurnToWork, persistEmployeeAssistantTurn, prepareEmployeeConversationTurn } from "@finnor/orchestration";
 import { randomUUID } from "node:crypto";
+import { assertEconomicReadReplyAccess, storedEconomicQuery, answerEconomicQuery, economicReadForInput } from "@finnor/orchestration";
+import { PeDomainError } from "@finnor/private-equity/src/types";
 
 function intakeAuthorityContext(ctx: {
   userId: string;
@@ -168,8 +171,30 @@ export async function POST(req: Request): Promise<Response> {
       // bounded aggregate fallback) before context, conversation, classification,
       // rate limiting, or any other fallible/mutating enrichment can run again.
       let aggregate: Awaited<ReturnType<typeof workAggregate>> = null;
-      let replay = storedResponse(received.finalOutcome);
-      if (!replay) {
+      const owned = await readWorkInputResponse({ tenantId: ctx.tenantId, userId: ctx.userId,
+        workId: received.workId, workInputId: received.workInputId });
+      const financial = owned.queryExecutions.length > 0 || economicReadForInput(owned.input.instructionText) !== null
+        || /^Typed operational query:\s*(?:company_revenue|stock_quote)\b/.test(owned.input.instructionText);
+      let replay = storedResponse(received.finalOutcome) ?? storedResponse({ response: owned.response });
+      if (financial) {
+        const query = storedEconomicQuery(owned.response);
+        if (owned.response && !query) return Response.json({ code: "ECONOMIC_READ_UNAVAILABLE",
+          error: "The complete original financial reply is unavailable." }, { status: 404, headers: { "Cache-Control": "no-store" } });
+        if (query) {
+          // A strict canonical reply is complete by design, not a lost HTTP
+          // envelope. Only a real recorded ancillary failure degrades its replay.
+          const canonical = EconomicReadReplySchema.safeParse(owned.response).success;
+          const [warning] = await withTenant(ctx.tenantId, db => db.select({ id: workEvents.id }).from(workEvents).where(and(
+            eq(workEvents.tenantId, ctx.tenantId), eq(workEvents.workId, received.workId),
+            eq(workEvents.eventType, "economic_read_projection_degraded"),
+            sql`${workEvents.payload}->>'workInputId'=${received.workInputId}`)).limit(1));
+          replay = { ...replay, planned: [], query, answer: answerEconomicQuery(query),
+            workId: received.workId, workInputId: received.workInputId, instructionId: received.instructionId,
+            ...(warning || !canonical && (!replay || !("planned" in replay)) ? { replayDegraded: true,
+              projectionWarnings: [{ stage: "response", code: warning ? "projection_persistence_failed" : "projection_missing_on_replay" }] } : {}) };
+        }
+      }
+      if (!replay && !financial) {
         aggregate = await workAggregate(ctx.tenantId, received.workId).catch(() => null);
         replay = aggregateReplay(received, aggregate);
       }
@@ -179,6 +204,13 @@ export async function POST(req: Request): Promise<Response> {
           : received.status;
         return duplicateWithoutReplay(received, aggregateStatus);
       }
+      try { await assertEconomicReadReplyAccess(ctx, replay, received); }
+      catch (error) {
+        if (error instanceof PeDomainError && error.code === "PE_ENTITY_NOT_FOUND")
+          return Response.json({ code: "ECONOMIC_READ_UNAVAILABLE", error: "The economic read is unavailable under current source and permissions. Request a new read." },
+            { status: 404, headers: { "Cache-Control": "no-store" } });
+        throw error;
+      }
       const replayResponse = {
         ...replay,
         ...(aggregate?.work ? { work: aggregate.work } : { work: { id: received.workId, status: received.status } }),
@@ -187,7 +219,8 @@ export async function POST(req: Request): Promise<Response> {
       const replayQuery = (replayResponse as Record<string, unknown>).query as { metadata?: { durationMs?: number } } | undefined;
       return Response.json(replayResponse, {
         status: received.status === "completed" || received.status === "failed" || received.status === "cancelled" ? 200 : 202,
-        headers: replayQuery?.metadata?.durationMs === undefined ? undefined : { "Server-Timing": `query;dur=${Number(replayQuery.metadata.durationMs).toFixed(1)}` },
+        headers: { "Cache-Control": "no-store", ...(replayQuery?.metadata?.durationMs === undefined ? {}
+          : { "Server-Timing": `query;dur=${Number(replayQuery.metadata.durationMs).toFixed(1)}` }) },
       });
     }
     let activeContext = body.data.activeContext;
@@ -267,7 +300,8 @@ export async function POST(req: Request): Promise<Response> {
       // intake bucket and batch backpressure are reserved for planner work.
       fastReadDecision = interactionAwareOperationalDecision(interpretOperationalQuery(body.data.instruction), activeContext, body.data.instruction);
       instructionRouteDecision = classifyInstructionRoute({ instruction: body.data.instruction, fastReadDecision, activeContext,
-        conversational: isConversationalTurn(body.data.instruction, { conversationContext: prepared.context, instructionId: received.instructionId }) });
+        conversational: fastReadDecision.route === "fast_read" && (fastReadDecision.request.intent === "company_revenue" || fastReadDecision.request.intent === "stock_quote")
+          ? false : isConversationalTurn(body.data.instruction, { conversationContext: prepared.context, instructionId: received.instructionId }) });
       if (instructionRouteDecision.route !== "QUERY") {
         await enforceRouteRateLimit(`intake:${ctx.tenantId}`, Number(process.env.RATE_LIMIT_INTAKE_PER_MINUTE ?? 20));
       }
@@ -329,7 +363,12 @@ export async function POST(req: Request): Promise<Response> {
         skipFastReadClassification: true,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Instruction processing failed";
+      if (err instanceof WorkQueryInProgressError) return Response.json({ error: err.message, workId: received.workId,
+        workInputId: received.workInputId, instructionId: received.instructionId, duplicate: true, inProgress: true },
+        { status: 202, headers: { "Cache-Control": "no-store" } });
+      const financial = fastReadDecision.route === "fast_read" && (fastReadDecision.request.intent === "company_revenue" || fastReadDecision.request.intent === "stock_quote");
+      const message = financial ? "The original economic read could not be completed; retry its original Work explicitly."
+        : err instanceof Error ? err.message : "Instruction processing failed";
       const timeout = /\b(?:timeout|timed out|deadline|aborted?)\b/i.test(message) || (err instanceof Error && err.name === "AbortError");
       const failedWork = await workAggregate(ctx.tenantId, received.workId).catch(() => null);
       if ((failedWork?.work as { status?: string } | undefined)?.status !== "failed") {
@@ -344,7 +383,8 @@ export async function POST(req: Request): Promise<Response> {
         workId: received.workId,
         workInputId: received.workInputId,
         instructionId: received.instructionId,
-      }, { status: timeout ? 504 : statusFromError(err) });
+      }, { status: financial && err instanceof PeDomainError && err.code === "PE_ENTITY_NOT_FOUND" ? 404 : timeout ? 504 : statusFromError(err),
+        headers: financial ? { "Cache-Control": "no-store" } : undefined });
     }
 
     // Core orchestration has committed its own durable truth above. Assistant
@@ -381,6 +421,8 @@ export async function POST(req: Request): Promise<Response> {
       projectionWarnings,
     };
     const responseText = assistantText(result);
+    const financialResult = result.query?.request.intent === "company_revenue" || result.query?.request.intent === "stock_quote";
+    const projectionError = (error: unknown) => financialResult ? new Error("Ancillary financial read projection failed") : error;
     const outcomeRefs: Array<Record<string, unknown>> = [
       { kind: "work", id: received.workId },
       { kind: "work_input", id: received.workInputId },
@@ -399,10 +441,11 @@ export async function POST(req: Request): Promise<Response> {
         workId: received.workId,
         workInputId: received.workInputId,
         outcomeRefs,
+        referenceText: `Outcome recorded for Work ${received.workId} (input ${received.workInputId}); ${outcomeRefs.length} reference(s). Financial detail is available after a current authorization check.`,
       });
       Object.assign(response, { assistantMessage });
     } catch (error) {
-      reportAncillaryProjectionFailure(projectionWarnings, "assistant message", error);
+      reportAncillaryProjectionFailure(projectionWarnings, "assistant message", projectionError(error));
     }
     try {
       await linkEmployeeConversationTurnToWork({
@@ -415,16 +458,20 @@ export async function POST(req: Request): Promise<Response> {
         ...(result.objective ? { objectiveLoopId: result.objective.objectiveLoopId } : {}),
       });
     } catch (error) {
-      reportAncillaryProjectionFailure(projectionWarnings, "objective link", error);
+      reportAncillaryProjectionFailure(projectionWarnings, "objective link", projectionError(error));
     }
     try {
       await recordWorkResponse({ tenantId: ctx.tenantId, workId: received.workId, workInputId: received.workInputId, userId: ctx.employeeId ?? ctx.userId }, response);
     } catch (error) {
-      reportAncillaryProjectionFailure(projectionWarnings, "response", error);
+      reportAncillaryProjectionFailure(projectionWarnings, "response", projectionError(error));
+      if (financialResult) await transitionWork(ctx.tenantId, received.workId, "completed", "economic_read_projection_degraded",
+        { workInputId: received.workInputId, stage: "response", code: "projection_persistence_failed" },
+        { expectedWorkInputId: received.workInputId, expectedStatus: "completed" }).catch(() => undefined);
     }
     return Response.json(response, {
       status: result.objective ? 202 : 201,
-      headers: result.query ? { "Server-Timing": `query;dur=${result.query.metadata.durationMs.toFixed(1)}` } : undefined,
+      headers: result.query ? { "Server-Timing": `query;dur=${result.query.metadata.durationMs.toFixed(1)}`,
+        ...(financialResult ? { "Cache-Control": "no-store" } : {}) } : undefined,
     });
   } catch (err) {
     return errorResponse(err);

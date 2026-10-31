@@ -1,0 +1,46 @@
+name: W123 ordinary Linux kernel verification
+on:
+  push:
+    branches: [cloud/postz-w1]
+    paths:
+      - .github/workflows/w123-native-verification.yml
+      - finnor-os/packages/governed-execution/**
+      - finnor-os/scripts/s6/**
+      - finnor-os/package-lock.json
+      - finnor-os/package.json
+permissions:
+  contents: read
+concurrency:
+  group: w123-kernel-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  kernel-comparison:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: finnor-os
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Reproduce original kernel escape and verify the repaired policy
+        run: node scripts/s6/compare-linux-policy-e2e.mjs "$RUNNER_TEMP/w123-kernel-comparison"
+      - name: Check source restoration after both actual kernel runs
+        if: ${{ always() }}
+        run: git diff --exit-code
+      - name: Retain controlled kernel evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: w123-kernel-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/w123-kernel-comparison/
+          if-no-files-found: error
+          retention-days: 7

@@ -114,8 +114,8 @@ async function readPolicy(ctx:PeMutationContext,value:unknown):Promise<Contingen
   try{if(!(await file.stat()).isFile()||(await file.stat()).size>8*1024*1024)throw unavailable();const data:unknown=JSON.parse(await file.readFile('utf8'));assertContingentPolicy(data);policy=data;}finally{await file.close();}
   if(policy.tenantId!==ctx.auth.tenantId||policy.principalId!==actor(ctx)||epistemicHash(policy.ref)!==epistemicHash(parsed.data))throw unavailable();return policy;
  }catch{throw unavailable();}}
-async function readable(ctx:PeMutationContext,policy:ContingentPolicy):Promise<void>{for(const pin of policy.bindings.beliefPins)await loadEnterpriseBeliefView(ctx,{root:pin.root as PeWorldRootRef});await recoverPolicyExperience(ctx,policy);}
-async function current(ctx:PeMutationContext,policy:ContingentPolicy):Promise<string|null>{
+async function readable(ctx:PeMutationContext,policy:ContingentPolicy,client?:PoolClient):Promise<void>{for(const pin of policy.bindings.beliefPins)await loadEnterpriseBeliefView(ctx,{root:pin.root as PeWorldRootRef},client);await recoverPolicyExperience(ctx,policy);}
+async function current(ctx:PeMutationContext,policy:ContingentPolicy,client?:PoolClient):Promise<string|null>{
  if(policy.bindings.modelRef.version==='postx-y2-strategic-response-v1'){
   try{await (await import('./strategic-response/store')).assertStrategicPolicyCurrent(ctx,policy);return null;}
   catch{return 'Y2_STRATEGIC_MODEL_POLICY_OR_ADMISSION_NOT_CURRENT';}
@@ -132,7 +132,7 @@ async function current(ctx:PeMutationContext,policy:ContingentPolicy):Promise<st
   return null;
  }catch(error){return (error as Error).message.match(/^[A-Z][A-Z0-9_]+$/)?.[0]??'R1_CURRENT_OWNER_BINDING_UNPASSED';}}
  if(Date.now()>=Date.parse(policy.validUntil))return 'POLICY_EXPIRED';if(!await controlSourcesCurrent(policy.compute.backend.sourceDigests))return 'S4_LOADED_METHOD_CHANGED';
- for(const pin of policy.bindings.beliefPins)if((await validateBeliefViewPin(ctx,pin)).status!=='CURRENT')return 'S1_SOURCE_RIGHTS_COVERAGE_OR_INTERPRETATION_CHANGED';
+ for(const pin of policy.bindings.beliefPins)if((await validateBeliefViewPin(ctx,pin,client)).status!=='CURRENT')return 'S1_SOURCE_RIGHTS_COVERAGE_OR_INTERPRETATION_CHANGED';
  try{await resolveEnterpriseInterventionModelForControl(ctx,policy.bindings.modelRef);}catch{return 'S3_MODEL_REVISED_REVOKED_OR_UNSUPPORTED';}
  return null;
 }
@@ -221,17 +221,17 @@ export async function synthesizeEnterpriseControl(ctx:PeMutationContext,input:{m
  return {...result,experience:events};
 }
 export interface R3ControlPolicyRead {schema:'finnor.s4.r3-policy-read.v1';policyRef:ExperimentRef}
-export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:R3ControlPolicyRead):Promise<Awaited<ReturnType<typeof import('./r3/control').readR3UsePolicy>>>;
-export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown):Promise<ContingentPolicy>;
-export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown){
+export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:R3ControlPolicyRead,client?:PoolClient):Promise<Awaited<ReturnType<typeof import('./r3/control').readR3UsePolicy>>>;
+export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown,client?:PoolClient):Promise<ContingentPolicy>;
+export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown,client?:PoolClient){
  if(value&&typeof value==='object'&&'schema' in value&&value.schema==='finnor.s4.r3-policy-read.v1')
   return (await import('./r3/control')).readR3UsePolicy(ctx,ExperimentRefSchema.parse((value as R3ControlPolicyRead).policyRef));
  const policy=await readPolicy(ctx,value);
  // Exact source resolution already authorizes and validates these same S1
  // pins. Keep that canonical current read and its durable publication fence.
- if(!policy.exactProfile)await readable(ctx,policy);
- if(await current(ctx,policy)){
-  if(policy.exactProfile)await readable(ctx,policy);
+ if(!policy.exactProfile)await readable(ctx,policy,client);
+ if(await current(ctx,policy,client)){
+  if(policy.exactProfile)await readable(ctx,policy,client);
   throw unavailable();
  }
  await recoverPolicyExperience(ctx,policy);return immutableControl(policy);

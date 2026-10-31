@@ -3,6 +3,8 @@ import { createHash } from 'node:crypto';
 import { open, readFile, realpath, stat, writeFile, mkdtemp, rm, chmod } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { basename, join } from 'node:path';
+import { nodeFilter } from './linux-node-policy.js';
+import { z } from 'zod';
 
 const sha256 = (bytes: Uint8Array | string) => createHash('sha256').update(bytes).digest('hex');
 
@@ -56,52 +58,6 @@ async function runtimeForKernel(supervisorNode: string) {
     supplementalManifestDigest: sha256(raw) };
 }
 
-/** Linux native ABI cBPF, including an ABI check and x32 refusal. No caller policy.
- * Threads must share VM/signal handlers/thread group and use only pthread flags.
- * clone3 returns ENOSYS so libc may use the separately checked clone syscall. */
-function nodeFilter(architecture: string): Buffer {
-  const arm = architecture === 'arm64';
-  const instructions: Array<[number, number, number, number]> = [
-    [0x20, 0, 0, 4], [0x15, 1, 0, arm ? 0xc00000b7 : 0xc000003e], [0x06, 0, 0, 0x80000000],
-    [0x20, 0, 0, 0], [0x45, 0, 1, 0x40000000], [0x06, 0, 0, 0x80000000],
-    [0x15, 0, 1, 435], [0x06, 0, 0, 0x00050026],
-  ];
-  const denied = arm ? [198, 199, 117, 33, 41, 40, 39, 224, 225, 142, 273, 105,
-    106, 104, 217, 218, 219, 97, 265, 268, 270, 271, 280, 282, 425, 438]
-    : [41, 53, 57, 58, 101, 133, 155, 165, 166, 167, 168, 169,
-      175, 176, 246, 248, 249, 250, 259, 272, 304, 308, 310, 311, 313, 321, 323, 425, 438];
-  // Landlock ABI 2 cannot mediate truncation, xattrs or chmod/utime. A fixed
-  // root hides host metadata; these syscall denials protect sibling jobs too.
-  denied.push(...(arm ? [45,46,52,53,54,55,88,129,130,131,154,157,...Array.from({length:12},(_,i)=>5+i)]
-    : [76,77,90,91,92,93,94,132,235,261,268,260,280,62,200,234,109,112,...Array.from({length:12},(_,i)=>188+i)]),424,434,437,452);
-  for (const syscall of denied)
-    instructions.push([0x15, 0, 1, syscall], [0x06, 0, 0, 0x00050001]);
-  // O_RDONLY|O_TRUNC bypasses ABI-2 write mediation. Ordinary writable opens
-  // remain available only where Landlock grants WRITE_FILE (private scratch).
-  for (const [syscall,flagsOffset] of (arm ? [[56,32]] : [[2,24],[257,32]]))
-    instructions.push([0x15,0,6,syscall!],[0x20,0,0,flagsOffset!],[0x45,0,3,0x200],
-      [0x54,0,0,3],[0x15,0,1,0],[0x06,0,0,0x00050001],[0x20,0,0,0]);
-  // Do not let a callee remove its parent-death guard. Thread naming and
-  // harmless privilege queries still use prctl during Node initialization.
-  instructions.push([0x15,0,4,arm?167:157],[0x20,0,0,16],[0x15,0,1,1],
-    [0x06,0,0,0x00050001],[0x20,0,0,0]);
-  const threadFlags = 0x01000000 | 0x00200000 | 0x00100000 | 0x00080000 | 0x00040000
-    | 0x00010000 | 0x00000800 | 0x00000400 | 0x00000200 | 0x00000100;
-  instructions.push(
-    [0x15, 0, 11, arm ? 220 : 56],
-    [0x20, 0, 0, 20], [0x15, 1, 0, 0], [0x06, 0, 0, 0x00050001],
-    [0x20, 0, 0, 16], [0x54, 0, 0, 0x00010900], [0x15, 1, 0, 0x00010900], [0x06, 0, 0, 0x00050001],
-    [0x20, 0, 0, 16], [0x45, 0, 1, (~threadFlags) >>> 0], [0x06, 0, 0, 0x00050001], [0x06, 0, 0, 0x7fff0000],
-    [0x06, 0, 0, 0x7fff0000],
-  );
-  const bytes = Buffer.alloc(instructions.length * 8);
-  instructions.forEach(([code, yes, no, value], i) => {
-    bytes.writeUInt16LE(code, i * 8); bytes[i * 8 + 2] = yes; bytes[i * 8 + 3] = no;
-    bytes.writeUInt32LE(value, i * 8 + 4);
-  });
-  return bytes;
-}
-
 export async function prepareLinuxNodeIsolation(scratch: string, node: string, options: { readOnlyScratch?: boolean } = {}) {
   if (process.platform !== 'linux' || !['x64', 'arm64'].includes(process.arch)) throw Error('ISOLATION_LINUX_ABI_UNSUPPORTED');
   if (process.getuid?.() === 0) throw Error('ISOLATION_NONROOT_REQUIRED');
@@ -142,11 +98,20 @@ export async function prepareLinuxNodeIsolation(scratch: string, node: string, o
   }catch(error){await cleanup();throw error;}
 }
 
+const processId=z.number().int().positive().max(0x7fffffff);
+const linuxBootstrapSchema=z.object({
+ schema:z.literal('finnor.s6.linux-bootstrap.v2'),pid:processId,parentPid:processId,
+ guardianPid:processId,guestPid:processId,guestParentPid:processId,processGroupId:processId,
+ lifetimeGuard:z.literal('TRUSTED_NONEXECUTING_PROCESS_GROUP_GUARD'),
+ uid:z.number().int().positive(),capabilities:z.literal(0),noNewPrivileges:z.literal(1),
+ fixedJail:z.literal(true),landlockAbi:z.number().int().min(2),filterSha256:z.string().regex(/^[a-f0-9]{64}$/),
+}).strict();
+
 export async function readLinuxBootstrap(path:string,pid:number|undefined,filterSha256:string){
  const fd=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW);
  try{const st=await fd.stat();if(!st.isFile()||st.size>4096||st.uid!==process.getuid?.()||st.nlink!==1)throw Error('ISOLATION_BOOTSTRAP_RECEIPT_CUSTODY');
-  const value=JSON.parse(await fd.readFile('utf8'));
-  if(value.schema!=='finnor.s6.linux-bootstrap.v1'||value.pid!==pid||!Number.isSafeInteger(value.parentPid)||value.parentPid<1||value.uid!==process.getuid?.()||value.capabilities!==0||value.noNewPrivileges!==1||value.fixedJail!==true||value.landlockAbi<2||value.filterSha256!==filterSha256||!/^[a-f0-9]{64}$/.test(filterSha256))throw Error('ISOLATION_BOOTSTRAP_RECEIPT_INVALID');
-  return value as {schema:string;pid:number;parentPid:number;uid:number;capabilities:0;noNewPrivileges:1;fixedJail:true;landlockAbi:number;filterSha256:string};
+  const value=linuxBootstrapSchema.parse(JSON.parse(await fd.readFile('utf8')));
+  if(value.pid!==pid||value.guardianPid!==pid||value.guestPid===pid||value.guestParentPid!==pid||value.processGroupId!==pid||value.parentPid!==process.pid||value.uid!==process.getuid?.()||value.filterSha256!==filterSha256||!/^[a-f0-9]{64}$/.test(filterSha256))throw Error('ISOLATION_BOOTSTRAP_RECEIPT_INVALID');
+  return value;
  }finally{await fd.close();}
 }

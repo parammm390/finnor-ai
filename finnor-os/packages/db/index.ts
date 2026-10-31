@@ -6,7 +6,7 @@
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "./schema";
-import { and, asc, desc, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
 import {connectWithExecutionDeadline,queryWithExecutionDeadline} from "./execution-deadline";
 import { CURRENT_MIGRATION_HEAD } from "./migration-head";
@@ -16,6 +16,15 @@ export { MAX_BACKGROUND_SCAN_BATCH, MAX_HIGH_EGRESS_ROWS, MAX_INSTRUCTION_EVENT_
 import { MAX_HIGH_EGRESS_ROWS, MAX_WORK_AGGREGATE_ROWS } from "./read-limits";
 import {
   CANONICAL_ENTITY_TYPES,
+  EconomicReadReplySchema,
+  EconomicReadRequestSchema,
+  ObjectiveEconomicQueryOriginSchema,
+  ObjectiveEconomicReadClaimSchema,
+  economicReadAcceptanceRequests,
+  economicReadReplyKey,
+  isEconomicReadIntent,
+  redactEconomicReadPayload,
+  storedEconomicQuery,
   assertExecutableVertical,
   isRetiredWaterAction,
   isRetiredWaterJob,
@@ -30,6 +39,8 @@ import {
   type EmployeeConversationThreadSummary,
   type EmployeePersonalMemory,
   type TenantVerticalIdentity,
+  type ObjectiveEconomicReadClaim,
+  type ObjectiveEconomicQueryOrigin,
 } from "@finnor/shared-types";
 
 export * from "./schema";
@@ -182,6 +193,13 @@ export function transactionClient(db: Db): pg.PoolClient {
   const client = scopedOrmClients.get(db);
   if (!client) throw new Error("A scoped transaction-local database is required");
   return client;
+}
+/** Mutation owners acquire this same-client fence before row or delta locks. */
+export async function lockTenantMaterialCutTx(db: Db, tenantId: string): Promise<void> {
+  await transactionClient(db).query(
+    "SELECT pg_advisory_xact_lock(hashtextextended('v3-material-cut:' || $1::uuid::text,0))",
+    [tenantId],
+  );
 }
 export function transactionDb(client: pg.PoolClient): Db {
   const target = {} as Db;
@@ -674,6 +692,16 @@ export interface ReceivedWork {
 export function workLifecycleOutcome(value: unknown): unknown {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
   const { response: _response, ...outcome } = value as Record<string, unknown>;
+  const query = jsonObject(outcome.query), request = jsonObject(query.request), result = jsonObject(query.result);
+  const financial = (intent: unknown) => intent === "company_revenue" || intent === "stock_quote";
+  if (financial(request.intent) || financial(result.intent) || result.economicRead !== undefined) {
+    // Historical full-query convenience outcomes are not a current financial
+    // disclosure grant. Shared projections get an allowlisted receipt reference.
+    const metadata = jsonObject(query.metadata);
+    return { kind: "operational_query",
+      ...(financial(request.intent) ? { intent: request.intent } : {}),
+      ...(isUuid(metadata.queryId as string | undefined) ? { queryId: metadata.queryId } : {}) };
+  }
   return Object.keys(outcome).length ? outcome : null;
 }
 
@@ -796,6 +824,9 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
   const contextSnapshotHash = contextSnapshot ? provenanceHash(contextSnapshot) : null;
   const contextCapturedAt = contextSnapshot ? provenanceCapturedAt(contextSnapshot) : null;
   return withTenant(params.tenantId, async (db) => {
+    // Canonical intake participates in the same material cut as its readers.
+    // Acquire before the input idempotency, Work row and source/delta locks.
+    await lockTenantMaterialCutTx(db, params.tenantId);
     // Work cannot be created before the input's two idempotency claims are known to
     // be free. Serialize both claims so callers using different work/idempotency IDs
     // for the same instruction cannot race each other into an orphan Work.
@@ -853,6 +884,7 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
       )) throw new ExactWorkIntakeConflict();
       const [receipt] = await db.select({ response: schema.workInputResponses.response }).from(schema.workInputResponses).where(and(
         eq(schema.workInputResponses.tenantId, params.tenantId), eq(schema.workInputResponses.workInputId, input.id),
+        eq(schema.workInputResponses.replyKey, "input"),
       )).limit(1);
       const response = receipt?.response ?? legacyInputResponse(canonicalWork.finalOutcome, input);
       return {
@@ -1259,6 +1291,7 @@ export async function transitionWorkTx(
   payload: Record<string, unknown> = {},
   patch: TransitionWorkPatch = {},
 ): Promise<void> {
+  await lockTenantMaterialCutTx(db, tenantId);
   // Work identity is immutable here. Serialize status/event writers without
   // blocking foreign-key KEY SHARE locks held by concurrent evidence appends.
   // FOR UPDATE created a Work -> ObjectiveStep -> Work cycle under real workers.
@@ -1337,8 +1370,8 @@ export async function transitionWork(
   await withTenant(tenantId, (db) => transitionWorkTx(db, tenantId, workId, toStatus, eventType, payload, patch));
 }
 
-/** A reply is write-once for one input and its authenticated principal. Recording
- * it neither races nor modifies the canonical Work completion evidence. */
+/** First private reply wins. HTTP presentation is not a durable financial
+ * envelope replacement: compare its complete canonical query, never UPDATE. */
 export async function recordWorkResponse(
   scope: { tenantId: string; workId: string; workInputId: string; userId?: string },
   response: Record<string, unknown>,
@@ -1348,16 +1381,59 @@ export async function recordWorkResponse(
   // other toJSON values), not the in-memory object graph from a canonical read.
   const wireResponse = JSON.parse(JSON.stringify(response)) as Record<string, unknown>;
   await withTenant(scope.tenantId, async (db) => {
+    await db.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`economic-input:${scope.tenantId}:${scope.workInputId}`}, 0))`);
     const [input] = await db.select().from(schema.workInputs).where(and(
       eq(schema.workInputs.tenantId, scope.tenantId), eq(schema.workInputs.workId, scope.workId), eq(schema.workInputs.id, scope.workInputId),
     )).limit(1);
     if (!input || input.createdBy !== (userId ?? null)) throw new ExactWorkIntakeConflict();
-    await db.insert(schema.workInputResponses).values({ tenantId: scope.tenantId, workInputId: input.id, response: wireResponse }).onConflictDoNothing();
+    await db.insert(schema.workInputResponses).values({ tenantId: scope.tenantId, workInputId: input.id, replyKey: "input", response: wireResponse }).onConflictDoNothing();
     const [stored] = await db.select({ response: schema.workInputResponses.response }).from(schema.workInputResponses).where(and(
       eq(schema.workInputResponses.tenantId, scope.tenantId), eq(schema.workInputResponses.workInputId, input.id),
+      eq(schema.workInputResponses.replyKey, "input"),
     )).limit(1);
-    if (!stored || canonicalJson(stored.response) !== canonicalJson(wireResponse)) throw new ExactWorkIntakeConflict();
+    if (!stored) throw new ExactWorkIntakeConflict();
+    if (canonicalJson(stored.response) === canonicalJson(wireResponse)) return;
+    const original = EconomicReadReplySchema.safeParse(stored.response), query = storedEconomicQuery(wireResponse);
+    if (original.success && query && canonicalJson(original.data.query) === canonicalJson(query)
+        && !original.data.objective && wireResponse.workId === scope.workId
+        && wireResponse.workInputId === input.id && wireResponse.instructionId === input.instructionId) {
+      // The identical immutable canonical query already owns the input. The
+      // caller can emit its answer/headers/duplicate flag without persisting them.
+      return;
+    }
+    throw new ExactWorkIntakeConflict();
   }, userId);
+}
+
+/** Authenticated original-input custody. Neither a Work ID nor supplied IDs are
+ * permission to see a different employee's response. No shared outcome fallback. */
+export async function readWorkInputResponse(scope: {
+  tenantId: string; workId: string; workInputId: string; userId: string;
+  objectiveStepId?: string;
+  objectiveClaim?: ObjectiveEconomicReadClaim;
+}) {
+  if (!isUuid(scope.userId)) throw new ExactWorkIntakeConflict();
+  return withTenantTransaction(scope.tenantId, { userId: scope.userId, readOnly: true }, async (db) => {
+    const [input] = await db.select().from(schema.workInputs).where(and(
+      eq(schema.workInputs.tenantId, scope.tenantId), eq(schema.workInputs.workId, scope.workId), eq(schema.workInputs.id, scope.workInputId),
+    )).limit(1);
+    if (!input || input.createdBy !== scope.userId) throw new ExactWorkIntakeConflict();
+    const origin = scope.objectiveStepId
+      ? await objectiveEconomicReadOriginTx(db, scope, scope.objectiveStepId, scope.objectiveClaim)
+      : null;
+    if (!scope.objectiveStepId && scope.objectiveClaim) throw new ExactWorkIntakeConflict();
+    const [stored] = await db.select({ response: schema.workInputResponses.response }).from(schema.workInputResponses).where(and(
+      eq(schema.workInputResponses.tenantId, scope.tenantId), eq(schema.workInputResponses.workInputId, input.id),
+      eq(schema.workInputResponses.replyKey, economicReadReplyKey(scope.objectiveStepId)),
+    )).limit(1);
+    const queryExecutions = await db.select().from(schema.workQueryExecutions).where(and(
+      eq(schema.workQueryExecutions.tenantId, scope.tenantId), eq(schema.workQueryExecutions.workId, scope.workId),
+      eq(schema.workQueryExecutions.workInputId, input.id),
+      scope.objectiveStepId ? eq(schema.workQueryExecutions.objectiveStepId, scope.objectiveStepId) : isNull(schema.workQueryExecutions.objectiveStepId),
+      inArray(schema.workQueryExecutions.intent, ["company_revenue", "stock_quote"]),
+    )).limit(2);
+    return { input, response: stored?.response ?? null, queryExecutions, origin };
+  });
 }
 
 const WORK_RECOVERY_CLAIM_TTL_MS = 15 * 60_000;
@@ -1615,6 +1691,7 @@ export async function persistSelectedWorkPlan(params: PersistSelectedWorkPlanPar
 
 /** Same owner boundary on an already authenticated transaction. */
 export async function persistSelectedWorkPlanTx(db: Db, params: Parameters<typeof persistSelectedWorkPlan>[0]): ReturnType<typeof persistSelectedWorkPlan> {
+    await lockTenantMaterialCutTx(db, params.tenantId);
     // The Work identity is immutable. Serialize competing plan writers while
     // permitting specialist-finalization foreign-key KEY SHARE checks. A full
     // UPDATE lock here can deadlock with the Plan's assignment fencing trigger.
@@ -1790,6 +1867,7 @@ export async function completeWorkPlanRevision(params: { tenantId: string; planR
 /** Same canonical completion verifier, usable in an existing atomic owner publication. */
 export async function completeWorkPlanRevisionTx(db: Db, params: { tenantId: string; planRevisionId: string; completionProof: Record<string, unknown> }): Promise<boolean> {
   if (params.completionProof.version !== 1 || params.completionProof.verified !== true) throw new Error("A verified CompletionProof is required");
+    await lockTenantMaterialCutTx(db, params.tenantId);
     await db.execute(sql`SELECT id FROM ${schema.workPlanRevisions} WHERE ${schema.workPlanRevisions.id}=${params.planRevisionId} AND ${schema.workPlanRevisions.tenantId}=${params.tenantId} FOR NO KEY UPDATE`);
     const [revision] = await db.select().from(schema.workPlanRevisions).where(and(
       eq(schema.workPlanRevisions.tenantId, params.tenantId),
@@ -2091,7 +2169,35 @@ export async function workAggregate(tenantId: string, workId: string): Promise<W
         ? or(eq(schema.integrationEvents.workId, workId), inArray(schema.integrationEvents.id, wakeEventIds))
         : eq(schema.integrationEvents.workId, workId),
     )).orderBy(asc(schema.integrationEvents.occurredAt), asc(schema.integrationEvents.id)).limit(MAX_WORK_AGGREGATE_ROWS + 1));
-    return { work: { ...work, finalOutcome: workLifecycleOutcome(work.finalOutcome) }, inputs, plannerAttempts, planRevisions, actions, businessEffects, approvals, workflowRuns, workflowSteps, receipts, repairs, events, queryExecutions, entityLinks, operations, operationTargets, operationEvents, objectiveLoop: objectiveLoop ?? null, objectiveSteps, objectivePlannerAttempts, workforceAssignments: workforceAssignmentRows, recoveryDecisions, eventWaits, wakeClaims, integrationEvents, read: { limit: MAX_WORK_AGGREGATE_ROWS, complete: truncatedTables.length === 0, truncatedTables } };
+    const financialIds = new Set(queryExecutions.filter(row => isEconomicReadIntent(row.intent)).map(row => row.id));
+    const sharedSteps = objectiveSteps.map(row => {
+      const decision = jsonObject(row.decision), request = jsonObject(decision.request);
+      const financial = isEconomicReadIntent(request.intent) || Boolean(row.queryExecutionId && financialIds.has(row.queryExecutionId));
+      return { ...row, claimOwner: null,
+        inspection: redactEconomicReadPayload(row.inspection),
+        observation: financial ? { kind: "private_economic_query", queryExecutionId: row.queryExecutionId } : redactEconomicReadPayload(row.observation),
+        decision: financial ? { kind: "query", request, reason: "Private economic query observation." } : redactEconomicReadPayload(row.decision),
+        decisionReason: financial ? "Private economic query observation." : row.decisionReason,
+        failure: financial && row.failure ? { code: "ECONOMIC_READ_UNAVAILABLE" } : redactEconomicReadPayload(row.failure),
+        successVerification: redactEconomicReadPayload(row.successVerification),
+        verificationResult: redactEconomicReadPayload(row.verificationResult),
+      };
+    });
+    return { work: { ...work, finalOutcome: workLifecycleOutcome(work.finalOutcome) }, inputs,
+      plannerAttempts: plannerAttempts.map(row => ({ ...row, decisionContextSnapshot: redactEconomicReadPayload(row.decisionContextSnapshot),
+        planningSnapshot: redactEconomicReadPayload(row.planningSnapshot), plannerResult: redactEconomicReadPayload(row.plannerResult),
+        compilationResult: redactEconomicReadPayload(row.compilationResult), failure: redactEconomicReadPayload(row.failure) })),
+      planRevisions, actions, businessEffects, approvals, workflowRuns, workflowSteps, receipts, repairs,
+      events: events.map(row => ({ ...row, payload: redactEconomicReadPayload(row.payload) })),
+      queryExecutions: queryExecutions.map(row => ({ ...row, objectiveClaimOwner: null })),
+      entityLinks, operations, operationTargets, operationEvents,
+      objectiveLoop: objectiveLoop ? { ...objectiveLoop, leaseOwner: null, lastObservation: redactEconomicReadPayload(objectiveLoop.lastObservation),
+        successVerification: redactEconomicReadPayload(objectiveLoop.successVerification) } : null,
+      objectiveSteps: sharedSteps,
+      objectivePlannerAttempts: objectivePlannerAttempts.map(row => ({ ...row,
+        decision: redactEconomicReadPayload(row.decision), failure: redactEconomicReadPayload(row.failure) })),
+      workforceAssignments: workforceAssignmentRows, recoveryDecisions, eventWaits, wakeClaims, integrationEvents,
+      read: { limit: MAX_WORK_AGGREGATE_ROWS, complete: truncatedTables.length === 0, truncatedTables } };
   });
 }
 
@@ -2110,6 +2216,11 @@ export interface BeginWorkQueryExecutionParams {
   intent: WorkQueryIntent;
   request: Record<string, unknown>;
   executionKey: string;
+  /** Financial claims resolve the existing exact input, not a caller's role. */
+  userId?: string;
+  /** Only an existing explicit Work recovery lease may rearm an uncommitted read. */
+  recoveryAttemptKey?: string;
+  objectiveClaim?: ObjectiveEconomicReadClaim;
 }
 
 export interface WorkQueryExecutionClaim {
@@ -2121,6 +2232,13 @@ export interface WorkQueryExecutionClaim {
   claimed: boolean;
   resultSummary: unknown;
   rowCount: number;
+}
+
+export class WorkQueryInProgressError extends Error {
+  constructor(public readonly workId: string, public readonly workInputId: string) {
+    super("The exact query input is already being read; replay its committed reply or wait for explicit recovery.");
+    this.name = "WorkQueryInProgressError";
+  }
 }
 
 function boundedJson(value: unknown, maxBytes: number): unknown {
@@ -2147,10 +2265,12 @@ function canonicalJson(value: unknown): string {
 }
 
 function assertSameWorkQueryExecution(
-  existing: { intent: string; request: unknown; workInputId: string | null },
+  existing: { intent: string; request: unknown; workInputId: string | null; objectiveStepId?: string | null },
   params: BeginWorkQueryExecutionParams,
 ): void {
-  if (existing.intent !== params.intent || existing.workInputId !== (params.workInputId ?? null) || canonicalJson(existing.request) !== canonicalJson(params.request)) {
+  if (existing.intent !== params.intent || existing.workInputId !== (params.workInputId ?? null)
+      || (existing.objectiveStepId ?? null) !== (params.objectiveClaim?.stepId ?? null)
+      || canonicalJson(existing.request) !== canonicalJson(params.request)) {
     throw new Error("executionKey is already bound to a different operational query");
   }
 }
@@ -2159,33 +2279,180 @@ function validateWorkQueryExecutionKey(executionKey: string): void {
   if (!executionKey.trim() || executionKey.length > 256) throw new Error("executionKey must be non-empty and at most 256 characters");
 }
 
+/** Native provenance is read from the selected immutable owner, never supplied
+ * as a caller-authored origin. A claim is additionally required to create/rearm/
+ * commit a generated read. Read-only retrieval may use a completed current plan. */
+async function objectiveEconomicReadOriginTx(
+  db: Db,
+  scope: { tenantId: string; workId: string; workInputId: string; userId: string },
+  stepId: string,
+  claim?: ObjectiveEconomicReadClaim,
+  lock = false,
+  expectedRequest?: unknown,
+): Promise<ObjectiveEconomicQueryOrigin> {
+  if (claim && ObjectiveEconomicReadClaimSchema.parse(claim).stepId !== stepId) throw new ExactWorkIntakeConflict();
+  const [stepIdentity] = await db.select({ loopId: schema.workObjectiveSteps.objectiveLoopId }).from(schema.workObjectiveSteps)
+    .where(and(eq(schema.workObjectiveSteps.tenantId, scope.tenantId), eq(schema.workObjectiveSteps.id, stepId),
+      eq(schema.workObjectiveSteps.workId, scope.workId))).limit(1);
+  if (!stepIdentity) throw new ExactWorkIntakeConflict();
+  if (lock) {
+    await db.execute(sql`SELECT id FROM ${schema.workObjectiveLoops} WHERE tenant_id=${scope.tenantId} AND id=${stepIdentity.loopId} FOR NO KEY UPDATE`);
+    await db.execute(sql`SELECT id FROM ${schema.works} WHERE tenant_id=${scope.tenantId} AND id=${scope.workId} FOR NO KEY UPDATE`);
+  }
+  const [step] = await db.select().from(schema.workObjectiveSteps).where(and(
+    eq(schema.workObjectiveSteps.tenantId, scope.tenantId), eq(schema.workObjectiveSteps.id, stepId))).limit(1);
+  const [loop] = await db.select().from(schema.workObjectiveLoops).where(and(
+    eq(schema.workObjectiveLoops.tenantId, scope.tenantId), eq(schema.workObjectiveLoops.id, stepIdentity.loopId),
+    eq(schema.workObjectiveLoops.workId, scope.workId))).limit(1);
+  const [plan] = step?.planRevisionId ? await db.select().from(schema.workPlanRevisions).where(and(
+    eq(schema.workPlanRevisions.tenantId, scope.tenantId), eq(schema.workPlanRevisions.id, step.planRevisionId),
+    eq(schema.workPlanRevisions.workId, scope.workId))).limit(1) : [];
+  const [input] = await db.select().from(schema.workInputs).where(and(
+    eq(schema.workInputs.tenantId, scope.tenantId), eq(schema.workInputs.id, scope.workInputId),
+    eq(schema.workInputs.workId, scope.workId))).limit(1);
+  const [latest] = await db.select({ id: schema.workInputs.id }).from(schema.workInputs).where(and(
+    eq(schema.workInputs.tenantId, scope.tenantId), eq(schema.workInputs.workId, scope.workId)))
+    .orderBy(desc(schema.workInputs.createdAt), desc(schema.workInputs.id)).limit(1);
+  const [principal] = await db.select({ id: schema.users.id }).from(schema.users).where(and(
+    eq(schema.users.tenantId, scope.tenantId), eq(schema.users.id, scope.userId), eq(schema.users.status, "active"))).limit(1);
+  const [work] = await db.select({ status: schema.works.status }).from(schema.works).where(and(
+    eq(schema.works.tenantId, scope.tenantId), eq(schema.works.id, scope.workId))).limit(1);
+  if (!step || !loop || !plan || !input || !principal || !work || input.createdBy !== scope.userId
+      || loop.createdBy !== scope.userId || latest?.id !== input.id || plan.workInputId !== input.id
+      || plan.objectiveLoopId !== loop.id || step.objectiveRevision !== loop.revision
+      || step.executionRole !== "node" || !step.planNodeId || !step.budgetReservedAt || step.budgetReservationKind !== "query"
+      || !["active", "completed"].includes(plan.status) || ["cancelled", "failed", "superseded"].includes(step.executionState ?? "")
+      || ["cancelled", "failed"].includes(work.status)) throw new ExactWorkIntakeConflict();
+  const goal = jsonObject(plan.goalSpec), graph = jsonObject(plan.planGraph), snapshot = jsonObject(plan.planningSnapshot);
+  const activeObjective = jsonObject(snapshot.activeObjective), accepted = economicReadAcceptanceRequests(loop.successCondition);
+  const nodes = Array.isArray(graph.nodes) ? graph.nodes.map(jsonObject) : [];
+  const node = nodes.find(item => item.id === step.planNodeId);
+  const goalCriteria = Array.isArray(goal.criteria) ? goal.criteria.map(jsonObject) : [];
+  const acceptedRequest = (value: unknown) => accepted?.some(request => canonicalJson(request) === canonicalJson(value)) === true;
+  if (!accepted || !node || node.kind !== "query" || !EconomicReadRequestSchema.safeParse(node.request).success
+      || !acceptedRequest(node.request) || !nodes.length || nodes.length > 256
+      || nodes.some(item => item.kind === "query" ? !acceptedRequest(item.request)
+        : item.kind !== "check" || !goalCriteria.some(criterion => criterion.id === item.criterionId))
+      || goal.workId !== scope.workId || goal.workInputId !== input.id || goal.statement !== loop.objective.trim()
+      || input.instructionText !== loop.objective || canonicalJson(goal.successCondition) !== canonicalJson(loop.successCondition)
+      || goal.semanticHash !== plan.goalHash || graph.goalHash !== plan.goalHash || graph.semanticHash !== plan.semanticHash
+      || snapshot.workInputId !== input.id || activeObjective.id !== loop.id || activeObjective.revision !== loop.revision
+      || activeObjective.successConditionHash !== `sha256:${createHash("sha256").update(canonicalJson(loop.successCondition)).digest("hex")}`)
+    throw new ExactWorkIntakeConflict();
+  if (expectedRequest !== undefined && canonicalJson(node.request) !== canonicalJson(expectedRequest))
+    throw new ExactWorkIntakeConflict();
+  const [receipt] = await db.select({ id: schema.workQueryExecutions.id, request: schema.workQueryExecutions.request,
+    workId: schema.workQueryExecutions.workId, inputId: schema.workQueryExecutions.workInputId })
+    .from(schema.workQueryExecutions).where(and(eq(schema.workQueryExecutions.tenantId, scope.tenantId),
+      eq(schema.workQueryExecutions.objectiveStepId, step.id))).limit(1);
+  if (receipt && (receipt.workId !== scope.workId || receipt.inputId !== input.id
+      || canonicalJson(receipt.request) !== canonicalJson(node.request))
+      || step.queryExecutionId && receipt?.id !== step.queryExecutionId) throw new ExactWorkIntakeConflict();
+  if (claim && (plan.status !== "active" || step.completedAt || step.claimOwner !== claim.leaseOwner
+      || !step.claimUntil || step.claimUntil <= new Date() || loop.deadlineAt <= new Date()
+      || !["claimed", "running"].includes(step.executionState ?? "") || loop.state !== "continue" || loop.leaseOwner !== claim.leaseOwner
+      || !["received", "understanding", "actionable", "awaiting_approval", "executing", "recovery"].includes(work.status)
+      || loop.queryCount > loop.maxQueries || loop.nodeAttemptCount > loop.maxNodeAttempts))
+    throw new ExactWorkIntakeConflict();
+  return ObjectiveEconomicQueryOriginSchema.parse({
+    kind: "objective_query", objectiveLoopId: loop.id, objectiveRevision: loop.revision,
+    planRevisionId: plan.id, planNodeId: step.planNodeId, objectiveStepId: step.id, attemptNumber: step.attemptNumber ?? 1,
+    originalPrincipalId: scope.userId, originalWorkInputId: input.id, originalInstructionId: input.instructionId,
+    originalInputSha256: createHash("sha256").update(input.instructionText, "utf8").digest("hex"),
+    planSemanticHash: plan.semanticHash, nodeSemanticHash: node.semanticHash, goalSemanticHash: plan.goalHash,
+    acceptanceHash: activeObjective.successConditionHash,
+  });
+}
+
 /** Claims one idempotent query execution under a tenant Work. The Work/Input
  * ownership checks are explicit even though RLS also protects these tables. */
 export async function beginWorkQueryExecution(params: BeginWorkQueryExecutionParams): Promise<WorkQueryExecutionClaim> {
   validateWorkQueryExecutionKey(params.executionKey);
+  const financial = params.intent === "company_revenue" || params.intent === "stock_quote";
+  if (financial && (!params.workInputId || !isUuid(params.userId))) throw new ExactWorkIntakeConflict();
+  if (params.objectiveClaim && (!financial || params.executionKey !== `objective-economic:${params.objectiveClaim.stepId}`))
+    throw new ExactWorkIntakeConflict();
   return withTenant(params.tenantId, async (db) => {
-    const [work] = await db.select({ id: schema.works.id }).from(schema.works).where(and(
+    if (financial) await db.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`economic-input:${params.tenantId}:${params.workInputId}`}, 0))`);
+    const [work] = await db.select().from(schema.works).where(and(
       eq(schema.works.id, params.workId),
       eq(schema.works.tenantId, params.tenantId),
     )).limit(1);
     if (!work) throw new Error("Work not found");
+    if (params.objectiveClaim) {
+      // Take the tenant material fence BEFORE the claim path's
+      // ObjectiveLoop/Work row locks and the rearm update, matching the
+      // fence-first order of transitionWorkTx/persistSelectedWorkPlanTx/
+      // completeWorkPlanRevisionTx/finishIteration. Row-locks-first here
+      // deadlocked against those owners under concurrent control (R2).
+      await lockTenantMaterialCutTx(db, params.tenantId);
+      await objectiveEconomicReadOriginTx(db,
+      { tenantId: params.tenantId, workId: params.workId, workInputId: params.workInputId!, userId: params.userId! },
+      params.objectiveClaim.stepId, params.objectiveClaim, true, params.request);
+    }
 
     if (params.workInputId) {
-      const [input] = await db.select({ id: schema.workInputs.id }).from(schema.workInputs).where(and(
+      const [input] = await db.select().from(schema.workInputs).where(and(
         eq(schema.workInputs.id, params.workInputId),
         eq(schema.workInputs.workId, params.workId),
         eq(schema.workInputs.tenantId, params.tenantId),
       )).limit(1);
       if (!input) throw new Error("Work input not found");
+      if (financial && input.createdBy !== params.userId) throw new ExactWorkIntakeConflict();
     }
 
-    const [existing] = await db.select().from(schema.workQueryExecutions).where(and(
+    const matches = await db.select().from(schema.workQueryExecutions).where(and(
       eq(schema.workQueryExecutions.tenantId, params.tenantId),
       eq(schema.workQueryExecutions.workId, params.workId),
-      eq(schema.workQueryExecutions.executionKey, params.executionKey),
-    )).limit(1);
+      // Input identity survives a no-key intake and the real retry route. It is
+      // never replaced by a fresh execution key on recovery.
+      financial ? or(and(eq(schema.workQueryExecutions.workInputId, params.workInputId!),
+        params.objectiveClaim ? eq(schema.workQueryExecutions.objectiveStepId, params.objectiveClaim.stepId) : isNull(schema.workQueryExecutions.objectiveStepId)),
+        eq(schema.workQueryExecutions.executionKey, params.executionKey))
+        : eq(schema.workQueryExecutions.executionKey, params.executionKey),
+    )).limit(financial ? 2 : 1);
+    if (matches.length > 1) throw new ExactWorkIntakeConflict();
+    const existing = matches[0];
     if (existing) {
       assertSameWorkQueryExecution(existing, params);
+      if (financial && existing.status !== "succeeded" && (params.recoveryAttemptKey || params.objectiveClaim)) {
+        const [stored] = await db.select({ id: schema.workInputResponses.workInputId }).from(schema.workInputResponses).where(and(
+          eq(schema.workInputResponses.tenantId, params.tenantId), eq(schema.workInputResponses.workInputId, params.workInputId!),
+          eq(schema.workInputResponses.replyKey, economicReadReplyKey(params.objectiveClaim?.stepId)),
+        )).limit(1);
+        if (!stored && params.objectiveClaim && existing.objectiveClaimOwner !== params.objectiveClaim.leaseOwner) {
+          // An expired native owner may be replaced only by the current claim.
+          // Each rearm spends additional canonical query/attempt budget.
+          const [spent] = await db.update(schema.workObjectiveLoops).set({
+            queryCount: sql`${schema.workObjectiveLoops.queryCount}+1`,
+            nodeAttemptCount: sql`${schema.workObjectiveLoops.nodeAttemptCount}+1`, updatedAt: new Date(),
+          }).where(and(eq(schema.workObjectiveLoops.tenantId, params.tenantId),
+            eq(schema.workObjectiveLoops.id, (await db.select({ id: schema.workObjectiveSteps.objectiveLoopId })
+              .from(schema.workObjectiveSteps).where(eq(schema.workObjectiveSteps.id, params.objectiveClaim.stepId)).limit(1))[0]!.id),
+            lt(schema.workObjectiveLoops.queryCount, schema.workObjectiveLoops.maxQueries),
+            lt(schema.workObjectiveLoops.nodeAttemptCount, schema.workObjectiveLoops.maxNodeAttempts))).returning({ id: schema.workObjectiveLoops.id });
+          if (!spent) throw new ExactWorkIntakeConflict();
+          await db.update(schema.workQueryExecutions).set({ status: "running", failure: null, completedAt: null,
+            resultSummary: null, rowCount: 0, objectiveClaimOwner: params.objectiveClaim.leaseOwner })
+            .where(eq(schema.workQueryExecutions.id, existing.id));
+          return { id: existing.id, workId: existing.workId, workInputId: existing.workInputId, executionKey: existing.executionKey,
+            status: "running", claimed: true, resultSummary: null, rowCount: 0 };
+        }
+        const recovery = jsonObject(work.recovery);
+        const claimedAt = typeof recovery.claimedAt === "string" ? Date.parse(recovery.claimedAt) : Number.NaN;
+        const [latest] = await db.select({ id: schema.workInputs.id }).from(schema.workInputs).where(and(
+          eq(schema.workInputs.tenantId, params.tenantId), eq(schema.workInputs.workId, params.workId),
+        )).orderBy(desc(schema.workInputs.createdAt), desc(schema.workInputs.id)).limit(1);
+        if (!params.objectiveClaim && !stored && latest?.id === params.workInputId && recovery.status === "claimed"
+            && recovery.attemptKey === params.recoveryAttemptKey && recovery.requestedBy === params.userId
+            && Number.isFinite(claimedAt) && Date.now() >= claimedAt && Date.now() - claimedAt < WORK_RECOVERY_CLAIM_TTL_MS
+            && !["completed", "cancelled", "failed"].includes(work.status)) {
+          await db.update(schema.workQueryExecutions).set({ status: "running", failure: null, completedAt: null,
+            resultSummary: null, rowCount: 0 }).where(eq(schema.workQueryExecutions.id, existing.id));
+          return { id: existing.id, workId: existing.workId, workInputId: existing.workInputId, executionKey: existing.executionKey,
+            status: "running", claimed: true, resultSummary: null, rowCount: 0 };
+        }
+      }
       return {
         id: existing.id,
         workId: existing.workId,
@@ -2202,6 +2469,8 @@ export async function beginWorkQueryExecution(params: BeginWorkQueryExecutionPar
       tenantId: params.tenantId,
       workId: params.workId,
       workInputId: params.workInputId ?? null,
+      objectiveStepId: params.objectiveClaim?.stepId ?? null,
+      objectiveClaimOwner: params.objectiveClaim?.leaseOwner ?? null,
       intent: params.intent,
       request: params.request,
       executionKey: params.executionKey,
@@ -2241,7 +2510,7 @@ export async function beginWorkQueryExecution(params: BeginWorkQueryExecutionPar
       resultSummary: raced.resultSummary,
       rowCount: raced.rowCount,
     };
-  });
+  }, params.userId);
 }
 
 export interface FinishWorkQueryExecutionParams {
@@ -2252,6 +2521,7 @@ export interface FinishWorkQueryExecutionParams {
   durationMs: number;
   resultSummary?: unknown;
   failure?: unknown;
+  objectiveClaim?: ObjectiveEconomicReadClaim;
 }
 
 /** Completes a query execution with a bounded summary and no raw result payload. */
@@ -2269,8 +2539,73 @@ export async function finishWorkQueryExecution(params: FinishWorkQueryExecutionP
     }).where(and(
       eq(schema.workQueryExecutions.id, params.executionId),
       eq(schema.workQueryExecutions.tenantId, params.tenantId),
+      params.objectiveClaim ? and(eq(schema.workQueryExecutions.objectiveStepId, params.objectiveClaim.stepId),
+        eq(schema.workQueryExecutions.objectiveClaimOwner, params.objectiveClaim.leaseOwner))
+        : isNull(schema.workQueryExecutions.objectiveStepId),
+      // A later exception cannot turn a committed original reply into failure.
+      or(sql`${schema.workQueryExecutions.intent} NOT IN ('company_revenue','stock_quote')`, eq(schema.workQueryExecutions.status, "running")),
     ));
   });
+}
+
+/** One existing-owner transaction commits both original private reply and
+ * succeeded query receipt. Ancillary trace/HTTP projection cannot split custody. */
+export async function recordWorkQueryResponse(
+  scope: { tenantId: string; workId: string; workInputId: string; userId: string; objectiveClaim?: ObjectiveEconomicReadClaim },
+  response: unknown,
+) {
+  const proposed = EconomicReadReplySchema.parse(response);
+  if (proposed.workId !== scope.workId || proposed.workInputId !== scope.workInputId || !isUuid(scope.userId))
+    throw new ExactWorkIntakeConflict();
+  return withTenant(scope.tenantId, async (db) => {
+    await db.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${`economic-input:${scope.tenantId}:${scope.workInputId}`}, 0))`);
+    const [input] = await db.select().from(schema.workInputs).where(and(
+      eq(schema.workInputs.tenantId, scope.tenantId), eq(schema.workInputs.workId, scope.workId), eq(schema.workInputs.id, scope.workInputId),
+    )).limit(1);
+    if (!input || input.createdBy !== scope.userId || input.instructionId !== proposed.instructionId) throw new ExactWorkIntakeConflict();
+    const origin = scope.objectiveClaim
+      ? await objectiveEconomicReadOriginTx(db, scope, scope.objectiveClaim.stepId, scope.objectiveClaim, true, proposed.query.request) : null;
+    if (canonicalJson(origin) !== canonicalJson(proposed.objective ?? null)) throw new ExactWorkIntakeConflict();
+    const replyKey = economicReadReplyKey(scope.objectiveClaim?.stepId);
+    const [execution] = await db.select().from(schema.workQueryExecutions).where(and(
+      eq(schema.workQueryExecutions.tenantId, scope.tenantId), eq(schema.workQueryExecutions.workId, scope.workId),
+      eq(schema.workQueryExecutions.workInputId, scope.workInputId), eq(schema.workQueryExecutions.id, proposed.query.result.execution.id),
+    )).limit(1);
+    if (!execution || execution.executionKey !== proposed.query.result.execution.executionKey
+        || execution.objectiveStepId !== (scope.objectiveClaim?.stepId ?? null)
+        || scope.objectiveClaim && execution.objectiveClaimOwner !== scope.objectiveClaim.leaseOwner
+        || execution.intent !== proposed.query.request.intent || canonicalJson(execution.request) !== canonicalJson(proposed.query.request))
+      throw new ExactWorkIntakeConflict();
+    const [stored] = await db.select({ response: schema.workInputResponses.response }).from(schema.workInputResponses).where(and(
+      eq(schema.workInputResponses.tenantId, scope.tenantId), eq(schema.workInputResponses.workInputId, input.id),
+      eq(schema.workInputResponses.replyKey, replyKey),
+    )).limit(1);
+    // A late/recovery reader can only return the committed winner. It may not
+    // overwrite that reply, reround its amounts or invent a new observedAt.
+    if (stored) {
+      const body = jsonObject(stored.response), query = storedEconomicQuery(body);
+      const original = EconomicReadReplySchema.parse(origin ? body
+        : { query, workId: body.workId, workInputId: body.workInputId, instructionId: body.instructionId });
+      if (execution.status !== "succeeded" || original.workId !== scope.workId || original.workInputId !== scope.workInputId
+          || original.instructionId !== input.instructionId || original.query.result.execution.id !== execution.id
+          || original.query.result.execution.executionKey !== execution.executionKey
+          || canonicalJson(original.query.request) !== canonicalJson(execution.request)
+          || canonicalJson(original.objective ?? null) !== canonicalJson(origin)) throw new ExactWorkIntakeConflict();
+      return original;
+    }
+    if (execution.status !== "running") throw new ExactWorkIntakeConflict();
+    await db.insert(schema.workInputResponses).values({ tenantId: scope.tenantId, workInputId: input.id, replyKey, response: proposed });
+    const [finished] = await db.update(schema.workQueryExecutions).set({ status: "succeeded", rowCount: proposed.query.result.count,
+      durationMs: Math.round(proposed.query.metadata.durationMs), failure: null, completedAt: new Date(proposed.query.metadata.completedAt),
+      resultSummary: { availability: proposed.query.result.economicRead.availability,
+        originalSourceVersions: proposed.query.result.economicRead.witnesses.map(ref => ref.versionId) },
+    }).where(and(eq(schema.workQueryExecutions.tenantId, scope.tenantId), eq(schema.workQueryExecutions.id, execution.id),
+      eq(schema.workQueryExecutions.status, "running"))).returning({ id: schema.workQueryExecutions.id });
+    // A concurrent failure/late attempt cannot commit a reply beside a receipt
+    // it no longer owns. Throwing rolls this existing transaction back in full.
+    if (!finished) throw new ExactWorkIntakeConflict();
+    return proposed;
+  }, scope.userId);
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -2298,6 +2633,7 @@ export function conversationMessage(row: typeof schema.employeeConversationMessa
     resolutionProvenance: Array.isArray(row.resolutionProvenance) ? row.resolutionProvenance as Array<Record<string, unknown>> : [],
     companyTruthSnapshot: row.companyTruthSnapshot && typeof row.companyTruthSnapshot === "object" ? row.companyTruthSnapshot as Record<string, unknown> : null,
     outcomeRefs: Array.isArray(row.outcomeRefs) ? row.outcomeRefs as Array<Record<string, unknown>> : [],
+    hydratedText: (row as typeof row & { hydratedText?: string | null }).hydratedText ?? null,
     createdAt: iso(row.createdAt),
   };
 }
@@ -2476,6 +2812,25 @@ export async function loadEmployeeConversationThread(params: {
       before,
       params.throughSequence !== undefined ? sql`${schema.employeeConversationMessages.sequence} <= ${params.throughSequence}` : sql`true`,
     )).orderBy(desc(schema.employeeConversationMessages.sequence)).limit(messageLimit);
+    // R1: outcome-bearing assistant turns store only a non-sensitive
+    // reference. Hydrate the gated financial text solely after a current
+    // authorization check: the owning principal must still be active and
+    // the referenced Work must still belong to this tenant scope.
+    const hydratedRows = await Promise.all(rows.map(async (row) => {
+      if (row.role !== "assistant" || !row.workId
+          || !Array.isArray(row.outcomeRefs) || row.outcomeRefs.length === 0) return row;
+      const [principal] = await db.select({ id: schema.users.id }).from(schema.users).where(and(
+        eq(schema.users.tenantId, params.tenantId), eq(schema.users.id, params.ownerEmployeeId),
+        eq(schema.users.status, "active"))).limit(1);
+      if (!principal) return row;
+      const [workRow] = await db.select({ status: schema.works.status, finalOutcome: schema.works.finalOutcome })
+        .from(schema.works).where(and(
+          eq(schema.works.tenantId, params.tenantId), eq(schema.works.id, row.workId))).limit(1);
+      const outcome = workRow ? jsonObject(workRow.finalOutcome) : {};
+      const summary = workRow && !["cancelled", "failed"].includes(workRow.status)
+        ? outcome.summary ?? outcome.observation : null;
+      return typeof summary === "string" && summary ? { ...row, hydratedText: summary } : row;
+    }));
     return {
       thread: {
         ...conversationThread(thread),
@@ -2484,7 +2839,7 @@ export async function loadEmployeeConversationThread(params: {
         unresolvedReferences: Array.isArray(thread.unresolvedReferences) ? thread.unresolvedReferences as Array<Record<string, unknown>> : [],
         outcomeRefs: Array.isArray(thread.outcomeRefs) ? thread.outcomeRefs as Array<Record<string, unknown>> : [],
       },
-      messages: rows.reverse().map(conversationMessage),
+      messages: hydratedRows.reverse().map(conversationMessage),
     };
   }, params.ownerEmployeeId);
 }

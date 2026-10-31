@@ -1,0 +1,74 @@
+{
+  "schema": "finnor.postz.w1.read-http-verification.v3",
+  "verificationProfile": "HTTP_V3",
+  "proposalValidation": "NOT_RUN",
+  "priorProfile": "HTTP_V2",
+  "requiredSource": [
+    "SOURCE_REVENUE", "SOURCE_BASIS_MISMATCH", "SOURCE_CURRENCY_MISMATCH", "SOURCE_QUOTE",
+    "SOURCE_DELAYED", "SOURCE_STALE", "SOURCE_RIGHTS_REVOKED"
+  ],
+  "requiredPriorHttp": [
+    "TYPED_API_REVENUE", "NATURAL_AND_DUPLICATE", "CORE_PRIOR_CLASSIFICATION", "AUTHENTICATION", "FOREIGN_TENANT",
+    "TYPED_API_QUOTE_CURRENT", "TYPED_API_REVENUE_DUPLICATE", "CORE_DUPLICATE",
+    "NAMED_COMPANY_NO_SUBSTITUTION", "MIXED_NEGATION_EFFECT_PRESERVED", "MISSING_REPORTING_CALENDAR",
+    "PROVISIONAL_CASH_FISCAL_REVENUE", "TYPED_API_STALE_QUOTE", "TYPED_API_UNAVAILABLE_QUOTE",
+    "TYPED_API_QUOTE_REPLAY_REVOKED", "UNAVAILABLE_REPLAY_CURRENTNESS"
+  ],
+  "requiredReview": [
+    "SHARED_ECONOMIC_REDACTION", "CONTEXT_READ_NO_FLEET", "REVENUE_NAMED_FORMS", "REVENUE_SELECTORS",
+    "POSITIVE_EFFECT_VOCABULARY", "MULTILINE_NEGATION", "RESOLVED_RESOURCE_SCOPES", "SCOPED_GRANT_CURRENTNESS",
+    "COMMITTED_RECEIPT_RECOVERY_NO_KEY", "TRACE_FAILURE_BEST_EFFORT", "QUOTE_EXPLICIT_SUBJECT",
+    "SIMULTANEOUS_QUOTE_VALIDITY", "EXACT_CAPABILITY_DENIES", "SUPPLIED_ID_RECOVERY_CUSTODY",
+    "PRIVATE_INSERT_ATOMIC_RECOVERY", "ANCILLARY_RESPONSE_FAILURE_REPLAY", "ASSISTANT_PROJECTION_FAILURE_REPLAY",
+    "QUOTE_POSSESSIVE", "EFFECT_WORD_ENTITY", "TYPED_REQUEST_RECOVERY", "COMPLETE_OUTPUT_REPLAY_VALIDATION",
+    "ORIGINAL_INPUT_PRINCIPAL_IDENTITY", "BACKGROUND_PRINCIPAL_NO_ACTIVATION", "IN_FLIGHT_DUPLICATE_RECEIPT"
+  ],
+  "findingPredicates": {
+    "1": ["SHARED_ECONOMIC_REDACTION"],
+    "2": ["CONTEXT_READ_NO_FLEET"],
+    "3": ["REVENUE_NAMED_FORMS"],
+    "4": ["REVENUE_SELECTORS"],
+    "5": ["POSITIVE_EFFECT_VOCABULARY"],
+    "6": ["MULTILINE_NEGATION", "MIXED_NEGATION_EFFECT_PRESERVED"],
+    "7": ["RESOLVED_RESOURCE_SCOPES", "SCOPED_GRANT_CURRENTNESS"],
+    "8": ["COMMITTED_RECEIPT_RECOVERY_NO_KEY", "TRACE_FAILURE_BEST_EFFORT"],
+    "9": ["QUOTE_EXPLICIT_SUBJECT"],
+    "10": ["SIMULTANEOUS_QUOTE_VALIDITY"],
+    "11": ["EXACT_CAPABILITY_DENIES", "SCOPED_GRANT_CURRENTNESS"],
+    "12": ["SUPPLIED_ID_RECOVERY_CUSTODY"],
+    "13": ["PRIVATE_INSERT_ATOMIC_RECOVERY", "ANCILLARY_RESPONSE_FAILURE_REPLAY", "ASSISTANT_PROJECTION_FAILURE_REPLAY"],
+    "14": ["QUOTE_POSSESSIVE"],
+    "15": ["EFFECT_WORD_ENTITY"],
+    "16": ["TYPED_REQUEST_RECOVERY", "ORIGINAL_INPUT_PRINCIPAL_IDENTITY"]
+  },
+  "mandatoryForEveryEpisode": {
+    "zeroDeltaTables": ["jobs", "workforce_assignments", "computer_runs", "sandbox_outbox", "s5_reservations", "business_effects", "compute_resource_leases", "work_planner_attempts"],
+    "paidProviderCalls": 0,
+    "externalNetworkAttempts": 0,
+    "cloudChanges": 0,
+    "backgroundQueueRoots": "Enqueued before the bounded read episode; the episode must create no additional jobs.",
+    "receiptCustody": "One financial receipt and one original-input private reply after commit; neither accepted original data nor metadata may be recomputed on replay.",
+    "faults": "Real targeted disposable SQL triggers; explicitly remove each before retry; never production fault switches."
+  },
+  "literalOracle": {
+    "revenue": "950.25",
+    "unrelatedCashReceiptNotRevenue": "999999",
+    "quote": "100.125",
+    "undisplayableQuoteMustNeverLeak": "200.875",
+    "foreignProvisionalCashEur": "41.75",
+    "typedRecoverableInputPrefix": "Typed economic query v1: ",
+    "selectedContext": "Must not replace the request's exact company or issuer.",
+    "namedRevenue": "At/for/of/possessive/bare-company forms; Unrelated Holdings never substitutes the tenant binding.",
+    "selectors": "Explicit CASH/EUR retained; explicit CALENDAR/FISCAL retained and boundedly UNAVAILABLE.",
+    "effectNegativeControl": "503 worker_fleet_unavailable, not an economic answer.",
+    "committedReceiptFault": "work_events.event_type=query_execution_completed fails after canonical receipt/private reply commit; actual retry without original idempotency key preserves original complete query.",
+    "traceFault": "instruction_events.phase=verifying failure remains best-effort; first read succeeds.",
+    "uncommittedPrivateFault": "Private INSERT failure cannot leave succeeded receipt; explicit retry rearms the same receipt.",
+    "ancillaryFault": "Private INSERT/UPDATE denied only when receipt already succeeded; canonical private insertion happens while running and survives ancillary failure.",
+    "sameTimeQuote": "Lower UUID carries expired quote, higher UUID current; repeat with freshness reversed; both stale stays STALE; price/session/delay disagreement stays CONFLICTED.",
+    "scopedAuthority": "Application owner role is not a business wildcard: a separate fixture employee has only real exact-resource financial grants. Test missing/relevant/unrelated deny, active/expired assignment and role/user currentness.",
+    "tampering": "Actual private JSONB corruptions of metadata, source/meta, page/count/status, IDs, intent/outcome and financial facts must refuse replay; keeping answer.query in sync must not bypass complete validation."
+  },
+  "acceptance": "All 47 independent observations required PASS for HTTP_V3. Missing, unknown profile, NOT_RUN, duplicate IDs or any FAIL cannot qualify. SOURCE_V1 is diagnostic only.",
+  "knownIntegrationGate": "Objective-loop financial subqueries currently omit workInputId, and planner/objective outer NAME authority remains unresolved. They must remain refused until the coordinator integrates exact per-query private input/principal custody and metadata-only shared observations. Simply forwarding one parent objective input to multiple different financial queries violates the one-request/receipt/reply input contract. This proposal does not edit the concurrent objective/native track."
+}

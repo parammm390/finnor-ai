@@ -94,6 +94,7 @@ export async function POST(req: Request): Promise<Response> {
       await persistEmployeeAssistantTurn({ tenantId: ctx.tenantId, employeeId, threadId: prepared.threadId,
         instructionId: received.instructionId, channel: "text", workId: received.workId, workInputId: received.workInputId,
         text: "Your human decision is drafted. Review its exact BusinessEffect and authority before confirming execution.",
+        referenceText: "A human decision draft awaits review; detail is available after a current authorization check.",
         outcomeRefs: [{ kind: "work", id: received.workId }, { kind: "domain_action", id: drafted.action.id }] });
     } catch { projectionWarnings.push("assistant_projection_unavailable"); }
     await recordWorkResponse({ tenantId: ctx.tenantId, workId: received.workId, workInputId: received.workInputId, userId: ctx.employeeId ?? ctx.userId }, { ...response, projectionWarnings });

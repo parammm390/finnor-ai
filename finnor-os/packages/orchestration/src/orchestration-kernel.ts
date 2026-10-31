@@ -5,6 +5,7 @@ import {
   decisionReceipts,
   domainActions,
   integrationEvents,
+  lockTenantMaterialCutTx,
   workEventWaits,
   workObjectiveLoops,
   workObjectiveSteps,
@@ -235,6 +236,7 @@ export async function reserveReadyPlanFrontier(params: {
   maxReady?: number;
 }): Promise<FrontierReservationResult> {
   return withTenant(params.tenantId, async (db) => {
+    await lockTenantMaterialCutTx(db, params.tenantId);
     // Identity keys are immutable. Keep exclusive state-writer serialization and
     // generation fences, while permitting in-flight step foreign-key checks.
     await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.tenantId}=${params.tenantId} AND ${workObjectiveLoops.id}=${params.objectiveLoopId} FOR NO KEY UPDATE`);

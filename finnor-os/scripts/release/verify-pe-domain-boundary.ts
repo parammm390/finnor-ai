@@ -5,6 +5,7 @@ import {
   CANONICAL_ENTITY_TYPES,
   CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS,
   CORE_OPERATIONAL_QUERY_INTENTS,
+  ECONOMIC_READ_QUERY_INTENTS,
   EXECUTABLE_VERTICALS,
   OPERATIONAL_QUERY_INTENTS,
   PARTY_TYPES,
@@ -192,7 +193,7 @@ function equalSets(left: readonly string[], right: readonly string[]): boolean {
   return left.length === right.length && [...left].sort().every((value, index) => value === [...right].sort()[index]);
 }
 
-const PUBLIC_QUERY_INTENTS = [...CORE_OPERATIONAL_QUERY_INTENTS, ...PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS];
+const PUBLIC_QUERY_INTENTS = [...CORE_OPERATIONAL_QUERY_INTENTS, ...PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS, ...ECONOMIC_READ_QUERY_INTENTS];
 const NATIVE_QUERY_INTENTS = [...PROGRAM_OPERATIONAL_QUERY_INTENTS, ...CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS];
 
 export function verifyQuerySurfaceCoverage(openApi: unknown): string[] {
@@ -213,6 +214,9 @@ export function verifyQuerySurfaceCoverage(openApi: unknown): string[] {
     Object.values(node).forEach((child) => { if (child && typeof child === "object") visit(child); });
   };
   visit(schema);
+  if (!equalSets(ECONOMIC_READ_QUERY_INTENTS, ["company_revenue", "stock_quote"])) {
+    errors.push("ordinary economic query catalogue must retain exact revenue and stock-quote readers");
+  }
   if (!equalSets(PROGRAM_OPERATIONAL_QUERY_INTENTS, ["harness_program_v1", "economic_programme_v1"])) {
     errors.push("native-only query catalogue must retain the exact P1 and Y1 readers");
   }
@@ -348,7 +352,7 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
 
   const expectedVerticals = ["none", "private_equity"];
   if (!equalSets(EXECUTABLE_VERTICALS, expectedVerticals)) errors.push(`executable verticals are ${EXECUTABLE_VERTICALS.join(", ")}`);
-  if (OPERATIONAL_QUERY_INTENTS.length !== 19) errors.push(`active query registry has ${OPERATIONAL_QUERY_INTENTS.length} intents; expected 19 including P7 workforce_status, P1 harness_program_v1, Y1 economic_programme_v1 and Y4 confidential_economic_computation_v1`);
+  if (OPERATIONAL_QUERY_INTENTS.length !== 21) errors.push("active query registry has " + OPERATIONAL_QUERY_INTENTS.length + " intents; expected21 including W1 revenue/stock-quote, P7 workforce, P1 harness, Y1 economic and Y4 confidential readers");
   const retiredQueries = OPERATIONAL_QUERY_INTENTS.filter((intent) => (RETIRED_WATER_QUERY_INTENTS as readonly string[]).includes(intent));
   if (retiredQueries.length) errors.push(`retired queries registered: ${retiredQueries.join(", ")}`);
   const expectedParties = ["employee", "team", "location", "external_organization", "external_contact"];

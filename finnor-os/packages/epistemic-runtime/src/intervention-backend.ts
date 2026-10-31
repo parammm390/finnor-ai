@@ -53,7 +53,7 @@ export async function invokeInterventionBackend(payload: Record<string, unknown>
     active++;
     try {
       const attempt = await new Promise<{ data: string; error: string | null }>(resolve => {
-        const child = spawn(process.env.FINNOR_S3_PYTHON!, ['-I', script], { shell: false, stdio: ['pipe', 'pipe', 'pipe'],
+        const child = spawn(process.env.FINNOR_S3_PYTHON!, ['-I', '-B', script], { shell: false, stdio: ['pipe', 'pipe', 'pipe'],
           env: { NODE_ENV: process.env.NODE_ENV ?? 'production', PATH: process.env.PATH, PYTHONDONTWRITEBYTECODE: '1', OPENBLAS_NUM_THREADS: '1', OMP_NUM_THREADS: '1', MKL_NUM_THREADS: '1', LC_ALL: 'C' } });
         const chunks: Buffer[] = []; let size = 0, failure: string | null = null, stderr = '';
         const timer = setTimeout(() => { failure = 'BACKEND_TIMEOUT'; child.kill('SIGKILL'); }, timeoutMs);

@@ -1,0 +1,1290 @@
+{
+  "schema": "finnor.w1.structural-inputs.v1",
+  "seed": "public-development-W1-20261029-structural-v1-c73e957c",
+  "cases": [
+    {
+      "id": "direct-accepted-stop-01",
+      "family": "direct-accepted-stop",
+      "path": "direct-accepted-stop-01.json",
+      "bytes": 1686,
+      "sha256": "a34c33030aa10b52dd774556bf7de5f6c7086bc9aca7ee57f05935eeb00ec1a8",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "direct-accepted-stop-02",
+      "family": "direct-accepted-stop",
+      "path": "direct-accepted-stop-02.json",
+      "bytes": 1686,
+      "sha256": "f1d86612bbdf90d6ec838156f648c5219536ecf6a7ce6a2025a451a2abbb10e3",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "direct-accepted-stop-03",
+      "family": "direct-accepted-stop",
+      "path": "direct-accepted-stop-03.json",
+      "bytes": 1686,
+      "sha256": "837baf2d07f530a426e959ee737a774309c7dc3da906c85e9c892c475990c8a7",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "direct-accepted-stop-04",
+      "family": "direct-accepted-stop",
+      "path": "direct-accepted-stop-04.json",
+      "bytes": 1686,
+      "sha256": "4691d820c64ea4f2525b2c3579b0a83c28b417b0bda34c12664a03ab5a283aad",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "direct-accepted-stop-05",
+      "family": "direct-accepted-stop",
+      "path": "direct-accepted-stop-05.json",
+      "bytes": 1686,
+      "sha256": "4fc8f1b4f0d0935cf9e37f1c4df2ff106df93219174fc07266b498fb81847502",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "direct-accepted-stop-06",
+      "family": "direct-accepted-stop",
+      "path": "direct-accepted-stop-06.json",
+      "bytes": 1686,
+      "sha256": "3a56a56de056535c6d5c3f6ae1d2e07d2fa98a619830eff44b3c12fd2201dcbb",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "direct-accepted-stop-07",
+      "family": "direct-accepted-stop",
+      "path": "direct-accepted-stop-07.json",
+      "bytes": 1686,
+      "sha256": "ff69b948f7078ef67a8e9b6bee70cbebd6a7502e66bf20e0047ddce0cfc9b80d",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "direct-accepted-stop-08",
+      "family": "direct-accepted-stop",
+      "path": "direct-accepted-stop-08.json",
+      "bytes": 1686,
+      "sha256": "858a36b6b73854525988f362bea9614cf3d8e602e0639c83f54d43c0ef359b00",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "two-stage-complementarity-01",
+      "family": "two-stage-complementarity",
+      "path": "two-stage-complementarity-01.json",
+      "bytes": 7154,
+      "sha256": "64ff4f5d8be61e929a8888476d70875366643c5129290370d1389b10c772f1af",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "two-stage-complementarity-02",
+      "family": "two-stage-complementarity",
+      "path": "two-stage-complementarity-02.json",
+      "bytes": 7154,
+      "sha256": "2eb4ab623dc40293818f5c2ab4a4124e8b9a2b35a3d7defd7eddd37297c60759",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "two-stage-complementarity-03",
+      "family": "two-stage-complementarity",
+      "path": "two-stage-complementarity-03.json",
+      "bytes": 7154,
+      "sha256": "026f8d66134b5e6be77c6923d101c6fcbf06ece70122d36ffcd00250224b9f21",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "two-stage-complementarity-04",
+      "family": "two-stage-complementarity",
+      "path": "two-stage-complementarity-04.json",
+      "bytes": 7154,
+      "sha256": "1e5cc8fb0fbacda0167d3e217829233944c5ce7f592d1349f4359f9444570551",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "two-stage-complementarity-05",
+      "family": "two-stage-complementarity",
+      "path": "two-stage-complementarity-05.json",
+      "bytes": 7154,
+      "sha256": "e4f521c52b6489927a454ac4434065dc8d64c9c9d6ac5fefb0731dbfc01e5245",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "two-stage-complementarity-06",
+      "family": "two-stage-complementarity",
+      "path": "two-stage-complementarity-06.json",
+      "bytes": 7154,
+      "sha256": "a1adcbef528f5136cde594f70dda6e2c852cc7f6bc97296b65c47e8e06bc10de",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "two-stage-complementarity-07",
+      "family": "two-stage-complementarity",
+      "path": "two-stage-complementarity-07.json",
+      "bytes": 7154,
+      "sha256": "b3f411c9f0227b864fab9390398f770cbd993d681a899b95a721382c35bcb03e",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "two-stage-complementarity-08",
+      "family": "two-stage-complementarity",
+      "path": "two-stage-complementarity-08.json",
+      "bytes": 7154,
+      "sha256": "abce036aceb8cf8665ce2e655dc72582069f4e9d5ee7ff7af0d3a40a2b7f662a",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "eight-stage-dependency-01",
+      "family": "eight-stage-dependency",
+      "path": "eight-stage-dependency-01.json",
+      "bytes": 23453,
+      "sha256": "f38815dda23fc953b6fc4808a854b676f9268871d7cea294d48d13e46131a7b6",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "eight-stage-dependency-02",
+      "family": "eight-stage-dependency",
+      "path": "eight-stage-dependency-02.json",
+      "bytes": 23453,
+      "sha256": "1c687336ea190073592f14194875531a3a3030459508c3d603e554345ef50c29",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "eight-stage-dependency-03",
+      "family": "eight-stage-dependency",
+      "path": "eight-stage-dependency-03.json",
+      "bytes": 23453,
+      "sha256": "f89c552f4c0ca6147a9477aafc82602e1195cb61afe57e42ec5e2959eb203121",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "eight-stage-dependency-04",
+      "family": "eight-stage-dependency",
+      "path": "eight-stage-dependency-04.json",
+      "bytes": 23453,
+      "sha256": "fbfab91a52cf9b81d6f3be1289130957910ea981d510aa4186be05bdc3be2318",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "eight-stage-dependency-05",
+      "family": "eight-stage-dependency",
+      "path": "eight-stage-dependency-05.json",
+      "bytes": 23453,
+      "sha256": "836732cd6b71990f2588fba6bf3bfb6fcd7f55fcd4e7d3e769232bda92453137",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "eight-stage-dependency-06",
+      "family": "eight-stage-dependency",
+      "path": "eight-stage-dependency-06.json",
+      "bytes": 23453,
+      "sha256": "a2c62380befe125885469ffc52771c4b3228bcb724f9ec76c339d53179ea16e6",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "eight-stage-dependency-07",
+      "family": "eight-stage-dependency",
+      "path": "eight-stage-dependency-07.json",
+      "bytes": 23453,
+      "sha256": "0698037dfd12b64d26a5447d6e01b51e2d5c873f66b641c1d14dee9361fc4e0d",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "eight-stage-dependency-08",
+      "family": "eight-stage-dependency",
+      "path": "eight-stage-dependency-08.json",
+      "bytes": 23453,
+      "sha256": "b6650b9e13cd80381b6a4d8d5a6d803e4ed638964410155fbd92942ee35d77c6",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "unequal-native-alternatives-01",
+      "family": "unequal-native-alternatives",
+      "path": "unequal-native-alternatives-01.json",
+      "bytes": 6132,
+      "sha256": "b4f73a8cde847c9c1ed4f60cb3d1b94134649ade0f5f34ac6afb8848ef8446df",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "unequal-native-alternatives-02",
+      "family": "unequal-native-alternatives",
+      "path": "unequal-native-alternatives-02.json",
+      "bytes": 8406,
+      "sha256": "57fb28209ab0db708d22d5e3cd47da015f3d80409676a16f17b62efbcca5f4e4",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "unequal-native-alternatives-03",
+      "family": "unequal-native-alternatives",
+      "path": "unequal-native-alternatives-03.json",
+      "bytes": 10680,
+      "sha256": "9f78136df3df36764feffeab585af1a48049e1b7c8fd03ef2947743867cead9f",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "unequal-native-alternatives-04",
+      "family": "unequal-native-alternatives",
+      "path": "unequal-native-alternatives-04.json",
+      "bytes": 6132,
+      "sha256": "698594f7747ec0618f34abac2681891a6f9ff12edd9065fa8f8c9e7796d2feca",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "unequal-native-alternatives-05",
+      "family": "unequal-native-alternatives",
+      "path": "unequal-native-alternatives-05.json",
+      "bytes": 8406,
+      "sha256": "75926ba326fb36b14af9d718b0da39e011afa7139557f883d932a730bfddc51a",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "unequal-native-alternatives-06",
+      "family": "unequal-native-alternatives",
+      "path": "unequal-native-alternatives-06.json",
+      "bytes": 10680,
+      "sha256": "d3eedd10135a694fc883c3d1570820fd1509c2438ff9e27f9c4f5934b4b1ebe5",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "unequal-native-alternatives-07",
+      "family": "unequal-native-alternatives",
+      "path": "unequal-native-alternatives-07.json",
+      "bytes": 6132,
+      "sha256": "a09b4b13ca13725784d50af920acc9509500aec88b3e9e6fe492b05a14732084",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "unequal-native-alternatives-08",
+      "family": "unequal-native-alternatives",
+      "path": "unequal-native-alternatives-08.json",
+      "bytes": 8406,
+      "sha256": "016bdf7e4b1b5eb4cd38997508e92b19b1fc3dccf1708dd16ed55b7b46aaf315",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "exact-rational-ties-01",
+      "family": "exact-rational-ties",
+      "path": "exact-rational-ties-01.json",
+      "bytes": 3787,
+      "sha256": "ffda403545bb5a986f868a965c4437653e71b55f0092c85ff5dbc74d1b1963d8",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "exact-rational-ties-02",
+      "family": "exact-rational-ties",
+      "path": "exact-rational-ties-02.json",
+      "bytes": 3787,
+      "sha256": "6a52e81bf0c09841079c592186b41cb7fdcdaf8d1c1ab51be11b2373223c03a2",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "exact-rational-ties-03",
+      "family": "exact-rational-ties",
+      "path": "exact-rational-ties-03.json",
+      "bytes": 3787,
+      "sha256": "6f91fec11d0a80ddd2dabb8dd747f2747bd809806a401a044332a3846f886db4",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "exact-rational-ties-04",
+      "family": "exact-rational-ties",
+      "path": "exact-rational-ties-04.json",
+      "bytes": 3787,
+      "sha256": "6cbb8a1bac677aae1ec437600685e9d0e81fa785d3348a04ea450e35593b0058",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "exact-rational-ties-05",
+      "family": "exact-rational-ties",
+      "path": "exact-rational-ties-05.json",
+      "bytes": 3787,
+      "sha256": "b9d2a8d00acd797049ce8a2946758b610d079dcff4ae43e4b6df5b2114a0a7cc",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "exact-rational-ties-06",
+      "family": "exact-rational-ties",
+      "path": "exact-rational-ties-06.json",
+      "bytes": 3787,
+      "sha256": "7342c9dfeed9832bcdcd0607463c9c3e0376dec3724212153a5b335cc3b778f5",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "exact-rational-ties-07",
+      "family": "exact-rational-ties",
+      "path": "exact-rational-ties-07.json",
+      "bytes": 3787,
+      "sha256": "6face9c73f305bf9f3a13fa1a09d9cd9307834e2df2ebf83dda28fe465ff5de8",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "exact-rational-ties-08",
+      "family": "exact-rational-ties",
+      "path": "exact-rational-ties-08.json",
+      "bytes": 3790,
+      "sha256": "1cb1868940d44abcc8e7fb17bd534b740d49fe23b636042ffd4387b75508e48c",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "observation-contingent-choice-01",
+      "family": "observation-contingent-choice",
+      "path": "observation-contingent-choice-01.json",
+      "bytes": 14665,
+      "sha256": "aaf623a902801436a594fe483fe8ed2e514607b06daca6aa5f41303a84d1cd6d",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "observation-contingent-choice-02",
+      "family": "observation-contingent-choice",
+      "path": "observation-contingent-choice-02.json",
+      "bytes": 14665,
+      "sha256": "badff4e41a2742e4d3868a45bdddab4d16a9364783bb21276074d302086ab1fe",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "observation-contingent-choice-03",
+      "family": "observation-contingent-choice",
+      "path": "observation-contingent-choice-03.json",
+      "bytes": 14665,
+      "sha256": "068cb2901cb64b1e00080dbb0b03f3ae5a71475eb4efd5d366c0ce4033afa2f4",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "observation-contingent-choice-04",
+      "family": "observation-contingent-choice",
+      "path": "observation-contingent-choice-04.json",
+      "bytes": 14665,
+      "sha256": "0cdc471db593a26e4bd8d9283da2c93c62bc295241baa9fe907569dc970c32be",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "observation-contingent-choice-05",
+      "family": "observation-contingent-choice",
+      "path": "observation-contingent-choice-05.json",
+      "bytes": 14665,
+      "sha256": "939e30b780353bf86faf4e2194d794b9d027887e0727c4bedfcc103be83822dd",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "observation-contingent-choice-06",
+      "family": "observation-contingent-choice",
+      "path": "observation-contingent-choice-06.json",
+      "bytes": 14665,
+      "sha256": "7e86ada1035531ad85e15159979ae2516843cf9ed3a2bd3664da97d98532b879",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "observation-contingent-choice-07",
+      "family": "observation-contingent-choice",
+      "path": "observation-contingent-choice-07.json",
+      "bytes": 14665,
+      "sha256": "b3ee2be8e50cc35dbb21733be12bb30a1f90806feb2ad1573db9f563552e407c",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "observation-contingent-choice-08",
+      "family": "observation-contingent-choice",
+      "path": "observation-contingent-choice-08.json",
+      "bytes": 14665,
+      "sha256": "2e384acbc90ad643309374911fb9de7e6ed4c18901b5b8bb096cd9aeba04c538",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "nonzero-invalid-observation-01",
+      "family": "nonzero-invalid-observation",
+      "path": "nonzero-invalid-observation-01.json",
+      "bytes": 7160,
+      "sha256": "37e0e4e1dfc6a96b7cf6754a2aa4775f5ea50a6b7e067cd884577711ba20e13f",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "nonzero-invalid-observation-02",
+      "family": "nonzero-invalid-observation",
+      "path": "nonzero-invalid-observation-02.json",
+      "bytes": 7160,
+      "sha256": "209583c6c766e18f39d399248f623a1a194fbc38ea03595568845ae0ab2924a6",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "nonzero-invalid-observation-03",
+      "family": "nonzero-invalid-observation",
+      "path": "nonzero-invalid-observation-03.json",
+      "bytes": 7160,
+      "sha256": "6ba6065971fce99b94b7a95158a61f05a1aade6433b7c6bddd92a9fe34ce0920",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "nonzero-invalid-observation-04",
+      "family": "nonzero-invalid-observation",
+      "path": "nonzero-invalid-observation-04.json",
+      "bytes": 7160,
+      "sha256": "80c9555e3a7016ad1314f9cf8b4553500880deac97806bc8e9783cbe8acc6aa4",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "nonzero-invalid-observation-05",
+      "family": "nonzero-invalid-observation",
+      "path": "nonzero-invalid-observation-05.json",
+      "bytes": 7160,
+      "sha256": "d1677d3f40acfee03c2f7107b68531e423bbe26a0ab79f39900066aaf1d813b7",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "nonzero-invalid-observation-06",
+      "family": "nonzero-invalid-observation",
+      "path": "nonzero-invalid-observation-06.json",
+      "bytes": 7160,
+      "sha256": "54d4debeb78453b8b2acdb171e6ebc4e0658692c62a0dba0084f29ea4c44e0ea",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "nonzero-invalid-observation-07",
+      "family": "nonzero-invalid-observation",
+      "path": "nonzero-invalid-observation-07.json",
+      "bytes": 7160,
+      "sha256": "7aee9ae85e5c96bfbd6d64d53689028cb57d25a27aee969fff7fb58483196205",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "nonzero-invalid-observation-08",
+      "family": "nonzero-invalid-observation",
+      "path": "nonzero-invalid-observation-08.json",
+      "bytes": 7160,
+      "sha256": "16d0d0eb08f1d95926797a3604d2f32784b0899b734da06df7e72e03fbebe18a",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "explicit-zero-support-branch-01",
+      "family": "explicit-zero-support-branch",
+      "path": "explicit-zero-support-branch-01.json",
+      "bytes": 7995,
+      "sha256": "8d8dcbf4681bb433773b84a8fade7d40348081fe380c9a02429fa810345c7663",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "explicit-zero-support-branch-02",
+      "family": "explicit-zero-support-branch",
+      "path": "explicit-zero-support-branch-02.json",
+      "bytes": 7995,
+      "sha256": "0adfab4f402ec2c821657f8c8c2ad6dbb6e98609bdeda455712a4a22eda1e63b",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "explicit-zero-support-branch-03",
+      "family": "explicit-zero-support-branch",
+      "path": "explicit-zero-support-branch-03.json",
+      "bytes": 7995,
+      "sha256": "04ed206e07c31f7d34035b9197926e115ee716030a5f3d0167a6e8f5e9b14647",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "explicit-zero-support-branch-04",
+      "family": "explicit-zero-support-branch",
+      "path": "explicit-zero-support-branch-04.json",
+      "bytes": 7995,
+      "sha256": "aae17d29805aa5f5a9b9a562ca1781325163ccd9cb476a7fe270704c8d1cd292",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "explicit-zero-support-branch-05",
+      "family": "explicit-zero-support-branch",
+      "path": "explicit-zero-support-branch-05.json",
+      "bytes": 7995,
+      "sha256": "da46cba30051604fab6e1aaacc56606fab59847ccddec0b0bdb7031634e3f43d",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "explicit-zero-support-branch-06",
+      "family": "explicit-zero-support-branch",
+      "path": "explicit-zero-support-branch-06.json",
+      "bytes": 7995,
+      "sha256": "d45f62e786d4de286a41e25a543421a0c19adb6ce896aeefb7a360a73df5bae4",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "explicit-zero-support-branch-07",
+      "family": "explicit-zero-support-branch",
+      "path": "explicit-zero-support-branch-07.json",
+      "bytes": 7995,
+      "sha256": "583d946974b983591a4ed36a89cea2860471de9bfd8a277195e9d4c34a253feb",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "explicit-zero-support-branch-08",
+      "family": "explicit-zero-support-branch",
+      "path": "explicit-zero-support-branch-08.json",
+      "bytes": 7995,
+      "sha256": "8c25def7579e8326323952f1f8e701463606e80c5b1a637599055d64bd8b8619",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "two-resource-conservation-01",
+      "family": "two-resource-conservation",
+      "path": "two-resource-conservation-01.json",
+      "bytes": 7540,
+      "sha256": "feb659dc6a2e40b3903c59f6e619e82846f9187f94e7254a26e354820247bd28",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "two-resource-conservation-02",
+      "family": "two-resource-conservation",
+      "path": "two-resource-conservation-02.json",
+      "bytes": 7540,
+      "sha256": "17904dc8207bbe6a22b21467dc7f2f59b7799151ccbf3af7c7b0a2f23cbbb31e",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "two-resource-conservation-03",
+      "family": "two-resource-conservation",
+      "path": "two-resource-conservation-03.json",
+      "bytes": 7540,
+      "sha256": "15d9a20b6935099503e0f91fa07496d6b20b226c0a647526366ea8841479c2f2",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "two-resource-conservation-04",
+      "family": "two-resource-conservation",
+      "path": "two-resource-conservation-04.json",
+      "bytes": 7541,
+      "sha256": "149412591def5410fc1be833ef6b848c427e598717f5b572f463ec405a7e4355",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "two-resource-conservation-05",
+      "family": "two-resource-conservation",
+      "path": "two-resource-conservation-05.json",
+      "bytes": 7541,
+      "sha256": "4b9b47f0428c36ba913d241e667dc42334e2a567b039b3e17ceb1b06be463256",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "two-resource-conservation-06",
+      "family": "two-resource-conservation",
+      "path": "two-resource-conservation-06.json",
+      "bytes": 7541,
+      "sha256": "372fd30dc07f048befd8ec904361ce730fc1153647310950d4407b382d83a272",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "two-resource-conservation-07",
+      "family": "two-resource-conservation",
+      "path": "two-resource-conservation-07.json",
+      "bytes": 7541,
+      "sha256": "afc61140cbd40e9ccd1fd5f890330f9030f1e2e3c148a9c4944ca12fa2670e77",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "two-resource-conservation-08",
+      "family": "two-resource-conservation",
+      "path": "two-resource-conservation-08.json",
+      "bytes": 7541,
+      "sha256": "ee69fccd2b807fdbb19cc76859ef15189a0cb809b7cef2d188153f8360d75820",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "unresolved-obligation-retention-01",
+      "family": "unresolved-obligation-retention",
+      "path": "unresolved-obligation-retention-01.json",
+      "bytes": 7862,
+      "sha256": "567ebc1a3d9e5b839e843766f449607af90d04f0878ffffdba661f19026cafb2",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "unresolved-obligation-retention-02",
+      "family": "unresolved-obligation-retention",
+      "path": "unresolved-obligation-retention-02.json",
+      "bytes": 7862,
+      "sha256": "ea5898fca4b727072defb2c60bd9472080d7318c7b544f089dad3833267f01e1",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "unresolved-obligation-retention-03",
+      "family": "unresolved-obligation-retention",
+      "path": "unresolved-obligation-retention-03.json",
+      "bytes": 7862,
+      "sha256": "0cd05f9d2a6af7ff365566ecc5359848658d5007a1c6680cc080bd30802b8214",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "unresolved-obligation-retention-04",
+      "family": "unresolved-obligation-retention",
+      "path": "unresolved-obligation-retention-04.json",
+      "bytes": 7862,
+      "sha256": "0f72f08594e7addd7673202799d7ddfb0884308846b4e2892f07abb70f6c4511",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "unresolved-obligation-retention-05",
+      "family": "unresolved-obligation-retention",
+      "path": "unresolved-obligation-retention-05.json",
+      "bytes": 7862,
+      "sha256": "e5e0fb084753cf872ba4556d377338c2556a2fcdb6c772583091c0a7f4e1fcdd",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "unresolved-obligation-retention-06",
+      "family": "unresolved-obligation-retention",
+      "path": "unresolved-obligation-retention-06.json",
+      "bytes": 7862,
+      "sha256": "657421c248a1e4f3c4db739dddd0455c22c282f0bd54c5a585de3f9b80610c54",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "unresolved-obligation-retention-07",
+      "family": "unresolved-obligation-retention",
+      "path": "unresolved-obligation-retention-07.json",
+      "bytes": 7862,
+      "sha256": "0a5a6e6325234c9ac38803af7fb6b73097c38ddcdea491ba7f01be24f5d1d053",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "unresolved-obligation-retention-08",
+      "family": "unresolved-obligation-retention",
+      "path": "unresolved-obligation-retention-08.json",
+      "bytes": 7862,
+      "sha256": "cae712eeda0fccb577a4d7eff499db573e13c7717fdb33d8e68335fb6034975f",
+      "expectation": "COMPLETE_MODEL_RELATIVE_POLICY",
+      "referenceReason": null,
+      "productionError": null
+    },
+    {
+      "id": "resolved-obligation-immutability-01",
+      "family": "resolved-obligation-immutability",
+      "path": "resolved-obligation-immutability-01.json",
+      "bytes": 8116,
+      "sha256": "c6acc1e2a5710477c63ba7e69bc777cb2c8eba793fd1b08222b0ceef8309084c",
+      "expectation": "REJECT",
+      "referenceReason": "ALTERED_RESOLVED_OBLIGATION",
+      "productionError": "METALEVEL_ALTERED_RESOLVED_OBLIGATION"
+    },
+    {
+      "id": "resolved-obligation-immutability-02",
+      "family": "resolved-obligation-immutability",
+      "path": "resolved-obligation-immutability-02.json",
+      "bytes": 8116,
+      "sha256": "6c6a3bdaa328678e0f56d252656880e0e2bf793835140da7a19ce10a9f4b7587",
+      "expectation": "REJECT",
+      "referenceReason": "ALTERED_RESOLVED_OBLIGATION",
+      "productionError": "METALEVEL_ALTERED_RESOLVED_OBLIGATION"
+    },
+    {
+      "id": "resolved-obligation-immutability-03",
+      "family": "resolved-obligation-immutability",
+      "path": "resolved-obligation-immutability-03.json",
+      "bytes": 8116,
+      "sha256": "ef82088e9781b8fa2cc4897e05f9163a3cdbc8d75c879b6f2522ab926e366da6",
+      "expectation": "REJECT",
+      "referenceReason": "ALTERED_RESOLVED_OBLIGATION",
+      "productionError": "METALEVEL_ALTERED_RESOLVED_OBLIGATION"
+    },
+    {
+      "id": "resolved-obligation-immutability-04",
+      "family": "resolved-obligation-immutability",
+      "path": "resolved-obligation-immutability-04.json",
+      "bytes": 8116,
+      "sha256": "9f041d5cd48c908ce5ab9b68ceba2da5f81ae8711cd1b19dcb266b15faec847a",
+      "expectation": "REJECT",
+      "referenceReason": "ALTERED_RESOLVED_OBLIGATION",
+      "productionError": "METALEVEL_ALTERED_RESOLVED_OBLIGATION"
+    },
+    {
+      "id": "resolved-obligation-immutability-05",
+      "family": "resolved-obligation-immutability",
+      "path": "resolved-obligation-immutability-05.json",
+      "bytes": 8116,
+      "sha256": "baf958c99628ee918c1a7781e3e30ca4bc05cb7a6121c2a9ed428405243e5089",
+      "expectation": "REJECT",
+      "referenceReason": "ALTERED_RESOLVED_OBLIGATION",
+      "productionError": "METALEVEL_ALTERED_RESOLVED_OBLIGATION"
+    },
+    {
+      "id": "resolved-obligation-immutability-06",
+      "family": "resolved-obligation-immutability",
+      "path": "resolved-obligation-immutability-06.json",
+      "bytes": 8116,
+      "sha256": "d0cc9fc316d3b4116ae00521b0b90f7ae935d9b86e03e406a0d8bd0685abf0ad",
+      "expectation": "REJECT",
+      "referenceReason": "ALTERED_RESOLVED_OBLIGATION",
+      "productionError": "METALEVEL_ALTERED_RESOLVED_OBLIGATION"
+    },
+    {
+      "id": "resolved-obligation-immutability-07",
+      "family": "resolved-obligation-immutability",
+      "path": "resolved-obligation-immutability-07.json",
+      "bytes": 8116,
+      "sha256": "ca1c126d07a34b0e2abfbbb611a55aea304b92e0296d94022d1fac985f75122c",
+      "expectation": "REJECT",
+      "referenceReason": "ALTERED_RESOLVED_OBLIGATION",
+      "productionError": "METALEVEL_ALTERED_RESOLVED_OBLIGATION"
+    },
+    {
+      "id": "resolved-obligation-immutability-08",
+      "family": "resolved-obligation-immutability",
+      "path": "resolved-obligation-immutability-08.json",
+      "bytes": 8116,
+      "sha256": "c9937a9d38f995175ceb55d8a4e976fc95ebd8e02b72266af4ce9383b4c50dd7",
+      "expectation": "REJECT",
+      "referenceReason": "ALTERED_RESOLVED_OBLIGATION",
+      "productionError": "METALEVEL_ALTERED_RESOLVED_OBLIGATION"
+    },
+    {
+      "id": "unexecuted-prerequisite-01",
+      "family": "unexecuted-prerequisite",
+      "path": "unexecuted-prerequisite-01.json",
+      "bytes": 7184,
+      "sha256": "24e2b3562b65331664f3df84710b97454edf329464827f39ccca960021ff7ce9",
+      "expectation": "REJECT",
+      "referenceReason": "UNMET_DEPENDENCY",
+      "productionError": "METALEVEL_UNMET_DEPENDENCY"
+    },
+    {
+      "id": "unexecuted-prerequisite-02",
+      "family": "unexecuted-prerequisite",
+      "path": "unexecuted-prerequisite-02.json",
+      "bytes": 7184,
+      "sha256": "c2f3e789625f57ad72ca476246adbf055d94dd5f14902fb672d3261166428038",
+      "expectation": "REJECT",
+      "referenceReason": "UNMET_DEPENDENCY",
+      "productionError": "METALEVEL_UNMET_DEPENDENCY"
+    },
+    {
+      "id": "unexecuted-prerequisite-03",
+      "family": "unexecuted-prerequisite",
+      "path": "unexecuted-prerequisite-03.json",
+      "bytes": 7184,
+      "sha256": "054b2983b6b2bc577f0ec14240c707570b738f7869ad89e2ebfd58d879a3f5be",
+      "expectation": "REJECT",
+      "referenceReason": "UNMET_DEPENDENCY",
+      "productionError": "METALEVEL_UNMET_DEPENDENCY"
+    },
+    {
+      "id": "unexecuted-prerequisite-04",
+      "family": "unexecuted-prerequisite",
+      "path": "unexecuted-prerequisite-04.json",
+      "bytes": 7184,
+      "sha256": "5def7f8a3271e261fe7b4b792fa53b2dd6925394bc8847d8dffc076afb595bbe",
+      "expectation": "REJECT",
+      "referenceReason": "UNMET_DEPENDENCY",
+      "productionError": "METALEVEL_UNMET_DEPENDENCY"
+    },
+    {
+      "id": "unexecuted-prerequisite-05",
+      "family": "unexecuted-prerequisite",
+      "path": "unexecuted-prerequisite-05.json",
+      "bytes": 7184,
+      "sha256": "8c727765d41f528b0daa5d54c81d1bb42bc4d8219b9be41c9a5e55d780cdd43a",
+      "expectation": "REJECT",
+      "referenceReason": "UNMET_DEPENDENCY",
+      "productionError": "METALEVEL_UNMET_DEPENDENCY"
+    },
+    {
+      "id": "unexecuted-prerequisite-06",
+      "family": "unexecuted-prerequisite",
+      "path": "unexecuted-prerequisite-06.json",
+      "bytes": 7184,
+      "sha256": "f3825f166b532d0ebc63bbde19661ce28c0397ef63f6aa3ac7d0dd3dc457b97b",
+      "expectation": "REJECT",
+      "referenceReason": "UNMET_DEPENDENCY",
+      "productionError": "METALEVEL_UNMET_DEPENDENCY"
+    },
+    {
+      "id": "unexecuted-prerequisite-07",
+      "family": "unexecuted-prerequisite",
+      "path": "unexecuted-prerequisite-07.json",
+      "bytes": 7184,
+      "sha256": "72546ec068243225f6ea02eac525a656a7c558a55aca2952b1027a78dfd3d98a",
+      "expectation": "REJECT",
+      "referenceReason": "UNMET_DEPENDENCY",
+      "productionError": "METALEVEL_UNMET_DEPENDENCY"
+    },
+    {
+      "id": "unexecuted-prerequisite-08",
+      "family": "unexecuted-prerequisite",
+      "path": "unexecuted-prerequisite-08.json",
+      "bytes": 7184,
+      "sha256": "a5436e5afd17deeec03af425a04142f764cc5d177b0ac498d1f466c6717b3752",
+      "expectation": "REJECT",
+      "referenceReason": "UNMET_DEPENDENCY",
+      "productionError": "METALEVEL_UNMET_DEPENDENCY"
+    },
+    {
+      "id": "unsafe-accepted-stop-01",
+      "family": "unsafe-accepted-stop",
+      "path": "unsafe-accepted-stop-01.json",
+      "bytes": 7147,
+      "sha256": "2b3cc50c7e9af023466aaf89dc27eb72bd7c9ee405b6648b672efdcd2afdeb9e",
+      "expectation": "REJECT",
+      "referenceReason": "UNSAFE_ACCEPTED_STOP",
+      "productionError": "METALEVEL_UNSAFE_ACCEPTED_STOP"
+    },
+    {
+      "id": "unsafe-accepted-stop-02",
+      "family": "unsafe-accepted-stop",
+      "path": "unsafe-accepted-stop-02.json",
+      "bytes": 7147,
+      "sha256": "179fde377ce054b9b4322fea7fb61da907f870f4ef93fd8276b813d68134398a",
+      "expectation": "REJECT",
+      "referenceReason": "UNSAFE_ACCEPTED_STOP",
+      "productionError": "METALEVEL_UNSAFE_ACCEPTED_STOP"
+    },
+    {
+      "id": "unsafe-accepted-stop-03",
+      "family": "unsafe-accepted-stop",
+      "path": "unsafe-accepted-stop-03.json",
+      "bytes": 7147,
+      "sha256": "7d7bfc22087474ee62c8e36101a1161b8881740880e8d51b8abd7219cc3de3de",
+      "expectation": "REJECT",
+      "referenceReason": "UNSAFE_ACCEPTED_STOP",
+      "productionError": "METALEVEL_UNSAFE_ACCEPTED_STOP"
+    },
+    {
+      "id": "unsafe-accepted-stop-04",
+      "family": "unsafe-accepted-stop",
+      "path": "unsafe-accepted-stop-04.json",
+      "bytes": 7147,
+      "sha256": "b55e341535dad3fb5bd7f6965eed05a320b7403fecc691165cfe3e06311f3a03",
+      "expectation": "REJECT",
+      "referenceReason": "UNSAFE_ACCEPTED_STOP",
+      "productionError": "METALEVEL_UNSAFE_ACCEPTED_STOP"
+    },
+    {
+      "id": "unsafe-accepted-stop-05",
+      "family": "unsafe-accepted-stop",
+      "path": "unsafe-accepted-stop-05.json",
+      "bytes": 7147,
+      "sha256": "e50287ce890c5c0f5fa3a125c497a4edd41ba4d5cfb7904ba8f8a43efec298cd",
+      "expectation": "REJECT",
+      "referenceReason": "UNSAFE_ACCEPTED_STOP",
+      "productionError": "METALEVEL_UNSAFE_ACCEPTED_STOP"
+    },
+    {
+      "id": "unsafe-accepted-stop-06",
+      "family": "unsafe-accepted-stop",
+      "path": "unsafe-accepted-stop-06.json",
+      "bytes": 7147,
+      "sha256": "66fcb17e3f547f4f83363860421d5cef0d24320501a351ddea5005354b32e5e3",
+      "expectation": "REJECT",
+      "referenceReason": "UNSAFE_ACCEPTED_STOP",
+      "productionError": "METALEVEL_UNSAFE_ACCEPTED_STOP"
+    },
+    {
+      "id": "unsafe-accepted-stop-07",
+      "family": "unsafe-accepted-stop",
+      "path": "unsafe-accepted-stop-07.json",
+      "bytes": 7147,
+      "sha256": "bd9f39e14f0e2fc92798030d259185a066d56bd0c9dd976f89302848e0bd77b9",
+      "expectation": "REJECT",
+      "referenceReason": "UNSAFE_ACCEPTED_STOP",
+      "productionError": "METALEVEL_UNSAFE_ACCEPTED_STOP"
+    },
+    {
+      "id": "unsafe-accepted-stop-08",
+      "family": "unsafe-accepted-stop",
+      "path": "unsafe-accepted-stop-08.json",
+      "bytes": 7147,
+      "sha256": "a31f7d553c5766e874b7bc6b8f97b3fbeb86a2b5c0a08cfdd80ffbbe3e97f4cc",
+      "expectation": "REJECT",
+      "referenceReason": "UNSAFE_ACCEPTED_STOP",
+      "productionError": "METALEVEL_UNSAFE_ACCEPTED_STOP"
+    },
+    {
+      "id": "unaffordable-reservation-01",
+      "family": "unaffordable-reservation",
+      "path": "unaffordable-reservation-01.json",
+      "bytes": 7153,
+      "sha256": "c4901f75f5ed0971f7446745b9aea227b808cfc50f86de989a76f3f4c053d096",
+      "expectation": "REJECT",
+      "referenceReason": "UNAFFORDABLE_RESERVATION",
+      "productionError": "METALEVEL_UNAFFORDABLE_RESERVATION"
+    },
+    {
+      "id": "unaffordable-reservation-02",
+      "family": "unaffordable-reservation",
+      "path": "unaffordable-reservation-02.json",
+      "bytes": 7153,
+      "sha256": "823124845d3cdc306b090392ec5922e513a9d50063a849f4c19a695980a392a2",
+      "expectation": "REJECT",
+      "referenceReason": "UNAFFORDABLE_RESERVATION",
+      "productionError": "METALEVEL_UNAFFORDABLE_RESERVATION"
+    },
+    {
+      "id": "unaffordable-reservation-03",
+      "family": "unaffordable-reservation",
+      "path": "unaffordable-reservation-03.json",
+      "bytes": 7153,
+      "sha256": "5a52e40ae4cffc270f30fc63e374596b011190f10ecaa163d4a45c4d6356fc02",
+      "expectation": "REJECT",
+      "referenceReason": "UNAFFORDABLE_RESERVATION",
+      "productionError": "METALEVEL_UNAFFORDABLE_RESERVATION"
+    },
+    {
+      "id": "unaffordable-reservation-04",
+      "family": "unaffordable-reservation",
+      "path": "unaffordable-reservation-04.json",
+      "bytes": 7153,
+      "sha256": "faf1becd5d84766ee262dc22231c0238ec8df502a070401a343f82f6c1d5dc95",
+      "expectation": "REJECT",
+      "referenceReason": "UNAFFORDABLE_RESERVATION",
+      "productionError": "METALEVEL_UNAFFORDABLE_RESERVATION"
+    },
+    {
+      "id": "unaffordable-reservation-05",
+      "family": "unaffordable-reservation",
+      "path": "unaffordable-reservation-05.json",
+      "bytes": 7153,
+      "sha256": "73944fa9cac40d72d400ee5969133efe7dbc6559d94ccc50c9e84cae08c7c958",
+      "expectation": "REJECT",
+      "referenceReason": "UNAFFORDABLE_RESERVATION",
+      "productionError": "METALEVEL_UNAFFORDABLE_RESERVATION"
+    },
+    {
+      "id": "unaffordable-reservation-06",
+      "family": "unaffordable-reservation",
+      "path": "unaffordable-reservation-06.json",
+      "bytes": 7153,
+      "sha256": "cde016b19967b60166543d074d6b7a963972f2e45e7b6468ecd726e76446203c",
+      "expectation": "REJECT",
+      "referenceReason": "UNAFFORDABLE_RESERVATION",
+      "productionError": "METALEVEL_UNAFFORDABLE_RESERVATION"
+    },
+    {
+      "id": "unaffordable-reservation-07",
+      "family": "unaffordable-reservation",
+      "path": "unaffordable-reservation-07.json",
+      "bytes": 7153,
+      "sha256": "35a89bf07632d77d132c3343e659c00a3e469a5fecc0caaeed63a973a4d029c3",
+      "expectation": "REJECT",
+      "referenceReason": "UNAFFORDABLE_RESERVATION",
+      "productionError": "METALEVEL_UNAFFORDABLE_RESERVATION"
+    },
+    {
+      "id": "unaffordable-reservation-08",
+      "family": "unaffordable-reservation",
+      "path": "unaffordable-reservation-08.json",
+      "bytes": 7153,
+      "sha256": "a7e5c21b2510336a4f4acb10b9f81a024b8fdc790a4cb6215a253adee0644df2",
+      "expectation": "REJECT",
+      "referenceReason": "UNAFFORDABLE_RESERVATION",
+      "productionError": "METALEVEL_UNAFFORDABLE_RESERVATION"
+    },
+    {
+      "id": "successor-resource-reset-01",
+      "family": "successor-resource-reset",
+      "path": "successor-resource-reset-01.json",
+      "bytes": 7153,
+      "sha256": "9cd3793a1a63e61af2a59cf9552ad49e26c16ad782a19c0b2b465add889c81cd",
+      "expectation": "REJECT",
+      "referenceReason": "RESOURCE_CONSERVATION",
+      "productionError": "METALEVEL_RESOURCE_CONSERVATION"
+    },
+    {
+      "id": "successor-resource-reset-02",
+      "family": "successor-resource-reset",
+      "path": "successor-resource-reset-02.json",
+      "bytes": 7153,
+      "sha256": "51c38b062dfa9ab4175fd554fb5c33ca87e2833233e9b2e37d26de7cc7da3859",
+      "expectation": "REJECT",
+      "referenceReason": "RESOURCE_CONSERVATION",
+      "productionError": "METALEVEL_RESOURCE_CONSERVATION"
+    },
+    {
+      "id": "successor-resource-reset-03",
+      "family": "successor-resource-reset",
+      "path": "successor-resource-reset-03.json",
+      "bytes": 7153,
+      "sha256": "d5cf4d8403050b08811e13a731d393a5890c5312265c3bcd743928638d48e7b3",
+      "expectation": "REJECT",
+      "referenceReason": "RESOURCE_CONSERVATION",
+      "productionError": "METALEVEL_RESOURCE_CONSERVATION"
+    },
+    {
+      "id": "successor-resource-reset-04",
+      "family": "successor-resource-reset",
+      "path": "successor-resource-reset-04.json",
+      "bytes": 7153,
+      "sha256": "ab769c7903478e9effab606992221c07be227030e55dec45dccd0b17c4ab09cd",
+      "expectation": "REJECT",
+      "referenceReason": "RESOURCE_CONSERVATION",
+      "productionError": "METALEVEL_RESOURCE_CONSERVATION"
+    },
+    {
+      "id": "successor-resource-reset-05",
+      "family": "successor-resource-reset",
+      "path": "successor-resource-reset-05.json",
+      "bytes": 7153,
+      "sha256": "5647e36646f35c4ab114560e2ab274ee60be4e159688ea55bc03aedbc122ae09",
+      "expectation": "REJECT",
+      "referenceReason": "RESOURCE_CONSERVATION",
+      "productionError": "METALEVEL_RESOURCE_CONSERVATION"
+    },
+    {
+      "id": "successor-resource-reset-06",
+      "family": "successor-resource-reset",
+      "path": "successor-resource-reset-06.json",
+      "bytes": 7153,
+      "sha256": "0ecf82893d0ce2ffdae4d1435eccb3127fc1a44700643e152743589016c6d3f3",
+      "expectation": "REJECT",
+      "referenceReason": "RESOURCE_CONSERVATION",
+      "productionError": "METALEVEL_RESOURCE_CONSERVATION"
+    },
+    {
+      "id": "successor-resource-reset-07",
+      "family": "successor-resource-reset",
+      "path": "successor-resource-reset-07.json",
+      "bytes": 7153,
+      "sha256": "7f60ee790967e55f6e9b89c1aedca34dfbfbd38d76bd480a841200b1865a8068",
+      "expectation": "REJECT",
+      "referenceReason": "RESOURCE_CONSERVATION",
+      "productionError": "METALEVEL_RESOURCE_CONSERVATION"
+    },
+    {
+      "id": "successor-resource-reset-08",
+      "family": "successor-resource-reset",
+      "path": "successor-resource-reset-08.json",
+      "bytes": 7153,
+      "sha256": "0977d372e3ec60880cafe3f53e4f336c1925e3f43e9a0c1578d7d77226f0f157",
+      "expectation": "REJECT",
+      "referenceReason": "RESOURCE_CONSERVATION",
+      "productionError": "METALEVEL_RESOURCE_CONSERVATION"
+    },
+    {
+      "id": "unsupported-seventeenth-computation-01",
+      "family": "unsupported-seventeenth-computation",
+      "path": "unsupported-seventeenth-computation-01.json",
+      "bytes": 40327,
+      "sha256": "5e38e91a9e1c73a1aa5888c26bf89af4e71554d7553929592cd18a9528c2dffb",
+      "expectation": "REJECT",
+      "referenceReason": "UNSUPPORTED_CHOICE_BOUND",
+      "productionError": null
+    },
+    {
+      "id": "unsupported-seventeenth-computation-02",
+      "family": "unsupported-seventeenth-computation",
+      "path": "unsupported-seventeenth-computation-02.json",
+      "bytes": 40327,
+      "sha256": "08d3a4f783e511c9e0fbc5e556d11fcbca284478f703755c40ed402d5142fdc9",
+      "expectation": "REJECT",
+      "referenceReason": "UNSUPPORTED_CHOICE_BOUND",
+      "productionError": null
+    },
+    {
+      "id": "unsupported-seventeenth-computation-03",
+      "family": "unsupported-seventeenth-computation",
+      "path": "unsupported-seventeenth-computation-03.json",
+      "bytes": 40327,
+      "sha256": "1fd57dbc8dadcd452373248b8eb7553204ddf1828c649e965a3513ccff4cea25",
+      "expectation": "REJECT",
+      "referenceReason": "UNSUPPORTED_CHOICE_BOUND",
+      "productionError": null
+    },
+    {
+      "id": "unsupported-seventeenth-computation-04",
+      "family": "unsupported-seventeenth-computation",
+      "path": "unsupported-seventeenth-computation-04.json",
+      "bytes": 40327,
+      "sha256": "1c9e454de7083f07a7410a8a5bf183cba455d1e926ef95158a1285dc4d1b2f99",
+      "expectation": "REJECT",
+      "referenceReason": "UNSUPPORTED_CHOICE_BOUND",
+      "productionError": null
+    },
+    {
+      "id": "unsupported-seventeenth-computation-05",
+      "family": "unsupported-seventeenth-computation",
+      "path": "unsupported-seventeenth-computation-05.json",
+      "bytes": 40327,
+      "sha256": "92f2adabc60db9086424dbb641adb1eb7cfed9e5a08fcec47d605a2c2482e133",
+      "expectation": "REJECT",
+      "referenceReason": "UNSUPPORTED_CHOICE_BOUND",
+      "productionError": null
+    },
+    {
+      "id": "unsupported-seventeenth-computation-06",
+      "family": "unsupported-seventeenth-computation",
+      "path": "unsupported-seventeenth-computation-06.json",
+      "bytes": 40327,
+      "sha256": "e8d1a751d49d9ba92d4e360ed35d7f4a1f70e44e687b3e2ffc074ca2c4739d3e",
+      "expectation": "REJECT",
+      "referenceReason": "UNSUPPORTED_CHOICE_BOUND",
+      "productionError": null
+    },
+    {
+      "id": "unsupported-seventeenth-computation-07",
+      "family": "unsupported-seventeenth-computation",
+      "path": "unsupported-seventeenth-computation-07.json",
+      "bytes": 40327,
+      "sha256": "bf55c79c4821280443b786970f7d5fbe42f168c0c0de27bf14af304627b1cb88",
+      "expectation": "REJECT",
+      "referenceReason": "UNSUPPORTED_CHOICE_BOUND",
+      "productionError": null
+    },
+    {
+      "id": "unsupported-seventeenth-computation-08",
+      "family": "unsupported-seventeenth-computation",
+      "path": "unsupported-seventeenth-computation-08.json",
+      "bytes": 40327,
+      "sha256": "72dabfd386f2a97273382a481d17f26afde5c49da620f60f1e91327d0ec9c26b",
+      "expectation": "REJECT",
+      "referenceReason": "UNSUPPORTED_CHOICE_BOUND",
+      "productionError": null
+    }
+  ],
+  "families": 16,
+  "casesPerFamily": 8,
+  "protectedCustody": false,
+  "qualification": "PUBLIC_FINITE_MODEL_MECHANISM_ONLY_NOT_EMPIRICAL_NATIVE_OR_PROTECTED"
+}

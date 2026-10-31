@@ -53,6 +53,7 @@ const delegatedRegistries = [
   ["CONTINUATION_OPERATIONS", "live-recompilation/api.ts"],
   ["PROCEDURE_OPERATIONS", "procedure-induction/api.ts"],
   ["DELIBERATION_OPERATIONS", "deliberation/api.ts"],
+  ["ECONOMIC_ORCHESTRATION_OPERATIONS", "economic-orchestration/api.ts"],
   ["APPLICATION_OPERATIONS", "application-semantics/api.ts"],
 ]
 const identificationOperations = registeredOperations("finnor-os/packages/private-equity/src/r4/contracts.ts", "R4_OPERATIONS")
@@ -104,6 +105,7 @@ const companyBrainReads = new Set([
   "bilateral-context", "bilateral-read", "bilateral-handoff",
   "program-read", "program-witness", "program-module", "program-projection", "program-artifact", "program-ports", "program-interface-module",
   "compute-search-read", "compute-search-projection",
+  "economic-orchestration-read", "economic-orchestration-projection",
   "interface-read", "interface-projection", "interface-catalogue", "interface-module", "interface-ports",
   "application-read", "application-record", "application-list", "application-history", "application-asset", "application-impact", "application-admission",
   "learning-read", "learning-list", "learning-experience", "learning-admission",
@@ -280,7 +282,7 @@ function routeEntry(method, path, source) {
   const read = method === "GET" || ownerClassification==="READ" || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family) || family === "closing" && ["read", "projection", "ports"].includes(path.slice("closing/".length))
   const adminOnly = restrictedOperations.has(path) || !r1 && !coalitionClassification && denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)) ||
     (family === "read-model" && /read-models\/(reliability|readiness|readiness-slo|failure-injections)/.test(path))
-  const control = r1&&["r1-cancel","r1-reconcile"].includes(path.slice("policies/".length)) || path === "live-controls" || path === "closing/stop" || controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program|capital-formation|application)-(?:cancel|resume|reconcile|advance)$/.test(path)
+  const control = r1&&["r1-cancel","r1-reconcile"].includes(path.slice("policies/".length)) || path === "live-controls" || path === "closing/stop" || controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|economic-orchestration|interface|decision-slice|deliberation|capital-program|capital-formation|application)-(?:cancel|resume|reconcile|advance)$/.test(path) || path === "company-brain/economic-orchestration-invalidate"
   const classification = adminOnly ? "ADMIN" : stream ? "STREAM" : ownerClassification ?? (read ? "READ" : control ? "CONTROL" : "MUTATION")
   const systemOnly = path.startsWith("webhooks/") || ["ready", "release", "vitals", "health"].includes(path)
   const humanOnly = humanOnlyPatterns.some((pattern) => pattern.test(path))
@@ -335,10 +337,12 @@ function registryEntries() {
   const universal = readFileSync(join(project, "finnor-os/packages/domain-plugins/universal-actions/index.ts"), "utf8")
   const universalActions = quoted(block(universal, "const ACTION_TYPES:", "];"))
   const querySource = readFileSync(join(project, "finnor-os/packages/shared-types/src/operational-queries.ts"), "utf8")
+  const economicQuerySource = readFileSync(join(project, "finnor-os/packages/shared-types/src/economic-reads.ts"), "utf8")
   const queries = [...quoted(block(querySource, "export const CORE_OPERATIONAL_QUERY_INTENTS = [", "] as const")),
     ...quoted(block(querySource, "export const PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS = [", "] as const")),
     ...quoted(block(querySource, "export const PROGRAM_OPERATIONAL_QUERY_INTENTS = [", "] as const")),
-    ...quoted(block(querySource, "export const CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS = [", "] as const"))]
+    ...quoted(block(querySource, "export const CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS = [", "] as const")),
+    ...quoted(block(economicQuerySource, "export const ECONOMIC_READ_QUERY_INTENTS = [", "] as const"))]
   const registry = readFileSync(join(project, "finnor-os/packages/orchestration/src/plugin-registry.ts"), "utf8")
   const humanOnly = quoted(block(registry, "export const HUMAN_ONLY_PLANNING_CAPABILITIES = [", "] as const"))
   const humanOnlySet = new Set(humanOnly)

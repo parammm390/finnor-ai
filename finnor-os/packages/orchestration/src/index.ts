@@ -5,6 +5,7 @@ import { bindWorkInputConversation } from "./conversation-memory";
 import { isDeepStrictEqual } from "node:util";
 import {
   RetiredVerticalError,
+  EconomicReadRequestSchema,
   isRetiredWaterAction,
   type DomainAction,
   type DomainPolicy,
@@ -19,7 +20,7 @@ import {
 import {
   MAX_HIGH_EGRESS_ROWS,
   withTenant, domainActions, domainPolicies, domainPolicyRevisions, actionLog,
-  decisionReceipts, planRepairs, enqueueJob, receiveWork, recordWorkResponse, transitionWork,
+  decisionReceipts, planRepairs, enqueueJob, receiveWork, recordWorkResponse, readWorkInputResponse, transitionWork, WorkQueryInProgressError,
   beginWorkPlannerAttempt, finishWorkPlannerAttempt, latestWorkInput, reconcileWorkStatus,
   recordRejectedWorkPlan, activeWorkPlanRevision,
   authorityStates,
@@ -61,6 +62,8 @@ import { assembleOperatingContext } from "./operating-context";
 import { interactionAwareOperationalDecision, interactionBusinessRoot, resolveOperatingInteractionContext, validateInteractionBusinessScope } from "./interaction-context";
 import { employeeAuthoritySnapshot, evaluateActionApproval, evaluateAuthority, finalizeApprovalAuthorityTx, isFinalApprovalStep, revalidateActionExecution } from "@finnor/authority";
 import { queryAuthorityRequest } from "./authority-runtime";
+import { economicReadInput, economicReadForInput } from "./economic-read-intake";
+import { assertEconomicReadReplyAccess, storedEconomicQuery } from "./economic-read-replay";
 import { isConsequentialAction } from "./compiler";
 import {
   ActionCancellationConflictError,
@@ -105,9 +108,13 @@ export * from "./planner-memory";
 export * from "./policy-simulation";
 export * from "./instruction-trace";
 export * from "./fast-read-lane";
+export * from "./economic-read-intake";
+export * from "./economic-query-answer";
+export * from "./economic-read-replay";
 export * from "./conversation";
 export * from "./authority-runtime";
 export * from "./objective-loop";
+export { readObjectiveEconomicQueryReply } from "./objective-economic-reads";
 export * from "./operating-context";
 export * from "./research-context";
 export * from "./event-waits";
@@ -420,23 +427,29 @@ export class FinnorOrchestrator implements Orchestrator {
     request: OperationalQueryRequest,
     ctx: TenantContext,
     work: { workId: string; workInputId: string; instructionId: string },
-    opts: { emitTrace?: boolean; executionKey?: string } = {},
+    opts: { emitTrace?: boolean; executionKey?: string; recoveryAttemptKey?: string; recordResponse?: (execution: OperationalQueryExecution, answer?: AnswerEnvelope) => Promise<void> } = {},
   ): Promise<{ execution: OperationalQueryExecution; answer?: AnswerEnvelope }> {
     const start = Date.now();
-    await transitionWork(ctx.tenantId, work.workId, "executing", "query_execution_started", {
-      intent: request.intent,
-      workInputId: work.workInputId,
-    }, { expectedWorkInputId: work.workInputId });
+    const economic = request.intent === "company_revenue" || request.intent === "stock_quote";
     try {
-      if (!this.fastReadOnlyRouter.execute) throw new Error("Operational query execution is unavailable");
-      const authority = await evaluateAuthority(ctx, queryAuthorityRequest(request, work.workId));
-      await transitionWork(ctx.tenantId, work.workId, "executing", "query_authority_evaluated", {
-        authorityDecisionId: authority.id,
-        authorityRevision: authority.authorityRevision,
-        outcome: authority.outcome,
-        reasonCode: authority.reasonCode,
+      await transitionWork(ctx.tenantId, work.workId, "executing", "query_execution_started", {
+        intent: request.intent,
+        workInputId: work.workInputId,
       }, { expectedWorkInputId: work.workInputId });
-      if (authority.outcome !== "allowed") throw new Error(`Authority denied: ${authority.reasonCode}`);
+      if (!this.fastReadOnlyRouter.execute) throw new Error("Operational query execution is unavailable");
+      // Exact financial names/symbols must resolve before the canonical grant
+      // owner can evaluate their resource IDs. The read-only economic owner uses
+      // canExerciseAuthorityTx with the requested capability and exact IDs.
+      if (!economic) {
+        const authority = await evaluateAuthority(ctx, queryAuthorityRequest(request, work.workId));
+        await transitionWork(ctx.tenantId, work.workId, "executing", "query_authority_evaluated", {
+          authorityDecisionId: authority.id,
+          authorityRevision: authority.authorityRevision,
+          outcome: authority.outcome,
+          reasonCode: authority.reasonCode,
+        }, { expectedWorkInputId: work.workInputId });
+        if (authority.outcome !== "allowed") throw new Error(`Authority denied: ${authority.reasonCode}`);
+      }
       if (opts.emitTrace !== false) {
         await emitInstructionEvent(ctx.tenantId, work.instructionId, "context_retrieved", {
           chips: [{ label: `${request.intent} canonical query selected`, source: `read-model:${request.intent}`, kind: "CANONICAL", role: "answer_evidence" }],
@@ -458,11 +471,12 @@ export class FinnorOrchestrator implements Orchestrator {
         workId: work.workId,
         workInputId: work.workInputId,
         executionKey: opts.executionKey ?? work.instructionId,
+        recoveryAttemptKey: opts.recoveryAttemptKey,
       });
       const durationMs = Math.max(0, Date.now() - start);
       const queryId = execution.result.execution?.id ?? execution.metadata.queryId;
       const completedAt = execution.metadata.completedAt;
-      const normalizedExecution: OperationalQueryExecution = {
+      const normalizedExecution: OperationalQueryExecution = economic ? execution : {
         ...execution,
         metadata: {
           ...execution.metadata,
@@ -472,6 +486,9 @@ export class FinnorOrchestrator implements Orchestrator {
         },
       };
       const answer = this.fastReadOnlyRouter.answer?.(normalizedExecution);
+      // Other query families retain their existing intake response owner.
+      // Financial execution/reply custody already committed atomically upstream.
+      if (!economic) await opts.recordResponse?.(normalizedExecution, answer);
       if (opts.emitTrace !== false) {
         await emitInstructionEvent(ctx.tenantId, work.instructionId, "verifying", {
           queryId,
@@ -484,7 +501,9 @@ export class FinnorOrchestrator implements Orchestrator {
           rowCount: normalizedExecution.result.count,
           sourceKind: "CANONICAL",
         });
-        await emitInstructionEvent(ctx.tenantId, work.instructionId, "completed", answer
+        await emitInstructionEvent(ctx.tenantId, work.instructionId, "completed", economic
+          ? { queryId, intent: request.intent, durationMs }
+          : answer
           ? createInstructionTraceAnswerEnvelope(queryId, answer)
           : { queryId, intent: request.intent, durationMs });
       }
@@ -493,13 +512,17 @@ export class FinnorOrchestrator implements Orchestrator {
         intent: request.intent,
         durationMs,
       }, {
-        finalOutcome: { kind: "operational_query", query: normalizedExecution },
+        finalOutcome: economic ? { kind: "operational_query", queryId, intent: request.intent }
+          : { kind: "operational_query", query: normalizedExecution },
+        ...(economic && opts.recoveryAttemptKey ? { recovery: { status: "succeeded", attemptKey: opts.recoveryAttemptKey } } : {}),
         expectedWorkInputId: work.workInputId,
       });
       return { execution: normalizedExecution, ...(answer ? { answer } : {}) };
     } catch (err) {
+      if (err instanceof WorkQueryInProgressError) throw err;
       const publicMessage = `The canonical ${request.intent.replaceAll("_", " ")} read could not be queried, so the result cannot be verified.`;
-      const failure = { ...workFailure(err, publicMessage), message: publicMessage, cause: err instanceof Error ? err.message.slice(0, 300) : "query unavailable" };
+      const failure = { ...workFailure(err, publicMessage), message: publicMessage,
+        ...(!economic ? { cause: err instanceof Error ? err.message.slice(0, 300) : "query unavailable" } : {}) };
       await transitionWork(ctx.tenantId, work.workId, "failed", "query_execution_failed", {
         intent: request.intent,
         message: failure.message,
@@ -531,7 +554,9 @@ export class FinnorOrchestrator implements Orchestrator {
       });
       return { ...execution, workId: request.workId, workInputId: input.id, instructionId: input.instructionId };
     }
-    const instruction = `Typed operational query: ${request.intent}`;
+    const economic = request.intent === "company_revenue" || request.intent === "stock_quote";
+    const parsedEconomic = economic ? EconomicReadRequestSchema.parse(request) : null;
+    const instruction = parsedEconomic ? economicReadInput(parsedEconomic) : `Typed operational query: ${request.intent}`;
     const received = await receiveWork({
       tenantId: ctx.tenantId,
       instruction,
@@ -542,9 +567,24 @@ export class FinnorOrchestrator implements Orchestrator {
       userId: ctx.employeeId ?? ctx.userId,
       idempotencyKey: opts.idempotencyKey,
       activeContext: opts.activeContext as Record<string, unknown> | undefined,
-      authorityContext: await authorityContextForWork(ctx),
+      authorityContext: economic ? intakeAuthorityContext(ctx) : await authorityContextForWork(ctx),
     });
     if (received.duplicate) {
+      if (economic) {
+        const owned = await readWorkInputResponse({ tenantId: ctx.tenantId, userId: ctx.userId,
+          workId: received.workId, workInputId: received.workInputId });
+        const execution = storedEconomicQuery(owned.response);
+        if (!execution) {
+          // A malformed financial reply never falls through to legacy casts.
+          if (owned.response) throw new ExactWorkIntakeConflict();
+          throw new OperationalQueryReplayUnavailable(received);
+        }
+        if (!isDeepStrictEqual(execution.request, parsedEconomic)) throw new ExactWorkIntakeConflict();
+        await assertEconomicReadReplyAccess(ctx, owned.response, received);
+        const answer = this.fastReadOnlyRouter.answer?.(execution);
+        return { ...execution, workId: received.workId, workInputId: received.workInputId, instructionId: received.instructionId,
+          duplicate: true, ...(answer ? { answer } : {}) };
+      }
       const finalOutcome = received.finalOutcome && typeof received.finalOutcome === "object" ? received.finalOutcome as Record<string, unknown> : {};
       const response = finalOutcome.response && typeof finalOutcome.response === "object"
         ? finalOutcome.response as Record<string, unknown> : {};
@@ -560,6 +600,7 @@ export class FinnorOrchestrator implements Orchestrator {
       }
       throw new OperationalQueryReplayUnavailable(received);
     }
+    try {
     await ensureInstructionSession(ctx.tenantId, received.instructionId, instruction, {
       sessionId: opts.sessionId,
       userId: ctx.userId,
@@ -572,11 +613,13 @@ export class FinnorOrchestrator implements Orchestrator {
       workId: received.workId,
       workInputId: received.workInputId,
       instructionId: received.instructionId,
-    }, { executionKey: opts.executionKey ?? opts.idempotencyKey ?? received.instructionId });
-    await recordWorkResponse({ tenantId: ctx.tenantId, workId: received.workId, workInputId: received.workInputId, userId: ctx.employeeId ?? ctx.userId }, {
-      request: result.execution.request, result: result.execution.result, execution: result.execution.metadata,
-      workId: received.workId, workInputId: received.workInputId, instructionId: received.instructionId,
-      ...(result.answer ? { answer: result.answer } : {}),
+    }, {
+      executionKey: opts.executionKey ?? opts.idempotencyKey ?? received.instructionId,
+      recordResponse: (execution, answer) => recordWorkResponse({ tenantId: ctx.tenantId, workId: received.workId, workInputId: received.workInputId, userId: ctx.employeeId ?? ctx.userId }, {
+        request: execution.request, result: execution.result, execution: execution.metadata,
+        workId: received.workId, workInputId: received.workInputId, instructionId: received.instructionId,
+        ...(answer ? { answer } : {}),
+      }),
     });
     return {
       ...result.execution,
@@ -585,6 +628,14 @@ export class FinnorOrchestrator implements Orchestrator {
       instructionId: received.instructionId,
       ...(result.answer ? { answer: result.answer } : {}),
     };
+    } catch (error) {
+      if (!economic || error instanceof WorkQueryInProgressError) throw error;
+      const failure = { ...workFailure(error, "The original economic read could not be completed."),
+        message: "The original economic read could not be completed; retry its original Work explicitly." };
+      await transitionWork(ctx.tenantId, received.workId, "failed", "query_intake_failed", failure,
+        { failure, expectedWorkInputId: received.workInputId }).catch(() => undefined);
+      throw error;
+    }
   }
 
   /** Same instruction path as handleInstruction, with an additive direct-answer
@@ -616,28 +667,68 @@ export class FinnorOrchestrator implements Orchestrator {
           authorityContext: intakeAuthorityContext(ctx),
         });
     await bindWorkInputConversation({ ctx, workId: received.workId, workInputId: received.workInputId, conversation: opts.conversationContext });
-    const interactionContext = await resolveOperatingInteractionContext({
-      tenantId: ctx.tenantId,
-      context: opts.activeContext,
-      channel: opts.channel ?? "console",
-      workId: received.workId,
-    });
-    opts = { ...opts, activeContext: interactionContext };
+    let economicRead = economicReadForInput(instruction);
+    if (!economicRead && /^Typed operational query:\s*(?:company_revenue|stock_quote)\b/.test(instruction)) {
+      const owned = await readWorkInputResponse({ tenantId: ctx.tenantId, userId: ctx.userId,
+        workId: received.workId, workInputId: received.workInputId });
+      // Older placeholder inputs are recoverable only when their actual existing
+      // query receipt owns the complete request. Never guess missing selectors.
+      const receipt = owned.queryExecutions.length === 1 ? owned.queryExecutions[0] : undefined;
+      const parsed = EconomicReadRequestSchema.safeParse(receipt?.request);
+      if (parsed.success && instruction.trim() === `Typed operational query: ${parsed.data.intent}`) economicRead = parsed.data;
+    }
+    if (!economicRead && /^(?:Typed economic query v1:|Typed operational query:\s*(?:company_revenue|stock_quote)\b)/.test(instruction))
+      throw new OperationalQueryReplayUnavailable({ ...received, status: "status" in received ? received.status : "failed" });
+    if (economicRead) {
+      const owned = await readWorkInputResponse({ tenantId: ctx.tenantId, userId: ctx.userId,
+        workId: received.workId, workInputId: received.workInputId });
+      if (owned.input.instructionId !== received.instructionId || owned.input.instructionText !== instruction) throw new ExactWorkIntakeConflict();
+      if (owned.response && (!opts.plannerAttemptKey || "duplicate" in received && received.duplicate)) {
+        const execution = storedEconomicQuery(owned.response);
+        if (!execution || !isDeepStrictEqual(execution.request, economicRead)) throw new ExactWorkIntakeConflict();
+        await assertEconomicReadReplyAccess(ctx, owned.response, received);
+        const answer = this.fastReadOnlyRouter.answer?.(execution);
+        return { actions: [], query: execution, ...(answer ? { answer } : {}),
+          workId: received.workId, workInputId: received.workInputId, instructionId: received.instructionId };
+      }
+      if (!owned.response && owned.queryExecutions.some(row => row.status === "running") && !opts.plannerAttemptKey)
+        throw new WorkQueryInProgressError(received.workId, received.workInputId);
+    }
+    if (economicRead && "duplicate" in received && received.duplicate)
+      throw new OperationalQueryReplayUnavailable(received);
     const workId = received.workId;
     const workInputId = received.workInputId;
     const instructionId = received.instructionId;
-    const effectiveOpts: InstructionOptions = { ...opts, workId, workInputId, instructionId };
-    await ensureInstructionSession(ctx.tenantId, instructionId, instruction, {
+    let interactionContext: Awaited<ReturnType<typeof resolveOperatingInteractionContext>>;
+    try {
+      interactionContext = await resolveOperatingInteractionContext({
+        tenantId: ctx.tenantId,
+        context: opts.activeContext,
+        channel: opts.channel ?? "console",
+        workId,
+      });
+      opts = { ...opts, activeContext: interactionContext };
+      await ensureInstructionSession(ctx.tenantId, instructionId, instruction, {
         sessionId: opts.sessionId,
         userId: ctx.userId,
         source: opts.channel === "voice" ? "voice" : "typed",
         workId,
       });
-    await emitInstructionEvent(ctx.tenantId, instructionId, "received", { workId });
-    await transitionWork(ctx.tenantId, workId, "understanding", "understanding_started", { instructionId, workInputId }, {
-      ...(opts.activeContext ? { activeContext: opts.activeContext as Record<string, unknown> } : {}),
-      expectedWorkInputId: workInputId,
-    });
+      await emitInstructionEvent(ctx.tenantId, instructionId, "received", { workId });
+      await transitionWork(ctx.tenantId, workId, "understanding", "understanding_started", { instructionId, workInputId }, {
+        ...(opts.activeContext ? { activeContext: opts.activeContext as Record<string, unknown> } : {}),
+        expectedWorkInputId: workInputId,
+      });
+    } catch (error) {
+      if (economicRead) {
+        const failure = { ...workFailure(error, "The original economic read could not be accepted."),
+          message: "The original economic read could not be accepted; retry its original Work explicitly." };
+        await transitionWork(ctx.tenantId, workId, "failed", "economic_read_intake_failed", failure,
+          { failure, expectedWorkInputId: workInputId }).catch(() => undefined);
+      }
+      throw error;
+    }
+    const effectiveOpts: InstructionOptions = { ...opts, workId, workInputId, instructionId };
 
     // This branch is intentionally before memory retrieval and planner invocation.
     // Classification is read-only and can only produce a typed query; it never
@@ -647,12 +738,14 @@ export class FinnorOrchestrator implements Orchestrator {
     let fastAnswer: AnswerEnvelope | null = null;
     let fastQuery: OperationalQueryExecution | undefined;
     let operatingContext: OperatingContext | undefined;
-    const shouldClassify = !opts.skipFastReadClassification && opts.fastReadDecision === undefined;
+    const shouldClassify = !economicRead && !opts.skipFastReadClassification && opts.fastReadDecision === undefined;
     let fastDecision: OperationalQueryDecision | undefined;
-    let instructionRoute: InstructionRouteDecision | undefined = opts.instructionRouteDecision;
+    let instructionRoute: InstructionRouteDecision | undefined = economicRead
+      ? { version: 1, route: "QUERY", reasonCodes: ["original_user_economic_read"] } : opts.instructionRouteDecision;
     try {
-      const businessRoot = interactionBusinessRoot(interactionContext);
-      fastDecision = opts.fastReadDecision ? interactionAwareOperationalDecision(opts.fastReadDecision, interactionContext, instruction) : undefined;
+      const businessRoot = economicRead ? null : interactionBusinessRoot(interactionContext);
+      fastDecision = economicRead ? { route: "fast_read", confidence: "high", request: economicRead }
+        : opts.fastReadDecision ? interactionAwareOperationalDecision(opts.fastReadDecision, interactionContext, instruction) : undefined;
       if (shouldClassify) {
         // Legacy/unit embeddings may provide a fully injected fast-read seam
         // without a configured database. A missing vertical identity is not a
@@ -703,12 +796,12 @@ export class FinnorOrchestrator implements Orchestrator {
         activeContext: opts.activeContext,
         conversational: isConversationalTurn(instruction, opts),
       });
-      if (opts.conversationContext?.resolution.status === "clarification_required") {
+      if (!economicRead && opts.conversationContext?.resolution.status === "clarification_required") {
         instructionRoute = { version: 1, route: "ATOMIC_EFFECT", reasonCodes: ["phase6_reference_or_sender_ambiguous"] };
       }
       // Durable startup validates its own accepted scope. Other lanes validate
       // here before any synchronous read, planning or conversational response.
-      if (instructionRoute.route !== "OBJECTIVE") await validateInteractionBusinessScope(ctx, interactionContext);
+      if (!economicRead && instructionRoute.route !== "OBJECTIVE") await validateInteractionBusinessScope(ctx, interactionContext);
       await transitionWork(ctx.tenantId, workId, "understanding", "instruction_routed", {
         policyVersion: instructionRoute.version,
         route: instructionRoute.route,
@@ -718,7 +811,7 @@ export class FinnorOrchestrator implements Orchestrator {
         : { executionModel: instructionRoute.route === "QUERY" ? "query" : instructionRoute.route === "ATOMIC_EFFECT" ? "atomic_effect" : "objective", expectedWorkInputId: workInputId });
       if (instructionRoute.route === "QUERY" && routeReadDecision.route === "fast_read" && this.fastReadOnlyRouter.execute) {
         await emitInstructionEvent(ctx.tenantId, instructionId, "step_progress", { stage: "resolving_context", sourceKind: "PROFILE" });
-        operatingContext = (await assembleOperatingContext(ctx, {
+        if (!economicRead) operatingContext = (await assembleOperatingContext(ctx, {
           instruction,
           workId,
           sessionId: opts.sessionId,
@@ -727,7 +820,10 @@ export class FinnorOrchestrator implements Orchestrator {
           includeMemory: false,
           includeCanonicalBusinessState: false,
         })).context;
-        const result = await this.executeFastOperationalQuery(routeReadDecision.request, ctx, { workId, workInputId, instructionId }, { executionKey: opts.executionKey ?? opts.idempotencyKey ?? instructionId });
+        const result = await this.executeFastOperationalQuery(routeReadDecision.request, ctx, { workId, workInputId, instructionId }, {
+          executionKey: opts.executionKey ?? opts.idempotencyKey ?? instructionId,
+          recoveryAttemptKey: opts.plannerAttemptKey,
+        });
         fastQuery = result.execution;
         fastAnswer = result.answer ?? null;
       } else if (!opts.skipFastReadClassification && fastDecision === undefined) {
@@ -736,7 +832,10 @@ export class FinnorOrchestrator implements Orchestrator {
         fastAnswer = await this.fastReadOnlyRouter.route(instruction, ctx);
       }
     } catch (err) {
-      const failure = workFailure(err, "Instruction classification failed");
+      if (err instanceof WorkQueryInProgressError) throw err;
+      const failure = economicRead ? { ...workFailure(err, "The original economic read could not be completed."),
+        message: "The original economic read could not be completed; retry its original Work explicitly." }
+        : workFailure(err, "Instruction classification failed");
       await transitionWork(ctx.tenantId, workId, "failed", "understanding_failed", failure, { failure, expectedWorkInputId: workInputId }).catch(() => undefined);
       await emitInstructionEvent(ctx.tenantId, instructionId, "failed", { error: failure.message, workId, recoverable: true });
       throw err;

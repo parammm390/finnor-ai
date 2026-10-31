@@ -4,6 +4,7 @@
  */
 import type { CanonicalEntityRef, CompanyContext, CompanyContextAnchor, PartyRef } from "./company-graph";
 import type { PeWorldRootRef } from "./private-equity";
+import { ECONOMIC_READ_QUERY_INTENTS, type EconomicReadRequest, type RevenueReadRequest, type QuoteReadRequest, type EconomicOperationalQueryResult } from "./economic-reads";
 
 export const OPERATIONAL_QUERY_VERSION = 1 as const;
 
@@ -40,6 +41,7 @@ export interface ConfidentialComputationQueryRequest { intent:"confidential_econ
 export const OPERATIONAL_QUERY_INTENTS = [
   ...CORE_OPERATIONAL_QUERY_INTENTS,
   ...PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
+  ...ECONOMIC_READ_QUERY_INTENTS,
   ...PROGRAM_OPERATIONAL_QUERY_INTENTS,
   ...CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS,
 ] as const;
@@ -174,6 +176,7 @@ export type CoreOperationalQueryRequest =
   | TeamRosterRequest;
 
 export type CanonicalOperationalQueryRequest =
+  | EconomicReadRequest
   | HarnessProgramQueryRequest
   | EconomicProgrammeQueryRequest
   | ConfidentialComputationQueryRequest
@@ -762,6 +765,7 @@ export interface EconomicProgrammeQueryResult extends OperationalQueryResultBase
 export interface ConfidentialComputationQueryResult extends OperationalQueryResultBase<"confidential_economic_computation_v1"> {}
 
 export type OperationalQueryResult =
+  | EconomicOperationalQueryResult
   | HarnessProgramQueryResult
   | EconomicProgrammeQueryResult
   | ConfidentialComputationQueryResult
@@ -785,7 +789,9 @@ export type OperationalQueryResult =
 export type OperationalQueryResultEnvelope = OperationalQueryResult;
 
 export type OperationalQueryResultFor<R extends OperationalQueryRequest> =
-  R extends EconomicProgrammeQueryRequest ? EconomicProgrammeQueryResult
+  R extends RevenueReadRequest ? Extract<EconomicOperationalQueryResult, { intent: "company_revenue" }>
+    : R extends QuoteReadRequest ? Extract<EconomicOperationalQueryResult, { intent: "stock_quote" }>
+    : R extends EconomicProgrammeQueryRequest ? EconomicProgrammeQueryResult
     : R extends HarnessProgramQueryRequest ? HarnessProgramQueryResult
     : R extends ConfidentialComputationQueryRequest ? ConfidentialComputationQueryResult
     : R extends WorkListRequest ? WorkListResult
