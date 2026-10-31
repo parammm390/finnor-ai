@@ -30,7 +30,7 @@ const nextConfig = {
   serverExternalPackages: ["pg", "ioredis", "groq-sdk", "pdf-parse", "pino", "thread-stream", "pino-pretty", "@axiomhq/pino", "tsx", "esbuild", "fs-ext", "@finnor/source-custody"],
   // The separately compiled S6 runtime uses Node ESM .js specifiers. Resolve
   // those same imports to original TS when bundling the ordinary API client.
-  experimental: { extensionAlias: { ".js": [".ts", ".tsx", ".js"] } },
+  experimental: { cpus: 2, extensionAlias: { ".js": [".ts", ".tsx", ".js"] } },
   webpack: (config, { webpack, isServer }) => {
     // Native numerical workers read and hash their original files. Webpack's
     // asset URL wrapper is not a Node file URL and cannot replace that binding.
@@ -86,6 +86,9 @@ const nextConfig = {
       "../../packages/private-equity/src/primary-diligence/checker-spec.md",
       "../../packages/private-equity/src/bilateral-opportunities/checker-spec.md",
       "../../packages/**/*.m", "../../packages/**/*.py", "../../packages/**/*.sql",
+      "../../packages/epistemic-runtime/src/uniform-algorithms/*.lean",
+      "../../packages/epistemic-runtime/src/uniform-algorithms/*.sb",
+      "../../packages/epistemic-runtime/src/uniform-algorithms/total/*.lean",
       "../../packages/**/*.mjs", "../../packages/**/*.cjs",
       "../../packages/private-equity/src/capital-formation/method-files.json",
       "../../packages/private-equity/src/economic-action-theory/profile.json",
@@ -102,6 +105,7 @@ const nextConfig = {
       "../../../src/components/centropy/canvas/*.ts", "../../../src/components/centropy/canvas/*.tsx",
       "../../../src/lib/centropy/capability-manifest.generated.json",
       "../../scripts/x3/stamp-source.mts", "../../scripts/x5/stamp-source.mts", "../../scripts/x4/stamp-source.mts",
+      "../../scripts/postx/y5/*.{mts,mjs,py,json}",
       "../../Dockerfile.worker", "./next.config.mjs",
       "./lib/**/*.ts",
     ],

@@ -1,5 +1,5 @@
 import type { PoolClient } from "pg";
-import { withTenantTransaction, type Db } from "@finnor/db";
+import { withTenantTransaction, DatabaseExecutionDeadlineError, type Db } from "@finnor/db";
 import type { EvidenceDependency } from "@finnor/shared-types";
 import { authorizeBeliefResources, authorizeBeliefSourceScopes } from "./enterprise-beliefs";
 import { PeDomainError, type PeMutationContext, type PeWorldRootRef } from "./types";
@@ -21,7 +21,11 @@ export async function authorize(ctx: PeMutationContext, root: PeWorldRootRef,
     const rights = await authorizeBeliefResources(ctx, [{ type: root.entityType, id: root.entityId }, ...resources], client);
     await authorizeBeliefSourceScopes(ctx, root, sources, client);
     return rights;
-  } catch { throw unavailable(); }
+  } catch (error) {
+    // An exhausted request deadline is not evidence that the resource is outside the caller's scope.
+    if (error instanceof DatabaseExecutionDeadlineError) throw error;
+    throw unavailable();
+  }
 }
 
 export async function revisions(ctx: PeMutationContext, keys: string[], client?: PoolClient, lock = false): Promise<EvidenceDependency[]> {

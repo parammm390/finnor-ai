@@ -3,12 +3,16 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
 
 /** Admit effects at first view, then retain the instance and its entered drafts. */
-export function CanvasInstrument({ children }: { children: ReactNode }) {
+export function CanvasInstrument({ children, focused = false }: { children: ReactNode; focused?: boolean }) {
   const element = useRef<HTMLDivElement>(null)
   const [opened, setOpened] = useState(false)
 
   useEffect(() => {
     if (opened) return
+    if (focused) {
+      setOpened(true)
+      return
+    }
     if (typeof IntersectionObserver === "undefined") {
       setOpened(true)
       return
@@ -23,9 +27,9 @@ export function CanvasInstrument({ children }: { children: ReactNode }) {
     }, { rootMargin: "200px" })
     observer.observe(target)
     return () => observer.disconnect()
-  }, [opened])
+  }, [opened, focused])
 
-  return <div ref={element} style={{ minHeight: 240 }} aria-busy={!opened}>
-    {opened ? children : <p role="status">Opening instrument…</p>}
+  return <div ref={element} style={{ minHeight: 240 }} aria-busy={!opened && !focused}>
+    {opened || focused ? children : <><p role="status">Opening instrument…</p><button type="button" onClick={() => setOpened(true)}>Open instrument</button></>}
   </div>
 }

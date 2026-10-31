@@ -1,4 +1,4 @@
-// Generated from finnor-os/openapi.json, SHA-256 4175fb2f1dce21396fc4251cebda133bd5c3b85b3812b02b2cbae31a6c190665.
+// Generated from finnor-os/openapi.json, SHA-256 f31309559d44914286bd2b81130f017fdffbf461ca1896bd305a13f013423503.
 export interface paths {
     "/api/interventions/assess-pywhy": {
         parameters: {
@@ -21569,6 +21569,1406 @@ export interface paths {
                     content?: never;
                 };
                 /** @description Native capacity or independent owner configuration unavailable. Retry never renews resources. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uniform-algorithms/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Y5Uniform-submit"];
+                };
+            };
+            responses: {
+                /** @description Original principal/Work-bound finite discovery accepted for durable native proof search. No checked result or admission yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or original S4/S5 semantic contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner or distinct evaluator authority absent. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private owner, Work or assignment. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original source, rights, Work, generation, instance, deadline or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required original semantic-owner predicate unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity, diagnostic profile or independently configured S8 owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uniform-algorithms/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Y5Uniform-read"];
+                };
+            };
+            responses: {
+                /** @description Current authorized lightweight status by default for v2. Capsule and retained history require explicit includeCapsule/includeHistory; bound payloads are withheld when source authorization is unavailable. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or original S4/S5 semantic contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner or distinct evaluator authority absent. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private owner, Work or assignment. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original source, rights, Work, generation, instance, deadline or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required original semantic-owner predicate unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity, diagnostic profile or independently configured S8 owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uniform-algorithms/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Y5Uniform-list"];
+                };
+            };
+            responses: {
+                /** @description Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or original S4/S5 semantic contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner or distinct evaluator authority absent. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private owner, Work or assignment. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original source, rights, Work, generation, instance, deadline or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required original semantic-owner predicate unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity, diagnostic profile or independently configured S8 owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uniform-algorithms/consume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Y5Uniform-consume"];
+                };
+            };
+            responses: {
+                /** @description Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or original S4/S5 semantic contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner or distinct evaluator authority absent. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private owner, Work or assignment. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original source, rights, Work, generation, instance, deadline or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required original semantic-owner predicate unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity, diagnostic profile or independently configured S8 owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uniform-algorithms/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Y5Uniform-cancel"];
+                };
+            };
+            responses: {
+                /** @description Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or original S4/S5 semantic contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner or distinct evaluator authority absent. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private owner, Work or assignment. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original source, rights, Work, generation, instance, deadline or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required original semantic-owner predicate unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity, diagnostic profile or independently configured S8 owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uniform-algorithms/invalidate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Y5Uniform-invalidate"];
+                };
+            };
+            responses: {
+                /** @description Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or original S4/S5 semantic contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner or distinct evaluator authority absent. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private owner, Work or assignment. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original source, rights, Work, generation, instance, deadline or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required original semantic-owner predicate unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity, diagnostic profile or independently configured S8 owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uniform-algorithms/specification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Y5Uniform-specification"];
+                };
+            };
+            responses: {
+                /** @description Current authenticated specification Work resolved to its immutable typed definition and separately qualified semantic acceptance. Public development is not protected family credit. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or original S4/S5 semantic contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner or distinct evaluator authority absent. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private owner, Work or assignment. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original source, rights, Work, generation, instance, deadline or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required original semantic-owner predicate unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity, diagnostic profile or independently configured S8 owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uniform-algorithms/record-task-episode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Y5Uniform-record-task-episode"];
+                };
+            };
+            responses: {
+                /** @description Canonical S5 model-only task request, result and cost episode recorded or replayed from authenticated specification/task Work references under the original invocation deadline. No inline values, answer, acceptance, protected family credit, reservation or S6 effects. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or original S4/S5 semantic contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner or distinct evaluator authority absent. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private owner, Work or assignment. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original source, rights, Work, generation, instance, deadline or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required original semantic-owner predicate unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity, diagnostic profile or independently configured S8 owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uniform-algorithms/submit-total": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Y5Uniform-submit-total"];
+                };
+            };
+            responses: {
+                /** @description Original principal/Work-bound finite discovery accepted for durable native proof search. No checked result or admission yet. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or original S4/S5 semantic contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner or distinct evaluator authority absent. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private owner, Work or assignment. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original source, rights, Work, generation, instance, deadline or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required original semantic-owner predicate unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity, diagnostic profile or independently configured S8 owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uniform-algorithms/consume-total": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Y5Uniform-consume-total"];
+                };
+            };
+            responses: {
+                /** @description Same kernel-checked typed definition applied to a separate original S5 task Work under the original finite use allowance. No inline values, algorithm, reservation, S6 effects or protected admission. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or original S4/S5 semantic contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner or distinct evaluator authority absent. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private owner, Work or assignment. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original source, rights, Work, generation, instance, deadline or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required original semantic-owner predicate unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity, diagnostic profile or independently configured S8 owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uniform-algorithms/assign-evaluation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Y5Uniform-assign-evaluation"];
+                };
+            };
+            responses: {
+                /** @description Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or original S4/S5 semantic contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner or distinct evaluator authority absent. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private owner, Work or assignment. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original source, rights, Work, generation, instance, deadline or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required original semantic-owner predicate unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity, diagnostic profile or independently configured S8 owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uniform-algorithms/evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Y5Uniform-evaluate"];
+                };
+            };
+            responses: {
+                /** @description Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or original S4/S5 semantic contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner or distinct evaluator authority absent. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private owner, Work or assignment. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original source, rights, Work, generation, instance, deadline or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required original semantic-owner predicate unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity, diagnostic profile or independently configured S8 owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uniform-algorithms/s8-propose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Y5Uniform-s8-propose"];
+                };
+            };
+            responses: {
+                /** @description Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or original S4/S5 semantic contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner or distinct evaluator authority absent. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private owner, Work or assignment. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original source, rights, Work, generation, instance, deadline or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required original semantic-owner predicate unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity, diagnostic profile or independently configured S8 owner unavailable. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/uniform-algorithms/admission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["Y5Uniform-admission"];
+                };
+            };
+            responses: {
+                /** @description Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Strict bounded request or original S4/S5 semantic contract rejected. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current signed bearer required. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Current owner or distinct evaluator authority absent. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Absent or unauthorized private owner, Work or assignment. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance. */
+                408: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original source, rights, Work, generation, instance, deadline or idempotency preimage changed. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Original request, storage or finite resource bound exceeded. */
+                413: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Required original semantic-owner predicate unavailable. */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Native capacity, diagnostic profile or independently configured S8 owner unavailable. */
                 503: {
                     headers: {
                         [name: string]: unknown;
@@ -47117,6 +48517,262 @@ export interface components {
         "interaction-reconcile": {
             /** Format: uuid */
             runId: string;
+        };
+        "Y5Uniform-submit": {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+            allocation: {
+                mandate: {
+                    [key: string]: unknown;
+                };
+                policyRefs: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                }[];
+                resourceRefs: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                }[];
+                jointModel: {
+                    [key: string]: unknown;
+                };
+                demandBindings: {
+                    policyRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    dimensionId: string;
+                    /** @enum {string} */
+                    component: "TOTAL" | "OCCUPANCY";
+                    resourceId: string;
+                    /** @constant */
+                    conversion: "IDENTICAL_UNIT_NO_CONVERSION";
+                }[];
+                funding: {
+                    policyRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    actionCostResourceId: string | null;
+                    terminalLiabilityResourceId: string | null;
+                    humanSecondsResourceId: string | null;
+                    operatingCash?: {
+                        /** @constant */
+                        schema: "finnor.s5.operating-cash-binding.v1";
+                        resourceId: string;
+                        /** @constant */
+                        basis: "GROSS_OUTFLOWS_NO_FORECAST_PROCEEDS";
+                    };
+                }[];
+                idempotencyKey: string;
+            };
+            idempotencyKey: string;
+            limits: {
+                wallMs: number;
+                maxAttempts: number;
+                maxUses: number;
+            };
+            baselineManifestRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            } | null;
+        };
+        "Y5Uniform-read": {
+            /** Format: uuid */
+            discoveryId: string;
+            includeCapsule?: boolean;
+            includeHistory?: boolean;
+        };
+        "Y5Uniform-list": {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+        };
+        "Y5Uniform-consume": {
+            /** Format: uuid */
+            discoveryId: string;
+            allocation: {
+                mandate: {
+                    [key: string]: unknown;
+                };
+                policyRefs: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                }[];
+                resourceRefs: {
+                    owner: string;
+                    id: string;
+                    version: string;
+                    contentDigest: string;
+                }[];
+                jointModel: {
+                    [key: string]: unknown;
+                };
+                demandBindings: {
+                    policyRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    dimensionId: string;
+                    /** @enum {string} */
+                    component: "TOTAL" | "OCCUPANCY";
+                    resourceId: string;
+                    /** @constant */
+                    conversion: "IDENTICAL_UNIT_NO_CONVERSION";
+                }[];
+                funding: {
+                    policyRef: {
+                        owner: string;
+                        id: string;
+                        version: string;
+                        contentDigest: string;
+                    };
+                    actionCostResourceId: string | null;
+                    terminalLiabilityResourceId: string | null;
+                    humanSecondsResourceId: string | null;
+                    operatingCash?: {
+                        /** @constant */
+                        schema: "finnor.s5.operating-cash-binding.v1";
+                        resourceId: string;
+                        /** @constant */
+                        basis: "GROSS_OUTFLOWS_NO_FORECAST_PROCEEDS";
+                    };
+                }[];
+                idempotencyKey: string;
+            };
+            idempotencyKey: string;
+            /** @enum {string} */
+            fallback: "NONE" | "EXISTING_S5_PRODUCER";
+        };
+        "Y5Uniform-cancel": {
+            /** Format: uuid */
+            discoveryId: string;
+        };
+        "Y5Uniform-invalidate": {
+            /** Format: uuid */
+            discoveryId: string;
+            /** @enum {string} */
+            dependency: "specification" | "implementation" | "runtime" | "rights" | "instance" | "admission";
+            reason: string;
+            idempotencyKey: string;
+        };
+        "Y5Uniform-specification": {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+            expectedSourceRef?: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
+        };
+        "Y5Uniform-record-task-episode": {
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+            /** Format: uuid */
+            taskWorkId: string;
+            idempotencyKey: string;
+        };
+        "Y5Uniform-submit-total": {
+            /** @constant */
+            schema: "finnor.y5.total-discovery-request.v2";
+            root: {
+                /** @enum {string} */
+                entityType: "pe_strategy" | "pe_opportunity" | "pe_deal" | "pe_fund" | "pe_vehicle" | "external_organization" | "pe_portfolio_holding";
+                /** Format: uuid */
+                entityId: string;
+            };
+            /** Format: uuid */
+            workId: string;
+            /** Format: uuid */
+            taskWorkId: string;
+            idempotencyKey: string;
+            limits: {
+                wallMs: number;
+                maxAttempts: number;
+                maxUses: number;
+                maxPrograms: number;
+                maxPropositions: number;
+                maxProofAttempts: number;
+                maxRetainedBytes: number;
+            };
+            baselineManifestRef: {
+                owner: string;
+                id: string;
+                version: string;
+                contentDigest: string;
+            } | null;
+        };
+        "Y5Uniform-consume-total": {
+            /** Format: uuid */
+            discoveryId: string;
+            /** Format: uuid */
+            taskWorkId: string;
+            idempotencyKey: string;
+        };
+        "Y5Uniform-assign-evaluation": {
+            /** Format: uuid */
+            discoveryId: string;
+            /** Format: uuid */
+            evaluatorId: string;
+            idempotencyKey: string;
+        };
+        "Y5Uniform-evaluate": {
+            /** Format: uuid */
+            evaluationId: string;
+        };
+        "Y5Uniform-s8-propose": {
+            /** Format: uuid */
+            discoveryId: string;
+            idempotencyKey: string;
+        };
+        "Y5Uniform-admission": {
+            /** Format: uuid */
+            discoveryId: string;
+            revisionRef: {
+                /** @constant */
+                owner: "S8";
+                id: string;
+                version: string;
+                contentDigest: string;
+            };
         };
         X3Expression: {
             /** @constant */

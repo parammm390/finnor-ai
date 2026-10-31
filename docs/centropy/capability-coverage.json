@@ -1,15 +1,15 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-10-26T06:56:38.339Z",
-  "sourceBaseCommit": "d164d336d36c447ac790055481be050d0ed024ce",
-  "manifestSha256": "ad69e07f9eb9bc59c8cebc6b813862a1c3aab671c5e3aae386d689f787c09bd9",
+  "generatedAt": "2026-10-31T06:09:48.270Z",
+  "sourceBaseCommit": "df9111da8c7a1170f1f074e43fdf5984eaa55b8b",
+  "manifestSha256": "5c1806214b2b629db0a3228952a404f348c0e767c2523f065c7394696c55f685",
   "formsSha256": "1bc12487fb34759988ed4490715c21560653608fb313a409f0e6bcc551340e89",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
   "counts": {
-    "total": 661,
-    "http": 590,
+    "total": 675,
+    "http": 604,
     "planner": 71,
-    "classified": 661,
+    "classified": 675,
     "classificationCoveragePercent": 100,
     "unclassified": 0,
     "backendApiWithoutMountedFrontend": 93,
@@ -18,7 +18,7 @@
     "disposition": {
       "ACTIVE_TYPED_HUMAN_CONTROL": 66,
       "INTENTIONAL_COMPATIBILITY": 25,
-      "ACTIVE_DIRECT_FRONTEND_PATH": 343,
+      "ACTIVE_DIRECT_FRONTEND_PATH": 357,
       "RESTRICTED_SYSTEM_OR_ADMIN": 59,
       "PROVIDER_PROTOCOL_CALLBACK": 2,
       "BACKEND_API_NO_MOUNTED_FRONTEND": 93,
@@ -851,6 +851,7 @@
       "src/components/centropy/canvas/StrategicResponsePanel.tsx",
       "src/components/centropy/canvas/UnderwritingScenarioLab.tsx",
       "src/components/centropy/canvas/UnderwritingSensitivityLab.tsx",
+      "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
       "src/components/centropy/canvas/application-client.ts",
       "src/components/centropy/canvas/application-semantics-client.ts",
       "src/components/centropy/canvas/canvas-compose.ts",
@@ -1008,7 +1009,7 @@
       },
       {
         "file": "src/lib/centropy/capability-manifest.generated.json",
-        "sha256": "ad69e07f9eb9bc59c8cebc6b813862a1c3aab671c5e3aae386d689f787c09bd9"
+        "sha256": "5c1806214b2b629db0a3228952a404f348c0e767c2523f065c7394696c55f685"
       },
       {
         "file": "src/components/centropy/lib/private-read-generation.ts",
@@ -1040,7 +1041,7 @@
       },
       {
         "file": "src/components/centropy/canvas/CanvasDocument.tsx",
-        "sha256": "b198c765b40d005bcdba878a6aae19b963a839df61d0ace4b9ce76b3511252f2"
+        "sha256": "cbd5ed013c545f5164f0f3440335f5dca44bc2463b806eff68804dcf57ff20f4"
       },
       {
         "file": "src/components/centropy/product/contracts.ts",
@@ -1060,7 +1061,7 @@
       },
       {
         "file": "src/components/centropy/canvas/CanvasInstrument.tsx",
-        "sha256": "ca996ea370548ef8cc693430780e99291760bbfbae57bf513de6ef3bd5c8b3dd"
+        "sha256": "2560b3fad9bbc0d097b4ff425622061d630ba43cec20586403ccb478875324d4"
       },
       {
         "file": "src/components/centropy/canvas/ArtifactTemplateDesk.tsx",
@@ -1179,6 +1180,10 @@
         "sha256": "5ebf3b7871dac0b289d50f326f7ce4318ff4163c330ae2e9f11069eab3a1f0ce"
       },
       {
+        "file": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
+        "sha256": "30241bb040a0b23c8964e9ef04f965f95ede6ff3ed9a9fb8b3f87a727fcf6b8c"
+      },
+      {
         "file": "src/components/centropy/canvas/IdentifiedSystemPanel.tsx",
         "sha256": "a0b6fb6609550a83cdbc103285c8c67ac1c4211780ac24b5dcad729f7a3b17d7"
       },
@@ -1188,7 +1193,7 @@
       },
       {
         "file": "src/lib/jarvis/openapi-types.ts",
-        "sha256": "910926b669fd1ef4c34f781eb11e696f4a68d008580b257c29d87d7e1e024b80"
+        "sha256": "79846a52701cf1359f032181125fc8a9a66990aa7bb39dc1c44d771f5950c2b1"
       },
       {
         "file": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
@@ -1256,7 +1261,7 @@
       },
       {
         "file": "finnor-os/packages/shared-types/src/allocation.ts",
-        "sha256": "869c067f526d2dd8e6a66464dbb5cb966b6de6fa9fb1c2d3b6de39052b310596"
+        "sha256": "faab5e2a2f300a1a251940943e36e63c4b6968ca886392cd9ebdd257e0b99ecb"
       },
       {
         "file": "finnor-os/packages/shared-types/src/contingent-control.ts",
@@ -4765,6 +4770,13 @@
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
+          "file": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
+          "route": "me",
+          "method": "GET",
+          "line": 84,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        },
+        {
           "file": "src/components/centropy/canvas/IdentifiedSystemPanel.tsx",
           "route": "me",
           "method": "GET",
@@ -4820,6 +4832,7 @@
           "src/components/centropy/lib/centropy-auth.tsx",
           "src/components/centropy/canvas/EnterpriseApplicationPanel.tsx",
           "src/components/centropy/canvas/LearnedPolicyPanel.tsx",
+          "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
           "src/components/centropy/canvas/IdentifiedSystemPanel.tsx",
           "src/components/centropy/canvas/application-semantics-client.ts",
           "src/components/centropy/canvas/EconomicActionTheoryPanel.tsx",
@@ -38296,6 +38309,918 @@
           "src/components/centropy/canvas/UnderwritingScenarioLab.tsx",
           "src/components/centropy/canvas/UnderwritingSensitivityLab.tsx",
           "src/components/centropy/canvas/CanvasDocument.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.uniform-algorithms.admission",
+      "family": "uniform-algorithm",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "uniform-algorithms/admission",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/uniform-algorithms/admission",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
+          "route": "uniform-algorithms/admission",
+          "method": "POST",
+          "line": 9,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/UniformAlgorithmPanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.uniform-algorithms.assign-evaluation",
+      "family": "uniform-algorithm",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "uniform-algorithms/assign-evaluation",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/uniform-algorithms/assign-evaluation",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
+          "route": "uniform-algorithms/assign-evaluation",
+          "method": "POST",
+          "line": 9,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/UniformAlgorithmPanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.uniform-algorithms.cancel",
+      "family": "uniform-algorithm",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "uniform-algorithms/cancel",
+      "routeDepth": 2,
+      "classification": "CONTROL",
+      "kind": "control",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "runtime_control",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/uniform-algorithms/cancel",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
+          "route": "uniform-algorithms/cancel",
+          "method": "POST",
+          "line": 9,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/UniformAlgorithmPanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.uniform-algorithms.consume",
+      "family": "uniform-algorithm",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "uniform-algorithms/consume",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/uniform-algorithms/consume",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
+          "route": "uniform-algorithms/consume",
+          "method": "POST",
+          "line": 9,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/UniformAlgorithmPanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.uniform-algorithms.consume-total",
+      "family": "uniform-algorithm",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "uniform-algorithms/consume-total",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/uniform-algorithms/consume-total",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
+          "route": "uniform-algorithms/consume-total",
+          "method": "POST",
+          "line": 9,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/UniformAlgorithmPanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.uniform-algorithms.evaluate",
+      "family": "uniform-algorithm",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "uniform-algorithms/evaluate",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/uniform-algorithms/evaluate",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
+          "route": "uniform-algorithms/evaluate",
+          "method": "POST",
+          "line": 9,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/UniformAlgorithmPanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.uniform-algorithms.invalidate",
+      "family": "uniform-algorithm",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "uniform-algorithms/invalidate",
+      "routeDepth": 2,
+      "classification": "CONTROL",
+      "kind": "control",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "runtime_control",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/uniform-algorithms/invalidate",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
+          "route": "uniform-algorithms/invalidate",
+          "method": "POST",
+          "line": 9,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/UniformAlgorithmPanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.uniform-algorithms.list",
+      "family": "uniform-algorithm",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "uniform-algorithms/list",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/uniform-algorithms/list",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
+          "route": "uniform-algorithms/list",
+          "method": "POST",
+          "line": 9,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/UniformAlgorithmPanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.uniform-algorithms.read",
+      "family": "uniform-algorithm",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "uniform-algorithms/read",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/uniform-algorithms/read",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
+          "route": "uniform-algorithms/read",
+          "method": "POST",
+          "line": 9,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/UniformAlgorithmPanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.uniform-algorithms.record-task-episode",
+      "family": "uniform-algorithm",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "uniform-algorithms/record-task-episode",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/uniform-algorithms/record-task-episode",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
+          "route": "uniform-algorithms/record-task-episode",
+          "method": "POST",
+          "line": 9,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/UniformAlgorithmPanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.uniform-algorithms.s8-propose",
+      "family": "uniform-algorithm",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "uniform-algorithms/s8-propose",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/uniform-algorithms/s8-propose",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
+          "route": "uniform-algorithms/s8-propose",
+          "method": "POST",
+          "line": 9,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/UniformAlgorithmPanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.uniform-algorithms.specification",
+      "family": "uniform-algorithm",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "uniform-algorithms/specification",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/uniform-algorithms/specification",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
+          "route": "uniform-algorithms/specification",
+          "method": "POST",
+          "line": 9,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/UniformAlgorithmPanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.uniform-algorithms.submit",
+      "family": "uniform-algorithm",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "uniform-algorithms/submit",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/uniform-algorithms/submit",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
+          "route": "uniform-algorithms/submit",
+          "method": "POST",
+          "line": 9,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/UniformAlgorithmPanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.post.uniform-algorithms.submit-total",
+      "family": "uniform-algorithm",
+      "owner": "@finnor/private-equity",
+      "transport": "http",
+      "method": "POST",
+      "routePattern": "uniform-algorithms/submit-total",
+      "routeDepth": 2,
+      "classification": "MUTATION",
+      "kind": "mutation",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "backend_policy",
+      "effectClass": "domain_mutation",
+      "verificationClass": "canonical_reread",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [
+        "work",
+        "company-brain"
+      ],
+      "timeoutClass": "WRITE",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "POST /api/uniform-algorithms/submit-total",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
+          "route": "uniform-algorithms/submit-total",
+          "method": "POST",
+          "line": 9,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "backend_policy",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_reread",
+        "backendSource": "finnor-os/apps/api/app/api/uniform-algorithms/[operation]/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/UniformAlgorithmPanel.tsx"
         ],
         "directRuntimeExecutionProvenByThisReport": false
       },

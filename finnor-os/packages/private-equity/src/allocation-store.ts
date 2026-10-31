@@ -43,6 +43,7 @@ async function authorizeResources(ctx:PeMutationContext,c:pg.PoolClient,resource
    resource:{type:'allocation_resource',id:resource.scopeRef.id},risk:'low'},c))throw denied();
  }
 }
+export {authorizeResources as authorizeAllocationResourceReads};
 type AllocationOrigin=AllocationResource|CanonicalAllocationProblem|AllocationCertificate|AllocationReservation|AllocationConsumption;
 /** Only immutable native owner preimages are delivered; projections are never re-signed. */
 async function enqueueAllocationOrigin(ctx:PeMutationContext,c:pg.PoolClient,value:AllocationOrigin,rightsRef:string):Promise<void>{

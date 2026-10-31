@@ -82,7 +82,7 @@ function evaluate(prepared:Prepared,selected:string[],withWitnesses=true):Alloca
     if(humanSeconds.compare(number(p.mandate.search.maxHumanSeconds))>0)reasons.push(`MANDATE_HUMAN_BUDGET:${path.id}`);
     for(const c of p.mandate.resources.couplings)for(let t=0;t<=h;t++){const used=Object.entries(c.weights).reduce((v,[id,weight])=>v.add(number(weight).mul(dimensions.get(id)!.occupied[t]!)),ER_ZERO);if(used.compare(number(c.maxPerPeriod))>0)reasons.push(`MANDATE_COUPLING:${c.id}:${path.id}:${t}`);}
     const scenario=p.jointModel.scenarios.find(s=>s.id===path.id)!;
-    const value=scenario.terms.reduce((v,term)=>term.policyIds.every(id=>chosen.has(id))?v.add(quantity(term.value)):v,quantity(scenario.baseValue));
+    const value=scenario.terms.reduce((v,term)=>term.policyIds.every(id=>chosen.has(id))?v.add(allocationQuantity(term.value)):v,allocationQuantity(scenario.baseValue));
     scenarioValues.push({scenarioId:path.id,value:decimal(value)});if(value.compare(number(p.mandate.risk.minimumUtility))<0)reasons.push(`FULL_HORIZON_RISK_FLOOR:${path.id}`);increments.push(incremental);
   }
   const envelopes:AllocationEnvelope[]=allocationResourceEnvelopes(p.resources,increments,h);
@@ -93,16 +93,24 @@ function evaluate(prepared:Prepared,selected:string[],withWitnesses=true):Alloca
 export function verifyCanonicalAllocation(problem:CanonicalAllocationProblem,selectedPolicyIds:string[]):AllocationCheck {
   return immutableControl(evaluate(prepare(problem),selectedPolicyIds));
 }
+/** Invocation-local original-space oracle. Snapshot once; omit only diagnostic
+ * witnesses, never constraints, exact objectives or infeasibility reasons. */
+export function prepareCanonicalAllocationSubsetEvaluator(problem:CanonicalAllocationProblem) {
+  const prepared=prepare(structuredClone(problem));
+  return {preparationCount:1 as const,check:(selectedPolicyIds:string[])=>{
+    const {feasible,objective,reasons}=evaluate(prepared,selectedPolicyIds,false);
+    return {feasible,objective,reasons};
+  }};
+}
 /** Exact box relaxation. No discrete optimum or LP scarcity-price inference. */
 export function analyticAllocationUpperBound(problem:CanonicalAllocationProblem):string {
-  const upper=problem.jointModel.scenarios.map(s=>s.terms.reduce((v,t)=>quantity(t.value).n>0n?v.add(quantity(t.value)):v,quantity(s.baseValue))).reduce(min);
+  const upper=problem.jointModel.scenarios.map(s=>s.terms.reduce((v,t)=>allocationQuantity(t.value).n>0n?v.add(allocationQuantity(t.value)):v,allocationQuantity(s.baseValue))).reduce(min);
   return decimal(upper);
 }
 /** Nonnegative numerical proposals become a proof only after original canonical
  * inequalities are reconstructed here. No producer matrix is consulted. */
-function canonicalLagrangianBound(prepared:Prepared,proposal:AllocationDualProposal):AllocationLagrangianProof {
+function canonicalLinearModel(prepared:Prepared) {
   const {problem:p}=prepared,h=p.mandate.horizon.periods,ids=p.policies.map(q=>q.ref.id);
-  if(proposal?.schema!=='finnor.s5.dual-proposal.v1'||!Array.isArray(proposal.multipliers)||proposal.multipliers.length>30000)throw new AllocationContractError('INVALID_CANDIDATE','Unsupported dual proposal');
   const products=new Map<string,string[]>();for(const s of p.jointModel.scenarios)for(const term of s.terms)if(term.policyIds.length>1)products.set([...term.policyIds].sort().join('|'),[...term.policyIds].sort());
   const variable=(group:string[])=>group.length===1?`x:${group[0]}`:`y:${[...group].sort().join('|')}`;
   const variables=[...ids.map(id=>`x:${id}`),...[...products.keys()].map(key=>`y:${key}`)];
@@ -134,9 +142,39 @@ function canonicalLagrangianBound(prepared:Prepared,proposal:AllocationDualPropo
     for(const d of p.mandate.resources.dimensions){add(`mandate-total:${d.id}:${s.id}`,totals.get(d.id)!,number(d.totalLimit));for(let t=0;t<=h;t++)add(`mandate-occupancy:${d.id}:${s.id}:${t}`,coeff(id=>occupied.get(d.id)!.get(id)![t]!),number(d.capacity));}
     for(const c of p.mandate.resources.couplings)for(let t=0;t<=h;t++)add(`mandate-coupling:${c.id}:${s.id}:${t}`,coeff(id=>sum(Object.entries(c.weights).map(([d,w])=>number(w).mul(occupied.get(d)!.get(id)![t]!)))),number(c.maxPerPeriod));
     add(`mandate-human:${s.id}`,human,number(p.mandate.search.maxHumanSeconds));
-    const a=new Map(variables.map(key=>[key,ER_ZERO]));for(const term of s.terms){const key=variable(term.policyIds);a.set(key,a.get(key)!.add(quantity(term.value)));}
-    objectives.set(s.id,{a,base:quantity(s.baseValue)});add(`risk-floor:${s.id}`,new Map([...a].map(([k,v])=>[k,v.mul(number(-1))])),quantity(s.baseValue).sub(number(p.mandate.risk.minimumUtility)));
+    const a=new Map(variables.map(key=>[key,ER_ZERO]));for(const term of s.terms){const key=variable(term.policyIds);a.set(key,a.get(key)!.add(allocationQuantity(term.value)));}
+    objectives.set(s.id,{a,base:allocationQuantity(s.baseValue)});add(`risk-floor:${s.id}`,new Map([...a].map(([k,v])=>[k,v.mul(number(-1))])),allocationQuantity(s.baseValue).sub(number(p.mandate.risk.minimumUtility)));
   }
+  return {variables,rows,objectives};
+}
+/** One original-space constraint owner for dual verification and Y5 structural
+ * recognition. This is not the numerical producer's MILP or a new solver. */
+export function inspectCanonicalAllocationLinearModel(problem:CanonicalAllocationProblem) {
+  assertAllocationProblem(problem);
+  const h=problem.mandate.horizon.periods,policies=problem.policies.length;
+  const covenants=new Map(problem.resources.flatMap(r=>r.covenants).map(c=>[c.id,c]));
+  const committed=new Set(problem.outstanding.flatMap(o=>o.policyRefs.map(p=>p.id)).filter(id=>problem.policies.some(p=>p.ref.id===id)));
+  const perScenario=problem.resources.length*(h+1)+[...covenants.values()].reduce((n,c)=>n+c.periods.length,0)
+    +problem.mandate.resources.dimensions.length*(h+2)+problem.mandate.resources.couplings.length*(h+1)+2;
+  const rowUpperBound=problem.jointModel.choiceConstraints.length*2+committed.size+problem.jointModel.scenarios.length*perScenario;
+  const coefficientCellUpperBound=(rowUpperBound+problem.jointModel.scenarios.length)*Math.max(1,policies);
+  const inspection={rowUpperBound,coefficientCellUpperBound,maxRows:2048,maxCoefficientCells:131072,expanded:false};
+  const empty={variables:[],rows:[],objectives:[],inspection};
+  if(problem.jointModel.scenarios.some(s=>s.terms.some(t=>t.policyIds.length>1)))
+    return {...empty,initialReasons:['NONADDITIVE_INTERACTION']};
+  if(rowUpperBound>inspection.maxRows||coefficientCellUpperBound>inspection.maxCoefficientCells)
+    return {...empty,initialReasons:['Y5_STRUCTURAL_MODEL_BUDGET_UNSUPPORTED']};
+  const prepared=prepare(problem);
+  if(prepared.initialReasons.length)return {...empty,initialReasons:[...prepared.initialReasons]};
+  const model=canonicalLinearModel(prepared);
+  return {initialReasons:[],variables:model.variables,inspection:{...inspection,expanded:true},
+    rows:[...model.rows].map(([id,row])=>({id,coefficients:[...row.a].map(([variable,q])=>({variable,value:decimal(q)})),maximum:decimal(row.b)})),
+    objectives:[...model.objectives].map(([id,row])=>({id,coefficients:[...row.a].map(([variable,q])=>({variable,value:decimal(q)})),base:decimal(row.base)}))};
+}
+function canonicalLagrangianBound(prepared:Prepared,proposal:AllocationDualProposal):AllocationLagrangianProof {
+  const p=prepared.problem;
+  if(proposal?.schema!=='finnor.s5.dual-proposal.v1'||!Array.isArray(proposal.multipliers)||proposal.multipliers.length>30000)throw new AllocationContractError('INVALID_CANDIDATE','Unsupported dual proposal');
+  const {variables,rows,objectives}=canonicalLinearModel(prepared);
   const multipliers=new Map<string,Q>(),weights=new Map<string,Q>();let mass=ER_ZERO;
   for(const m of proposal.multipliers){if(!m||!['upper','lower'].includes(m.side)||typeof m.rowId!=='string')throw new AllocationContractError('INVALID_CANDIDATE','Invalid dual multiplier identity');const key=`${m.side}:${m.rowId}`;
     if(multipliers.has(key))throw new AllocationContractError('INVALID_CANDIDATE','Duplicate dual multiplier');const q=allocationQuantity(m.value);if(q.n<0n)throw new AllocationContractError('INVALID_CANDIDATE','Negative dual multiplier');multipliers.set(key,q);

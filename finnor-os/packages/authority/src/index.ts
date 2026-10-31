@@ -72,8 +72,9 @@ type AuthorityReadDb = Pick<Db, "select">;
 
 /** Explicit table reads need no relational-schema reconstruction. Each call
  * still reads current authority through Core's scoped, deadline-bound client. */
+const authorityReadDb = (client: PoolClient): AuthorityReadDb => drizzle(client);
 function withAuthorityRead<T>(tenantId: string, fn: (db: AuthorityReadDb) => Promise<T>): Promise<T> {
-  return withTenantClientTransaction(tenantId, { readOnly: true }, (client) => fn(drizzle(client)));
+  return withTenantClientTransaction(tenantId, { readOnly: true }, (client) => fn(authorityReadDb(client)));
 }
 
 function record(value: unknown): Record<string, unknown> {
@@ -613,7 +614,7 @@ async function authorityTemporalBoundaryTx(ctx: TenantContext, client: PoolClien
 export async function employeeAuthoritySnapshotTx(ctx: TenantContext, client: PoolClient, lock = true) {
   const revision = await lockCurrentAuthorityTx(ctx, client, lock);
   const validUntil = await authorityTemporalBoundaryTx(ctx, client);
-  const auth = await loadAuthority(transactionDb(client), ctx.tenantId, ctx.employeeId ?? ctx.userId);
+  const auth = await loadAuthority(authorityReadDb(client), ctx.tenantId, ctx.employeeId ?? ctx.userId);
   if (!auth.employee || auth.employee.status !== "active") throw new Error("CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE");
   return { employeeId: auth.employee.id, revision, roles: auth.assignments.map(row => row.roleKey), validUntil };
 }
@@ -623,7 +624,7 @@ export async function employeeAuthoritySnapshotTx(ctx: TenantContext, client: Po
 export async function employeeScopedRoleKeysTx(ctx: TenantContext, resources: AuthorityResource[], client: PoolClient) {
   const revision = await lockCurrentAuthorityTx(ctx, client);
   const validUntil = await authorityTemporalBoundaryTx(ctx, client);
-  const db = transactionDb(client), auth = await loadAuthority(db, ctx.tenantId, ctx.employeeId ?? ctx.userId);
+  const db = authorityReadDb(client), auth = await loadAuthority(db, ctx.tenantId, ctx.employeeId ?? ctx.userId);
   if (!auth.employee || auth.employee.status !== "active" || resources.length === 0)
     throw new Error("CURRENT_CANONICAL_AUTHORITY_UNAVAILABLE");
   const roles: string[] = [];
@@ -644,7 +645,7 @@ export async function canExerciseAuthority(ctx: TenantContext, request: Authorit
 
 export async function canExerciseAuthorityTx(ctx: TenantContext, request: AuthorityRequest, client: PoolClient, lock = true): Promise<boolean> {
   await lockCurrentAuthorityTx(ctx, client, lock);
-  return canExerciseAuthorityOnDb(ctx, request, transactionDb(client));
+  return canExerciseAuthorityOnDb(ctx, request, authorityReadDb(client));
 }
 
 /** The same configured S1 chain, expressed as exact immutable decisions rather

@@ -775,6 +775,7 @@ function connectedHistory(rows: HistoryRow[], root: PeWorldRootRef, validAt: Dat
 export interface PeWorldTemporalQuery {
   validAt?: Date | string;
   knowledgeAt?: Date | string;
+  omitAuxiliaryTasks?: true;
 }
 
 /** Historical cuts require retained database commit visibility. Current reads
@@ -1128,7 +1129,8 @@ async function reconstructPrivateEquityWorldState(
       ) AS revoked`, [ctx.auth.tenantId, root.entityType, root.entityId, evidenceSourceIds]);
     if (revokedProvider.rows[0]?.revoked) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE world root was not found in the authenticated tenant");
 
-    const taskRaw = entityRefs.length ? await client.query<SqlRow>(
+    // Pinned S1 source witnesses must not depend on unversioned Task projections.
+    const taskRaw = !temporal?.omitAuxiliaryTasks && entityRefs.length ? await client.query<SqlRow>(
       `SELECT t.* FROM finnor_os.tasks t
         WHERE t.tenant_id=$1 AND t.created_at<=$3 AND EXISTS (
           SELECT 1 FROM jsonb_to_recordset($2::jsonb) AS scoped(entity_type text,entity_id uuid)

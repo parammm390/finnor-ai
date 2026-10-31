@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import type pg from "pg";
 
 const execution = new AsyncLocalStorage<{ deadline: number }>();
+const statementSlackMs = 100;
 export class DatabaseExecutionDeadlineError extends Error {
   constructor() { super("Database operation exhausted its execution deadline"); this.name = "DatabaseExecutionDeadlineError"; }
 }
@@ -65,6 +66,11 @@ export async function connectWithExecutionDeadline(pool: pg.Pool): Promise<pg.Po
   const onConnectionError = (error: Error) => { discard = true; connectionError = error; };
   client.on("error", onConnectionError);
   const original = client.query.bind(client);
+  // statement_timeout is a duration that restarts with each statement. A value armed earlier in the
+  // transaction lets a later statement outlive the deadline by the time since it was armed, so it is
+  // re-armed once that slack is material, and whenever a nested scope changes the effective deadline.
+  // The client-side query_timeout still fires at the deadline.
+  let armed: { at: number; deadline: number } | null = null;
   return new Proxy(client, {
     get(target, property) {
       if (property === "release") return (destroy?: boolean) => {
@@ -80,17 +86,22 @@ export async function connectWithExecutionDeadline(pool: pg.Pool): Promise<pg.Po
         const rollback = /^\s*ROLLBACK\b/i.test(text);
         try {
           const left = rollback ? 200 : remaining()!;
-          if (!rollback && transaction && !/^\s*SET LOCAL statement_timeout\b/i.test(text)) {
+          const now = performance.now(), setsTimeout = /^\s*SET LOCAL statement_timeout\b/i.test(text);
+          const deadline = execution.getStore()?.deadline ?? 0;
+          if (!rollback && transaction && !setsTimeout &&
+            (armed === null || armed.deadline !== deadline || now - armed.at > Math.min(statementSlackMs, left / 8))) {
             const timeoutQuery: pg.QueryConfig & { query_timeout: number } = { text: `SET LOCAL statement_timeout = ${left}`, query_timeout: left };
             await original(timeoutQuery);
+            armed = { at: now, deadline };
           }
-          const boundedText = /^\s*SET LOCAL statement_timeout\b/i.test(text) ? `SET LOCAL statement_timeout = ${left}` : text;
+          const boundedText = setsTimeout ? `SET LOCAL statement_timeout = ${left}` : text;
           const boundedQuery: pg.QueryConfig & { query_timeout: number } = { ...(typeof query === "string" ? {} : query), text: boundedText,
             ...(values ? { values } : {}), query_timeout: left };
           const result = await original(boundedQuery);
           if (connectionError) throw connectionError;
-          if (/^\s*BEGIN\b/i.test(text)) transaction = true;
-          if (/^\s*(COMMIT|ROLLBACK)\b/i.test(text)) transaction = false;
+          if (setsTimeout) armed = { at: now, deadline };
+          if (/^\s*BEGIN\b/i.test(text)) { transaction = true; armed = null; }
+          if (/^\s*(COMMIT|ROLLBACK)\b/i.test(text)) { transaction = false; armed = null; }
           return result;
         } catch (error) {
           if (error instanceof DatabaseExecutionDeadlineError || (error as { code?: string }).code === "57014" ||

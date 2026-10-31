@@ -6,6 +6,7 @@ import { beliefOwnerRef, boundBeliefView, createBeliefView, epistemicHash, prepa
 import { loadPrivateEquityWorldState } from "./world-state";
 import { PeDomainError, type PeMutationContext, type PeWorldRootRef, type PeWorldState } from "./types";
 import {enqueueNativeBelief,enqueueNativeReferences,enqueueNativePreparedEvents,nativeReference} from './native-experience-transport';
+import {sharedWithinResolution} from './resolution-memo';
 
 export type WorldReadAuthorization = { revision: number; evaluatedAt: string };
 export async function authorizeBeliefResources(ctx: PeMutationContext, resources: Array<{ type: string; id: string }>, client?: PoolClient): Promise<WorldReadAuthorization> {
@@ -134,11 +135,29 @@ export function worldBeliefView(ctx: PeMutationContext, world: PeWorldState, rec
 
 export async function loadEnterpriseBeliefView(ctx: PeMutationContext, input: {
   root: PeWorldRootRef; validAt?: string; knowledgeAt?: string; decisionContext?: BeliefDecisionContext; maxClaims?: number;
-}): Promise<BeliefView> {
-  const world = await loadPrivateEquityWorldState(ctx, input.root, { validAt: input.validAt, knowledgeAt: input.knowledgeAt });
+}, options?: { omitAuxiliaryTasks?: true }): Promise<BeliefView> {
+  const world = await loadPrivateEquityWorldState(ctx, input.root, { validAt: input.validAt, knowledgeAt: input.knowledgeAt,
+    omitAuxiliaryTasks: options?.omitAuxiliaryTasks });
   if (!world.beliefView) throw new Error("S1 world integration did not emit BeliefView");
   try { const view=boundBeliefView(world.beliefView, input.maxClaims ?? 1000, input.decisionContext);await enqueueNativeBelief(ctx,view,world);return view; }
   catch { throw new PeDomainError("PE_INVALID_BELIEF_CONTEXT", "S1 decision context or permitted serialization envelope is unsupported"); }
+}
+
+/** Reconstruct the original cut while the owner authorizes every source under
+ * current rights. A digest alone is insufficient when its closure is unavailable. */
+export function assertEnterpriseBeliefViewPinSourceVisibility(ctx: PeMutationContext, pin: BeliefViewPin): Promise<void> {
+  return sharedWithinResolution(ctx, "belief-view-pin-source-visibility", pin, async () => {
+    const unavailable = () => new PeDomainError("PE_ENTITY_NOT_FOUND", "PE world root was not found in the authenticated tenant");
+    if (pin.tenantId !== ctx.auth.tenantId || !Number.isSafeInteger(pin.rightsRevision) || pin.rightsRevision < 1 ||
+      !Number.isFinite(Date.parse(pin.validAt)) || !Number.isFinite(Date.parse(pin.knowledgeAt)) ||
+      !/^[a-f0-9]{64}$/.test(pin.dependencyDigest) || typeof pin.interpretationVersion !== "string" || !pin.interpretationVersion) throw unavailable();
+    const view = await loadEnterpriseBeliefView(ctx, { root: pin.root as PeWorldRootRef, validAt: pin.validAt, knowledgeAt: pin.knowledgeAt },
+      { omitAuxiliaryTasks: true });
+    // Prior rights/interpretation identify the immutable witness, not today's grant.
+    const dependencyDigest = epistemicHash({ dependencyRefs: view.experience.event.dependencyRefs, rightsRevision: pin.rightsRevision,
+      interpretation: pin.interpretationVersion, coverage: view.coverage, sourceCuts: view.sourceCuts.map(({ knownThrough: _knownThrough, ...cut }) => cut) });
+    if (view.coverage.canonicalStatus !== "COMPLETE" || view.coverage.truncated || dependencyDigest !== pin.dependencyDigest) throw unavailable();
+  });
 }
 
 /** Current-use validation is separate from immutable historical reconstruction.
