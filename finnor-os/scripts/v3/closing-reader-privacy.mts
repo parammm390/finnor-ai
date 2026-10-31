@@ -34,6 +34,8 @@ export async function verifyClosingReaderPrivacy(client: pg.Client, save: Save) 
       assert.deepEqual(identity, { role, rolsuper: false, rolbypassrls: false,
         private_source_read: false, proposal_write: false, private_cut: false });
       await client.query("SELECT set_config('app.tenant_id',$1,true),set_config('app.user_id','',true)", [tenant]);
+      const emptyIdentityCut = (await client.query("SELECT finnor_os.pe_closing_cut($1,$2) cut", [tenant, randomUUID()])).rows[0];
+      assert.deepEqual(emptyIdentityCut, { cut: null }, "COMPLETE_CLOSING_QUERY_PERMISSION_PREFLIGHT");
       const view = (await client.query(`SELECT finnor_os.y4_s5_visible($1,$2) ordinary,
         finnor_os.y4_s5_visible($1,$3) confidential,
         finnor_os.y4_s5_subject_visible($1,$2) ordinary_subject,
@@ -52,7 +54,7 @@ export async function verifyClosingReaderPrivacy(client: pg.Client, save: Save) 
       await client.query("SELECT set_config('app.tenant_id',$1,true)", [foreign]);
       const foreignView = (await client.query("SELECT finnor_os.y4_s5_visible($1,$2) visible", [tenant, ordinaryDigest])).rows[0];
       assert.equal(foreignView.visible, false);
-      rows.push({ identity, view, spoof, foreignView });
+      rows.push({ identity, emptyIdentityCut, view, spoof, foreignView });
       await client.query("RESET ROLE");
     }
     await client.query("SET LOCAL ROLE finnor_app");

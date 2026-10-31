@@ -293,7 +293,9 @@
         ".github/workflows/release-readiness.yml",
         ".github/workflows/dealer-zero-replay.yml",
         ".github/workflows/tenant-isolation-nightly.yml",
-        ".github/workflows/w123-native-verification.yml"
+        ".github/workflows/w123-native-verification.yml",
+        ".github/workflows/w1-owning-episode.yml",
+        ".github/workflows/w1-owning-verification.yml"
       ],
       "classification": "READ_ONLY",
       "state": "ACTIVE"

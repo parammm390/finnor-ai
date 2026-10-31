@@ -29,3 +29,13 @@ one rolled-back transaction; they must confer no budget, effect or receipt.
 Missing roles, extra privileges, changed tenant visibility, failed rollback and
 principal impersonation all fail the check. These focused checks supplement the
 full owner E2E and do not establish Y4 protected or field qualification.
+
+The three isolated predicate calls pass in real Linux PostgreSQL, but run
+41233570873 still fails SQLSTATE 42501 in the complete material-cut query.
+The predicate-only check therefore does not establish the complete dependency
+closure. Execute the actual pe_closing_cut query under each role, retaining a
+missing-programme NULL as a query/permission preflight only. Its permissions
+must fail before the positive financial journey if a dependency is absent.
+Diagnostic output may name only a PostgreSQL permission object's identifier
+and kind from the exact permission-denied syntax; never emit arbitrary SQL
+error messages, statements, parameters, request data or database credentials.

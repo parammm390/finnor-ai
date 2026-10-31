@@ -122,7 +122,7 @@ export class R2NativeSession {
    const isolated=await prepareLinuxNodeIsolation(scratch,await realpath(process.execPath),{readOnlyScratch:true});
    try{
     const run=await this.run('p1-programme',[isolated.command,...isolated.args],JSON.stringify({histories}),true,scratch,isolated.fd.fd,isolated.bootstrapFd.fd);
-    const linuxBootstrap=await readLinuxBootstrap(isolated.bootstrapPath,run.receipt.pid,isolated.profile.filterSha256);
+    const linuxBootstrap=await readLinuxBootstrap(isolated.bootstrapPath,{guardianPid:run.receipt.pid,parentPid:run.supervisorPid,filterSha256:isolated.profile.filterSha256});
     if(linuxBootstrap.parentPid!==run.supervisorPid)refuse('P1 bootstrap parent differs from the observed physical supervisor');
     await this.checkpoint();
     return {outputs:JSON.parse(run.stdout),physicalRef:run.ref,profileSha256:sha(isolated.profileText),nodeSha256:sha(await readFile(isolated.node)),dyldProfileSha256:null,
