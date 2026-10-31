@@ -216,7 +216,9 @@ qualified B_X_release. Y3/Y4 prompts do not prove implementation.
 Only task-owned local engineering, disposable verification, local commits
 and reviewable handoff are authorized. No push, PR, merge, deployment,
 provisioning, protected activation, new production grant/signer, external
-message, real economic commitment or payment is authorized.
+message, real economic commitment or payment is authorized. (Later, the owner
+authorized pushing and a draft pull request; see the 2026-10-31 continuation.
+Every other item in this list stays unauthorized.)
 
 The governing POST-X PRD and inspected inherited sources are retained in the
 preparation records. Current independent custody, trust policy and qualified
@@ -262,12 +264,41 @@ overlapping parent/child costs and the incomplete total ledger.
   cycle with the planner manifest), and both workers pass the new heartbeat
   lease argument. Source checks pass at that cut
   (`evidence/y5-completion/remote-main-merge-checks/RESULTS.md`); the CI jobs
-  that need PostgreSQL, Docker or a production-artifact build were not run.
+  that need PostgreSQL, Docker or a production-artifact build were not run on
+  this host and ran only after publication (see the CI bullets below).
   The owner end-to-end was not rerun after the merge, so the nineteenth run
   describes the pre-merge cut.
-- Publication: the Y5 commits and the merge are local only. `git push` failed
-  because this environment has no GitHub credential; no remote was written and
-  no pull request exists.
+- Publication: the branch `droid/postx-y5-completion-2026-10-31` is pushed and
+  draft pull request #166 is open against main
+  (https://github.com/parammm390/finnor-ai/pull/166). The owner granted push and
+  draft-PR authority in the final instruction and approved the GitHub device
+  login for `parammm390`. Nothing is merged, deployed, activated, granted or
+  admitted to a protected gate. The `gh` keyring token stays on this host until
+  the owner revokes it or runs `gh auth logout`.
+- CI on the pull request: the first run (head `8b48572f`) found two defects of
+  mine. The committed migration bundle was stale (the Y5 migration still carried
+  two comment lines the SQL file no longer has), which stopped worker-image,
+  canonical-graph-gate and phase5-readiness scope4 and scope5 at their first
+  database step; and gitleaks flagged `officialReleaseApiDigest` (the public
+  SHA-256 of the pinned Lean archive) in `preparation.json`. Commit `1d5c45bc`
+  regenerates the bundle and the Y5 and planner manifests (Y5 source digest now
+  `495a2c5b…a914b`) and adds one exact path-and-field gitleaks allowlist entry
+  with verifier fixtures. See `decisions.tsv` rows 68 to 70.
+- CI on the pull request, second run (head `1d5c45bc`, run 41235272880): every
+  job passed except `worker-image`. Its first attempt reached the 45-minute job
+  limit inside the image smoke script. The script redirects stage output to
+  files, so the log is silent after 19:56:23Z; the runner's orphan cleanup found
+  the script, one background subshell and one `docker run`, which places the hang
+  in the R3 or R4 owner stage, and no stage output survived the cancel. The
+  second attempt failed when the runner ran out of disk during the image build.
+  The third attempt, on the identical tree, passed (image smoke 11 min 25 s), and
+  the run ended with 20 jobs passed and 1 scope-conditional job skipped. The
+  first-attempt hang is not root-caused and did not recur. A native macOS run of
+  the R3 owner end-to-end on this tree passes in 63 s; it is not the Linux image.
+  The pull request is draft and mergeable; nothing is merged. See
+  `decisions.tsv` rows 71 to 73 and the `pr-166-ci` case in
+  `completion-verification.json`. These results cover head `1d5c45bc`; a later
+  head needs its own run.
 - Installed, mounted-browser, native-proof, recovery and source-runtime-release
   gates are NOT_RUN at the current cut; Markov uniform is UNPROVED; external
   gates are NOT_ESTABLISHED. Reviewers so far are same-family models. No gate

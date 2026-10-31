@@ -40,7 +40,19 @@
       "evidence": "evidence/y5-completion/remote-main-merge-checks/",
       "limitSeconds": 600,
       "status": "VERIFIED_SOURCE_CHECKS_ONLY",
-      "note": "Merge commit cc539793 plus a refresh commit that regenerated the Y5 and planner manifests after the release-pin edit changed the Y5 source digest (now 1b28485b2fc67ff51b05d6de2c8225471a4fa9c0e622d7e5ba289aaee5ff13df). All listed steps exit 0 at that cut; release:truth first failed on stale migration-head pins, which were advanced to postx_y7_uniform_algorithms.sql (decisions.tsv, last two rows) and then passed with test:release 81 of 81. NOT run on this host: CI jobs production-artifacts, worker-image, test shards, operating-profit, phase7 and correctness-regressions, and git diff --exit-code on a runner checkout. These checks do not qualify the Y5 owner end-to-end, installed runtime, mounted browser, native proof or recovery gates."
+      "note": "Merge commit cc539793 plus a refresh commit that regenerated the Y5 and planner manifests after the release-pin edit changed the Y5 source digest (then 1b28485b2fc67ff51b05d6de2c8225471a4fa9c0e622d7e5ba289aaee5ff13df; the migration-bundle fix recorded in pr-166-ci moved it to 495a2c5bb180b4e643cde1f9fa9508256791527583216049a8bf6ca0b3a9914b). All listed steps exit 0 at that cut; release:truth first failed on stale migration-head pins, which were advanced to postx_y7_uniform_algorithms.sql (decisions.tsv rows 66 and 67) and then passed with test:release 81 of 81. This list did not include npm run db:bundle followed by git diff --exit-code on migrations-bundle.ts, and that bundle was stale at this cut; CI found it (case pr-166-ci). These checks do not qualify the Y5 owner end-to-end, installed runtime, mounted browser, native proof or recovery gates."
+    },
+    {
+      "id": "pr-166-ci",
+      "commands": [
+        "gh pr checks 166 --repo parammm390/finnor-ai",
+        "gh run view 41235272880 --repo parammm390/finnor-ai --json status,conclusion,attempt,headSha,jobs"
+      ],
+      "oracle": "The repository's own required pull request jobs pass on the exact head tree, including the jobs that need PostgreSQL, Docker and a production-artifact build, gitleaks over base..head and the migration-bundle parity step, none of which could run on this host",
+      "evidence": "https://github.com/parammm390/finnor-ai/pull/166 (runs 41233446564 and 41235272880); job logs and the native R3 run are retained outside the repository in y5-handoff/ci-logs/ and y5-handoff/r3-local/",
+      "limitSeconds": 2700,
+      "status": "VERIFIED_REMOTE_CI_ONLY",
+      "note": "Run 41233446564 at head 8b48572f failed on two defects of mine (a stale migration bundle and gitleaks on the public Lean archive digest), fixed in 1d5c45bc. Run 41235272880 at head 1d5c45bc: attempt 1 passed every job except worker-image, which reached the 45-minute job limit inside the image smoke script (the stage most consistent with the hung processes is the backgrounded R3 or R4 owner stage; no stage output survived the cancel); attempt 2 failed in the worker-image build when the runner itself ran out of disk; attempt 3, on the identical tree, passed (image smoke 11 min 25 s). Final state: 20 jobs success, 1 skipped (applicable-dealer-zero / database-role-qa), universal-pr-verdict success, pull request draft and mergeable. The attempt 1 hang is NOT root-caused and did not recur. A native macOS run of the R3 owner end-to-end on this tree (3 of 3 cases, 63 s, clean exit) found no deterministic failure, but it is not the Linux image. These results qualify the pull request's CI gates at head 1d5c45bc only. They do not qualify the Y5 owner end-to-end, installed runtime, mounted browser, native proof or recovery gates, and a later head needs its own run."
     },
     {
       "id": "complete-s5-episode-cut",
