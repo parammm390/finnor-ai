@@ -27,3 +27,12 @@ SYS_CHROOT file capability; scored owners remain the ordinary runner user.
 Record setup output and run the existing S6 executor boundary first. No local
 Mac or Factory host setup, protected admission, new solver or fallback runtime
 is authorized by this CI preparation. Missing prerequisites fail before owners.
+
+Actual fresh runner setup 124677104801 fails JAIL_UNSEALED_ENTRY before scored
+execution. Sealed-callee creation requires root ownership, not merely a root
+caller. Explicitly assign uid/gid zero to each new copied Node/library/launcher
+output before final readonly modes and the unchanged inventory check. The
+existing packager destination is fixed, fresh and root-controlled; no source
+file ownership or ambient path is modified. Preserve link/file checks and
+include only the failing sealed-relative path, uid and permission mode when
+reporting custody refusal, so another setup failure is actionable.
