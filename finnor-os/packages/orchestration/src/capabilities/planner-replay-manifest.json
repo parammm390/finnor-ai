@@ -2126,7 +2126,7 @@
     {
       "file": "packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
       "bytes": 8809,
-      "sha256": "5b1186b10e6d1d8f98fe7186079e61ad3c2594aa8227d59de63a55a552b500ca"
+      "sha256": "f0e2d2a8d4962cbb90836d11bdfb3e9677bb40a85386142d08c5807532d33429"
     },
     {
       "file": "packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2496,7 +2496,7 @@
     {
       "file": "packages/private-equity/src/policy-learning/source-manifest.generated.ts",
       "bytes": 13772,
-      "sha256": "e5729ec9a4c2555ce937df9637833a60b1d2cad4ca224066020ad9730c0a597a"
+      "sha256": "24f914783fe395dc03d9af323a14e0f940698d921808be43300fab10e8511164"
     },
     {
       "file": "packages/private-equity/src/policy-learning/source-paths.ts",
@@ -2841,7 +2841,7 @@
     {
       "file": "packages/private-equity/src/system-identification/source-manifest.generated.ts",
       "bytes": 19716,
-      "sha256": "1e9a26c31c6d9ebe823fb71d5b6c3caa4d565251ae271f91f96b799a5d65c8d4"
+      "sha256": "44ee1bb4b033a69fdabf29e2b45f77bc160ef9818a7cd93e219a8f24331e255e"
     },
     {
       "file": "packages/private-equity/src/system-identification/source-paths.ts",
@@ -3130,8 +3130,8 @@
     },
     {
       "file": "packages/security/src/workos-auth.ts",
-      "bytes": 4176,
-      "sha256": "e40fe7ea0195299bef6374d179fa86d909d3548fe74c4ac441f3c46f15e740ca"
+      "bytes": 4180,
+      "sha256": "0066b4bf4517d8d79fc3c5c4d8e0aafd1e077d2b6078c17d8fab4976d871756b"
     },
     {
       "file": "packages/shared-types/package.json",

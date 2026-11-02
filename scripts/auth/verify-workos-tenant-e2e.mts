@@ -62,7 +62,7 @@ const base = `http://127.0.0.1:${address.port}`;
 async function token(options: { issuer?: string; expires?: number; audience?: string; subject?: string; sessionId?: string } = {}) {
   let value = new SignJWT({ sid: options.sessionId ?? "session_controlled_e2e", role: "admin", org_id: "org_foreign_ignored" })
     .setProtectedHeader({ alg: "RS256", kid: publicJwk.kid })
-    .setSubject(options.subject ?? subject).setIssuer(options.issuer ?? "https://api.workos.com")
+    .setSubject(options.subject ?? subject).setIssuer(options.issuer ?? `https://api.workos.com/user_management/${process.env.WORKOS_CLIENT_ID}`)
     .setIssuedAt().setExpirationTime(options.expires ?? Math.floor(Date.now() / 1000) + 120);
   if (options.audience) value = value.setAudience(options.audience);
   return value.sign(privateKey);
@@ -87,6 +87,8 @@ try {
   await check("unsigned forgery", "forged.token.value", 401);
   await check("expired token", await token({ expires: Math.floor(Date.now() / 1000) - 10 }), 401);
   await check("wrong issuer", await token({ issuer: "https://evil.example" }), 401);
+  await check("another WorkOS client issuer", await token({ issuer: "https://api.workos.com/user_management/client_other" }), 401);
+  await check("bare WorkOS API origin is not the token issuer", await token({ issuer: "https://api.workos.com" }), 401);
   await check("wrong audience", await token({ audience: "client_other" }), 401);
   await check("unlinked subject", await token({ subject: "user_foreign" }), 401);
   modes.verified = false;
@@ -137,6 +139,14 @@ try {
   assert.notEqual(otherSession.sessionId, initial.sessionId);
   await check("invalid session identity refused", await token({ sessionId: "wrong-prefix" }), 401);
   await check("real PostgreSQL tenant isolation", await token(), 200, "/tenant-isolation");
+  const configuredIssuer = process.env.WORKOS_ISSUER;
+  try {
+    delete process.env.WORKOS_ISSUER;
+    await check("missing issuer uses the configured client issuer", await token(), 200);
+  } finally {
+    if (configuredIssuer === undefined) delete process.env.WORKOS_ISSUER;
+    else process.env.WORKOS_ISSUER = configuredIssuer;
+  }
   report.status = "PASS";
 } catch (error) {
   report.status = "FAIL";

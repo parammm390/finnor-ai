@@ -33,7 +33,7 @@ export async function verifyWorkOSIdentity(token: string): Promise<{ email: stri
       keys: createRemoteJWKSet(new URL(`https://api.workos.com/sso/jwks/${clientId}`), { timeoutDuration: 5000 }),
     };
   }
-  const issuers = (process.env.WORKOS_ISSUER ?? "https://api.workos.com,https://api.workos.com/")
+  const issuers = (process.env.WORKOS_ISSUER ?? `https://api.workos.com/user_management/${clientId}`)
     .split(",").map(value => value.trim()).filter(Boolean);
   if (issuers.length === 0) throw new Error("WORKOS_AUTH_NOT_CONFIGURED");
   const { payload } = await jwtVerify(token, cachedKeys.keys, {

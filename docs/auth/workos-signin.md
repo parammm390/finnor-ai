@@ -9,8 +9,11 @@ The frontend server requires `WORKOS_CLIENT_ID`, `WORKOS_API_KEY`, a random
 `WORKOS_COOKIE_PASSWORD` of at least 32 characters, `WORKOS_ISSUER`,
 `NEXT_PUBLIC_WORKOS_REDIRECT_URI` and `NEXT_PUBLIC_FINNOR_AUTH_PROVIDER=workos`.
 The callback must be the registered, fixed `/api/auth/callback` on the application
-origin. Use host-only cookies. Set the provider issuer explicitly; the standard
-WorkOS issuer spellings are `https://api.workos.com,https://api.workos.com/`.
+origin. Use host-only cookies. Set `WORKOS_ISSUER` to the exact access-token
+`iss` claim for the configured environment. With the standard API domain this is
+`https://api.workos.com/user_management/<WORKOS_CLIENT_ID>`. The bare API origin
+and AuthKit OAuth issuer are different values and reject valid access tokens.
+Use the identical exact issuer on the frontend and every bearer verifier.
 
 The API and every bearer-authenticating worker/SSE gateway require `FINNOR_AUTH_PROVIDER=workos`, `WORKOS_CLIENT_ID`,
 `WORKOS_API_KEY`, `WORKOS_ISSUER` and `WORKOS_IDENTITY_BINDINGS`.
