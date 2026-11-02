@@ -24,7 +24,8 @@ export async function verifyWorkOSIdentity(token: string): Promise<{ email: stri
   const apiKey = process.env.WORKOS_API_KEY;
   if (!/^client_[a-z0-9]{26}$/i.test(clientId) || !apiKey) throw new Error("WORKOS_AUTH_NOT_CONFIGURED");
   if ((process.env.FINNOR_ENVIRONMENT === "production" || process.env.VERCEL_ENV === "production")
-    && !apiKey.startsWith("sk_live_")) throw new Error("WORKOS_PRODUCTION_KEY_REQUIRED");
+    && (process.env.WORKOS_ENVIRONMENT !== "production" || !/^sk_[A-Za-z0-9_+/=-]{20,}$/.test(apiKey)
+      || apiKey.startsWith("sk_test_"))) throw new Error("WORKOS_PRODUCTION_ENVIRONMENT_REQUIRED");
   if (token.length > 16384) throw new Error("WORKOS_TOKEN_INVALID");
   if (cachedKeys?.clientId !== clientId) {
     cachedKeys = {

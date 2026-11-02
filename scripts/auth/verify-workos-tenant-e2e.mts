@@ -115,7 +115,19 @@ try {
   }
   const previousEnvironment = process.env.FINNOR_ENVIRONMENT;
   process.env.FINNOR_ENVIRONMENT = "production";
+  const originalKey = process.env.WORKOS_API_KEY;
+  const originalWorkosEnvironment = process.env.WORKOS_ENVIRONMENT;
+  process.env.WORKOS_ENVIRONMENT = "production";
+  process.env.WORKOS_API_KEY = "sk_test_controlled_environment_key";
   await check("test credential refused in production", await token(), 401);
+  process.env.WORKOS_API_KEY = "sk_controlled_production_key_format";
+  delete process.env.WORKOS_ENVIRONMENT;
+  await check("undeclared WorkOS environment refused in production", await token(), 401);
+  process.env.WORKOS_ENVIRONMENT = "production";
+  await check("documented production secret-key format accepted", await token(), 200);
+  process.env.WORKOS_API_KEY = originalKey;
+  if (originalWorkosEnvironment === undefined) delete process.env.WORKOS_ENVIRONMENT;
+  else process.env.WORKOS_ENVIRONMENT = originalWorkosEnvironment;
   if (previousEnvironment === undefined) delete process.env.FINNOR_ENVIRONMENT;
   else process.env.FINNOR_ENVIRONMENT = previousEnvironment;
   const initial = await check("existing canonical identity; IdP org and role ignored", await token(), 200);

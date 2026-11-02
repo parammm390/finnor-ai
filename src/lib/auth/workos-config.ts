@@ -9,7 +9,9 @@ export function workosCallbackUrl(): URL {
     throw new Error("WorkOS authentication is not configured.")
   }
   if ((process.env.FINNOR_ENVIRONMENT === "production" || process.env.VERCEL_ENV === "production")
-    && !process.env.WORKOS_API_KEY?.startsWith("sk_live_")) throw new Error("Production authentication requires a production WorkOS key.")
+    && (process.env.WORKOS_ENVIRONMENT !== "production"
+      || !/^sk_[A-Za-z0-9_+/=-]{20,}$/.test(process.env.WORKOS_API_KEY ?? "")
+      || process.env.WORKOS_API_KEY?.startsWith("sk_test_"))) throw new Error("Production authentication requires the production WorkOS environment.")
   const url = new URL(value)
   const local = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)
   if (url.username || url.password || url.search || url.hash || url.pathname !== "/api/auth/callback"

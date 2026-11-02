@@ -7,6 +7,7 @@ if (!["localhost", "127.0.0.1"].includes(base.hostname)) throw Error("LOCAL_DISP
 const out = resolve(process.argv[3] ?? "test-results/workos-auth-http");
 await mkdir(out, { recursive: true, mode: 0o700 });
 const results = [];
+const authOrigin = process.env.AUTH_EXPECTED_ORIGIN ?? base.origin;
 
 async function check(name, path, expected, options = {}) {
   const response = await fetch(new URL(path, base), { redirect: "manual", signal: AbortSignal.timeout(30_000), ...options });
@@ -46,8 +47,8 @@ try {
     headers: { cookie: cookie.split(";")[0] },
   });
   assert.match(forged.headers.get("cache-control") ?? "", /no-store/);
-  const logout = await check("signed-out same-origin logout", "/api/auth/sign-out", 303, { method: "POST", headers: { origin: base.origin } });
-  assert.equal(logout.headers.get("location"), new URL("/centropy/login", base).toString());
+  const logout = await check("signed-out same-origin logout", "/api/auth/sign-out", 303, { method: "POST", headers: { origin: authOrigin } });
+  assert.equal(logout.headers.get("location"), new URL("/centropy/login", authOrigin).toString());
   await writeFile(resolve(out, "report.json"), JSON.stringify({
     classification: "LOCAL_NEXT_HTTP_AUTH_BOUNDARIES", status: "PASS", base: base.origin, cases: results,
     coverage: ["signed-out", "header injection", "redirect validation", "callback CSRF", "logout CSRF", "PKCE initiation"],

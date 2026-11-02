@@ -15,7 +15,7 @@ WorkOS issuer spellings are `https://api.workos.com,https://api.workos.com/`.
 The API and every bearer-authenticating worker/SSE gateway require `FINNOR_AUTH_PROVIDER=workos`, `WORKOS_CLIENT_ID`,
 `WORKOS_API_KEY`, `WORKOS_ISSUER` and `WORKOS_IDENTITY_BINDINGS`.
 Never prefix secrets or identity bindings with `NEXT_PUBLIC_`. Production
-environments reject test credentials. Switching an API to WorkOS disables its
+environments require `WORKOS_ENVIRONMENT=production` and reject known test credentials. A secret-key prefix alone never establishes environment identity; verify environment-scoped resources before linking. WorkOS documents the generic `sk_` key format. Switching an API to WorkOS disables its
 Supabase token path; there is no automatic provider downgrade.
 
 `WORKOS_IDENTITY_BINDINGS` is a server-owned JSON object keyed by WorkOS user ID:
@@ -103,3 +103,5 @@ revocation owner. The older dirty development checkout is not the release source
 
 These checks establish adapter boundaries; they do not establish live recovery.
 Private evidence and the approved identity fixture stay outside the repository.
+
+Production key accepted and environment separation checked: the production key cannot read the staging principal. The approved production user is linked without fabricating email verification. Frontend/API production environment configuration is saved; deployment is still pending. The production-format guard correction passes 20 controlled resolver/real read-only PostgreSQL cases.
