@@ -189,24 +189,6 @@ async function submit(f: any, name: string, mutation?: (p: any) => void) {
     incumbentPolicyRef: f.policies[0].ref, ...(programTarget ? { programTarget } : {}),
     idempotencyKey: randomUUID(), limits: { deadlineAt: new Date(Date.now() + 600000).toISOString(), maxAttempts: 8, childSeconds: 25 } };
   await artifact(name + '/original-submission.json', { selectedWork, supplied, input });
-  const { resolveDecisionWork } = await import('../../packages/private-equity/src/decision-slice/adapters');
-  const { readSourceObject } = await import('../../packages/private-equity/src/deliberation/store');
-  const { validateEnterpriseContingentPolicy } = await import('../../packages/private-equity/src/enterprise-control');
-  const { resolveR3ProgramTarget } = await import('../../packages/private-equity/src/r3/program-target');
-  const { resolveR3Owners } = await import('../../packages/private-equity/src/r3/owners');
-  const preflight: any[] = [];
-  for (const [boundary, fn] of [
-    ['EXISTING_WORK', () => resolveDecisionWork(f.ctx, selectedWork.work.workId)],
-    ['ORIGINAL_PERMISSIONED_DECLARATION', () => readSourceObject(f.ctx, f.root, supplied.original.sourceId, supplied.original.versionId)],
-    ['ORIGINAL_S4_CURRENTNESS', () => validateEnterpriseContingentPolicy(f.ctx, f.policies[0].ref)],
-    ...(programTarget ? [['ORIGINAL_M3_TARGET', async () => resolveR3ProgramTarget(f.ctx, programTarget,
-      await resolveDecisionWork(f.ctx, selectedWork.work.workId), f.policies[0].ref)] as [string, () => Promise<any>]] : []),
-    ...(programTarget ? [['ORIGINAL_R3_OWNER_BINDING', () => resolveR3Owners(f.ctx, input)] as [string, () => Promise<any>]] : []),
-  ] as Array<[string, () => Promise<any>]>) {
-    try { const value = await fn(); preflight.push({ boundary, status: 'READ', value }); }
-    catch (error) { preflight.push({ boundary, status: 'REFUSED', error: failureDetails(error) }); }
-  }
-  await artifact(name + '/owner-preflight.json', preflight);
   if (programTarget) {
     const wrongTarget = await http.call(f.principal, 'elicitation-protocols', 'submit', {
       ...input, idempotencyKey: randomUUID(), programTarget: { ...programTarget, candidateDigest: '0'.repeat(64) } });
