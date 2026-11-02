@@ -11,7 +11,7 @@ export const APPLICATION_SOURCE_PATHS=own.map(n=>'finnor-os/packages/private-equ
  'finnor-os/packages/private-equity/src/live-recompilation/contracts.ts','finnor-os/package-lock.json',
  'finnor-os/packages/private-equity/src/enterprise-control.ts','finnor-os/packages/private-equity/src/enterprise-allocation.ts',
  'finnor-os/packages/private-equity/src/enterprise-obligations.ts','finnor-os/packages/capability-evolution/src/application-port.ts',
- 'finnor-os/packages/capability-evolution/src/application-consumer.ts','finnor-os/packages/capability-evolution/src/consumer-transport.ts','finnor-os/packages/db/index.ts','finnor-os/packages/security/src/auth.ts',
+ 'finnor-os/packages/capability-evolution/src/application-consumer.ts','finnor-os/packages/capability-evolution/src/consumer-transport.ts','finnor-os/packages/db/index.ts','finnor-os/packages/security/src/auth.ts','finnor-os/packages/security/src/workos-auth.ts',
  'finnor-os/packages/capability-evolution/src/contracts.ts','finnor-os/packages/capability-evolution/src/journal.ts',
  'finnor-os/packages/capability-evolution/src/source-closure.ts',
  'src/components/centropy/canvas/EnterpriseApplicationPanel.tsx','src/components/centropy/canvas/application-client.ts',

@@ -1,7 +1,7 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-10-31T06:09:48.270Z",
-  "sourceBaseCommit": "df9111da8c7a1170f1f074e43fdf5984eaa55b8b",
+  "generatedAt": "2026-11-02T16:10:44.100Z",
+  "sourceBaseCommit": "f8efb2be752328f382185c2a17a6374e94ee019e",
   "manifestSha256": "5c1806214b2b629db0a3228952a404f348c0e767c2523f065c7394696c55f685",
   "formsSha256": "1bc12487fb34759988ed4490715c21560653608fb313a409f0e6bcc551340e89",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -931,6 +931,7 @@
       "src/components/centropy/world/WorldRelationships.tsx",
       "src/components/centropy/world/WorldWorkRecord.tsx",
       "src/components/centropy/world/world-context.ts",
+      "src/lib/auth/browser-session.ts",
       "src/lib/centropy/capability-manifest.generated.json",
       "src/lib/centropy/capability-manifest.ts",
       "src/lib/centropy/human-forms.generated.json",
@@ -989,7 +990,11 @@
       },
       {
         "file": "src/components/centropy/lib/centropy-auth.tsx",
-        "sha256": "aff59344ad55439fef8a7f49eddb96c4395f35563c08f314f07fde5cbc361595"
+        "sha256": "26cba289b53bd6d9d2f7775b83d77409a2335169126442ba2619cb7aed103268"
+      },
+      {
+        "file": "src/lib/auth/browser-session.ts",
+        "sha256": "59a35b78bf931f087a7f5a5267ef7c899664c53a84616276d2e17b24e04a0eb4"
       },
       {
         "file": "src/lib/centropy/supabase-browser.ts",
@@ -1557,7 +1562,7 @@
       },
       {
         "file": "src/components/centropy/lib/LoginForm.tsx",
-        "sha256": "153dc69b1fe95800429727f656388d665824a60404b8269cd579324016451a14"
+        "sha256": "e680baf224697a6237c0241d511191fc1104b461162b10364abbce946685f12c"
       },
       {
         "file": "src/app/centropy/money/page.tsx",
@@ -1577,7 +1582,7 @@
       },
       {
         "file": "src/components/centropy/lib/ResetPasswordForm.tsx",
-        "sha256": "f5d9b0676f23e5df74e00265e3ad041c4ec7ebdb50f82bc1d8e85077f5b12984"
+        "sha256": "70a6d9ec52c02cb46def20fd6a2d2312d1f74548b70226218800adcb9e5f0d39"
       },
       {
         "file": "src/app/centropy/schedule/page.tsx",
@@ -4752,7 +4757,7 @@
           "file": "src/components/centropy/lib/centropy-auth.tsx",
           "route": "me",
           "method": "GET",
-          "line": 164,
+          "line": 225,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
@@ -32636,7 +32641,7 @@
           "file": "src/components/centropy/lib/centropy-auth.tsx",
           "route": "live-controls",
           "method": "POST",
-          "line": 210,
+          "line": 275,
           "binding": "Native product proxy fetch with explicit HTTP method; source evidence only"
         }
       ],

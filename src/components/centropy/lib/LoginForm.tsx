@@ -54,6 +54,19 @@ export function LoginForm() {
     }
   }
 
+  if (process.env.NEXT_PUBLIC_FINNOR_AUTH_PROVIDER === "workos") {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#03070c] px-5 text-[#f2f7fd]">
+        <div className="w-full max-w-[430px] rounded-[24px] border border-[#25425a] bg-[#091420] px-8 py-9">
+          <h1 className="text-2xl font-semibold">Sign in to CENTROPY</h1>
+          <p className="mt-3 text-sm leading-6 text-[#9baabb]">Continue to your private workspace.</p>
+          <a href="/api/auth/sign-in?returnTo=/centropy" className="mt-7 block rounded-xl bg-[#62d8ff] px-5 py-3 text-center font-semibold text-[#04111c]">Continue to sign in</a>
+        </div>
+      </main>
+    )
+  }
+
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#04070f] px-4 text-[color:var(--j-text)]">
       <div className="w-full max-w-sm rounded-2xl border border-[color:var(--j-border)] bg-slate-950 p-6">
