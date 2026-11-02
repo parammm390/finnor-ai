@@ -72,7 +72,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
-      "sha256": "3f9052de26b5f2219adf9b26e2f3483e2578a69be5195f89d04a91b3618b8aa2"
+      "sha256": "92630d7d486060e45aa52016bea817f0580f5b71dcd3b7692a328b1a62723c50"
     },
     {
       "path": "finnor-os/packages/private-equity/src/owner-context.ts",
@@ -80,7 +80,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-beliefs.ts",
-      "sha256": "bb7fcfe361f136eb9280f18dbeb088785170bac337451106bf7b6ef1591f78f6"
+      "sha256": "0285325e7ceae02b283cff87d452a0aac9f5a48ff4b6c4e6e38901a3dd41e715"
     },
     {
       "path": "finnor-os/packages/db/compute-contract.ts",
