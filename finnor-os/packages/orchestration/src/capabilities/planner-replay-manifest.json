@@ -65,8 +65,8 @@
     },
     {
       "file": "package-lock.json",
-      "bytes": 263207,
-      "sha256": "3a5d69f378a3b1f1f21cafe44cdb40856916492de25446dbf32683542ac27393"
+      "bytes": 263258,
+      "sha256": "ad015353104043178ed4df6e741443513d7dbc5d745fdf376a3dfde723d629f4"
     },
     {
       "file": "package.json",
@@ -2125,13 +2125,13 @@
     },
     {
       "file": "packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "bytes": 8649,
-      "sha256": "cf0e50bf37038ccd891fb42868a8201d94e10a1587330428f3fed59a53d75fc0"
+      "bytes": 8809,
+      "sha256": "5b1186b10e6d1d8f98fe7186079e61ad3c2594aa8227d59de63a55a552b500ca"
     },
     {
       "file": "packages/private-equity/src/enterprise-applications/source-paths.ts",
-      "bytes": 2392,
-      "sha256": "452a23cfec69ef1f6ac290f025605a8420c8fdfb220df0e35e703ed53ab07af7"
+      "bytes": 2441,
+      "sha256": "e3caf32d398492a5726ea2571a8c604b054b9dffb739d64625eeeaf8ae118f91"
     },
     {
       "file": "packages/private-equity/src/enterprise-applications/store.ts",
@@ -2495,8 +2495,8 @@
     },
     {
       "file": "packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "bytes": 13612,
-      "sha256": "5b5f5c8fb5e4cea7efabebbd3e604bf5731ea1ee00236fbc59479e9a3ef0ee06"
+      "bytes": 13772,
+      "sha256": "e5729ec9a4c2555ce937df9637833a60b1d2cad4ca224066020ad9730c0a597a"
     },
     {
       "file": "packages/private-equity/src/policy-learning/source-paths.ts",
@@ -2840,8 +2840,8 @@
     },
     {
       "file": "packages/private-equity/src/system-identification/source-manifest.generated.ts",
-      "bytes": 19556,
-      "sha256": "0dfa6430178e585599dd1b65ca0db0cfac970dbe53bf0315761f41e21e53f89c"
+      "bytes": 19716,
+      "sha256": "1e9a26c31c6d9ebe823fb71d5b6c3caa4d565251ae271f91f96b799a5d65c8d4"
     },
     {
       "file": "packages/private-equity/src/system-identification/source-paths.ts",
@@ -3080,13 +3080,13 @@
     },
     {
       "file": "packages/security/package.json",
-      "bytes": 349,
-      "sha256": "85ab7f18df6dfb5f9d6e7134f1b9d2869ba17ff637e17e2d6f9f01212576fd92"
+      "bytes": 392,
+      "sha256": "9294adc009af4575357d3623ba8dc6eac2506cf6583b43cb3823c6dc35ed6051"
     },
     {
       "file": "packages/security/src/auth.ts",
-      "bytes": 6024,
-      "sha256": "2a770168e34c67705f2ff9aca4c552e2818806368c5784f738cace7e78d4d25a"
+      "bytes": 6952,
+      "sha256": "17053844c8fed253f467301e8abb7d7c10320a0b6732a6570031a00f942e9690"
     },
     {
       "file": "packages/security/src/connections.ts",
@@ -3127,6 +3127,11 @@
       "file": "packages/security/src/tenant-credentials.ts",
       "bytes": 39480,
       "sha256": "1d9636d1ba379dffe53fedec6d394927cf409befd860a95457358622daa8c9d4"
+    },
+    {
+      "file": "packages/security/src/workos-auth.ts",
+      "bytes": 4176,
+      "sha256": "e40fe7ea0195299bef6374d179fa86d909d3548fe74c4ac441f3c46f15e740ca"
     },
     {
       "file": "packages/shared-types/package.json",
