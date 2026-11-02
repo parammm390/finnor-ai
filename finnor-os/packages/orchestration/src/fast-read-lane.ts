@@ -139,6 +139,7 @@ export interface FastReadOnlyRouterDeps {
 const ACTIVE_INTENTS = new Set<string>(OPERATIONAL_QUERY_INTENTS);
 const PE_INTENTS = new Set<string>(PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS);
 const MUTATION = /\b(?:send|email|message|call|create|update|delete|remove|assign|handoff|delegate|schedule|reschedule|share|approve|reject|close|waive|execute|change)\b/i;
+const ANALYTICAL_REQUEST = /\b(?:analy[sz]e|assess|compare|evaluate|identify|quantify|rank|recommend|separate|prove)\b/i;
 const EXECUTION_COMMAND = /(?:^|[.!?,;\n]\s*|\b(?:and|then)\s+)(?:(?:please|also)\s+){0,2}(?:run|start|launch)\b|\b(?:can|could|would|will)\s+you\s+(?:please\s+)?(?:run|start|launch)\b/i;
 // Exclude nominal lists without suppressing a later clause's command and object.
 const EXECUTION_NAME_LIST = /\b(?:for|between|of)\s+(?:run|start|launch)(?:\s*,\s*(?:run|start|launch))*(?:\s*,?\s+(?:and|or)\s+(?:run|start|launch))\b/gi;
@@ -180,7 +181,7 @@ export function interpretOperationalQuery(instruction: string, scope?: { busines
   const scopedDealId = scope?.dealId ?? (scope?.businessRoot?.entityType === "pe_deal" ? scope.businessRoot.entityId : undefined);
   const scopedRoot = scope?.businessRoot ?? (scopedDealId ? { entityType: "pe_deal" as const, entityId: scopedDealId } : undefined);
   if (!text) return { route: "planner", reason: "not_question" };
-  if (MUTATION.test(text) || EXECUTION_COMMAND.test(text.replace(EXECUTION_NAME_LIST, "operation names"))) return { route: "planner", reason: "mutation_or_advice" };
+  if (MUTATION.test(text) || ANALYTICAL_REQUEST.test(text) || EXECUTION_COMMAND.test(text.replace(EXECUTION_NAME_LIST, "operation names"))) return { route: "planner", reason: "mutation_or_advice" };
   if (!QUESTION.test(text)) return { route: "planner", reason: "not_question" };
 
   if (/^what changed since yesterday(?:,? and does it affect our recommendation)?\??$/i.test(text)) {

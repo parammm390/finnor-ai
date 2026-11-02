@@ -1250,8 +1250,8 @@
     },
     {
       "file": "packages/orchestration/src/fast-read-lane.ts",
-      "bytes": 30796,
-      "sha256": "401e5462dee247c4c0928eafc677a48e90fa720e5ac632cd29b605f5f7f2f298"
+      "bytes": 30951,
+      "sha256": "5f21b7b10b7a6234198800658ed77e9f7007bc0cba5b09e3d302a316b955031f"
     },
     {
       "file": "packages/orchestration/src/graph/allowlist-executor.ts",

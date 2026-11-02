@@ -193,6 +193,24 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
     console.log(`PE_OBJECTIVE_WORLD_SCOPE_EVIDENCE ${join(evidenceDirectory, `world-scope-${runId}.json`)}`);
   });
 
+  it.each([
+    "Analyze this deal. Identify the 5 biggest closing risks. Rank by severity and show evidence.",
+    "For every claim you just made, show its exact source, timestamp, and confidence. Separate facts from assumptions.",
+    "Identify conflicting financial figures across this deal's documents. Show both values and their sources.",
+    "Find the highest-impact EBITDA improvement opportunity. Quantify upside, assumptions, confidence, implementation cost, and evidence gaps.",
+  ])("retains analytical instructions as durable Work instead of an unrelated party lookup: %s", async (instruction) => {
+    const response = await http.request("actions", {
+      instruction, channel: "text", idempotencyKey: `analysis-routing:${randomUUID()}`,
+    });
+    await record("analytical-instruction-intake", { instruction, response });
+    expect(response.status, JSON.stringify(response.body)).toBe(202);
+    expect(response.body.objective?.objectiveLoopId).toBeTruthy();
+    const current = await state(response.body.workId);
+    expect(current.loop.id).toBe(response.body.objective.objectiveLoopId);
+    expect(current.loop.state).toBe("continue");
+    expect(current.queries).toEqual([]);
+  });
+
   it("retains an explicitly selected opportunity instead of linking the sole incidental Deal, then verifies only its accepted factual-read contract", async () => {
     // Contract: accepted pre-Deal subject survives HTTP intake and real planning.
     // Defect: generic Deal fallback silently captures unrelated non-Deal work.
