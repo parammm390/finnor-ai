@@ -86,11 +86,20 @@ revocation owner. The older dirty development checkout is not the release source
   stable delivery identity across refresh and distinct identity across logins.
 - PASS: scoped frontend/backend TypeScript programs, including their imported
   dependencies, and lint of the changed frontend and HTTP driver.
-- NOT_DONE: a complete production build/cold installation and real mounted
-  WorkOS sign-in, verification, authenticated refresh/logout and account switch.
-  The local login-page HTTP smoke did not finish successfully.
-- NOT_DONE: production identity linkage, coordinated frontend/API/any exposed SSE
-  gateway configuration and deployment. Production credentials were pending.
+- PASS: frontend cold installation (`npm ci --ignore-scripts`), optimized
+  production build, full frontend TypeScript and all 48 static pages. The built
+  server passed the same 14 HTTP cases and login/recovery-page HTTP smoke. Chrome
+  rendered the WorkOS sign-in page. No supplied API key or cookie password was
+  found in the 120 generated client JavaScript chunks.
+- NOT_DONE: API cold production build and real WorkOS sign-in, verification,
+  authenticated refresh/logout and account switch.
+- DONE: production WorkOS Client ID retrieved from the signed-in dashboard; exact
+  HTTPS callback and sign-out return URLs registered for the FINNOR application.
+- NOT_DONE: production API-key issuance, identity linkage, coordinated
+  frontend/API/any exposed SSE gateway configuration and deployment. The named
+  production key form is prepared for the owner action required by browser
+  security policy. A Vercel preview attempt failed before build with
+  `git_info_fail`; local build validation succeeded afterward.
 
 These checks establish adapter boundaries; they do not establish live recovery.
 Private evidence and the approved identity fixture stay outside the repository.
