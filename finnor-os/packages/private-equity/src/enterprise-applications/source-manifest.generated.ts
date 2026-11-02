@@ -160,7 +160,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/security/src/workos-auth.ts",
-      "sha256": "e40fe7ea0195299bef6374d179fa86d909d3548fe74c4ac441f3c46f15e740ca"
+      "sha256": "0066b4bf4517d8d79fc3c5c4d8e0aafd1e077d2b6078c17d8fab4976d871756b"
     },
     {
       "path": "finnor-os/packages/capability-evolution/src/contracts.ts",
