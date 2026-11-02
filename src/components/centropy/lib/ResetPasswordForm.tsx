@@ -17,6 +17,7 @@ export function ResetPasswordForm() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (process.env.NEXT_PUBLIC_FINNOR_AUTH_PROVIDER === "workos") return
     let active = true
     void getSupabaseBrowser()
       .then((supabaseBrowser) => supabaseBrowser.auth.getSession())
@@ -67,6 +68,11 @@ export function ResetPasswordForm() {
       setBusy(false)
     }
   }
+
+  if (process.env.NEXT_PUBLIC_FINNOR_AUTH_PROVIDER === "workos") {
+    return <main className="flex min-h-screen items-center justify-center bg-[#03070c] px-5 text-[#f2f7fd]"><div className="max-w-md rounded-2xl border border-[#25425a] p-8"><h1 className="text-xl font-semibold">Reset your password</h1><p className="mt-3 text-sm">Password recovery is available on the sign-in page.</p><a className="mt-5 block text-[#62d8ff]" href="/api/auth/sign-in?returnTo=/centropy">Continue to sign in</a></div></main>
+  }
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#04070f] px-4 text-[color:var(--j-text)]">

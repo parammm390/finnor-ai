@@ -7,7 +7,7 @@
 // authorization logic lives here or in the proxy, only session plumbing.
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
-import type { Session } from "@supabase/supabase-js"
+import { readWorkOSSession, type BrowserSession as Session } from "@/lib/auth/browser-session"
 import { getSupabaseBrowser } from "@/lib/centropy/supabase-browser"
 import { centropyGet } from "./api"
 
@@ -20,6 +20,7 @@ export type CentropyRole = "owner"
 // (api.ts isn't a component) that always reflects the latest session from the one
 // Supabase client instance's in-memory state.
 let currentSession: Session | null = null
+let locallySignedOut = false
 let rejectedCredential: string | null = null
 let accessGeneration = 0
 const rejectionListeners = new Set<(reason: string) => void>()
@@ -113,6 +114,66 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
     let unsubscribe: (() => void) | null = null
     setLoading(true)
     setAuthError(null)
+    if (process.env.NEXT_PUBLIC_FINNOR_AUTH_PROVIDER === "workos") {
+      let sequence = 0
+      let controller: AbortController | undefined
+      let timer: ReturnType<typeof setTimeout> | undefined
+      const channel = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel("finnor-auth")
+      const clear = () => {
+        adoptSession(null)
+        setSession(null)
+        setRole(null)
+        resolvedRoleUserIdRef.current = null
+      }
+      const refresh = async () => {
+        if (locallySignedOut) return
+        const current = ++sequence
+        controller?.abort()
+        const requestController = new AbortController()
+        controller = requestController
+        const timeout = setTimeout(() => requestController.abort(), CENTROPY_AUTH_BOOTSTRAP_TIMEOUT_MS)
+        try {
+          const next = await readWorkOSSession(requestController.signal)
+          if (!active || locallySignedOut || current !== sequence) return
+          adoptSession(next)
+          setSession(previous => previous?.user.id === next?.user.id && previous?.access_token === next?.access_token ? previous : next)
+          setAuthError(null)
+        } catch (cause) {
+          if (!active || current !== sequence) return
+          clear()
+          setAuthError(cause instanceof Error ? cause.message : "Sign-in could not be restored.")
+        } finally {
+          clearTimeout(timeout)
+          if (active && current === sequence) {
+            setLoading(false)
+            if (timer) clearTimeout(timer)
+            timer = setTimeout(() => void refresh(), 60_000)
+          }
+        }
+      }
+      const focus = () => { if (document.visibilityState === "visible") void refresh() }
+      if (channel) channel.onmessage = event => {
+        if (event.data !== "signed-out") return
+        locallySignedOut = true
+        ++sequence
+        controller?.abort()
+        clear()
+        setLoading(false)
+        setAuthError(null)
+      }
+      window.addEventListener("focus", focus)
+      document.addEventListener("visibilitychange", focus)
+      void refresh()
+      return () => {
+        active = false
+        ++sequence
+        controller?.abort()
+        if (timer) clearTimeout(timer)
+        channel?.close()
+        window.removeEventListener("focus", focus)
+        document.removeEventListener("visibilitychange", focus)
+      }
+    }
     void (async () => {
       try {
         const supabaseBrowser = await withTimeout(getSupabaseBrowser())
@@ -165,6 +226,8 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
       .then((r) => {
         if (!cancelled) {
           if (!isCentropyRole(r.role)) {
+            resolvedRoleUserIdRef.current = null
+            setRole(null)
             setRoleError("CENTROPY returned an unknown workspace role. Retry connection or contact an administrator.")
             return
           }
@@ -174,7 +237,8 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
       })
       .catch((error) => {
         if (!cancelled) {
-          if (!sameResolvedUser) setRole(null)
+          resolvedRoleUserIdRef.current = null
+          setRole(null)
           setRoleError(error instanceof Error ? error.message : "CENTROPY could not load your role.")
         }
       })
@@ -202,15 +266,30 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
   }, [])
 
   async function signOut(): Promise<void> {
+    if (process.env.NEXT_PUBLIC_FINNOR_AUTH_PROVIDER === "workos") locallySignedOut = true
     const token = currentSession?.access_token
     // Close the local scope synchronously. A late response cannot resurrect
     // private state while provider logout or the delivery tombstone is pending.
-    currentSession = null
+    adoptSession(null)
     setSession(null); setRole(null); resolvedRoleUserIdRef.current = null
     if (token) await fetch("/api/centropy/live-controls", {
       method: "POST", cache: "no-store", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
       body: JSON.stringify({ operation: "end-delivery", input: {} }), signal: AbortSignal.timeout(3000),
     }).catch(() => undefined)
+    if (process.env.NEXT_PUBLIC_FINNOR_AUTH_PROVIDER === "workos") {
+      locallySignedOut = true
+      if (typeof BroadcastChannel !== "undefined") {
+        const channel = new BroadcastChannel("finnor-auth")
+        channel.postMessage("signed-out")
+        channel.close()
+      }
+      const form = document.createElement("form")
+      form.method = "POST"
+      form.action = "/api/auth/sign-out"
+      document.body.append(form)
+      form.submit()
+      return
+    }
     const supabaseBrowser = await getSupabaseBrowser()
     await supabaseBrowser.auth.signOut()
   }

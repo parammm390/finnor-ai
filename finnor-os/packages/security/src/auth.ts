@@ -15,6 +15,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { getPool, queryWithExecutionDeadline, executionDeadlineMilliseconds } from "@finnor/db";
 import type { TenantContext, Role } from "@finnor/shared-types";
 
+import { verifyWorkOSIdentity } from "./workos-auth";
+
 export class AuthVerificationError extends Error {
   constructor(
     message: string,
@@ -55,7 +57,16 @@ function supabaseAuthClient(url: string, key: string): SupabaseClient {
 /** Verifies a Supabase-issued bearer token and returns the caller's email. Throws
  *  AuthVerificationError (never a bare Error) so every caller can map it to the right
  *  HTTP status without knowing anything about Supabase's own error shape. */
-export async function verifyBearerToken(token: string): Promise<{ email: string; deliverySession?: TenantContext["deliverySession"] }> {
+type VerifiedIdentity = { provider: "supabase"; email: string; deliverySession?: TenantContext["deliverySession"] }
+  | { provider: "workos"; email: string; principalId: string; tenantId: string; deliverySession: NonNullable<TenantContext["deliverySession"]> };
+
+export async function verifyBearerToken(token: string): Promise<VerifiedIdentity> {
+  const provider = process.env.FINNOR_AUTH_PROVIDER ?? "supabase";
+  if (provider === "workos") {
+    try { return { provider: "workos", ...await verifyWorkOSIdentity(token) }; }
+    catch { throw new AuthVerificationError("Invalid, unavailable or unlinked WorkOS identity", 401); }
+  }
+  if (provider !== "supabase") throw new AuthVerificationError("Authentication provider is not configured", 500);
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new AuthVerificationError("Auth is not configured (SUPABASE_URL / key missing)", 500);
@@ -75,7 +86,7 @@ export async function verifyBearerToken(token: string): Promise<{ email: string;
     && typeof expires === "number" && Number.isSafeInteger(expires)
     && expires * 1000 > Date.now()
     ? { subject, sessionId, expiresAt: new Date(expires * 1000).toISOString() } : undefined;
-  return { email, ...(deliverySession ? { deliverySession } : {}) };
+  return { provider: "supabase", email, ...(deliverySession ? { deliverySession } : {}) };
 }
 
 /** Identity → tenant lookup. Outside any withTenant() scope deliberately — tenant
@@ -105,8 +116,11 @@ export async function resolveTenantContextByEmail(email: string): Promise<Identi
 /** Bearer token → tenant context in one call. No Next.js Request dependency, so any
  *  Node HTTP surface (Next.js route handlers, apps/worker's SSE gateway) can use it. */
 export async function resolveTenantFromBearerToken(token: string): Promise<IdentityContext> {
-  const { email, deliverySession } = await verifyBearerToken(token);
-  const ctx = await resolveTenantContextByEmail(email);
+  const identity = await verifyBearerToken(token);
+  const ctx = await resolveTenantContextByEmail(identity.email);
   if (!ctx) throw new AuthVerificationError("User has no tenant — contact your administrator", 403);
-  return { ...ctx, ...(deliverySession ? { deliverySession } : {}) };
+  if (identity.provider === "workos" && (ctx.userId !== identity.principalId || ctx.tenantId !== identity.tenantId)) {
+    throw new AuthVerificationError("Identity is not linked to this FINNOR account", 403);
+  }
+  return { ...ctx, ...(identity.deliverySession ? { deliverySession: identity.deliverySession } : {}) };
 }
