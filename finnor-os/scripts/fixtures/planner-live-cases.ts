@@ -1,16 +1,18 @@
 /** Current candidate-plan evaluation corpus. Expected behavior is never sent to the live model. */
+import type { CanonicalOperationalQueryRequest, PartyRef } from '@finnor/shared-types';
+
 export const PLANNER_EVAL_IDS = {
   tenant: '10000000-0000-4000-8000-000000000001', employee: '10000000-0000-4000-8000-000000000002',
   deal: '10000000-0000-4000-8000-000000000003', workstream: '10000000-0000-4000-8000-000000000004',
   item: '10000000-0000-4000-8000-000000000005', other: '10000000-0000-4000-8000-000000000006',
 };
-type QueryCase = { kind: 'query'; request: Record<string, unknown> };
+type QueryCase = { kind: 'query'; request: CanonicalOperationalQueryRequest };
 type ActionCase = { kind: 'action'; actionType: string; payload: Record<string, unknown> };
 type SafeCase = { kind: 'safe_response' };
 export interface PlannerLiveCase { id: string; instruction: string; expected: QueryCase | ActionCase | SafeCase }
 const ids = PLANNER_EVAL_IDS;
-const owner = { partyType: 'employee', partyId: ids.employee };
-const query = (id: string, instruction: string, request: Record<string, unknown>): PlannerLiveCase => ({ id, instruction, expected: { kind: 'query', request } });
+const owner: PartyRef = { partyType: 'employee', partyId: ids.employee };
+const query = (id: string, instruction: string, request: CanonicalOperationalQueryRequest): PlannerLiveCase => ({ id, instruction, expected: { kind: 'query', request } });
 const action = (id: string, instruction: string, actionType: string, payload: Record<string, unknown>): PlannerLiveCase => ({ id, instruction, expected: { kind: 'action', actionType, payload } });
 const safe = (id: string, instruction: string): PlannerLiveCase => ({ id, instruction, expected: { kind: 'safe_response' } });
 export const PLANNER_LIVE_CASES: readonly PlannerLiveCase[] = [
@@ -19,7 +21,7 @@ export const PLANNER_LIVE_CASES: readonly PlannerLiveCase[] = [
   query('agent-activity', 'Inspect the recorded activity of our agents.', { intent: 'agent_activity' }),
   query('workforce-status', 'Inspect the current workforce status.', { intent: 'workforce_status' }),
   query('company-context', 'Inspect the canonical company context.', { intent: 'company_context' }),
-  query('party-context', `Inspect the context for employee ${ids.employee}.`, { intent: 'party_context', party: owner }),
+  query('party-context', `Inspect the context for employee ${ids.employee}.`, { intent: 'party_context', ref: owner }),
   query('world-state', `Inspect the canonical PE world state rooted at Deal ${ids.deal}.`, { intent: 'pe_world_state', root: { entityType: 'pe_deal', entityId: ids.deal } }),
   query('deal-context', `Inspect Deal ${ids.deal} and its current context.`, { intent: 'deal_context', dealId: ids.deal }),
   query('deal-workstreams', `Inspect Workstreams in Deal ${ids.deal}.`, { intent: 'deal_workstreams', dealId: ids.deal }),
