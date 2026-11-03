@@ -1,5 +1,5 @@
 import type { BeliefClaim, BeliefDecisionContext, BeliefView, BeliefViewPin, BeliefViewPinValidation } from "@finnor/shared-types";
-import { canExerciseAuthority, canExerciseAuthorityTx, employeeAuthoritySnapshot, employeeAuthoritySnapshotTx } from "@finnor/authority";
+import { canExerciseAuthorityBatch, canExerciseAuthorityTx, employeeAuthoritySnapshot, employeeAuthoritySnapshotTx } from "@finnor/authority";
 import type { PoolClient } from "pg";
 import { withTenantTransaction } from "@finnor/db";
 import { beliefOwnerRef, boundBeliefView, createBeliefView, epistemicHash, prepareS1ExperienceEvent } from "@finnor/epistemic-runtime";
@@ -29,8 +29,8 @@ export async function authorizeBeliefResources(ctx: PeMutationContext, resources
       if (client) {
         for (const group of grouped.slice(offset, offset + 16)) allowed.push(await canExerciseAuthorityTx(ctx.auth,
           { operation: "query", capability: "query:pe_world_state", resources: group, risk: "low" }, client, lock));
-      } else allowed.push(...await Promise.all(grouped.slice(offset, offset + 16).map(group => canExerciseAuthority(ctx.auth,
-        { operation: "query", capability: "query:pe_world_state", resources: group, risk: "low" }))));
+      } else allowed.push(...await canExerciseAuthorityBatch(ctx.auth, grouped.slice(offset, offset + 16).map(group =>
+        ({ operation: "query", capability: "query:pe_world_state", resources: group, risk: "low" }))));
       if (allowed.some(value => !value)) throw new Error("Unavailable");
     }
     await authorizeBeliefCandidateCut(ctx, client);

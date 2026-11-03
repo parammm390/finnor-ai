@@ -1,7 +1,7 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-02T16:10:44.100Z",
-  "sourceBaseCommit": "f8efb2be752328f382185c2a17a6374e94ee019e",
+  "generatedAt": "2026-11-03T04:15:20.174Z",
+  "sourceBaseCommit": "a610de22ef01b26a61978661dbd370efbdaff089",
   "manifestSha256": "5c1806214b2b629db0a3228952a404f348c0e767c2523f065c7394696c55f685",
   "formsSha256": "1bc12487fb34759988ed4490715c21560653608fb313a409f0e6bcc551340e89",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -41774,6 +41774,7 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [
+        "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/universal-action-fabric.test.ts"
       ],
       "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
@@ -42233,6 +42234,7 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [
+        "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/universal-action-fabric.test.ts"
       ],
       "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
@@ -42503,6 +42505,7 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [
+        "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/universal-action-fabric.test.ts"
       ],
       "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
@@ -43560,6 +43563,7 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [
+        "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/private-equity-phase3.test.ts"
       ],
       "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
@@ -44908,6 +44912,7 @@
       "tests": [
         "e2e/centropy-governed-message.spec.ts",
         "finnor-os/tests/integration/correlation-id.test.ts",
+        "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/phase6-plan-concurrency.test.ts",
         "finnor-os/tests/integration/private-equity-phase4.test.ts",
         "finnor-os/tests/integration/universal-action-fabric.test.ts",
@@ -44976,6 +44981,7 @@
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
       "tests": [
+        "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/universal-action-fabric.test.ts"
       ],
       "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",

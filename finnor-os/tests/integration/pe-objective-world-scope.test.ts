@@ -8,17 +8,18 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { closePool, configureTenantVertical } from "@finnor/db";
 import {
   FinnorOrchestrator, LLMPlanner, createDefaultPluginRegistry,
-  type LLMProvider,
+  type LLMProvider, type PlanningResult,
 } from "@finnor/orchestration";
 import { configureAgentProfile } from "../../packages/orchestration/src/workforce-runtime";
 import { createDeal, createFund, createOpportunity, createStrategy, type PeMutationContext } from "@finnor/private-equity";
-import type { ObjectiveSuccessCondition, PeWorldRootRef } from "@finnor/shared-types";
+import type { CanonicalOperationalQueryRequest, ObjectiveSuccessCondition, PeWorldRootRef } from "@finnor/shared-types";
 import { assertDisposableDatabaseTarget } from "../../packages/db/production-target-guard";
 import { CURRENT_MIGRATION_HEAD } from "../../packages/db/migration-head";
 import { startHeartbeat } from "../../apps/worker/src/heartbeat";
 import { readWorkerFleetReadiness } from "../../apps/api/lib/worker-readiness";
 import { browserHttpFixture } from "../../scripts/v2/browser-http-fixture.mjs";
 import { operatingSelection } from "../../../src/components/centropy/world/world-context";
+import { buildConstraintSet, type PlanningConstraint } from "@finnor/planning";
 
 // Authoring gate: this owns the authenticated non-Deal objective regression.
 // A real owner world read and the generic graph test do not exercise HTTP intake,
@@ -170,7 +171,7 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
     const foreignCtx: PeMutationContext = { auth: { tenantId: foreignTenantId, userId: foreignActorId, employeeId: foreignActorId, role: "owner" } };
     foreignFund = { entityType: "pe_fund", entityId: String((await createFund(foreignCtx, { name: "Foreign private fund", baseCurrency: "USD" })).row.id) };
     incidentalDealId = String((await createDeal(ctx, { targetOrganizationId: companyId, name: "Unrelated sole active Deal", dealLeadEmployeeId: actorId, signedLoiAt: new Date("2026-09-01"), targetClosingAt: new Date("2026-12-01") })).row.id);
-    await configureAgentProfile(tenantId, createDefaultPluginRegistry(), { key: `world-${runId}`, name: "World query worker", actor: ctx.auth, capabilityGrants: [{ kind: "query", capability: "query:pe_world_state" }, { kind: "check", capability: "check:objective_success" }], autonomyLimits: { maxActions: 1, maxQueries: 11, maxReplans: 8, maxPlannerCalls: 8, maxWallClockMs: 120_000 } });
+    await configureAgentProfile(tenantId, createDefaultPluginRegistry(), { key: `world-${runId}`, name: "World query worker", actor: ctx.auth, capabilityGrants: [{ kind: "query", capability: "query:pe_world_state" }, { kind: "query", capability: "query:party_context" }, { kind: "check", capability: "check:objective_success" }], autonomyLimits: { maxActions: 1, maxQueries: 11, maxReplans: 8, maxPlannerCalls: 8, maxWallClockMs: 120_000 } });
     http = await browserHttpFixture(admin, tenantId, actorId, otherActorId);
     heartbeat = startHeartbeat(1_000, heartbeatStop.signal);
     let ready = false;
@@ -191,6 +192,111 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
     await admin?.end();
     for (const [key, value] of Object.entries(originalEnvironment)) { if (value === undefined) delete process.env[key]; else process.env[key] = value; }
     console.log(`PE_OBJECTIVE_WORLD_SCOPE_EVIDENCE ${join(evidenceDirectory, `world-scope-${runId}.json`)}`);
+  });
+
+  it.each([
+    "Analyze this deal. Identify the 5 biggest closing risks. Rank by severity and show evidence.",
+    "For every claim you just made, show its exact source, timestamp, and confidence. Separate facts from assumptions.",
+    "Identify conflicting financial figures across this deal's documents. Show both values and their sources.",
+    "Find the highest-impact EBITDA improvement opportunity. Quantify upside, assumptions, confidence, implementation cost, and evidence gaps.",
+  ])("retains analytical instructions as durable Work instead of an unrelated party lookup: %s", async (instruction) => {
+    const response = await http.request("actions", {
+      instruction, channel: "text", idempotencyKey: `analysis-routing:${randomUUID()}`,
+    });
+    await record("analytical-instruction-intake", { instruction, response });
+    expect(response.status, JSON.stringify(response.body)).toBe(202);
+    expect(response.body.objective?.objectiveLoopId).toBeTruthy();
+    const current = await state(response.body.workId);
+    expect(current.loop.id).toBe(response.body.objective.objectiveLoopId);
+    expect(current.loop.state).toBe("continue");
+    expect(current.queries).toEqual([]);
+  });
+
+  it("advertises and executes the authenticated employee's exact party-context read", async () => {
+    const request = { intent: "party_context", ref: { partyType: "employee", partyId: actorId } } satisfies CanonicalOperationalQueryRequest;
+    const response = await http.request("objectives", {
+      objective: `Inspect the canonical context of employee ${actorId}.`, channel: "text",
+      idempotencyKey: `employee-context:${randomUUID()}`, activeContext: context(fund, "businessRoot"),
+      successCondition: { version: 1, source: "explicit", mode: "all", statement: "Read the exact authenticated employee record; no business effect is requested.", criteria: [
+        { kind: "no_open_execution" }, { kind: "all_objective_effects_verified", minimumCount: 0 },
+        { kind: "canonical_query", request, assertion: { path: ["party", "ref", "partyId"], operator: "eq", expected: actorId } },
+      ] },
+      budgets: { maxSteps: 8, maxActions: 0, maxQueries: 12, maxPlannerFailures: 1, deadlineAt: new Date(Date.now() + 120_000).toISOString() },
+    });
+    expect(response.status, JSON.stringify(response.body)).toBe(202);
+    const objective = response.body.objective as { workId: string; objectiveLoopId: string };
+    const provider: LLMProvider = { name: "grounded-party-query-fixture", contextWindowTokens: 131072, async complete(options) {
+      const input = JSON.parse(options.user);
+      const advertised = input.snapshot.availableReads.map((item: { request: Record<string, unknown> }) => item.request);
+      await record("authenticated-employee-advertised-reads", { actorId, advertised });
+      expect(advertised, "Copying an advertised query must retain the authenticated employee reference").toContainEqual(request);
+      const criteria = input.goal.criteria as Array<{ id: string }>;
+      return JSON.stringify({ candidates: [{ version: 1, candidateKey: "read-authenticated-employee", nodes: [
+        { key: "read_employee", kind: "query", request, supports: criteria.map(item => item.id) },
+        ...criteria.map((item, index) => ({ key: `check_${index}`, kind: "check", criterionId: item.id, dependsOn: ["read_employee"] })),
+      ] }] });
+    } };
+    const runtime = new FinnorOrchestrator({ planner: new LLMPlanner(createDefaultPluginRegistry(), provider) });
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const outcome = await runtime.runObjectiveIteration({ tenantId, ...objective });
+      if (["completed", "blocked", "failed", "cancelled", "awaiting_approval", "waiting"].includes(outcome)) break;
+    }
+    const current = await state(objective.workId);
+    await record("authenticated-employee-read-result", current);
+    expect(current.loop.state).toBe("completed");
+    expect(current.queries).toEqual(expect.arrayContaining([expect.objectContaining({ intent: "party_context", status: "succeeded", request })]));
+  });
+
+  it.each([false, true])("enforces draft-only against a send proposal with supplied constraints %s", async (suppliedConstraints) => {
+    const response = await http.request("objectives", {
+      objective: "Resolve every outstanding diligence request. Draft necessary follow-ups, but do not send anything.",
+      channel: "text", idempotencyKey: `draft-only:${randomUUID()}`, activeContext: context(fund, "businessRoot"),
+      budgets: { maxSteps: 8, maxActions: 1, maxQueries: 12, maxPlannerFailures: 1, deadlineAt: new Date(Date.now() + 120_000).toISOString() },
+    });
+    expect(response.status, JSON.stringify(response.body)).toBe(202);
+    const objective = response.body.objective as { workId: string; objectiveLoopId: string };
+    const plans: PlanningResult[] = [];
+    const provider: LLMProvider = { name: "adversarial-draft-only-fixture", contextWindowTokens: 131072, async complete(options) {
+      const input = JSON.parse(options.user);
+      return JSON.stringify({ candidates: [{ version: 1, candidateKey: "attempt-forbidden-send", nodes: [
+        { key: "send_despite_instruction", kind: "action", actionType: "send_message", payload: { recipient: { partyType: "employee", partyId: actorId }, channel: "internal", body: "This must never be sent." }, supports: input.goal.criteria.map((item: { id: string }) => item.id) },
+        ...input.goal.criteria.map((item: { id: string }, index: number) => ({ key: `check_${index}`, kind: "check", criterionId: item.id, dependsOn: ["send_despite_instruction"] })),
+      ] }] });
+    } };
+    const delegate = new LLMPlanner(createDefaultPluginRegistry(), provider);
+    const preservedDeadline: PlanningConstraint = {
+      id: "independent-work-deadline", kind: "deadline", source: "work", strength: "hard", scope: { type: "plan" },
+      requirement: { deadlineAt: new Date(Date.now() + 60_000).toISOString() },
+      provenance: { ref: "disposable-work-deadline", hash: "independent-deadline-fixture" },
+    };
+    const runtime = new FinnorOrchestrator({ planner: { async plan(instruction, tenantContext, memory, options) {
+      const initial = await delegate.plan(instruction, tenantContext, memory, options);
+      const plan = suppliedConstraints ? await delegate.plan(instruction, tenantContext, memory, {
+        ...options, constraints: buildConstraintSet({ ...initial.constraints, prohibitedCapabilities: [], constraints: [...initial.constraints.constraints, preservedDeadline] }),
+      }) : initial;
+      plans.push(plan); return plan;
+    } } });
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const outcome = await runtime.runObjectiveIteration({ tenantId, ...objective });
+      if (["completed", "blocked", "failed", "cancelled", "awaiting_approval", "waiting"].includes(outcome)) break;
+    }
+    await record("draft-only-adversarial-planning", plans);
+    expect(plans.length).toBeGreaterThan(0);
+    for (const plan of plans) {
+      if (suppliedConstraints) expect(plan.constraints.constraints).toContainEqual(preservedDeadline);
+      expect(plan.constraints.prohibitedCapabilities).toEqual(expect.arrayContaining(["send_message", "place_call", "notify_group", "share_document", "computer_task", "delegate_objective"]));
+      expect(plan.compilation.selected).toBeNull();
+      expect(plan.compilation.candidates.flatMap(candidate => candidate.violations)).toEqual(expect.arrayContaining([
+        expect.objectContaining({ code: "CAPABILITY_NOT_ALLOWED", nodeKey: "send_despite_instruction" }),
+      ]));
+    }
+    const current = await state(objective.workId);
+    const effects = (await admin.query("SELECT id FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2", [tenantId, objective.workId])).rows;
+    await record("draft-only-persisted-no-send", { current, effects });
+    expect(effects).toEqual([]);
+    expect(current.loop.success_condition.criteria).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: "decision_evidence", accepted: expect.arrayContaining(["business_effect"]) }),
+    ]));
   });
 
   it("retains an explicitly selected opportunity instead of linking the sole incidental Deal, then verifies only its accepted factual-read contract", async () => {

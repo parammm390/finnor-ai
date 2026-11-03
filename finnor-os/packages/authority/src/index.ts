@@ -643,6 +643,17 @@ export async function canExerciseAuthority(ctx: TenantContext, request: Authorit
   return withAuthorityRead(ctx.tenantId, (db) => canExerciseAuthorityOnDb(ctx, request, db));
 }
 
+export async function canExerciseAuthorityBatch(ctx: TenantContext, requests: AuthorityRequest[]): Promise<boolean[]> {
+  if (requests.length === 0) return [];
+  return withAuthorityRead(ctx.tenantId, async (db) => {
+    const employeeId = ctx.employeeId ?? (UUID.test(ctx.userId) ? ctx.userId : null);
+    const authority = employeeId ? await loadAuthority(db, ctx.tenantId, employeeId) : undefined;
+    const results: boolean[] = [];
+    for (const request of requests) results.push(await canExerciseAuthorityOnDb(ctx, request, db, authority));
+    return results;
+  });
+}
+
 export async function canExerciseAuthorityTx(ctx: TenantContext, request: AuthorityRequest, client: PoolClient, lock = true): Promise<boolean> {
   await lockCurrentAuthorityTx(ctx, client, lock);
   return canExerciseAuthorityOnDb(ctx, request, authorityReadDb(client));
@@ -703,7 +714,7 @@ export async function validateExactControlApprovalsTx(
   return { decision: requirements.decision, approvalDecisionIds: [...new Set(accepted)] };
 }
 
-async function canExerciseAuthorityOnDb(ctx: TenantContext, request: AuthorityRequest, db: AuthorityReadDb): Promise<boolean> {
+async function canExerciseAuthorityOnDb(ctx: TenantContext, request: AuthorityRequest, db: AuthorityReadDb, authority?: LoadedAuthority): Promise<boolean> {
     const employeeId = ctx.employeeId ?? (UUID.test(ctx.userId) ? ctx.userId : null);
     const legacyApprovalAllowed = async (): Promise<boolean> => {
       if (process.env.NODE_ENV === "production" || request.operation !== "approval") return false;
@@ -718,7 +729,7 @@ async function canExerciseAuthorityOnDb(ctx: TenantContext, request: AuthorityRe
     };
     if (!employeeId) return legacyApprovalAllowed();
 
-    const auth = await loadAuthority(db, ctx.tenantId, employeeId);
+    const auth = authority ?? await loadAuthority(db, ctx.tenantId, employeeId);
     if (!auth.employee) return legacyApprovalAllowed();
     if (auth.employee.status !== "active") return false;
 

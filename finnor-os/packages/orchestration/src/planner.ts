@@ -6,6 +6,8 @@ import { buildConversationModelInput } from "./conversation-prompt";
 import { and, desc, eq, inArray, lte } from "drizzle-orm";
 import { z } from "zod";
 import {
+  CANONICAL_ENTITY_TYPES,
+  canonicalEntityRefToPartyRef,
   OPERATIONAL_QUERY_INTENTS,
   PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
   PRIVATE_EQUITY_VERTICAL,
@@ -16,6 +18,7 @@ import {
   type ObjectiveSuccessCondition,
   type OperatingContext,
   type TenantContext,
+  type PartyRef,
 } from "@finnor/shared-types";
 import { domainPolicyRevisions, resolveTenantVertical, withTenant } from "@finnor/db";
 import {
@@ -52,7 +55,7 @@ import { clarificationContinuationAction, enforceExternalResearchRoute, safeRead
 import { resolveCompetitorResearch } from "./research-context";
 import { applyOperatingInteractionTargets } from "./interaction-targeting";
 import { interactionBusinessRoot } from "./interaction-context";
-import { defaultObjectiveSuccessCondition, growthRateLessBps } from "./objective-success";
+import { defaultObjectiveSuccessCondition, growthRateLessBps, objectiveForbidsCommunication } from "./objective-success";
 import { planningHealthForAction } from "./planning-health";
 import { parseModelJson } from "./model-json";
 
@@ -210,6 +213,16 @@ function plannerConstraintContext(constraints: ConstraintSet): Record<string, un
 function plannerSnapshotContext(snapshot: PlanningWorldSnapshot): Record<string, unknown> {
   const dealId = snapshot.canonicalEntities.find((entity) => entity.kind === "entity" && entity.type === "pe_deal")?.id;
   const businessRoot = snapshot.businessRoot ?? (dealId ? { entityType: "pe_deal", entityId: dealId } : null);
+  const partyRefs = new Map<string, PartyRef>();
+  if (snapshot.authority.employeeId) {
+    partyRefs.set(`employee:${snapshot.authority.employeeId}`, { partyType: "employee", partyId: snapshot.authority.employeeId });
+  }
+  for (const entity of snapshot.canonicalEntities) {
+    if (entity.kind !== "entity") continue;
+    const type = z.enum(CANONICAL_ENTITY_TYPES).safeParse(entity.type);
+    const ref = type.success ? canonicalEntityRefToPartyRef({ entityType: type.data, entityId: entity.id }) : null;
+    if (ref) partyRefs.set(`${ref.partyType}:${ref.partyId}`, ref);
+  }
   const availableReads = snapshot.capabilities
     .filter((item) => item.kind === "query" && item.available && item.health !== "unavailable")
     .flatMap((item) => {
@@ -219,9 +232,15 @@ function plannerSnapshotContext(snapshot: PlanningWorldSnapshot): Record<string,
         : PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS.some((value) => value === intent) && dealId
           ? { intent, dealId }
           : item.requiredReferences.length === 0 ? { intent } : null;
-      if (!request) return [];
-      const valid = validateOperationalQueryRequest(request);
-      return valid.success ? [{ request: valid.request }] : [];
+      const requests = [
+        ...(request ? [request] : []),
+        ...(intent === "party_context" || intent === "party_lookup"
+          ? [...partyRefs.values()].map((ref) => ({ intent, ref })) : []),
+      ];
+      return requests.flatMap((candidate) => {
+        const valid = validateOperationalQueryRequest(candidate);
+        return valid.success ? [{ request: valid.request }] : [];
+      });
     });
   return {
     capturedAt: snapshot.capturedAt,
@@ -876,16 +895,29 @@ export class LLMPlanner implements Planner {
     });
   }
 
-  private async constraints(tenantContext: TenantContext, verticalKey: string, opts: PlannerOptions): Promise<ConstraintSet> {
-    if (opts.constraints) return opts.constraints;
+  private async constraints(instruction: string, tenantContext: TenantContext, verticalKey: string, opts: PlannerOptions): Promise<ConstraintSet> {
+    const communicationForbidden = objectiveForbidsCommunication(instruction);
+    if (opts.constraints && !communicationForbidden) return opts.constraints;
     const { planningCapabilitiesForVertical } = await import("./plugin-registry");
     const manifest = planningCapabilitiesForVertical(this.plugins, verticalKey);
+    const prohibited = communicationForbidden
+      ? manifest.filter((item) => item.externalSideEffect
+        || ["delegate_objective", "handoff_work", "request_acknowledgement"].includes(item.capability)).map((item) => item.capability)
+      : [];
+    if (opts.constraints) {
+      const generated = new Set(buildConstraintSet({ ...opts.constraints, constraints: [] }).constraints.map((item) => sha256(item)));
+      return buildConstraintSet({
+        ...opts.constraints,
+        prohibitedCapabilities: [...opts.constraints.prohibitedCapabilities, ...prohibited],
+        constraints: opts.constraints.constraints.filter((item) => !generated.has(sha256(item))),
+      });
+    }
     return buildConstraintSet({
       tenantId: tenantContext.tenantId,
       verticalKey,
       allowedCapabilities: manifest.filter((item) => item.modelProposable).map((item) => item.capability),
       humanOnlyCapabilities: manifest.filter((item) => !item.modelProposable).map((item) => item.capability),
-      prohibitedCapabilities: [],
+      prohibitedCapabilities: prohibited,
       authorityRevision: opts.operatingContext?.authority.revision ?? tenantContext.authorityRevision ?? null,
       budgets: { ...DEFAULT_PLAN_BUDGETS, ...opts.planBudgets },
       constraints: opts.hardConstraints ?? [],
@@ -1338,7 +1370,7 @@ export class LLMPlanner implements Planner {
     const verticalKey = await this.verticalKey(tenantContext, opts);
     if (isRetiredWaterAction(instruction)) throw new RetiredVerticalError("water");
     const goal = this.goal(instruction, opts);
-    const constraints = await this.constraints(tenantContext, verticalKey, opts);
+    const constraints = await this.constraints(instruction, tenantContext, verticalKey, opts);
     const snapshot = await this.snapshot(tenantContext, verticalKey, opts);
     const { plannerActionTypesForVertical } = await import("./plugin-registry");
     const allActionTypes = plannerActionTypesForVertical(this.plugins, verticalKey);

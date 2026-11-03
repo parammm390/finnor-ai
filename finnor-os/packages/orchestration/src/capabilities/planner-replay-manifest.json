@@ -125,8 +125,8 @@
     },
     {
       "file": "packages/authority/src/index.ts",
-      "bytes": 54018,
-      "sha256": "3f9052de26b5f2219adf9b26e2f3483e2578a69be5195f89d04a91b3618b8aa2"
+      "bytes": 54636,
+      "sha256": "92630d7d486060e45aa52016bea817f0580f5b71dcd3b7692a328b1a62723c50"
     },
     {
       "file": "packages/authority/src/relationship-policy.ts",
@@ -1250,8 +1250,8 @@
     },
     {
       "file": "packages/orchestration/src/fast-read-lane.ts",
-      "bytes": 30796,
-      "sha256": "401e5462dee247c4c0928eafc677a48e90fa720e5ac632cd29b605f5f7f2f298"
+      "bytes": 30951,
+      "sha256": "5f21b7b10b7a6234198800658ed77e9f7007bc0cba5b09e3d302a316b955031f"
     },
     {
       "file": "packages/orchestration/src/graph/allowlist-executor.ts",
@@ -1335,8 +1335,8 @@
     },
     {
       "file": "packages/orchestration/src/objective-success.ts",
-      "bytes": 61297,
-      "sha256": "585653451f52c0aa4d4ac6e297ed3da8d8f07320ea030ae2e62002e10a92b423"
+      "bytes": 61555,
+      "sha256": "66336eae47499816649c682ba6747c1353ffd747d4dcde7a72ce69831a714b3c"
     },
     {
       "file": "packages/orchestration/src/operating-context.ts",
@@ -1385,8 +1385,8 @@
     },
     {
       "file": "packages/orchestration/src/planner.ts",
-      "bytes": 91482,
-      "sha256": "e9c3cd8c754760ef2a65e0f8a054a663fb0cd7d335ffa539a69a8b6b3e2006ff"
+      "bytes": 93248,
+      "sha256": "34cb6d8dacd3b84b0ea607223dcbe249090a42e016501b0c6ffa54d4dc670dd5"
     },
     {
       "file": "packages/orchestration/src/planning-health.ts",
@@ -2126,7 +2126,7 @@
     {
       "file": "packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
       "bytes": 8809,
-      "sha256": "5b1186b10e6d1d8f98fe7186079e61ad3c2594aa8227d59de63a55a552b500ca"
+      "sha256": "46b00b569297d6f4826868367d0739887908f7c2abc56b675b2661fc47a1a358"
     },
     {
       "file": "packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2140,8 +2140,8 @@
     },
     {
       "file": "packages/private-equity/src/enterprise-beliefs.ts",
-      "bytes": 17202,
-      "sha256": "bb7fcfe361f136eb9280f18dbeb088785170bac337451106bf7b6ef1591f78f6"
+      "bytes": 17201,
+      "sha256": "0285325e7ceae02b283cff87d452a0aac9f5a48ff4b6c4e6e38901a3dd41e715"
     },
     {
       "file": "packages/private-equity/src/enterprise-control.ts",
@@ -2496,7 +2496,7 @@
     {
       "file": "packages/private-equity/src/policy-learning/source-manifest.generated.ts",
       "bytes": 13772,
-      "sha256": "e5729ec9a4c2555ce937df9637833a60b1d2cad4ca224066020ad9730c0a597a"
+      "sha256": "457af5d8356e8db606420bd336c0b02fbb8e2c94c53834a8f75296de633402da"
     },
     {
       "file": "packages/private-equity/src/policy-learning/source-paths.ts",
@@ -2841,7 +2841,7 @@
     {
       "file": "packages/private-equity/src/system-identification/source-manifest.generated.ts",
       "bytes": 19716,
-      "sha256": "1e9a26c31c6d9ebe823fb71d5b6c3caa4d565251ae271f91f96b799a5d65c8d4"
+      "sha256": "9a744f5097e1e84b5dcaf6d134a174b7112985f65c5bf4429d67dc7416330c2f"
     },
     {
       "file": "packages/private-equity/src/system-identification/source-paths.ts",
