@@ -1,7 +1,7 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-03T04:15:20.174Z",
-  "sourceBaseCommit": "a610de22ef01b26a61978661dbd370efbdaff089",
+  "generatedAt": "2026-11-03T04:26:58.881Z",
+  "sourceBaseCommit": "17e89c522f5c5cdde68bdbdfd3bd0c1634e3fd19",
   "manifestSha256": "5c1806214b2b629db0a3228952a404f348c0e767c2523f065c7394696c55f685",
   "formsSha256": "1bc12487fb34759988ed4490715c21560653608fb313a409f0e6bcc551340e89",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -4027,6 +4027,7 @@
         "finnor-os/tests/integration/microsoft365-pe-mapping.test.ts",
         "finnor-os/tests/integration/microsoft365-sync-worker.test.ts",
         "finnor-os/tests/integration/payment-webhook-auth.test.ts",
+        "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/pg-notify-triggers.test.ts",
         "finnor-os/tests/integration/private-equity-p1-world-truth.test.ts",
         "finnor-os/tests/integration/private-equity-p4-underwriting.test.ts",
@@ -6323,6 +6324,7 @@
         "e2e/centropy-real-demo.spec.ts",
         "e2e/phase9-institutional-workstation.spec.ts",
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
+        "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/private-equity-p1-upgrade.test.ts",
         "finnor-os/tests/integration/private-equity-p1-world-truth.test.ts",
         "finnor-os/tests/integration/private-equity-phase2.test.ts",
@@ -6401,6 +6403,7 @@
         "e2e/centropy-ic-deck-work-action.spec.ts",
         "e2e/centropy-live-host.spec.ts",
         "e2e/centropy-real-demo.spec.ts",
+        "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/phase6-conversation-context-kernel.test.ts",
         "finnor-os/tests/integration/work-investigation-http.test.ts"
       ],
@@ -37721,6 +37724,7 @@
         "e2e/centropy-ic-deck-work-action.spec.ts",
         "e2e/centropy-live-host.spec.ts",
         "e2e/centropy-real-demo.spec.ts",
+        "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/phase6-conversation-context-kernel.test.ts",
         "finnor-os/tests/integration/work-investigation-http.test.ts"
       ],

@@ -79,6 +79,7 @@ import {
 import { classifyInstructionRoute, finalizeInstructionRouteFromPlan, type InstructionRouteDecision } from "./instruction-routing";
 import { interpretPrivateEquityQuestion } from "@finnor/private-equity";
 import { fail as economicQueryFault } from "@finnor/private-equity/src/economic-action-theory/contracts";
+import { answerCanonicalAnalysis, isCanonicalAnalysisRead } from "./canonical-analysis";
 
 export * from "./llm";
 export * from "./planner";
@@ -420,7 +421,7 @@ export class FinnorOrchestrator implements Orchestrator {
     request: OperationalQueryRequest,
     ctx: TenantContext,
     work: { workId: string; workInputId: string; instructionId: string },
-    opts: { emitTrace?: boolean; executionKey?: string } = {},
+    opts: { emitTrace?: boolean; executionKey?: string; answer?: (execution: OperationalQueryExecution) => Promise<AnswerEnvelope> } = {},
   ): Promise<{ execution: OperationalQueryExecution; answer?: AnswerEnvelope }> {
     const start = Date.now();
     await transitionWork(ctx.tenantId, work.workId, "executing", "query_execution_started", {
@@ -471,7 +472,16 @@ export class FinnorOrchestrator implements Orchestrator {
           completedAt,
         },
       };
-      const answer = this.fastReadOnlyRouter.answer?.(normalizedExecution);
+      const answer = opts.answer ? await opts.answer(normalizedExecution) : this.fastReadOnlyRouter.answer?.(normalizedExecution);
+      if (opts.answer && await isInstructionCancelled(ctx.tenantId, work.instructionId)) throw new Error("GROUNDING_WORK_CANCELLED");
+      await transitionWork(ctx.tenantId, work.workId, "completed", "query_execution_completed", {
+        queryId,
+        intent: request.intent,
+        durationMs,
+      }, {
+        finalOutcome: { kind: "operational_query", query: normalizedExecution, ...(opts.answer && answer ? { answer } : {}) },
+        expectedWorkInputId: work.workInputId,
+      });
       if (opts.emitTrace !== false) {
         await emitInstructionEvent(ctx.tenantId, work.instructionId, "verifying", {
           queryId,
@@ -488,17 +498,10 @@ export class FinnorOrchestrator implements Orchestrator {
           ? createInstructionTraceAnswerEnvelope(queryId, answer)
           : { queryId, intent: request.intent, durationMs });
       }
-      await transitionWork(ctx.tenantId, work.workId, "completed", "query_execution_completed", {
-        queryId,
-        intent: request.intent,
-        durationMs,
-      }, {
-        finalOutcome: { kind: "operational_query", query: normalizedExecution },
-        expectedWorkInputId: work.workInputId,
-      });
       return { execution: normalizedExecution, ...(answer ? { answer } : {}) };
     } catch (err) {
-      const publicMessage = `The canonical ${request.intent.replaceAll("_", " ")} read could not be queried, so the result cannot be verified.`;
+      const publicMessage = opts.answer ? "The scoped data or analytical answer could not be verified. No business action was performed."
+        : `The canonical ${request.intent.replaceAll("_", " ")} read could not be queried, so the result cannot be verified.`;
       const failure = { ...workFailure(err, publicMessage), message: publicMessage, cause: err instanceof Error ? err.message.slice(0, 300) : "query unavailable" };
       await transitionWork(ctx.tenantId, work.workId, "failed", "query_execution_failed", {
         intent: request.intent,
@@ -650,6 +653,7 @@ export class FinnorOrchestrator implements Orchestrator {
     const shouldClassify = !opts.skipFastReadClassification && opts.fastReadDecision === undefined;
     let fastDecision: OperationalQueryDecision | undefined;
     let instructionRoute: InstructionRouteDecision | undefined = opts.instructionRouteDecision;
+    let analyticalRead = false;
     try {
       const businessRoot = interactionBusinessRoot(interactionContext);
       fastDecision = opts.fastReadDecision ? interactionAwareOperationalDecision(opts.fastReadDecision, interactionContext, instruction) : undefined;
@@ -696,6 +700,12 @@ export class FinnorOrchestrator implements Orchestrator {
           fastDecision = interpreted ? interactionAwareOperationalDecision(interpreted, interactionContext, instruction) : undefined;
         }
       }
+      if (businessRoot && fastDecision?.route !== "fast_read" && isCanonicalAnalysisRead(instruction) && !isConversationalTurn(instruction, opts)
+        && (await resolveTenantVertical(ctx.tenantId)).verticalKey === "private_equity") {
+        analyticalRead = true;
+        fastDecision = { route: "fast_read", confidence: "high", request: { intent: "pe_world_state", root: businessRoot } };
+        instructionRoute = undefined;
+      }
       const routeReadDecision: OperationalQueryDecision = fastDecision ?? { route: "planner", reason: "unsupported" };
       instructionRoute ??= classifyInstructionRoute({
         instruction,
@@ -727,7 +737,15 @@ export class FinnorOrchestrator implements Orchestrator {
           includeMemory: false,
           includeCanonicalBusinessState: false,
         })).context;
-        const result = await this.executeFastOperationalQuery(routeReadDecision.request, ctx, { workId, workInputId, instructionId }, { executionKey: opts.executionKey ?? opts.idempotencyKey ?? instructionId });
+        const result = await this.executeFastOperationalQuery(routeReadDecision.request, ctx, { workId, workInputId, instructionId }, {
+          executionKey: opts.executionKey ?? opts.idempotencyKey ?? instructionId,
+          ...(analyticalRead ? { answer: (execution: OperationalQueryExecution) => answerCanonicalAnalysis({
+            instruction, ctx, execution, conversation: opts.conversationContext, channel: opts.channel,
+            capabilityManifest: planningCapabilitiesForVertical(this.plugins, "private_equity"),
+            onProgress: async (stage) => { await emitInstructionEvent(ctx.tenantId, instructionId, "step_progress", { stage, sourceKind: "CANONICAL" }); },
+            signal: opts.signal, deadlineAt: opts.deadlineAt, deadlineMs: opts.deadlineMs,
+          }) } : {}),
+        });
         fastQuery = result.execution;
         fastAnswer = result.answer ?? null;
       } else if (!opts.skipFastReadClassification && fastDecision === undefined) {

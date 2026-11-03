@@ -4,14 +4,16 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import pg from "pg";
+import { z } from "zod";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { closePool, configureTenantVertical } from "@finnor/db";
 import {
-  FinnorOrchestrator, LLMPlanner, createDefaultPluginRegistry,
+  FinnorOrchestrator, LLMPlanner, createDefaultPluginRegistry, registerProvider,
   type LLMProvider, type PlanningResult,
 } from "@finnor/orchestration";
 import { configureAgentProfile } from "../../packages/orchestration/src/workforce-runtime";
-import { createDeal, createFund, createOpportunity, createStrategy, type PeMutationContext } from "@finnor/private-equity";
+import { resolveProviderForPurpose } from "../../packages/orchestration/src/llm";
+import { createDeal, createDealRisk, createWorkstream, createFund, createOpportunity, createStrategy, type PeMutationContext } from "@finnor/private-equity";
 import type { CanonicalOperationalQueryRequest, ObjectiveSuccessCondition, PeWorldRootRef } from "@finnor/shared-types";
 import { assertDisposableDatabaseTarget } from "../../packages/db/production-target-guard";
 import { CURRENT_MIGRATION_HEAD } from "../../packages/db/migration-head";
@@ -49,6 +51,7 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
   const heartbeatStop = new AbortController();
   let opportunity: PeWorldRootRef, fund: PeWorldRootRef, foreignFund: PeWorldRootRef;
   let incidentalDealId: string;
+  let analysisRisk: Awaited<ReturnType<typeof createDealRisk>> | undefined;
   const ctx: PeMutationContext = { auth: { tenantId, userId: actorId, employeeId: actorId, role: "owner" }, provenance: { sourceSystem: "integration:pe-objective-world-scope", createdBy: actorId } };
 
   async function record(step: string, value: unknown) {
@@ -211,6 +214,118 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
     expect(current.loop.state).toBe("continue");
     expect(current.queries).toEqual([]);
   });
+
+  it.each(["supported", "polite_supported", "unknown_reference", "rejected_review", "rights_revoked", "cancelled"])("grounds selected Deal analysis and preserves publication boundaries: %s", async (mode) => {
+    const statement = "Synthetic concentration risk: the principal customer renewal remains unverified.";
+    if (!analysisRisk) {
+      const workstream = await createWorkstream(ctx, { dealId: incidentalDealId, kind: "financial_diligence", name: "Financial source review", owner: { partyType: "employee", partyId: actorId } });
+      analysisRisk = await createDealRisk(ctx, { dealId: incidentalDealId, workstreamId: String(workstream.row.id), statement, severity: "high", owner: { partyType: "employee", partyId: actorId } });
+    }
+    const risk = analysisRisk;
+    const providerKey = `analysis-${runId}`;
+    const liveModels = process.env.FINNOR_GROUNDED_ANALYSIS_LIVE === "1" && mode === "supported";
+    const priorAnswer = process.env.LLM_PROVIDER_ANSWER_TEXT, priorCritic = process.env.LLM_PROVIDER_CRITIC_TEXT;
+    const modelInputs: unknown[] = [];
+    const modelDeadlines: number[] = [];
+    let denyId: string | undefined;
+    let cancelledInstruction: string | undefined;
+    registerProvider(providerKey, () => ({ name: providerKey, contextWindowTokens: 131072, async complete(options) {
+      const input = JSON.parse(options.user); modelInputs.push(input);
+      expect(options.timeoutMs).toBe(20_000);
+      modelDeadlines.push(z.number().finite().parse(options.deadlineAt));
+      expect(input.registeredCapabilities).toEqual(expect.arrayContaining([expect.objectContaining({ capability: "query:pe_world_state", kind: "query" })]));
+      const claim = input.canonicalEvidence?.claims?.find((item: { ownerRef: { id: string } }) => item.ownerRef.id === risk.row.id);
+      expect(claim, "The actual risk and its immutable owner evidence must reach the responder").toBeDefined();
+      if (input.phase === "grounded_analysis_review") {
+        if (mode === "rights_revoked") denyId = String((await admin.query("INSERT INTO finnor_os.role_authority_grants(tenant_id,role_id,capability,resource_type,effect,max_risk,approval_required) VALUES($1,$2,'query:pe_world_state','*','deny','high',false) RETURNING id", [tenantId, roleId])).rows[0].id);
+        if (mode === "cancelled") {
+          cancelledInstruction = String((await admin.query("SELECT id FROM finnor_os.instruction_sessions WHERE tenant_id=$1 ORDER BY created_at DESC,id DESC LIMIT 1", [tenantId])).rows[0].id);
+          const cancellation = await http.request(`instructions/${cancelledInstruction}/cancel`, {});
+          await record("grounded-analysis-concurrent-cancellation", cancellation);
+          expect(cancellation.status).toBe(200);
+        }
+        return JSON.stringify({ status: mode === "rejected_review" ? "UNSUPPORTED" : "SUPPORTED", issues: mode === "rejected_review" ? ["The proposed assessment is not supported."] : [] });
+      }
+      return JSON.stringify({ summary: "The available registered records identify closing risk; five independent risks are not established.", assessments: [{ claimId: mode === "unknown_reference" ? foreignFund.entityId : claim.id, analysis: "An unverified renewal is an unresolved closing risk; this assessment does not establish an actual loss." }], assumptions: [], limitations: ["The registered risk record is not the underlying customer contract."] });
+    } }));
+    if (!liveModels) { process.env.LLM_PROVIDER_ANSWER_TEXT = providerKey; process.env.LLM_PROVIDER_CRITIC_TEXT = providerKey; }
+    try {
+      if (liveModels) {
+        const startedAt = Date.now();
+        try {
+          const control = await resolveProviderForPurpose("answer", "text").complete({
+            system: "Return OK only.", user: "Transport control. Return OK.",
+            tenantId, traceId: randomUUID(), purpose: "answer", channel: "text",
+            deadlineAt: startedAt + 15_000, timeoutMs: 10_000, maxOutputTokens: 16,
+          });
+          await record("grounded-analysis-live-transport-control", { elapsedMs: Date.now() - startedAt, response: control });
+          expect(control.trim()).toContain("OK");
+        } catch (error) {
+          await record("grounded-analysis-live-transport-control", { elapsedMs: Date.now() - startedAt, error: error instanceof Error ? { name: error.name, message: error.message } : String(error) });
+          throw error;
+        }
+      }
+      const instruction = mode === "polite_supported" ? "Can you analyze this deal and identify its biggest closing risks?"
+        : "Analyze this deal. Identify the 5 biggest closing risks. Rank by severity and show evidence.";
+      const body = { instruction, channel: "text", idempotencyKey: `grounded-analysis:${randomUUID()}`, activeContext: context({ entityType: "pe_deal", entityId: incidentalDealId }) };
+      const response = liveModels ? await (async () => {
+        const login = await fetch(http.authOrigin + "/auth/v1/token?grant_type=password", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: http.loginEmail, password: "local-disposable-no-authority" }), signal: AbortSignal.timeout(5_000) });
+        const token = z.object({ access_token: z.string().min(1) }).parse(await login.json());
+        try {
+          const result = await fetch(http.origin + "/api/actions", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${token.access_token}` }, body: JSON.stringify(body), signal: AbortSignal.timeout(45_000) });
+          return { status: result.status, body: await result.json() };
+        } catch (error) {
+          await record("grounded-analysis-live-failure-stage", {
+            error: error instanceof Error ? { name: error.name, message: error.message } : String(error),
+            works: (await admin.query("SELECT id,status,failure FROM finnor_os.works WHERE tenant_id=$1 ORDER BY created_at DESC LIMIT 3", [tenantId])).rows,
+            events: (await admin.query("SELECT phase,payload FROM finnor_os.instruction_events WHERE tenant_id=$1 ORDER BY created_at DESC LIMIT 12", [tenantId])).rows,
+            calls: (await admin.query("SELECT purpose,provider,model,status,detail FROM finnor_os.llm_calls WHERE tenant_id=$1 ORDER BY created_at DESC LIMIT 4", [tenantId])).rows,
+          });
+          throw error;
+        }
+      })() : await http.request("actions", body);
+      await record("grounded-analysis-http-result", { mode, liveModels, instruction, response, modelInputs, modelDeadlines });
+      expect(new Set(modelDeadlines).size).toBeLessThanOrEqual(1);
+      const liveCalls = liveModels ? (await admin.query("SELECT provider,model,purpose,status,input_tokens,output_tokens,detail FROM finnor_os.llm_calls WHERE tenant_id=$1 ORDER BY created_at", [tenantId])).rows : [];
+      if (liveModels) await record("grounded-analysis-live-diagnostics", { calls: liveCalls, events: (await admin.query("SELECT phase,payload FROM finnor_os.instruction_events WHERE tenant_id=$1 ORDER BY created_at", [tenantId])).rows });
+      expect(JSON.stringify(modelInputs)).not.toContain(foreignFund.entityId);
+      if (mode !== "supported" && mode !== "polite_supported") {
+        expect(response.status, JSON.stringify(response.body)).toBe(500);
+        if (mode === "cancelled") {
+          expect((await state(response.body.workId)).work.status).toBe("cancelled");
+          expect((await admin.query("SELECT id FROM finnor_os.instruction_events WHERE tenant_id=$1 AND instruction_id=$2 AND phase='completed'", [tenantId, cancelledInstruction])).rows).toEqual([]);
+          expect(response.body.error).toBe("GROUNDING_WORK_CANCELLED");
+          expect(response.body.answer).toBeUndefined();
+          return;
+        }
+        const expectedError = mode === "unknown_reference" ? "GROUNDING_CITATION_UNAVAILABLE"
+          : mode === "rejected_review" ? "GROUNDED_ANALYSIS_UNSUPPORTED" : "GROUNDING_SOURCE_OR_RIGHTS_CHANGED";
+        expect(response.body.error).toBe(expectedError);
+        expect(response.body.answer).toBeUndefined();
+        expect((await state(response.body.workId)).work.status).toBe("failed");
+        return;
+      }
+      expect(response.status, JSON.stringify(response.body)).toBe(201);
+      expect(response.body.objective).toBeUndefined();
+      expect(response.body.answer.spokenSummary).toContain(statement);
+      expect(response.body.answer.evidence).toEqual(expect.arrayContaining([expect.objectContaining({ ref: String(risk.row.id), kind: "CANONICAL" })]));
+      const thread = await http.read(`threads/${response.body.threadId}`);
+      expect(thread.status).toBe(200);
+      expect(thread.body.messages).toEqual(expect.arrayContaining([expect.objectContaining({ role: "assistant", originalText: response.body.answer.spokenSummary })]));
+      const current = await state(response.body.workId);
+      expect(current.work.status).toBe("completed");
+      expect(current.loop).toBeUndefined();
+      expect(current.queries).toEqual(expect.arrayContaining([expect.objectContaining({ intent: "pe_world_state", status: "succeeded" })]));
+      expect((await admin.query("SELECT id FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2", [tenantId, response.body.workId])).rows).toEqual([]);
+      if (liveModels) {
+        expect(liveCalls).toEqual(expect.arrayContaining([expect.objectContaining({ purpose: "answer", status: "completed" }), expect.objectContaining({ purpose: "critic", status: "completed" })]));
+      }
+    } finally {
+      if (denyId) await admin.query("DELETE FROM finnor_os.role_authority_grants WHERE tenant_id=$1 AND id=$2", [tenantId, denyId]);
+      if (priorAnswer === undefined) delete process.env.LLM_PROVIDER_ANSWER_TEXT; else process.env.LLM_PROVIDER_ANSWER_TEXT = priorAnswer;
+      if (priorCritic === undefined) delete process.env.LLM_PROVIDER_CRITIC_TEXT; else process.env.LLM_PROVIDER_CRITIC_TEXT = priorCritic;
+    }
+  }, 60_000);
 
   it("advertises and executes the authenticated employee's exact party-context read", async () => {
     const request = { intent: "party_context", ref: { partyType: "employee", partyId: actorId } } satisfies CanonicalOperationalQueryRequest;
