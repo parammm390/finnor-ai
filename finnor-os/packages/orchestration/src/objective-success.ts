@@ -129,6 +129,10 @@ export function parseObjectiveCompletionEvidence(value: unknown): ObjectiveCompl
   return evidence;
 }
 
+export function objectiveForbidsCommunication(objective: string): boolean {
+  return /\b(?:do\s+not|don['’]t|never)\s+(?:send|email|message|notify|call|contact)\b|\bdrafts?[-\s]+only\b/i.test(objective);
+}
+
 /** Conservative default: effects must verify, execution must be settled, and the
  * completion decision must cite current business evidence. Response/delegation/
  * computer objectives additionally require the corresponding durable outcome. */
@@ -147,7 +151,8 @@ export function defaultObjectiveSuccessCondition(objective: string): ObjectiveSu
   }
   const requiresComputer = /\b(?:computer|browser)\b/i.test(objective);
   if (requiresComputer) criteria.push({ kind: "computer_run_state", minimumCount: 1, requiredStatus: "succeeded", evidenceRequired: true });
-  const acceptsCommunicationEffect = /\b(?:send|message|email|text|call|contact|follow up|notify)\b/i.test(objective);
+  const acceptsCommunicationEffect = !objectiveForbidsCommunication(objective)
+    && /\b(?:send|message|email|text|call|contact|follow up|notify)\b/i.test(objective);
   const accepted: Array<ObjectiveCompletionEvidence["kind"]> = ["canonical_query"];
   if (acceptsCommunicationEffect) accepted.push("business_effect");
   if (requiresMatchedEvent) accepted.push("matched_event");
