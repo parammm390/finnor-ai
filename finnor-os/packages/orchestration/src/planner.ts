@@ -6,6 +6,8 @@ import { buildConversationModelInput } from "./conversation-prompt";
 import { and, desc, eq, inArray, lte } from "drizzle-orm";
 import { z } from "zod";
 import {
+  CANONICAL_ENTITY_TYPES,
+  canonicalEntityRefToPartyRef,
   OPERATIONAL_QUERY_INTENTS,
   PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
   PRIVATE_EQUITY_VERTICAL,
@@ -16,6 +18,7 @@ import {
   type ObjectiveSuccessCondition,
   type OperatingContext,
   type TenantContext,
+  type PartyRef,
 } from "@finnor/shared-types";
 import { domainPolicyRevisions, resolveTenantVertical, withTenant } from "@finnor/db";
 import {
@@ -210,6 +213,16 @@ function plannerConstraintContext(constraints: ConstraintSet): Record<string, un
 function plannerSnapshotContext(snapshot: PlanningWorldSnapshot): Record<string, unknown> {
   const dealId = snapshot.canonicalEntities.find((entity) => entity.kind === "entity" && entity.type === "pe_deal")?.id;
   const businessRoot = snapshot.businessRoot ?? (dealId ? { entityType: "pe_deal", entityId: dealId } : null);
+  const partyRefs = new Map<string, PartyRef>();
+  if (snapshot.authority.employeeId) {
+    partyRefs.set(`employee:${snapshot.authority.employeeId}`, { partyType: "employee", partyId: snapshot.authority.employeeId });
+  }
+  for (const entity of snapshot.canonicalEntities) {
+    if (entity.kind !== "entity") continue;
+    const type = z.enum(CANONICAL_ENTITY_TYPES).safeParse(entity.type);
+    const ref = type.success ? canonicalEntityRefToPartyRef({ entityType: type.data, entityId: entity.id }) : null;
+    if (ref) partyRefs.set(`${ref.partyType}:${ref.partyId}`, ref);
+  }
   const availableReads = snapshot.capabilities
     .filter((item) => item.kind === "query" && item.available && item.health !== "unavailable")
     .flatMap((item) => {
@@ -219,9 +232,15 @@ function plannerSnapshotContext(snapshot: PlanningWorldSnapshot): Record<string,
         : PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS.some((value) => value === intent) && dealId
           ? { intent, dealId }
           : item.requiredReferences.length === 0 ? { intent } : null;
-      if (!request) return [];
-      const valid = validateOperationalQueryRequest(request);
-      return valid.success ? [{ request: valid.request }] : [];
+      const requests = [
+        ...(request ? [request] : []),
+        ...(intent === "party_context" || intent === "party_lookup"
+          ? [...partyRefs.values()].map((ref) => ({ intent, ref })) : []),
+      ];
+      return requests.flatMap((candidate) => {
+        const valid = validateOperationalQueryRequest(candidate);
+        return valid.success ? [{ request: valid.request }] : [];
+      });
     });
   return {
     capturedAt: snapshot.capturedAt,
