@@ -1335,8 +1335,8 @@
     },
     {
       "file": "packages/orchestration/src/objective-success.ts",
-      "bytes": 61297,
-      "sha256": "585653451f52c0aa4d4ac6e297ed3da8d8f07320ea030ae2e62002e10a92b423"
+      "bytes": 61555,
+      "sha256": "66336eae47499816649c682ba6747c1353ffd747d4dcde7a72ce69831a714b3c"
     },
     {
       "file": "packages/orchestration/src/operating-context.ts",
@@ -1385,8 +1385,8 @@
     },
     {
       "file": "packages/orchestration/src/planner.ts",
-      "bytes": 92385,
-      "sha256": "c5ed9c27d5d946910f77bf180e15008f28514804f3fb9ab9b2e3e05c5dcd2629"
+      "bytes": 93248,
+      "sha256": "34cb6d8dacd3b84b0ea607223dcbe249090a42e016501b0c6ffa54d4dc670dd5"
     },
     {
       "file": "packages/orchestration/src/planning-health.ts",

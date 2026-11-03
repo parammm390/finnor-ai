@@ -55,7 +55,7 @@ import { clarificationContinuationAction, enforceExternalResearchRoute, safeRead
 import { resolveCompetitorResearch } from "./research-context";
 import { applyOperatingInteractionTargets } from "./interaction-targeting";
 import { interactionBusinessRoot } from "./interaction-context";
-import { defaultObjectiveSuccessCondition, growthRateLessBps } from "./objective-success";
+import { defaultObjectiveSuccessCondition, growthRateLessBps, objectiveForbidsCommunication } from "./objective-success";
 import { planningHealthForAction } from "./planning-health";
 import { parseModelJson } from "./model-json";
 
@@ -895,16 +895,29 @@ export class LLMPlanner implements Planner {
     });
   }
 
-  private async constraints(tenantContext: TenantContext, verticalKey: string, opts: PlannerOptions): Promise<ConstraintSet> {
-    if (opts.constraints) return opts.constraints;
+  private async constraints(instruction: string, tenantContext: TenantContext, verticalKey: string, opts: PlannerOptions): Promise<ConstraintSet> {
+    const communicationForbidden = objectiveForbidsCommunication(instruction);
+    if (opts.constraints && !communicationForbidden) return opts.constraints;
     const { planningCapabilitiesForVertical } = await import("./plugin-registry");
     const manifest = planningCapabilitiesForVertical(this.plugins, verticalKey);
+    const prohibited = communicationForbidden
+      ? manifest.filter((item) => item.externalSideEffect
+        || ["delegate_objective", "handoff_work", "request_acknowledgement"].includes(item.capability)).map((item) => item.capability)
+      : [];
+    if (opts.constraints) {
+      const generated = new Set(buildConstraintSet({ ...opts.constraints, constraints: [] }).constraints.map((item) => sha256(item)));
+      return buildConstraintSet({
+        ...opts.constraints,
+        prohibitedCapabilities: [...opts.constraints.prohibitedCapabilities, ...prohibited],
+        constraints: opts.constraints.constraints.filter((item) => !generated.has(sha256(item))),
+      });
+    }
     return buildConstraintSet({
       tenantId: tenantContext.tenantId,
       verticalKey,
       allowedCapabilities: manifest.filter((item) => item.modelProposable).map((item) => item.capability),
       humanOnlyCapabilities: manifest.filter((item) => !item.modelProposable).map((item) => item.capability),
-      prohibitedCapabilities: [],
+      prohibitedCapabilities: prohibited,
       authorityRevision: opts.operatingContext?.authority.revision ?? tenantContext.authorityRevision ?? null,
       budgets: { ...DEFAULT_PLAN_BUDGETS, ...opts.planBudgets },
       constraints: opts.hardConstraints ?? [],
@@ -1357,7 +1370,7 @@ export class LLMPlanner implements Planner {
     const verticalKey = await this.verticalKey(tenantContext, opts);
     if (isRetiredWaterAction(instruction)) throw new RetiredVerticalError("water");
     const goal = this.goal(instruction, opts);
-    const constraints = await this.constraints(tenantContext, verticalKey, opts);
+    const constraints = await this.constraints(instruction, tenantContext, verticalKey, opts);
     const snapshot = await this.snapshot(tenantContext, verticalKey, opts);
     const { plannerActionTypesForVertical } = await import("./plugin-registry");
     const allActionTypes = plannerActionTypesForVertical(this.plugins, verticalKey);
