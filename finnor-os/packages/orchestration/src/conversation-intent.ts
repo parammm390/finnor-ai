@@ -28,6 +28,13 @@ export function hasRequestedBusinessEffect(instruction: string): boolean {
   const value = unquotedInstruction(instruction);
   const effects = value.matchAll(/(?:^|[.!?;:,\n]\s*|\b(?:and(?: then)?|then|also|now|but)\s+)(?:(?:please|however)\s+|(?:can|could|would|will)\s+you\s+|(?:I want|I'd like)\s+you\s+to\s+)*(?<verb>send|email|text|message|notify|call|create|record|update|set|delete|remove|cancel|approve|reject|pay|execute|finish|complete|draft|prepare|share|assign|schedule|reschedule|resolve|mark|waive|close|open|submit|publish|save|upload|export|attach|start|run|continue|resume)\b/gi);
   return [...effects].some(match => {
+    // "Show activity for run, start and launch events" describes event names.
+    // A comma within that noun list is not a new imperative to start Work.
+    const prefix = value.slice(0, match.index);
+    const suffix = value.slice(match.index + match[0].length);
+    const namedEventList = /\b(?:for|about|of|between)\s+(?:run|start|launch)\s*$/i.test(prefix)
+      && /^\s+and\s+(?:run|start|launch)\s+events?\b/i.test(suffix);
+    if (namedEventList) return false;
     const scenarioCashFlow = match.groups?.verb?.toLowerCase() === "pay" && value[match.index] === ":"
       && /\b(?:example|scenario|case|cash flows?)\s*$/i.test(value.slice(0, match.index))
       && /\b(?:hypothetical|synthetic)\b/i.test(value) && /\bexplanation only\b/i.test(value);

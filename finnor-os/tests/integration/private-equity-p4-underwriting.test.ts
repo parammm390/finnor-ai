@@ -1413,7 +1413,7 @@ describe.skipIf(!available)("P4 deterministic PE underwriting persistence and P3
         if (output && process.env.FINNOR_IC_MEMO_MOUNTED === "1") {
           const thread = await http.request("threads", { title: "Committee EBITDA alternatives", workId: work.workId });
           expect(thread.status, JSON.stringify(thread.body)).toBe(201);
-          const { verifyMountedCommitteeMemo } = await import("../../../scripts/transformation/mounted-financial-explanation");
+          const { verifyMountedCommitteeMemo } = await import("../../scripts/transformation/mounted-financial-explanation");
           await verifyMountedCommitteeMemo({
             output, authOrigin: http.authOrigin, apiOrigin: http.origin, email: http.loginEmail,
             threadId: idOf(thread.body.thread), dealId: dealA, caseId: icCaseId,

@@ -44,7 +44,7 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
   const evidenceDirectory = process.env.FINNOR_PE_OBJECTIVE_EVIDENCE_DIR ?? join(tmpdir(), "finnor-pe-objective-world-scope", runId);
   const observations: Array<Record<string, unknown>> = [];
   let sourceCut: Record<string, unknown>;
-  const originalEnvironment = Object.fromEntries(["DATABASE_URL", "SECRETS_PROVIDER", "HEALTHCHECK_PING_URL"].map(key => [key, process.env[key]]));
+  const originalEnvironment = Object.fromEntries(["DATABASE_URL", "SECRETS_PROVIDER", "HEALTHCHECK_PING_URL", "RATE_LIMIT_INTAKE_PER_MINUTE", "RATE_LIMIT_PER_MINUTE", "RATE_LIMIT_IP_PER_MINUTE"].map(key => [key, process.env[key]]));
   let admin: pg.Client;
   let http: Awaited<ReturnType<typeof browserHttpFixture>>;
   let heartbeat: ReturnType<typeof startHeartbeat>;
@@ -119,7 +119,7 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
       let expectedCalls = 1;
       let response: Awaited<ReturnType<typeof http.request>>;
       if (mounted) {
-        const { verifyMountedFinancialExplanation } = await import("../../../scripts/transformation/mounted-financial-explanation");
+        const { verifyMountedFinancialExplanation } = await import("../../scripts/transformation/mounted-financial-explanation");
         const browser = await verifyMountedFinancialExplanation({
           output: evidenceDirectory, authOrigin: http.authOrigin, apiOrigin: http.origin,
           email: http.loginEmail, peerEmail: `${otherActorId}@world.test.invalid`,
@@ -254,7 +254,7 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
         await admin.query("UPDATE finnor_os.documents SET archived_at=now() WHERE tenant_id=$1 AND id=$2", [tenantId, artifact.documentId]);
       };
       if (process.env.FINNOR_SOURCE_PROXY_MOUNTED === "1") {
-        const { verifyMountedDocumentReview } = await import("../../../scripts/transformation/mounted-financial-explanation");
+        const { verifyMountedDocumentReview } = await import("../../scripts/transformation/mounted-financial-explanation");
         const browser = await verifyMountedDocumentReview({
           kind: "forecast", output: evidenceDirectory, authOrigin: http.authOrigin, apiOrigin: http.origin, email: http.loginEmail,
           archiveSource, valuationRequest: { dealId: incidentalDealId, instruction: forecastQuestion },
@@ -418,7 +418,7 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
       };
       const checkedWorkIds = [workId, valuationWorkId];
       if (process.env.FINNOR_DOCUMENT_REVIEW_MOUNTED === "1") {
-        const { verifyMountedDocumentReview } = await import("../../../scripts/transformation/mounted-financial-explanation");
+        const { verifyMountedDocumentReview } = await import("../../scripts/transformation/mounted-financial-explanation");
         const browser = await verifyMountedDocumentReview({
           kind: "registered", output: evidenceDirectory, authOrigin: http.authOrigin, apiOrigin: http.origin, email: http.loginEmail,
           threadId: response.body.threadId, archiveSource,
@@ -614,6 +614,12 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
 
   beforeAll(async () => {
     assertDisposableDatabaseTarget(SOURCE_DATABASE_URL, "PE objective world-scope setup");
+    // This E2E exercises many independent instructions against one disposable
+    // tenant and one loopback IP. Preserve the production throttle; raise only
+    // this fixture's ceilings so requests reach their routing assertions.
+    process.env.RATE_LIMIT_INTAKE_PER_MINUTE = "1000";
+    process.env.RATE_LIMIT_PER_MINUTE = "1000";
+    process.env.RATE_LIMIT_IP_PER_MINUTE = "1000";
     const patch = execFileSync("git", ["diff", "--binary", "HEAD"], { cwd: import.meta.dirname, encoding: "utf8", maxBuffer: 8 * 1024 * 1024 });
     sourceCut = {
       revision: execFileSync("git", ["rev-parse", "HEAD"], { cwd: import.meta.dirname, encoding: "utf8" }).trim(),

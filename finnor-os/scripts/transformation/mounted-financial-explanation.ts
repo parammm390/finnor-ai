@@ -4,7 +4,7 @@ import { open, readFile, readdir, writeFile } from "node:fs/promises"
 import { createServer } from "node:net"
 import { resolve } from "node:path"
 import { setTimeout as delay } from "node:timers/promises"
-import { chromium, expect as browserExpect, type Page } from "@playwright/test"
+import { chromium, expect as browserExpect, type Page } from "playwright/test"
 
 const expect = browserExpect.configure({ timeout: 12_000 })
 
@@ -35,7 +35,7 @@ async function withMountedWorkspace<T>(
   fixture: MountedWorkspace,
   inspect: (input: { page: Page; origin: string; steps: string[]; pageErrors: string[] }) => Promise<T>,
 ) {
-  const repository = resolve(import.meta.dirname, "../..")
+  const repository = resolve(import.meta.dirname, "../../..")
   const paths = await readdir(repository)
   if (paths.some(path => /^\.env(?:\.development)?(?:\.local)?$/.test(path))) {
     throw new Error("Mounted acceptance requires a checkout without a Next.js environment file")
