@@ -41,7 +41,7 @@ import {
 } from "@finnor/db";
 import { and, asc, desc, eq, sql, type AnyColumn, type SQL } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
-import { inputSnapshotHash } from "../../underwriting/src/snapshot";
+import { inputSnapshotHash, scenarioHash } from "../../underwriting/src/snapshot";
 import { runResultHash } from "../../underwriting/src/result";
 import {
   BUSINESS_EFFECT_SCHEMA_VERSION,
@@ -1083,13 +1083,84 @@ async function observeCreatedCanonicalEffect(tenantId: string, effect: BusinessE
           || row.input_hash !== row.input_snapshot?.semanticHash || row.input_hash !== inputSnapshotHash(row.input_snapshot)
           || row.result_hash !== row.result?.resultSemanticHash || row.result_hash !== runResultHash(row.result)) return null;
       const scenario = payload.scenario as Record<string, unknown> | undefined;
-      if (scenario ? !row.scenario_definition
+      if (payload.committeeEbitda) {
+        if (!row.scenario_definition?.committeeEbitdaBasis
+          || scenarioHash(row.scenario_definition) !== payload.committeeScenarioHash) return null;
+      } else if (scenario ? !row.scenario_definition
           || row.scenario_definition.name !== scenario.name
           || stable(row.scenario_definition.overrides) !== stable(scenario.overrides)
         : row.scenario_id !== (payload.scenarioId ?? null)) return null;
+      const basis = row.scenario_definition?.committeeEbitdaBasis;
+      if (basis) {
+        const input = row.input_snapshot?.values?.["entry.metric_value"];
+        const override = row.scenario_definition.overrides?.[0];
+        if (input?.truthClass !== "SCENARIO_OVERRIDE" || input.status !== "KNOWN" || input.value !== override?.value
+          || stable(input.provenance) !== stable([{
+            kind: "committee_financial_assertion", id: basis.documentId, versionId: basis.documentVersionId,
+            anchorId: basis.location, byteSha256: basis.byteSha256, committeeCaseId: basis.icCaseId,
+          }])) return null;
+      }
       return { id: row.id, workId: row.work_id, investmentCaseId: row.investment_case_id,
         modelVersionId: row.model_version_id, scenarioId: row.scenario_id, worldAt: observedWorldAt,
         status: row.status, validity: row.validity, inputHash: row.input_hash, resultHash: row.result_hash };
+    });
+  }
+  if (effect.operation.name === "create_ic_memo_draft") {
+    const actionId = effect.source.domainActionId;
+    if (!effect.source.workId || payload.workId !== effect.source.workId || typeof payload.title !== "string") return null;
+    const grounding = payload.grounding;
+    if (!grounding || typeof grounding !== "object" || !("entities" in grounding) || !Array.isArray(grounding.entities)) return null;
+    const runs = grounding.entities.filter(entity => entity?.entityType === "underwriting_run");
+    const runId = runs[0]?.entityId;
+    if (runs.length !== 1 || typeof runId !== "string" || !UUID_RE.test(runId)) return null;
+    const alternativeIds: unknown[] = Array.isArray(payload.alternativeRunIds) ? payload.alternativeRunIds : [];
+    if (alternativeIds.some(id => typeof id !== "string" || !UUID_RE.test(id))) return null;
+    const runRefs = [runId, ...alternativeIds].map(id => `underwriting_run:${id}`);
+    const trimmed = payload.title.trim();
+    const title = trimmed.toLowerCase().endsWith(".docx") ? trimmed : `${trimmed}.docx`;
+    return withTenant(tenantId, async db => {
+      const rows = await db.execute<Record<string, unknown>>(sql`
+        SELECT link.id::text id, link.deal_id::text "dealId", link.entity_id::text "icCaseId",
+               document.id::text "documentId", version.id::text "documentVersionId",
+               version.byte_sha256 "byteSha256", run.id::text "underwritingRunId"
+          FROM finnor_os.documents document
+          JOIN finnor_os.document_versions version
+            ON version.tenant_id=document.tenant_id AND version.document_id=document.id
+           AND version.source_system='ic_memo_draft' AND version.source_ref=document.external_id
+           AND version.origin='finnor_generated' AND version.format='docx'
+          JOIN finnor_os.document_version_contents content
+            ON content.tenant_id=version.tenant_id AND content.version_id=version.id
+           AND content.sha256=version.byte_sha256 AND content.size_bytes=version.size_bytes
+           AND encode(sha256(content.bytes),'hex')=version.byte_sha256
+          JOIN finnor_os.pe_document_links link
+            ON link.tenant_id=document.tenant_id AND link.document_id=document.id
+           AND link.entity_type='pe_ic_case' AND link.link_role='source' AND link.archived_at IS NULL
+           AND link.world_root_type='pe_deal' AND link.world_root_id=link.deal_id
+          JOIN finnor_os.pe_ic_cases ic
+            ON ic.tenant_id=link.tenant_id AND ic.id=link.entity_id AND ic.deal_id=link.deal_id
+          JOIN finnor_os.underwriting_runs run
+            ON run.tenant_id=ic.tenant_id AND run.id=${runId}::uuid
+           AND run.investment_case_id=ic.investment_case_id AND run.work_id=${effect.source.workId}::uuid
+           AND run.status='SUCCEEDED' AND run.validity='VALID'
+         WHERE document.tenant_id=${tenantId}::uuid AND document.id=${actionId}::uuid
+           AND document.external_id=${actionId} AND document.source_system='ic_memo_draft'
+           AND document.title=${title} AND document.archived_at IS NULL
+           AND link.deal_id=${payload.dealId}::uuid AND link.entity_id=${payload.icCaseId}::uuid
+           AND EXISTS (
+             SELECT 1 FROM finnor_os.business_events event
+              WHERE event.tenant_id=document.tenant_id AND event.entity_type='document' AND event.entity_id=document.id
+                AND event.event_type='document_version_observed' AND event.source='ic_memo_draft'
+                AND event.payload->>'documentVersionId'=version.id::text
+                AND (event.payload->'sourceRefs') @> ${JSON.stringify(runRefs)}::jsonb
+           )
+           AND EXISTS (
+             SELECT 1 FROM finnor_os.work_entity_links work_link
+              WHERE work_link.tenant_id=ic.tenant_id AND work_link.work_id=run.work_id
+                AND work_link.entity_type='pe_ic_case' AND work_link.entity_id=ic.id AND work_link.relationship='target'
+           )
+         LIMIT 2
+      `);
+      return rows.rows.length === 1 ? { ...rows.rows[0], alternativeRunIds: alternativeIds } : null;
     });
   }
   if (effect.operation.name === "create_task") {
@@ -1246,7 +1317,7 @@ export async function recordBusinessEffectOutcome(tenantId: string, effect: Busi
           ? "Canonical outbound intent is recorded, but final external delivery has not yet been observed"
           : "The provider accepted the delivery, but no canonical or external delivery state was observed", checkedAt: new Date().toISOString(), observed: result.output };
     status = observed && !requiresExternalObservation ? "verified" : "partially_verified";
-  } else if (effect.operation.name === "create_underwriting_run" || effect.expected.state?.exists === true) {
+  } else if (["create_underwriting_run", "create_ic_memo_draft"].includes(effect.operation.name) || effect.expected.state?.exists === true) {
     const observed = await observeCreatedCanonicalEffect(tenantId, effect);
     verification = { state: observed ? "verified" : "divergent", basis: observed ? "Native action-bound or preallocated canonical record satisfies the exact creation predicate" : "Execution reported success but the exact authorized creation predicate was not established", checkedAt: new Date().toISOString(), ...(observed ? { observed } : {}) };
     status = observed ? "verified" : "divergent";
@@ -1278,7 +1349,16 @@ export async function recordBusinessEffectOutcome(tenantId: string, effect: Busi
       && target.id === effect.delta.values[binding[0]]) : candidates;
     let current: Record<string, unknown> | null = null;
     for (const target of exactCandidates) {
-      current = await withTenant(tenantId, (db) => safeState(db, tenantId, target));
+      current = await withTenant(tenantId, async (db) => {
+        if (effect.operation.name === "select_ic_underwriting_run") {
+          const observed = await db.execute<Record<string, unknown>>(sql`
+            SELECT id::text id, version, primary_underwriting_run_id::text "primaryUnderwritingRunId"
+              FROM finnor_os.pe_ic_cases WHERE tenant_id=${tenantId}::uuid AND id=${target.id}::uuid LIMIT 1
+          `);
+          return observed.rows[0] ?? null;
+        }
+        return safeState(db, tenantId, target);
+      });
       if (current) break;
     }
     const matched = Boolean(current && valuesMatch(effect.expected.state!, current));

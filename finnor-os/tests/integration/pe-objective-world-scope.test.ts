@@ -1,8 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { closePool, configureTenantVertical } from "@finnor/db";
@@ -20,6 +20,7 @@ import { readWorkerFleetReadiness } from "../../apps/api/lib/worker-readiness";
 import { browserHttpFixture } from "../../scripts/v2/browser-http-fixture.mjs";
 import { operatingSelection } from "../../../src/components/centropy/world/world-context";
 import { buildConstraintSet, type PlanningConstraint } from "@finnor/planning";
+import { registerProvider } from "../../packages/orchestration/src/llm";
 
 // Authoring gate: this owns the authenticated non-Deal objective regression.
 // A real owner world read and the generic graph test do not exercise HTTP intake,
@@ -37,7 +38,8 @@ const available = await (async () => {
 describe.skipIf(!available)("authenticated PE objective world scope", () => {
   const tenantId = randomUUID(), foreignTenantId = randomUUID();
   const actorId = randomUUID(), otherActorId = randomUUID(), foreignActorId = randomUUID();
-  const companyId = randomUUID(), roleId = randomUUID();
+  const reviewFixtures = process.env.FINNOR_DOCUMENT_REVIEW_FIXTURES;
+  const companyId = reviewFixtures ? "11111111-1111-4111-8111-111111111111" : randomUUID(), roleId = randomUUID();
   const runId = randomUUID();
   const evidenceDirectory = process.env.FINNOR_PE_OBJECTIVE_EVIDENCE_DIR ?? join(tmpdir(), "finnor-pe-objective-world-scope", runId);
   const observations: Array<Record<string, unknown>> = [];
@@ -71,6 +73,482 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
       surface: { id: "world", route: "/centropy", spatialState: "detail" }, filters: [],
     };
   }
+
+  async function verifyFinancialExplanation(selected: boolean, mounted = false) {
+    const instruction = "What are the enterprise value, equity purchase price, and total sponsor cash at entry in this synthetic FIN-01 example? Source A: FY2025 EBITDA USD 20 million. Source B: FY2025 EBITDA USD 18 million. Both are supplied, unresolved assertions for the same company and period. Apply EV/EBITDA 8.0x to each; net debt USD 60 million; transaction fees USD 5 million; all equity paid by the sponsor; no rollover, other funding, liabilities, or adjustments. Show formulas, both cases and the discrepancy. Do not choose a preferred source or treat these figures as verified company data. This is an explanation only; do not create records or execute actions.";
+    const proposal = {
+      status: "ready", title: "Entry valuation comparison",
+      inputs: [
+        { id: "a", label: "Source A EBITDA", quote: "Source A: FY2025 EBITDA USD 20 million.", literal: "USD 20 million" },
+        { id: "b", label: "Source B EBITDA", quote: "Source B: FY2025 EBITDA USD 18 million.", literal: "USD 18 million" },
+        { id: "multiple", label: "Entry multiple", quote: "Apply EV/EBITDA 8.0x", literal: "8.0x" },
+        { id: "debt", label: "Net debt", quote: "net debt USD 60 million", literal: "USD 60 million" },
+        { id: "fees", label: "Transaction fees", quote: "transaction fees USD 5 million", literal: "USD 5 million" },
+      ],
+      steps: [
+        { id: "ev_a", label: "A enterprise value", op: "multiply", left: "a", right: "multiple" },
+        { id: "eq_a", label: "A equity price", op: "subtract", left: "ev_a", right: "debt" },
+        { id: "cash_a", label: "A sponsor cash", op: "add", left: "eq_a", right: "fees" },
+        { id: "ev_b", label: "B enterprise value", op: "multiply", left: "b", right: "multiple" },
+        { id: "eq_b", label: "B equity price", op: "subtract", left: "ev_b", right: "debt" },
+        { id: "cash_b", label: "B sponsor cash", op: "add", left: "eq_b", right: "fees" },
+        { id: "difference", label: "Difference in each output", op: "subtract", left: "ev_a", right: "ev_b" },
+      ],
+      outputs: ["ev_a", "eq_a", "cash_a", "ev_b", "eq_b", "cash_b", "difference"],
+      assumptions: ["all equity paid by the sponsor", "no rollover, other funding, liabilities, or adjustments"], gaps: [],
+    };
+    const providerKey = `checked-explanation-${runId}`, calls: unknown[] = [];
+    const prior = process.env.LLM_PROVIDER_ANSWER_TEXT;
+    let markSecondProposalStarted = () => {};
+    let releaseSecondProposal = () => {};
+    const secondProposalStarted = new Promise<void>(resolve => { markSecondProposalStarted = resolve; });
+    const secondProposalGate = new Promise<void>(resolve => { releaseSecondProposal = resolve; });
+    registerProvider(providerKey, () => ({ name: providerKey, contextWindowTokens: 131072, async complete(options) {
+      const request = JSON.parse(options.user); calls.push(request);
+      expect(request.instruction).toBe(instruction);
+      if (mounted && calls.length === 2) {
+        markSecondProposalStarted();
+        await secondProposalGate;
+      }
+      return JSON.stringify(proposal);
+    } }));
+    process.env.LLM_PROVIDER_ANSWER_TEXT = providerKey;
+    try {
+      const idempotencyKey = `checked-explanation:${randomUUID()}`;
+      let body: unknown = { instruction, channel: "text", idempotencyKey, ...(selected ? { activeContext: context({ entityType: "pe_deal", entityId: incidentalDealId }) } : {}) };
+      let expectedCalls = 1;
+      let response: Awaited<ReturnType<typeof http.request>>;
+      if (mounted) {
+        const { verifyMountedFinancialExplanation } = await import("../../../scripts/transformation/mounted-financial-explanation");
+        const browser = await verifyMountedFinancialExplanation({
+          output: evidenceDirectory, authOrigin: http.authOrigin, apiOrigin: http.origin,
+          email: http.loginEmail, peerEmail: `${otherActorId}@world.test.invalid`,
+          createSiblingThread: async () => {
+            const created = await http.request("threads", { title: "Cancellation rehearsal" });
+            expect(created.status).toBe(201);
+            return created.body.thread.id as string;
+          },
+          instruction, secondProposalStarted, releaseSecondProposal,
+        });
+        body = browser.request;
+        response = browser.response;
+        expectedCalls = 2;
+        const cancelledInstructionId = browser.cancelled.request.instructionId;
+        const cancelled = await state(cancelledInstructionId);
+        const cancelledEvents = (await admin.query("SELECT seq,phase FROM finnor_os.instruction_events WHERE tenant_id=$1 AND instruction_id=$2 ORDER BY seq", [tenantId, cancelledInstructionId])).rows;
+        await record("mounted-financial-explanation", { browser, cancelled, cancelledEvents, transport: http.observed });
+        expect(cancelled.work.status).toBe("cancelled");
+        expect(cancelledEvents.map(event => event.phase)).toContain("cancelled");
+        expect(cancelledEvents.map(event => event.phase)).not.toContain("completed");
+      } else {
+        response = await http.request("actions", body);
+      }
+      const current = await state(response.body.workId);
+      const effects = (await admin.query("SELECT id FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2", [tenantId, response.body.workId])).rows;
+      await record("checked-financial-explanation", { selected, instruction, proposal, response, current, effects, calls, independentExpected: [160000000, 100000000, 105000000, 144000000, 84000000, 89000000, 16000000] });
+      expect(response.status, JSON.stringify(response.body)).toBe(201);
+      expect(response.body.answer.analysis.status).toBe("checked");
+      expect(response.body.answer.analysis.calculations.map((item: { value: { numerator: string; denominator: string; unit: string } }) => item.value)).toEqual(
+        [160000000, 100000000, 105000000, 144000000, 84000000, 89000000, 16000000].map(value => ({ numerator: String(value), denominator: "1", unit: "USD", formatted: expect.any(String) })),
+      );
+      expect(response.body.objective).toBeUndefined();
+      expect(current.work.status).toBe("completed"); expect(current.loop).toBeUndefined();
+      expect(current.queries).toEqual([]); expect(effects).toEqual([]); expect(calls).toHaveLength(expectedCalls);
+      const thread = await http.read(`threads/${response.body.threadId}`);
+      expect(thread.body.messages).toEqual(expect.arrayContaining([expect.objectContaining({ role: "assistant", originalText: response.body.answer.spokenSummary })]));
+      const replay = await http.request("actions", body);
+      expect(replay.body.answer.analysis).toEqual(response.body.answer.analysis);
+      expect(calls).toHaveLength(expectedCalls);
+      const aggregate = await http.read(`works/${response.body.workId}`);
+      expect(aggregate.body.work.work.finalOutcome.answer.analysis).toEqual(response.body.answer.analysis);
+    } finally {
+      releaseSecondProposal();
+      if (prior === undefined) delete process.env.LLM_PROVIDER_ANSWER_TEXT; else process.env.LLM_PROVIDER_ANSWER_TEXT = prior;
+    }
+  }
+
+  it.each([false, true])("delivers a checked supplied financial explanation without incidental execution, selected Deal %s", async selected => {
+    await verifyFinancialExplanation(selected);
+  });
+  if (process.env.FINNOR_MOUNTED_FIN01 === "1") {
+    it("delivers and restores original FIN-01 through the mounted workspace", () => verifyFinancialExplanation(false, true), 210_000);
+  }
+
+  const sourceProxy = process.env.FINNOR_SOURCE_PROXY_PDF;
+  if (sourceProxy) {
+    it("reports incomplete coverage for an original merger proxy and exports a scoped forecast comparison", async () => {
+      const { bindArtifact, ingestArtifact } = await import("@finnor/artifacts");
+      const bytes = await readFile(sourceProxy);
+      const sha256 = createHash("sha256").update(bytes).digest("hex");
+      const title = "AvidXchange Holdings definitive merger proxy, August 15, 2025";
+      const artifact = await ingestArtifact(ctx.auth, { title, bytes, origin: "manual_upload" });
+      const anchor = artifact.ir.nodes.find(node => node.kind === "page" && node.data.page === 87);
+      await record("source-proxy-ingested", { title, sha256, documentId: artifact.documentId, version: artifact.version, anchor });
+      expect(artifact.version.byte_sha256).toBe(sha256);
+      if (!anchor) throw new Error("Missing native proxy page 87");
+      await bindArtifact(ctx.auth, artifact.documentId, {
+        versionId: artifact.version.id, anchorId: anchor.id, anchorHash: anchor.hash,
+        targetKind: "canonical_entity", targetEntityType: "external_organization", targetId: companyId,
+      });
+      const body = {
+        instruction: "Identify conflicting financial figures across this deal's documents. Show both values and their sources.",
+        channel: "text", idempotencyKey: randomUUID(),
+        activeContext: context({ entityType: "pe_deal", entityId: incidentalDealId }, "businessRoot"),
+      };
+      const response = await http.request("actions", body);
+      const live = await http.read(`works/${response.body.workId}`);
+      await record("source-proxy-investigation", { body, response, live });
+      expect(response.status).toBe(201);
+      expect(live.status).toBe(200);
+      expect(live.body.work.documentReview).toMatchObject({
+        status: "reviewed", coverage: "partial", documentsReviewed: 0, comparableGroups: 0, findings: [],
+      });
+      expect(live.body.work.documentReview.gaps.join(" ")).toMatch(/registered financial table|financial tables are incomplete/);
+      expect(response.body.answer.spokenSummary).toContain("No financial tables could be reviewed");
+
+      const forecastQuestion = `Compare FY2027 Adjusted EBITDA forecasts on PDF pages 87 and 88 of "${title}" at 8x EV/EBITDA, treating $ as USD.`;
+      const forecastInput = { ...body, instruction: forecastQuestion, idempotencyKey: randomUUID() };
+      const forecastIntake = await http.request("actions", forecastInput);
+      await record("source-proxy-forecast-intake", { input: forecastInput, response: forecastIntake });
+      expect(forecastIntake.status).toBe(201);
+      expect(forecastIntake.body.objective).toBeUndefined();
+      const path = `works/${forecastIntake.body.workId}`;
+      const forecastWork = await http.read(path);
+      await record("source-proxy-forecast-owner", forecastWork);
+      const forecastReview = forecastWork.body.work.documentReview;
+      expect(forecastReview).toMatchObject({ documentsReviewed: 1, comparableGroups: 1, findings: [], valuation: {
+        status: "calculated", forecast: { year: 2027, definition: expect.stringContaining("inclusive of forecasted public company costs") },
+        entryMultiple: "8", currency: "USD", enterpriseValueSpread: "456000000", funding: { status: "requires_input" },
+        cases: [
+          { ebitda: "157000000", enterpriseValue: "1256000000", source: {
+            vintage: "Risk-Adjusted Forecasts", versionId: artifact.version.id, sha256, anchor: { page: 88, quote: expect.stringContaining("$157") },
+          }, funding: null },
+          { ebitda: "214000000", enterpriseValue: "1712000000", source: {
+            vintage: "February 2025 Forecasts", versionId: artifact.version.id, sha256, anchor: { page: 87, quote: expect.stringContaining("$214") },
+          }, funding: null },
+        ],
+      } });
+      expect(JSON.stringify(forecastWork.body.work.work.finalOutcome)).not.toMatch(/157000000|214000000/);
+      const briefQuery = { export: "valuation-brief" };
+      const brief = await http.readResponse(path, briefQuery);
+      const briefText = await brief.text();
+      expect(brief.status).toBe(200);
+      expect(brief.headers.get("cache-control")).toContain("no-store");
+      for (const value of ["FY2027", "February 2025 Forecasts", "Risk-Adjusted Forecasts", "public company costs", "USD 456,000,000",
+        "USD 1,256,000,000", "USD 1,712,000,000", "page 87", "page 88", sha256]) expect(briefText).toContain(value);
+      await writeFile(join(evidenceDirectory, "avidxchange-forecast-brief.md"), briefText);
+
+      const differentBasis = await http.request("actions", {
+        ...forecastInput, idempotencyKey: randomUUID(), instruction: forecastQuestion.replace("87 and 88", "86 and 87"),
+      });
+      expect(differentBasis.status).toBe(201);
+      const unsupportedPath = `works/${differentBasis.body.workId}`;
+      const unsupported = await http.read(unsupportedPath);
+      expect(unsupported.body.work.documentReview.valuation).toMatchObject({ status: "requires_input", reason: expect.stringContaining("same Adjusted EBITDA definition") });
+      expect(unsupported.body.work.documentReview.gaps).toContain("Adjusted EBITDA definition footnotes differ on PDF pages 86 and 87.");
+      const unsupportedBrief = await http.readResponse(unsupportedPath, briefQuery);
+      expect(unsupportedBrief.status).toBe(404);
+      const peerBrief = await http.readResponse(path, briefQuery, "other");
+      expect(peerBrief.status).toBe(404);
+      const archiveSource = async () => {
+        await admin.query("UPDATE finnor_os.documents SET archived_at=now() WHERE tenant_id=$1 AND id=$2", [tenantId, artifact.documentId]);
+      };
+      if (process.env.FINNOR_SOURCE_PROXY_MOUNTED === "1") {
+        const { verifyMountedDocumentReview } = await import("../../../scripts/transformation/mounted-financial-explanation");
+        const browser = await verifyMountedDocumentReview({
+          kind: "forecast", output: evidenceDirectory, authOrigin: http.authOrigin, apiOrigin: http.origin, email: http.loginEmail,
+          archiveSource, valuationRequest: { dealId: incidentalDealId, instruction: forecastQuestion },
+          spread: "USD 456,000,000", cells: ["USD 157,000,000", "USD 1,256,000,000", "USD 214,000,000", "USD 1,712,000,000"],
+          vintages: ["Risk-Adjusted Forecasts · page 88", "February 2025 Forecasts · page 87"], briefText,
+        });
+        await record("source-proxy-forecast-mounted", browser);
+      } else await archiveSource();
+      const stale = await http.read(path);
+      expect(stale.body.work.documentReview).toEqual({ status: "stale" });
+      const staleBrief = await http.readResponse(path, briefQuery);
+      expect(staleBrief.status).toBe(409);
+      const actions = await admin.query("SELECT id FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2", [tenantId, forecastIntake.body.workId]);
+      expect(actions.rows).toEqual([]);
+      await record("source-proxy-forecast-export", { briefText, unsupported, unsupportedBrief: unsupportedBrief.status, peerBrief: peerBrief.status,
+        stale, staleBrief: staleBrief.status, actions: actions.rows });
+    }, 210_000);
+  }
+
+  if (reviewFixtures) {
+    it("compares current document figures through a signed Investigation", async () => {
+      const { bindArtifact, ingestArtifact } = await import("@finnor/artifacts");
+      const artifacts: Array<{ id: string; versionId: string; sha256: string; title: string }> = [];
+      for (const [title, path] of [["Management financials", "management/financials.xlsx"], ["Quality of earnings", "qoe/financials.pdf"]] as const) {
+        const bytes = await readFile(join(reviewFixtures, path));
+        const artifact = await ingestArtifact(ctx.auth, { title, bytes, origin: "manual_upload" });
+        const anchor = artifact.ir.nodes.find(node => node.kind === "cell" || node.kind === "page");
+        expect(anchor, "Source must have an actual cell or page anchor").toBeDefined();
+        await bindArtifact(ctx.auth, artifact.documentId, {
+          versionId: artifact.version.id, anchorId: anchor!.id, anchorHash: anchor!.hash,
+          targetKind: "canonical_entity", targetEntityType: "external_organization", targetId: companyId,
+        });
+        artifacts.push({ id: artifact.documentId, versionId: artifact.version.id, sha256: artifact.version.byte_sha256, title });
+      }
+      const instruction = "Identify conflicting financial figures across this deal's documents. Show both values and their sources.";
+      const body = { instruction, channel: "text", idempotencyKey: randomUUID(),
+        activeContext: context({ entityType: "pe_deal", entityId: incidentalDealId }, "businessRoot") };
+      const response = await http.request("actions", body);
+      await record("document-review-intake", { body, artifacts, response });
+      expect(response.status).toBe(201);
+      expect(response.body.objective).toBeUndefined();
+      expect(response.body.planned).toEqual([]);
+      const workId = response.body.workId;
+      const ownerWork = await state(workId);
+      expect(ownerWork.work.status).toBe("completed");
+      expect(ownerWork.loop).toBeUndefined();
+      const live = await http.read(`works/${workId}`);
+      const result = live.body.work.documentReview;
+      expect(result).toMatchObject({
+        status: "reviewed", coverage: "registered_sources", findings: [{
+          metric: "EBITDA", periodEnd: "2025-12-31T00:00:00.000Z", currency: "USD", spread: "2000000",
+          assertions: [
+            { value: "18000000", source: { documentId: artifacts[1]!.id, versionId: artifacts[1]!.versionId, sha256: artifacts[1]!.sha256, anchor: { page: 1 } } },
+            { value: "20000000", source: { documentId: artifacts[0]!.id, versionId: artifacts[0]!.versionId, sha256: artifacts[0]!.sha256, anchor: { sheet: "Financials", cell: "C2" } } },
+          ],
+        }],
+      });
+      const stored = JSON.stringify(live.body.work.work.finalOutcome);
+      expect(stored).not.toContain("20000000");
+      expect(stored).not.toContain("18000000");
+      const thread = await http.read(`threads/${response.body.threadId}`);
+      expect(JSON.stringify(thread.body)).not.toContain("20000000");
+      const peer = await http.read(`works/${workId}`, "other");
+      expect(JSON.stringify(peer.body)).not.toContain("18000000");
+      expect(peer.body.work?.documentReview).toBeUndefined();
+      const replay = await http.request("actions", body);
+      expect(replay.body.workId).toBe(workId);
+      expect(JSON.stringify(replay.body)).not.toContain("20000000");
+      const mixed = await http.request("actions", { ...body, instruction: `${instruction} Draft an investment committee memo.`, idempotencyKey: randomUUID() });
+      expect(mixed.status).toBe(202);
+      expect(mixed.body.objective?.objectiveLoopId).toBeTruthy();
+
+      const valuationQuestion = "What is the valuation impact of conflicting EBITDA across this deal's documents at 8x EV/EBITDA?";
+      const financing = "Assume USD 60 million net debt and USD 5 million transaction fees, with all equity funded by the sponsor and no rollover or other funding.";
+      const valuationInput = { ...body, instruction: `${valuationQuestion} ${financing}`, idempotencyKey: randomUUID() };
+      const valuationIntake = await http.request("actions", valuationInput);
+      await record("document-valuation-intake", { input: valuationInput, response: valuationIntake });
+      expect(valuationIntake.status).toBe(201);
+      expect(valuationIntake.body.objective).toBeUndefined();
+      expect(valuationIntake.body.planned).toEqual([]);
+      const valuationWorkId = valuationIntake.body.workId;
+      const valuationPath = `works/${valuationWorkId}`;
+      const valuationWork = await state(valuationWorkId);
+      expect(valuationWork.work.status).toBe("completed");
+      expect(valuationWork.loop).toBeUndefined();
+      const valuationRead = await http.read(valuationPath);
+      const valuation = valuationRead.body.work.documentReview.valuation;
+      expect(valuation).toMatchObject({
+        status: "calculated", entryMultiple: "8", currency: "USD", enterpriseValueSpread: "16000000",
+        funding: { status: "calculated", netDebt: "60000000", fees: "5000000" },
+        cases: [
+          { ebitda: "18000000", enterpriseValue: "144000000", funding: { equityPrice: "84000000", sponsorCash: "89000000" },
+            source: { versionId: artifacts[1]!.versionId, anchor: { page: 1 } } },
+          { ebitda: "20000000", enterpriseValue: "160000000", funding: { equityPrice: "100000000", sponsorCash: "105000000" },
+            source: { versionId: artifacts[0]!.versionId, anchor: { cell: "C2" } } },
+        ],
+      });
+      expect(JSON.stringify(valuationRead.body.work.work.finalOutcome)).not.toMatch(/144000000|160000000|89000000|105000000/);
+      const briefQuery = { export: "valuation-brief" };
+      const brief = await http.readResponse(valuationPath, briefQuery);
+      const briefText = await brief.text();
+      expect(brief.status).toBe(200);
+      expect(brief.headers.get("content-type")).toMatch(/^text\/markdown/);
+      expect(brief.headers.get("content-disposition")).toContain("attachment");
+      expect(brief.headers.get("cache-control")).toContain("no-store");
+      for (const value of ["USD 144,000,000", "USD 160,000,000", "USD 89,000,000", "USD 105,000,000",
+        "Financials!C2", "page 1", artifacts[0]!.sha256, artifacts[1]!.sha256]) expect(briefText).toContain(value);
+      const briefPeer = await http.readResponse(valuationPath, briefQuery, "other");
+      expect(briefPeer.status).toBe(404);
+      expect(await briefPeer.text()).not.toContain("144,000,000");
+      const incompleteIntake = await http.request("actions", { ...body, instruction: valuationQuestion, idempotencyKey: randomUUID() });
+      expect(incompleteIntake.status).toBe(201);
+      const incomplete = await http.read(`works/${incompleteIntake.body.workId}`);
+      expect(incomplete.body.work.documentReview.valuation).toMatchObject({
+        status: "calculated", funding: { status: "requires_input" }, cases: [{ funding: null }, { funding: null }],
+      });
+      const partialFundingQuestion = `${valuationQuestion} Assume USD 60 million net debt.`;
+      const partialFundingIntake = await http.request("actions", {
+        ...valuationInput, instruction: partialFundingQuestion, idempotencyKey: randomUUID(),
+      });
+      await record("document-valuation-partial-funding", { instruction: partialFundingQuestion, response: partialFundingIntake });
+      expect(partialFundingIntake.status).toBe(201);
+      expect(partialFundingIntake.body.objective).toBeUndefined();
+      const partialFunding = await http.read(`works/${partialFundingIntake.body.workId}`);
+      expect(partialFunding.body.work.documentReview.valuation).toMatchObject({
+        status: "calculated", funding: { status: "requires_input" },
+        cases: [{ enterpriseValue: "144000000", funding: null }, { enterpriseValue: "160000000", funding: null }],
+      });
+      const mixedPartial = await http.request("actions", {
+        ...valuationInput, instruction: `${partialFundingQuestion} Send the brief to the Deal team.`, idempotencyKey: randomUUID(),
+      });
+      expect(mixedPartial.status).toBe(202);
+      expect(mixedPartial.body.objective?.objectiveLoopId).toBeTruthy();
+      const rejectedFunding = [];
+      for (const { scenario, financingText, reason } of [
+        { scenario: "currency mismatch", financingText: financing.replaceAll("USD", "EUR"), reason: "different currency" },
+        { scenario: "negative equity", financingText: financing.replace("60 million", "200 million"), reason: "negative equity price" },
+      ]) {
+        const intake = await http.request("actions", { ...valuationInput, instruction: `${valuationQuestion} ${financingText}`, idempotencyKey: randomUUID() });
+        expect(intake.status).toBe(201);
+        const restored = await http.read(`works/${intake.body.workId}`);
+        expect(restored.body.work.documentReview.valuation).toMatchObject({
+          status: "calculated", funding: { status: "requires_input", reason: expect.stringContaining(reason) },
+          cases: [{ enterpriseValue: "144000000", funding: null }, { enterpriseValue: "160000000", funding: null }],
+        });
+        rejectedFunding.push({ scenario, valuation: restored.body.work.documentReview.valuation });
+      }
+      const mixedValuation = await http.request("actions", { ...valuationInput, instruction: `${valuationInput.instruction} Send the brief to the Deal team.`, idempotencyKey: randomUUID() });
+      expect(mixedValuation.status).toBe(202);
+      expect(mixedValuation.body.objective?.objectiveLoopId).toBeTruthy();
+
+      await admin.query("UPDATE finnor_os.employee_role_assignments SET active=false WHERE tenant_id=$1 AND employee_id=$2", [tenantId, actorId]);
+      const revoked = await http.read(`works/${workId}`);
+      expect(revoked.body.work.documentReview).toEqual({ status: "unavailable" });
+      const briefRevoked = await http.readResponse(valuationPath, briefQuery);
+      expect(briefRevoked.status).toBe(404);
+      expect(await briefRevoked.text()).not.toContain("144,000,000");
+      await admin.query("UPDATE finnor_os.employee_role_assignments SET active=true WHERE tenant_id=$1 AND employee_id=$2", [tenantId, actorId]);
+      const archiveSource = async () => {
+        await admin.query("UPDATE finnor_os.documents SET archived_at=now() WHERE tenant_id=$1 AND id=$2", [tenantId, artifacts[1]!.id]);
+      };
+      const checkedWorkIds = [workId, valuationWorkId];
+      if (process.env.FINNOR_DOCUMENT_REVIEW_MOUNTED === "1") {
+        const { verifyMountedDocumentReview } = await import("../../../scripts/transformation/mounted-financial-explanation");
+        const browser = await verifyMountedDocumentReview({
+          kind: "registered", output: evidenceDirectory, authOrigin: http.authOrigin, apiOrigin: http.origin, email: http.loginEmail,
+          threadId: response.body.threadId, archiveSource,
+          valuationRequest: { dealId: incidentalDealId, instruction: valuationInput.instruction },
+        });
+        const browserWork = await state(browser.valuationWorkId);
+        expect(browserWork.work.status).toBe("completed");
+        expect(browserWork.loop).toBeUndefined();
+        checkedWorkIds.push(browser.valuationWorkId);
+        await record("document-review-mounted", browser);
+      } else await archiveSource();
+      const stale = await http.read(`works/${workId}`);
+      expect(stale.body.work.documentReview).toEqual({ status: "stale" });
+      const briefStale = await http.readResponse(valuationPath, briefQuery);
+      expect(briefStale.status).toBe(409);
+      expect(await briefStale.text()).not.toContain("144,000,000");
+      const actions = await admin.query("SELECT id FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=ANY($2::uuid[])", [tenantId, checkedWorkIds]);
+      expect(actions.rows).toEqual([]);
+      await record("document-review-owner", { workId, ownerWork, live, peer, mixed, revoked, stale, checkedWorkIds, actions: actions.rows });
+      await record("document-valuation-owner", { valuationRead, incomplete, partialFunding, mixedPartial, rejectedFunding, briefText, access: {
+        peer: briefPeer.status, revoked: briefRevoked.status, stale: briefStale.status,
+      } });
+    }, process.env.FINNOR_DOCUMENT_REVIEW_MOUNTED === "1" ? 210_000 : 45_000);
+  }
+
+  it.each([
+    "Analyze this deal. Send the findings to the deal team.",
+    "What are the returns in a synthetic example? Explanation only; send the calculation to the deal team.",
+    "Calculate a hypothetical valuation. Create a closing condition now.",
+    `Calculate a hypothetical valuation from supplied EBITDA USD 20 million and multiple 8x, and message the calculation to ${actorId}@world.test.invalid.`,
+    "Calculate a hypothetical valuation from supplied EBITDA USD 20 million and multiple 8x, and set the entry value on the deal.",
+    "Calculate a hypothetical valuation from supplied EBITDA USD 20 million and multiple 8x, and cancel the pending approval.",
+    `Calculate a hypothetical valuation from supplied EBITDA USD 20 million and multiple 8x. If the result is positive, send the calculation to ${actorId}@world.test.invalid.`,
+    "Calculate a hypothetical valuation from supplied EBITDA USD 20 million and multiple 8x, and terminate the deal.",
+    "Calculate a hypothetical valuation from supplied EBITDA USD 20 million and multiple 8x, and liquidate the holding.",
+  ])("retains affirmative requested work after an explanation clause: %s", async instruction => {
+    const response = await http.request("actions", { instruction, channel: "text", idempotencyKey: `explanation-effect:${randomUUID()}` });
+    await record("explanation-with-requested-effect", { instruction, response });
+    expect(response.status, JSON.stringify(response.body)).toBe(202);
+    expect(response.body.objective?.objectiveLoopId).toBeTruthy();
+    expect(response.body.answer).toBeUndefined();
+  });
+
+  it.each([
+    { key: "fractional", instruction: "Calculate a hypothetical entry using supplied EBITDA EUR 0.1 million, multiple 3x, and net debt EUR 0.4 million. Explanation only.",
+      inputs: ["EUR 0.1 million", "3x", "EUR 0.4 million"], steps: [{ id: "ev", label: "Enterprise value", op: "multiply", left: "i0", right: "i1" }, { id: "equity", label: "Equity price", op: "subtract", left: "ev", right: "i2" }], outputs: ["ev", "equity"], unit: "EUR" },
+    { key: "margin", instruction: "Calculate EBITDA and leverage from supplied revenue USD 1.25 million, margin 12.5%, and debt USD 625000. This is a hypothetical explanation.",
+      inputs: ["USD 1.25 million", "12.5%", "USD 625000"], steps: [{ id: "ebitda", label: "EBITDA", op: "multiply", left: "i0", right: "i1" }, { id: "leverage", label: "Leverage", op: "divide", left: "i2", right: "ebitda" }], outputs: ["ebitda", "leverage"], unit: null },
+    { key: "recurring", instruction: "Calculate a supplied hypothetical ratio of 1 divided by 3. Explanation only.", inputs: ["1", "3"], steps: [{ id: "ratio", label: "Ratio", op: "divide", left: "i0", right: "i1" }], outputs: ["ratio"], unit: "scalar" },
+    { key: "total", instruction: "What is the total in this supplied hypothetical example: USD 1.1 plus USD 2.2?", inputs: ["USD 1.1", "USD 2.2"], steps: [{ id: "total", label: "Total", op: "add", left: "i0", right: "i1" }], outputs: ["total"], unit: "USD" },
+    { key: "zero", instruction: "Calculate a supplied hypothetical ratio of 1 divided by 0. Explanation only.", inputs: ["1", "0"], steps: [{ id: "ratio", label: "Ratio", op: "divide", left: "i0", right: "i1" }], outputs: ["ratio"], unit: null },
+    { key: "currency", instruction: "Calculate a hypothetical sum from supplied USD 10 and EUR 20. Explanation only.", inputs: ["USD 10", "EUR 20"], steps: [{ id: "sum", label: "Sum", op: "add", left: "i0", right: "i1" }], outputs: ["sum"], unit: null },
+    { key: "fabricated", instruction: "Calculate a hypothetical sum from supplied USD 10. Explanation only.", inputs: ["USD 10", "USD 20"], steps: [{ id: "sum", label: "Sum", op: "add", left: "i0", right: "i1" }], outputs: ["sum"], unit: null },
+    { key: "forward", instruction: "Calculate a hypothetical ratio from supplied 1 and 3. Explanation only.", inputs: ["1", "3"], steps: [{ id: "ratio", label: "Ratio", op: "divide", left: "future", right: "i1" }], outputs: ["ratio"], unit: null },
+    { key: "duplicate", instruction: "Calculate a hypothetical ratio from supplied 1 and 3. Explanation only.", inputs: ["1", "3"], steps: [{ id: "i0", label: "Ratio", op: "divide", left: "i0", right: "i1" }], outputs: ["i0"], unit: null },
+    { key: "missing", instruction: "Calculate hypothetical sponsor cash from supplied EBITDA USD 10 million and multiple 8x. I have not supplied debt or fees. Explanation only.", inputs: [], steps: [], outputs: [], unit: null },
+    { key: "cashflow", instruction: "What is the IRR in a synthetic example: pay USD 100 today and receive USD 120 in one year? Explanation only; do not execute any payment.", inputs: [], steps: [], outputs: [], unit: null },
+    ...["USD 2", "USD 20", "20"].map(literal => ({ key: `shortened_${literal}`, instruction: "Calculate hypothetical enterprise value from supplied EBITDA USD 20 million and multiple 8x. Explanation only.", inputs: [literal, "8x"], steps: [{ id: "ev", label: "Enterprise value", op: "multiply", left: "i0", right: "i1" }], outputs: ["ev"], unit: null })),
+    { key: "suffix_currency", instruction: "What is the total from supplied hypothetical amounts 10 USD and 20 EUR? Explanation only.", inputs: ["10", "20"], steps: [{ id: "sum", label: "Total", op: "add", left: "i0", right: "i1" }], outputs: ["sum"], unit: null },
+    ...["percent", "per cent"].map(unit => ({ key: `spelled_${unit}`, instruction: `Calculate EBITDA from supplied hypothetical revenue USD 100 and margin 20 ${unit}. Explanation only.`, inputs: ["USD 100", "20"], steps: [{ id: "profit", label: "EBITDA", op: "multiply", left: "i0", right: "i1" }], outputs: ["profit"], unit: null })),
+  ])("checks a source-bound calculation through HTTP and persistence: $key", async fixture => {
+    const reference = JSON.parse(execFileSync("python3", [join(process.cwd(), "../scripts/transformation/financial-reference.py")], { encoding: "utf8" }));
+    const expected = reference[fixture.key];
+    const missing = fixture.key === "missing" || fixture.key === "cashflow";
+    const proposal = { status: missing ? "needs_inputs" : "ready", title: "Supplied financial analysis",
+      inputs: fixture.inputs.map((literal, index) => ({ id: `i${index}`, label: `Supplied input ${index + 1}`, quote: literal, literal })),
+      steps: fixture.steps, outputs: fixture.outputs, assumptions: [], gaps: missing ? ["A supported method and all required financial inputs are needed."] : [] };
+    const key = `financial-case-${fixture.key}-${runId}`, prior = process.env.LLM_PROVIDER_ANSWER_TEXT;
+    registerProvider(key, () => ({ name: key, contextWindowTokens: 131072, async complete() { return JSON.stringify(proposal); } }));
+    process.env.LLM_PROVIDER_ANSWER_TEXT = key;
+    try {
+      const response = await http.request("actions", { instruction: fixture.instruction, channel: "text", idempotencyKey: `${key}:${randomUUID()}` });
+      const current = await state(response.body.workId);
+      await record("source-bound-calculation", { fixture, independentExpected: expected ?? "no checked result", proposal, response, current });
+      expect(response.status, JSON.stringify(response.body)).toBe(201);
+      expect(response.body.objective).toBeUndefined(); expect(current.loop).toBeUndefined(); expect(current.queries).toEqual([]);
+      const analysis = response.body.answer.analysis;
+      if (expected) {
+        expect(analysis.status).toBe("checked");
+        expect(analysis.calculations.map(({ value }: { value: { numerator: string; denominator: string } }) => ({ numerator: value.numerator, denominator: value.denominator }))).toEqual(expected);
+        if (fixture.unit) expect(analysis.calculations.every((item: { value: { unit: string } }) => item.value.unit === fixture.unit)).toBe(true);
+        if (fixture.key === "margin") expect(analysis.calculations.map((item: { value: { unit: string } }) => item.value.unit)).toEqual(["USD", "scalar"]);
+      } else { expect(analysis.status).toBe("incomplete"); expect(analysis.calculations).toEqual([]); expect(analysis.gaps.length).toBeGreaterThan(0); }
+      const effects = await admin.query("SELECT id FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2", [tenantId, response.body.workId]);
+      expect(effects.rows).toEqual([]);
+    } finally { if (prior === undefined) delete process.env.LLM_PROVIDER_ANSWER_TEXT; else process.env.LLM_PROVIDER_ANSWER_TEXT = prior; }
+  });
+
+  it("fences a supplied answer when actual cancellation queues after answer_started", async () => {
+    const instructionId = randomUUID(), key = `publication-fence-${runId}`, prior = process.env.LLM_PROVIDER_ANSWER_TEXT;
+    const instruction = "Calculate a supplied hypothetical ratio of 1 divided by 3. Explanation only.";
+    const blocker = new pg.Client({ connectionString: SOURCE_DATABASE_URL }); await blocker.connect();
+    let blocked = false;
+    registerProvider(key, () => ({ name: key, contextWindowTokens: 131072, async complete() {
+      await blocker.query("BEGIN");
+      await blocker.query("SELECT id FROM finnor_os.instruction_sessions WHERE tenant_id=$1 AND id=$2 FOR UPDATE", [tenantId, instructionId]);
+      blocked = true;
+      return JSON.stringify({ status: "ready", title: "Ratio", inputs: [{ id: "a", label: "Numerator", quote: "1", literal: "1" }, { id: "b", label: "Denominator", quote: "3", literal: "3" }], steps: [{ id: "ratio", label: "Ratio", op: "divide", left: "a", right: "b" }], outputs: ["ratio"], assumptions: [], gaps: [] });
+    } }));
+    process.env.LLM_PROVIDER_ANSWER_TEXT = key;
+    const responsePromise = http.request("actions", { instruction, instructionId, channel: "text", idempotencyKey: `fence:${instructionId}` });
+    try {
+      const deadline = Date.now() + 10000;
+      let started = false;
+      while (Date.now() < deadline && !started) {
+        started = (await admin.query("SELECT 1 FROM finnor_os.work_events WHERE tenant_id=$1 AND work_id=$2 AND event_type='answer_started'", [tenantId, instructionId])).rowCount === 1;
+        if (!started) await new Promise(resolve => setTimeout(resolve, 20));
+      }
+      expect(blocked && started, "The actual answer must reach its publication boundary").toBe(true);
+      const cancellationPromise = http.request(`instructions/${instructionId}/cancel`, {});
+      let waits = 0;
+      while (Date.now() < deadline && waits < 2) {
+        waits = Number((await admin.query("SELECT count(*) AS count FROM pg_stat_activity WHERE wait_event_type='Lock' AND query ILIKE '%instruction_sessions%' AND datname=current_database() AND pid<>pg_backend_pid()")).rows[0].count);
+        if (waits < 2) await new Promise(resolve => setTimeout(resolve, 20));
+      }
+      expect(waits, "Answer trace and cancellation must actually contend on the persisted instruction").toBeGreaterThanOrEqual(2);
+      await blocker.query("COMMIT"); blocked = false;
+      const [response, cancellation] = await Promise.all([responsePromise, cancellationPromise]);
+      const events = (await admin.query("SELECT seq,phase,payload FROM finnor_os.instruction_events WHERE tenant_id=$1 AND instruction_id=$2 ORDER BY seq", [tenantId, instructionId])).rows;
+      const current = await state(instructionId);
+      await record("cancel-at-answer-publication", { instruction, response, cancellation, events, current, lockWaiters: waits });
+      expect(cancellation.status).toBe(200); expect(response.body.answer).toBeUndefined();
+      expect(events.some(event => event.phase === "completed")).toBe(false);
+      expect(current.work.status).toBe("cancelled");
+    } finally {
+      if (blocked) await blocker.query("ROLLBACK").catch(() => undefined);
+      await responsePromise.catch(() => undefined); await blocker.end();
+      if (prior === undefined) delete process.env.LLM_PROVIDER_ANSWER_TEXT; else process.env.LLM_PROVIDER_ANSWER_TEXT = prior;
+    }
+  }, 30000);
 
   function readContract(root: PeWorldRootRef): ObjectiveSuccessCondition {
     return { version: 1, source: "explicit", mode: "all", statement: "Inspect the exact selected PE world record; this is a factual read, not a profit outcome.", criteria: [
@@ -144,9 +622,21 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
     };
     await mkdir(evidenceDirectory, { recursive: true });
     await writeFile(join(evidenceDirectory, `source-${runId}.patch`), patch);
+    const repository = join(process.cwd(), "..");
+    const untracked = execFileSync("git", ["ls-files", "--others", "--exclude-standard", "-z"], { cwd: repository, encoding: "utf8" }).split("\0").filter(Boolean);
+    const untrackedSources = [];
+    for (const path of untracked) {
+      const bytes = await readFile(join(repository, path));
+      if (bytes.length > 2 * 1024 * 1024) throw new Error("Untracked verification source exceeds the capture bound");
+      const saved = join(evidenceDirectory, `source-${runId}-untracked`, path);
+      await mkdir(dirname(saved), { recursive: true }); await writeFile(saved, bytes);
+      untrackedSources.push({ path, sha256: createHash("sha256").update(bytes).digest("hex"), bytes: bytes.length, saved });
+    }
+    sourceCut.untrackedSources = untrackedSources;
     admin = new pg.Client({ connectionString: SOURCE_DATABASE_URL });
     await admin.connect();
     sourceCut.postgresVersion = (await admin.query("SHOW server_version")).rows[0].server_version;
+    sourceCut.postgresSettings = (await admin.query("SELECT current_setting('wal_segment_size') AS wal_segment_size,current_setting('max_wal_size') AS max_wal_size,current_setting('min_wal_size') AS min_wal_size,current_setting('fsync') AS fsync,current_setting('full_page_writes') AS full_page_writes")).rows[0];
     // Migrations create the restricted role; a fresh CI service has not enabled
     // its fixture-only login. Never depend on another test file doing this first.
     await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD 'finnor_app'");
@@ -157,7 +647,8 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
     await admin.query("SET app.test_vertical_mode='explicit'");
     await admin.query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,'PE world objective'),($3,$4,'Foreign PE world objective')", [tenantId, randomUUID(), foreignTenantId, randomUUID()]);
     await admin.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name) VALUES($1,$4,$6,'owner','active','World operator'),($2,$4,$7,'owner','active','Other operator'),($3,$5,$8,'owner','active','Foreign operator')", [actorId, otherActorId, foreignActorId, tenantId, foreignTenantId, `${actorId}@world.test.invalid`, `${otherActorId}@world.test.invalid`, `${foreignActorId}@world.test.invalid`]);
-    await admin.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,'World scope company','other')", [companyId, tenantId, randomUUID()]);
+    await admin.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,$4,'other')",
+      [companyId, tenantId, randomUUID(), sourceProxy ? "AvidXchange Holdings, Inc." : "World scope company"]);
     await admin.query("INSERT INTO finnor_os.employee_roles(id,tenant_id,key,name) VALUES($1,$2,$3,'World objective authority')", [roleId, tenantId, `world-${runId}`]);
     await admin.query("INSERT INTO finnor_os.employee_role_assignments(tenant_id,employee_id,role_id,resource_scope) VALUES($1,$2,$3,'{\"kind\":\"tenant\"}'::jsonb)", [tenantId, actorId, roleId]);
     await admin.query("INSERT INTO finnor_os.role_authority_grants(tenant_id,role_id,capability,resource_type,effect,max_risk,approval_required) VALUES($1,$2,'*','*','allow','high',false)", [tenantId, roleId]);
@@ -170,7 +661,7 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
     fund = { entityType: "pe_fund", entityId: String((await createFund(ctx, { name: "Explicit investment fund", baseCurrency: "USD", vintageYear: 2026 })).row.id) };
     const foreignCtx: PeMutationContext = { auth: { tenantId: foreignTenantId, userId: foreignActorId, employeeId: foreignActorId, role: "owner" } };
     foreignFund = { entityType: "pe_fund", entityId: String((await createFund(foreignCtx, { name: "Foreign private fund", baseCurrency: "USD" })).row.id) };
-    incidentalDealId = String((await createDeal(ctx, { targetOrganizationId: companyId, name: "Unrelated sole active Deal", dealLeadEmployeeId: actorId, signedLoiAt: new Date("2026-09-01"), targetClosingAt: new Date("2026-12-01") })).row.id);
+    incidentalDealId = String((await createDeal(ctx, { targetOrganizationId: companyId, name: sourceProxy ? "AvidXchange forecast review" : "Unrelated sole active Deal", dealLeadEmployeeId: actorId, signedLoiAt: new Date("2026-09-01"), targetClosingAt: new Date("2026-12-01") })).row.id);
     await configureAgentProfile(tenantId, createDefaultPluginRegistry(), { key: `world-${runId}`, name: "World query worker", actor: ctx.auth, capabilityGrants: [{ kind: "query", capability: "query:pe_world_state" }, { kind: "query", capability: "query:party_context" }, { kind: "check", capability: "check:objective_success" }], autonomyLimits: { maxActions: 1, maxQueries: 11, maxReplans: 8, maxPlannerCalls: 8, maxWallClockMs: 120_000 } });
     http = await browserHttpFixture(admin, tenantId, actorId, otherActorId);
     heartbeat = startHeartbeat(1_000, heartbeatStop.signal);
@@ -194,10 +685,19 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
     console.log(`PE_OBJECTIVE_WORLD_SCOPE_EVIDENCE ${join(evidenceDirectory, `world-scope-${runId}.json`)}`);
   });
 
+  it("asks for a source scope when the document comparison names no exact selected Deal or company", async () => {
+    const instruction = "Identify conflicting financial figures across this deal's documents. Show both values and their sources.";
+    const response = await http.request("actions", { instruction, channel: "text", idempotencyKey: randomUUID() });
+    await record("document-review-missing-scope", { instruction, response });
+    expect(response.status).toBe(201);
+    expect(response.body.answer.spokenSummary).toBe("Select the Deal or company whose documents you want to compare.");
+    expect(response.body.answer.documentReviewReceipt).toBeUndefined();
+    expect(response.body.objective).toBeUndefined();
+  });
+
   it.each([
     "Analyze this deal. Identify the 5 biggest closing risks. Rank by severity and show evidence.",
     "For every claim you just made, show its exact source, timestamp, and confidence. Separate facts from assumptions.",
-    "Identify conflicting financial figures across this deal's documents. Show both values and their sources.",
     "Find the highest-impact EBITDA improvement opportunity. Quantify upside, assumptions, confidence, implementation cost, and evidence gaps.",
   ])("retains analytical instructions as durable Work instead of an unrelated party lookup: %s", async (instruction) => {
     const response = await http.request("actions", {

@@ -54,7 +54,7 @@
 .ct-thread { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; min-width: 0; background: var(--ct-thread); border-right: 1px solid var(--ct-line); }
 .ct-thread__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; padding: 29px 30px 18px; border-bottom: 1px solid rgba(184, 211, 237, .07); }
 .ct-eyebrow { display: block; color: var(--ct-accent); font-size: 11px; font-weight: 700; line-height: 1.4; letter-spacing: .14em; }
-.ct-thread__header h1 { margin: 6px 0 0; max-width: 370px; font-size: clamp(19px, 2vw, 24px); line-height: 1.25; font-weight: 620; letter-spacing: -.025em; }
+.ct-thread__header h1 { margin: 6px 0 0; max-width: 370px; font-size: clamp(19px, 2vw, 24px); line-height: 1.25; font-weight: 620; letter-spacing: -.025em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .ct-thread__header > a { display: grid; place-items: center; width: 34px; height: 34px; color: var(--ct-muted); text-decoration: none; border: 1px solid var(--ct-line); border-radius: 8px; flex: 0 0 auto; }
 .ct-thread__header > a:hover { color: var(--ct-text); background: var(--ct-raised); }
 .ct-thread__scroll { overflow-y: auto; overscroll-behavior: contain; padding: 30px 30px 35px; min-height: 0; scrollbar-color: #26384b transparent; }

@@ -226,6 +226,11 @@ async function inspectPrivateEquityIcBasis(tenantId: string, dealId: string, wor
       JOIN finnor_os.pe_investment_cases investment
         ON investment.tenant_id=run.tenant_id AND investment.id=run.investment_case_id
       WHERE run.tenant_id=${tenantId}::uuid AND investment.deal_id=${dealId}::uuid
+        AND NOT EXISTS (
+          SELECT 1 FROM finnor_os.underwriting_scenarios scenario
+          WHERE scenario.tenant_id=run.tenant_id AND scenario.id=run.scenario_id
+            AND scenario.definition ? 'committeeEbitdaBasis'
+        )
       ORDER BY CASE WHEN run.work_id=${workId}::uuid THEN 0 WHEN run.scenario_id IS NULL THEN 1 ELSE 2 END,
         run.computed_at DESC,run.id LIMIT 16
     `);
@@ -249,10 +254,19 @@ async function inspectPrivateEquityIcBasis(tenantId: string, dealId: string, wor
     const memoDrafts = await db.execute(sql`
       SELECT link.entity_id::text ic_case_id,document.id::text document_id,
              version.id::text document_version_id,version.created_at,
-             document.external_id action_id
+             document.external_id action_id, assessment.source_completeness
       FROM finnor_os.pe_document_links link
       JOIN finnor_os.documents document ON document.tenant_id=link.tenant_id AND document.id=link.document_id
       JOIN finnor_os.document_versions version ON version.tenant_id=document.tenant_id AND version.document_id=document.id
+      LEFT JOIN LATERAL (
+        SELECT event.payload->>'financialSourceCompleteness' source_completeness
+        FROM finnor_os.business_events event
+        WHERE event.tenant_id=document.tenant_id AND event.entity_type='document' AND event.entity_id=document.id
+          AND event.event_type='document_version_observed' AND event.source='ic_memo_draft'
+          AND event.payload->>'documentVersionId'=version.id::text
+          AND event.payload->>'financialSourceCompleteness' IN ('INCOMPLETE','CONFLICTING')
+        LIMIT 1
+      ) assessment ON true
       WHERE link.tenant_id=${tenantId}::uuid AND link.deal_id=${dealId}::uuid
         AND link.entity_type='pe_ic_case' AND link.archived_at IS NULL
         AND document.source_system='ic_memo_draft' AND document.archived_at IS NULL

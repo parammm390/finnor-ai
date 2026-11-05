@@ -2516,7 +2516,7 @@ export async function appendEmployeeConversationMessage(
   if (!text.trim() || Buffer.byteLength(text, "utf8") > 65_536) throw new Error("conversation_message_invalid");
   return withTenant(params.tenantId, async (db) => {
     await db.execute(sql`SELECT id FROM ${schema.employeeConversationThreads} WHERE ${schema.employeeConversationThreads.id}=${params.threadId} AND ${schema.employeeConversationThreads.tenantId}=${params.tenantId} AND ${schema.employeeConversationThreads.ownerEmployeeId}=${params.ownerEmployeeId} FOR UPDATE`);
-    const [thread] = await db.select({ id: schema.employeeConversationThreads.id }).from(schema.employeeConversationThreads).where(and(
+    const [thread] = await db.select({ id: schema.employeeConversationThreads.id, title: schema.employeeConversationThreads.title }).from(schema.employeeConversationThreads).where(and(
       eq(schema.employeeConversationThreads.id, params.threadId),
       eq(schema.employeeConversationThreads.tenantId, params.tenantId),
       eq(schema.employeeConversationThreads.ownerEmployeeId, params.ownerEmployeeId),
@@ -2554,7 +2554,7 @@ export async function appendEmployeeConversationMessage(
     if (!created) throw new Error("Unable to append conversation message");
     const now = new Date();
     await db.update(schema.employeeConversationThreads).set({
-      ...(sequence === 1 && params.role === "user" ? { title: text.replace(/\s+/g, " ").trim().slice(0, 120) } : {}),
+      ...(sequence === 1 && params.role === "user" && thread.title === null ? { title: text.replace(/\s+/g, " ").trim().slice(0, 120) } : {}),
       revision: sql`${schema.employeeConversationThreads.revision}+1`,
       lastActivityAt: now,
       updatedAt: now,

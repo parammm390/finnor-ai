@@ -145,7 +145,11 @@ export async function createGroundedMemoArtifact(ctx: ArtifactActor, input: {
   actionId: string;
   title: string;
   sections: readonly GroundedMemoSection[];
-}): Promise<{ documentId: string; version: DocumentVersion; ir: SemanticIR; replayed: boolean }> {
+  financialSourceCompleteness?: "INCOMPLETE" | "CONFLICTING";
+}): Promise<{
+  documentId: string; version: DocumentVersion; ir: SemanticIR; replayed: boolean;
+  financialSourceCompleteness?: "INCOMPLETE" | "CONFLICTING";
+}> {
   if (!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(input.actionId)) throw new Error("INVALID_GROUNDED_MEMO_ACTION_ID");
   const title = input.title.trim().toLowerCase().endsWith(".docx") ? input.title.trim() : `${input.title.trim()}.docx`;
   const bytes = groundedMemoBytes(input.title, input.sections);
@@ -169,7 +173,19 @@ export async function createGroundedMemoArtifact(ctx: ArtifactActor, input: {
       const loaded = await loadDocumentVersion(db, ctx.tenantId, input.actionId, String(prior.rows[0].id));
       if (!loaded) throw new Error("GROUNDED_MEMO_VERSION_MISSING");
       const snapshot = await loadArtifactIRSnapshot(db, ctx.tenantId, loaded.version.id);
-      return { documentId: input.actionId, version: loaded.version, ir: snapshot?.ir ?? await interpret(loaded.bytes, { fileName: title }), replayed: true };
+      const observed = await db.execute<{ status: "INCOMPLETE" | "CONFLICTING" }>(sql`
+        SELECT payload->>'financialSourceCompleteness' status FROM finnor_os.business_events
+        WHERE tenant_id=${ctx.tenantId}::uuid AND entity_type='document' AND entity_id=${input.actionId}::uuid
+          AND event_type='document_version_observed' AND source='ic_memo_draft'
+          AND payload->>'documentVersionId'=${loaded.version.id}
+          AND payload->>'financialSourceCompleteness' IN ('INCOMPLETE','CONFLICTING')
+        LIMIT 1
+      `);
+      return {
+        documentId: input.actionId, version: loaded.version,
+        ir: snapshot?.ir ?? await interpret(loaded.bytes, { fileName: title }), replayed: true,
+        financialSourceCompleteness: observed.rows[0]?.status,
+      };
     }
     const version = await appendDocumentVersion(db, {
       tenantId: ctx.tenantId, documentId: input.actionId, bytes, mediaType: MEDIA.docx,
@@ -181,10 +197,13 @@ export async function createGroundedMemoArtifact(ctx: ArtifactActor, input: {
     await recordBusinessEvent(db, {
       tenantId: ctx.tenantId, entityType: "document", entityId: input.actionId,
       eventType: "document_version_observed",
-      payload: { documentVersionId: version.id, format: "docx", semanticHash: ir.semanticHash, origin: "finnor_generated", sourceRefs },
+      payload: {
+        documentVersionId: version.id, format: "docx", semanticHash: ir.semanticHash, origin: "finnor_generated", sourceRefs,
+        ...(input.financialSourceCompleteness ? { financialSourceCompleteness: input.financialSourceCompleteness } : {}),
+      },
       source: "ic_memo_draft",
     });
-    return { documentId: input.actionId, version, ir, replayed: false };
+    return { documentId: input.actionId, version, ir, replayed: false, financialSourceCompleteness: input.financialSourceCompleteness };
   });
 }
 

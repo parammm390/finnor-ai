@@ -8,6 +8,7 @@ import {
   affectedNodes,
   canonicalSerialize,
   compileUnderwritingModel,
+  cmp,
   decimal,
   diffModels,
   diffRuns,
@@ -19,6 +20,7 @@ import {
   sealInputSnapshot,
   runResultHash,
   semanticHash,
+  type CommitteeEbitdaSelection,
   type CompiledUnderwritingModel,
   type InputNode,
   type InputProvenanceRef,
@@ -36,11 +38,12 @@ import {
 import { PeDomainError, type PeMutationContext } from "./types";
 import { assertPeText, assertPeUuid, peProvenance, peTransaction, type PeClient } from "./repository";
 import { recordUnderwritingMetric } from "./underwriting-telemetry";
-import {resolveEvidenceUnderwritingInputs,assertEvidenceSnapshotCurrent,type EvidenceUnderwritingBinding} from './evidence-execution/consumer';
+import {resolveEvidenceUnderwritingInputs,assertEvidenceSnapshotCurrent,assertCommitteeFinancialSourceCurrent,type EvidenceUnderwritingBinding} from './evidence-execution/consumer';
 import {resolvePrimaryUnderwritingInputs,bindPrimaryConsumerDependencies} from './primary-diligence/consumer';
 import {resolveConfidentialUnderwritingInputs,hasConfidentialSnapshot,sealConfidentialRunResult,refuseUnadmittedConfidentialSink} from './confidential-computation/consumer';
 import type {ConfidentialOutputBinding} from './confidential-computation/contracts';
-import type {PrimaryFindingBinding} from '@finnor/shared-types';
+import { documentSourceLocation, type PrimaryFindingBinding } from "@finnor/shared-types";
+import { reviewFinancialDocuments } from "./document-financial-review";
 import {
   boundUnderwritingCells,
   observedUnderwritingCell,
@@ -278,6 +281,81 @@ export async function createUnderwritingModelVersion(ctx: PeMutationContext, inp
   });
 }
 
+export async function resolveCommitteeEbitdaScenario(ctx: PeMutationContext, input: {
+  dealId: string;
+  investmentCaseId: string;
+  modelVersionId: string;
+  baseRunId: string;
+  selection: CommitteeEbitdaSelection;
+}): Promise<UnderwritingScenario> {
+  const { dealId, investmentCaseId, modelVersionId, baseRunId, selection } = input;
+  const context = await peTransaction(ctx, async (_db, client) => {
+    const { row, compiled } = await loadModelVersion(client, ctx.auth.tenantId, modelVersionId);
+    const runtime = compiled.model.runtime;
+    if (row.investment_case_id !== investmentCaseId || runtime?.entryValuationMethod !== "metric_multiple"
+      || runtime.entryValuationMetric !== "EBITDA") {
+      throw new PeDomainError("IC_SCENARIO_MODEL_CONFLICT", "Select a model version explicitly configured for entry EBITDA");
+    }
+    const base = (await client.query<StoredRunIntegrity & { world_at: Date }>(
+      `SELECT run.id::text, run.world_at, run.input_hash, run.input_snapshot, run.result_hash, run.result
+         FROM finnor_os.underwriting_runs run
+         JOIN finnor_os.pe_ic_cases ic ON ic.tenant_id=run.tenant_id AND ic.investment_case_id=run.investment_case_id
+        WHERE run.tenant_id=$1 AND run.id=$2 AND run.model_version_id=$3 AND run.scenario_id IS NULL
+          AND run.status='SUCCEEDED' AND run.validity='VALID'
+          AND ic.id=$4 AND ic.deal_id=$5 AND ic.investment_case_id=$6
+          AND ic.state IN ('PREPARING','READY_FOR_REVIEW','QUESTIONS_OPEN')`,
+      [ctx.auth.tenantId, baseRunId, modelVersionId, selection.icCaseId, dealId, investmentCaseId],
+    )).rows[0];
+    if (!base) throw new PeDomainError("IC_SCENARIO_MODEL_CONFLICT", "The base run and open Committee case must belong to the exact investment case");
+    await assertStoredRunIntegrity(ctx.auth.tenantId, base, ctx, client);
+    const multiple = base.input_snapshot.values["entry.multiple"];
+    if (multiple?.status !== "KNOWN" || typeof multiple.value !== "string" || cmp(multiple.value, "0") <= 0) {
+      throw new PeDomainError("IC_SCENARIO_MODEL_CONFLICT", "The base run must pin a positive entry multiple");
+    }
+    return { currency: runtime.currency, worldAt: base.world_at };
+  }, { readOnly: true });
+
+  const { review, digest } = await reviewFinancialDocuments(ctx, { entityType: "pe_deal", entityId: dealId }, undefined, selection.icCaseId);
+  const matches = review.findings
+    .filter(finding => finding.metric.toUpperCase() === "EBITDA" && finding.frequency === "annual"
+      && finding.currency === context.currency && finding.unit === "currency" && finding.periodEnd.slice(0, 10) === selection.periodEnd)
+    .flatMap(finding => finding.assertions.filter(assertion => assertion.source.versionId === selection.documentVersionId));
+  const assertion = matches[0];
+  if (matches.length !== 1 || !assertion || cmp(assertion.value, "0") <= 0) {
+    throw new PeDomainError("IC_SCENARIO_SOURCE_CONFLICT", "Select one admitted positive EBITDA assertion with the exact period and model currency");
+  }
+  const knownAtCutoff = await peTransaction(ctx, async (_db, client) => Boolean((await client.query(
+    "SELECT 1 FROM finnor_os.document_versions WHERE tenant_id=$1 AND id=$2 AND created_at <= $3",
+    [ctx.auth.tenantId, selection.documentVersionId, context.worldAt],
+  )).rows[0]), { readOnly: true });
+  if (!knownAtCutoff) throw new PeDomainError("IC_SCENARIO_SOURCE_CONFLICT", "The source version postdates the base run cutoff");
+
+  return {
+    schemaVersion: "underwriting-scenario.v1",
+    name: `Committee EBITDA ${selection.periodEnd} · ${selection.documentVersionId}`,
+    overrides: [{ nodeId: "entry.metric_value", value: assertion.value, reason: "Conditional Committee source assertion" }],
+    committeeEbitdaBasis: {
+      ...selection, dealId, baseRunId, reviewDigest: digest, documentId: assertion.source.documentId,
+      byteSha256: assertion.source.sha256, location: documentSourceLocation(assertion.source.anchor),
+    },
+  };
+}
+
+async function verifyCommitteeEbitdaScenario(
+  ctx: PeMutationContext, investmentCaseId: string, modelVersionId: string, scenario?: UnderwritingScenario,
+): Promise<void> {
+  const basis = scenario?.committeeEbitdaBasis;
+  if (!scenario || !basis) return;
+  const current = await resolveCommitteeEbitdaScenario(ctx, {
+    dealId: basis.dealId, investmentCaseId, modelVersionId, baseRunId: basis.baseRunId,
+    selection: { icCaseId: basis.icCaseId, documentVersionId: basis.documentVersionId, periodEnd: basis.periodEnd },
+  });
+  if (scenarioHash(current) !== scenarioHash(scenario) || current.name !== scenario.name
+    || canonicalSerialize(current.overrides) !== canonicalSerialize(scenario.overrides)) {
+    throw new PeDomainError("IC_SCENARIO_SOURCE_CONFLICT", "The Committee source basis changed after this scenario was grounded");
+  }
+}
+
 export async function createUnderwritingScenario(ctx: PeMutationContext, input: {
   investmentCaseId: string;
   modelVersionId: string;
@@ -287,6 +365,7 @@ export async function createUnderwritingScenario(ctx: PeMutationContext, input: 
   assertPeUuid(input.investmentCaseId, "investmentCaseId");
   assertPeUuid(input.modelVersionId, "modelVersionId");
   if (input.parentScenarioId) assertPeUuid(input.parentScenarioId, "parentScenarioId");
+  await verifyCommitteeEbitdaScenario(ctx, input.investmentCaseId, input.modelVersionId, input.scenario);
   const hash = scenarioHash(input.scenario);
   return peTransaction(ctx, async (_db, client) => {
     const { row, compiled } = await loadModelVersion(client, ctx.auth.tenantId, input.modelVersionId);
@@ -663,12 +742,15 @@ export async function prepareUnderwritingRun(ctx: PeMutationContext, input: Omit
   if(Object.keys(confidentialInputs).some(id=>derivedInputs[id]||input.explicitInputs?.[id]))
     fail("MODEL_SCHEMA_INVALID","A confidential input cannot shadow another input source");
   Object.assign(derivedInputs,confidentialInputs);
-  return peTransaction(ctx, async (_db, client) => {
+  const prepared = await peTransaction(ctx, async (_db, client) => {
     const { row, compiled } = await loadModelVersion(client, ctx.auth.tenantId, input.modelVersionId);
     if (row.investment_case_id !== input.investmentCaseId) fail("MODEL_VERSION_NOT_FOUND", "ModelVersion is not attached to the requested InvestmentCase");
     const clock = (await client.query<{ now: Date }>("SELECT transaction_timestamp() now")).rows[0]!.now;
     if (new Date(worldAt).getTime() > clock.getTime()) fail("INVALID_PERIOD", "worldAt cannot be in the future");
     const scenario = await loadScenario(client, ctx.auth.tenantId, input.scenarioId, row);
+    if (scenario?.committeeEbitdaBasis && input.baseRunId !== scenario.committeeEbitdaBasis.baseRunId) {
+      throw new PeDomainError("IC_SCENARIO_MODEL_CONFLICT", "The source scenario requires its exact base run");
+    }
     const baseSnapshot = input.baseRunId ? await (async () => {
       const base = (await client.query<StoredRunIntegrity & { investment_case_id: string; model_version_id: string; scenario_id: string | null; world_at: Date }>(
         `SELECT id::text,investment_case_id::text,model_version_id::text,scenario_id::text,world_at,
@@ -687,6 +769,8 @@ export async function prepareUnderwritingRun(ctx: PeMutationContext, input: Omit
     const applied = applyScenario(compiled, baseSnapshot, scenario);
     return { row, compiled, baseSnapshot, effectiveSnapshot: applied.snapshot, scenario, scenarioSemanticHash: applied.scenarioSemanticHash };
   }, { readOnly: true });
+  await verifyCommitteeEbitdaScenario(ctx, input.investmentCaseId, input.modelVersionId, prepared.scenario);
+  return prepared;
 }
 
 export async function persistPreparedUnderwritingRun(ctx: PeMutationContext, original: {
@@ -700,6 +784,7 @@ export async function persistPreparedUnderwritingRun(ctx: PeMutationContext, ori
   assertPeText(input.idempotencyKey, "underwriting idempotencyKey");
   if (input.idempotencyKey.length > 240) fail("MODEL_SCHEMA_INVALID", "Underwriting idempotency key exceeds 240 characters");
   if (input.workId) assertPeUuid(input.workId, "workId");
+  await verifyCommitteeEbitdaScenario(ctx, input.prepared.row.investment_case_id, input.prepared.row.id, input.prepared.scenario);
   if (input.result.engineVersion !== UNDERWRITING_ENGINE_VERSION
     || input.result.modelSemanticHash !== input.prepared.compiled.semanticHash
     || input.result.inputSemanticHash !== input.prepared.effectiveSnapshot.semanticHash
@@ -786,6 +871,154 @@ export async function getUnderwritingRun(ctx: PeMutationContext, runId: string):
     await assertStoredRunIntegrity(ctx.auth.tenantId, row,ctx,client);
     return recordShape(row);
   }, { readOnly: true });
+}
+
+export async function assertCommitteeMemoRunsCurrent(ctx: PeMutationContext, input: {
+  investmentCaseId: string;
+  runIds: readonly string[];
+}, client: PeClient): Promise<void> {
+  const { rows } = await client.query<StoredRunIntegrity>(
+    `SELECT id, input_hash, input_snapshot, result_hash, result
+       FROM finnor_os.underwriting_runs
+      WHERE tenant_id=$1 AND investment_case_id=$2 AND id=ANY($3::uuid[])
+        AND status='SUCCEEDED' AND validity='VALID'`,
+    [ctx.auth.tenantId, input.investmentCaseId, input.runIds],
+  );
+  if (rows.length !== input.runIds.length) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "Committee memo run is unavailable");
+  for (const row of rows) await assertStoredRunIntegrity(ctx.auth.tenantId, row, ctx, client);
+}
+
+type CommitteeMemoScope = {
+  icCaseId: string;
+  workId: string;
+  investmentCaseId: string;
+};
+
+type CommitteeMemoRun = StoredRunIntegrity & {
+  model_version_id: string;
+  world_at: Date;
+  definition: UnderwritingScenario;
+  scenario_hash: string;
+};
+
+const committeeMemoMismatch = () => new PeDomainError("IC_MEMO_ALTERNATIVES_CONFLICT",
+  "Select verified alternatives from this Work that cover the same current Committee EBITDA disagreement and base model");
+
+async function verifiedCommitteeMemoRuns(client: PeClient, tenantId: string, scope: CommitteeMemoScope, runIds?: readonly string[]) {
+  return (await client.query<CommitteeMemoRun>(
+      `SELECT run.*, scenario.definition, scenario.semantic_hash AS scenario_hash
+         FROM finnor_os.underwriting_runs run
+         JOIN finnor_os.underwriting_scenarios scenario
+           ON scenario.tenant_id=run.tenant_id AND scenario.id=run.scenario_id
+          AND scenario.model_version_id=run.model_version_id AND scenario.investment_case_id=run.investment_case_id
+         JOIN finnor_os.business_effects effect
+           ON effect.tenant_id=run.tenant_id AND effect.domain_action_id::text=run.idempotency_key
+          AND effect.status='verified' AND effect.effect->'operation'->>'name'='create_underwriting_run'
+          AND effect.verification->>'state'='verified' AND effect.verification->'observed'->>'id'=run.id::text
+          AND effect.verification->'observed'->>'inputHash'=run.input_hash
+          AND effect.verification->'observed'->>'resultHash'=run.result_hash
+        WHERE run.tenant_id=$1 AND run.work_id=$2 AND run.investment_case_id=$3
+          AND scenario.definition->'committeeEbitdaBasis'->>'icCaseId'=$4
+          AND ($5::uuid[] IS NULL OR run.id=ANY($5::uuid[])) AND run.status='SUCCEEDED' AND run.validity='VALID'
+        ORDER BY run.id LIMIT 49`,
+      [tenantId, scope.workId, scope.investmentCaseId, scope.icCaseId, runIds ?? null],
+  )).rows;
+}
+
+export async function readCommitteeMemoAlternatives(ctx: PeMutationContext, input: CommitteeMemoScope & {
+  runIds: readonly string[];
+  financial: Awaited<ReturnType<typeof reviewFinancialDocuments>>;
+}) {
+  const rows = await peTransaction(ctx, async (_db, client) => {
+    const rows = await verifiedCommitteeMemoRuns(client, ctx.auth.tenantId, input, input.runIds);
+    if (rows.length !== input.runIds.length) throw committeeMemoMismatch();
+    for (const row of rows) await assertStoredRunIntegrity(ctx.auth.tenantId, row, ctx, client);
+    return rows;
+  }, { readOnly: true });
+  return summarizeCommitteeMemoAlternatives(rows, input);
+}
+
+function summarizeCommitteeMemoAlternatives(rows: CommitteeMemoRun[], input: {
+  icCaseId: string;
+  financial: Awaited<ReturnType<typeof reviewFinancialDocuments>>;
+}) {
+  const first = rows[0];
+  const base = first?.definition.committeeEbitdaBasis;
+  const multiple = first?.input_snapshot.values["entry.multiple"]?.value;
+  if (!first || !base || typeof multiple !== "string" || rows.length < 2 || rows.length > 6) throw committeeMemoMismatch();
+  const snapshotWithoutEbitda = (snapshot: UnderwritingInputSnapshot) => {
+    const { "entry.metric_value": _ebitda, ...rest } = snapshot.values;
+    return canonicalSerialize(rest);
+  };
+  const commonInputs = snapshotWithoutEbitda(first.input_snapshot);
+  const alternatives = rows.map(row => {
+    const basis = row.definition.committeeEbitdaBasis;
+    const ebitda = row.input_snapshot.values["entry.metric_value"];
+    if (!basis || basis.icCaseId !== input.icCaseId || basis.reviewDigest !== input.financial.digest
+      || basis.baseRunId !== base.baseRunId || basis.periodEnd !== base.periodEnd
+      || row.model_version_id !== first.model_version_id || asIso(row.world_at) !== asIso(first.world_at)
+      || scenarioHash(row.definition) !== row.scenario_hash || snapshotWithoutEbitda(row.input_snapshot) !== commonInputs
+      || ebitda?.truthClass !== "SCENARIO_OVERRIDE" || ebitda.status !== "KNOWN" || typeof ebitda.value !== "string") throw committeeMemoMismatch();
+    return { row, basis, ebitda: ebitda.value, currency: ebitda.currency };
+  });
+  const finding = input.financial.review.findings.find(item => item.metric.toUpperCase() === "EBITDA" && item.frequency === "annual"
+    && item.periodEnd.slice(0, 10) === base.periodEnd && item.assertions.length === alternatives.length
+    && new Set(alternatives.map(item => item.basis.documentVersionId)).size === alternatives.length
+    && alternatives.every(({ basis, ebitda, currency }) => item.currency === currency && item.assertions.some(assertion =>
+      assertion.source.versionId === basis.documentVersionId && assertion.source.documentId === basis.documentId
+      && assertion.source.sha256 === basis.byteSha256 && documentSourceLocation(assertion.source.anchor) === basis.location
+      && cmp(assertion.value, ebitda) === 0)));
+  if (!finding?.currency) throw committeeMemoMismatch();
+  const currency = finding.currency;
+  return {
+    baseRunId: base.baseRunId, multiple, currency, periodEnd: base.periodEnd,
+    alternatives: alternatives.map(({ row, basis, ebitda }) => {
+      const amount = (nodeId: string) => {
+        const output = row.result.outputs[nodeId];
+        if (typeof output?.value !== "string" || output.currency !== currency) throw committeeMemoMismatch();
+        return output.value;
+      };
+      const source = finding.assertions.find(assertion => assertion.source.versionId === basis.documentVersionId)?.source;
+      if (!source) throw committeeMemoMismatch();
+      return {
+        runId: row.id, sourceTitle: source.title, documentVersionId: source.versionId, location: basis.location, ebitda,
+        enterpriseValue: amount("output.transaction.entry_enterprise_value"),
+        purchaseEquity: amount("output.transaction.purchase_equity_value"),
+        sponsorEquity: amount("output.sources_uses.sponsor_equity"),
+      };
+    }).sort((left, right) => cmp(right.ebitda, left.ebitda)),
+  };
+}
+
+export async function discoverCommitteeMemoAlternativeRunIds(ctx: PeMutationContext, scope: CommitteeMemoScope & { dealId: string }) {
+  const rows = await peTransaction(ctx, (_db, client) => verifiedCommitteeMemoRuns(client, ctx.auth.tenantId, scope), { readOnly: true });
+  if (rows.length < 2) return undefined;
+  if (rows.length === 49) throw committeeMemoMismatch();
+  const financial = await reviewFinancialDocuments(ctx, { entityType: "pe_deal", entityId: scope.dealId }, undefined, scope.icCaseId);
+  const groups = new Map<string, CommitteeMemoRun[]>();
+  for (const row of rows) {
+    const basis = row.definition.committeeEbitdaBasis;
+    if (!basis || basis.reviewDigest !== financial.digest) continue;
+    const key = JSON.stringify([basis.baseRunId, basis.periodEnd, row.model_version_id, asIso(row.world_at)]);
+    const group = groups.get(key) ?? [];
+    group.push(row);
+    groups.set(key, group);
+  }
+  let runIds: string[] | undefined;
+  for (const group of groups.values()) {
+    let comparison;
+    try {
+      comparison = summarizeCommitteeMemoAlternatives(group, { ...scope, financial });
+    } catch (error) {
+      if (error instanceof PeDomainError && error.code === "IC_MEMO_ALTERNATIVES_CONFLICT") continue;
+      throw error;
+    }
+    if (runIds) throw committeeMemoMismatch();
+    runIds = comparison.alternatives.map(alternative => alternative.runId);
+  }
+  if (!runIds) return undefined;
+  await readCommitteeMemoAlternatives(ctx, { ...scope, financial, runIds });
+  return runIds;
 }
 
 export async function getUnderwritingSensitivity(ctx: PeMutationContext, sensitivityId: string): Promise<Record<string, unknown>> {
@@ -937,7 +1170,7 @@ export async function listUnderwritingWorkspace(ctx: PeMutationContext, investme
     const models = await client.query("SELECT * FROM finnor_os.underwriting_models WHERE tenant_id=$1 AND investment_case_id=$2 ORDER BY created_at,id LIMIT 100", [ctx.auth.tenantId, investmentCaseId]);
     const versions = await client.query("SELECT id,model_id,version_key,semantic_hash,schema_version,financial_convention_version,minimum_engine_version,parent_version_id,created_by,created_at FROM finnor_os.underwriting_model_versions WHERE tenant_id=$1 AND investment_case_id=$2 ORDER BY created_at DESC,id LIMIT 200", [ctx.auth.tenantId, investmentCaseId]);
     const inputBindings = await client.query("SELECT model_version_id,input_node_id,source_kind,assumption_id,evidence_version_id,document_id,document_version_id,anchor_id,anchor_hash,value_path,value_selector,stale_after_days,created_at FROM finnor_os.underwriting_model_input_bindings WHERE tenant_id=$1 AND investment_case_id=$2 ORDER BY model_version_id,input_node_id LIMIT 10000", [ctx.auth.tenantId, investmentCaseId]);
-    const scenarios = await client.query("SELECT * FROM finnor_os.underwriting_scenarios WHERE tenant_id=$1 AND investment_case_id=$2 ORDER BY created_at DESC,id LIMIT 200", [ctx.auth.tenantId, investmentCaseId]);
+    const scenarios = await client.query<{ definition: UnderwritingScenario }>("SELECT * FROM finnor_os.underwriting_scenarios WHERE tenant_id=$1 AND investment_case_id=$2 ORDER BY created_at DESC,id LIMIT 200", [ctx.auth.tenantId, investmentCaseId]);
     const runs = await client.query(`SELECT run.id,run.model_version_id,run.scenario_id,run.work_id,run.world_at,run.computed_at,
         run.engine_version,run.model_semantic_hash,run.input_hash,run.input_snapshot,run.result_hash,
         run.status,run.validity,run.failure_code,run.idempotency_key,run.created_by,run.result,
@@ -951,9 +1184,22 @@ export async function listUnderwritingWorkspace(ctx: PeMutationContext, investme
     const projections = await client.query("SELECT * FROM finnor_os.underwriting_artifact_projections WHERE tenant_id=$1 AND investment_case_id=$2 ORDER BY created_at DESC,id LIMIT 200", [ctx.auth.tenantId, investmentCaseId]);
     const visibleRuns:Record<string,unknown>[]=[],invalidatedRuns:Record<string,unknown>[]=[];
     for(const row of runs.rows){try{await assertEvidenceSnapshotCurrent(ctx,row.input_snapshot as UnderwritingInputSnapshot,client);visibleRuns.push(recordShape(row));}catch{invalidatedRuns.push({id:row.id,modelVersionId:row.model_version_id,status:'INVALIDATED',validity:'INVALID',result:null,inputSnapshot:null,reason:'EVIDENCE_DERIVATION_NOT_CURRENT'});}}
+    const visibleScenarios = [];
+    for (const scenario of scenarios.rows) {
+      const source = scenario.definition.committeeEbitdaBasis;
+      if (source) {
+        try {
+          await assertCommitteeFinancialSourceCurrent(ctx, investmentCaseId, source, client);
+        } catch (error) {
+          if (error instanceof PeDomainError && error.code === "PE_ENTITY_NOT_FOUND") continue;
+          throw error;
+        }
+      }
+      visibleScenarios.push(recordShape(scenario));
+    }
     return {
       investmentCase: recordShape(investmentCase),
-      models: models.rows.map(recordShape), modelVersions: versions.rows.map(recordShape), modelInputBindings: inputBindings.rows.map(recordShape), scenarios: scenarios.rows.map(recordShape),
+      models: models.rows.map(recordShape), modelVersions: versions.rows.map(recordShape), modelInputBindings: inputBindings.rows.map(recordShape), scenarios: visibleScenarios,
       runs: visibleRuns,invalidatedRuns, sensitivities: sensitivities.rows.map(recordShape),
       artifactBindings: bindings.rows.map(recordShape), artifactProjections: projections.rows.map(recordShape),
       complete: true,

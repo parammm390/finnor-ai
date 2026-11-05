@@ -1,6 +1,6 @@
 import { artifactContext, getArtifact } from "@finnor/artifacts";
 import { requireContext } from "../../../../../lib/auth";
-import { artifactActor, artifactErrorResponse, UUID } from "../../../../../lib/artifacts";
+import { artifactActor, artifactErrorResponse, requireReadableArtifact, UUID } from "../../../../../lib/artifacts";
 
 export const runtime = "nodejs";
 
@@ -8,11 +8,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   try {
     const { id } = await params;
     if (!UUID.test(id)) return Response.json({ error: "Invalid Document ID", code: "invalid_id" }, { status: 400 });
-    const ctx = artifactActor(await requireContext(req));
+    const ctx = await requireContext(req);
+    const actor = artifactActor(ctx);
     const requestedVersion = new URL(req.url).searchParams.get("versionId") ?? undefined;
     if (requestedVersion && !UUID.test(requestedVersion)) return Response.json({ error: "Invalid DocumentVersion ID", code: "invalid_id" }, { status: 400 });
-    const artifact = await getArtifact(ctx, id, requestedVersion);
-    const context = await artifactContext(ctx, id, artifact.version.id);
+    await requireReadableArtifact(ctx, id);
+    const artifact = await getArtifact(actor, id, requestedVersion);
+    const context = await artifactContext(actor, id, artifact.version.id);
     return Response.json({
       documentId: id,
       document: artifact.document,
