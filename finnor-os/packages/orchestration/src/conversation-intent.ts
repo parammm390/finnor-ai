@@ -33,7 +33,7 @@ export function hasRequestedBusinessEffect(instruction: string): boolean {
     const prefix = value.slice(0, match.index);
     const suffix = value.slice(match.index + match[0].length);
     const namedEventList = /\b(?:for|about|of|between)\s+(?:run|start|launch)\s*$/i.test(prefix)
-      && /^\s+and\s+(?:run|start|launch)\s+events?\b/i.test(suffix);
+      && /^\s+and\s+(?:run|start|launch)(?:\s+events?)?\s*[?.!]?\s*$/i.test(suffix);
     if (namedEventList) return false;
     const scenarioCashFlow = match.groups?.verb?.toLowerCase() === "pay" && value[match.index] === ":"
       && /\b(?:example|scenario|case|cash flows?)\s*$/i.test(value.slice(0, match.index))
