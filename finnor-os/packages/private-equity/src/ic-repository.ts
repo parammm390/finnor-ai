@@ -6,6 +6,7 @@ import type { AuthorityDecision, TenantContext } from "@finnor/shared-types";
 import { finalizeReceiptTx, openReceiptTx } from "@finnor/workflow-runtime/receipts";
 import { aggregateIcDecision, icSemanticHash } from "./ic-aggregation";
 import { recordIcMetric, type IcMetric } from "./ic-telemetry";
+import { canReadGeneratedCommitteeMemo } from "./ic-memo-access";
 import {
   IC_CASE_TRANSITIONS,
   IC_CONDITION_TRANSITIONS,
@@ -732,6 +733,19 @@ export async function selectIcMemoVersion(ctx: PeMutationContext, input: {
       throw new PeDomainError("IC_TERMINAL", "An exact memo or deck version cannot be selected into a terminal IC case");
     }
     await requireMemoDocumentVersionTx(client, process, input.documentId, input.documentVersionId);
+    const assessment = (await client.query<{ status: "INCOMPLETE" | "CONFLICTING" }>(
+      `SELECT payload->>'financialSourceCompleteness' status FROM finnor_os.business_events
+        WHERE tenant_id=$1 AND entity_type='document' AND entity_id=$2
+          AND event_type='document_version_observed' AND source='ic_memo_draft'
+          AND payload->>'documentVersionId'=$3
+          AND payload->>'financialSourceCompleteness' IN ('INCOMPLETE','CONFLICTING') LIMIT 1`,
+      [bound.auth.tenantId, input.documentId, input.documentVersionId],
+    )).rows[0]?.status;
+    if (assessment && input.sourceCompleteness !== assessment) {
+      throw new PeDomainError("IC_MEMO_SOURCE_COMPLETENESS_CONFLICT",
+        "The requested source status conflicts with the financial evidence recorded for this memo version",
+        { observedSourceCompleteness: assessment });
+    }
     const prior = (await client.query<{ id: string; revision: number }>(
       `SELECT id::text,revision FROM finnor_os.pe_ic_memos WHERE tenant_id=$1 AND ic_case_id=$2 AND artifact_role=$3 ORDER BY revision DESC LIMIT 1`,
       [bound.auth.tenantId, input.icCaseId, input.artifactRole],
@@ -2536,8 +2550,10 @@ export async function getIcWorkspace(ctx: PeMutationContext, input: {
       if (!row) throw new PeDomainError("IC_CORRUPT_TRUTH", "Pinned P3 DocumentVersion is unavailable at the requested asOf time");
       return shapePeRow(row);
     };
-    const memoArtifact = await artifactProjection(currentMemo);
-    const deckArtifact = await artifactProjection(currentDeck);
+    const memoArtifact = currentMemo && await canReadGeneratedCommitteeMemo(ctx, String(currentMemo.documentId), client)
+      ? await artifactProjection(currentMemo) : null;
+    const deckArtifact = currentDeck && await canReadGeneratedCommitteeMemo(ctx, String(currentDeck.documentId), client)
+      ? await artifactProjection(currentDeck) : null;
 
     const policySnapshot = parseIcPolicySnapshot(configRaw.policy_snapshot);
     const memberSnapshots: IcCommitteeMemberSnapshot[] = memberRaw.map((row) => ({

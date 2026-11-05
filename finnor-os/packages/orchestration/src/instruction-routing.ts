@@ -2,7 +2,7 @@ import type { DomainAction, OperatingInteractionContext } from "@finnor/shared-t
 import type { PlanGraph } from "@finnor/planning";
 import type { OperationalQueryDecision } from "./fast-read-lane";
 import { isConsequentialAction } from "./compiler";
-import { INFORMATIONAL_QUESTION, REQUESTED_WORK, isReadOnlyConversationQuestion } from "./conversation-intent";
+import { INFORMATIONAL_QUESTION, REQUESTED_WORK, hasRequestedBusinessEffect, isDocumentFinancialReviewQuestion, isReadOnlyConversationQuestion, isSuppliedAnalysisQuestion } from "./conversation-intent";
 
 export const INSTRUCTION_ROUTING_POLICY_VERSION = 1 as const;
 
@@ -64,16 +64,19 @@ export function classifyInstructionRoute(input: {
   conversational?: boolean;
 }): InstructionRouteDecision {
   if (input.conversational) return { version: 1, route: "CONVERSATION", reasonCodes: ["non_business_conversation"] };
-  if (input.fastReadDecision.route === "fast_read") {
+  if (isDocumentFinancialReviewQuestion(input.instruction)) return { version: 1, route: "CONVERSATION", reasonCodes: ["document_financial_review"] };
+  if (isSuppliedAnalysisQuestion(input.instruction)) return { version: 1, route: "CONVERSATION", reasonCodes: ["supplied_conditional_analysis"] };
+  const requestedEffect = hasRequestedBusinessEffect(input.instruction);
+  if (!requestedEffect && input.fastReadDecision.route === "fast_read") {
     return { version: 1, route: "QUERY", reasonCodes: ["deterministic_canonical_read"], queryDecision: input.fastReadDecision };
   }
-  if (isReadOnlyConversationQuestion(input.instruction)) {
+  if (!requestedEffect && isReadOnlyConversationQuestion(input.instruction)) {
     return { version: 1, route: "CONVERSATION", reasonCodes: ["private_conversation_recall"] };
   }
   // A plain informational question outside the typed business-read grammar is
   // still not an objective. Keep it on the lightweight answer lane; business
   // terms, mutations, and external/research requests remain fail-closed.
-  if (isLightweightInformationalQuestion(input.instruction, input.fastReadDecision)) {
+  if (!requestedEffect && isLightweightInformationalQuestion(input.instruction, input.fastReadDecision)) {
     return { version: 1, route: "CONVERSATION", reasonCodes: ["lightweight_informational_question"] };
   }
   if (strictAtomicCandidate(input.instruction, input.activeContext)) {

@@ -14,6 +14,8 @@ import {
   type OperatingEvidenceKind,
   type TenantContext,
   type PeWorldRootRef,
+  type FinancialExplanation,
+  type FinancialDocumentReviewReceipt,
 } from "@finnor/shared-types";
 import type { OperationalQueryOptions } from "@finnor/read-models";
 import { executeTenantOperationalQuery } from "./operational-query-runtime";
@@ -112,6 +114,8 @@ export interface AnswerEnvelope {
   asOf: string;
   freshness: AnswerFreshness;
   query?: OperationalQueryExecution;
+  analysis?: FinancialExplanation;
+  documentReviewReceipt?: FinancialDocumentReviewReceipt;
 }
 
 export type FastReadOnlyClassification =

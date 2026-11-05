@@ -128,7 +128,11 @@ export function extractNamedExpressions(instruction: string): NamedExpression[] 
   for (const match of instruction.matchAll(new RegExp(
     `\\b(?:email|call|text|contact|message|notify|ask|tell)\\s+(?:the\\s+)?${name}${boundary}`,
     "giu",
-  ))) add(match[1], undefined, "party", match.index ?? 0);
+  ))) {
+    const artifactToRecipient = /^(?:calculation|analysis|findings|results|memo|report|summary|document|model|update|draft|note)$/i.test(match[1] ?? "")
+      && /^\s+to\b/i.test(instruction.slice((match.index ?? 0) + match[0].length));
+    if (!artifactToRecipient) add(match[1], undefined, "party", match.index ?? 0);
+  }
   for (const match of instruction.matchAll(new RegExp(
     `\\b(?:spoke|talked|met)\\s+(?:to|with)\\s+${name}(?:\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?))?${boundary}`,
     "giu",

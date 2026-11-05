@@ -10,7 +10,27 @@ export interface DocumentPayload {bytes:string;source:Source;digest:string;versi
 export interface DocumentExtraction {rows:FinancialRow[];witnesses:EvidenceWitness[];reasons:string[];sourceCounts:Array<{id:string;expected:number;actual:number}>;nativeOperations:unknown[]}
 const HEADERS=['entityId','metricKey','value','periodStart','periodEnd','currencyCode','frequency','unit','calendar','consolidation','instrument','scale','sign'] as const;
 export async function parseDocumentPayload(input:DocumentPayload):Promise<DocumentExtraction>{
- const source=EvidenceSourceSchema.parse(input.source);if(source.kind!=='artifact')throw Error('ARTIFACT_SOURCE_REQUIRED');const bytes=Buffer.from(input.bytes,'base64');if(bytes.length>6_000_000||sha256(bytes)!==input.digest)throw Error('DOCUMENT_BYTES_DIGEST_OR_BOUND_MISMATCH');
+ const source=EvidenceSourceSchema.parse(input.source);if(source.kind!=='artifact')throw Error('ARTIFACT_SOURCE_REQUIRED');
+ return parseFinancialRows({...input,bytes:Buffer.from(input.bytes,'base64'),source,selection:source});
+}
+
+export function parseRegisteredFinancialDocument(input: {
+ bytes:Buffer; digest:string; version:string; documentId:string; subject:Source['subject']; format:'xlsx'|'pdf';
+}):Promise<DocumentExtraction>{
+ const layout:Source['layout']=input.format==='xlsx'
+  ? {format:'xlsx',sheet:'Financials',headerRow:1,columns:{
+   entityId:'A',metricKey:'B',value:'C',periodStart:'D',periodEnd:'E',currencyCode:'F',frequency:'G',
+   unit:'H',calendar:'I',consolidation:'J',instrument:'K',scale:'L',sign:'M',
+  }}
+  : {format:'pdf',headerRow:1,delimiter:'|'};
+ return parseFinancialRows({...input,source:{documentId:input.documentId,subject:input.subject,layout},pdfTimeoutMs:3000});
+}
+
+async function parseFinancialRows(input:{
+ bytes:Buffer; digest:string; version:string; source:Pick<Source,'documentId'|'subject'|'layout'>;
+ selection?:Source; pdfTimeoutMs?:number;
+}):Promise<DocumentExtraction>{
+ const {source,bytes,selection}=input;if(bytes.length>6_000_000||sha256(bytes)!==input.digest)throw Error('DOCUMENT_BYTES_DIGEST_OR_BOUND_MISMATCH');
  const rows:FinancialRow[]=[],witnesses:EvidenceWitness[]=[],reasons:string[]=[],nativeOperations:unknown[]=[];let allRecords=0;let records:Array<{values:Record<string,string>;anchor:EvidenceWitness['anchor'];formula:boolean;rawValue:string;ordinal:number}>=[];
  if(source.layout.format==='xlsx'){
   if(bytes.readUInt32LE(0)!==0x04034b50)throw Error('XLSX_MAGIC_REQUIRED');const pkg=new OfficePackage(bytes),ir=parseWorkbook(pkg);const sheet=ir.sheets.find(s=>s.name===source.layout.sheet);if(!sheet)throw Error('REGISTERED_XLSX_SHEET_UNAVAILABLE');
@@ -20,7 +40,7 @@ export async function parseDocumentPayload(input:DocumentPayload):Promise<Docume
   const numbers=[...new Set([...cells.keys()].map(a=>Number(a.replace(/^[A-Z]+/,''))).filter(n=>n>source.layout.headerRow))].sort((a,b)=>a-b);if(numbers.length>1000)throw Error('XLSX_SOURCE_ROW_BOUND');
   for(const ordinal of numbers){const values=Object.fromEntries(HEADERS.map(h=>[h,cells.get(columns[h]+ordinal)?.value??'']));if(HEADERS.every(h=>!values[h]))continue;allRecords++;const material=cells.get(columns.value+ordinal);records.push({values,anchor:{sheet:sheet.name,cell:columns.value+ordinal},formula:HEADERS.some(h=>cells.get(columns[h]+ordinal)?.formula),rawValue:material?.value??'',ordinal});}
  }else if(source.layout.format==='pdf'){
-  if(bytes.subarray(0,5).toString()!=='%PDF-')throw Error('PDF_MAGIC_REQUIRED');const {interpret}=await import('@finnor/artifacts');const ir=await interpret(bytes,{timeoutMs:25000});if(ir.nodes.some(n=>n.data.status!=='TEXT_AVAILABLE'))reasons.push('PDF_OCR_REQUIRED_OR_PARTIAL_TEXT');let headerSeen=false;
+  if(bytes.subarray(0,5).toString()!=='%PDF-')throw Error('PDF_MAGIC_REQUIRED');const {interpret}=await import('@finnor/artifacts');const ir=await interpret(bytes,{timeoutMs:input.pdfTimeoutMs??25000});if(ir.nodes.some(n=>n.data.status!=='TEXT_AVAILABLE'))reasons.push('PDF_OCR_REQUIRED_OR_PARTIAL_TEXT');let headerSeen=false;
   for(const page of ir.nodes){const pageNum=Number(page.data.page),text=String(page.data.text??'');for(const quote of text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean)){if(quote===HEADERS.join('|')){headerSeen=true;continue;}if(/^--\s*\d+\s+of\s+\d+\s*--$/.test(quote))continue;if(!headerSeen||quote.split('|').length!==HEADERS.length){reasons.push('PDF_UNPARSED_MATERIAL_TEXT');continue;}const values=Object.fromEntries(HEADERS.map((h,i)=>[h,quote.split('|')[i]!.trim()]));allRecords++;records.push({values,anchor:{page:pageNum,quote},formula:false,rawValue:values.value!,ordinal:allRecords});}}
   if(!headerSeen)throw Error('PDF_REGISTERED_TABLE_HEADER_UNAVAILABLE');
  }else{
@@ -36,8 +56,9 @@ export async function parseDocumentPayload(input:DocumentPayload):Promise<Docume
   if(!startText.success||!endText.success){reasons.push('DOCUMENT_PERIOD_INTERPRETATION_UNAVAILABLE');continue;}
   const start=new Date(startText.data),end=new Date(endText.data);if(!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime())||start.getTime()>end.getTime()){reasons.push('DOCUMENT_PERIOD_INTERPRETATION_UNAVAILABLE');continue;}
   const parsed=FinancialSemanticsSchema.safeParse({entityType:source.subject.entityType,entityId:v.entityId,periodStart:start.toISOString(),periodEnd:end.toISOString(),unit:v.unit,currencyCode:v.currencyCode==='NONE'?null:v.currencyCode,frequency:v.frequency,calendar:v.calendar,consolidation:v.consolidation,instrument:v.instrument,scale:v.scale,sign:v.sign});if(!parsed.success){reasons.push('DOCUMENT_FINANCIAL_SEMANTICS_OR_IDENTITY_INTERPRETATION_UNAVAILABLE');continue;}const semantics=parsed.data;
-  if(semantics.entityId!==source.subject.entityId||v.metricKey!==source.metricKey||semantics.periodStart!==source.periodStart||semantics.periodEnd!==source.periodEnd)continue;
-  if(semantics.unit!==source.unit||semantics.currencyCode!==source.currencyCode||semantics.frequency!==source.frequency||semantics.calendar!==source.calendar||semantics.consolidation!==source.consolidation||semantics.instrument!==source.instrument||semantics.scale!==source.scale||semantics.sign!==source.sign){reasons.push('DOCUMENT_FINANCIAL_SEMANTICS_MISMATCH');continue;}
+  if(semantics.entityId!==source.subject.entityId)continue;
+  if(selection&&(v.metricKey!==selection.metricKey||semantics.periodStart!==selection.periodStart||semantics.periodEnd!==selection.periodEnd))continue;
+  if(selection&&(semantics.unit!==selection.unit||semantics.currencyCode!==selection.currencyCode||semantics.frequency!==selection.frequency||semantics.calendar!==selection.calendar||semantics.consolidation!==selection.consolidation||semantics.instrument!==selection.instrument||semantics.scale!==selection.scale||semantics.sign!==selection.sign)){reasons.push('DOCUMENT_FINANCIAL_SEMANTICS_MISMATCH');continue;}
   const value=exactScale(canonicalExact(v.value!),semantics.scale,semantics.sign),normalized={...semantics,scale:'1' as const,sign:'AS_RECORDED' as const};const id=source.layout.format+':'+input.version+':'+record.ordinal+':value';
   const witness:EvidenceWitness={id,sourceKind:source.layout.format,owner:'S1_BOUND_DOCUMENT_VERSION',recordId:source.documentId,version:input.version,contentDigest:input.digest,field:'value',rawValue:record.rawValue,anchor:record.anchor,semantics,modulePath:['DocumentVersion:immutable-bytes',source.layout.format==='xlsx'?'SpreadsheetIR:raw-xml-value':source.layout.format==='pdf'?'PDFParse:actual-page-text':'AppleVision:actual-image-regions',...(source.layout.format==='image'?['AppleVision:binary:'+process.env.FINNOR_P4_OCR_SHA256]:[]),'P4:registered-table-layout','P4:exact-scale-sign'],uncertainty:['SOURCE_ASSERTION_NOT_CANONICAL_TRUTH',...(source.layout.format==='image'?['OCR_CONFIDENCE_NOT_CALIBRATED']:[])]};
   witnesses.push(witness);rows.push({recordId:source.documentId+':'+record.ordinal,metricKey:v.metricKey!,value,semantics:normalized,witnessIds:[id],fields:{...v,value,entityType:normalized.entityType,scale:'1',sign:'AS_RECORDED'}});

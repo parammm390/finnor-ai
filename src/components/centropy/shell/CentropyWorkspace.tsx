@@ -6,12 +6,14 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { ArrowRight, Globe2, History, LockKeyhole, LogOut, PanelsTopLeft, Plus, Settings } from "lucide-react"
 import { useCentropyAuth } from "@/components/centropy/lib/centropy-auth"
 import { usePrivateRequestScope } from "@/components/centropy/lib/use-private-request-scope"
-import { centropyGet, centropyPost, CentropyApiError } from "@/components/centropy/lib/api"
+import { centropyDownload, centropyGet, centropyPost, CentropyApiError } from "@/components/centropy/lib/api"
 import { readPeOperatingContext } from "@/components/centropy/pe/context-routing"
 import { isPeWorldRootRef, type CompanyBrainNode, type CompanyBrainObjectRef, type PeWorldRootRef } from "@/components/centropy/pe/contracts"
 import { InstructionTraceRuntime, type InstructionTraceSnapshot } from "../runtime/instruction-events"
 import { presenceFromRuntime } from "../runtime/presence-state"
 import { CanvasDocument, type CanvasSourceError } from "../canvas/CanvasDocument"
+import { AnswerCanvas } from "../canvas/AnswerCanvas"
+import { readAnswerResult } from "../canvas/answer-result"
 import { CausalReplayPanel } from "../canvas/CausalReplayPanel"
 import { composeCanvasDocument } from "../canvas/canvas-compose"
 import { useCanvasSources } from "../canvas/use-canvas-sources"
@@ -101,6 +103,8 @@ function CentropyWorkspaceContent() {
   const investigation = useInvestigation(threadId, ready, refreshToken)
   const [recent, setRecent] = useState<ConversationThreadSummary[]>([])
   const [recentError, setRecentError] = useState<string | null>(null)
+  const [recentLoading, setRecentLoading] = useState(true)
+  const [answerWorkDetails, setAnswerWorkDetails] = useState<string | null>(null)
   const recentGeneration = useRef(0)
   const [busy, setBusy] = useState(false)
   const [stopping, setStopping] = useState(false)
@@ -164,12 +168,13 @@ function CentropyWorkspaceContent() {
     if (!mutationIsCurrent(key)) return
     const generation = ++recentGeneration.current
     setRecent([])
+    setRecentLoading(true)
     if (!ready) return
     try {
       const next = await listInvestigations()
-      if (mutationIsCurrent(key) && recentGeneration.current === generation) { setRecent(next); setRecentError(null) }
+      if (mutationIsCurrent(key) && recentGeneration.current === generation) { setRecent(next); setRecentError(null); setRecentLoading(false) }
     } catch (cause) {
-      if (mutationIsCurrent(key) && recentGeneration.current === generation) { setRecent([]); setRecentError(cause instanceof Error ? cause.message : "Investigations are unavailable") }
+      if (mutationIsCurrent(key) && recentGeneration.current === generation) { setRecent([]); setRecentError(cause instanceof Error ? cause.message : "Investigations are unavailable"); setRecentLoading(false) }
     }
   }, [ready, mutationScopeKey, mutationIsCurrent])
 
@@ -241,6 +246,7 @@ function CentropyWorkspaceContent() {
     try { return composeCanvasDocument({ thread: investigation.loaded.thread, work: canvasSources.work.data, projection: canvasSources.projection.data, underwriting: canvasSources.underwriting.data, ic: canvasSources.ic.data }) }
     catch { return null }
   }, [investigation.loaded, canvasSources.work.data, canvasSources.projection.data, canvasSources.underwriting.data, canvasSources.ic.data])
+  const answerResult = canvasSources.work.status === "ready" && canvasSources.work.data?.work.id === activeWorkId ? readAnswerResult(canvasSources.work.data) : null
   const canvasErrors: CanvasSourceError[] = [
     ...(canvasSources.work.error ? [{ kind: "work" as const, message: canvasSources.work.error, retained: Boolean(canvasSources.work.data) }] : []),
     ...(canvasSources.projection.error ? [{ kind: "company_brain" as const, message: canvasSources.projection.error, retained: Boolean(canvasSources.projection.data) }] : []),
@@ -276,7 +282,7 @@ function CentropyWorkspaceContent() {
         return
       }
       if (!currentThreadId) {
-        const created = await createInvestigation(instruction.slice(0, 100))
+        const created = await createInvestigation()
         if (!current()) return
         currentThreadId = created.id
         createdThread = true
@@ -510,15 +516,15 @@ function CentropyWorkspaceContent() {
           {investigation.error ? <p className="ct-thread__notice ct-thread__notice--error" role="alert">{investigation.error} <button type="button" onClick={() => void investigation.refresh()}>Retry</button></p> : null}
           {investigation.hasOlder ? <button className="ct-thread__older" type="button" onClick={() => void investigation.loadOlder()} disabled={investigation.olderLoading}>{investigation.olderLoading ? "Loading earlier turns…" : "Load earlier turns"}</button> : null}
           {!messages.length && !threadId ? <div className="ct-thread__welcome"><span className="ct-thread__presence"><CentropyPresence state={presenceState} size={98} /></span><span className="ct-eyebrow">CENTROPY</span><h2>What needs to move forward?</h2><p>Ask about institutional context or give CENTROPY a bounded objective. The work and its evidence stay here.</p></div> : null}
-          {messages.map((message) => <article className="ct-turn" data-role={message.role} key={message.id}><div className="ct-turn__identity"><span>{message.role === "user" ? "YOU" : "CENTROPY"}</span><time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time></div><p>{message.originalText}</p>{message.workId && message.role === "assistant" ? <button type="button" className="ct-turn__link" onClick={() => { invalidateSelection(); setResponseWork(threadId ? { threadId, workId: message.workId! } : null) }}>Inspect linked Work <ArrowRight size={13} /></button> : null}</article>)}
+          {messages.map((message) => <article className="ct-turn" data-role={message.role} key={message.id}><div className="ct-turn__identity"><span>{message.role === "user" ? "YOU" : "CENTROPY"}</span><time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time></div><p>{message.role === "assistant" && message.workId === activeWorkId && answerResult?.analysis ? `${answerResult.title}. ${answerResult.analysis.status === "checked" ? "The calculation and its inputs are ready on the Canvas." : "The missing inputs are listed on the Canvas."}` : message.originalText}</p>{message.workId && message.role === "assistant" ? <button type="button" className="ct-turn__link" onClick={() => { invalidateSelection(); setResponseWork(threadId ? { threadId, workId: message.workId! } : null); setAnswerWorkDetails(null); setMobilePane("canvas") }}>View result <ArrowRight size={13} /></button> : null}</article>)}
           {activeWorkId && canvasSources.work.data?.work.id === activeWorkId ? <VerifiedIcOutcome work={canvasSources.work.data} ic={canvasSources.ic.data} dealId={canvasRoot?.entityType === "pe_deal" ? canvasRoot.entityId : null} onOpenCanvas={() => setMobilePane("canvas")} /> : null}
           {activeWorkId && canvasSources.work.data?.work.id === activeWorkId ? <VerifiedUnderwritingOutcome work={canvasSources.work.data} underwriting={canvasSources.underwriting.data} dealId={canvasRoot?.entityType === "pe_deal" ? canvasRoot.entityId : null} onOpenCanvas={() => setMobilePane("canvas")} /> : null}
           {visiblePending && !messages.some((message) => message.instructionId === visiblePending.instructionId && message.role === "user") ? <article className="ct-turn" data-role="user" data-pending="true"><div className="ct-turn__identity"><span>YOU</span><span>{visiblePending.failed ? "Submission needs attention" : "Submitting"}</span></div><p>{visiblePending.text}</p></article> : null}
           {visibleTrace ? <ExecutionObject trace={visibleTrace} stopping={stopping} onStop={() => void stopInstruction()} canonicalWorkStatus={traceCanonicalWorkStatus} restoringHistory={!visiblePending && visibleTrace.instructionId === latestInstructionId} /> : null}
-          {canvasRoot?.entityType === "pe_deal" || canvasSources.work.data?.outcomePack ? <Suspense fallback={<p className="ct-thread__notice">Reading bounded missions…</p>}><OutcomePacks root={canvasRoot} run={canvasSources.work.data?.work.id === activeWorkId ? canvasSources.work.data.outcomePack : null} onStart={startOutcomePack} /></Suspense> : null}
+          {!answerResult && (canvasRoot?.entityType === "pe_deal" || canvasSources.work.data?.outcomePack) ? <Suspense fallback={<p className="ct-thread__notice">Reading bounded missions…</p>}><OutcomePacks root={canvasRoot} run={canvasSources.work.data?.work.id === activeWorkId ? canvasSources.work.data.outcomePack : null} onStart={startOutcomePack} /></Suspense> : null}
           {activeWorkId && canvasSources.work.data?.work.id === activeWorkId && ["failed", "recovery"].includes(canvasSources.work.data.work.status) ? <Suspense fallback={<p className="ct-thread__notice">Reading Work recovery…</p>}><WorkRecovery key={activeWorkId} aggregate={canvasSources.work.data} current={canvasSources.work.status === "ready"} onChanged={() => { setRefreshToken((value) => value + 1); setCanvasRefresh((value) => value + 1) }} /></Suspense> : null}
           {activeWorkId && canvasSources.work.data?.work.id === activeWorkId && pendingActionSignature ? <Suspense fallback={<p className="ct-thread__notice">Reading governed effects…</p>}><PendingEffects key={activeWorkId} aggregate={canvasSources.work.data} current={canvasSources.work.status === "ready"} refreshKey={pendingActionSignature} onChanged={() => { setRefreshToken((value) => value + 1); setCanvasRefresh((value) => value + 1) }} /></Suspense> : null}
-          {activeWorkId ? <><button type="button" className="ct-workforce-toggle" aria-expanded={assignmentsOpen} onClick={() => setAssignmentsOpen((value) => !value)}>{assignmentsOpen ? "Close specialist assignments" : "Inspect specialist assignments"}</button>{assignmentsOpen ? <Suspense fallback={<p className="ct-thread__notice">Opening specialist assignments…</p>}><WorkforceAssignments key={activeWorkId} workId={activeWorkId} aggregate={canvasSources.work.data?.work.id === activeWorkId ? canvasSources.work.data : null} onChanged={() => { setRefreshToken((value) => value + 1); setCanvasRefresh((value) => value + 1) }} /></Suspense> : null}</> : null}
+          {activeWorkId && !answerResult ? <><button type="button" className="ct-workforce-toggle" aria-expanded={assignmentsOpen} onClick={() => setAssignmentsOpen((value) => !value)}>{assignmentsOpen ? "Close specialist assignments" : "Inspect specialist assignments"}</button>{assignmentsOpen ? <Suspense fallback={<p className="ct-thread__notice">Opening specialist assignments…</p>}><WorkforceAssignments key={activeWorkId} workId={activeWorkId} aggregate={canvasSources.work.data?.work.id === activeWorkId ? canvasSources.work.data : null} onChanged={() => { setRefreshToken((value) => value + 1); setCanvasRefresh((value) => value + 1) }} /></Suspense> : null}</> : null}
           {activeWorkId && activeObjectiveId ? <ObjectiveControl key={activeWorkId} workId={activeWorkId} source={canvasSources.work} redirecting={redirecting} onRedirectToggle={() => setRedirecting((value) => !value)} onChanged={() => { setRefreshToken((value) => value + 1); setCanvasRefresh((value) => value + 1) }} /> : null}
           {controlNotice?.scope === noticeScope ? <p className="ct-thread__notice" role="status">{controlNotice.message}</p> : null}
           {submissionError?.scope === noticeScope ? <p className="ct-thread__notice ct-thread__notice--error" role="alert">{submissionError.message}</p> : null}
@@ -528,16 +534,21 @@ function CentropyWorkspaceContent() {
       </section>
 
       <main className="ct-canvas" aria-label={worldMode ? "WORLD explorer" : "Investigation Canvas"}>
+        {answerResult && !worldMode && !replayWorkId && answerWorkDetails !== activeWorkId ? <AnswerCanvas key={activeWorkId} result={answerResult}
+          onInspectWork={() => setAnswerWorkDetails(activeWorkId)}
+          onDownloadBrief={activeWorkId ? () => centropyDownload(`works/${activeWorkId}`, "finnor-valuation-diligence-brief.md", { export: "valuation-brief" }) : undefined} /> : <>
+        {answerResult && answerWorkDetails === activeWorkId && !worldMode ? <button type="button" className="ct-answer__work-link" onClick={() => setAnswerWorkDetails(null)}>Back to answer</button> : null}
         {!worldMode && canvasRoot && focusedObject && canvasSources.projection.data && canvasSources.projection.status !== "error"
           ? <LiveInstitutionalControl root={canvasRoot} focus={focusedObject} workId={activeWorkId} onChanged={() => setCanvasRefresh(value => value + 1)} /> : null}
         {worldMode ? <WorldExplorer key={`${auth.session.user.id}:${auth.session.access_token}`} root={canvasRoot} projection={canvasSources.projection.data} projectionStatus={canvasSources.projection.status} projectionError={canvasSources.projection.error} initialObject={routeSelectedObject} workId={activeWorkId} onSelectRoot={selectWorldRoot} onSelectObject={selectWorldObject} onAsk={askAboutWorldNode} onRefresh={() => setCanvasRefresh((value) => value + 1)} />
           : threadId ? replayWorkId ? <CausalReplayPanel workId={replayWorkId} onClose={() => selectReplayWorkId(null)} /> : canvasDocument ? <CanvasDocument key={threadId} onSelectProgramWork={(workId) => {invalidateSelection();setResponseWork({threadId,workId});setRefreshToken(value=>value+1);setCanvasRefresh(value=>value+1)}} document={canvasDocument} root={canvasRoot} sourceErrors={canvasErrors} refreshing={canvasLoading} onRefresh={() => setCanvasRefresh((value) => value + 1)} onRefreshUnderwriting={() => setUnderwritingRefresh((value) => value + 1)} work={canvasSources.work.status === "ready" ? canvasSources.work.data : null} underwriting={canvasSources.underwriting.data} underwritingReady={canvasSources.underwriting.status === "ready"} ic={canvasSources.ic.data} icReady={canvasSources.ic.status === "ready"} onSelectIcCase={selectIcCase} onOpenReplay={selectReplayWorkId} onInspectEntity={(id) => { const node = canvasSources.projection.data?.nodes.find((item) => `${item.ref.type}:${item.ref.id}` === id); if (node && canvasRoot) { invalidateSelection(); setFocusedObject(node.ref); router.push(worldHref(canvasRoot, node.ref)) } }} /> : investigation.status === "loading" || canvasLoading ? <p className="ct-canvas__loading" role="status">Assembling Canvas from persisted records…</p> : <div className="ct-canvas__invalid" role="alert"><h2>Canvas unavailable</h2><p>The typed document could not be composed from the current source records.</p><button type="button" onClick={() => setCanvasRefresh((value) => value + 1)}>Retry from sources</button></div>
           : draftArtifactInUrl ? <Suspense fallback={<p role="status">Reading the exact artifact draft…</p>}><StandaloneArtifactCanvas key={`${searchParams.get("artifactDocumentId")}:${searchParams.get("artifactVersionId")}`} documentId={searchParams.get("artifactDocumentId")!} initialVersionId={searchParams.get("artifactVersionId")!} onClose={() => { invalidateSelection(); const query = new URLSearchParams(routeQuery); for (const key of ["artifactMode", "artifactDocumentId", "artifactVersionId"]) query.delete(key); router.replace(`${pathname}${query.size ? `?${query}` : ""}`, { scroll: false }) }} onVersionChange={(id) => { if (!UUID.test(id)) return; invalidateSelection(); const query = new URLSearchParams(routeQuery); query.set("artifactVersionId", id); router.replace(`${pathname}?${query}`, { scroll: false }) }} /></Suspense>
-          : <HomeCanvas recent={recent} recentError={recentError} onOpenInvestigation={openInvestigation} />}
+          : <HomeCanvas recent={recent} recentError={recentError} recentLoading={recentLoading} onOpenInvestigation={openInvestigation} />}
+        </>}
       </main>
     </div>
     {settingsOpen ? <Suspense fallback={<p role="status">Opening Settings…</p>}><SettingsDialog onClose={() => setSettingsOpen(false)} onChanged={() => { setCanvasRefresh((value) => value + 1); setRefreshToken((value) => value + 1) }} /></Suspense> : null}
 
-    <dialog className="ct-investigations" ref={drawer} aria-label="Recent Investigations"><header><div><span className="ct-eyebrow">CONTINUE WORK</span><h2>Investigations</h2></div><button type="button" onClick={() => drawer.current?.close()} aria-label="Close Investigations">×</button></header><button type="button" className="ct-investigations__new" onClick={() => { invalidateSelection(); drawer.current?.close(); setThreadId(null); router.push("/centropy") }}><Plus size={17} aria-hidden /> New Investigation</button>{recentError ? <p role="alert">{recentError}</p> : null}<ol>{recent.map((item) => <li key={item.id}><button type="button" onClick={() => openInvestigation(item.id)}><strong>{item.title || "Untitled Investigation"}</strong><span>{item.activeWorkId ? "Active Work · " : ""}{formatDate(item.lastActivityAt)}</span></button></li>)}</ol></dialog>
+    <dialog className="ct-investigations" ref={drawer} aria-label="Recent Investigations"><header><div><span className="ct-eyebrow">CONTINUE WORK</span><h2>Investigations</h2></div><button type="button" onClick={() => drawer.current?.close()} aria-label="Close Investigations">×</button></header><button type="button" className="ct-investigations__new" onClick={() => { invalidateSelection(); drawer.current?.close(); setThreadId(null); router.push("/centropy") }}><Plus size={17} aria-hidden /> New Investigation</button>{recentLoading ? <p role="status">Loading your Investigations…</p> : recentError ? <p role="alert">{recentError}</p> : null}<ol>{recent.map((item) => <li key={item.id}><button type="button" onClick={() => openInvestigation(item.id)}><strong>{item.title || "Untitled Investigation"}</strong><span>{item.activeWorkId ? "Active Work · " : ""}{formatDate(item.lastActivityAt)}</span></button></li>)}</ol></dialog>
   </div>
 }

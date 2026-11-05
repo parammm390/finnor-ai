@@ -21,6 +21,7 @@ import {
   delegations,
   domainActions,
   integrationEvents,
+  users,
   withTenant,
   workEventWaits,
   workObjectiveLoops,
@@ -661,9 +662,10 @@ async function privateEquityIcPreparationCriterion(params: {
   requireScenario?: boolean;
 }): Promise<Omit<ObjectiveSuccessCriterionResult, "index" | "kind">> {
   const { work, caseIds } = await withTenant(params.tenantId, async (db) => {
-    const [work] = await db.select({ createdAt: works.createdAt }).from(works).where(and(
-      eq(works.tenantId, params.tenantId), eq(works.id, params.workId),
-    )).limit(1);
+    const [work] = await db.select({ createdAt: works.createdAt, employeeId: users.id }).from(works)
+      .leftJoin(users, and(eq(users.tenantId, works.tenantId), eq(users.status, "active"),
+        sql`${users.id} = coalesce(${works.currentOwnerId}, ${works.createdBy})`))
+      .where(and(eq(works.tenantId, params.tenantId), eq(works.id, params.workId))).limit(1);
     const links = await db.select({ entityId: workEntityLinks.entityId }).from(workEntityLinks).where(and(
       eq(workEntityLinks.tenantId, params.tenantId),
       eq(workEntityLinks.workId, params.workId),
@@ -678,7 +680,12 @@ async function privateEquityIcPreparationCriterion(params: {
     evidenceRefs: [],
     observed: { linkedCaseCount: caseIds.length },
   };
-  const ctx: PeMutationContext = { auth: { tenantId: params.tenantId, userId: "system:objective-success", role: "owner" } };
+  if (!work.employeeId) return {
+    satisfied: false,
+    basis: "Committee preparation verification requires a current responsible employee for this Work.",
+    evidenceRefs: [],
+  };
+  const ctx: PeMutationContext = { auth: { tenantId: params.tenantId, userId: work.employeeId, employeeId: work.employeeId, role: "owner" } };
   const observations: Array<{ caseId: string; gaps: string[] }> = [];
   for (const caseId of caseIds) {
     const workspace = await getIcWorkspace(ctx, { icCaseId: caseId });

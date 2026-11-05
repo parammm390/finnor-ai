@@ -46,7 +46,7 @@ import { getCheckpointer } from "./graph/checkpointer";
 import { ensureSecretsLoaded, redactStructured, redactText } from "@finnor/security";
 import { isPlanActionReady, planIdForAction, readyPlanActions, recordPredictionDiff } from "./plan-dag";
 import { plannerMemoryEnabled } from "./planner-memory";
-import { createInstructionTraceAnswerEnvelope, createInstructionTraceResultEnvelope, ensureInstructionSession, emitInstructionEvent, isInstructionCancelled, isReadOnlyAnswerAction } from "./instruction-trace";
+import { createInstructionTraceAnswerEnvelope, createInstructionTraceResultEnvelope, ensureInstructionSession, emitInstructionEvent, isInstructionCancelled, isReadOnlyAnswerAction, publishInstructionAnswer } from "./instruction-trace";
 import {
   defaultFastReadOnlyRouter,
   type AnswerEnvelope,
@@ -56,6 +56,7 @@ import {
   type OperationalQueryRequest,
 } from "./fast-read-lane";
 import { isConversationalTurn, LLMConversationResponder, type ConversationResponder } from "./conversation";
+import { isDocumentFinancialReviewQuestion, isSuppliedAnalysisQuestion } from "./conversation-intent";
 import { requiresTypedConfirmation } from "../../../scripts/release/action-hardening-spec";
 import { assembleOperatingContext } from "./operating-context";
 import { interactionAwareOperationalDecision, interactionBusinessRoot, resolveOperatingInteractionContext, validateInteractionBusinessScope } from "./interaction-context";
@@ -369,6 +370,7 @@ export class FinnorOrchestrator implements Orchestrator {
     opts: InstructionOptions,
     route: "conversation" | "empty_plan_recovery",
     work: { workId: string; workInputId: string; instructionId: string; plannerAttemptId: string },
+    businessRoot: ReturnType<typeof interactionBusinessRoot>,
   ): Promise<InstructionResult> {
     const instructionId = work.instructionId;
     try {
@@ -380,6 +382,7 @@ export class FinnorOrchestrator implements Orchestrator {
         capabilityManifest: planningCapabilitiesForVertical(this.plugins, (await resolveTenantVertical(ctx.tenantId)).verticalKey),
         conversationContext: opts.conversationContext,
         instructionId,
+        businessRoot,
       });
       if (await isInstructionCancelled(ctx.tenantId, instructionId)) return { actions: [] };
       await finishWorkPlannerAttempt({
@@ -394,13 +397,10 @@ export class FinnorOrchestrator implements Orchestrator {
         const answerId = `conversation:${instructionId}`;
         await emitInstructionEvent(ctx.tenantId, instructionId, "plan_ready", { count: 1, route });
         await emitInstructionEvent(ctx.tenantId, instructionId, "executing", { actionId: answerId, route });
-        await emitInstructionEvent(ctx.tenantId, instructionId, "completed", createInstructionTraceAnswerEnvelope(answerId, answer));
       }
+      const published = await publishInstructionAnswer({ tenantId: ctx.tenantId, workId: work.workId, workInputId: work.workInputId, instructionId, route, answer });
+      if (!published) return { actions: [], workId: work.workId, workInputId: work.workInputId, instructionId };
       await rememberAnswerTurn(instruction, answer, ctx, opts);
-      await transitionWork(ctx.tenantId, work.workId, "completed", "answer_completed", { route }, {
-        finalOutcome: { kind: "answer", route, spokenSummary: answer.spokenSummary },
-        expectedWorkInputId: work.workInputId,
-      });
       return { actions: [], answer, workId: work.workId, workInputId: work.workInputId, instructionId };
     } catch (err) {
       const failure = workFailure(err, "Conversational answer failed");
@@ -653,7 +653,7 @@ export class FinnorOrchestrator implements Orchestrator {
     try {
       const businessRoot = interactionBusinessRoot(interactionContext);
       fastDecision = opts.fastReadDecision ? interactionAwareOperationalDecision(opts.fastReadDecision, interactionContext, instruction) : undefined;
-      if (shouldClassify) {
+      if (shouldClassify && !isSuppliedAnalysisQuestion(instruction) && !isDocumentFinancialReviewQuestion(instruction)) {
         // Legacy/unit embeddings may provide a fully injected fast-read seam
         // without a configured database. A missing vertical identity is not a
         // reason to break that seam; the canonical dispatcher will still fail
@@ -730,7 +730,7 @@ export class FinnorOrchestrator implements Orchestrator {
         const result = await this.executeFastOperationalQuery(routeReadDecision.request, ctx, { workId, workInputId, instructionId }, { executionKey: opts.executionKey ?? opts.idempotencyKey ?? instructionId });
         fastQuery = result.execution;
         fastAnswer = result.answer ?? null;
-      } else if (!opts.skipFastReadClassification && fastDecision === undefined) {
+      } else if (!opts.skipFastReadClassification && fastDecision === undefined && !isDocumentFinancialReviewQuestion(instruction)) {
         // Legacy injected routers predate the typed seam. Keep their answer contract
         // intact, but never create a planner attempt for the read branch.
         fastAnswer = await this.fastReadOnlyRouter.route(instruction, ctx);
@@ -790,7 +790,8 @@ export class FinnorOrchestrator implements Orchestrator {
       const attempt = await beginWorkPlannerAttempt({ tenantId: ctx.tenantId, workId, workInputId, attemptKey: opts.plannerAttemptKey ?? `input:${workInputId}` });
       requireFreshPlannerAttempt(workId, attempt);
       await transitionWork(ctx.tenantId, workId, "planning", "planning_started", { plannerAttemptId: attempt.id, route: "conversation" }, { expectedWorkInputId: workInputId });
-      return this.conversationalResult(instruction, ctx, emptyMemory, effectiveOpts, "conversation", { workId, workInputId, instructionId, plannerAttemptId: attempt.id });
+      return this.conversationalResult(instruction, ctx, emptyMemory, effectiveOpts, "conversation",
+        { workId, workInputId, instructionId, plannerAttemptId: attempt.id }, interactionBusinessRoot(interactionContext));
     }
 
     // Secrets are needed by the existing planner/provider path only. Keeping boot

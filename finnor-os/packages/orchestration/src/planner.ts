@@ -504,12 +504,14 @@ function icMemoSelectionCandidate(goal: GoalSpec, planningContext: unknown): Can
   const parsedCutoff = new Date(String(draft.created_at));
   if (Number.isNaN(parsedCutoff.getTime())) return null;
   const cutoff = parsedCutoff.toISOString();
+  const sourceCompleteness = draft.source_completeness === "INCOMPLETE" || draft.source_completeness === "CONFLICTING"
+    ? draft.source_completeness : "COMPLETE";
   return boundedIcActionCandidate(goal, "select_ic_memo_version", {
     dealId: current.basis.dealId, icCaseId: current.caseRow.id,
     expectedCaseVersion: current.caseRow.version, artifactRole: "MEMO",
     documentId: draft.document_id, documentVersionId: draft.document_version_id,
     underwritingRunId: current.caseRow.primaryUnderwritingRunId,
-    evidenceCutoffAt: cutoff, sourceCompleteness: "COMPLETE",
+    evidenceCutoffAt: cutoff, sourceCompleteness,
     changeClassification: recovering && current.caseRow.currentMemoId ? "NON_MATERIAL" : current.caseRow.currentMemoId ? "MATERIAL" : "INITIAL",
   }, recovering ? "grounded-ic-memo-selection-recovery" : "grounded-ic-memo-selection");
 }

@@ -1,7 +1,7 @@
 import { MAX_BACKGROUND_SCAN_BATCH, actionLog, domainActions, instructionSessions, workflowRuns, workflowSteps, workObjectiveLoops, works, withTenant, transitionWork } from "@finnor/db";
 import { cancelRun } from "@finnor/workflow-runtime";
 import { and, asc, eq, gt, inArray, or } from "drizzle-orm";
-import { emitInstructionEvent } from "@finnor/orchestration";
+import { emitInstructionEvent, recordInstructionCancellationFence } from "@finnor/orchestration";
 import { canApprove, errorResponse, requireContext } from "../../../../../lib/auth";
 import { getOrchestrator } from "../../../../../lib/orchestrator";
 
@@ -41,13 +41,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     // Publish the cancellation fence before taking a second snapshot. A planner
     // that finishes after this point sees the marker and must reject its drafts.
-    await emitInstructionEvent(
-      ctx.tenantId,
-      id,
-      "cancelled",
-      { requestedBy: ctx.userId, source: "product", fence: true, canonical: false },
-      { required: true },
-    );
+    const fenced = await recordInstructionCancellationFence({ tenantId: ctx.tenantId, instructionId: id, workId: instruction.workId, requestedBy: ctx.userId });
+    if (!fenced) return Response.json({ error: "Completed Work cannot be cancelled", status: "completed" }, { status: 409 });
 
     const snapshot = await withTenant(ctx.tenantId, async (db) => {
       // Cancellation is a rare write path, but an instruction may have a long

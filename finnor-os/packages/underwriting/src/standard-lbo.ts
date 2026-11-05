@@ -92,6 +92,7 @@ export interface StandardLboModelConfig {
   currency: string;
   periodDefinition: PeriodDefinition;
   entryValuationMethod: "direct_enterprise_value" | "metric_multiple";
+  entryValuationMetric?: "EBITDA";
   revenueMethod: "explicit" | "growth";
   ebitdaMethod: "explicit" | "margin";
   dAndATreatment: "explicit" | "ebitda_equals_ebit";
@@ -427,6 +428,7 @@ export function createStandardLboModel(config: StandardLboModelConfig): Underwri
       ...(config.returnMethod ? { returnMethod: config.returnMethod } : {}),
       currency,
       entryValuationMethod: config.entryValuationMethod,
+      ...(config.entryValuationMetric ? { entryValuationMetric: config.entryValuationMetric } : {}),
       revenueMethod: config.revenueMethod,
       ebitdaMethod: config.ebitdaMethod,
       dAndATreatment: config.dAndATreatment,

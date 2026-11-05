@@ -32,9 +32,10 @@ function dateLabel(value: string): string {
   return new Date(value).toLocaleDateString([], { month: "short", day: "numeric" })
 }
 
-export function HomeCanvas({ recent, recentError, onOpenInvestigation }: {
+export function HomeCanvas({ recent, recentError, recentLoading = false, onOpenInvestigation }: {
   recent: ConversationThreadSummary[]
   recentError: string | null
+  recentLoading?: boolean
   onOpenInvestigation: (id: string) => void
 }) {
   const [workflowOpen, setWorkflowOpen] = useState(false)
@@ -89,7 +90,7 @@ export function HomeCanvas({ recent, recentError, onOpenInvestigation }: {
   return <div className="ct-home">
     <header className="ct-home__intro"><span className="ct-eyebrow">YOUR WORKSPACE</span><h2>Pick up where work stands.</h2><p>The Thread is ready for a new question or objective. These records are live reads from your accessible workspace.</p></header>
 
-    <section className="ct-home__section" aria-labelledby="ct-home-recent"><h3 id="ct-home-recent">Recent Investigations</h3>{recentError ? <p role="alert">{recentError}</p> : null}{recent.length ? <ol>{recent.slice(0, 5).map((item) => <li key={item.id}><button type="button" onClick={() => onOpenInvestigation(item.id)}><span><strong>{item.title || "Untitled Investigation"}</strong><small>{item.summary || (item.activeWorkId ? "Linked Work" : "Conversation thread")}</small></span><time dateTime={item.lastActivityAt}>{dateLabel(item.lastActivityAt)}</time><ArrowRight size={15} aria-hidden /></button></li>)}</ol> : <p>{recentError ? "Investigations could not be loaded." : "No Investigations yet. Your first objective begins in the Thread."}</p>}</section>
+    <section className="ct-home__section" aria-labelledby="ct-home-recent"><h3 id="ct-home-recent">Recent Investigations</h3>{recentError ? <p role="alert">{recentError}</p> : null}{recentLoading ? <p role="status">Loading your Investigations…</p> : recent.length ? <ol>{recent.slice(0, 5).map((item) => <li key={item.id}><button type="button" onClick={() => onOpenInvestigation(item.id)}><span><strong>{item.title || "Untitled Investigation"}</strong><small>{item.summary || (item.activeWorkId ? "Linked Work" : "Conversation thread")}</small></span><time dateTime={item.lastActivityAt}>{dateLabel(item.lastActivityAt)}</time><ArrowRight size={15} aria-hidden /></button></li>)}</ol> : <p>{recentError ? "Investigations could not be loaded." : "No Investigations yet. Your first objective begins in the Thread."}</p>}</section>
 
     {openError ? <p role="alert">{openError}</p> : null}
     {openingWorkId ? <p role="status">Opening the Work’s Investigation…</p> : null}
