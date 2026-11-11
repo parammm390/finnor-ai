@@ -1209,5 +1209,18 @@ export const UNIFORM_SOURCE_PATHS=[
   "finnor-os/packages/private-equity/src/resolution-memo.ts",
   "finnor-os/apps/worker/src/job-heartbeat.ts",
   "finnor-os/packages/private-equity/src/r3/api.ts",
-  "finnor-os/packages/private-equity/src/r3/fallback.ts"
+  "finnor-os/packages/private-equity/src/r3/fallback.ts",
+  "finnor-os/packages/orchestration/src/financial-explanation.ts",
+  "finnor-os/packages/private-equity/src/document-financial-review.ts",
+  "finnor-os/packages/private-equity/src/evidence-execution/pdf-forecast.ts",
+  "finnor-os/packages/private-equity/src/financial-explanation.ts",
+  "finnor-os/packages/private-equity/src/ic-memo-access.ts",
+  "finnor-os/packages/security/src/workos-auth.ts",
+  "finnor-os/packages/shared-types/src/document-financial-review.ts",
+  "finnor-os/packages/shared-types/src/financial-explanation.ts",
+  "finnor-os/packages/workflow-runtime/src/control-rules.ts",
+  "src/components/centropy/canvas/AnswerCanvas.tsx",
+  "src/components/centropy/canvas/answer-canvas.css",
+  "src/components/centropy/canvas/answer-result.ts",
+  "src/lib/auth/browser-session.ts"
 ] as const;
