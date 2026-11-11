@@ -72,7 +72,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
-      "sha256": "92630d7d486060e45aa52016bea817f0580f5b71dcd3b7692a328b1a62723c50"
+      "sha256": "3a214100f924f579faef5015605188ba2dd53cc39ebd2e90170fe326d99162d1"
     },
     {
       "path": "finnor-os/packages/private-equity/src/owner-context.ts",
@@ -96,7 +96,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "a77e74e099ac6a81c359901110c69de0e14b87ca858df70b653d5e0d2474efbc"
+      "sha256": "0d5e3ec09e19394e7007baad6f58396250422ebc612d08acfab9ee288b053b02"
     },
     {
       "path": "finnor-os/packages/db/migrations/0189_x3_enterprise_applications.sql",
@@ -124,7 +124,7 @@ export default {
     },
     {
       "path": "finnor-os/package-lock.json",
-      "sha256": "ad015353104043178ed4df6e741443513d7dbc5d745fdf376a3dfde723d629f4"
+      "sha256": "934a898e1c437342b4ffbb376d69b9f420f57a19b800006948c0d95e47c48442"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",

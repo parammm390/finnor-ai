@@ -20,9 +20,7 @@ const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
 const CONNECTION_OK = new Set(["active", "degraded"]);
 
-export type ConnectionStatus =
-  | "disconnected" | "connecting" | "active" | "degraded" | "expired"
-  | "reauth_required" | "revoked" | "disabled" | "misconfigured" | "provider_unavailable";
+export type ConnectionStatus = (typeof authProfiles.$inferSelect)["connectionStatus"];
 
 export class ConnectionError extends Error {
   constructor(readonly code: string, message: string, readonly status = 400) {
@@ -81,6 +79,7 @@ async function loadProfile(tenantId: string, authProfileRef: string) {
     status: authProfiles.status,
     authMethod: authProfiles.authMethod,
     connectionStatus: authProfiles.connectionStatus,
+    connectionRevision: authProfiles.connectionRevision,
     requiredScopes: authProfiles.requiredScopes,
     grantedScopes: authProfiles.grantedScopes,
     providerSubjectRef: authProfiles.providerSubjectRef,
@@ -134,6 +133,16 @@ export async function beginGoogleConnection(input: {
   const expiresAt = new Date(Date.now() + 10 * 60_000);
 
   await withTenant(input.tenantId, async (db) => {
+    const [started] = await db.update(authProfiles).set({
+      connectionStatus: "connecting",
+      connectionRevision: sql`${authProfiles.connectionRevision} + 1`,
+      lastConnectionErrorCode: null,
+      updatedAt: new Date(),
+    }).where(and(
+      eq(authProfiles.tenantId, input.tenantId), eq(authProfiles.id, profile.id),
+      eq(authProfiles.status, "active"), eq(authProfiles.connectionRevision, profile.connectionRevision),
+    )).returning({ revision: authProfiles.connectionRevision });
+    if (!started) throw connectionAttemptChanged();
     await db.insert(oauthConnectionRequests).values({
       tenantId: input.tenantId,
       authProfileId: profile.id,
@@ -143,17 +152,15 @@ export async function beginGoogleConnection(input: {
       pkceChallenge: challenge,
       redirectUri,
       requestedScopes: scopes,
+      connectionRevision: started.revision,
       expiresAt,
     });
-    const fromStatus = profile.connectionStatus;
-    await db.update(authProfiles).set({ connectionStatus: "connecting", lastConnectionErrorCode: null, updatedAt: new Date() })
-      .where(and(eq(authProfiles.tenantId, input.tenantId), eq(authProfiles.id, profile.id)));
     await db.insert(connectionEvents).values({
       tenantId: input.tenantId,
       authProfileId: profile.id,
       actorId: input.actorId,
       eventType: "connect_started",
-      fromStatus,
+      fromStatus: profile.connectionStatus,
       toStatus: "connecting",
       traceId: input.traceId,
     });
@@ -186,15 +193,30 @@ type ConsumedRequest = {
   requested_scopes: string[];
 };
 
-async function failConsumedConnection(request: ConsumedRequest, code: string, status: ConnectionStatus): Promise<void> {
+type CurrentConnectionAttempt = ConsumedRequest & { revision: number };
+
+function connectionAttemptChanged(): ConnectionError {
+  return new ConnectionError("connection_attempt_changed", "This connection attempt is no longer current. Start a new connection.", 409);
+}
+
+function currentConnectionAttempt(request: CurrentConnectionAttempt) {
+  return and(
+    eq(authProfiles.tenantId, request.tenant_id), eq(authProfiles.id, request.auth_profile_id),
+    eq(authProfiles.connectionRevision, request.revision), eq(authProfiles.status, "active"),
+    eq(authProfiles.connectionStatus, "connecting"),
+  );
+}
+
+async function failConsumedConnection(request: CurrentConnectionAttempt, code: string, status: ConnectionStatus): Promise<void> {
   await withTenant(request.tenant_id, async (db) => {
-    await db.update(authProfiles).set({
+    const [updated] = await db.update(authProfiles).set({
       connectionStatus: status,
       lastConnectionErrorCode: code.slice(0, 120),
       ...(status === "reauth_required" ? { reauthRequiredAt: new Date() } : {}),
       connectionRevision: sql`${authProfiles.connectionRevision} + 1`,
       updatedAt: new Date(),
-    }).where(and(eq(authProfiles.tenantId, request.tenant_id), eq(authProfiles.id, request.auth_profile_id)));
+    }).where(currentConnectionAttempt(request)).returning({ id: authProfiles.id });
+    if (!updated) throw connectionAttemptChanged();
     await db.insert(connectionEvents).values({
       tenantId: request.tenant_id,
       authProfileId: request.auth_profile_id,
@@ -217,28 +239,35 @@ export async function completeGoogleConnection(input: {
   const consumed = await getPool().query<ConsumedRequest>(
     "SELECT * FROM finnor_os.consume_oauth_connection_request($1)", [sha256(input.state)],
   );
-  const request = consumed.rows[0];
-  if (!request) throw new ConnectionError("invalid_state", "OAuth state is invalid, expired, or already used", 409);
-  if (!safeEqual(pkceChallenge(input.verifier), request.pkce_challenge)) {
-    await failConsumedConnection(request, "invalid_pkce", "disconnected");
-    throw new ConnectionError("invalid_pkce", "OAuth PKCE verification failed", 409);
-  }
+  const consumedRequest = consumed.rows[0];
+  if (!consumedRequest) throw new ConnectionError("invalid_state", "OAuth state is invalid, expired, or already used", 409);
 
-  const [profile] = await withTenant(request.tenant_id, (db) => db.select({
+  const [profile] = await withTenant(consumedRequest.tenant_id, (db) => db.select({
     ref: authProfiles.authProfileRef,
     status: authProfiles.status,
     authMethod: authProfiles.authMethod,
     connectionStatus: authProfiles.connectionStatus,
+    connectionRevision: authProfiles.connectionRevision,
+    requestedRevision: oauthConnectionRequests.connectionRevision,
     application: applicationAccounts.application,
     provider: applicationAccounts.provider,
     providerAccountRef: applicationAccounts.providerAccountRef,
   }).from(authProfiles).innerJoin(applicationAccounts, and(
-    eq(applicationAccounts.tenantId, request.tenant_id),
+    eq(applicationAccounts.tenantId, consumedRequest.tenant_id),
     eq(applicationAccounts.id, authProfiles.applicationAccountId),
-  )).where(and(eq(authProfiles.tenantId, request.tenant_id), eq(authProfiles.id, request.auth_profile_id))).limit(1));
-  if (!profile || profile.status !== "active" || profile.authMethod !== "oauth2") {
-    await failConsumedConnection(request, "profile_changed", "disabled");
-    throw new ConnectionError("profile_changed", "Auth profile is no longer eligible", 409);
+  )).innerJoin(oauthConnectionRequests, and(
+    eq(oauthConnectionRequests.tenantId, consumedRequest.tenant_id),
+    eq(oauthConnectionRequests.authProfileId, authProfiles.id),
+    eq(oauthConnectionRequests.id, consumedRequest.request_id),
+  )).where(and(eq(authProfiles.tenantId, consumedRequest.tenant_id), eq(authProfiles.id, consumedRequest.auth_profile_id))).limit(1));
+  if (!profile || profile.requestedRevision === null || profile.requestedRevision !== profile.connectionRevision
+    || profile.status !== "active" || profile.authMethod !== "oauth2" || profile.connectionStatus !== "connecting") {
+    throw connectionAttemptChanged();
+  }
+  const request = { ...consumedRequest, revision: profile.requestedRevision };
+  if (!safeEqual(pkceChallenge(input.verifier), request.pkce_challenge)) {
+    await failConsumedConnection(request, "invalid_pkce", "disconnected");
+    throw new ConnectionError("invalid_pkce", "OAuth PKCE verification failed", 409);
   }
   await authorizeAuthProfileConnection(request.tenant_id, request.actor_id, profile.application, profile.ref);
 
@@ -298,6 +327,9 @@ export async function completeGoogleConnection(input: {
 
   const expiresAt = new Date(Date.now() + expiresIn * 1_000);
   const reference = `finnor/tenants/${request.tenant_id}/gmail/oauth/${request.auth_profile_id}`;
+  const [stillCurrent] = await withTenant(request.tenant_id, (db) => db.select({ id: authProfiles.id })
+    .from(authProfiles).where(currentConnectionAttempt(request)).limit(1));
+  if (!stillCurrent) throw connectionAttemptChanged();
   let versionId: string;
   try {
     versionId = await writeAwsSecretReference(reference, {
@@ -313,7 +345,7 @@ export async function completeGoogleConnection(input: {
     throw new ConnectionError("secret_store_unavailable", "The managed credential store is unavailable", 503);
   }
   await withTenant(request.tenant_id, async (db) => {
-    await db.update(authProfiles).set({
+    const [connected] = await db.update(authProfiles).set({
       credentialProvider: "aws-secrets-manager",
       credentialRef: reference,
       credentialVersion: `id:${versionId}`,
@@ -329,7 +361,8 @@ export async function completeGoogleConnection(input: {
       lastConnectionErrorCode: null,
       connectionRevision: sql`${authProfiles.connectionRevision} + 1`,
       updatedAt: new Date(),
-    }).where(and(eq(authProfiles.tenantId, request.tenant_id), eq(authProfiles.id, request.auth_profile_id)));
+    }).where(currentConnectionAttempt(request)).returning({ id: authProfiles.id });
+    if (!connected) throw connectionAttemptChanged();
     await db.update(communicationIdentities).set({ authProfileId: request.auth_profile_id, updatedAt: new Date() }).where(and(
       eq(communicationIdentities.tenantId, request.tenant_id),
       eq(communicationIdentities.provider, "gmail"),
@@ -354,7 +387,7 @@ export async function getConnectionStatus(input: { tenantId: string; actorId: st
     authProfileRef: profile.ref,
     provider: profile.provider,
     authMethod: profile.authMethod,
-    status: profile.connectionStatus as ConnectionStatus,
+    status: profile.connectionStatus,
     usable: profile.status === "active" && CONNECTION_OK.has(profile.connectionStatus),
     requiredScopes: stringArray(profile.requiredScopes),
     grantedScopes: stringArray(profile.grantedScopes),
@@ -442,17 +475,33 @@ export async function markBrowserConnectionReauthRequired(input: {
   });
 }
 
-async function recordHealth(profile: Awaited<ReturnType<typeof loadProfile>>, tenantId: string, status: ConnectionStatus, reasonCode?: string): Promise<void> {
+type ConnectionProfile = Awaited<ReturnType<typeof loadProfile>>;
+
+function profileHealth(profile: ConnectionProfile, reasonCode: string | null) {
+  return {
+    authProfileRef: profile.ref,
+    status: profile.connectionStatus,
+    usable: profile.status === "active" && CONNECTION_OK.has(profile.connectionStatus),
+    reasonCode,
+  };
+}
+
+async function recordHealth(profile: ConnectionProfile, tenantId: string, status: ConnectionStatus, reasonCode: string | null = null) {
   const now = new Date();
-  await withTenant(tenantId, async (db) => {
-    await db.update(authProfiles).set({
+  const recorded = await withTenant(tenantId, async (db) => {
+    const [updated] = await db.update(authProfiles).set({
       connectionStatus: status,
       ...(status === "active" ? { lastVerifiedAt: now } : {}),
-      lastConnectionErrorCode: reasonCode ?? null,
+      lastConnectionErrorCode: reasonCode,
       ...(status === "reauth_required" ? { reauthRequiredAt: now } : {}),
       connectionRevision: sql`${authProfiles.connectionRevision} + 1`,
       updatedAt: now,
-    }).where(and(eq(authProfiles.tenantId, tenantId), eq(authProfiles.id, profile.id)));
+    }).where(and(
+      eq(authProfiles.tenantId, tenantId), eq(authProfiles.id, profile.id),
+      eq(authProfiles.status, "active"), eq(authProfiles.connectionRevision, profile.connectionRevision),
+      eq(authProfiles.connectionStatus, profile.connectionStatus),
+    )).returning({ id: authProfiles.id });
+    if (!updated) return false;
     await db.insert(connectionEvents).values({
       tenantId,
       authProfileId: profile.id,
@@ -461,18 +510,25 @@ async function recordHealth(profile: Awaited<ReturnType<typeof loadProfile>>, te
       toStatus: status,
       reasonCode,
     });
+    return true;
   });
+  if (recorded) return { authProfileRef: profile.ref, status, usable: CONNECTION_OK.has(status), reasonCode };
+  const current = await loadProfile(tenantId, profile.ref);
+  const observationStillMatches = current.connectionStatus === status
+    && current.credentialRef === profile.credentialRef && current.credentialVersion === profile.credentialVersion;
+  return profileHealth(current, observationStillMatches ? reasonCode : "connection_state_changed");
 }
 
-async function verifyProfileHealth(tenantId: string, profile: Awaited<ReturnType<typeof loadProfile>>) {
+async function verifyProfileHealth(tenantId: string, initialProfile: ConnectionProfile) {
+  let profile = initialProfile;
   if (profile.status !== "active" || profile.connectionStatus === "disabled" || profile.connectionStatus === "revoked") {
-    return { authProfileRef: profile.ref, status: profile.connectionStatus as ConnectionStatus, usable: false, reasonCode: "connection_disabled" };
+    return profileHealth(profile, "connection_disabled");
   }
+  if (profile.connectionStatus === "connecting") return profileHealth(profile, "connection_in_progress");
   try {
     if (profile.authMethod === "oauth2") {
       if (profile.provider !== "gmail" || profile.credentialProvider !== "aws-secrets-manager" || !profile.credentialRef) {
-        await recordHealth(profile, tenantId, "misconfigured", "oauth_reference_missing");
-        return { authProfileRef: profile.ref, status: "misconfigured" as const, usable: false, reasonCode: "oauth_reference_missing" };
+        return recordHealth(profile, tenantId, "misconfigured", "oauth_reference_missing");
       }
       const context = await resolveCredentialReferenceContext(tenantId, "gmail", {
         credentialProvider: profile.credentialProvider,
@@ -481,22 +537,27 @@ async function verifyProfileHealth(tenantId: string, profile: Awaited<ReturnType
         publicMetadata: profile.providerAccountRef ? { user: profile.providerAccountRef } : {},
         integration: { id: profile.id, capability: profile.application, binding: profile.provider },
       });
+      if (context.reference.version !== profile.credentialVersion) {
+        const current = await loadProfile(tenantId, profile.ref);
+        if (current.credentialVersion !== context.reference.version || current.credentialRef !== context.reference.id
+          || current.status !== "active" || !CONNECTION_OK.has(current.connectionStatus)) {
+          return profileHealth(current, "connection_state_changed");
+        }
+        profile = current;
+      }
       if (!context.credentials.accessToken) throw new ConnectionError("reauth_required", "Google OAuth access token is unavailable", 409);
       const response = await (googleFetchOverride ?? fetch)("https://gmail.googleapis.com/gmail/v1/users/me/profile", {
         headers: { authorization: `Bearer ${context.credentials.accessToken}` },
       });
       if (response.status === 401 || response.status === 403) {
-        await recordHealth(profile, tenantId, "reauth_required", "provider_auth_rejected");
-        return { authProfileRef: profile.ref, status: "reauth_required" as const, usable: false, reasonCode: "provider_auth_rejected" };
+        return recordHealth(profile, tenantId, "reauth_required", "provider_auth_rejected");
       }
       if (!response.ok) {
-        await recordHealth(profile, tenantId, "provider_unavailable", "provider_health_failed");
-        return { authProfileRef: profile.ref, status: "provider_unavailable" as const, usable: false, reasonCode: "provider_health_failed" };
+        return recordHealth(profile, tenantId, "provider_unavailable", "provider_health_failed");
       }
     } else if (profile.authMethod === "browser_profile") {
       if ((profile.credentialProvider !== "aws-secrets-manager" && profile.credentialProvider !== "os-keychain") || !profile.credentialRef) {
-        await recordHealth(profile, tenantId, "misconfigured", "browser_profile_reference_missing");
-        return { authProfileRef: profile.ref, status: "misconfigured" as const, usable: false, reasonCode: "browser_profile_reference_missing" };
+        return recordHealth(profile, tenantId, "misconfigured", "browser_profile_reference_missing");
       }
       const bundle = await resolveTenantBoundSecretBundle(tenantId, {
         credentialProvider: profile.credentialProvider,
@@ -504,8 +565,7 @@ async function verifyProfileHealth(tenantId: string, profile: Awaited<ReturnType
         credentialVersion: profile.credentialVersion,
       });
       if (!bundle.steelProfileId && !bundle.profileId && !bundle.steelNamespace && !bundle.namespace) {
-        await recordHealth(profile, tenantId, "misconfigured", "browser_profile_handle_missing");
-        return { authProfileRef: profile.ref, status: "misconfigured" as const, usable: false, reasonCode: "browser_profile_handle_missing" };
+        return recordHealth(profile, tenantId, "misconfigured", "browser_profile_handle_missing");
       }
       // Steel authentication is proven by the actual isolated session. The runner
       // marks reauth_required on login/MFA/CAPTCHA/session-expiry observations.
@@ -516,14 +576,12 @@ async function verifyProfileHealth(tenantId: string, profile: Awaited<ReturnType
         credentialVersion: profile.credentialVersion,
       });
     }
-    await recordHealth(profile, tenantId, "active");
-    return { authProfileRef: profile.ref, status: "active" as const, usable: true, reasonCode: null };
+    return recordHealth(profile, tenantId, "active");
   } catch (error) {
     const reauth = error instanceof ConnectionError && error.code === "reauth_required"
       || /reauthorization|invalid_grant/i.test(error instanceof Error ? error.message : "");
     const status = reauth ? "reauth_required" : "provider_unavailable";
-    await recordHealth(profile, tenantId, status, reauth ? "refresh_rejected" : "health_check_unavailable");
-    return { authProfileRef: profile.ref, status, usable: false, reasonCode: reauth ? "refresh_rejected" : "health_check_unavailable" };
+    return recordHealth(profile, tenantId, status, reauth ? "refresh_rejected" : "health_check_unavailable");
   }
 }
 

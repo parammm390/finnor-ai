@@ -536,6 +536,28 @@ describe.skipIf(!available)("P5 governed PE Investment Committee runtime", () =>
     process.env.DATABASE_URL = SUPER_URL;
   });
 
+  it("keeps the exact underwriting basis of a finalized IC case", async () => {
+    const fixture = await buildRaceFixture({ stage: "CONDITIONS_PENDING" });
+    const alternate = await seedRun(tenantA, fixture.investmentCaseId, "e");
+    const before = await getIcWorkspace(ctxA, { icCaseId: fixture.icCaseId });
+    await finalizeIcDecision(ctxA, {
+      icCaseId: fixture.icCaseId, decisionProposalId: fixture.proposalId!, expectedCaseVersion: Number(before.case.version),
+      title: "Finalized underwriting basis", rationale: "Keep the exact recorded voting basis after finalization.",
+      idempotencyKey: `p5-frozen-basis-${randomUUID()}`,
+    });
+    const finalized = await getIcWorkspace(ctxA, { icCaseId: fixture.icCaseId });
+    const request = { icCaseId: fixture.icCaseId, expectedCaseVersion: Number(finalized.case.version) };
+    await expect(selectPrimaryIcUnderwritingRun(ctxA, { ...request, underwritingRunId: fixture.runId })).resolves.toMatchObject({ idempotent: true });
+    await expect(selectPrimaryIcUnderwritingRun(ctxA, { ...request, underwritingRunId: alternate })).rejects.toMatchObject({ code: "IC_TERMINAL" });
+    await expect(tenantQuery(tenantA, ownerA, `UPDATE finnor_os.pe_ic_cases
+      SET primary_underwriting_run_id=$2, current_recommendation_id=NULL, version=version+1, updated_at=clock_timestamp()
+      WHERE id=$1`, [fixture.icCaseId, alternate])).rejects.toThrow(/retains its underwriting and recommendation basis/);
+    const after = await getIcWorkspace(ctxA, { icCaseId: fixture.icCaseId });
+    expect(after.case).toMatchObject({ state: "DECIDED", version: finalized.case.version, primaryUnderwritingRunId: fixture.runId });
+    expect(after.decisionProof).toEqual(finalized.decisionProof);
+  }, 120_000);
+
+
   it("rejects missing, cross-root and cross-InvestmentCase prerequisites before mutation", async () => {
     const opened = await createIcCase(ctxA, {
       id: randomUUID(), dealId, investmentCaseId, committeeConfigVersionId: configId,

@@ -8,7 +8,8 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { withTenant, closePool, getPool, tenants, workflowRuns, workflowSteps, decisionReceipts } from "@finnor/db";
+import { withTenant, closePool, getPool, tenants, users, workflowRuns, workflowSteps, decisionReceipts, works, reconciliationCases } from "@finnor/db";
+import { executionProjection } from "@finnor/read-models";
 import { eq } from "drizzle-orm";
 import { submitCommand, claimStep, completeStep, failStep, advanceWorkflow, pauseRun, resumeRun, cancelRun, retryRun, escalateRun, workflowStepJobKey } from "@finnor/workflow-runtime";
 
@@ -27,13 +28,14 @@ async function dbUp(): Promise<boolean> {
 }
 const available = await dbUp();
 
-async function newRun(steps: string[] = ["step_a", "step_b"]): Promise<{ runId: string; stepIds: string[] }> {
+async function newRun(steps: string[] = ["step_a", "step_b"], workId?: string): Promise<{ runId: string; stepIds: string[] }> {
   const submitted = await withTenant(TENANT_ID, (db) =>
     submitCommand(db, {
       tenantId: TENANT_ID,
       commandType: "run_controls_test",
       payload: {},
       workflowType: "run_controls_test",
+      workId,
       steps: steps.map((s) => ({ stepType: s, payload: {} })),
     }),
   );
@@ -190,6 +192,31 @@ describe.skipIf(!available)("run controls (§2.7)", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.reason).toBe("illegal_transition");
+  });
+
+  it("offers safe retry and withholds it when the same run has an open reconciliation", async () => {
+    const [work] = await withTenant(TENANT_ID, (db) => db.insert(works).values({
+      tenantId: TENANT_ID, initialChannel: "console", initialInstruction: "Verify retry controls",
+    }).returning());
+    const [owner] = await withTenant(TENANT_ID, (db) => db.insert(users).values({
+      tenantId: TENANT_ID, email: `retry-${work!.id}@example.test`, role: "owner", displayName: "Retry owner",
+    }).returning());
+    const { runId, stepIds } = await newRun(["retryable_step"], work!.id);
+    expect(await claimStep(TENANT_ID, stepIds[0]!)).not.toBeNull();
+    await failStep(TENANT_ID, stepIds[0]!, "Known local failure");
+    await advanceWorkflow(TENANT_ID, runId);
+    const projectRun = async () => (await executionProjection(TENANT_ID, work!.id, {
+      userId: owner!.id, role: "owner", canControlRuns: true,
+    }))?.workflows.find((run) => run.id === runId);
+    const eligible = await projectRun();
+    expect(eligible?.controls).toEqual(expect.arrayContaining([expect.objectContaining({ kind: "retry" })]));
+    await withTenant(TENANT_ID, (db) => db.insert(reconciliationCases).values({
+      tenantId: TENANT_ID, relatedStepId: stepIds[0]!, caseType: "unknown_delivery", status: "open",
+    }));
+    const blocked = await projectRun();
+    expect(blocked?.controls.some((control) => control.kind === "retry")).toBe(false);
+    expect(blocked?.retryBlocked).toMatchObject({ code: "unresolved_effect" });
+    expect(await retryRun(TENANT_ID, runId, eligible!.version, owner!.id)).toEqual({ ok: false, reason: "illegal_transition" });
   });
 
   it("escalate: running or failed -> escalated, and blocks further claims", async () => {

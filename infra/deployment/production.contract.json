@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "postx_y7_uniform_algorithms.sql",
+    "requiredMigrationHead": "postx_y9_ic_terminal_basis_fence.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

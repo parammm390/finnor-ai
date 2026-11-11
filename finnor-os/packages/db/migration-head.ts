@@ -4,4 +4,4 @@
  * Keep this beside the migrations so readiness and worker heartbeats cannot drift
  * by carrying independent literals.
  */
-export const CURRENT_MIGRATION_HEAD = "postx_y7_uniform_algorithms.sql";
+export const CURRENT_MIGRATION_HEAD = "postx_y9_ic_terminal_basis_fence.sql";

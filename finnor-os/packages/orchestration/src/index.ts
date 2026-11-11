@@ -60,7 +60,7 @@ import { isDocumentFinancialReviewQuestion, isSuppliedAnalysisQuestion } from ".
 import { requiresTypedConfirmation } from "../../../scripts/release/action-hardening-spec";
 import { assembleOperatingContext } from "./operating-context";
 import { interactionAwareOperationalDecision, interactionBusinessRoot, resolveOperatingInteractionContext, validateInteractionBusinessScope } from "./interaction-context";
-import { employeeAuthoritySnapshot, evaluateActionApproval, evaluateAuthority, finalizeApprovalAuthorityTx, isFinalApprovalStep, revalidateActionExecution } from "@finnor/authority";
+import { ApprovalBasisChangedError, employeeAuthoritySnapshot, evaluateActionApproval, evaluateAuthority, finalizeApprovalAuthorityTx, revalidateActionExecution } from "@finnor/authority";
 import { queryAuthorityRequest } from "./authority-runtime";
 import { isConsequentialAction } from "./compiler";
 import {
@@ -1643,7 +1643,7 @@ export class FinnorOrchestrator implements Orchestrator {
     if (approverAuthority && approverAuthority.outcome !== "allowed") {
       return { status: "failure", output: { authorityDecisionId: approverAuthority.id }, error: `Authority denied: ${approverAuthority.reasonCode}` };
     }
-    if (decision === "approve" && approverAuthority && !(await isFinalApprovalStep(tenantId, actionId))) {
+    if (decision === "approve" && approverAuthority?.approvalStep?.final === false) {
       const advanced = await withTenant(tenantId, async (db) => {
         const [action] = await db
           .select({ instructionId: domainActions.instructionId, workId: domainActions.workId })
@@ -1668,10 +1668,14 @@ export class FinnorOrchestrator implements Orchestrator {
           actionId,
           decision,
           approverId: decidedBy,
-          authorityDecisionId: approverAuthority.id,
+          authority: approverAuthority,
         });
         return { found: true as const, cancelled: false as const };
+      }).catch((error: unknown) => {
+        if (error instanceof ApprovalBasisChangedError) return { conflict: error.message };
+        throw error;
       });
+      if ("conflict" in advanced) return { status: "failure", output: { staleApproval: true }, error: advanced.conflict };
       if (!advanced.found) return { status: "failure", output: {}, error: "Action not found" };
       if (advanced.cancelled) {
         return { status: "failure", output: { cancelled: true }, error: "Approval refused: the instruction or Work item is cancelled." };
@@ -1776,7 +1780,7 @@ export class FinnorOrchestrator implements Orchestrator {
         },
       });
       if (approverAuthority && humanDecision) {
-        await finalizeApprovalAuthorityTx(db, { tenantId, actionId, decision, approverId: decidedBy, authorityDecisionId: approverAuthority.id });
+        await finalizeApprovalAuthorityTx(db, { tenantId, actionId, decision, approverId: decidedBy, authority: approverAuthority });
       }
       if (effect) {
         await db.update(businessEffects).set(decision === "approve"
@@ -1804,7 +1808,11 @@ export class FinnorOrchestrator implements Orchestrator {
         };
       }
       return { claimed, current: claimed, durableAction: null, staleAuthority: false as const };
+    }).catch((error: unknown) => {
+      if (error instanceof ApprovalBasisChangedError) return { claimed: null, current: null, staleApproval: error.message };
+      throw error;
     });
+    if ("staleApproval" in transition) return { status: "failure", output: { staleApproval: true }, error: transition.staleApproval };
     if ("staleAuthority" in transition && transition.staleAuthority) {
       return { status: "failure", output: { staleAuthority: true }, error: "Authority changed while the decision was being applied; review the request again." };
     }

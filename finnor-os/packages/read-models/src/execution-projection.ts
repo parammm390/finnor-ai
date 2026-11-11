@@ -45,7 +45,9 @@ import type {
   ExecutionVerificationState,
   ExecutionWorkflow,
   Role,
+  WorkflowRetryBlocker,
 } from "@finnor/shared-types";
+import { RUN_CONTROL_TRANSITIONS, WORKFLOW_CONTROL_VERBS, workflowRetryBlocker, type RunControlVerb } from "@finnor/workflow-runtime/control-rules";
 import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 
 const ACTION_LIMIT = 200;
@@ -248,16 +250,20 @@ function edgeState(status: ExecutionActionNode["status"]): ExecutionDependencyEd
   return "waiting";
 }
 
-function workflowControls(status: ExecutionWorkflow["status"], id: string, version: number, allowed: boolean, retryUnsafe: boolean): ExecutionControl[] {
+const WORKFLOW_CONTROLS: Record<RunControlVerb, Pick<ExecutionControl, "label" | "reason">> = {
+  pause: { label: "Pause", reason: "Running workflows may be paused." },
+  resume: { label: "Continue", reason: "Paused workflows may resume." },
+  cancel: { label: "Cancel", reason: "Cancellation stops future eligible steps; completed effects remain." },
+  retry: { label: "Retry", reason: "The failed steps and recorded effects are eligible for retry." },
+  escalate: { label: "Escalate", reason: "Escalate this workflow for human ownership." },
+};
+
+function workflowControls(status: ExecutionWorkflow["status"], id: string, version: number, allowed: boolean, retryBlocked: WorkflowRetryBlocker | null): ExecutionControl[] {
   if (!allowed) return [];
-  const control = (kind: ExecutionControl["kind"], label: string, reason: string): ExecutionControl => ({ kind, label, endpoint: `/api/workflows/runs/${id}/${kind}`, method: "POST", expectedVersion: version, reason });
-  if (status === "running") return [control("pause", "Pause", "Running workflows may be paused."), control("cancel", "Cancel", "Cancellation stops future eligible steps; completed effects remain."), control("escalate", "Escalate", "Running workflows may be escalated for human ownership.")];
-  if (status === "paused") return [control("resume", "Continue", "Paused workflows may resume."), control("cancel", "Cancel", "Cancellation stops future eligible steps; completed effects remain.")];
-  if (status === "failed") return [
-    ...(retryUnsafe ? [] : [control("retry", "Retry", "The failed run has no open reconciliation or unknown effect.")]),
-    control("escalate", "Escalate", "Failed workflows may be escalated."),
-  ];
-  return [];
+  return WORKFLOW_CONTROL_VERBS.filter((verb) => RUN_CONTROL_TRANSITIONS[verb].fromStatuses.includes(status)
+    && (verb !== "retry" || retryBlocked === null)).map((kind) => ({
+    kind, ...WORKFLOW_CONTROLS[kind], endpoint: `/api/workflows/runs/${id}/${kind}`, method: "POST", expectedVersion: version,
+  }));
 }
 
 export async function executionActionTypes(tenantId: string, workId: string): Promise<Array<{ id: string; actionType: string; status: DomainActionStatus }>> {
@@ -277,9 +283,7 @@ export async function executionProjection(
     const [work] = await db.select().from(works).where(and(eq(works.tenantId, tenantId), eq(works.id, workId))).limit(1);
     if (!work) return null;
 
-    // withTenant owns one transaction-bound pg client. Keep queries sequential so
-    // every row comes from one coherent snapshot and pg@9 never rejects concurrent
-    // client.query() calls on that connection.
+    // Keep reads sequential on the transaction's single tenant-scoped pg client.
     const actionRowsPlus = await db.select().from(domainActions).where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.workId, workId))).orderBy(asc(domainActions.createdAt), asc(domainActions.id)).limit(ACTION_LIMIT + 1);
     const linkRows = await db.select().from(workEntityLinks).where(and(eq(workEntityLinks.tenantId, tenantId), eq(workEntityLinks.workId, workId))).orderBy(asc(workEntityLinks.createdAt));
     const runRows = await db.select().from(workflowRuns).where(and(eq(workflowRuns.tenantId, tenantId), eq(workflowRuns.workId, workId))).orderBy(asc(workflowRuns.createdAt));
@@ -301,6 +305,14 @@ export async function executionProjection(
     const workflowStepsTruncated = stepRowsPlus.length > WORKFLOW_STEP_LIMIT;
     const stepRows = stepRowsPlus.slice(0, WORKFLOW_STEP_LIMIT);
     const stepIds = stepRows.map((row) => row.id);
+    const effectStatuses = new Map(effectRows.map((row) => [row.id, row.status]));
+    const missingEffectIds = [...new Set(stepRows.flatMap((step) => step.status === "failed" && step.businessEffectId && !effectStatuses.has(step.businessEffectId)
+      ? [step.businessEffectId] : []))];
+    if (missingEffectIds.length) {
+      const statuses = await db.select({ id: businessEffects.id, status: businessEffects.status }).from(businessEffects)
+        .where(and(eq(businessEffects.tenantId, tenantId), inArray(businessEffects.id, missingEffectIds)));
+      for (const effect of statuses) effectStatuses.set(effect.id, effect.status);
+    }
 
     const receiptWhere = or(
       eq(decisionReceipts.workId, workId),
@@ -484,9 +496,14 @@ export async function executionProjection(
     };
     const projectedComputerByAction = new Map(computerRows.map((row) => [row.domainActionId, projectComputer(row)]));
 
+    const openReconciliationStepIds = new Set(reconRows.filter((row) => row.status === "open").map((row) => row.relatedStepId));
     const projectedWorkflows: ExecutionWorkflow[] = runRows.map((run) => {
       const steps = (stepsByRun.get(run.id) ?? []).sort((a, b) => a.sequence - b.sequence);
-      const unknown = steps.some((step) => (integrationsByStep.get(step.id) ?? []).some((operation) => operation.status === "unknown") || reconByStep.get(step.id)?.status === "open");
+      const canControl = viewer.canControlRuns === true && !isRetiredWaterWorkflow(run.workflowType);
+      const retryBlocked = canControl && run.status === "failed" ? workflowRetryBlocker({
+        steps, effectStatuses, truncated: workflowStepsTruncated,
+        unresolvedEffect: steps.some((step) => (integrationsByStep.get(step.id) ?? []).some((operation) => operation.status === "unknown") || openReconciliationStepIds.has(step.id)),
+      }) : null;
       return {
         id: run.id,
         workflowType: run.workflowType,
@@ -518,7 +535,8 @@ export async function executionProjection(
             sourceRef: `workflow_steps:${step.id}`,
           };
         }),
-        controls: workflowControls(run.status, run.id, run.version, viewer.canControlRuns === true && !isRetiredWaterWorkflow(run.workflowType), unknown),
+        controls: workflowControls(run.status, run.id, run.version, canControl, retryBlocked),
+        ...(retryBlocked ? { retryBlocked } : {}),
         createdAt: run.createdAt.toISOString(),
         updatedAt: run.updatedAt.toISOString(),
         sourceRef: `workflow_runs:${run.id}`,

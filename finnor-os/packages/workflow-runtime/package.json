@@ -41,6 +41,10 @@
     "./stuck-runs": {
       "types": "./src/stuck-runs.ts",
       "import": "./src/stuck-runs.ts"
+    },
+    "./control-rules": {
+      "types": "./src/control-rules.ts",
+      "import": "./src/control-rules.ts"
     }
   },
   "dependencies": {

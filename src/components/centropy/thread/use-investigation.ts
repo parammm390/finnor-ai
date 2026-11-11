@@ -28,7 +28,7 @@ export function useInvestigation(threadId: string | null, enabled: boolean, refr
     if (!threadId || !enabled) return
     const request = ++generation.current
     setState((previous) => previous.forScope === scope.key && previous.loaded?.thread.id === threadId
-      ? { ...previous, forThreadId: threadId, status: "ready", error: null }
+      ? { ...previous, forThreadId: threadId, status: "ready", error: null, olderLoading: false }
       : { ...EMPTY, forThreadId: threadId, forScope: scope.key, status: "loading" })
     try {
       const loaded = await loadInvestigation(threadId)

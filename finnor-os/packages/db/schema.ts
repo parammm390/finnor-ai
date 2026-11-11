@@ -642,6 +642,7 @@ export const oauthConnectionRequests = pgTable(
     pkceChallenge: text("pkce_challenge").notNull(),
     redirectUri: text("redirect_uri").notNull(),
     requestedScopes: text("requested_scopes").array().notNull(),
+    connectionRevision: integer("connection_revision"),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     consumedAt: timestamp("consumed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

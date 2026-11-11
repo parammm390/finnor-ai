@@ -140,11 +140,11 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "8e9915ccd93468c36234687129c0bd7c42f5904694fbe119ca7e018206042831"
+      "sha256": "1e8a7d00fccf9bd5fdb1694a71a8e7d69dde1f77274eeb69f8375b8691de2234"
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
-      "sha256": "92630d7d486060e45aa52016bea817f0580f5b71dcd3b7692a328b1a62723c50"
+      "sha256": "3a214100f924f579faef5015605188ba2dd53cc39ebd2e90170fe326d99162d1"
     },
     {
       "path": "finnor-os/packages/private-equity/src/owner-context.ts",
@@ -172,7 +172,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "a77e74e099ac6a81c359901110c69de0e14b87ca858df70b653d5e0d2474efbc"
+      "sha256": "0d5e3ec09e19394e7007baad6f58396250422ebc612d08acfab9ee288b053b02"
     },
     {
       "path": "finnor-os/packages/db/migrations/0190_x5_experience_policy.sql",
@@ -184,7 +184,7 @@ export default {
     },
     {
       "path": "finnor-os/package-lock.json",
-      "sha256": "ad015353104043178ed4df6e741443513d7dbc5d745fdf376a3dfde723d629f4"
+      "sha256": "934a898e1c437342b4ffbb376d69b9f420f57a19b800006948c0d95e47c48442"
     },
     {
       "path": "package-lock.json",
@@ -372,7 +372,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "sha256": "d9509dfe885c4d0ae6025c2e1c1c9306474fd319f666a22cf1fb22cb4136d3bb"
+      "sha256": "1a8949627e7acb74767021e213b14b2d60608f4da281f63b5f72bf532ee1b284"
     },
     {
       "path": "finnor-os/packages/epistemic-runtime/src/identification.ts",

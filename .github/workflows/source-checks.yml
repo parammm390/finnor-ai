@@ -99,6 +99,7 @@ jobs:
           status=0
           npm run authz:matrix:check || status=1
           npm run openapi || status=1
+          npm run db:bundle || status=1
           npm run typecheck || status=1
           npm run build:inputs:check || status=1
           npm run release:manifest || status=1
@@ -128,6 +129,20 @@ jobs:
         id: drift
         continue-on-error: true
         run: git diff --exit-code
+      - name: Collect generated updates for review
+        if: ${{ steps.backend.outcome == 'failure' || steps.inventory.outcome == 'failure' || steps.drift.outcome == 'failure' }}
+        continue-on-error: true
+        env:
+          DIAGNOSTICS: ${{ runner.temp }}/finnor-ci-process
+        run: |
+          mkdir -p "$DIAGNOSTICS"
+          {
+            npm --prefix finnor-os run build:inputs:generate || true
+            (cd finnor-os && node --import=tsx scripts/postx/y5/generate-source.mts) || true
+            npm --prefix finnor-os run capabilities:planner-manifest || true
+            npm run centropy:coverage || true
+          } > "$DIAGNOSTICS/generated-commands.log" 2>&1
+          git diff --binary > "$DIAGNOSTICS/generated.patch"
       - name: Fail closed after collecting independent source diagnostics
         id: aggregate
         if: ${{ always() }}
