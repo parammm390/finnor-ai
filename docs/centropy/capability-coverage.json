@@ -1,7 +1,7 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-05T04:00:37.014Z",
-  "sourceBaseCommit": "421523f5eec43b9d17de16fb352b7532aec3bf86",
+  "generatedAt": "2026-11-11T01:42:22.687Z",
+  "sourceBaseCommit": "654bb2130c12661f469d819c2817e240ea8b1cb3",
   "manifestSha256": "5c1806214b2b629db0a3228952a404f348c0e767c2523f065c7394696c55f685",
   "formsSha256": "1bc12487fb34759988ed4490715c21560653608fb313a409f0e6bcc551340e89",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -1513,7 +1513,7 @@
       },
       {
         "file": "src/components/centropy/thread/use-investigation.ts",
-        "sha256": "5d2a11900ed3b363c2910d0f8b504e8581b0d06c5602e8ab7d203456b89ac591"
+        "sha256": "bacd887f7d069377b0bf272ea1f25fdc85c26ebad6bd25ea3e4b61d7630fc78f"
       },
       {
         "file": "src/components/centropy/thread/Composer.tsx",
@@ -2132,6 +2132,7 @@
       "tests": [
         "e2e/centropy-temporal-question.spec.ts",
         "e2e/private-equity-product-contract.spec.ts",
+        "finnor-os/tests/integration/artifact-os.test.ts",
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/computer-execution-fabric.test.ts",
         "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
@@ -4127,6 +4128,7 @@
         "finnor-os/tests/integration/decision-receipts.test.ts",
         "finnor-os/tests/integration/microsoft365-administration.test.ts",
         "finnor-os/tests/integration/microsoft365-subscription-worker.test.ts",
+        "finnor-os/tests/integration/phase5-connection-lifecycle.test.ts",
         "finnor-os/tests/integration/phase6-performance.test.ts",
         "finnor-os/tests/integration/phase6-plan-concurrency.test.ts",
         "finnor-os/tests/integration/provider-circuit-breaker-budget.test.ts",
@@ -6229,12 +6231,14 @@
         "e2e/centropy-live-host.spec.ts",
         "e2e/centropy-live-workforce-reassign.spec.ts",
         "e2e/centropy-underwriting-multi-input.spec.ts",
+        "finnor-os/tests/integration/artifact-os.test.ts",
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/clarification-request.test.ts",
         "finnor-os/tests/integration/computer-execution-fabric.test.ts",
         "finnor-os/tests/integration/heartbeat.test.ts",
         "finnor-os/tests/integration/p2-postgres-transient.test.ts",
         "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
+        "finnor-os/tests/integration/phase5-connection-lifecycle.test.ts",
         "finnor-os/tests/integration/production-manifest-readonly.test.ts",
         "finnor-os/tests/integration/production-protected-runtime-probe.test.ts",
         "finnor-os/tests/integration/production-query-surface.test.ts",
@@ -6244,6 +6248,7 @@
         "finnor-os/tests/integration/runtime-database-role-isolation.test.ts",
         "finnor-os/tests/integration/scope3-compute-load.test.ts",
         "finnor-os/tests/integration/scope3-compute-plane.test.ts",
+        "finnor-os/tests/integration/single-action-runtime-bridge.test.ts",
         "finnor-os/tests/integration/vitals-route.test.ts",
         "finnor-os/tests/integration/water-retirement-forward-head.test.ts",
         "finnor-os/tests/integration/workflow-runtime.test.ts",
@@ -7440,6 +7445,7 @@
         "finnor-os/tests/integration/private-equity-phase3.test.ts",
         "finnor-os/tests/integration/private-equity-phase4.test.ts",
         "finnor-os/tests/integration/private-equity-upgrade.test.ts",
+        "finnor-os/tests/integration/run-controls.test.ts",
         "finnor-os/tests/integration/scope1-orchestration-concurrency.test.ts",
         "finnor-os/tests/integration/tenant-isolation.test.ts",
         "finnor-os/tests/integration/universal-action-fabric.test.ts",
@@ -7925,6 +7931,7 @@
         "finnor-os/tests/integration/reliability.test.ts",
         "finnor-os/tests/integration/retired-water-webhook-quarantine.test.ts",
         "finnor-os/tests/integration/scope1-orchestration-concurrency.test.ts",
+        "finnor-os/tests/integration/single-action-runtime-bridge.test.ts",
         "finnor-os/tests/integration/sse-gateway.test.ts",
         "finnor-os/tests/integration/universal-action-fabric.test.ts",
         "finnor-os/tests/integration/universal-actions-upgrade.test.ts",

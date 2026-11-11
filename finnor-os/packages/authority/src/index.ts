@@ -506,7 +506,18 @@ export async function recordActionAuthority(params: {
   });
 }
 
-export async function evaluateActionApproval(ctx: TenantContext, actionId: string): Promise<AuthorityDecision> {
+type ActionApprovalDecision = AuthorityDecision & {
+  approvalStep: { requestId: string; stepId: string; sequence: number; final: boolean } | null;
+};
+
+export class ApprovalBasisChangedError extends Error {
+  constructor(message = "The approval step or reviewed effect changed. Refresh and review the request again.") {
+    super(message);
+    this.name = "ApprovalBasisChangedError";
+  }
+}
+
+export async function evaluateActionApproval(ctx: TenantContext, actionId: string): Promise<ActionApprovalDecision> {
   const [row] = await withTenant(ctx.tenantId, (db) => db.select({
     actionType: domainActions.actionType,
     workId: domainActions.workId,
@@ -514,7 +525,15 @@ export async function evaluateActionApproval(ctx: TenantContext, actionId: strin
     requestId: authorityApprovalRequests.id,
     requestStatus: authorityApprovalRequests.status,
     currentStep: authorityApprovalRequests.currentStep,
+    stepId: authorityApprovalRequestSteps.id,
+    stepStatus: authorityApprovalRequestSteps.status,
     stepCapability: authorityApprovalRequestSteps.approverCapability,
+    finalStep: sql<boolean>`NOT EXISTS (
+      SELECT 1 FROM finnor_os.authority_approval_request_steps next_step
+      WHERE next_step.tenant_id=${authorityApprovalRequests.tenantId}
+        AND next_step.approval_request_id=${authorityApprovalRequests.id}
+        AND next_step.sequence=${authorityApprovalRequests.currentStep}+1
+    )`,
     businessEffectId: domainActions.businessEffectId,
     requestBusinessEffectId: authorityApprovalRequests.businessEffectId,
     requestBusinessEffectHash: authorityApprovalRequests.businessEffectHash,
@@ -525,6 +544,10 @@ export async function evaluateActionApproval(ctx: TenantContext, actionId: strin
     .leftJoin(businessEffects, and(eq(businessEffects.id, domainActions.businessEffectId), eq(businessEffects.tenantId, ctx.tenantId)))
     .where(and(eq(domainActions.tenantId, ctx.tenantId), eq(domainActions.id, actionId))).limit(1));
   if (!row) throw new Error("Action not found");
+  const approvalStep = row.requestStatus === "pending" && row.requestId && row.stepId
+    && row.currentStep !== null && row.stepStatus === "pending"
+    ? { requestId: row.requestId, stepId: row.stepId, sequence: row.currentStep, final: row.finalStep }
+    : null;
   const context = record(row.authorityContext);
   const resources = Array.isArray(context.resources) ? context.resources.filter((item): item is AuthorityResource => Boolean(item && typeof item === "object" && typeof (item as AuthorityResource).type === "string")) : [];
   const request: AuthorityRequest = {
@@ -538,18 +561,20 @@ export async function evaluateActionApproval(ctx: TenantContext, actionId: strin
     businessEffectId: row.businessEffectId ?? undefined,
     businessEffectHash: row.effectSemanticHash ?? undefined,
   };
-  if (row.businessEffectId && (!row.effectSemanticHash || (row.requestId && (row.requestBusinessEffectId !== row.businessEffectId || row.requestBusinessEffectHash !== row.effectSemanticHash)))) {
-    return withTenant(ctx.tenantId, (db) => insertDecision(db, {
+  const invalidStep = row.requestStatus === "pending" && !approvalStep;
+  if (invalidStep || (row.businessEffectId && (!row.effectSemanticHash || (row.requestId && (row.requestBusinessEffectId !== row.businessEffectId || row.requestBusinessEffectHash !== row.effectSemanticHash))))) {
+    const decision = await withTenant(ctx.tenantId, (db) => insertDecision(db, {
       ctx,
       request,
       employeeId: ctx.employeeId ?? (UUID.test(ctx.userId) ? ctx.userId : null),
       revision: 1,
       outcome: "denied",
-      reasonCode: "business_effect_approval_mismatch",
+      reasonCode: invalidStep ? "approval_step_unavailable" : "business_effect_approval_mismatch",
       evidence: { actionBusinessEffectId: row.businessEffectId, requestBusinessEffectId: row.requestBusinessEffectId, requestBusinessEffectHash: row.requestBusinessEffectHash, currentEffectHash: row.effectSemanticHash },
     }));
+    return { ...decision, approvalStep };
   }
-  return evaluateAuthority(ctx, request);
+  return { ...await evaluateAuthority(ctx, request), approvalStep };
 }
 
 export async function finalizeApprovalAuthorityTx(db: Db, params: {
@@ -557,36 +582,53 @@ export async function finalizeApprovalAuthorityTx(db: Db, params: {
   actionId: string;
   decision: "approve" | "reject";
   approverId: string;
-  authorityDecisionId: string;
+  authority: ActionApprovalDecision;
 }): Promise<void> {
-    const [request] = await db.select().from(authorityApprovalRequests).where(and(eq(authorityApprovalRequests.tenantId, params.tenantId), eq(authorityApprovalRequests.domainActionId, params.actionId))).limit(1);
-    if (!request || request.status !== "pending") return;
-    const [step] = await db.update(authorityApprovalRequestSteps).set({
-      status: params.decision === "approve" ? "approved" : "rejected",
-      decidedBy: params.approverId,
-      authorityDecisionId: params.authorityDecisionId,
-      decidedAt: new Date(),
-    }).where(and(eq(authorityApprovalRequestSteps.approvalRequestId, request.id), eq(authorityApprovalRequestSteps.sequence, request.currentStep), eq(authorityApprovalRequestSteps.status, "pending"))).returning();
-    if (!step) return;
-    if (params.decision === "reject") {
-      await db.update(authorityApprovalRequests).set({ status: "rejected", resolvedAt: new Date() }).where(eq(authorityApprovalRequests.id, request.id));
-      return;
-    }
-    const [next] = await db.select().from(authorityApprovalRequestSteps).where(and(eq(authorityApprovalRequestSteps.approvalRequestId, request.id), eq(authorityApprovalRequestSteps.sequence, request.currentStep + 1))).limit(1);
-    await db.update(authorityApprovalRequests).set(next ? { currentStep: request.currentStep + 1 } : { status: "approved", resolvedAt: new Date() }).where(eq(authorityApprovalRequests.id, request.id));
-}
+  const { tenantId, actionId, authority } = params;
+  const basis = authority.approvalStep;
+  const [action] = await db.select({ status: domainActions.status, effectId: domainActions.businessEffectId })
+    .from(domainActions)
+    .where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.id, actionId))).for("update");
+  if (!action || action.effectId !== authority.businessEffectId
+    || (params.decision === "approve" && basis?.final === false && !["pending", "needs_human_review"].includes(action.status))) {
+    throw new ApprovalBasisChangedError();
+  }
+  const [effect] = action.effectId ? await db.select({ hash: businessEffects.semanticHash }).from(businessEffects)
+    .where(and(eq(businessEffects.tenantId, tenantId), eq(businessEffects.id, action.effectId))).limit(1) : [];
+  if ((effect?.hash ?? null) !== authority.businessEffectHash) throw new ApprovalBasisChangedError();
+  const [state] = await db.select({ revision: authorityStates.revision }).from(authorityStates)
+    .where(eq(authorityStates.tenantId, tenantId)).for("share");
+  if ((state?.revision ?? 1) !== authority.authorityRevision) {
+    throw new ApprovalBasisChangedError("Authority changed while the decision was being applied. Review the request again.");
+  }
+  const [request] = await db.select().from(authorityApprovalRequests)
+    .where(and(eq(authorityApprovalRequests.tenantId, tenantId), eq(authorityApprovalRequests.domainActionId, actionId))).for("update");
+  if (!request && !basis) return;
+  if (!request || !basis || request.status !== "pending" || request.id !== basis.requestId || request.currentStep !== basis.sequence
+    || request.businessEffectId !== authority.businessEffectId || request.businessEffectHash !== authority.businessEffectHash) {
+    throw new ApprovalBasisChangedError();
+  }
 
-export async function finalizeApprovalAuthority(params: Parameters<typeof finalizeApprovalAuthorityTx>[1]): Promise<void> {
-  await withTenant(params.tenantId, (db) => finalizeApprovalAuthorityTx(db, params));
-}
-
-export async function isFinalApprovalStep(tenantId: string, actionId: string): Promise<boolean> {
-  return withTenant(tenantId, async (db) => {
-    const [request] = await db.select({ id: authorityApprovalRequests.id, currentStep: authorityApprovalRequests.currentStep }).from(authorityApprovalRequests).where(and(eq(authorityApprovalRequests.tenantId, tenantId), eq(authorityApprovalRequests.domainActionId, actionId), eq(authorityApprovalRequests.status, "pending"))).limit(1);
-    if (!request) return true;
-    const [next] = await db.select({ id: authorityApprovalRequestSteps.id }).from(authorityApprovalRequestSteps).where(and(eq(authorityApprovalRequestSteps.approvalRequestId, request.id), eq(authorityApprovalRequestSteps.sequence, request.currentStep + 1))).limit(1);
-    return !next;
-  });
+  const [next] = await db.select({ id: authorityApprovalRequestSteps.id }).from(authorityApprovalRequestSteps)
+    .where(and(eq(authorityApprovalRequestSteps.approvalRequestId, request.id), eq(authorityApprovalRequestSteps.sequence, basis.sequence + 1))).limit(1);
+  if (basis.final !== !next) throw new ApprovalBasisChangedError();
+  const [step] = await db.update(authorityApprovalRequestSteps).set({
+    status: params.decision === "approve" ? "approved" : "rejected",
+    decidedBy: params.approverId,
+    authorityDecisionId: authority.id,
+    decidedAt: new Date(),
+  }).where(and(
+    eq(authorityApprovalRequestSteps.id, basis.stepId),
+    eq(authorityApprovalRequestSteps.approvalRequestId, request.id),
+    eq(authorityApprovalRequestSteps.sequence, basis.sequence),
+    eq(authorityApprovalRequestSteps.approverCapability, authority.capability),
+    eq(authorityApprovalRequestSteps.status, "pending"),
+  )).returning({ id: authorityApprovalRequestSteps.id });
+  if (!step) throw new ApprovalBasisChangedError();
+  const update = params.decision === "reject"
+    ? { status: "rejected" as const, resolvedAt: new Date() }
+    : next ? { currentStep: basis.sequence + 1 } : { status: "approved" as const, resolvedAt: new Date() };
+  await db.update(authorityApprovalRequests).set(update).where(eq(authorityApprovalRequests.id, request.id));
 }
 
 export async function employeeAuthoritySnapshot(ctx: TenantContext): Promise<{ employeeId: string; revision: number; roles: string[] }> {

@@ -2,10 +2,11 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { setTimeout as wait } from "node:timers/promises";
 import pg from "pg";
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { closePool, configureTenantVertical, withTenant } from "@finnor/db";
+import { closePool, configureTenantVertical, withTenant, withTenantTransaction } from "@finnor/db";
 import {
   loadDocumentVersion,
   recordExternalReferenceAcknowledgement,
@@ -227,6 +228,52 @@ describe.skipIf(!available)("P3 Artifact OS persistence and provider truth", () 
       origin: "manual_upload",
     })).rejects.toThrow(/DOCUMENT_NOT_FOUND/);
     expect((await admin.query("SELECT count(*)::int count FROM finnor_os.document_versions WHERE document_id=$1", [created.documentId])).rows[0].count).toBe(beforeArchivedRetry);
+  });
+
+  it("rejects a concurrent document head writer using the same expected version", async () => {
+    const base = await createBlankArtifact(actorA, { kind: "docx", title: "Concurrent document heads" });
+    const loaded = await withTenant(tenantA, (db) => loadDocumentVersion(db, tenantA, base.documentId, base.version.id));
+    if (!loaded) throw new Error("Missing fixture version");
+    const candidate = (key: string) => ingestArtifact(actorA, {
+      documentId: base.documentId, title: "Concurrent document heads.docx", bytes: loaded.bytes,
+      origin: "provider_observation", sourceRef: key, parentVersionId: base.version.id,
+      headKind: "provider", headKey: key, expectedHead: null,
+    });
+    const first = await candidate("first");
+    const second = await candidate("second");
+    const input = { tenantId: tenantA, documentId: base.documentId, kind: "current" as const, key: "default", expectedVersionId: base.version.id };
+    let held!: () => void;
+    let release!: () => void;
+    const firstWrite = new Promise<void>((resolve) => { held = resolve; });
+    const commit = new Promise<void>((resolve) => { release = resolve; });
+    const writer = withTenant(tenantA, async (db) => {
+      await setDocumentVersionHead(db, { ...input, versionId: first.version.id });
+      held();
+      await commit;
+    });
+    let waiterPid = 0;
+    const contender = firstWrite.then(() => withTenantTransaction(tenantA, {}, async (db, client) => {
+      waiterPid = (await client.query<{ pid: number }>("SELECT pg_backend_pid() pid")).rows[0]!.pid;
+      await setDocumentVersionHead(db, { ...input, versionId: second.version.id });
+    })).then(() => "advanced", (error: unknown) => error instanceof Error ? error.message : String(error));
+    try {
+      await Promise.race([firstWrite, writer.then(() => { throw new Error("First writer did not hold the transaction"); })]);
+      const deadline = Date.now() + 4_000;
+      let waiting = false;
+      while (!waiting && Date.now() < deadline) {
+        waiting = Boolean((await admin.query("SELECT 1 FROM pg_stat_activity WHERE pid=$1 AND wait_event_type='Lock'", [waiterPid])).rowCount);
+        if (!waiting) await wait(20);
+      }
+      expect(waiting).toBe(true);
+    } finally {
+      release();
+      await writer;
+    }
+    const result = await contender;
+    const artifact = await getArtifact(actorA, base.documentId);
+    expect({ contender: result, head: artifact.heads.find((head) => head.kind === "current")?.version_id }).toEqual({
+      contender: "STALE_BRANCH_HEAD", head: first.version.id,
+    });
   });
 
   it("serves XLSX, DOCX, PPTX, and PDF exact versions with truthful media type and filename", async () => {

@@ -79,6 +79,9 @@
       "@finnor/workflow-runtime": [
         "./packages/workflow-runtime/src/index.ts"
       ],
+      "@finnor/workflow-runtime/control-rules": [
+        "./packages/workflow-runtime/src/control-rules.ts"
+      ],
       "@finnor/memory": [
         "./packages/memory/src/index.ts"
       ],

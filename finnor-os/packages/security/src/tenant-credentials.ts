@@ -1,5 +1,5 @@
 import { authProfiles, connectionEvents, tenantIntegrations, withTenant } from "@finnor/db";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, notInArray, sql } from "drizzle-orm";
 import { readAwsSecretReference, writeAwsSecretReference } from "./secrets";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -460,20 +460,36 @@ async function cachedSecret(cacheKey: string, reference: string, version?: strin
   return read;
 }
 
-async function markGmailReauthRequired(tenantId: string, reference: string, reasonCode: string): Promise<void> {
-  await withTenant(tenantId, async (db) => {
+interface GmailRefreshBinding {
+  tenantId: string;
+  reference: string;
+  credentialVersion: string | null;
+}
+
+function currentGmailRefreshBinding(binding: GmailRefreshBinding) {
+  return and(
+    eq(authProfiles.tenantId, binding.tenantId),
+    eq(authProfiles.credentialRef, binding.reference),
+    sql`${authProfiles.credentialVersion} IS NOT DISTINCT FROM ${binding.credentialVersion}`,
+    eq(authProfiles.status, "active"),
+    notInArray(authProfiles.connectionStatus, ["connecting", "revoked", "disabled"]),
+  );
+}
+
+async function markGmailReauthRequired(binding: GmailRefreshBinding, reasonCode: string): Promise<void> {
+  await withTenant(binding.tenantId, async (db) => {
     const rows = await db.update(authProfiles).set({
       connectionStatus: "reauth_required",
       reauthRequiredAt: new Date(),
       lastConnectionErrorCode: reasonCode,
       connectionRevision: sql`${authProfiles.connectionRevision} + 1`,
       updatedAt: new Date(),
-    }).where(and(eq(authProfiles.tenantId, tenantId), eq(authProfiles.credentialRef, reference))).returning({
+    }).where(currentGmailRefreshBinding(binding)).returning({
       id: authProfiles.id,
     });
     for (const row of rows) {
       await db.insert(connectionEvents).values({
-        tenantId,
+        tenantId: binding.tenantId,
         authProfileId: row.id,
         eventType: "reauth_required",
         fromStatus: "active",
@@ -488,15 +504,14 @@ async function markGmailReauthRequired(tenantId: string, reference: string, reas
  * token remains inside the tenant secret, the platform OAuth client is loaded by the
  * existing managed system-secret bootstrap, and invalid_grant immediately removes
  * the profile from runtime selection. */
-async function refreshGmailOAuthSecret(params: {
-  tenantId: string;
-  reference: string;
+async function refreshGmailOAuthSecret(params: GmailRefreshBinding & {
   secret: Record<string, string>;
-}): Promise<Record<string, string>> {
+}): Promise<{ secret: Record<string, string>; version: string | null }> {
   const refreshToken = params.secret.refreshToken;
-  if (!refreshToken) return params.secret;
   const expiresAt = Date.parse(params.secret.expiresAt ?? "");
-  if (params.secret.accessToken && Number.isFinite(expiresAt) && expiresAt > Date.now() + 5 * 60_000) return params.secret;
+  if (!refreshToken || (params.secret.accessToken && Number.isFinite(expiresAt) && expiresAt > Date.now() + 5 * 60_000)) {
+    return { secret: params.secret, version: params.credentialVersion };
+  }
   const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID?.trim();
   const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET?.trim();
   if (!clientId || !clientSecret) throw new Error("Google OAuth client configuration is unavailable");
@@ -510,7 +525,7 @@ async function refreshGmailOAuthSecret(params: {
   if (!response.ok) {
     const code = typeof payload.error === "string" ? payload.error : "oauth_refresh_failed";
     if (code === "invalid_grant") {
-      await markGmailReauthRequired(params.tenantId, params.reference, code);
+      await markGmailReauthRequired(params, code);
       throw new TenantCredentialError("reauth_required", "gmail", params.tenantId, "Google connection requires reauthorization");
     }
     throw new Error("Google OAuth refresh is temporarily unavailable");
@@ -525,9 +540,10 @@ async function refreshGmailOAuthSecret(params: {
     ...(typeof payload.scope === "string" ? { scopes: payload.scope } : {}),
   };
   const versionId = await writeAwsSecretReference(params.reference, refreshed);
+  const version = `id:${versionId}`;
   await withTenant(params.tenantId, async (db) => {
     const rows = await db.update(authProfiles).set({
-      credentialVersion: `id:${versionId}`,
+      credentialVersion: version,
       connectionStatus: "active",
       tokenExpiresAt: new Date(refreshed.expiresAt),
       lastRefreshedAt: new Date(),
@@ -535,7 +551,7 @@ async function refreshGmailOAuthSecret(params: {
       lastConnectionErrorCode: null,
       connectionRevision: sql`${authProfiles.connectionRevision} + 1`,
       updatedAt: new Date(),
-    }).where(and(eq(authProfiles.tenantId, params.tenantId), eq(authProfiles.credentialRef, params.reference))).returning({ id: authProfiles.id });
+    }).where(currentGmailRefreshBinding(params)).returning({ id: authProfiles.id });
     for (const row of rows) {
       await db.insert(connectionEvents).values({
         tenantId: params.tenantId,
@@ -547,7 +563,7 @@ async function refreshGmailOAuthSecret(params: {
       });
     }
   });
-  return refreshed;
+  return { secret: refreshed, version };
 }
 
 export interface TenantBoundSecretReference {
@@ -764,10 +780,13 @@ export async function resolveCredentialReferenceContext<P extends TenantCredenti
   }
   const cacheKey = `${tenantId}:${provider}:aws-secrets-manager:${reference.credentialRef}:${reference.credentialVersion ?? "current"}`;
   let secret: Record<string, string>;
+  let version = reference.credentialVersion;
   try {
     secret = await cachedSecret(cacheKey, reference.credentialRef, reference.credentialVersion);
     if (provider === "gmail") {
-      secret = await refreshGmailOAuthSecret({ tenantId, reference: reference.credentialRef, secret });
+      const refreshed = await refreshGmailOAuthSecret({ tenantId, reference: reference.credentialRef, credentialVersion: version, secret });
+      secret = refreshed.secret;
+      version = refreshed.version;
     }
   } catch (error) {
     if (error instanceof TenantCredentialError) throw error;
@@ -781,7 +800,7 @@ export async function resolveCredentialReferenceContext<P extends TenantCredenti
       integration,
       secretProvider: "aws-secrets-manager",
       reference: reference.credentialRef,
-      version: reference.credentialVersion,
+      version,
       // Public account routing (for example a selected phoneNumberId/realmId) is
       // allowed to override the secret bundle's default account. Secret-shaped keys
       // were rejected above, so this cannot replace authentication material.
@@ -847,7 +866,10 @@ export async function resolveTenantCredentialContext<P extends TenantCredentialP
   try {
     secret = await cachedSecret(cacheKey, integration.credentialRef, integration.credentialVersion);
     if (provider === "gmail") {
-      secret = await refreshGmailOAuthSecret({ tenantId, reference: integration.credentialRef, secret });
+      const refreshed = await refreshGmailOAuthSecret({
+        tenantId, reference: integration.credentialRef, credentialVersion: integration.credentialVersion, secret,
+      });
+      secret = refreshed.secret;
     }
   } catch (error) {
     if (error instanceof TenantCredentialError) throw error;

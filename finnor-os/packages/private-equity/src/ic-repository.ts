@@ -790,6 +790,9 @@ export async function selectPrimaryIcUnderwritingRun(ctx: PeMutationContext, inp
     const process = await loadCaseForUpdate(client, bound.auth.tenantId, input.icCaseId);
     if (process.primary_underwriting_run_id === input.underwritingRunId) return mutation(process, false, true);
     expectedVersion(Number(process.version), input.expectedCaseVersion, "ICCase");
+    if (["DECIDED", "WITHDRAWN", "SUPERSEDED"].includes(process.state)) {
+      throw new PeDomainError("IC_TERMINAL", "An underwriting run cannot be selected into a terminal IC case");
+    }
     const policy = await policyForCase(client, bound.auth.tenantId, process.id);
     await requireEligibleUnderwritingBasisTx(client, bound.auth.tenantId, process.investment_case_id, input.underwritingRunId, policy.snapshot);
     const invalidate = ["READY_FOR_VOTE", "VOTING", "CONDITIONS_PENDING"].includes(process.state);

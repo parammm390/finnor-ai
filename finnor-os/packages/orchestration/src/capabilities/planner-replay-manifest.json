@@ -65,8 +65,8 @@
     },
     {
       "file": "package-lock.json",
-      "bytes": 263258,
-      "sha256": "ad015353104043178ed4df6e741443513d7dbc5d745fdf376a3dfde723d629f4"
+      "bytes": 263299,
+      "sha256": "934a898e1c437342b4ffbb376d69b9f420f57a19b800006948c0d95e47c48442"
     },
     {
       "file": "package.json",
@@ -125,8 +125,8 @@
     },
     {
       "file": "packages/authority/src/index.ts",
-      "bytes": 54636,
-      "sha256": "92630d7d486060e45aa52016bea817f0580f5b71dcd3b7692a328b1a62723c50"
+      "bytes": 56685,
+      "sha256": "3a214100f924f579faef5015605188ba2dd53cc39ebd2e90170fe326d99162d1"
     },
     {
       "file": "packages/authority/src/relationship-policy.ts",
@@ -465,8 +465,8 @@
     },
     {
       "file": "packages/db/migration-head.ts",
-      "bytes": 276,
-      "sha256": "a77e74e099ac6a81c359901110c69de0e14b87ca858df70b653d5e0d2474efbc"
+      "bytes": 281,
+      "sha256": "0d5e3ec09e19394e7007baad6f58396250422ebc612d08acfab9ee288b053b02"
     },
     {
       "file": "packages/db/migrations/0150_portfolio_resource_clearing.sql",
@@ -495,8 +495,8 @@
     },
     {
       "file": "packages/db/schema.ts",
-      "bytes": 323933,
-      "sha256": "f522bfdbd261bf9ea1a290d19340e62aa945c140a7abcfaf773bb7128e7554df"
+      "bytes": 323989,
+      "sha256": "e5685fdfa7cc7aecbe18fbbcd0f76a142a60117f1bf2942137430e54af84c80c"
     },
     {
       "file": "packages/document-ir/package.json",
@@ -550,8 +550,8 @@
     },
     {
       "file": "packages/domain-plugins/universal-actions/delegation-state.ts",
-      "bytes": 9158,
-      "sha256": "4a39c4a9f5e379b86ca3b9d1146e24eddc10d5f9e9c91d49cbbf2986786df2f3"
+      "bytes": 10103,
+      "sha256": "6c15e9abe24e7bfc23a620571e1ce2a8b009bc6a1b4d246107b97ddfacbc7aef"
     },
     {
       "file": "packages/domain-plugins/universal-actions/endpoint-resolver.ts",
@@ -570,8 +570,8 @@
     },
     {
       "file": "packages/domain-plugins/universal-actions/runtime.ts",
-      "bytes": 57119,
-      "sha256": "c491f63037d44accae5945cfb27aabde098f7f83af679b060c33588a34562591"
+      "bytes": 56900,
+      "sha256": "7855899d133eec787bedce303a064db9993d6807c6f54254af54a19f61ddf7eb"
     },
     {
       "file": "packages/domain-plugins/universal-actions/schemas.ts",
@@ -1290,8 +1290,8 @@
     },
     {
       "file": "packages/orchestration/src/index.ts",
-      "bytes": 109532,
-      "sha256": "033aeb3b365dc3483e2ebef192a7f1088a2de6ffae18d670daab256bbc7516ba"
+      "bytes": 110078,
+      "sha256": "078fbd7eb10f18091b29d8482ae94e85ccca5f52cc1fa5076b95ec941c0be470"
     },
     {
       "file": "packages/orchestration/src/instruction-routing.ts",
@@ -2136,7 +2136,7 @@
     {
       "file": "packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
       "bytes": 8809,
-      "sha256": "8e9915ccd93468c36234687129c0bd7c42f5904694fbe119ca7e018206042831"
+      "sha256": "1e8a7d00fccf9bd5fdb1694a71a8e7d69dde1f77274eeb69f8375b8691de2234"
     },
     {
       "file": "packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2235,8 +2235,8 @@
     },
     {
       "file": "packages/private-equity/src/ic-repository.ts",
-      "bytes": 156733,
-      "sha256": "6e732e1c4cf27bb8534cce86681de1bcc0ebba98f75e76867fff85f819b519eb"
+      "bytes": 156925,
+      "sha256": "301641a15d555bc407e46db64ad2c9e8a5c0d08ddbb137992a90c149fb3b133c"
     },
     {
       "file": "packages/private-equity/src/ic-telemetry.ts",
@@ -2526,7 +2526,7 @@
     {
       "file": "packages/private-equity/src/policy-learning/source-manifest.generated.ts",
       "bytes": 13772,
-      "sha256": "d9509dfe885c4d0ae6025c2e1c1c9306474fd319f666a22cf1fb22cb4136d3bb"
+      "sha256": "1a8949627e7acb74767021e213b14b2d60608f4da281f63b5f72bf532ee1b284"
     },
     {
       "file": "packages/private-equity/src/policy-learning/source-paths.ts",
@@ -2871,7 +2871,7 @@
     {
       "file": "packages/private-equity/src/system-identification/source-manifest.generated.ts",
       "bytes": 19716,
-      "sha256": "fe04b9fad6c3cfbbbc19b5cddd2f84b447cfb8b31c1fcafbc78fae88d23a2d97"
+      "sha256": "c4fd268ba3e7da79501c37b26d9e7b4097820dbc203ea851a3711a5a671da7b4"
     },
     {
       "file": "packages/private-equity/src/system-identification/source-paths.ts",
@@ -2935,13 +2935,13 @@
     },
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-manifest.generated.ts",
-      "bytes": 209646,
-      "sha256": "28cbfa3555f0cad16353ec95b8711e5101cf6f6077c176304625fd270d8b7f9a"
+      "bytes": 211843,
+      "sha256": "367b9655aad13da2ccf3625ccbe417490418609fa52d6021df99399417644139"
     },
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-paths.ts",
-      "bytes": 78862,
-      "sha256": "5a7fd413fa209404abee45d661ee1dab5ebfd8385d0dcd7468ff0a4c3a95350f"
+      "bytes": 79655,
+      "sha256": "c51fafa8e8b0532b1141f5a071e3a09c65b4063dac51259409639b68b2486e8b"
     },
     {
       "file": "packages/private-equity/src/uniform-algorithms/specification.ts",
@@ -3045,8 +3045,8 @@
     },
     {
       "file": "packages/read-models/package.json",
-      "bytes": 320,
-      "sha256": "0932fe117bd4b0d2e6909c44bd0ad73e54cea45c34bc269fd4acf518afbc102e"
+      "bytes": 357,
+      "sha256": "6f732bffed505389619adb253eb71ff1ca9fc53f5c92d41aca75cb7f47ee9695"
     },
     {
       "file": "packages/read-models/src/anomaly-detector.ts",
@@ -3070,8 +3070,8 @@
     },
     {
       "file": "packages/read-models/src/execution-projection.ts",
-      "bytes": 54408,
-      "sha256": "c2d4317d8c2cfe539491a1a41a6c24544346451bef3adbd9ac5e45351e56f9f4"
+      "bytes": 55404,
+      "sha256": "c259510ab2557a375c4d1cd9cc3c4a3457ad37ab3c7c27e22012b4aa35a46fda"
     },
     {
       "file": "packages/read-models/src/failure-injection-calendar.ts",
@@ -3120,8 +3120,8 @@
     },
     {
       "file": "packages/security/src/connections.ts",
-      "bytes": 26851,
-      "sha256": "9e6b7db7992f7e53dbb6ceca12aa5758ff8be4042e029c546944c29879dcc11f"
+      "bytes": 29212,
+      "sha256": "a7e84f0def167481ba977d59b5c50912ca8ed6996fb2ae18e453892fd72f9912"
     },
     {
       "file": "packages/security/src/delivery.ts",
@@ -3155,8 +3155,8 @@
     },
     {
       "file": "packages/security/src/tenant-credentials.ts",
-      "bytes": 39480,
-      "sha256": "1d9636d1ba379dffe53fedec6d394927cf409befd860a95457358622daa8c9d4"
+      "bytes": 40224,
+      "sha256": "71171d3c2b3fb72269f1e0953e19f50360c4476c1d239a1583d2377ea7fbecf4"
     },
     {
       "file": "packages/security/src/workos-auth.ts",
@@ -3290,8 +3290,8 @@
     },
     {
       "file": "packages/shared-types/src/execution-projection.ts",
-      "bytes": 9148,
-      "sha256": "02c1e20e664238ae115221db09fe1a23fe1464bd7c602ee094c9fa6a31602212"
+      "bytes": 9365,
+      "sha256": "9be125c351bb063399f3d91dd2cfe035cd61a8f16a2ae493a65217d5eb277bbd"
     },
     {
       "file": "packages/shared-types/src/experiments.ts",
@@ -3705,8 +3705,8 @@
     },
     {
       "file": "packages/workflow-runtime/package.json",
-      "bytes": 1262,
-      "sha256": "8c1118171ead373d36eb33e6eff6d20d520d503adf0a922d81e7279b85a022cf"
+      "bytes": 1376,
+      "sha256": "59849c65f1e92e442c98ba0661fb1a8ee146e0209fe304ae5296e63ad44cb2d1"
     },
     {
       "file": "packages/workflow-runtime/src/chaos.ts",
@@ -3722,6 +3722,11 @@
       "file": "packages/workflow-runtime/src/compensation.ts",
       "bytes": 4174,
       "sha256": "da7d85efd7004b4ece75622d444f17ac16de7f819afd597f8f88e30041adf750"
+    },
+    {
+      "file": "packages/workflow-runtime/src/control-rules.ts",
+      "bytes": 2421,
+      "sha256": "e9cd1b0f8b4dabeff081dc63dbadfadde90948b31ada0f60f99d731881b0f0ef"
     },
     {
       "file": "packages/workflow-runtime/src/dlq-triage.ts",
@@ -3785,8 +3790,8 @@
     },
     {
       "file": "packages/workflow-runtime/src/run-controls.ts",
-      "bytes": 17578,
-      "sha256": "7b0140043f2d409f3d5c87d9a5f41d62b021d7d2b2733262452df4925da3e4e6"
+      "bytes": 17034,
+      "sha256": "0de4071420088684efe4df4e088fcd76b6920a517bfe99e1169039cccd956072"
     },
     {
       "file": "packages/workflow-runtime/src/steps.ts",
@@ -3835,8 +3840,8 @@
     },
     {
       "file": "tsconfig.base.json",
-      "bytes": 5952,
-      "sha256": "0a496c9b62d8c03c4dc74fb1f981f92a5b5f8c0c17d3c2b2f2018ad3919b3716"
+      "bytes": 6070,
+      "sha256": "4525f68e60161406847b601bd67636149418a905c90c2316d9b88993f958258f"
     },
     {
       "file": "tsconfig.json",

@@ -526,6 +526,52 @@ describe.skipIf(!available)("Phase 2 Universal Action + Delegation Fabric", () =
     expect(events.map((event) => event.toStatus)).toEqual(["created", "sent", "delivered", "escalated", "cancelled"]);
   });
 
+  it("completes a previously accepted escalated delegation when its exact task is done", async () => {
+    const delegated = await executeAction({
+      actionType: "delegate_objective",
+      payload: {
+        workRef: { workId: WORK_A }, targetRef: { partyType: "employee", partyId: MARIO_A },
+        objective: "Finish the accepted delivery", escalationTargetRef: { partyType: "employee", partyId: SARAH }, evidenceRefs: [],
+      },
+      workId: WORK_A,
+    });
+    expect(delegated.result.status).toBe("success");
+    const [delegation] = await withTenant(TENANT_A, (db) => db.select().from(delegations).where(eq(delegations.domainActionId, delegated.action.id)));
+    if (!delegation?.taskId) throw new Error("Delegated task is missing");
+    const [ack] = await withTenant(TENANT_A, (db) => db.select().from(acknowledgementRequests).where(eq(acknowledgementRequests.delegationId, delegation.id)));
+    await acknowledgeDelegation({ tenantId: TENANT_A, delegationId: delegation.id, acknowledgementRequestId: ack!.id, actorId: MARIO_A });
+    await acceptDelegation({ tenantId: TENANT_A, delegationId: delegation.id, actorId: MARIO_A });
+    const escalated = await executeAction({ actionType: "escalate_work", payload: {
+      delegationRef: { delegationId: delegation.id }, targetRef: { partyType: "employee", partyId: SARAH }, reason: "Completion delayed", evidenceRefs: [],
+    } });
+    expect(escalated.result.status).toBe("success");
+    const finish = () => executeAction({ actionType: "update_task", payload: { taskRef: { taskId: delegation.taskId }, status: "done" } });
+    const admin = new pg.Client({ connectionString: SUPER_URL });
+    await admin.connect();
+    const constraint = `test_completion_${delegation.id.replaceAll("-", "")}`;
+    try {
+      await admin.query(`ALTER TABLE finnor_os.delegation_events ADD CONSTRAINT ${constraint}
+        CHECK (delegation_id <> '${delegation.id}'::uuid OR to_status <> 'completed') NOT VALID`);
+      expect((await finish()).result.status).toBe("failure");
+      const [uncommittedTask] = await withTenant(TENANT_A, (db) => db.select().from(tasks).where(eq(tasks.id, delegation.taskId!)));
+      expect(uncommittedTask?.status).toBe("open");
+    } finally {
+      await admin.query(`ALTER TABLE finnor_os.delegation_events DROP CONSTRAINT IF EXISTS ${constraint}`);
+      await admin.end();
+    }
+    expect((await finish()).result.status).toBe("success");
+    expect((await finish()).result.status).toBe("success");
+    const [task, stored, completedEvents] = await withTenant(TENANT_A, async (db) => {
+      const [task] = await db.select().from(tasks).where(eq(tasks.id, delegation.taskId!));
+      const [stored] = await db.select().from(delegations).where(eq(delegations.id, delegation.id));
+      const completedEvents = await db.select().from(delegationEvents).where(and(eq(delegationEvents.delegationId, delegation.id), eq(delegationEvents.toStatus, "completed")));
+      return [task, stored, completedEvents] as const;
+    });
+    expect({ task: task?.status, delegation: stored?.status, completionEvents: completedEvents.map((event) => event.fromStatus) }).toEqual({
+      task: "done", delegation: "completed", completionEvents: ["escalated"],
+    });
+  });
+
   it("schedules and reschedules the same internal event without fabricating an external calendar result", async () => {
     // The operating-context projection intentionally omits events that have
     // already ended. Keep this fixture relative to the runner clock so the

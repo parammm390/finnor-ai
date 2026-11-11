@@ -7,35 +7,20 @@
 // execution) so "who paused this and when" is answerable the same way any other
 // consequential action in this system is.
 
-import { actionLog, businessEffects, commands, domainActions, reconciliationCases, withTenant, workflowRuns, workflowStepClaims, workflowSteps, reconcileWorkStatus, resolveTenantVertical } from "@finnor/db";
+import { actionLog, businessEffects, commands, domainActions, integrationOperations, reconciliationCases, withTenant, workflowRuns, workflowStepClaims, workflowSteps, reconcileWorkStatus, resolveTenantVertical } from "@finnor/db";
 import type { Db } from "@finnor/db";
 import { and, eq, sql, inArray } from "drizzle-orm";
 import { redriveNextPendingStepTx } from "./steps";
 import { openReceiptTx, finalizeReceiptTx } from "./receipts";
 import { isRetiredWaterWorkflow, RetiredVerticalError } from "@finnor/shared-types";
 
-export type RunControlVerb = "pause" | "resume" | "cancel" | "retry" | "escalate";
+import { RUN_CONTROL_TRANSITIONS as TRANSITIONS, workflowRetryBlocker, type TransitionSpec } from "./control-rules";
+export type { RunControlVerb } from "./control-rules";
 
 export type RunControlFailureReason = "not_found" | "version_conflict" | "illegal_transition";
 export type RunControlResult =
   | { ok: true; run: typeof workflowRuns.$inferSelect }
   | { ok: false; reason: RunControlFailureReason };
-
-type WorkflowRunStatus = (typeof workflowRuns.$inferSelect)["status"];
-
-interface TransitionSpec {
-  verb: RunControlVerb;
-  fromStatuses: WorkflowRunStatus[];
-  toStatus: WorkflowRunStatus;
-}
-
-const TRANSITIONS: Record<RunControlVerb, TransitionSpec> = {
-  pause: { verb: "pause", fromStatuses: ["running"], toStatus: "paused" },
-  resume: { verb: "resume", fromStatuses: ["paused"], toStatus: "running" },
-  cancel: { verb: "cancel", fromStatuses: ["running", "paused"], toStatus: "cancelled" },
-  retry: { verb: "retry", fromStatuses: ["failed"], toStatus: "running" },
-  escalate: { verb: "escalate", fromStatuses: ["running", "failed"], toStatus: "escalated" },
-};
 
 async function assertActiveRun(tenantId: string, runId: string): Promise<void> {
   await resolveTenantVertical(tenantId);
@@ -137,12 +122,12 @@ export async function resumeRun(tenantId: string, runId: string, expectedVersion
 export async function cancelRun(tenantId: string, runId: string, expectedVersion: number, requestedBy: string, _authorityDecisionId?: string): Promise<RunControlResult> {
   await assertActiveRun(tenantId, runId);
   const updated = await withTenant(tenantId, async (db) => {
-    const [run] = await db.update(workflowRuns).set({ status: "cancelled", version: sql`${workflowRuns.version} + 1`, updatedAt: new Date() })
+    const [run] = await db.update(workflowRuns).set({ status: TRANSITIONS.cancel.toStatus, version: sql`${workflowRuns.version} + 1`, updatedAt: new Date() })
       .where(and(
         eq(workflowRuns.id, runId),
         eq(workflowRuns.tenantId, tenantId),
         eq(workflowRuns.version, expectedVersion),
-        inArray(workflowRuns.status, ["running", "paused"]),
+        inArray(workflowRuns.status, TRANSITIONS.cancel.fromStatuses),
       )).returning();
     if (!run) return null;
     const steps = await db.select().from(workflowSteps).where(and(eq(workflowSteps.tenantId, tenantId), eq(workflowSteps.workflowRunId, runId)));
@@ -250,33 +235,29 @@ export async function retryRun(tenantId: string, runId: string, expectedVersion:
       eq(workflowSteps.workflowRunId, runId),
     ));
     const failed = steps.filter((step) => step.status === "failed");
-    // Retry is a local-processing/provider-redelivery operation only when the prior
-    // result is known not to have produced an effect. Unknown delivery, divergence,
-    // cancellation-after-commit, and authority/precondition blocks require explicit
-    // reconciliation or a replacement EffectSet instead.
-    const safelyRetryable = failed.length > 0 && failed.every((step) =>
-      (["authorized", "failed_before_effect"].includes(step.executionState)
-        || (step.executionState === "claimed" && !step.effectCommitAt))
-      && !["reconciling", "failed_after_possible_effect", "cancellation_requested", "blocked"].includes(step.executionState),
-    );
-    if (!safelyRetryable) return null;
+    if (!failed.length) return null;
     const effectIds = [...new Set(failed.map((step) => step.businessEffectId).filter((id): id is string => Boolean(id)))];
-    if (effectIds.length > 0) {
-      const effects = await db.select({ status: businessEffects.status }).from(businessEffects).where(and(
-        eq(businessEffects.tenantId, tenantId),
-        inArray(businessEffects.id, effectIds),
-      ));
-      if (effects.length !== effectIds.length || effects.some((effect) => effect.status !== "failed")) return null;
-    }
+    const effects = effectIds.length ? await db.select({ id: businessEffects.id, status: businessEffects.status }).from(businessEffects).where(and(
+      eq(businessEffects.tenantId, tenantId), inArray(businessEffects.id, effectIds),
+    )) : [];
+    const stepIds = steps.map((step) => step.id);
+    const unresolved = await db.execute<{ present: boolean }>(sql`SELECT EXISTS (
+      SELECT 1 FROM ${integrationOperations} WHERE ${and(eq(integrationOperations.tenantId, tenantId),
+        inArray(integrationOperations.workflowStepId, stepIds), eq(integrationOperations.status, "unknown"))}
+    ) OR EXISTS (
+      SELECT 1 FROM ${reconciliationCases} WHERE ${and(eq(reconciliationCases.tenantId, tenantId),
+        inArray(reconciliationCases.relatedStepId, stepIds), eq(reconciliationCases.status, "open"))}
+    ) AS present`);
+    if (workflowRetryBlocker({ steps, effectStatuses: new Map(effects.map((effect) => [effect.id, effect.status])), unresolvedEffect: unresolved.rows[0]?.present !== false })) return null;
     const [run] = await db.update(workflowRuns).set({
-      status: "running",
+      status: TRANSITIONS.retry.toStatus,
       version: sql`${workflowRuns.version} + 1`,
       updatedAt: new Date(),
     }).where(and(
       eq(workflowRuns.id, runId),
       eq(workflowRuns.tenantId, tenantId),
       eq(workflowRuns.version, expectedVersion),
-      eq(workflowRuns.status, "failed"),
+      inArray(workflowRuns.status, TRANSITIONS.retry.fromStatuses),
     )).returning();
     if (!run) return null;
     await db.update(commands).set({ status: "running", cancellationRequestedAt: null, updatedAt: new Date() })
@@ -317,7 +298,7 @@ export async function retryRun(tenantId: string, runId: string, expectedVersion:
       run,
       requestedBy,
       `retry workflow run ${runId}`,
-      { verb: "retry", fromStatuses: ["failed"], toStatus: "running", safeKnownFailure: true },
+      { ...TRANSITIONS.retry, safeKnownFailure: true },
     );
     return run;
   });

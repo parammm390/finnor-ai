@@ -4,6 +4,7 @@ import { reviewedEffectHash } from "../reviewed-effect";
 // unchanged; only a persistent worker may cross the effect boundary.
 
 import { randomUUID } from "node:crypto";
+import { AsyncLocalStorage } from "node:async_hooks";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -90,6 +91,64 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
     ownerId = owner!.id;
   });
   afterAll(async () => { await closePool(); });
+
+  it("cannot spend an approval decision on a step that advanced while it waited", async () => {
+    const fixture = await draftUpdate("Stale chain approval must not release the next step");
+    const requestId = await withTenant(SEED_TENANT_ID, async (db) => {
+      const [request] = await db.select().from(authorityApprovalRequests).where(eq(authorityApprovalRequests.domainActionId, fixture.action.id));
+      const [firstStep] = await db.select().from(authorityApprovalRequestSteps).where(and(
+        eq(authorityApprovalRequestSteps.approvalRequestId, request!.id), eq(authorityApprovalRequestSteps.sequence, 1),
+      ));
+      await db.insert(authorityApprovalRequestSteps).values({
+        tenantId: SEED_TENANT_ID, approvalRequestId: request!.id, sequence: 2,
+        approverCapability: firstStep!.approverCapability, minApprovals: 1,
+      });
+      return request!.id;
+    });
+    const scope = new AsyncLocalStorage<boolean>();
+    const originalQuery = pg.Client.prototype.query;
+    let reached!: () => void;
+    let resume!: () => void;
+    let paused = false;
+    const waiting = new Promise<void>((resolve) => { reached = resolve; });
+    const released = new Promise<void>((resolve) => { resume = resolve; });
+    const decide = () => fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, {
+      role: "owner",
+      expectedEffectHash: fixture.reviewedEffectHash,
+    });
+    Object.defineProperty(pg.Client.prototype, "query", { value: function(this: pg.Client, ...args: unknown[]) {
+      const query = args[0];
+      const text = typeof query === "string" ? query : query && typeof query === "object" && "text" in query ? String(query.text) : "";
+      if (!paused && scope.getStore() && text.startsWith('select "instruction_id", "work_id" from "finnor_os"."domain_actions"')) {
+        paused = true;
+        reached();
+        return released.then(() => Reflect.apply(originalQuery, this, args));
+      }
+      return Reflect.apply(originalQuery, this, args);
+    } });
+    const earlier = scope.run(true, decide);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([
+        waiting,
+        earlier.then((result) => { throw new Error(`Earlier approval settled before the transition barrier: ${result.error ?? result.status}`); }),
+        new Promise<never>((_, reject) => { timeout = setTimeout(() => reject(new Error("Approval transition barrier was not reached")), 5000); }),
+      ]);
+      expect(await decide()).toMatchObject({ status: "success", output: { awaitingNextApproval: true } });
+    } finally {
+      clearTimeout(timeout);
+      resume();
+      Object.defineProperty(pg.Client.prototype, "query", { value: originalQuery });
+    }
+    const stale = await earlier;
+    const steps = await withTenant(SEED_TENANT_ID, (db) => db.select({ status: authorityApprovalRequestSteps.status })
+      .from(authorityApprovalRequestSteps).where(eq(authorityApprovalRequestSteps.approvalRequestId, requestId)).orderBy(authorityApprovalRequestSteps.sequence));
+    expect({ stale: stale.status, steps, command: (await durableRows(fixture.action.id)).command }).toEqual({
+      stale: "failure", steps: [{ status: "approved" }, { status: "pending" }], command: undefined,
+    });
+    expect(await decide()).toMatchObject({ status: "success", output: { queued: true } });
+  });
+
 
   it("commits final approval + exact EffectSet intent + first job atomically, and returns before execution", async () => {
     const fixture = await draftUpdate("Executed only by the worker");
