@@ -112,7 +112,10 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
     let paused = false;
     const waiting = new Promise<void>((resolve) => { reached = resolve; });
     const released = new Promise<void>((resolve) => { resume = resolve; });
-    const decide = () => fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, { role: "owner" });
+    const decide = () => fixture.orchestrator.decide(fixture.action.id, SEED_TENANT_ID, "approve", ownerId, {
+      role: "owner",
+      expectedEffectHash: fixture.reviewedEffectHash,
+    });
     Object.defineProperty(pg.Client.prototype, "query", { value: function(this: pg.Client, ...args: unknown[]) {
       const query = args[0];
       const text = typeof query === "string" ? query : query && typeof query === "object" && "text" in query ? String(query.text) : "";
@@ -128,7 +131,7 @@ describe.skipIf(!available)("single-action universal durable boundary", () => {
     try {
       await Promise.race([
         waiting,
-        earlier.then(() => { throw new Error("Earlier approval settled before the transition barrier"); }),
+        earlier.then((result) => { throw new Error(`Earlier approval settled before the transition barrier: ${result.error ?? result.status}`); }),
         new Promise<never>((_, reject) => { timeout = setTimeout(() => reject(new Error("Approval transition barrier was not reached")), 5000); }),
       ]);
       expect(await decide()).toMatchObject({ status: "success", output: { awaitingNextApproval: true } });
