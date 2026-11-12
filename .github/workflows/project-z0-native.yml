@@ -2,7 +2,7 @@ name: Project Z0 native continuation
 
 on:
   push:
-    branches: [codex/project-z0-resume, codex/project-z0-identity, codex/project-z0-useful, codex/project-z0-r12, codex/project-z0-mounted, codex/project-z0-recovery]
+    branches: [codex/project-z0-resume, codex/project-z0-identity, codex/project-z0-useful, codex/project-z0-r12, codex/project-z0-mounted, codex/project-z0-recovery, codex/project-z0-economic]
 
 permissions:
   contents: read
@@ -35,7 +35,18 @@ jobs:
       - name: Install the locked Chromium build
         if: github.ref_name == 'codex/project-z0-mounted'
         run: PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/z0-chromium" node node_modules/playwright/cli.js install --with-deps chromium
+      - name: Verify the installed economic programme reader
+        if: github.ref_name == 'codex/project-z0-economic'
+        working-directory: finnor-os
+        run: |
+          npm run db:bundle
+          npm run openapi
+          npm run build --workspace @finnor/api
+          node --import=tsx scripts/y1/build-runtime.mts
+          FINNOR_Y1_BUILT_API=1 FINNOR_Y1_EVIDENCE_DIR="$RUNNER_TEMP/z0-economic" \
+            node --import=tsx scripts/y1/run-installed.mts
       - name: Run the native owner scenario
+        if: github.ref_name != 'codex/project-z0-economic'
         env:
           Z0_RECOVERY_MODE: ${{ matrix.mode }}
         run: |
@@ -135,14 +146,35 @@ jobs:
                 .map(field => [field, identifier(diagnostic[field])])) : null,
             })),
           } : null
+          const fixtureFailures = files.filter(name => /^parent-[a-z0-9-]{1,48}-queue\.private\.json$/.test(name)).map(name => {
+            const { queue } = JSON.parse(readFileSync(join(scenario, name), 'utf8'))
+            return queue.filter(job => job.status !== 'completed').map(job => ({
+              type: identifier(job.type), compiler: typedCode(job.compiler_status), programme: typedCode(job.programme_status),
+              ...jobFailure({ status: job.status, error: job.reason }),
+            }))
+          })
           const mountedFile = join(scenario, 'z0-mounted-session.v1.json')
           if (existsSync(mountedFile)) {
             const { cases } = JSON.parse(readFileSync(mountedFile, 'utf8'))
             for (const { id, outcome, error, reason, checks } of cases) {
+              const browserOperation = typeof error === 'string'
+                ? error.match(/^(browserType\.launch|browser\.newContext|page\.goto|page\.waitForResponse|locator\.(?:fill|click|waitFor)):/)?.[1] ?? null : null
+              const networkError = typeof error === 'string' ? error.match(/net::(ERR_[A-Z_]{3,80})/)?.[1] ?? null : null
+              const setupFailure = checks.find(check => check.id === 'B.setup' && !check.pass)?.observed
+              const setupPredicate = typeof setupFailure === 'string' ? predicateFrom(setupFailure.replace(/^B:/, '')) : null
+              const setupCause = typeof setupFailure === 'string'
+                ? setupFailure.match(/^B:Z0_FIXTURE_TERMINAL_(?:COMPILER|PROGRAMME|SESSION)_[A-Z_]+:([A-Z0-9_]{3,160})(?=[: ]|$)/)?.[1] ?? null : null
               results.push({ id, outcome, predicate: predicateFrom(error) ?? predicateFrom(reason),
+                browserOperation, networkError, setupPredicate, setupCause,
                 failedChecks: checks.filter(check => !check.pass).map(check => check.id)
                   .filter(check => /^[a-zA-Z0-9_.-]{1,80}$/.test(check)) })
             }
+          }
+          const economicCase = join(process.env.RUNNER_TEMP, 'z0-economic', 'cases', 'E-canonical-query-preserves-original-Work.json')
+          if (existsSync(economicCase)) {
+            const { status, observed, error } = JSON.parse(readFileSync(economicCase, 'utf8'))
+            results.push({ id: 'D1-02a', outcome: status === 'PASS' && observed?.canonicalReadDidNotSteerOrCompleteWork === true ? 'PASS' : 'FAIL',
+              predicate: predicateFrom(error) })
           }
           const state = join(process.env.GITHUB_WORKSPACE, '.centropy-certification',
             'z0-ci-' + process.env.GITHUB_RUN_ID + '-' + process.env.GITHUB_RUN_ATTEMPT)
@@ -169,7 +201,7 @@ jobs:
               } catch {}
             }
           }
-          const receipt = { sourceSha: process.env.GITHUB_SHA, results, acquisitionFailure, serverErrorKinds: [...serverErrorKinds] }
+          const receipt = { sourceSha: process.env.GITHUB_SHA, results, acquisitionFailure, fixtureFailures, serverErrorKinds: [...serverErrorKinds] }
           writeFileSync(join(process.env.RUNNER_TEMP, 'z0-cases.json'), JSON.stringify(receipt, null, 2) + '\n')
           const continuation = ['P0-00', 'P0-01', 'P0-10', 'P0-11']
           const recovery = {
@@ -180,6 +212,7 @@ jobs:
           }
           const required = ({
             'codex/project-z0-identity': ['D1-00', 'D1-B', 'D1-01'],
+            'codex/project-z0-economic': ['D1-02a'],
             'codex/project-z0-useful': [...continuation, 'P0-11b'],
             'codex/project-z0-r12': ['R12-02', 'R12-03', 'R12-04'],
             'codex/project-z0-mounted': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),
