@@ -1,8 +1,8 @@
 import assert from "node:assert/strict"
-import { spawn } from "node:child_process"
+import { spawn, spawnSync } from "node:child_process"
 import { createHash } from "node:crypto"
 import { createRequire } from "node:module"
-import { createWriteStream, existsSync, mkdirSync, readFileSync, statfsSync, writeFileSync } from "node:fs"
+import { chmodSync, createWriteStream, existsSync, mkdirSync, readFileSync, statfsSync, writeFileSync } from "node:fs"
 import { dirname, isAbsolute, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { setTimeout as delay } from "node:timers/promises"
@@ -33,11 +33,36 @@ assert.ok(forwarded.every(key => /^[A-Z][A-Z0-9_]{2,60}$/.test(key) && !/KEY|TOK
   "Only named non-secret environment variables may be forwarded")
 const state = join(root, ".centropy-certification", name)
 assert.ok(!existsSync(state) && state !== evidence && !state.startsWith(evidence + "/") && !evidence.startsWith(state + "/"))
+// The pinned Auth starter refuses a missing or symlinked state parent, and a clean checkout has no .centropy-certification.
+mkdirSync(dirname(state), { recursive: true, mode: 0o700 })
+// BEGIN --auth-tls / --production-build / z4 profile (inert unless the flag or profile is given)
+const authTls = process.argv.includes("--auth-tls")
+const productionBuild = process.argv.includes("--production-build")
+const authTlsPort = Number(option("auth-tls-port") ?? "54443")
+const tlsDirectory = join(evidence, "tls")
+const tlsCertificate = join(tlsDirectory, "auth-tls-cert.pem")
+const tlsKey = join(tlsDirectory, "auth-tls-key.private.pem")
+const tlsState = join(evidence, "auth-tls-state")
+assert.ok(Number.isInteger(authTlsPort) && authTlsPort >= 1024 && authTlsPort <= 65535, "AUTH_TLS_PORT_INVALID")
+// Presence is refused even when set to a safe-looking value: no trust may be weakened by environment.
+assert.ok(!authTls || !("NODE_TLS_REJECT_UNAUTHORIZED" in process.env), "NODE_TLS_REJECT_UNAUTHORIZED_REFUSED")
+assert.ok(!authTls || forwarded.every(key => !/^(NODE_TLS|NODE_EXTRA|SSL_|OPENSSL)/.test(key)), "TRUST_ENVIRONMENT_NOT_FORWARDABLE")
+const z4Profile = (profiles ?? "").split(",").includes("z4")
+const s3Python = process.env.FINNOR_S3_PYTHON
+assert.ok(!z4Profile || (s3Python && isAbsolute(s3Python)), "Z4_PROFILE_REQUIRES_ABSOLUTE_FINNOR_S3_PYTHON")
+// z1 takes the same pinned interpreter only when the caller supplies it, for the S3/S4 owner chain.
+const z1Chain = (profiles ?? "").split(",").includes("z1") && s3Python !== undefined
+assert.ok(!z1Chain || isAbsolute(s3Python), "Z1_CHAIN_REQUIRES_ABSOLUTE_FINNOR_S3_PYTHON")
+const budgetMs = option("budget-ms")
+assert.ok(budgetMs === undefined || /^[0-9]{6,7}$/.test(budgetMs), "BUDGET_MS_MUST_BE_A_BOUNDED_INTEGER")
+// END
 mkdirSync(evidence, { mode: 0o700 })
 const baseEnv = { PATH: dirname(process.execPath) + ":/usr/bin:/bin", HOME: evidence, TMPDIR: evidence,
   CI: "1", LANG: "C.UTF-8", PYTHONDONTWRITEBYTECODE: "1", NEXT_TELEMETRY_DISABLED: "1",
   NODE_OPTIONS: "--max-old-space-size=4096", RAYON_NUM_THREADS: "2", TSX_DISABLE_CACHE: "1" }
-const scenarioEnv = { ...baseEnv, ...Object.fromEntries(forwarded.filter(key => process.env[key] !== undefined).map(key => [key, process.env[key]])) }
+// Node reads NODE_EXTRA_CA_CERTS lazily at its first TLS use, so it must be part of the start environment.
+const scenarioEnv = { ...baseEnv, ...(authTls ? { NODE_EXTRA_CA_CERTS: tlsCertificate } : {}),
+  ...Object.fromEntries(forwarded.filter(key => process.env[key] !== undefined).map(key => [key, process.env[key]])) }
 const receipt = { schema: "finnor.project-z.native-scenario-stack.v1", status: "RUNNING", stage: "PINNED_AUTH_INSTALL",
   startedAt: new Date().toISOString(), sourceRoot: root, state, node: process.version, profiles: profiles ?? null,
   scenarios: scenarios.map(path => ({ path, sha256: createHash("sha256").update(readFileSync(path)).digest("hex"), code: null, signal: null })),
@@ -131,12 +156,38 @@ try {
   const auth = start("auth", process.execPath, [join(root, "scripts/project-z/start-isolated-auth.mjs"),
     "--state=" + state, "--auth-binary=" + join(target, "auth")], "READY_REAL_LOCAL_AUTH_AND_DATABASE")
   assert.ok(await bounded(auth.ready, 240000), "REAL_AUTH_READY_REQUIRED")
+  // BEGIN --auth-tls front
+  if (authTls) {
+    receipt.stage = "AUTH_TLS_FRONT"
+    save()
+    mkdirSync(tlsDirectory, { mode: 0o700 })
+    const generated = spawnSync("openssl", ["req", "-x509", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:prime256v1", "-nodes",
+      "-keyout", tlsKey, "-out", tlsCertificate, "-days", "2", "-subj", "/CN=127.0.0.1",
+      "-addext", "subjectAltName=IP:127.0.0.1", "-addext", "basicConstraints=critical,CA:FALSE",
+      "-addext", "keyUsage=critical,digitalSignature", "-addext", "extendedKeyUsage=serverAuth"],
+      { env: { PATH: "/usr/bin:/bin" }, stdio: "ignore", timeout: 30000 })
+    assert.equal(generated.status, 0, "AUTH_TLS_CERTIFICATE_GENERATION_FAILED")
+    chmodSync(tlsKey, 0o600)
+    chmodSync(tlsCertificate, 0o644)
+    const tls = start("auth-tls", process.execPath, [join(root, "scripts/project-z/start-isolated-auth-tls.mjs"),
+      "--cert=" + tlsCertificate, "--key=" + tlsKey, "--state=" + tlsState, "--port=" + authTlsPort], "READY_LOOPBACK_TLS_AUTH_FRONT")
+    const tlsReady = await bounded(tls.ready, 60000)
+    assert.ok(tlsReady, "AUTH_TLS_FRONT_READY_REQUIRED")
+    receipt.authTls = { origin: tlsReady.origin, certificateSha256: tlsReady.certificateSha256, spkiSha256: tlsReady.spkiSha256,
+      trust: "SINGLE_DECLARED_PEM_VIA_NODE_EXTRA_CA_CERTS_AT_PROCESS_START", tlsVerificationDisabled: false }
+  }
+  // END
   receipt.stage = "REAL_APPLICATION_BOOTSTRAP"
   save()
   const app = start("app", process.execPath, [join(root, "scripts/project-z/start-isolated-app.mjs"), "--state=" + state,
     ...(profiles ? ["--profile=" + profiles] : []), ...(z3Producer ? ["--z3-producer=" + z3Producer] : []),
-    ...(noWorker ? ["--no-worker"] : [])], "READY_REAL_AUTHENTICATED_NATIVE_TARGET")
-  assert.ok(await bounded(app.ready, 1200000), "REAL_APPLICATION_READY_REQUIRED")
+    ...(noWorker ? ["--no-worker"] : []),
+    ...(authTls ? ["--auth-tls-origin=" + receipt.authTls.origin, "--auth-tls-cert=" + tlsCertificate, "--auth-tls-state=" + tlsState] : []),
+    ...(productionBuild ? ["--production-build"] : []), ...(z4Profile || z1Chain ? ["--s3-python=" + s3Python] : []),
+    ...(profiles?.split(",").includes("z5") ? ["--z5-s3-python=" + process.env.FINNOR_S3_PYTHON] : []), // z5-native
+    ...(budgetMs ? ["--budget-ms=" + budgetMs] : [])],
+    "READY_REAL_AUTHENTICATED_NATIVE_TARGET")
+  assert.ok(await bounded(app.ready, productionBuild ? 3000000 : 1200000), "REAL_APPLICATION_READY_REQUIRED")
   receipt.stage = hold ? "HELD_READY" : "SCENARIOS"
   receipt.readyAt = new Date().toISOString()
   save()
@@ -147,7 +198,8 @@ try {
   for (const [index, scenario] of scenarios.entries()) {
     const output = join(evidence, `scenario-${String(index + 1).padStart(2, "0")}`)
     const run = start(`scenario-${index + 1}`, process.execPath, ["--import", createRequireTsx(), scenario], undefined,
-      { FINNOR_NATIVE_STATE: state, FINNOR_NATIVE_EVIDENCE: output, FINNOR_NATIVE_ROOT: root, FINNOR_NATIVE_APP_ATTEMPT: "01" }, backend)
+      { FINNOR_NATIVE_STATE: state, FINNOR_NATIVE_EVIDENCE: output, FINNOR_NATIVE_ROOT: root, FINNOR_NATIVE_APP_ATTEMPT: "01",
+        ...(authTls ? { FINNOR_NATIVE_AUTH_TLS_STATE: tlsState } : {}) }, backend)
     const result = await run.ended
     receipt.scenarios[index].code = result.code
     receipt.scenarios[index].signal = result.signal

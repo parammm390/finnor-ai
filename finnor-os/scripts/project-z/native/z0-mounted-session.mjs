@@ -14,7 +14,7 @@ import { chmodSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import {
-  readNativeEnvironment, signInOwner, startOwnedWorker, createOriginalInstitutionParent,
+  readNativeEnvironment, signInOwner, startOwnedWorker, createOriginalInstitutionParent, prepareInstitutionFixtureResourcePool,
   driveAcquisitionToModelReady, submitInstitutionAcquisition,
 } from "./x1-origin-fixture.mts";
 import {
@@ -88,7 +88,8 @@ let witnessBefore = null;
 
 await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_READY, blocked parent B, threads, foreign owner", async c => {
   if (!worker) notRun("SCENARIO_OWNED_WORKER_REQUIRES_NO_WORKER_LAUNCH");
-  parentA = await createOriginalInstitutionParent(env, { record, tag: tagA });
+  const resourcePool = await prepareInstitutionFixtureResourcePool(env, [tagA, tagB]);
+  parentA = await createOriginalInstitutionParent(env, { record, tag: tagA, resourcePool });
   check(c, "A.quiescent", "compiler WAITING|PARTIAL and zero live jobs", "O-SQL x1_compiler_requests/jobs via fixture", parentA.nativeStatus,
     ["WAITING", "PARTIAL"].includes(parentA.nativeStatus.compiler) && parentA.nativeStatus.liveJobs === 0);
   acqA = await driveAcquisitionToModelReady(env, parentA, { privateRoot, record });
@@ -102,7 +103,8 @@ await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_REA
   check(c, "A.thread", "owner thread whose active Work is the original Work", "O-SQL employee_conversation_threads", { status: created.status, activeWorkId: thread?.active_work_id ?? null }, created.status === 201 && thread?.active_work_id === parentA.workId);
 
   try {
-    parentB = await createOriginalInstitutionParent(env, { record, tag: tagB });
+    parentB = await createOriginalInstitutionParent(env, { record, tag: tagB, resourcePool });
+    if (parentA.parentReservation.id === parentB.parentReservation.id) throw Error("MOUNTED_FIXTURE_REUSED_A_RESERVATION");
     const submitted = await submitInstitutionAcquisition(env, parentB, { privateRoot, record }, owner);
     acquisitionB = submitted.request;
     if (submitted.response.status !== 202) { await submitted.handle.portal.stop(); throw Error("B_ACQUIRE_" + submitted.response.status); }
