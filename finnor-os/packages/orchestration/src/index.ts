@@ -78,6 +78,7 @@ import {
   type StartObjectiveOptions,
 } from "./objective-loop";
 import { classifyInstructionRoute, finalizeInstructionRouteFromPlan, type InstructionRouteDecision } from "./instruction-routing";
+import { answerCanonicalAnalysis, isCanonicalAnalysisRead } from "./canonical-analysis";
 import { interpretPrivateEquityQuestion } from "@finnor/private-equity";
 import { fail as economicQueryFault } from "@finnor/private-equity/src/economic-action-theory/contracts";
 
@@ -420,7 +421,7 @@ export class FinnorOrchestrator implements Orchestrator {
     request: OperationalQueryRequest,
     ctx: TenantContext,
     work: { workId: string; workInputId: string; instructionId: string },
-    opts: { emitTrace?: boolean; executionKey?: string } = {},
+    opts: { emitTrace?: boolean; executionKey?: string; answer?: (execution: OperationalQueryExecution) => Promise<AnswerEnvelope> } = {},
   ): Promise<{ execution: OperationalQueryExecution; answer?: AnswerEnvelope }> {
     const start = Date.now();
     await transitionWork(ctx.tenantId, work.workId, "executing", "query_execution_started", {
@@ -471,7 +472,17 @@ export class FinnorOrchestrator implements Orchestrator {
           completedAt,
         },
       };
-      const answer = this.fastReadOnlyRouter.answer?.(normalizedExecution);
+      const answer = opts.answer ? await opts.answer(normalizedExecution) : this.fastReadOnlyRouter.answer?.(normalizedExecution);
+      if (opts.answer) {
+        // Existing transactional publication fence protects both Work completion
+        // and the answer event against cancellation or a superseded input.
+        const published = await publishInstructionAnswer({
+          tenantId: ctx.tenantId, workId: work.workId, workInputId: work.workInputId,
+          instructionId: work.instructionId, route: "grounded_analysis", answer: answer!,
+        });
+        if (!published) throw new Error("GROUNDING_WORK_CANCELLED");
+        return { execution: normalizedExecution, answer };
+      }
       if (opts.emitTrace !== false) {
         await emitInstructionEvent(ctx.tenantId, work.instructionId, "verifying", {
           queryId,
@@ -498,7 +509,7 @@ export class FinnorOrchestrator implements Orchestrator {
       });
       return { execution: normalizedExecution, ...(answer ? { answer } : {}) };
     } catch (err) {
-      const publicMessage = `The canonical ${request.intent.replaceAll("_", " ")} read could not be queried, so the result cannot be verified.`;
+      const publicMessage = opts.answer ? "The sourced analysis could not be verified. No business action was performed." : `The canonical ${request.intent.replaceAll("_", " ")} read could not be queried, so the result cannot be verified.`;
       const failure = { ...workFailure(err, publicMessage), message: publicMessage, cause: err instanceof Error ? err.message.slice(0, 300) : "query unavailable" };
       await transitionWork(ctx.tenantId, work.workId, "failed", "query_execution_failed", {
         intent: request.intent,
@@ -645,6 +656,7 @@ export class FinnorOrchestrator implements Orchestrator {
     // already classified the instruction, it passes the decision so writes are not
     // classified a second time.
     let fastAnswer: AnswerEnvelope | null = null;
+    let analyticalRead = false;
     let fastQuery: OperationalQueryExecution | undefined;
     let operatingContext: OperatingContext | undefined;
     const shouldClassify = !opts.skipFastReadClassification && opts.fastReadDecision === undefined;
@@ -696,6 +708,16 @@ export class FinnorOrchestrator implements Orchestrator {
           fastDecision = interpreted ? interactionAwareOperationalDecision(interpreted, interactionContext, instruction) : undefined;
         }
       }
+      // Selected PE analysis is a governed source read, not a side-effecting
+      // objective. Preserve explicit work, typed reads and hypothetical calculations.
+      if (businessRoot && fastDecision?.route !== "fast_read"
+        && !isSuppliedAnalysisQuestion(instruction) && !isDocumentFinancialReviewQuestion(instruction)
+        && isCanonicalAnalysisRead(instruction) && !isConversationalTurn(instruction, opts)
+        && (await resolveTenantVertical(ctx.tenantId)).verticalKey === "private_equity") {
+        analyticalRead = true;
+        fastDecision = { route: "fast_read", confidence: "high", request: { intent: "pe_world_state", root: businessRoot } };
+        instructionRoute = undefined;
+      }
       const routeReadDecision: OperationalQueryDecision = fastDecision ?? { route: "planner", reason: "unsupported" };
       instructionRoute ??= classifyInstructionRoute({
         instruction,
@@ -727,7 +749,15 @@ export class FinnorOrchestrator implements Orchestrator {
           includeMemory: false,
           includeCanonicalBusinessState: false,
         })).context;
-        const result = await this.executeFastOperationalQuery(routeReadDecision.request, ctx, { workId, workInputId, instructionId }, { executionKey: opts.executionKey ?? opts.idempotencyKey ?? instructionId });
+        const result = await this.executeFastOperationalQuery(routeReadDecision.request, ctx, { workId, workInputId, instructionId }, {
+          executionKey: opts.executionKey ?? opts.idempotencyKey ?? instructionId,
+          ...(analyticalRead ? { answer: (execution: OperationalQueryExecution) => answerCanonicalAnalysis({
+            instruction, ctx, execution, conversation: opts.conversationContext, channel: opts.channel,
+            capabilityManifest: planningCapabilitiesForVertical(this.plugins, "private_equity"),
+            onProgress: async (stage) => { await emitInstructionEvent(ctx.tenantId, instructionId, "step_progress", { stage, sourceKind: "CANONICAL" }); },
+            signal: opts.signal, deadlineAt: opts.deadlineAt, deadlineMs: opts.deadlineMs,
+          }) } : {}),
+        });
         fastQuery = result.execution;
         fastAnswer = result.answer ?? null;
       } else if (!opts.skipFastReadClassification && fastDecision === undefined && !isDocumentFinancialReviewQuestion(instruction)) {
