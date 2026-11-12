@@ -1,0 +1,138 @@
+name: Project Z0 native continuation
+
+on:
+  push:
+    branches: [codex/project-z0-resume, codex/project-z0-identity, codex/project-z0-useful, codex/project-z0-r12]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: project-z0-native-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  original-owner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Run the native owner scenario
+        run: |
+          scenario=z0-session.mjs
+          profiles=z0
+          if [ "$GITHUB_REF_NAME" = "codex/project-z0-identity" ]; then
+            scenario=z0-d1-session.mjs
+          elif [ "$GITHUB_REF_NAME" = "codex/project-z0-useful" ]; then
+            export FINNOR_Z0_MODE=workstream
+          elif [ "$GITHUB_REF_NAME" = "codex/project-z0-r12" ]; then
+            scenario=z0-r12-session.mjs
+            profiles=v2
+          fi
+          taskset -c 0,1 node scripts/project-z/run-native-scenario.mjs \
+            --name="z0-ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+            --evidence="$RUNNER_TEMP/z0-native" --profiles="$profiles" --no-worker --forward-env=FINNOR_Z0_MODE \
+            --scenario="$GITHUB_WORKSPACE/finnor-os/scripts/project-z/native/$scenario"
+      - name: Record native case outcomes
+        if: ${{ always() }}
+        run: |
+          node --input-type=module <<'JS'
+          import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+          import { join } from 'node:path'
+
+          const root = join(process.env.RUNNER_TEMP, 'z0-native')
+          const scenario = join(root, 'scenario-01')
+          const files = existsSync(scenario) ? readdirSync(scenario) : []
+          const typedCode = value => typeof value === 'string' && /^[A-Z0-9_]{3,160}$/.test(value) ? value : null
+          const results = files.filter(name => /^(?:z0|r12)-\d+-case-[A-Z0-9-]+[a-z]?\.json$/.test(name)).sort()
+            .map(name => {
+              const { id, outcome, error, errorCode, errorType, detail } = JSON.parse(readFileSync(join(scenario, name), 'utf8'))
+              const predicate = (typeof error === 'string' ? error : '').match(/^[A-Z][A-Z0-9_]{2,160}(?=[: ]|$)/)?.[0]
+                ?? typedCode(errorCode) ?? typedCode(detail?.predicate)
+                ?? (/^[A-Za-z]{3,30}$/.test(errorType ?? '') ? errorType : null)
+              const path = ['MODEL_USED', 'DIRECT_FALLBACK'].includes(detail?.path) ? detail.path : null
+              const fallbackReason = path === 'DIRECT_FALLBACK' && /^Z0_MODEL_[A-Z0-9_]{1,100}$/.test(detail?.fallbackReason ?? '')
+                ? detail.fallbackReason : null
+              const httpStatus = Number.isInteger(detail?.status) ? detail.status : null
+              const responseCode = typedCode(detail?.code)
+              const rejected = Array.isArray(detail?.failures) ? detail.failures.map(entry => ({
+                carrier: /^[a-z0-9_]{3,100}$/.test(entry.carrier ?? '') ? entry.carrier : null,
+                status: Number.isInteger(entry.status) ? entry.status : null,
+                code: typedCode(entry.code),
+              })) : []
+              const readbackFailures = id === 'P0-00' && Array.isArray(detail?.failures) ? detail.failures.map(entry => ({
+                name: /^[a-zA-Z]{3,45}$/.test(entry.name ?? '') ? entry.name : null,
+                sqlState: typedCode(entry.sqlState),
+                column: /^[a-zA-Z0-9_."]{1,120}$/.test(entry.column ?? '') ? entry.column : null,
+              })) : []
+              const ownerRead = detail?.ownerRead && Number.isInteger(detail.ownerRead.status)
+                ? { status: detail.ownerRead.status, code: typedCode(detail.ownerRead.code) } : null
+              const continuationJobs = Array.isArray(detail?.continuationJobs) ? detail.continuationJobs.map(job => ({
+                status: /^[a-z_]{3,30}$/.test(job.status ?? '') ? job.status : null,
+                predicate: (job.error ?? '').match(/^[A-Z][A-Z0-9_]{2,160}(?=[: ]|$)/)?.[0] ?? null,
+                identifier: (job.error ?? '').match(/(?:violates (?:check|foreign key) constraint|column|relation) "([a-z0-9_.]{1,120})"/i)?.[1] ?? null,
+              })) : []
+              return { id, outcome, predicate, path, fallbackReason, httpStatus, responseCode, rejected, readbackFailures, ownerRead, continuationJobs }
+            })
+          const state = join(process.env.GITHUB_WORKSPACE, '.centropy-certification',
+            'z0-ci-' + process.env.GITHUB_RUN_ID + '-' + process.env.GITHUB_RUN_ATTEMPT)
+          const apiLog = join(state, 'api-01.private.log')
+          const serverErrorKinds = new Set()
+          const retainErrorKind = value => {
+            if (typeof value !== 'string') return
+            const kind = typedCode(value) ?? value.match(/(?:violates (?:check|foreign key) constraint|column|relation) "([a-z0-9_.]{1,120})"/i)?.[1]
+            if (kind) serverErrorKinds.add(kind)
+          }
+          if (existsSync(apiLog)) {
+            for (const entry of readFileSync(apiLog, 'utf8').split('\n')) {
+              const line = entry.replace(/\x1b\[[0-9;]*m/g, '')
+              const pretty = line.match(/^\s*(?:err|cause):\s*"(.*)"\s*$/)
+              if (pretty) {
+                retainErrorKind(pretty[1].replace(/\\"/g, '"'))
+                continue
+              }
+              if (!line.includes('unhandled route failure') && !line.includes('[route-error]')) continue
+              try {
+                const { err, cause } = JSON.parse(line.slice(line.indexOf('{')))
+                retainErrorKind(err)
+                retainErrorKind(cause)
+              } catch {}
+            }
+          }
+          const receipt = { sourceSha: process.env.GITHUB_SHA, results, serverErrorKinds: [...serverErrorKinds] }
+          writeFileSync(join(process.env.RUNNER_TEMP, 'z0-cases.json'), JSON.stringify(receipt, null, 2) + '\n')
+          const continuation = ['P0-00', 'P0-01', 'P0-10', 'P0-11']
+          const required = ({
+            'codex/project-z0-identity': ['D1-00', 'D1-B', 'D1-01'],
+            'codex/project-z0-useful': [...continuation, 'P0-11b'],
+            'codex/project-z0-r12': ['R12-02', 'R12-03', 'R12-04'],
+          })[process.env.GITHUB_REF_NAME] ?? continuation
+          for (const id of required) {
+            const result = results.find(entry => entry.id === id)
+            if (result?.outcome !== 'PASS') {
+              console.error(id, result?.outcome ?? 'MISSING', result?.predicate ?? '', result?.httpStatus ?? '', result?.responseCode ?? '')
+              process.exitCode = 1
+            }
+          }
+          JS
+      - name: Retain stack and case receipts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: project-z0-native-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/z0-native/stack-result.json
+            ${{ runner.temp }}/z0-cases.json
+          if-no-files-found: error
+          retention-days: 7
