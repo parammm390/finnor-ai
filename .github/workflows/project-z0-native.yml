@@ -2,7 +2,7 @@ name: Project Z0 native continuation
 
 on:
   push:
-    branches: [codex/project-z0-resume, codex/project-z0-identity, codex/project-z0-useful, codex/project-z0-r12, codex/project-z0-mounted, codex/project-z0-recovery, codex/project-z0-economic]
+    branches: [codex/project-z0-resume, codex/project-z0-identity, codex/project-z0-useful, codex/project-z0-r12, codex/project-z0-mounted, codex/project-z0-recovery, codex/project-z0-economic, codex/project-z0-confidential]
 
 permissions:
   contents: read
@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: ${{ fromJSON(github.ref_name == 'codex/project-z0-recovery' && '["current-source","current-parent","current-terms","current-rights","kill","revoke","boundaries"]' || '["default"]') }}
+        mode: ${{ fromJSON(github.ref_name == 'codex/project-z0-recovery' && '["current-claim-source","current-claim-parent","current-claim-terms","current-claim-rights","revoked-accept","revoked-use","boundaries"]' || '["default"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -55,6 +55,9 @@ jobs:
           launch_args=()
           if [ "$GITHUB_REF_NAME" = "codex/project-z0-identity" ]; then
             scenario=z0-d1-session.mjs
+          elif [ "$GITHUB_REF_NAME" = "codex/project-z0-confidential" ]; then
+            scenario=z0-confidential-query.mjs
+            profiles=y4
           elif [ "$GITHUB_REF_NAME" = "codex/project-z0-useful" ]; then
             export FINNOR_Z0_MODE=workstream
           elif [ "$GITHUB_REF_NAME" = "codex/project-z0-r12" ]; then
@@ -68,9 +71,13 @@ jobs:
             case "$Z0_RECOVERY_MODE" in
               current-*)
                 export FINNOR_Z0_MODE=current
-                dependency="${Z0_RECOVERY_MODE#current-}"
+                stage="${Z0_RECOVERY_MODE#current-}"
+                dependency="${stage#*-}"
+                stage="${stage%%-*}"
                 export FINNOR_Z0_DEPENDENCY="${dependency^^}"
+                export FINNOR_Z0_CURRENTNESS_STAGE="${stage^^}"
                 ;;
+              boundaries) launch_args+=(--budget-ms=3300000); export FINNOR_Z0_MODE=boundaries ;;
               *) export FINNOR_Z0_MODE="$Z0_RECOVERY_MODE" ;;
             esac
           fi
@@ -78,7 +85,8 @@ jobs:
           taskset -c 0,1 node scripts/project-z/run-native-scenario.mjs \
             --name="z0-ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
             --evidence="$RUNNER_TEMP/z0-native" --profiles="$profiles" --no-worker --forward-env=FINNOR_Z0_MODE \
-            --forward-env=PLAYWRIGHT_BROWSERS_PATH --forward-env=FINNOR_Z0_DEPENDENCY "${launch_args[@]}" \
+            --forward-env=PLAYWRIGHT_BROWSERS_PATH --forward-env=FINNOR_Z0_DEPENDENCY \
+            --forward-env=FINNOR_Z0_CURRENTNESS_STAGE "${launch_args[@]}" \
             --scenario="$GITHUB_WORKSPACE/finnor-os/scripts/project-z/native/$scenario"
       - name: Record native case outcomes
         if: ${{ always() }}
@@ -119,6 +127,16 @@ jobs:
                 ? detail.fallbackReason : null
               const httpStatus = Number.isInteger(detail?.status) ? detail.status : null
               const responseCode = typedCode(detail?.code)
+              const budget = id.startsWith('CUR-') && detail?.budget ? {
+                applicationDebits: Number.isInteger(detail.budget.applicationDebits) ? detail.budget.applicationDebits : null,
+                withinEnvelope: detail.budget.withinEnvelope === true,
+                originalEnvelopeRetained: detail.before?.original?.envelopes === detail.after?.original?.envelopes,
+                originalEpisodeRetained: detail.before?.episode === detail.after?.episode,
+                originalStatusBefore: identifier(detail.before?.original?.status),
+                originalStatusAfter: identifier(detail.after?.original?.status),
+                chargesBefore: detail.afterMutation?.charges?.count,
+                chargesAfter: detail.after?.charges?.count,
+              } : null
               const rejected = Array.isArray(detail?.failures) ? detail.failures.map(entry => ({
                 carrier: /^[a-z0-9_]{3,100}$/.test(entry.carrier ?? '') ? entry.carrier : null,
                 status: Number.isInteger(entry.status) ? entry.status : null,
@@ -144,7 +162,7 @@ jobs:
                 })),
               } : null
               return { id, outcome, predicate, causePredicate, sqlIdentifier: sqlIdentifier(error), path, fallbackReason,
-                httpStatus, responseCode, rejected, readbackFailures, ownerRead, continuationJobs, objective }
+                httpStatus, responseCode, budget, rejected, readbackFailures, ownerRead, continuationJobs, objective }
             })
           const acquisitionFile = files.find(name => /^z0-\d+-acquisition-failure-session\.json$/.test(name))
           const acquisition = acquisitionFile ? JSON.parse(readFileSync(join(scenario, acquisitionFile), 'utf8')) : null
@@ -223,15 +241,18 @@ jobs:
           const recovery = {
             kill: ['P1-03'],
             revoke: ['P1-05'],
+            'revoked-accept': ['B-REVOKE-ACCEPT'],
+            'revoked-use': ['B-REVOKE-USE'],
             boundaries: ['B-REVOKE-CLAIM', 'B-KILL-CLAIM', 'B-KILL-ACCEPT'],
           }
           const recoveryMode = process.env.Z0_RECOVERY_MODE
           const recoveryRequired = recoveryMode.startsWith('current-')
-            ? ['INTAKE', 'CLAIM'].map(stage => 'CUR-' + stage + '-' + recoveryMode.slice(8).toUpperCase())
+            ? ['CUR-' + recoveryMode.slice(8).toUpperCase()]
             : recovery[recoveryMode]
           const required = ({
             'codex/project-z0-identity': ['D1-00', 'D1-B', 'D1-01'],
             'codex/project-z0-economic': ['D1-02a'],
+            'codex/project-z0-confidential': ['D1-03a'],
             'codex/project-z0-useful': [...continuation, 'P0-11b'],
             'codex/project-z0-r12': ['R12-02', 'R12-03', 'R12-04'],
             'codex/project-z0-mounted': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),

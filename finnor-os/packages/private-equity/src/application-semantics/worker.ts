@@ -16,7 +16,7 @@ import { ApplicationExecuteSchema } from "./native-contracts";
 import { applicationDatabaseDiagnostic, applicationFailureReason, parseApplicationComposition, x2Digest, x2Fault, x2Ref } from "./contracts";
 import { assertApplicationClaim } from "./obligations";
 import { applicationArtifact, applicationEvent, applicationSession, canonicalApplicationActor,
-  currentApplicationWork, retainApplicationArtifact, type ApplicationSessionRow } from "./store";
+  currentApplicationWork, retainApplicationArtifact, type ApplicationSessionRow, type NativeApplicationProfile } from "./store";
 import { initializeApplicationValidities } from "./validity";
 import { continueNativeApplicationComposition, NativeApplicationRuntime } from "./runtime";
 import { beginSelectionConsumption, isGovernedChild, retainSelectionReceipt, settleSelectionFailure,
@@ -76,7 +76,7 @@ async function changeStatus(ctx: PeMutationContext, row: ApplicationSessionRow, 
 }
 
 async function publishModel(ctx: PeMutationContext, row: ApplicationSessionRow, execution: Readonly<JobExecutionContext>,
-  model: ApplicationActionModel, check: ApplicationModelCheck) {
+  model: ApplicationActionModel, check: ApplicationModelCheck, profiles: readonly NativeApplicationProfile[]) {
   assertApplicationModelUse(model, check);
   return tx(ctx, async (c, db) => {
     const current = await applicationSession(ctx, row.id, c, true);
@@ -95,7 +95,7 @@ async function publishModel(ctx: PeMutationContext, row: ApplicationSessionRow, 
     const evidence = await applicationEvent(ctx, next, "CHECKED_MODEL_FROZEN_BEFORE_FRESH_OBJECTIVE", {
       modelRef: model.ref, checkRef: check.ref, heldOutObjectiveKnown: false, protectedAdmission: false,
     }, c);
-    const originalAcceptance = await acceptInstitutionApplicationModel(ctx, next, model, check, execution, c);
+    const originalAcceptance = await acceptInstitutionApplicationModel(ctx, next, model, check, profiles, execution, c);
     if (!originalAcceptance) await transitionWorkTx(db, current.tenant_id, current.work_id, "completed", "application_model_independently_checked",
       { sessionId: current.id, workInputId: current.work_input_id, modelRef: model.ref, checkRef: check.ref, evidenceRef: evidence },
       { expectedWorkInputId: current.work_input_id, finalOutcome: { schema: "finnor.x2.model-work-result.v1",
@@ -230,7 +230,7 @@ export async function runApplicationSemanticsJob(payload: Record<string, unknown
       row = await changeStatus(ctx, row, execution, "ACQUIRING", "executing");
       runtime.adoptCanonicalSession(row);
       const learned = await runtime.acquire();
-      row = await publishModel(ctx, row, execution, learned.model, learned.check);
+      row = await publishModel(ctx, row, execution, learned.model, learned.check, learned.profiles);
       await applicationEvent(ctx, row, "S8_APPLICATION_ADMISSION_SEPARATE_PENDING", {
         modelRef: learned.model.ref, checkRef: learned.check.ref, protectedAdmission: false, executionAuthorityGranted: false,
       });

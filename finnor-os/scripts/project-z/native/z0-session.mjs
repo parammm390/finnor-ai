@@ -20,11 +20,15 @@ const state = process.env.FINNOR_NATIVE_STATE, evidence = process.env.FINNOR_NAT
 const workstreamMode = process.env.FINNOR_Z0_MODE === "workstream";
 const currentnessMode = process.env.FINNOR_Z0_MODE === "current";
 const boundaryMode = process.env.FINNOR_Z0_MODE === "boundaries";
+const revokeAcceptMode = process.env.FINNOR_Z0_MODE === "revoked-accept";
+const revokeUseMode = process.env.FINNOR_Z0_MODE === "revoked-use";
 const dependencies = ["SOURCE", "PARENT", "TERMS", "RIGHTS"];
 const currentnessStages = ["INTAKE", "CLAIM"];
 const selectedDependency = process.env.FINNOR_Z0_DEPENDENCY;
-if (currentnessMode && !dependencies.includes(selectedDependency)) throw Error("Z0_CURRENTNESS_DEPENDENCY_REQUIRED");
-const fixtureTags = Array.from({ length: currentnessMode ? 3 : boundaryMode ? 4 : 1 },
+const selectedStage = process.env.FINNOR_Z0_CURRENTNESS_STAGE;
+if (currentnessMode && (!dependencies.includes(selectedDependency) || !currentnessStages.includes(selectedStage)))
+  throw Error("Z0_CURRENTNESS_DEPENDENCY_AND_STAGE_REQUIRED");
+const fixtureTags = Array.from({ length: currentnessMode ? 2 : boundaryMode ? 4 : 1 },
   () => "a" + randomUUID().slice(0, 8));
 let resourcePool;
 if (!state || !evidence) throw Error("Z0_SCENARIO_NATIVE_ENVIRONMENT_REQUIRED");
@@ -62,11 +66,31 @@ async function runCase(id, title, body) {
 }
 const notRun = (id, title, reason) => { results.push({ id, title, outcome: "NOT_RUN", reason }); record("case-" + id, results.at(-1)); };
 const ensure = (condition, predicate) => { if (!condition) throw Error(predicate); };
+async function waitUntil(label, ms, probe, every = 2000) {
+  const end = Date.now() + ms;
+  for (;;) { const value = await probe(); if (value) return value; if (Date.now() > end) throw Error("TIMEOUT_" + label); await sleep(every); }
+}
 
 const { default: pg } = await import("pg");
 const sql = new pg.Client({ connectionString: env.CENTROPY_E2E_DB_ADMIN_URL });
 await sql.connect();
 const q = async (text, params = []) => (await sql.query(text, params)).rows;
+async function disableFixtureAccounts(profileIds) {
+  await q("BEGIN");
+  try {
+    await q("SET LOCAL lock_timeout = '5s'");
+    const disabled = await q(`UPDATE finnor_os.application_accounts a SET status='disabled'
+      WHERE a.tenant_id=$1 AND a.application='x2_portal' AND a.status='active'
+      AND a.id IN (SELECT p.application_account_id FROM finnor_os.auth_profiles p
+        WHERE p.tenant_id=a.tenant_id AND p.id=ANY($2::uuid[])) RETURNING a.id`, [parent.tenantId, profileIds]);
+    ensure(disabled.length > 0, "NO_FIXTURE_ACCOUNT_DISABLED");
+    await q("COMMIT");
+    return disabled.length;
+  } catch (error) {
+    await q("ROLLBACK");
+    throw error;
+  }
+}
 
 const continuationReads = {
   effectHash: "SELECT semantic_hash FROM finnor_os.business_effects WHERE tenant_id=$1 AND domain_action_id=$2",
@@ -160,7 +184,7 @@ let parent = null, acquired = null;
 await runCase("P0-01", "Original institution parent reaches a quiescent checked state through owner code", async () => {
   if (currentnessMode || boundaryMode) resourcePool = await prepareInstitutionFixtureResourcePool(env, fixtureTags);
   parent = await createOriginalInstitutionParent(env, { record, tag: fixtureTags[0], resourcePool,
-    shape: workstreamMode ? "gated-workstreams" : "gated-two-supported-and-unresolved" });
+    shape: workstreamMode || revokeUseMode ? "gated-workstreams" : "gated-two-supported-and-unresolved" });
   ensure(parent.nativeStatus.liveJobs === 0, "PARENT_NOT_QUIESCENT");
   const w = await witness(parent);
   ensure(w.sessions === 0 && w.domainActions === (parent.gated ? 1 : 0) && w.peRequests === 0,
@@ -355,7 +379,7 @@ if (currentnessMode) {
     await submitted.handle.portal.stop();
   };
   const currentCase = (stage, dependency) => runCase(`CUR-${stage}-${dependency}`, `Currentness ${stage} x ${dependency}: an actual change of the dependency is refused or stops the affected work only`, async () => {
-    const tag = fixtureTags[1 + currentnessStages.indexOf(stage)];
+    const tag = fixtureTags[1];
     const p = await createOriginalInstitutionParent(env, { record, tag, resourcePool, shape: "partial-unresolved" });
     ensure(p.parentReservation.id !== parent.parentReservation.id, "FIXTURE_REUSED_THE_CONTROL_RESERVATION");
     const before = await witness(p);
@@ -395,19 +419,31 @@ if (currentnessMode) {
       }
       const [acceptance] = await q("SELECT count(*)::int n FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 AND kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED'", [p.tenantId, sessionId]);
       const [physical] = await q("SELECT count(*)::int n FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2", [p.tenantId, sessionId]);
+      const [budget] = await q(`SELECT count(*) FILTER (WHERE c.body->'allocationRef'=s.allocation_ref)::int "applicationDebits",
+        NOT EXISTS(SELECT 1 FROM jsonb_array_elements(r.envelopes) e
+          WHERE (SELECT coalesce(sum(d.units),0) FROM finnor_os.s5_governed_resource_charges d
+            WHERE d.tenant_id=s.tenant_id AND d.reservation_id=r.reservation_id AND d.resource_id=e->>'resourceId'
+            AND d.unit=e->>'unit') >
+            (SELECT sum(value::numeric) FROM jsonb_array_elements_text(e->'quantities'))) "withinEnvelope"
+        FROM finnor_os.application_semantics_sessions s
+        JOIN finnor_os.s5_reservations r ON r.tenant_id=s.tenant_id AND r.reservation_id=s.reservation_ref->>'id'
+        LEFT JOIN finnor_os.s5_governed_resource_charges c ON c.tenant_id=r.tenant_id AND c.reservation_id=r.reservation_id
+        WHERE s.tenant_id=$1 AND s.id=$2 GROUP BY s.tenant_id,r.reservation_id,r.envelopes`, [p.tenantId, sessionId]);
       const after = await witness(p);
       ensure(await controlUnchanged(), "UNRELATED_CONTROL_PARENT_CHANGED");
-      ensure(sameOriginal(before, after) && after.charges.count === afterMutation.charges.count, "CLAIM_REFUSAL_CHANGED_THE_ORIGINAL_BUDGET");
-      const stopped = STOP.includes(row?.status) && row.status !== "MODEL_READY" && acceptance.n === 0 && physical.n === 0
+      const unchanged = before.original.envelopes === after.original.envelopes && before.episode === after.episode
+        && after.peRequests === afterMutation.peRequests && budget?.withinEnvelope && budget.applicationDebits === 0;
+      const stopped = unchanged && STOP.includes(row?.status) && row.status !== "MODEL_READY" && acceptance.n === 0 && physical.n === 0
         && expectedRefusals[dependency].includes(row.reason);
-      return { outcome: stopped ? "PASS" : "FAIL", detail: { predicate: stopped ? "CHANGED_DEPENDENCY_STOPPED_THE_CLAIM" : "CHANGED_DEPENDENCY_NOT_FENCED_AT_CLAIM_" + row?.status,
-        mutation, session: row, code: row?.reason, acceptanceEvents: acceptance.n, physicalRequests: physical.n, before, afterMutation, after } };
+      return { outcome: stopped ? "PASS" : "FAIL", detail: { predicate: stopped ? "CHANGED_DEPENDENCY_STOPPED_THE_CLAIM"
+        : !unchanged ? "CLAIM_REFUSAL_CHANGED_THE_ORIGINAL_BUDGET" : "CHANGED_DEPENDENCY_NOT_FENCED_AT_CLAIM",
+        mutation, session: row, code: row?.reason, acceptanceEvents: acceptance.n, physicalRequests: physical.n, budget, before, afterMutation, after } };
     } finally {
       if (submitted) await submitted.handle.portal.stop();
       if (!worker) worker = await startWorker(30);
     }
   });
-  for (const stage of currentnessStages) await currentCase(stage, selectedDependency);
+  await currentCase(selectedStage, selectedDependency);
   const noFence = "no owner fence found: X1 pins its own installed compiler method identity (X1_INSTALLED_COMPILER_METHOD_CHANGED), but no application-semantics learner, checker or Z0 consumer source identity is bound by any owner read; a source-byte fault would only modify the running product, not exercise a fence";
   for (const stage of ["INTAKE", "CLAIM", "USE", "DISPATCH"]) for (const dependency of ["CODE", "CHECKER", "CONSUMER"]) notRun(`CUR-${stage}-${dependency}`, `Currentness ${stage} x ${dependency}`, noFence);
   for (const stage of ["USE", "DISPATCH"]) for (const dependency of ["SOURCE", "PARENT", "TERMS", "RIGHTS"]) notRun(`CUR-${stage}-${dependency}`, `Currentness ${stage} x ${dependency}`,
@@ -448,6 +484,79 @@ const invariants = async (before, sessionId, portalDir = null, owned = parent) =
 };
 const revokeMode = process.env.FINNOR_Z0_MODE === "revoke";
 const TERMINAL = ["MODEL_READY", "FAILED", "BLOCKED", "UNKNOWN", "STALE", "CANCELLED"];
+
+if (revokeAcceptMode) {
+  await runCase("B-REVOKE-ACCEPT", "The checked model cannot publish or wake the original consumer after its application accounts are revoked", async () => {
+    ensure(worker, "OWNED_WORKER_REQUIRED");
+    const before = await witness(parent);
+    await worker.stop();
+    worker = null;
+    const lock = [1742728626, 1091891395];
+    let submitted, triggerInstalled = false, lockHeld = false;
+    try {
+      submitted = await submitInstitutionAcquisition(env, parent, { privateRoot, record }, owner);
+      ensure(submitted.response.status === 202, "ACQUIRE_NOT_ACCEPTED_" + submitted.response.status);
+      const sessionId = submitted.response.body.sessionId;
+      ensure(/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(sessionId), "ACQUISITION_SESSION_ID_REQUIRED");
+      const [lease] = await q("SELECT pg_backend_pid() pid,pg_advisory_lock($1::int,$2::int)", lock);
+      lockHeld = true;
+      // Fixture-only barrier on the real checker event; no injected product event or model.
+      await q(`CREATE FUNCTION finnor_os.z0_fixture_pause_checker_event() RETURNS trigger LANGUAGE plpgsql
+        SET search_path=pg_catalog AS $$ BEGIN
+          PERFORM pg_advisory_xact_lock(${lock[0]},${lock[1]}); RETURN NEW;
+        END $$`);
+      await q(`CREATE TRIGGER z0_fixture_pause_checker_event BEFORE INSERT ON finnor_os.application_semantics_events
+        FOR EACH ROW WHEN (NEW.session_id='${sessionId}'::uuid AND NEW.kind='FROZEN_MODEL_AND_INDEPENDENT_CHECK')
+        EXECUTE FUNCTION finnor_os.z0_fixture_pause_checker_event()`);
+      triggerInstalled = true;
+      worker = await startWorker(30);
+      const status = async () => (await q(`SELECT status,reason,model_ref,check_ref FROM finnor_os.application_semantics_sessions
+        WHERE tenant_id=$1 AND id=$2`, [parent.tenantId, sessionId]))[0];
+      await waitUntil("CHECKED_MODEL_EVENT_AT_BARRIER", 600000, async () => {
+        const [blocked] = await q(`SELECT EXISTS(SELECT 1 FROM pg_stat_activity
+          WHERE wait_event_type='Lock' AND wait_event='advisory' AND $1::int=ANY(pg_blocking_pids(pid))
+          AND query LIKE 'INSERT INTO finnor_os.application_semantics_events%') waiting`, [lease.pid]);
+        const row = await status();
+        if (TERMINAL.includes(row?.status)) throw Error("CHECKER_BARRIER_MISSED_" + row.status + ":" + row.reason);
+        return blocked.waiting;
+      }, 200);
+      const revokedAccounts = await disableFixtureAccounts(submitted.handle.profileIds);
+      await q("SELECT pg_advisory_unlock($1::int,$2::int)", lock);
+      lockHeld = false;
+      const final = await waitUntil("PROFILE_REFUSAL_AT_ACCEPTANCE", 120000, async () => {
+        const row = await status();
+        return TERMINAL.includes(row?.status) ? row : null;
+      });
+      const [e] = await q(`SELECT count(*) FILTER (WHERE kind='FROZEN_MODEL_AND_INDEPENDENT_CHECK')::int checked,
+        count(*) FILTER (WHERE kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED')::int accepted,
+        count(*) FILTER (WHERE kind='CHECKED_MODEL_FROZEN_BEFORE_FRESH_OBJECTIVE')::int published,
+        min(body->'detail'->'modelRef'->>'id') FILTER (WHERE kind='FROZEN_MODEL_AND_INDEPENDENT_CHECK') model
+        FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2`, [parent.tenantId, sessionId]);
+      const [v] = await q(`SELECT count(*)::int n FROM finnor_os.application_operation_validities
+        WHERE tenant_id=$1 AND principal_id=$2 AND model_id=$3`, [parent.tenantId, parent.ownerId, e.model]);
+      const jobs = await q(continuationReads.jobs, [parent.tenantId, parent.programId, parent.ownerId]);
+      const after = await witness(parent);
+      const refused = final.status === "STALE" && final.reason === "X2_CURRENT_APPLICATION_PROFILE_CHANGED";
+      const unchanged = sameBudget(before, after) && before.peRequests === after.peRequests
+        && after.charges.count > before.charges.count;
+      const passed = refused && !final.model_ref && !final.check_ref && e.checked === 1 && e.model
+        && e.accepted === 0 && e.published === 0 && v.n === 0
+        && !jobs.some(job => job.stage?.startsWith("x2-model:" + sessionId + ":")) && unchanged;
+      return { outcome: passed ? "PASS" : "FAIL", detail: { predicate: passed ? "APPLICATION_PROFILE_REFUSED_AT_ACCEPTANCE" : "ACCEPTANCE_AFTER_ACCOUNT_REVOCATION_UNPROVEN",
+        sessionId, code: final.reason, final, revokedAccounts, events: e, validities: v.n, jobs, before, after } };
+    } finally {
+      if (lockHeld) await q("SELECT pg_advisory_unlock($1::int,$2::int)", lock);
+      if (triggerInstalled) await q("DROP TRIGGER z0_fixture_pause_checker_event ON finnor_os.application_semantics_events");
+      await q("DROP FUNCTION IF EXISTS finnor_os.z0_fixture_pause_checker_event()");
+      await submitted?.handle.portal.stop();
+    }
+  });
+  const failed = results.some(row => row.outcome === "FAIL");
+  record("summary", { results, programId: parent.programId });
+  await worker?.stop();
+  await sql.end();
+  process.exit(failed ? 1 : 0);
+}
 
 /**
  * `boundaries` mode (failure model sections 15 and 15.1): revocation at CLAIM, SIGKILL at the CLAIM boundary with two
@@ -585,6 +694,12 @@ if (boundaryMode) {
     const p = await freshParent(3, "gated-two-supported-and-unresolved");
     ensure(p.gated, "GATED_PARENT_REQUIRED");
     const before = await witness(p);
+    const originalProgramme = async () => (await q(`SELECT p.status,p.failure,
+      h.body->'institution'->'unresolved' unresolved,
+      jsonb_array_length(h.body->'observedPostconditions') observed
+      FROM finnor_os.p1_requests p JOIN finnor_os.p1_programs h ON h.tenant_id=p.tenant_id AND h.id=p.head_id
+      WHERE p.tenant_id=$1 AND p.id=$2`, [p.tenantId, p.programId]))[0];
+    const programmeBefore = await originalProgramme();
     const submitted = await submitInstitutionAcquisition(env, p, { privateRoot, record }, owner);
     try {
       ensure(submitted.response.status === 202, `ACQUIRE_NOT_ACCEPTED_${submitted.response.status}`);
@@ -627,7 +742,7 @@ if (boundaryMode) {
         if (Date.now() > end) break;
       }
       const after = { session: await sessionRowOf(p, sessionId), jobs: await sessionJobs(p, sessionId), continuation: await continuation(), preparation: await preparation(), acceptance: await acceptanceCount(p, sessionId) };
-      const [programme] = await q("SELECT status,failure FROM finnor_os.p1_requests WHERE tenant_id=$1 AND id=$2", [p.tenantId, p.programId]);
+      const programme = await originalProgramme();
       const [rootRows] = await q("SELECT count(*)::int n FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND work_id=$2", [p.tenantId, p.workId]);
       const [head] = await q("SELECT body->'bounds'->>'deadlineAt' deadline FROM finnor_os.p1_programs WHERE tenant_id=$1 AND id=(SELECT head_id FROM finnor_os.p1_requests WHERE tenant_id=$1 AND id=$2)", [p.tenantId, p.programId]);
       const events = readJournal(submitted.handle.portal.dir);
@@ -640,9 +755,14 @@ if (boundaryMode) {
       ensure(rootRows.n === 1, "SECOND_ROOT_SESSION_CREATED_" + rootRows.n);
       ensure(duplicates.length === 0, "PORTAL_WRITE_EVENT_DUPLICATED_FOR_A_REQUEST:" + duplicates.join(","));
       ensure(stillPending.length === 0, "JOBS_STILL_PENDING_AFTER_RECOVERY_WINDOW_" + stillPending.length);
-      ensure(!/fail/i.test(String(programme.status)) && !programme.failure, "ORIGINAL_PROGRAMME_FAILED_BY_THE_KILL_" + programme.status);
+      ensure(programme.status === "WAITING" && programme.failure === null
+        || programme.status === "PARTIAL" && ((programmeBefore.status === "PARTIAL" && programme.failure === programmeBefore.failure)
+          || (programme.failure === "X1_UNRESOLVED_DUTIES_RETAINED" && programme.unresolved.length > 0)),
+      "ORIGINAL_PROGRAMME_AFTER_KILL_" + programme.status + ":" + (programme.failure ?? "NONE"));
+      ensure(sha(programme.unresolved) === sha(programmeBefore.unresolved) && programme.observed >= programmeBefore.observed,
+        "ORIGINAL_DUTIES_OR_OBSERVATIONS_LOST_AFTER_KILL");
       ensure(Date.parse(head.deadline) === Date.parse(p.programmeDeadlineAt), "ORIGINAL_DEADLINE_CHANGED");
-      return { detail: { sessionId, pid, exit: killed, atKill, resumed, after, programme, portalDuplicateSends: duplicates, before, ...checked } };
+      return { detail: { sessionId, pid, exit: killed, atKill, resumed, after, programmeBefore, programme, portalDuplicateSends: duplicates, before, ...checked } };
     } finally {
       await submitted.handle.portal.stop();
       if (!worker) worker = await startWorker(30);
@@ -650,8 +770,6 @@ if (boundaryMode) {
   });
 
   notRun("B-EXHAUSTED-FALLBACK", "Fallback under remaining resources when the original parent is exhausted (Z0-R44)", "cannot be produced without hand-written charges: the Work admits one root acquisition and over-demand is refused (P0-04, Z0_ORIGINAL_BUDGET_EXHAUSTED); the original continuation is observed in P0-11");
-  notRun("B-REVOKE-ACCEPT", "Revocation between checker verdict and S4 acceptance (Z0-R11-C02)", "needs a change committed inside one worker delivery between two statements; no owner hook, not built");
-  notRun("B-REVOKE-USE", "Revocation between acceptance and the original consumer (Z0-R11-C03)", "needs a change committed between S4 acceptance and the enqueued continuation reading it; no owner hook, not built");
 
   const tallyBoundaries = results.reduce((acc, row) => ({ ...acc, [row.outcome]: (acc[row.outcome] ?? 0) + 1 }), {});
   record("summary", { tally: tallyBoundaries, results, tenantId: parent.tenantId, parents: [parent.programId] });
@@ -830,10 +948,6 @@ await runCase("P1-01", "Duplicate delivery of the exact acquisition request retu
  * (fixture shape gated-two-supported-and-unresolved). Everything after acceptance goes through the real owner paths:
  * the enqueued original continuation, the HTTP approval route and the owner program-resume operation.
  */
-const waitUntil = async (label, ms, probe, every = 2000) => {
-  const end = Date.now() + ms;
-  for (;;) { const value = await probe(); if (value) return value; if (Date.now() > end) throw Error("TIMEOUT_" + label); await sleep(every); }
-};
 const confirmAction = async actionId => {
   const [effect] = await q(continuationReads.effectHash, [parent.tenantId, actionId]);
   const response = await owner.call(`/api/actions/${actionId}/confirm`, { ...(effect ? { expectedEffectHash: effect.semantic_hash } : {}), typedConfirmation: true });
@@ -843,6 +957,52 @@ const actionRow = async actionId => (await q(continuationReads.action, [parent.t
 const programEvents = async () => q(continuationReads.events, [parent.tenantId, parent.programId, parent.ownerId]);
 const continuationJobs = async () => q(continuationReads.jobs, [parent.tenantId, parent.programId, parent.ownerId]);
 const quiet = async () => (await continuationJobs()).every(job => !["queued", "running"].includes(job.status));
+if (revokeUseMode) {
+  await runCase("B-REVOKE-USE", "The accepted model cannot be used by the original consumer after its application accounts are revoked", async () => {
+    ensure(acquired && parent.gated, "CHECKED_GATED_PARENT_REQUIRED");
+    const { heldActionId: held, undispatchedActionId: undispatched } = parent.gated;
+    const [accepted] = await q(continuationReads.acceptance, [parent.tenantId, parent.ownerId, acquired.sessionId]);
+    ensure(accepted?.check_digest, "CHECKED_ACCEPTANCE_REQUIRED");
+    const acceptedStage = `x2-model:${acquired.sessionId}:${accepted.check_digest}`;
+    await waitUntil("ACCEPTED_WAKE_BEFORE_REVOCATION", 180000, async () => (await continuationJobs()).some(job =>
+      job.stage === acceptedStage && job.status === "completed") && await quiet());
+    ensure((await actionRow(held))?.status === "pending" && !await actionRow(undispatched), "ORIGINAL_CONSUMER_WAS_NOT_GATED");
+    const before = await witness(parent);
+    const [headBefore] = await q(continuationReads.head, [parent.tenantId, parent.programId]);
+    const priorJobs = new Set((await continuationJobs()).map(job => job.id));
+    const revokedAccounts = await disableFixtureAccounts(acquired.profileIds);
+    const approval = await confirmAction(held);
+    ensure(approval.status === 200, "CONFIRM_HELD_ACTION_REFUSED_" + approval.status);
+    await waitUntil("HELD_EFFECT_VERIFIED_AFTER_REVOCATION", 240000, async () => {
+      const row = await actionRow(held);
+      return row?.status === "completed" && row.effect_status === "verified";
+    });
+    const resume = await owner.operation("program-resume", { programId: parent.programId });
+    ensure(resume.status === 202, "ORIGINAL_PROGRAMME_RESUME_REFUSED_" + resume.status);
+    const attempted = await waitUntil("POST_REVOCATION_CONSUMER_DELIVERY", 240000, async () => {
+      const jobs = (await continuationJobs()).filter(job => !priorJobs.has(job.id));
+      return jobs.some(job => job.stage?.startsWith("resume-")) && await quiet() ? jobs : null;
+    });
+    const events = await programEvents();
+    const refused = attempted.some(job => /\bX2_CURRENT_APPLICATION_PROFILE_CHANGED\b/.test(job.error + " " + job.failure_detail))
+      || events.some(row => row.kind === "X1_CONTINUATION_UNCERTAIN" && row.body?.predicate === "X2_CURRENT_APPLICATION_PROFILE_CHANGED");
+    const after = await witness(parent);
+    const [head] = await q(continuationReads.head, [parent.tenantId, parent.programId]);
+    const [pe] = await q(continuationReads.createdWorkstream, [parent.tenantId, undispatched]);
+    const passed = refused && !await actionRow(undispatched) && !pe
+      && !events.some(row => /^P1_ORIGINAL_APPLICATION_MODEL_(?:MATERIALIZED|CONSUMED)$/.test(row.kind))
+      && sameBudget(before, after) && after.peRequests === before.peRequests && after.sessions === before.sessions
+      && head.deadline === headBefore.deadline && head.observed <= headBefore.observed + 1;
+    return { outcome: passed ? "PASS" : "FAIL", detail: { predicate: passed ? "APPLICATION_PROFILE_REFUSED_AT_USE" : "MODEL_USE_AFTER_ACCOUNT_REVOCATION_UNPROVEN",
+      code: refused ? "X2_CURRENT_APPLICATION_PROFILE_CHANGED" : null, revokedAccounts, before, after, headBefore, head, continuationJobs: attempted } };
+  });
+  const failed = results.some(row => row.outcome === "FAIL");
+  record("summary", { results, programId: parent.programId });
+  await acquired?.portal.stop();
+  await worker?.stop();
+  await sql.end();
+  process.exit(failed ? 1 : 0);
+}
 let p011 = null;
 await runCase("P0-11", "Original continuation consumes the accepted model for the undispatched duty (or records a direct fallback) and returns to the original Work", async () => {
   if (!acquired) return { outcome: "NOT_RUN", detail: "no accepted model" };

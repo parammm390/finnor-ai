@@ -639,7 +639,7 @@ export class NativeApplicationRuntime implements ApplicationLearningPort {
       protectedAdmission: false, externalUniversalProof: false,
       chargesDigest: x2Digest(await applicationParentCharges(this.ctx, this.session.allocation_ref)),
     });
-    return { model, check };
+    return { model, check, profiles: [...this.entries.values()].map(entry => entry.profile) };
   }
   async freshInitial() {
     const request = ApplicationExecuteSchema.parse(this.session.request);

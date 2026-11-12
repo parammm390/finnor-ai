@@ -9,7 +9,7 @@ import { NATIVE_APPLICATION_PROFILE_AUTHORITY_SQL } from "@finnor/db";
 import type {
   ApplicationActionModel, ApplicationModelCheck, ExperimentRef, Role,
 } from "@finnor/shared-types";
-import { resolveApplicationOperationProfile } from "@finnor/security";
+import { IdentityAccessError, resolveApplicationOperationProfile } from "@finnor/security";
 import type { PeMutationContext, PeWorldRootRef } from "../types";
 import { authorize, principal, schemaIdentity, tx, unavailable } from "../evidence-execution/store";
 import { enqueueOwnerDeliveryInTransaction } from "../../../governed-execution/src/owner-delivery-store";
@@ -203,7 +203,13 @@ export async function nativeApplicationProfile(ctx: PeMutationContext, id: strin
   }>(`SELECT p.auth_profile_ref,a.application,p.connection_revision,p.updated_at,${NATIVE_APPLICATION_PROFILE_AUTHORITY_SQL} private_binding FROM finnor_os.auth_profiles p JOIN finnor_os.application_accounts a ON a.tenant_id=p.tenant_id AND a.id=p.application_account_id WHERE p.tenant_id=$1 AND p.id=$2`,
   [ctx.auth.tenantId, id])).rows[0], true);
   if (!selected) throw unavailable();
-  const access = await resolveApplicationOperationProfile(ctx.auth.tenantId, principal(ctx), selected.application, selected.auth_profile_ref);
+  const access = await resolveApplicationOperationProfile(ctx.auth.tenantId, principal(ctx), selected.application, selected.auth_profile_ref)
+    .catch((error: unknown) => {
+      if (error instanceof IdentityAccessError && error.code === "auth_profile_inactive") {
+        x2Fault("X2_CURRENT_APPLICATION_PROFILE_CHANGED");
+      }
+      throw error;
+    });
   const config = access.restrictions.applicationSemantics;
   if (!config || typeof config !== "object" || Array.isArray(config)) x2Fault("X2_EXACT_AUTH_PROFILE_DOMAIN_REQUIRED");
   const data = config as Record<string, unknown>;

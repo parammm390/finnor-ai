@@ -4,7 +4,7 @@ import type { ApplicationActionModel, ApplicationModelCheck, ApplicationSnapshot
   ApplicationTransitionEvidence, ExperimentRef } from "@finnor/shared-types";
 import type { JobExecutionContext } from "../../../../../apps/worker/src/queue";
 import type { PeMutationContext } from "@finnor/private-equity/src/types";
-import type { ApplicationSessionRow } from "@finnor/private-equity/src/application-semantics/store";
+import type { ApplicationSessionRow, NativeApplicationProfile } from "@finnor/private-equity/src/application-semantics/store";
 import { applicationArtifact, applicationEvent, applicationSession, assertNativeApplicationProfileCurrent, currentApplicationWork,
   nativeApplicationProfile, retainApplicationArtifact } from "@finnor/private-equity/src/application-semantics/store";
 import { assertApplicationClaim } from "@finnor/private-equity/src/application-semantics/obligations";
@@ -59,6 +59,7 @@ async function assertNoUnobservedParentEffect(ctx: PeMutationContext, reservatio
 /** Invoked inside the real X2 publication transaction, not a completion toast. */
 export async function acceptInstitutionApplicationModel(ctx: PeMutationContext, row: ApplicationSessionRow,
   proposedModel: ApplicationActionModel, proposedCheck: ApplicationModelCheck,
+  profiles: readonly NativeApplicationProfile[],
   execution: Readonly<JobExecutionContext>, c: PoolClient) {
   const origin = await retainedInstitutionApplicationOrigin(ctx, row, c);
   if (!origin) return null;
@@ -67,6 +68,13 @@ export async function acceptInstitutionApplicationModel(ctx: PeMutationContext, 
   const { model, check } = await retainedModel(ctx, row, c);
   if (x2Digest(model) !== x2Digest(proposedModel) || x2Digest(check) !== x2Digest(proposedCheck)
     || row.status !== "MODEL_READY") x2Fault("Z0_ACTUAL_MODEL_PUBLICATION_REQUIRED");
+  const byId = new Map(profiles.map(profile => [profile.profile.id, profile]));
+  if (byId.size !== row.profile_ids.length) x2Fault("Z0_ORIGINAL_MODEL_PROFILE_CHANGED");
+  for (const id of [...row.profile_ids].sort()) {
+    const profile = byId.get(id);
+    if (!profile) x2Fault("Z0_ORIGINAL_MODEL_PROFILE_CHANGED");
+    await assertNativeApplicationProfileCurrent(ctx, profile, c);
+  }
   await assertNoUnobservedParentEffect(ctx, row.reservation_ref, c);
   const original = await nativeRequestRow(ctx, origin.body.selector.programId, c, true);
   await assertProgramCurrent(ctx, original, c, true);
