@@ -38,6 +38,13 @@ export const institutionOriginRef = (body: InstitutionApplicationOrigin) => x2Re
 export const originOf = (row: ApplicationSessionRow): ExperimentRef | null =>
   (row.parent as typeof row.parent & { institutionalOriginRef?: ExperimentRef }).institutionalOriginRef ?? null;
 
+const ownerCurrentnessRefusals = new Set([
+  "X1_COMPILER_REVISION_SUPERSEDED", "X1_SOURCE_GRANT_REVOKED_OR_SUPERSEDED", "X1_SOURCE_REVISION_CHANGED",
+  "X1_MANDATE_REVISION_CHANGED", "X1_P1_MANDATE_REVISION_CHANGED", "X1_RIGHTS_REVISION_CHANGED",
+  "X1_EXACT_WORK_REVISION_CHANGED", "EXACT_WORK_REVISION_CHANGED", "CANONICAL_PLAN_REVISION_SUPERSEDED",
+  "X1_INSTALLED_COMPILER_METHOD_CHANGED", "PROGRAM_RUNTIME_SOURCE_CHANGED", "PROGRAM_SCHEMA_CHANGED",
+]);
+
 export async function lockInstitutionApplicationOwners(ctx: PeMutationContext, c: PoolClient) {
   // Canonical S5 writers take portfolio before source/currentness and owner rows.
   await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [`s5-portfolio:${ctx.auth.tenantId}`]);
@@ -104,8 +111,13 @@ async function readOwnerOrigin(ctx: PeMutationContext, request: InstitutionalAcq
     }
   }
   await authorize(ctx, request.root, [{ type: "work", id: request.workId }], [], c);
-  await assertInstitutionCompilerCurrent(ctx, compiler, compiler.input_manifest?.current, c, true);
-  await assertProgramCurrent(ctx, native, c, true);
+  try {
+    await assertInstitutionCompilerCurrent(ctx, compiler, compiler.input_manifest?.current, c, true);
+    await assertProgramCurrent(ctx, native, c, true);
+  } catch (error) {
+    if (error instanceof Error && ownerCurrentnessRefusals.has(error.message)) x2Fault(error.message);
+    throw error;
+  }
   const current = compiler.input_manifest?.current;
   if (!current) x2Fault("Z0_ORIGINAL_SOURCE_MANIFEST_REQUIRED");
   const deadlineAt = assertInheritedDeadline({

@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: ${{ fromJSON(github.ref_name == 'codex/project-z0-recovery' && '["current","kill","revoke","boundaries"]' || '["default"]') }}
+        mode: ${{ fromJSON(github.ref_name == 'codex/project-z0-recovery' && '["current-source","current-parent","current-terms","current-rights","kill","revoke","boundaries"]' || '["default"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -65,13 +65,20 @@ jobs:
             export PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/z0-chromium"
             launch_args+=(--budget-ms=3300000)
           elif [ "$GITHUB_REF_NAME" = "codex/project-z0-recovery" ]; then
-            export FINNOR_Z0_MODE="$Z0_RECOVERY_MODE"
+            case "$Z0_RECOVERY_MODE" in
+              current-*)
+                export FINNOR_Z0_MODE=current
+                dependency="${Z0_RECOVERY_MODE#current-}"
+                export FINNOR_Z0_DEPENDENCY="${dependency^^}"
+                ;;
+              *) export FINNOR_Z0_MODE="$Z0_RECOVERY_MODE" ;;
+            esac
           fi
           install -d -m 700 "$GITHUB_WORKSPACE/.centropy-certification"
           taskset -c 0,1 node scripts/project-z/run-native-scenario.mjs \
             --name="z0-ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
             --evidence="$RUNNER_TEMP/z0-native" --profiles="$profiles" --no-worker --forward-env=FINNOR_Z0_MODE \
-            --forward-env=PLAYWRIGHT_BROWSERS_PATH "${launch_args[@]}" \
+            --forward-env=PLAYWRIGHT_BROWSERS_PATH --forward-env=FINNOR_Z0_DEPENDENCY "${launch_args[@]}" \
             --scenario="$GITHUB_WORKSPACE/finnor-os/scripts/project-z/native/$scenario"
       - name: Record native case outcomes
         if: ${{ always() }}
@@ -214,18 +221,21 @@ jobs:
           writeFileSync(join(process.env.RUNNER_TEMP, 'z0-cases.json'), JSON.stringify(receipt, null, 2) + '\n')
           const continuation = ['P0-00', 'P0-01', 'P0-10', 'P0-11']
           const recovery = {
-            current: ['INTAKE', 'CLAIM'].flatMap(stage => ['SOURCE', 'PARENT', 'TERMS', 'RIGHTS'].map(dependency => 'CUR-' + stage + '-' + dependency)),
             kill: ['P1-03'],
             revoke: ['P1-05'],
             boundaries: ['B-REVOKE-CLAIM', 'B-KILL-CLAIM', 'B-KILL-ACCEPT'],
           }
+          const recoveryMode = process.env.Z0_RECOVERY_MODE
+          const recoveryRequired = recoveryMode.startsWith('current-')
+            ? ['INTAKE', 'CLAIM'].map(stage => 'CUR-' + stage + '-' + recoveryMode.slice(8).toUpperCase())
+            : recovery[recoveryMode]
           const required = ({
             'codex/project-z0-identity': ['D1-00', 'D1-B', 'D1-01'],
             'codex/project-z0-economic': ['D1-02a'],
             'codex/project-z0-useful': [...continuation, 'P0-11b'],
             'codex/project-z0-r12': ['R12-02', 'R12-03', 'R12-04'],
             'codex/project-z0-mounted': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),
-            'codex/project-z0-recovery': recovery[process.env.Z0_RECOVERY_MODE],
+            'codex/project-z0-recovery': recoveryRequired,
           })[process.env.GITHUB_REF_NAME] ?? continuation
           for (const id of required) {
             const result = results.find(entry => entry.id === id)

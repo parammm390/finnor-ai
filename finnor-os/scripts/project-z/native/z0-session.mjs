@@ -22,7 +22,9 @@ const currentnessMode = process.env.FINNOR_Z0_MODE === "current";
 const boundaryMode = process.env.FINNOR_Z0_MODE === "boundaries";
 const dependencies = ["SOURCE", "PARENT", "TERMS", "RIGHTS"];
 const currentnessStages = ["INTAKE", "CLAIM"];
-const fixtureTags = Array.from({ length: currentnessMode ? 9 : boundaryMode ? 4 : 1 },
+const selectedDependency = process.env.FINNOR_Z0_DEPENDENCY;
+if (currentnessMode && !dependencies.includes(selectedDependency)) throw Error("Z0_CURRENTNESS_DEPENDENCY_REQUIRED");
+const fixtureTags = Array.from({ length: currentnessMode ? 3 : boundaryMode ? 4 : 1 },
   () => "a" + randomUUID().slice(0, 8));
 let resourcePool;
 if (!state || !evidence) throw Error("Z0_SCENARIO_NATIVE_ENVIRONMENT_REQUIRED");
@@ -308,6 +310,12 @@ if (process.env.FINNOR_Z0_MODE === "reject") {
  */
 if (currentnessMode) {
   const STOP = ["MODEL_READY", "FAILED", "BLOCKED", "UNKNOWN", "STALE", "CANCELLED"];
+  const expectedRefusals = {
+    SOURCE: ["X1_SOURCE_GRANT_REVOKED_OR_SUPERSEDED", "X1_SOURCE_REVISION_CHANGED"],
+    PARENT: ["X1_COMPILER_REVISION_SUPERSEDED", "Z0_ORIGINAL_INSTITUTION_BINDING_CHANGED", "Z0_CURRENT_ORIGINAL_X1_OWNER_REQUIRED"],
+    TERMS: ["X1_MANDATE_REVISION_CHANGED", "X1_P1_MANDATE_REVISION_CHANGED"],
+    RIGHTS: ["X1_RIGHTS_REVISION_CHANGED", "X2_CURRENT_S1_RIGHTS_CHANGED"],
+  };
   const authorityRevision = async () => (await q("SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=$1", [parent.tenantId]))[0]?.revision ?? null;
   const mutations = {
     SOURCE: async p => {
@@ -347,22 +355,24 @@ if (currentnessMode) {
     await submitted.handle.portal.stop();
   };
   const currentCase = (stage, dependency) => runCase(`CUR-${stage}-${dependency}`, `Currentness ${stage} x ${dependency}: an actual change of the dependency is refused or stops the affected work only`, async () => {
-    const tag = fixtureTags[1 + currentnessStages.indexOf(stage) * dependencies.length + dependencies.indexOf(dependency)];
+    const tag = fixtureTags[1 + currentnessStages.indexOf(stage)];
     const p = await createOriginalInstitutionParent(env, { record, tag, resourcePool, shape: "partial-unresolved" });
     ensure(p.parentReservation.id !== parent.parentReservation.id, "FIXTURE_REUSED_THE_CONTROL_RESERVATION");
     const before = await witness(p);
     const sessionsOf = async () => (await q("SELECT id,status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND work_id=$2", [p.tenantId, p.workId]));
     if (stage === "INTAKE") {
       const mutation = await mutations[dependency](p);
+      const afterMutation = await witness(p);
       const submitted = await submitInstitutionAcquisition(env, p, { privateRoot, record }, owner);
       const accepted = submitted.response.status === 202;
       if (accepted) await cancelAndStop(submitted, submitted.response.body.sessionId); else await submitted.handle.portal.stop();
       const after = await witness(p), sessions = await sessionsOf();
-      const refused = submitted.response.status >= 400 && submitted.response.status < 500 && sessions.length === 0;
+      const code = submitted.response.body?.code;
+      const refused = submitted.response.status === 409 && sessions.length === 0 && expectedRefusals[dependency].includes(code);
       ensure(await controlUnchanged(), "UNRELATED_CONTROL_PARENT_CHANGED");
-      ensure(sameOriginal(before, after) && after.charges.count === before.charges.count, "REFUSAL_CHANGED_THE_ORIGINAL_BUDGET");
+      ensure(sameOriginal(before, after) && after.charges.count === afterMutation.charges.count, "REFUSAL_CHANGED_THE_ORIGINAL_BUDGET");
       return { outcome: refused ? "PASS" : "FAIL", detail: { predicate: refused ? "CHANGED_DEPENDENCY_REFUSED_AT_INTAKE" : accepted ? "CHANGED_DEPENDENCY_NOT_FENCED_ACQUISITION_ACCEPTED" : "NOT_A_CLEAN_REFUSAL",
-        mutation, status: submitted.response.status, body: submitted.response.body, sessions, before, after } };
+        mutation, status: submitted.response.status, code, body: submitted.response.body, sessions, before, afterMutation, after } };
     }
     ensure(worker, "OWNED_WORKER_REQUIRED_FOR_CLAIM_STAGE");
     await worker.stop();
@@ -375,6 +385,7 @@ if (currentnessMode) {
       const queued = await q("SELECT status,attempts FROM finnor_os.jobs WHERE tenant_id=$1 AND type='run_application_semantics_v1' AND payload->>'sessionId'=$2", [p.tenantId, sessionId]);
       ensure(queued.length === 1 && queued[0].status === "queued" && queued[0].attempts === 0, "ACQUISITION_JOB_WAS_CLAIMED_BEFORE_THE_CHANGE");
       const mutation = await mutations[dependency](p);
+      const afterMutation = await witness(p);
       worker = await startWorker(30);
       let row = null;
       for (let i = 0; i < 120; i++) {
@@ -386,16 +397,17 @@ if (currentnessMode) {
       const [physical] = await q("SELECT count(*)::int n FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2", [p.tenantId, sessionId]);
       const after = await witness(p);
       ensure(await controlUnchanged(), "UNRELATED_CONTROL_PARENT_CHANGED");
-      ensure(sameOriginal(before, after) && after.charges.count === before.charges.count, "CLAIM_REFUSAL_CHANGED_THE_ORIGINAL_BUDGET");
-      const stopped = STOP.includes(row?.status) && row.status !== "MODEL_READY" && acceptance.n === 0 && physical.n === 0;
+      ensure(sameOriginal(before, after) && after.charges.count === afterMutation.charges.count, "CLAIM_REFUSAL_CHANGED_THE_ORIGINAL_BUDGET");
+      const stopped = STOP.includes(row?.status) && row.status !== "MODEL_READY" && acceptance.n === 0 && physical.n === 0
+        && expectedRefusals[dependency].includes(row.reason);
       return { outcome: stopped ? "PASS" : "FAIL", detail: { predicate: stopped ? "CHANGED_DEPENDENCY_STOPPED_THE_CLAIM" : "CHANGED_DEPENDENCY_NOT_FENCED_AT_CLAIM_" + row?.status,
-        mutation, session: row, acceptanceEvents: acceptance.n, physicalRequests: physical.n, before, after } };
+        mutation, session: row, code: row?.reason, acceptanceEvents: acceptance.n, physicalRequests: physical.n, before, afterMutation, after } };
     } finally {
       if (submitted) await submitted.handle.portal.stop();
       if (!worker) worker = await startWorker(30);
     }
   });
-  for (const stage of currentnessStages) for (const dependency of dependencies) await currentCase(stage, dependency);
+  for (const stage of currentnessStages) await currentCase(stage, selectedDependency);
   const noFence = "no owner fence found: X1 pins its own installed compiler method identity (X1_INSTALLED_COMPILER_METHOD_CHANGED), but no application-semantics learner, checker or Z0 consumer source identity is bound by any owner read; a source-byte fault would only modify the running product, not exercise a fence";
   for (const stage of ["INTAKE", "CLAIM", "USE", "DISPATCH"]) for (const dependency of ["CODE", "CHECKER", "CONSUMER"]) notRun(`CUR-${stage}-${dependency}`, `Currentness ${stage} x ${dependency}`, noFence);
   for (const stage of ["USE", "DISPATCH"]) for (const dependency of ["SOURCE", "PARENT", "TERMS", "RIGHTS"]) notRun(`CUR-${stage}-${dependency}`, `Currentness ${stage} x ${dependency}`,

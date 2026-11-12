@@ -663,7 +663,15 @@ export async function reviseOriginalSource(env: NativeEnvironment, parent: Origi
   const version = await db.withTenantTransaction(parent.tenantId, { userId: parent.ownerId }, async (tx: any) => dataPlatform.appendDocumentVersion(tx, {
     tenantId: parent.tenantId, documentId: binding.documentId, bytes, mediaType: "application/octet-stream", format: "unknown", origin: "manual_upload",
     actor: parent.ownerId, sourceSystem: "owner-export", sourceRef: `revised-${parent.tag}`, providerVersionId: "r2" }));
-  const expiresAt = new Date(Date.now() + 2 * 3600000).toISOString();
+  const sql = await admin(env);
+  const expiresAt = await (async () => {
+    try {
+      const row = (await sql.query("SELECT expires_at FROM finnor_os.x1_source_grants WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND document_id=$4 AND document_version_id=$5",
+        [parent.tenantId, parent.ownerId, parent.workId, binding.documentId, binding.versionId])).rows[0];
+      if (!row) throw Error("Z0_FIXTURE_ORIGINAL_SOURCE_GRANT_MISSING");
+      return new Date(row.expires_at).toISOString();
+    } finally { await sql.end(); }
+  })();
   const response = await owner.operation("institution-register-source", { workId: parent.workId, documentId: binding.documentId, documentVersionId: version.id,
     sourceClass: binding.sourceClass, protocol: "json_records", purpose: "standing evidence responsibility", expiresAt });
   return { status: response.status, body: response.body, newVersionId: version.id, previousVersionId: binding.versionId };
