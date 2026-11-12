@@ -80,7 +80,7 @@ import { classifyInstructionRoute, finalizeInstructionRouteFromPlan, type Instru
 import { interpretPrivateEquityQuestion } from "@finnor/private-equity";
 import { isOriginalWorkObservation } from "./project-z/z0-convergence/semantics";
 import { observeOriginalWork } from "./project-z/z0-convergence/original-work-observation";
-export { ConvergedInstitutionRuntime } from "./project-z/z0-convergence";
+export { ConvergedInstitutionRuntime, isOriginalWorkObservation } from "./project-z/z0-convergence";
 
 export * from "./llm";
 export * from "./planner";
