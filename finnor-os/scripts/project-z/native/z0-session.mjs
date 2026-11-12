@@ -64,11 +64,11 @@ const continuationReads = {
     WHERE a.tenant_id=$1 AND a.id=$2`,
   events: `SELECT e.kind,e.generation,e.created_at,e.body FROM finnor_os.p1_events e
     WHERE e.tenant_id=$1 AND e.request_id=$2 AND e.principal_id=$3 ORDER BY e.created_at,e.id`,
-  jobs: `SELECT j.id::text,j.status,j.created_at,j.payload->>'stage' stage,left(coalesce(j.last_error,''),240) error
+  jobs: `SELECT j.id::text,j.status,j.run_at,j.payload->>'stage' stage,left(coalesce(j.last_error,''),240) error
     FROM finnor_os.jobs j JOIN finnor_os.p1_requests p ON p.tenant_id=j.tenant_id AND p.id::text=j.payload->>'programId'
     WHERE j.tenant_id=$1 AND p.id=$2 AND p.principal_id=$3 AND j.type='run_x1_institution_continuation_v1'
       AND j.payload->>'principalId'=p.principal_id::text AND j.payload->>'generation'=p.generation::text
-    ORDER BY j.created_at,j.id`,
+    ORDER BY j.run_at,j.id`,
   acceptance: `SELECT created_at,body->'detail'->'acceptanceRef' acceptance_ref,
     body->'detail'->'checkRef'->>'contentDigest' check_digest FROM finnor_os.application_semantics_events
     WHERE tenant_id=$1 AND principal_id=$2 AND session_id=$3 AND kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED'`,
@@ -823,11 +823,15 @@ await runCase("P0-11", "Original continuation consumes the accepted model for th
   const settled = async id => { const row = await actionRow(id); return row?.status === "completed" && row.effect_status === "verified" ? row : null; };
   steps.heldSettled = await waitUntil("HELD_ACTION_COMPLETED_AND_VERIFIED", 240000, () => settled(A));
   const resume = async label => {
-    const before = (await continuationJobs()).length;
+    const before = new Set((await continuationJobs()).map(job => job.id));
     const response = await owner.operation("program-resume", { programId: parent.programId });
     ensure(response.status === 202, `PROGRAM_RESUME_${label}_REFUSED_${response.status}:${JSON.stringify(response.body).slice(0, 200)}`);
-    await waitUntil("CONTINUATION_" + label, 240000, async () => (await continuationJobs()).length > before && await quiet());
-    return { status: response.status, jobs: (await continuationJobs()).slice(before) };
+    const jobs = await waitUntil("CONTINUATION_" + label, 240000, async () => {
+      const added = (await continuationJobs()).filter(job => !before.has(job.id));
+      return added.some(job => job.stage?.startsWith("resume-")) && await quiet() ? added : null;
+    });
+    ensure(jobs.every(job => job.status === "completed"), `ORIGINAL_RESUME_${label}_JOB_FAILED`);
+    return { status: response.status, jobs };
   };
   steps.resumeAfterHeld = await resume("AFTER_HELD");
   steps.undispatchedDispatched = await waitUntil("UNDISPATCHED_DUTY_DISPATCHED", 120000, () => actionRow(B));

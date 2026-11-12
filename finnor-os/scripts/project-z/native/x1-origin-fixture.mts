@@ -354,7 +354,7 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
         FROM finnor_os.x1_compiler_requests r LEFT JOIN finnor_os.p1_requests p ON p.tenant_id=r.tenant_id AND p.id=r.program_id
         JOIN finnor_os.jobs j ON j.tenant_id=r.tenant_id
           AND (j.payload->>'requestId'=r.id::text OR j.payload->>'programId'=r.program_id::text)
-        WHERE r.tenant_id=$1 AND r.id=$2 ORDER BY j.created_at,j.id LIMIT 128`, [tenantId, compilerRequestId])).rows;
+        WHERE r.tenant_id=$1 AND r.id=$2 ORDER BY j.run_at,j.id LIMIT 128`, [tenantId, compilerRequestId])).rows;
       const path = join(process.env.FINNOR_NATIVE_EVIDENCE ?? process.cwd(), `parent-${tag}-queue.private.json`);
       writeFileSync(path, JSON.stringify({ compilerRequestId, queue }, null, 2) + "\n", { flag: "wx", mode: 0o600 });
       } catch { /* Preserve the original owner/timeout failure if diagnostics cannot be retained. */ }
