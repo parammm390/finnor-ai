@@ -50,7 +50,7 @@ function document(config) {
 function view(state, auth) {
   const { principalId, grantId, grantRevision, ...record } = binding(state, auth);
   return { ...record, ...input, version: auth.record.version, name: auth.record.workstreamDraftName ?? initialName,
-    observation: { available: fields, unavailable: [] } };
+    observation: { available: ["version", ...fields], unavailable: [] } };
 }
 const reject = (status, code) => { throw new ApplicationError(status, code); };
 async function readJson(request) {
