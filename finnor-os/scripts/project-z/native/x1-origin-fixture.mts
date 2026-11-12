@@ -172,7 +172,7 @@ async function waitFor<T>(label: string, timeoutMs: number, probe: () => Promise
   }
 }
 
-export type ParentShape = "partial-unresolved" | "mixed-supported-and-unresolved";
+export type ParentShape = "partial-unresolved" | "mixed-supported-and-unresolved" | "gated-two-supported-and-unresolved";
 
 export interface OriginalInstitutionParent {
   schema: "finnor.project-z.native.z0-original-parent.v1";
@@ -185,8 +185,13 @@ export interface OriginalInstitutionParent {
   originalDeadlineAt: string; wallDeadlineAt: string; dutyDeadlineAt: string; programmeDeadlineAt: string;
   deadlineAt: string; rightsRevision: string;
   resources: { compute: string; human: string }; grantIds: string[];
+  sourceBindings: Array<{ sourceClass: string; documentId: string; versionId: string; sha256: string }>;
   nativeStatus: { compiler: string; programme: string; liveJobs: number };
   jobs: Array<{ id: string; type: string; status: string }>;
+  /** Only the `gated-two-supported-and-unresolved` shape: duty A is dispatched and `pending` owner approval, duty B is
+   * executable and undispatched, and `responsibilityIdentity` names B. */
+  gated?: { heldIdentity: string; heldActionId: string; heldActionStatus: string; undispatchedActionId: string;
+    undispatchedRequestText: string; requestedAt: string; dueAt: string; workstreamExternalId: string; recipientExternalId: string };
 }
 
 export interface ParentOptions {
@@ -201,13 +206,19 @@ export interface ParentOptions {
  * X1 reports it as an unresolved duty: the native request is PARTIAL with no
  * business effect and no live P1 job, which is the quiescent state an
  * acquisition with `institutionalOrigin` requires. `mixed-supported-and-unresolved`
- * adds one supported create_deal_request duty (executed by the stock native
- * path) next to an unsupported operation; the selected duty is the unresolved one.
+ * adds one executable request (executed by the stock native path) and selects
+ * the unresolved duty.
+ * `gated-two-supported-and-unresolved` sets `requiresConfirmation=true` for the operation and adds two supported
+ * create_deal_request duties on the same Deal plus the unresolved one: the first pass leaves duty A pending owner
+ * approval (it holds the Deal), duty B executable and undispatched, and the programme quiescent PARTIAL (the unresolved
+ * duty is a persisted intervention, so no poll is scheduled). The selected duty is B.
  */
 export async function createOriginalInstitutionParent(env: NativeEnvironment, options: ParentOptions = {}): Promise<OriginalInstitutionParent> {
   const record = options.record ?? noRecord;
   const tag = options.tag ?? randomUUID().slice(0, 8);
   const shape = options.shape ?? "partial-unresolved";
+  const gatedShape = shape === "gated-two-supported-and-unresolved";
+  const executableCount = gatedShape ? 2 : shape === "mixed-supported-and-unresolved" ? 1 : 0;
   const { db, pe, dataPlatform, store, contracts } = await owners(env);
   const owner = await signInOwner(env);
   const { tenantId, userId } = owner;
@@ -228,7 +239,7 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
       dealLeadEmployeeId: userId, signedLoiAt: new Date(now - 86400000), targetClosingAt: new Date(now + 86400000) });
     const dealId = String(deal.row.id);
     let workstreamExternalId: string | null = null, recipientExternalId: string | null = null;
-    if (shape === "mixed-supported-and-unresolved") {
+    if (executableCount) {
       workstreamExternalId = "WS-" + randomUUID(); recipientExternalId = "PARTY-" + randomUUID();
       await pe.createWorkstream(ctxFor(workstreamExternalId), { dealId, kind: "financial_diligence", name: "Evidence schedule", owner: { partyType: "employee", partyId: userId } });
       await pe.addDealParty(ctxFor(recipientExternalId), { dealId, party: { partyType: "external_organization", partyId: organizationId }, role: "target_management" });
@@ -245,7 +256,7 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
       autonomyLimits: { maxActions: 1, maxQueries: 8, maxReplans: 6, maxPlannerCalls: 8, maxWallClockMs: 3600000 },
       planningHints: { qualification: "DISPOSABLE_ORDINARY_NO_PROTECTED_ADMISSION" } });
     if (profile.status !== 201) throw Error("Z0_FIXTURE_WORKFORCE_PROFILE_" + profile.status);
-    const policy = await owner.call(`/api/policies/${tenantId}/create_deal_request`, { policy: { scope: "DISPOSABLE_INTERNAL_REQUEST_ONLY" }, requiresConfirmation: false }, { method: "PUT" });
+    const policy = await owner.call(`/api/policies/${tenantId}/create_deal_request`, { policy: { scope: "DISPOSABLE_INTERNAL_REQUEST_ONLY" }, requiresConfirmation: gatedShape }, { method: "PUT" });
     if (policy.status !== 200) throw Error("Z0_FIXTURE_NATIVE_POLICY_" + policy.status);
     await record("parent-02-workforce-and-policy", { profile: profile.status, policy: policy.status });
 
@@ -266,12 +277,19 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
 
     const triggerBase = { kind: "trigger", triggerKind: "evidence_request_needed", registrationId, occurredAt, availableAt,
       requestText: `Provide the original signed evidence schedule ${tag}`, requiresAcceptedDeliverable: true };
+    const executableTriggers = Array.from({ length: executableCount }, (_, index) => ({
+      ...triggerBase, id: `request-${index}`,
+      requestText: gatedShape ? `${triggerBase.requestText} (${index})` : triggerBase.requestText,
+      workstreamExternalId, requestedFromExternalId: recipientExternalId,
+    }));
+    // A supported duty with a missing native link stays in the checked P1
+    // programme as an intervention, so an idle parent has no observation poll.
+    const unresolvedTrigger = { ...triggerBase, id: `request-${executableCount}` };
     const sources = [
       { id: "crm-original", sourceClass: "crm_deals", rows: [{ id: "deal-A", kind: "entity", entityType: "deal", registrationId, name: `Z0 original ${tag}` }] },
       { id: "ledger-original", sourceClass: "financial_ledger", rows: [{ id: "balance-A", kind: "quantity", registrationId, factKey: "facility_balance",
         value: "20.00", currency: "USD", unit: "units", period: "2026-10", basis: "outstanding", occurredAt, availableAt }] },
-      { id: "work-original", sourceClass: "work_tracking", rows: [{ id: "request-0", ...triggerBase,
-        ...(workstreamExternalId ? { workstreamExternalId, requestedFromExternalId: recipientExternalId } : {}) }] },
+      { id: "work-original", sourceClass: "work_tracking", rows: [...executableTriggers, unresolvedTrigger] },
     ];
     const bindings: Array<{ sourceClass: string; documentId: string; versionId: string; sha256: string }> = [];
     for (const source of sources) {
@@ -287,8 +305,7 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
 
     const expiresAt = new Date(now + 2 * 3600000).toISOString();
     const supported = { id: "standing-request", triggerKind: "evidence_request_needed", operation: "create_deal_request", principalId: userId, deadlineAt: dutyDeadline, materiality: "material" };
-    const unresolvedRule = { ...supported, id: "standing-transaction-approval", operation: "approve_transaction" };
-    const rules = shape === "mixed-supported-and-unresolved" ? [supported, unresolvedRule] : [supported];
+    const rules = [supported];
     const mandate = await owner.operation("institution-mandate", { workId, institutionId, rules, expiresAt });
     if (mandate.status !== 200) throw Error("Z0_FIXTURE_MANDATE_" + mandate.status + ":" + JSON.stringify(mandate.body).slice(0, 200));
     const grantIds: string[] = [];
@@ -311,14 +328,37 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
       const row = (await sql.query(`SELECT r.status compiler_status,r.failure compiler_failure,r.program_id,r.episode_id,r.work_input_id,r.work_input_digest,
           p.status p1_status,p.failure p1_failure,p.head_id,p.plan_revision_id,
           (SELECT count(*)::int FROM finnor_os.jobs j WHERE j.tenant_id=r.tenant_id AND j.status IN('queued','running','quarantined')
-            AND (j.payload->>'requestId'=r.id::text OR j.payload->>'programId'=r.program_id::text)) live
+            AND j.type IN('run_harness_program_v1','run_x1_institution_continuation_v1')
+            AND j.payload->>'programId'=r.program_id::text AND j.payload->>'principalId'=p.principal_id::text
+            AND (j.payload->>'generation')::integer=p.generation) live
         FROM finnor_os.x1_compiler_requests r LEFT JOIN finnor_os.p1_requests p ON p.tenant_id=r.tenant_id AND p.id=r.program_id
         WHERE r.tenant_id=$1 AND r.id=$2`, [tenantId, compilerRequestId])).rows[0];
       if (!row) return null;
       if (terminal.has(row.compiler_status)) throw Error(`Z0_FIXTURE_TERMINAL_COMPILER_${row.compiler_status}:${row.compiler_failure ?? ""}`);
       if (row.program_id && ["FAILED", "INVALIDATED", "CANCELLED"].includes(row.p1_status)) throw Error(`Z0_FIXTURE_TERMINAL_PROGRAMME_${row.p1_status}:${row.p1_failure ?? ""}`);
-      if (["WAITING", "PARTIAL"].includes(row.compiler_status) && row.program_id && row.head_id && row.p1_status === "PARTIAL" && row.live === 0) return row;
+      if (["WAITING", "PARTIAL"].includes(row.compiler_status) && row.program_id && row.head_id
+        && ["WAITING", "PARTIAL"].includes(row.p1_status) && row.live === 0) {
+        if (!gatedShape) return row;
+        const body = (await sql.query("SELECT body FROM finnor_os.p1_programs WHERE tenant_id=$1 AND id=$2", [tenantId, row.head_id])).rows[0]?.body;
+        const ids = (body?.nodes ?? []).filter((node: any) => node.action).map((node: any) => node.action.expectedEntityId);
+        const states = ids.length ? (await sql.query("SELECT status FROM finnor_os.domain_actions WHERE tenant_id=$1 AND id=ANY($2::uuid[])", [tenantId, ids])).rows : [];
+        if (states.length === 1 && states[0].status === "pending") return row;
+        if (states.length > 1 || states.some((state: any) => state.status !== "pending")) throw Error(`Z0_FIXTURE_TERMINAL_GATED_SHAPE_${states.map((state: any) => state.status).join(",")}`);
+      }
       return null;
+    }).catch(async error => {
+      try {
+      const queue = (await sql.query(`SELECT j.id,j.type,j.status,j.run_at,j.attempts,j.claim_fence,j.lease_expires_at,
+          left(coalesce(j.last_error,''),1000) reason,j.payload->>'generation' generation,
+          r.status compiler_status,p.status programme_status,p.generation programme_generation
+        FROM finnor_os.x1_compiler_requests r LEFT JOIN finnor_os.p1_requests p ON p.tenant_id=r.tenant_id AND p.id=r.program_id
+        JOIN finnor_os.jobs j ON j.tenant_id=r.tenant_id
+          AND (j.payload->>'requestId'=r.id::text OR j.payload->>'programId'=r.program_id::text)
+        WHERE r.tenant_id=$1 AND r.id=$2 ORDER BY j.created_at,j.id LIMIT 128`, [tenantId, compilerRequestId])).rows;
+      const path = join(process.env.FINNOR_NATIVE_EVIDENCE ?? process.cwd(), `parent-${tag}-queue.private.json`);
+      writeFileSync(path, JSON.stringify({ compilerRequestId, queue }, null, 2) + "\n", { flag: "wx", mode: 0o600 });
+      } catch { /* Preserve the original owner/timeout failure if diagnostics cannot be retained. */ }
+      throw error;
     });
     const episode = (await sql.query("SELECT id,original_deadline,wall_deadline,parent_reservation,parent_demand FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND id=$2", [tenantId, cut.episode_id])).rows[0];
     const head = (await sql.query("SELECT body FROM finnor_os.p1_programs WHERE tenant_id=$1 AND id=$2", [tenantId, cut.head_id])).rows[0].body;
@@ -326,7 +366,30 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
     const unresolved = (head.nodes as any[]).filter(node => !node.action);
     const supportedNodes = (head.nodes as any[]).filter(node => node.action);
     if (unresolved.length !== 1) throw Error(`Z0_FIXTURE_TERMINAL_UNRESOLVED_DUTY_COUNT_${unresolved.length}`);
-    const duty = request.institution.responsibilities.find((item: any) => item.obligation.stableIdentity === unresolved[0].stableIdentity);
+    if (supportedNodes.length !== executableCount) throw Error(`Z0_FIXTURE_TERMINAL_SUPPORTED_DUTY_COUNT_${supportedNodes.length}`);
+    const unresolvedDuty = request.institution.responsibilities.find((item: any) => item.obligation.stableIdentity === unresolved[0].stableIdentity);
+    if (unresolvedDuty?.obligation.trigger.recordId !== unresolvedTrigger.id
+      || !head.interventions?.some((item: any) => item.stableIdentity === unresolved[0].stableIdentity
+        && item.predicate === "X1_EXACT_ACTION_PAYLOAD_MISSING" && item.possibleEffect === false))
+      throw Error("Z0_FIXTURE_TERMINAL_MISSING_ORIGINAL_DUTY_INTERVENTION");
+    let selected = unresolved[0];
+    let gated: OriginalInstitutionParent["gated"];
+    if (gatedShape) {
+      const rows = (await sql.query("SELECT id::text,status FROM finnor_os.domain_actions WHERE tenant_id=$1 AND id=ANY($2::uuid[])", [tenantId, supportedNodes.map(node => node.action.expectedEntityId)])).rows;
+      const held = supportedNodes.find(node => rows.some((row: any) => row.id === node.action.expectedEntityId));
+      selected = supportedNodes.find(node => node !== held);
+      if (rows.length !== 1 || rows[0].status !== "pending" || cut.p1_status !== "PARTIAL" || !held || !selected)
+        throw Error(`Z0_FIXTURE_TERMINAL_GATED_DISPATCH_${cut.p1_status}_${rows.map(row => row.status).join(",")}`);
+      const selectedDuty = request.institution.responsibilities.find((item: any) => item.obligation.stableIdentity === selected.stableIdentity);
+      const source = executableTriggers.find(trigger => trigger.id === selectedDuty?.obligation.trigger.recordId);
+      if (!source || !source.workstreamExternalId || !source.requestedFromExternalId)
+        throw Error("Z0_FIXTURE_TERMINAL_UNDISPATCHED_DUTY_SOURCE_MISSING");
+      gated = { heldIdentity: held.stableIdentity, heldActionId: held.action.expectedEntityId, heldActionStatus: rows[0].status,
+        undispatchedActionId: selected.action.expectedEntityId, undispatchedRequestText: source.requestText,
+        requestedAt: source.occurredAt, dueAt: dutyDeadline, workstreamExternalId: source.workstreamExternalId,
+        recipientExternalId: source.requestedFromExternalId };
+    }
+    const duty = request.institution.responsibilities.find((item: any) => item.obligation.stableIdentity === selected.stableIdentity);
     if (!duty) throw Error("Z0_FIXTURE_TERMINAL_CHECKED_DUTY_MISSING");
     const iso = (value: unknown) => new Date(value as string | Date).toISOString();
     const deadlines = [iso(episode.original_deadline), iso(episode.wall_deadline), iso(duty.obligation.originalDeadline), iso(head.bounds.deadlineAt)];
@@ -336,10 +399,10 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
       tenantId, ownerId: userId, dealId, registrationId, institutionId, workId, workInputId: cut.work_input_id, workInputDigest: cut.work_input_digest,
       compilerRequestId, programId: cut.program_id, episodeId: episode.id, planRevisionId: cut.plan_revision_id, headId: cut.head_id,
       parentReservation: episode.parent_reservation, parentDemandDigest: episode.parent_demand.demandDigest, chargeScope: episode.parent_demand.chargeScope,
-      responsibilityIdentity: unresolved[0].stableIdentity, supportedIdentities: supportedNodes.map(node => node.stableIdentity),
+      responsibilityIdentity: selected.stableIdentity, supportedIdentities: supportedNodes.map(node => node.stableIdentity),
       originalDeadlineAt: deadlines[0]!, wallDeadlineAt: deadlines[1]!, dutyDeadlineAt: deadlines[2]!, programmeDeadlineAt: deadlines[3]!,
-      deadlineAt: deadlines.reduce((a, b) => (Date.parse(a) <= Date.parse(b) ? a : b)), rightsRevision: rights, resources, grantIds,
-      nativeStatus: { compiler: cut.compiler_status, programme: cut.p1_status, liveJobs: cut.live }, jobs };
+      deadlineAt: deadlines.reduce((a, b) => (Date.parse(a) <= Date.parse(b) ? a : b)), rightsRevision: rights, resources, grantIds, sourceBindings: bindings,
+      nativeStatus: { compiler: cut.compiler_status, programme: cut.p1_status, liveJobs: cut.live }, jobs, ...(gated ? { gated } : {}) };
     await record("parent-04-quiescent-original-parent", parent);
     return parent;
   } finally { await sql.end(); }
@@ -471,4 +534,82 @@ export async function driveAcquisitionToModelReady(env: NativeEnvironment, paren
       projectionStatus: projection.status, projectionSha256: projection.bodySha256 });
     return result;
   } finally { await sql.end(); }
+}
+
+export interface ForeignIdentity { tenantId: string; userId: string; email: string; password: string; sameTenantAsOwner: boolean }
+
+/**
+ * A second authenticated identity for refusal cases: a real Auth user created through the Auth admin API plus the
+ * tenant directory rows the product's own tenant-user path writes (users row matched by email; a new tenant is
+ * configured for the private-equity vertical exactly like the other owner e2e fixtures). `tenantId` omitted creates an
+ * unrelated tenant; naming the owner's tenant creates a different principal inside it.
+ */
+export async function createForeignIdentity(env: NativeEnvironment, options: { tenantId?: string } = {}): Promise<ForeignIdentity> {
+  const { db } = await owners(env);
+  const sql = await admin(env);
+  try {
+    const tag = randomUUID().slice(0, 8), email = `z0-foreign-${tag}@z0.example.test`, password = "Z0!" + randomUUID();
+    const created = await fetch(`${env.SUPABASE_URL}/auth/v1/admin/users`, { method: "POST",
+      headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY!, authorization: "Bearer " + env.SUPABASE_SERVICE_ROLE_KEY!, "content-type": "application/json" },
+      body: JSON.stringify({ email, password, email_confirm: true }), signal: AbortSignal.timeout(30000) });
+    if (created.status >= 300) throw Error("Z0_FIXTURE_FOREIGN_AUTH_USER_" + created.status);
+    const tenantId = options.tenantId ?? randomUUID(), userId = randomUUID();
+    if (!options.tenantId) await sql.query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,'Z0 unrelated firm')", [tenantId, randomUUID()]);
+    await sql.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name) VALUES($1,$2,$3,'owner','active','Z0 foreign principal')", [userId, tenantId, email]);
+    if (!options.tenantId) await db.configureTenantVertical({ tenantId, verticalKey: "private_equity", expectedVersion: 0, createdBy: userId, sourceSystem: "Z0:foreign" });
+    return { tenantId, userId, email, password, sameTenantAsOwner: Boolean(options.tenantId) };
+  } finally { await sql.end(); }
+}
+
+export interface StandaloneApplicationWork { workId: string; resourceId: string; units: string; tenantId: string }
+
+/**
+ * An ordinary Work (no X1 mandate, no compiler episode) on the parent's deal with its OWN compute resource, created
+ * through the same owner code the parent fixture uses. It lets the Z0 refusals be shown to be specific to X1 Works and
+ * lets a lawful standalone X2 acquisition run beside the original parent. The resource is not the original reservation.
+ */
+export async function createStandaloneApplicationWork(env: NativeEnvironment, parent: OriginalInstitutionParent, options: { units?: string } = {}): Promise<StandaloneApplicationWork> {
+  const { db, store, contracts } = await owners(env);
+  const { tenantId, ownerId: userId, dealId } = parent;
+  const ctx = { auth: { tenantId, userId, employeeId: userId, role: "owner" as const }, provenance: { sourceSystem: "existing-crm-owner", createdBy: userId } };
+  const units = options.units ?? "520", tag = randomUUID().slice(0, 8);
+  const intake = await db.receiveWork({ tenantId, userId, channel: "console", idempotencyKey: `z0-standalone-intake:${tag}:${randomUUID()}`,
+    instruction: "Ordinary application-learning Work with no institutional mandate",
+    activeContext: { entityType: "pe_deal", entityId: dealId }, authorityContext: { principalId: userId, scope: "DISPOSABLE_STANDALONE_APPLICATION_LEARNING_ONLY" } });
+  const workId = intake.workId as string;
+  await db.attachWorkEntity(tenantId, workId, { entityType: "pe_deal", entityId: dealId, source: "Z0:standalone-owner-registration" });
+  const sql = await admin(env);
+  try {
+    const rights = String((await sql.query("SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1", [tenantId])).rows[0].revision);
+    const ref = (ownerName: string, id: string) => ({ owner: ownerName, id, version: "owner-fixture-v1", contentDigest: sha(id) });
+    const resourceId = `z0-standalone-compute-${tag}`, start = new Date().toISOString(), until = new Date(Date.now() + 2 * 3600000).toISOString();
+    await store.putAllocationResource(ctx, contracts.parseAllocationResource({ schema: "finnor.allocation-resource.v1", resourceId, resourceClass: "COMPUTE", tenantId,
+      ownerRef: ref("BUSINESS_OWNER", userId), legalEntityRef: ref("S1", dealId), scopeRef: ref("BUSINESS_OWNER", "z0-standalone-" + tag),
+      permittedRoots: [{ entityType: "pe_deal", entityId: dealId }], rightsRef: `authority:${tenantId}:${rights}`,
+      unit: "request", currency: null, kind: "CUMULATIVE_EXPENDITURE", horizon: { startAt: start, periodMs: 3600000, periods: 2 },
+      sourceRef: ref("BUSINESS_OWNER", "capacity:" + resourceId), asOf: start, knowledgeAt: start, validUntil: until, beliefPins: [],
+      availability: [{ amount: units, basis: "REPORTED_AVAILABLE" }, { amount: units, basis: "REPORTED_AVAILABLE" }, { amount: units, basis: "REPORTED_AVAILABLE" }],
+      existingUse: ["0", "0", "0"], safetyMargin: "0", covenants: [], revoked: false, qualification: "AUTHENTICATED_OWNER_ASSERTION_UNADMITTED" }), null);
+    return { workId, resourceId, units, tenantId };
+  } finally { await sql.end(); }
+}
+
+/**
+ * Owner-path source revision: append a new version of the first original source document (the CRM export) and register it
+ * through `institution-register-source`, which supersedes the earlier grant of that source for the same Work.
+ */
+export async function reviseOriginalSource(env: NativeEnvironment, parent: OriginalInstitutionParent) {
+  const { db, dataPlatform } = await owners(env);
+  const owner = await signInOwner(env);
+  const binding = parent.sourceBindings[0];
+  if (!binding) throw Error("Z0_FIXTURE_ORIGINAL_SOURCE_BINDING_MISSING");
+  const rows = [{ id: "deal-A", kind: "entity", entityType: "deal", registrationId: parent.registrationId, name: `Z0 original ${parent.tag} revised` }];
+  const bytes = Buffer.from(JSON.stringify(rows));
+  const version = await db.withTenantTransaction(parent.tenantId, { userId: parent.ownerId }, async (tx: any) => dataPlatform.appendDocumentVersion(tx, {
+    tenantId: parent.tenantId, documentId: binding.documentId, bytes, mediaType: "application/octet-stream", format: "unknown", origin: "manual_upload",
+    actor: parent.ownerId, sourceSystem: "owner-export", sourceRef: `revised-${parent.tag}`, providerVersionId: "r2" }));
+  const expiresAt = new Date(Date.now() + 2 * 3600000).toISOString();
+  const response = await owner.operation("institution-register-source", { workId: parent.workId, documentId: binding.documentId, documentVersionId: version.id,
+    sourceClass: binding.sourceClass, protocol: "json_records", purpose: "standing evidence responsibility", expiresAt });
+  return { status: response.status, body: response.body, newVersionId: version.id, previousVersionId: binding.versionId };
 }

@@ -1,0 +1,73 @@
+name: Project Z0 native continuation
+
+on:
+  push:
+    branches: [codex/project-z0-resume]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: project-z0-native-continuation
+  cancel-in-progress: false
+
+jobs:
+  original-owner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Run the real X1 to X2 to original Work scenario
+        run: |
+          taskset -c 0,1 node scripts/project-z/run-native-scenario.mjs \
+            --name="z0-ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+            --evidence="$RUNNER_TEMP/z0-native" --profiles=z0 --no-worker \
+            --scenario="$GITHUB_WORKSPACE/finnor-os/scripts/project-z/native/z0-session.mjs"
+      - name: Record native case outcomes
+        if: ${{ always() }}
+        run: |
+          node --input-type=module <<'JS'
+          import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+          import { join } from 'node:path'
+
+          const root = join(process.env.RUNNER_TEMP, 'z0-native')
+          const scenario = join(root, 'scenario-01')
+          const files = existsSync(scenario) ? readdirSync(scenario) : []
+          const results = files.filter(name => /^z0-\d+-case-[A-Z0-9-]+[a-z]?\.json$/.test(name)).sort()
+            .map(name => {
+              const { id, outcome, error, detail } = JSON.parse(readFileSync(join(scenario, name), 'utf8'))
+              const predicate = (typeof error === 'string' ? error : '').match(/^[A-Z][A-Z0-9_]{2,160}(?=[: ]|$)/)?.[0] ?? null
+              const path = ['MODEL_USED', 'DIRECT_FALLBACK'].includes(detail?.path) ? detail.path : null
+              return { id, outcome, predicate, path }
+            })
+          const receipt = { sourceSha: process.env.GITHUB_SHA, results }
+          writeFileSync(join(process.env.RUNNER_TEMP, 'z0-cases.json'), JSON.stringify(receipt, null, 2) + '\n')
+          for (const id of ['P0-01', 'P0-10', 'P0-11']) {
+            const result = results.find(entry => entry.id === id)
+            if (result?.outcome !== 'PASS') {
+              console.error(id, result?.outcome ?? 'MISSING', result?.predicate ?? '')
+              process.exitCode = 1
+            }
+          }
+          JS
+      - name: Retain stack and case receipts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: project-z0-native-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/z0-native/stack-result.json
+            ${{ runner.temp }}/z0-cases.json
+          if-no-files-found: error
+          retention-days: 7
