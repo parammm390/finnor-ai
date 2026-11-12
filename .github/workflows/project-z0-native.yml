@@ -2,7 +2,7 @@ name: Project Z0 native continuation
 
 on:
   push:
-    branches: [codex/project-z0-resume, codex/project-z0-identity]
+    branches: [codex/project-z0-resume, codex/project-z0-identity, codex/project-z0-useful]
 
 permissions:
   contents: read
@@ -33,10 +33,12 @@ jobs:
           scenario=z0-session.mjs
           if [ "$GITHUB_REF_NAME" = "codex/project-z0-identity" ]; then
             scenario=z0-d1-session.mjs
+          elif [ "$GITHUB_REF_NAME" = "codex/project-z0-useful" ]; then
+            export FINNOR_Z0_MODE=workstream
           fi
           taskset -c 0,1 node scripts/project-z/run-native-scenario.mjs \
             --name="z0-ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
-            --evidence="$RUNNER_TEMP/z0-native" --profiles=z0 --no-worker \
+            --evidence="$RUNNER_TEMP/z0-native" --profiles=z0 --no-worker --forward-env=FINNOR_Z0_MODE \
             --scenario="$GITHUB_WORKSPACE/finnor-os/scripts/project-z/native/$scenario"
       - name: Record native case outcomes
         if: ${{ always() }}
@@ -72,7 +74,12 @@ jobs:
               })) : []
               const ownerRead = detail?.ownerRead && Number.isInteger(detail.ownerRead.status)
                 ? { status: detail.ownerRead.status, code: typedCode(detail.ownerRead.code) } : null
-              return { id, outcome, predicate, path, fallbackReason, httpStatus, responseCode, rejected, readbackFailures, ownerRead }
+              const continuationJobs = Array.isArray(detail?.continuationJobs) ? detail.continuationJobs.map(job => ({
+                status: /^[a-z_]{3,30}$/.test(job.status ?? '') ? job.status : null,
+                predicate: (job.error ?? '').match(/^[A-Z][A-Z0-9_]{2,160}(?=[: ]|$)/)?.[0] ?? null,
+                identifier: (job.error ?? '').match(/(?:violates (?:check|foreign key) constraint|column|relation) "([a-z0-9_.]{1,120})"/i)?.[1] ?? null,
+              })) : []
+              return { id, outcome, predicate, path, fallbackReason, httpStatus, responseCode, rejected, readbackFailures, ownerRead, continuationJobs }
             })
           const state = join(process.env.GITHUB_WORKSPACE, '.centropy-certification',
             'z0-ci-' + process.env.GITHUB_RUN_ID + '-' + process.env.GITHUB_RUN_ATTEMPT)
@@ -103,6 +110,7 @@ jobs:
           writeFileSync(join(process.env.RUNNER_TEMP, 'z0-cases.json'), JSON.stringify(receipt, null, 2) + '\n')
           const required = process.env.GITHUB_REF_NAME === 'codex/project-z0-identity'
             ? ['D1-00', 'D1-B', 'D1-01'] : ['P0-00', 'P0-01', 'P0-10', 'P0-11']
+          if (process.env.GITHUB_REF_NAME === 'codex/project-z0-useful') required.push('P0-11b')
           for (const id of required) {
             const result = results.find(entry => entry.id === id)
             if (result?.outcome !== 'PASS') {

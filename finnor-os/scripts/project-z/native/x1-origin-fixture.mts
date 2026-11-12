@@ -172,7 +172,13 @@ async function waitFor<T>(label: string, timeoutMs: number, probe: () => Promise
   }
 }
 
-export type ParentShape = "partial-unresolved" | "mixed-supported-and-unresolved" | "gated-two-supported-and-unresolved";
+export type ParentShape = "partial-unresolved" | "mixed-supported-and-unresolved" | "gated-two-supported-and-unresolved" | "gated-workstreams";
+
+type GatedDuty = { heldIdentity: string; heldActionId: string; heldActionStatus: string; undispatchedActionId: string } & (
+  { operation: "create_deal_request"; undispatchedRequestText: string; requestedAt: string; dueAt: string;
+    workstreamExternalId: string; recipientExternalId: string }
+  | { operation: "open_workstream"; workstreamKind: string; workstreamName: string }
+);
 
 export interface OriginalInstitutionParent {
   schema: "finnor.project-z.native.z0-original-parent.v1";
@@ -188,10 +194,9 @@ export interface OriginalInstitutionParent {
   sourceBindings: Array<{ sourceClass: string; documentId: string; versionId: string; sha256: string }>;
   nativeStatus: { compiler: string; programme: string; liveJobs: number };
   jobs: Array<{ id: string; type: string; status: string }>;
-  /** Only the `gated-two-supported-and-unresolved` shape: duty A is dispatched and `pending` owner approval, duty B is
+  /** In a gated shape, duty A is dispatched and `pending` owner approval, duty B is
    * executable and undispatched, and `responsibilityIdentity` names B. */
-  gated?: { heldIdentity: string; heldActionId: string; heldActionStatus: string; undispatchedActionId: string;
-    undispatchedRequestText: string; requestedAt: string; dueAt: string; workstreamExternalId: string; recipientExternalId: string };
+  gated?: GatedDuty;
 }
 
 export interface ParentOptions {
@@ -217,7 +222,9 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
   const record = options.record ?? noRecord;
   const tag = options.tag ?? randomUUID().slice(0, 8);
   const shape = options.shape ?? "partial-unresolved";
-  const gatedShape = shape === "gated-two-supported-and-unresolved";
+  const workstreamShape = shape === "gated-workstreams";
+  const gatedShape = shape === "gated-two-supported-and-unresolved" || workstreamShape;
+  const operation = workstreamShape ? "open_workstream" : "create_deal_request";
   const executableCount = gatedShape ? 2 : shape === "mixed-supported-and-unresolved" ? 1 : 0;
   const { db, pe, dataPlatform, store, contracts } = await owners(env);
   const owner = await signInOwner(env);
@@ -239,7 +246,7 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
       dealLeadEmployeeId: userId, signedLoiAt: new Date(now - 86400000), targetClosingAt: new Date(now + 86400000) });
     const dealId = String(deal.row.id);
     let workstreamExternalId: string | null = null, recipientExternalId: string | null = null;
-    if (executableCount) {
+    if (executableCount && !workstreamShape) {
       workstreamExternalId = "WS-" + randomUUID(); recipientExternalId = "PARTY-" + randomUUID();
       await pe.createWorkstream(ctxFor(workstreamExternalId), { dealId, kind: "financial_diligence", name: "Evidence schedule", owner: { partyType: "employee", partyId: userId } });
       await pe.addDealParty(ctxFor(recipientExternalId), { dealId, party: { partyType: "external_organization", partyId: organizationId }, role: "target_management" });
@@ -256,7 +263,7 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
       autonomyLimits: { maxActions: 1, maxQueries: 8, maxReplans: 6, maxPlannerCalls: 8, maxWallClockMs: 3600000 },
       planningHints: { qualification: "DISPOSABLE_ORDINARY_NO_PROTECTED_ADMISSION" } });
     if (profile.status !== 201) throw Error("Z0_FIXTURE_WORKFORCE_PROFILE_" + profile.status);
-    const policy = await owner.call(`/api/policies/${tenantId}/create_deal_request`, { policy: { scope: "DISPOSABLE_INTERNAL_REQUEST_ONLY" }, requiresConfirmation: gatedShape }, { method: "PUT" });
+    const policy = await owner.call(`/api/policies/${tenantId}/${operation}`, { policy: { scope: "DISPOSABLE_INTERNAL_REQUEST_ONLY" }, requiresConfirmation: gatedShape }, { method: "PUT" });
     if (policy.status !== 200) throw Error("Z0_FIXTURE_NATIVE_POLICY_" + policy.status);
     await record("parent-02-workforce-and-policy", { profile: profile.status, policy: policy.status });
 
@@ -280,7 +287,9 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
     const executableTriggers = Array.from({ length: executableCount }, (_, index) => ({
       ...triggerBase, id: `request-${index}`,
       requestText: gatedShape ? `${triggerBase.requestText} (${index})` : triggerBase.requestText,
-      workstreamExternalId, requestedFromExternalId: recipientExternalId,
+      ...(workstreamShape
+        ? { workstreamKind: "financial_diligence", workstreamName: `Independent evidence schedule ${tag} (${index})` }
+        : { workstreamExternalId, requestedFromExternalId: recipientExternalId }),
     }));
     // A supported duty with a missing native link stays in the checked P1
     // programme as an intervention, so an idle parent has no observation poll.
@@ -304,7 +313,7 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
     }
 
     const expiresAt = new Date(now + 2 * 3600000).toISOString();
-    const supported = { id: "standing-request", triggerKind: "evidence_request_needed", operation: "create_deal_request", principalId: userId, deadlineAt: dutyDeadline, materiality: "material" };
+    const supported = { id: "standing-request", triggerKind: "evidence_request_needed", operation, principalId: userId, deadlineAt: dutyDeadline, materiality: "material" };
     const rules = [supported];
     const mandate = await owner.operation("institution-mandate", { workId, institutionId, rules, expiresAt });
     if (mandate.status !== 200) throw Error("Z0_FIXTURE_MANDATE_" + mandate.status + ":" + JSON.stringify(mandate.body).slice(0, 200));
@@ -382,12 +391,15 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
         throw Error(`Z0_FIXTURE_TERMINAL_GATED_DISPATCH_${cut.p1_status}_${rows.map(row => row.status).join(",")}`);
       const selectedDuty = request.institution.responsibilities.find((item: any) => item.obligation.stableIdentity === selected.stableIdentity);
       const source = executableTriggers.find(trigger => trigger.id === selectedDuty?.obligation.trigger.recordId);
-      if (!source || !source.workstreamExternalId || !source.requestedFromExternalId)
-        throw Error("Z0_FIXTURE_TERMINAL_UNDISPATCHED_DUTY_SOURCE_MISSING");
-      gated = { heldIdentity: held.stableIdentity, heldActionId: held.action.expectedEntityId, heldActionStatus: rows[0].status,
-        undispatchedActionId: selected.action.expectedEntityId, undispatchedRequestText: source.requestText,
-        requestedAt: source.occurredAt, dueAt: dutyDeadline, workstreamExternalId: source.workstreamExternalId,
-        recipientExternalId: source.requestedFromExternalId };
+      const actions = { heldIdentity: held.stableIdentity, heldActionId: held.action.expectedEntityId,
+        heldActionStatus: rows[0].status, undispatchedActionId: selected.action.expectedEntityId };
+      if (workstreamShape && source?.workstreamKind && source.workstreamName) {
+        gated = { ...actions, operation, workstreamKind: source.workstreamKind, workstreamName: source.workstreamName };
+      } else if (!workstreamShape && source?.workstreamExternalId && source.requestedFromExternalId) {
+        gated = { ...actions, operation, undispatchedRequestText: source.requestText,
+          requestedAt: source.occurredAt, dueAt: dutyDeadline, workstreamExternalId: source.workstreamExternalId,
+          recipientExternalId: source.requestedFromExternalId };
+      } else throw Error("Z0_FIXTURE_TERMINAL_UNDISPATCHED_DUTY_SOURCE_MISSING");
     }
     const duty = request.institution.responsibilities.find((item: any) => item.obligation.stableIdentity === selected.stableIdentity);
     if (!duty) throw Error("Z0_FIXTURE_TERMINAL_CHECKED_DUTY_MISSING");
@@ -445,7 +457,14 @@ export async function submitInstitutionAcquisition(env: NativeEnvironment, paren
     mkdirSync(options.privateRoot, { recursive: true, mode: 0o700 });
     await portalModule.initialize(dir, "api");
     const credentials = JSON.parse(readFileSync(join(dir, "credentials.json"), "utf8"));
-    const portal = spawn(process.execPath, [join(here, "../../x2/fixtures/server.mjs"), "--private-dir", dir, "--port", "0"],
+    const workstream = parent.gated?.operation === "open_workstream" ? parent.gated : null;
+    if (workstream) writeFileSync(join(dir, "workstream-demo.private.json"), JSON.stringify({
+      dealId: parent.dealId, workstreamId: workstream.undispatchedActionId, kind: workstream.workstreamKind,
+      name: workstream.workstreamName, owner: { partyType: "employee", partyId: parent.ownerId },
+    }), { mode: 0o600, flag: "wx" });
+    const portalArgs = workstream ? [join(here, "z0-workstream-portal.mjs"), dir]
+      : [join(here, "../../x2/fixtures/server.mjs"), "--private-dir", dir, "--port", "0"];
+    const portal = spawn(process.execPath, portalArgs,
       { env: { PATH: process.env.PATH ?? "", LANG: "C", TZ: "UTC" }, stdio: ["ignore", "pipe", "pipe"] });
     const origin: string = await new Promise((yes, no) => {
       const timer = setTimeout(() => no(Error("Z0_FIXTURE_PORTAL_READINESS_TIMEOUT")), 15000);
@@ -459,7 +478,8 @@ export async function submitInstitutionAcquisition(env: NativeEnvironment, paren
     mkdirSync(tenantSecrets, { recursive: true, mode: 0o700 }); chmodSync(tenantSecrets, 0o700);
     const profileIds: string[] = [];
     const recordIds = [credentials.recordIds.discoveryOne, credentials.recordIds.discoveryTwo];
-    for (const [role, grantName] of [["editor", "discovery"], ["approver", "approval"]] as const) {
+    const portalRoles = [["editor", "discovery"], ["approver", "approval"]] as const;
+    for (const [role, grantName] of workstream ? portalRoles.slice(0, 1) : portalRoles) {
       const name = `${role}-${parent.tag}-${unique}`, accountId = randomUUID(), profileId = randomUUID();
       writeFileSync(join(tenantSecrets, name + ".json"), JSON.stringify({ applicationHeaders: JSON.stringify(
         { authorization: "Bearer " + credentials.tokens[role], "x-portal-grant": credentials.grantIds[grantName] }) }), { mode: 0o600, flag: "wx" });

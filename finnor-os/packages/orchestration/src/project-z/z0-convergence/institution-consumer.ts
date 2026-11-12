@@ -147,10 +147,20 @@ function materializeFrozenPayload(node: DutyNode, model: ApplicationActionModel,
     if (depth > 8 || !path.split(".").every(part => /^[A-Za-z][A-Za-z0-9_]*$/.test(part))) return false;
     if (value === null || typeof value === "string" || typeof value === "boolean") {
       const field = model.stateSchema.find(item => item.path === path);
-      if (!field || value === null && !field.nullable
-        || typeof value === "string" && !["text", "enum"].includes(field.kind)
-        || typeof value === "boolean" && field.kind !== "boolean") return false;
-      goal[path] = value;
+      if (!field) return false;
+      if (typeof value === "string" && field.kind === "identity") {
+        const observed = initial.state[path];
+        if (initial.observationQualification !== "LAWFUL_INDEPENDENT_READBACK" || initial.unavailableFields.includes(path)
+          || !observed || typeof observed !== "object" || observed.kind !== "identity" || observed.id !== value
+          || observed.application !== initial.scope.application || observed.account !== initial.scope.account
+          || observed.entity !== initial.target.entity) return false;
+        goal[path] = observed;
+      } else {
+        if (value === null && !field.nullable
+          || typeof value === "string" && !["text", "enum"].includes(field.kind)
+          || typeof value === "boolean" && field.kind !== "boolean") return false;
+        goal[path] = value;
+      }
       return Object.keys(goal).length <= 16;
     }
     if (!value || typeof value !== "object" || Array.isArray(value)) return false;
@@ -184,9 +194,14 @@ function materializeFrozenPayload(node: DutyNode, model: ApplicationActionModel,
     Object.hasOwn(predicted, key) && sameApplicationScalar(predicted[key], value))) {
     return { reason: "Z0_MODEL_DID_NOT_COMPUTE_ORIGINAL_OWNER_ARGUMENT" } as const;
   }
-  const rebuild = (value: unknown, path: string): unknown => value !== null && typeof value === "object"
-    ? Object.fromEntries(Object.entries(value).map(([key, leaf]) => [key, rebuild(leaf, path ? `${path}.${key}` : key)]))
-    : predicted[path];
+  const rebuild = (value: unknown, path: string): unknown => {
+    if (value !== null && typeof value === "object") {
+      return Object.fromEntries(Object.entries(value).map(([key, leaf]) => [key, rebuild(leaf, path ? `${path}.${key}` : key)]));
+    }
+    const computedValue = predicted[path];
+    return typeof value === "string" && computedValue && typeof computedValue === "object" && computedValue.kind === "identity"
+      ? computedValue.id : computedValue;
+  };
   const computed: DutyNode = { ...node, action: { ...node.action,
     payload: rebuild(node.action.payload, "") as Record<string, unknown> } };
   if (sha(computed) !== sha(node)) x2Fault("Z0_MODEL_CHANGED_COMPLETE_ORIGINAL_FROZEN_INTENT");

@@ -17,6 +17,7 @@ import {
 import { matchesOriginalOwnerArgument } from "../z0/native-original-oracle.mjs";
 
 const state = process.env.FINNOR_NATIVE_STATE, evidence = process.env.FINNOR_NATIVE_EVIDENCE;
+const workstreamMode = process.env.FINNOR_Z0_MODE === "workstream";
 if (!state || !evidence) throw Error("Z0_SCENARIO_NATIVE_ENVIRONMENT_REQUIRED");
 const env = readNativeEnvironment(state);
 const privateRoot = join(state, "z0-private");
@@ -44,7 +45,8 @@ async function runCase(id, title, body) {
     results.push({ id, title, outcome: detail?.outcome ?? "PASS", started, detail: redact(detail?.detail ?? detail ?? null) });
   } catch (error) {
     results.push({ id, title, outcome: "FAIL", started, error: String(error?.message ?? error).slice(0, 600),
-      errorCode: error?.code ?? null, errorType: error?.name ?? null });
+      errorCode: error?.code ?? null, errorType: error?.name ?? null,
+      ...(error?.continuationJobs ? { detail: { continuationJobs: error.continuationJobs } } : {}) });
   }
   record("case-" + id, results.at(-1));
   console.log(JSON.stringify({ case: id, outcome: results.at(-1).outcome, error: results.at(-1).error }));
@@ -86,13 +88,15 @@ const continuationReads = {
   request: `SELECT id,deal_id,workstream_id,requested_from_deal_party_id,owner_party_type,owner_party_id,
     request_text,requested_at,due_at,requires_accepted_deliverable,state FROM finnor_os.pe_requests
     WHERE tenant_id=$1 AND id=$2 AND archived_at IS NULL`,
+  createdWorkstream: `SELECT id,deal_id,kind,name,owner_party_type,owner_party_id,state
+    FROM finnor_os.pe_workstreams WHERE tenant_id=$1 AND id=$2 AND archived_at IS NULL`,
   envelope: `SELECT (SELECT max(v::numeric) FROM jsonb_array_elements_text(e->'quantities') v)::text limit_units,e->>'resourceId' resource_id
     FROM finnor_os.s5_reservations r,jsonb_array_elements(r.envelopes) e WHERE r.tenant_id=$1 AND r.reservation_id=$2 AND e->>'unit'='request'`,
   spent: `SELECT coalesce(sum(units),0)::text used FROM finnor_os.s5_governed_resource_charges
     WHERE tenant_id=$1 AND reservation_id=$2 AND resource_id=$3 AND unit='request'`,
 };
 
-if (!process.env.FINNOR_Z0_MODE) {
+if (!process.env.FINNOR_Z0_MODE || workstreamMode) {
   await runCase("P0-00", "The original continuation reads bind to the migrated database", async () => {
     const failures = [];
     for (const [name, statement] of Object.entries(continuationReads)) {
@@ -143,7 +147,8 @@ for (const route of ["institution-mandate", "institution-register-source", "inst
 
 let parent = null, acquired = null;
 await runCase("P0-01", "Original institution parent reaches a quiescent checked state through owner code", async () => {
-  parent = await createOriginalInstitutionParent(env, { record, tag: "a" + randomUUID().slice(0, 6), shape: "gated-two-supported-and-unresolved" });
+  parent = await createOriginalInstitutionParent(env, { record, tag: "a" + randomUUID().slice(0, 6),
+    shape: workstreamMode ? "gated-workstreams" : "gated-two-supported-and-unresolved" });
   ensure(parent.nativeStatus.liveJobs === 0, "PARENT_NOT_QUIESCENT");
   const w = await witness(parent);
   ensure(w.sessions === 0 && w.domainActions === (parent.gated ? 1 : 0) && w.peRequests === 0,
@@ -830,7 +835,8 @@ await runCase("P0-11", "Original continuation consumes the accepted model for th
       const added = (await continuationJobs()).filter(job => !before.has(job.id));
       return added.some(job => job.stage?.startsWith("resume-")) && await quiet() ? added : null;
     });
-    ensure(jobs.every(job => job.status === "completed"), `ORIGINAL_RESUME_${label}_JOB_FAILED`);
+    const failed = jobs.filter(job => job.status !== "completed");
+    if (failed.length) throw Object.assign(Error(`ORIGINAL_RESUME_${label}_JOB_FAILED`), { continuationJobs: failed });
     return { status: response.status, jobs };
   };
   steps.resumeAfterHeld = await resume("AFTER_HELD");
@@ -871,23 +877,31 @@ await runCase("P0-11", "Original continuation consumes the accepted model for th
   }, 3000);
   const [programme] = await q(continuationReads.programme, [parent.tenantId, parent.programId]);
   // N8: independent canonical read of the business row and comparison with values derived from the fixture inputs.
-  const [workstream] = await q(continuationReads.workstream, [parent.tenantId, parent.dealId, g.workstreamExternalId]);
-  const [recipient] = await q(continuationReads.recipient, [parent.tenantId, parent.dealId, g.recipientExternalId]);
-  ensure(workstream && recipient, "ORIGINAL_SOURCE_LINKS_UNAVAILABLE_IN_PE");
-  const expectedPayload = { dealId: parent.dealId, requestId: B, workstreamId: workstream.id,
-    requestedFromDealPartyId: recipient.id, owner: { partyType: "employee", partyId: parent.ownerId },
-    requestText: g.undispatchedRequestText, requestedAt: g.requestedAt, dueAt: g.dueAt, requiresAcceptedDeliverable: true };
+  let expectedPayload, expectedRow, peRow;
+  const originalOwner = { partyType: "employee", partyId: parent.ownerId };
+  const rowIdentity = { id: B, deal_id: parent.dealId, owner_party_type: originalOwner.partyType, owner_party_id: originalOwner.partyId };
+  if (g.operation === "open_workstream") {
+    expectedPayload = { dealId: parent.dealId, workstreamId: B, kind: g.workstreamKind, name: g.workstreamName, owner: originalOwner };
+    expectedRow = { ...rowIdentity, kind: g.workstreamKind, name: g.workstreamName, state: "not_started" };
+    [peRow] = await q(continuationReads.createdWorkstream, [parent.tenantId, B]);
+  } else {
+    const [workstream] = await q(continuationReads.workstream, [parent.tenantId, parent.dealId, g.workstreamExternalId]);
+    const [recipient] = await q(continuationReads.recipient, [parent.tenantId, parent.dealId, g.recipientExternalId]);
+    ensure(workstream && recipient, "ORIGINAL_SOURCE_LINKS_UNAVAILABLE_IN_PE");
+    expectedPayload = { dealId: parent.dealId, requestId: B, workstreamId: workstream.id,
+      requestedFromDealPartyId: recipient.id, owner: originalOwner, requestText: g.undispatchedRequestText,
+      requestedAt: g.requestedAt, dueAt: g.dueAt, requiresAcceptedDeliverable: true };
+    expectedRow = { ...rowIdentity, workstream_id: workstream.id, requested_from_deal_party_id: recipient.id,
+      request_text: g.undispatchedRequestText, requested_at: Date.parse(g.requestedAt), due_at: Date.parse(g.dueAt),
+      requires_accepted_deliverable: true, state: "open" };
+    [peRow] = await q(continuationReads.request, [parent.tenantId, B]);
+  }
   ensure(matchesOriginalOwnerArgument({ workId: parent.workId, frozenPayload: expectedPayload }, dispatched.payload),
     "ACTION_PAYLOAD_DIFFERS_FROM_FIXTURE_INPUTS");
-  const [peRow] = await q(continuationReads.request, [parent.tenantId, B]);
-  ensure(peRow, "INDEPENDENT_PE_REQUEST_ROW_MISSING");
-  const expectedRow = { id: B, deal_id: parent.dealId, workstream_id: workstream.id,
-    requested_from_deal_party_id: recipient.id, owner_party_type: "employee", owner_party_id: parent.ownerId,
-    request_text: g.undispatchedRequestText, requested_at: Date.parse(g.requestedAt), due_at: Date.parse(g.dueAt),
-    requires_accepted_deliverable: true, state: "open" };
+  ensure(peRow, "INDEPENDENT_PE_ROW_MISSING");
   const differentFields = Object.entries(expectedRow).filter(([key, value]) =>
     (peRow[key] instanceof Date ? peRow[key].getTime() : peRow[key]) !== value).map(([key]) => key);
-  ensure(!differentFields.length, "INDEPENDENT_PE_REQUEST_ROW_DIFFERS:" + differentFields.join(","));
+  ensure(!differentFields.length, "INDEPENDENT_PE_ROW_DIFFERS:" + differentFields.join(","));
   ensure(Date.parse(finalHead.deadline) === Date.parse(headBefore.deadline) && Date.parse(finalHead.deadline) === Date.parse(parent.programmeDeadlineAt), "ORIGINAL_DEADLINE_CHANGED");
   const budgetAfter = await witness(parent);
   ensure(budgetAfter.reservations.count === budgetBefore.reservations.count && budgetAfter.original.envelopes === budgetBefore.original.envelopes && budgetAfter.episode === budgetBefore.episode, "NEW_PARENT_OR_ENVELOPE_CHANGED");
