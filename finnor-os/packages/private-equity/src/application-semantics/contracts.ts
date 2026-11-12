@@ -19,6 +19,8 @@ export const X2_LIMITS = Object.freeze({
 });
 export const x2Digest = (body: unknown) => createHash("sha256").update(canonical(body)).digest("hex");
 export const x2ByteDigest = (body: string | Uint8Array) => createHash("sha256").update(body).digest("hex");
+export const nativeApplicationOperationId = (id: string, role: string) =>
+  `${id.slice(0, 224)}.${x2Digest({ role }).slice(0, 16)}`;
 let installedNodeDigest: string | undefined;
 function installedRuntimeDigest(): string | null {
   const root = resolve(import.meta.dirname, "../../../../.."), directory = resolve(root, "finnor-os/x2-runtime");

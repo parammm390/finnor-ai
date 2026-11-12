@@ -33,7 +33,7 @@ import {
   ApplicationAcquireSchema, ApplicationExecuteSchema, type ApplicationPhase,
 } from "./native-contracts";
 import {
-  applicationDatabaseDiagnostic, applicationFailureReason, applicationWireCorrelation, parseTransitionEvidence,
+  applicationDatabaseDiagnostic, applicationFailureReason, applicationWireCorrelation, nativeApplicationOperationId, parseTransitionEvidence,
   sameApplicationScalar, sameX2Ref, x2Digest, x2Fault, x2Ref, X2_LIMITS,
 } from "./contracts";
 import {
@@ -68,11 +68,8 @@ function preimage(ref: ExperimentRef, value: unknown): unknown {
   if (x2Digest(value) !== ref.contentDigest) x2Fault("X2_TRUSTED_SOURCE_PREIMAGE_MISMATCH");
   return value;
 }
-function nativeOperationId(id: string, role: string) {
-  return `${id.slice(0, 224)}.${x2Digest({ role }).slice(0, 16)}`;
-}
 function alias(description: DescribedApplicationOperation): DescribedApplicationOperation {
-  return { ...description, id: nativeOperationId(description.id, description.role) };
+  return { ...description, id: nativeApplicationOperationId(description.id, description.role) };
 }
 function sameState(before: ApplicationSnapshot, after: ApplicationSnapshot) {
   return before.recordRevision === after.recordRevision && x2Digest(before.state) === x2Digest(after.state)
