@@ -78,12 +78,20 @@ jobs:
             ? value.match(/^(?:[A-Za-z]+Error: |Error: )?([A-Z][A-Z0-9_]{2,160})(?=[: \n]|$)/)?.[1] ?? null : null
           const sqlIdentifier = value => typeof value === 'string'
             ? value.match(/(?:violates (?:check|foreign key|unique) constraint|column|relation) "([a-z0-9_.]{1,120})"/i)?.[1] ?? null : null
+          const jobFailure = job => ({
+            status: identifier(job.status),
+            predicate: predicateFrom(job.failure_detail) ?? predicateFrom(job.error),
+            identifier: sqlIdentifier(job.failure_detail) ?? sqlIdentifier(job.error),
+            location: (job.error ?? '').match(/\/finnor-os\/((?:packages|apps\/worker)\/[a-zA-Z0-9_./-]+\.m?ts:\d+:\d+)/)?.[1] ?? null,
+          })
           const results = files.filter(name => /^(?:z0|r12)-\d+-case-[A-Z0-9-]+[a-z]?\.json$/.test(name)).sort()
             .map(name => {
               const { id, outcome, error, errorCode, errorType, detail, reason } = JSON.parse(readFileSync(join(scenario, name), 'utf8'))
               const predicate = predicateFrom(error)
                 ?? typedCode(errorCode) ?? typedCode(detail?.predicate) ?? predicateFrom(detail?.reason ?? reason)
                 ?? (/^[A-Za-z]{3,30}$/.test(errorType ?? '') ? errorType : null)
+              const causePredicate = typeof error === 'string'
+                ? error.match(/^Z0_FIXTURE_TERMINAL_(?:COMPILER|PROGRAMME|SESSION)_[A-Z_]+:([A-Z0-9_]{3,160})(?=[: ]|$)/)?.[1] ?? null : null
               const path = ['MODEL_USED', 'DIRECT_FALLBACK'].includes(detail?.path) ? detail.path : null
               const fallbackReason = path === 'DIRECT_FALLBACK' && /^Z0_MODEL_[A-Z0-9_]{1,100}$/.test(detail?.fallbackReason ?? '')
                 ? detail.fallbackReason : null
@@ -101,13 +109,20 @@ jobs:
               })) : []
               const ownerRead = detail?.ownerRead && Number.isInteger(detail.ownerRead.status)
                 ? { status: detail.ownerRead.status, code: typedCode(detail.ownerRead.code) } : null
-              const continuationJobs = Array.isArray(detail?.continuationJobs) ? detail.continuationJobs.map(job => ({
-                status: /^[a-z_]{3,30}$/.test(job.status ?? '') ? job.status : null,
-                predicate: predicateFrom(job.failure_detail) ?? predicateFrom(job.error),
-                identifier: sqlIdentifier(job.failure_detail) ?? sqlIdentifier(job.error),
-                location: (job.error ?? '').match(/\/finnor-os\/((?:packages|apps\/worker)\/[a-zA-Z0-9_./-]+\.m?ts:\d+:\d+)/)?.[1] ?? null,
-              })) : []
-              return { id, outcome, predicate, path, fallbackReason, httpStatus, responseCode, rejected, readbackFailures, ownerRead, continuationJobs }
+              const continuationJobs = Array.isArray(detail?.continuationJobs) ? detail.continuationJobs.map(jobFailure) : []
+              const objective = detail?.objective ? {
+                state: identifier(detail.objective.loop?.state),
+                jobs: detail.objective.jobs.map(job => ({ type: identifier(job.type), ...jobFailure(job) })),
+                steps: detail.objective.steps.map(step => ({
+                  phase: identifier(step.phase), decision: identifier(step.decision_kind),
+                  outcome: identifier(step.iteration_outcome), failure: typedCode(step.failure?.code),
+                })),
+                queries: detail.objective.queries.map(query => ({
+                  status: identifier(query.status), failure: typedCode(query.failure?.code),
+                })),
+              } : null
+              return { id, outcome, predicate, causePredicate, sqlIdentifier: sqlIdentifier(error), path, fallbackReason,
+                httpStatus, responseCode, rejected, readbackFailures, ownerRead, continuationJobs, objective }
             })
           const acquisitionFile = files.find(name => /^z0-\d+-acquisition-failure-session\.json$/.test(name))
           const acquisition = acquisitionFile ? JSON.parse(readFileSync(join(scenario, acquisitionFile), 'utf8')) : null

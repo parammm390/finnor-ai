@@ -5,12 +5,13 @@ import type { ApplicationActionModel, ApplicationModelCheck, ApplicationSnapshot
 import type { JobExecutionContext } from "../../../../../apps/worker/src/queue";
 import type { PeMutationContext } from "@finnor/private-equity/src/types";
 import type { ApplicationSessionRow } from "@finnor/private-equity/src/application-semantics/store";
-import { applicationArtifact, applicationEvent, applicationSession, currentApplicationWork,
+import { applicationArtifact, applicationEvent, applicationSession, assertNativeApplicationProfileCurrent, currentApplicationWork,
   nativeApplicationProfile, retainApplicationArtifact } from "@finnor/private-equity/src/application-semantics/store";
 import { assertApplicationClaim } from "@finnor/private-equity/src/application-semantics/obligations";
 import { assertApplicationModelUse } from "@finnor/private-equity/src/application-semantics/checker";
-import { ApplicationSnapshotSchema, parseApplicationCheck, parseApplicationModel, parseTransitionEvidence,
+import { ApplicationSnapshotSchema, nativeApplicationOperationId, parseApplicationCheck, parseApplicationModel, parseTransitionEvidence,
   sameApplicationScalar, sameX2Ref, x2Digest, x2Fault, x2Ref, X2RefSchema } from "@finnor/private-equity/src/application-semantics/contracts";
+import { profileScopeKey, runWithPrefetchedProfiles, type PrefetchedProfile } from "@finnor/private-equity/src/application-semantics/profile-scope";
 import { assertApplicationComposition, composeApplicationActions } from "@finnor/private-equity/src/application-semantics/composition";
 import { projectApplicationSnapshot } from "@finnor/private-equity/src/application-semantics/observation";
 import type { PrivateApplicationBinding } from "@finnor/private-equity/src/application-semantics/ports";
@@ -222,6 +223,20 @@ export function institutionApplicationOwnerInputFromCanonicalAction(node: DutyNo
   return { node, modelUseRef: use.data, acceptanceRef: acceptance.data };
 }
 
+async function withInstitutionModelProfiles<R>(ctx: PeMutationContext, acceptanceRef: ExperimentRef, run: () => Promise<R>) {
+  const acceptance = await applicationArtifact<InstitutionModelAcceptance>(ctx, acceptanceRef);
+  const row = await applicationSession(ctx, acceptance.sessionId);
+  const profiles = new Map<string, PrefetchedProfile<unknown>>();
+  // Resolving a profile records an authority decision on its own connection.
+  // Complete that read before acquiring the tenant material-cut lock.
+  await Promise.all(row.profile_ids.map(async id => {
+    const key = profileScopeKey(ctx.auth.tenantId, principal(ctx), id);
+    try { profiles.set(key, { ok: true, value: await nativeApplicationProfile(ctx, id) }); }
+    catch (error) { profiles.set(key, { ok: false, error }); }
+  }));
+  return runWithPrefetchedProfiles(profiles, run);
+}
+
 async function currentAcceptedModel(ctx: PeMutationContext, original: Awaited<ReturnType<typeof originalDelivery>>,
   node: DutyNode, selected: { ref: ExperimentRef; session_id: string },
   execution: Readonly<JobExecutionContext>, c: PoolClient) {
@@ -249,12 +264,14 @@ async function currentAcceptedModel(ctx: PeMutationContext, original: Awaited<Re
     [ctx.auth.tenantId, principal(ctx), model.ref.id, operation.id])).rows[0];
     const binding = await applicationArtifact<Omit<PrivateApplicationBinding, "ref">>(ctx, operation.privateBindingRef, c);
     if (validity?.status !== "CURRENT" || !sameX2Ref(validity.current_binding_ref, operation.privateBindingRef)
-      || binding.schema !== "finnor.x2.private-application-binding.v1" || binding.operationId !== operation.id
+      || binding.schema !== "finnor.x2.private-application-binding.v1"
+      || nativeApplicationOperationId(binding.operationId, operation.authorization.role) !== operation.id
       || !row.profile_ids.includes(binding.profileId)) x2Fault("Z0_ORIGINAL_MODEL_OPERATION_NOT_CURRENT");
     const profile = await nativeApplicationProfile(ctx, binding.profileId);
     if (!sameX2Ref(profile.profile.grantRef, operation.authorization.grantRef)
       || profile.profile.role !== operation.authorization.role || profile.profile.account !== model.scope.account
       || profile.profile.application !== model.scope.application) x2Fault("Z0_ORIGINAL_MODEL_PROFILE_CHANGED");
+    await assertNativeApplicationProfileCurrent(ctx, profile, c);
   }
   return { row, model, check };
 }
@@ -275,7 +292,7 @@ export async function consumeInstitutionApplicationModels(ctx: PeMutationContext
   const charged = await chargeInstitutionDemand(ctx, selection.reservationRef, {
     responsibilityIdentity: node.stableIdentity, phase: "PREPARATION", ordinal: 1, units: 1, physicalInvocationId,
   });
-  return tx(ctx, async c => {
+  return withInstitutionModelProfiles(ctx, selection.accepted.ref, () => tx(ctx, async c => {
     const original = await originalDelivery(ctx, programId, execution, c);
     const selected = await acceptedForDuty(ctx, original, node, c);
     if (!selected || !sameX2Ref(selected.ref, selection.accepted.ref)) x2Fault("Z0_ORIGINAL_MODEL_SELECTION_CHANGED");
@@ -319,7 +336,7 @@ export async function consumeInstitutionApplicationModels(ctx: PeMutationContext
       acceptanceRef: selected.ref, compositionRef, ownerInputDigest: materialization.ownerInputDigest,
       physicalInvocationId, chargeRef: charged.charge.ref, consumed: false, completed: false }, c);
     return { node: result.computed, modelUseRef, acceptanceRef: selected.ref };
-  });
+  }));
 }
 
 /** Observe the real ordinary bridge's canonical row, never just a candidate
@@ -327,7 +344,8 @@ export async function consumeInstitutionApplicationModels(ctx: PeMutationContext
 export async function recordInstitutionApplicationModelUse(ctx: PeMutationContext, programId: string,
   execution: Readonly<JobExecutionContext>, input: InstitutionApplicationOwnerInput) {
   if (!input.modelUseRef) return;
-  await tx(ctx, async c => {
+  if (!input.acceptanceRef) x2Fault("Z0_NATIVE_OWNER_MODEL_ACCEPTANCE_CHANGED");
+  await withInstitutionModelProfiles(ctx, input.acceptanceRef, () => tx(ctx, async c => {
     const original = await originalDelivery(ctx, programId, execution, c);
     const selected = await acceptedForDuty(ctx, original, input.node, c);
     if (!selected || !input.acceptanceRef || !sameX2Ref(selected.ref, input.acceptanceRef)) {
@@ -373,7 +391,7 @@ export async function recordInstitutionApplicationModelUse(ctx: PeMutationContex
       actualOwner: "ORIGINAL_NATIVE_P1_ACTION_BRIDGE", originalWorkInputId: original.work_input_id,
       independentBusinessObservationStillRequired: true, newAllowance: false, completed: false,
     }, c);
-  });
+  }));
 }
 
 /** Failure/cancellation does not cancel the original responsibility. A lawful
