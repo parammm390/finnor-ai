@@ -1155,8 +1155,8 @@
     },
     {
       "file": "packages/orchestration/src/canonical-analysis.ts",
-      "bytes": 12882,
-      "sha256": "b446e167f33e09c75d6324476b78c6cac50db80921825fd7f8757570ec591db3"
+      "bytes": 13632,
+      "sha256": "2bfba5c7712801bd9f88985f4c4f118d6aaaa668a5e8cbec68061a27afca60a3"
     },
     {
       "file": "packages/orchestration/src/capabilities/contracts.ts",

@@ -24,6 +24,11 @@ export function isCanonicalAnalysisRead(instruction: string): boolean {
     .replace(/^(?:please\s+)?(?:(?:can|could|would|will)\s+you\s+)?(?:please\s+)?/i, "");
   if (!INFORMATIONAL_QUESTION.test(text)
     && !/^(?:analy[sz]e|assess|compare|evaluate|identify|quantify|rank|recommend|separate|prove)\b/i.test(text)) return false;
+  // A selected Deal is context, not a license to answer unrelated questions
+  // with financial records. Preserve explicit mixed artifact/execution requests.
+  if (!/\b(?:deals?|acquisitions?|transactions?|targets?|compan(?:y|ies)|funds?|holdings?|investments?|underwriting|valuations?|ebitda|credit|risks?|closing|diligence|financial|finance|cash\s+flow|returns?|committee|\bic\b|memos?|evidence|sources?|documents?|claims?|contradictions?|portfolio|ownership|lenders?|debt|profit|capital|enterprise\s+value)\b/i.test(text)) return false;
+  if (/\b(?:generate|produce|initiate|write|build|prepare|file|deliver|export|publish)\b/i.test(text)
+    && /\b(?:and(?:\s+then)?|then|also|now|please|(?:can|could|would)\s+you)\b/i.test(text)) return false;
   return !/(?:^|\b(?:and(?: then)?|then|also|now|please|(?:can|could|would) you)\s+)(?:send|email|call|create|update|delete|approve|reject|pay|execute|finish|complete|draft|share|assign|schedule|resolve|mark|waive|close)\b/i.test(text);
 }
 
