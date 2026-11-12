@@ -66,8 +66,10 @@ const continuationReads = {
     WHERE a.tenant_id=$1 AND a.id=$2`,
   events: `SELECT e.kind,e.generation,e.created_at,e.body FROM finnor_os.p1_events e
     WHERE e.tenant_id=$1 AND e.request_id=$2 AND e.principal_id=$3 ORDER BY e.created_at,e.id`,
-  jobs: `SELECT j.id::text,j.status,j.run_at,j.payload->>'stage' stage,left(coalesce(j.last_error,''),240) error
+  jobs: `SELECT j.id::text,j.status,j.run_at,j.payload->>'stage' stage,left(coalesce(j.last_error,''),1500) error,
+    left(coalesce(a.failure_detail,''),400) failure_detail
     FROM finnor_os.jobs j JOIN finnor_os.p1_requests p ON p.tenant_id=j.tenant_id AND p.id::text=j.payload->>'programId'
+    LEFT JOIN finnor_os.job_delivery_attempts a ON a.job_id=j.id AND a.claim_fence=j.claim_fence
     WHERE j.tenant_id=$1 AND p.id=$2 AND p.principal_id=$3 AND j.type='run_x1_institution_continuation_v1'
       AND j.payload->>'principalId'=p.principal_id::text AND j.payload->>'generation'=p.generation::text
     ORDER BY j.run_at,j.id`,
@@ -421,7 +423,7 @@ if (process.env.FINNOR_Z0_MODE === "boundaries") {
   const sessionRowOf = (p, id) => q("SELECT status,reason,generation,reservation_ref,original_parent_ref,deadline_at FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [p.tenantId, id]).then(rows => rows[0]);
   const acceptanceCount = (p, id) => q("SELECT count(*)::int n, min(body->'detail'->'acceptanceRef'->>'id') ref FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 AND kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED'", [p.tenantId, id]).then(rows => rows[0]);
   const requestCount = (p, id) => q("SELECT count(*)::int n FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2", [p.tenantId, id]).then(rows => rows[0].n);
-  const sessionJobs = (p, id) => q("SELECT id::text,status,attempts,claim_fence::text,left(coalesce(last_error,''),160) error FROM finnor_os.jobs WHERE tenant_id=$1 AND type='run_application_semantics_v1' AND payload->>'sessionId'=$2 ORDER BY created_at,id", [p.tenantId, id]);
+  const sessionJobs = (p, id) => q("SELECT id::text,status,attempts,claim_fence::text,left(coalesce(last_error,''),160) error FROM finnor_os.jobs WHERE tenant_id=$1 AND type='run_application_semantics_v1' AND payload->>'sessionId'=$2 ORDER BY run_at,id", [p.tenantId, id]);
   const settle = async (p, id, ms) => { const end = Date.now() + ms; let row = null; for (;;) { row = await sessionRowOf(p, id); if (TERMINAL.includes(row?.status)) return row; if (Date.now() > end) return row; await sleep(2500); } };
   const portalSendDuplicates = events => {
     const seen = new Map();
@@ -545,7 +547,7 @@ if (process.env.FINNOR_Z0_MODE === "boundaries") {
       ensure(submitted.response.status === 202, `ACQUIRE_NOT_ACCEPTED_${submitted.response.status}`);
       const sessionId = submitted.response.body.sessionId;
       const preparation = async () => (await q("SELECT count(*)::int n FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 AND phase='PREPARATION'", [p.tenantId, p.parentReservation.id]))[0].n;
-      const continuation = () => q("SELECT id::text,status,left(coalesce(last_error,''),160) error FROM finnor_os.jobs WHERE tenant_id=$1 AND type='run_x1_institution_continuation_v1' AND payload->>'programId'=$2 ORDER BY created_at,id", [p.tenantId, p.programId]);
+      const continuation = () => q("SELECT id::text,status,left(coalesce(last_error,''),160) error FROM finnor_os.jobs WHERE tenant_id=$1 AND type='run_x1_institution_continuation_v1' AND payload->>'programId'=$2 ORDER BY run_at,id", [p.tenantId, p.programId]);
       let accepted = null, pid = null, killed = null;
       for (let i = 0; i < 60000 && !accepted; i++) {
         const acceptance = await acceptanceCount(p, sessionId);
@@ -624,7 +626,7 @@ if (!killMode && !revokeMode) {
       const row = (await q("SELECT id,status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC LIMIT 1", [parent.tenantId, parent.workId]))[0] ?? null;
       const events = row ? await q("SELECT kind,left(body::text,900) body FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 ORDER BY created_at,event_id", [parent.tenantId, row.id]) : [];
       const requests = row ? await q("SELECT node_id,status,reason,possible_egress,left(body::text,500) body FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2 ORDER BY created_at", [parent.tenantId, row.id]) : [];
-      const dispositions = row ? await q("SELECT created_at,body->'detail'->>'disposition' disposition,body->'detail'->>'reason' reason FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 AND kind IN ('INDEPENDENT_APPLICATION_DISPOSITION','FAILED_OR_FENCED_PHYSICAL_DELIVERY') ORDER BY created_at,event_id", [parent.tenantId, row.id]) : [];
+      const dispositions = row ? await q("SELECT created_at,body->'detail'->>'disposition' disposition,body->'detail'->>'reason' reason,body->'detail'->'databaseDiagnostic' diagnostic FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 AND kind IN ('INDEPENDENT_APPLICATION_DISPOSITION','FAILED_OR_FENCED_PHYSICAL_DELIVERY') ORDER BY created_at,event_id", [parent.tenantId, row.id]) : [];
       const charges = await q("SELECT phase,resource_id,unit,count(*)::int n,sum(units)::text units FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 GROUP BY 1,2,3 ORDER BY 1", [parent.tenantId, parent.parentReservation.id]);
       record("acquisition-failure-session", { session: row, dispositions, charges, events: events.filter(item => !/^PHYSICAL_READ_/.test(item.kind)), requests, error: String(error.message).slice(0, 300) });
       throw error;
