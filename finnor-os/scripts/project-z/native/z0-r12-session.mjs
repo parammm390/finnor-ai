@@ -131,9 +131,19 @@ await startWorker(LEASE_SECONDS);
 const owner = await signInOwner(env);
 const { tenantId, userId } = owner;
 const ctx = { auth: { tenantId, userId, employeeId: userId, role: "owner" }, provenance: { sourceSystem: "R12:native-scenario", createdBy: userId } };
+const profile = await owner.call("/api/workforce/profiles", {
+  key: "r12-primary-diligence-reader",
+  name: "Primary diligence observation",
+  modelRoute: { provider: "orchestration_runtime", model: null, purpose: "objective_execution" },
+  capabilityGrants: [{ kind: "query", capability: "query:primary_diligence_v1" },
+    { kind: "check", capability: "check:objective_success" }],
+  maxConcurrentAssignments: 4,
+  autonomyLimits: { maxActions: 1, maxQueries: 8, maxWallClockMs: 3500000 },
+});
+ensure(profile.status === 201, "R12_WORKFORCE_PROFILE_" + profile.status);
 const me = await owner.call("/api/me");
 record("environment", { profile: "v2", apiOrigin: "http://127.0.0.1:3101", tenantId, userId, meStatus: me.status, workerPid: worker.pid,
-  workerLeaseSeconds: LEASE_SECONDS, sourceOrigin: publicDescriptor.origin, node: process.version });
+  workforceProfileStatus: profile.status, workerLeaseSeconds: LEASE_SECONDS, sourceOrigin: publicDescriptor.origin, node: process.version });
 for (const route of ["primary-plan", "primary-open-work", "primary-submit", "primary-read", "primary-consume", "primary-governance-put", "primary-reserve-budget", "primary-cancel", "primary-advance", "primary-governance-revoke"])
   await owner.operation(route, {}).catch(() => null);
 await owner.call("/api/queries", { intent: "work_list", openOnly: true }).catch(() => null);
@@ -593,7 +603,7 @@ await runCase("R12-11", "Newer Work input supersedes: reader non-current; stale 
   const oldInput = await probe(f.workId, { workInputId: f.workInputId });
   ensure(oldInput.status !== "ok", "OLD_INPUT_STILL_OK");
   const before = await planRevisions(f.workId);
-  const stalePlan = await plan(f, undefined);
+  const stalePlan = await call("primary-plan", f.intake);
   ensure(stalePlan.status >= 400 && stalePlan.status < 500 && await planRevisions(f.workId) === before, "STALE_INPUT_PLAN_ACCEPTED_" + stalePlan.status);
   const unknown = await owner.operation("primary-plan", { ...f.intake, extra: true });
   ensure(unknown.status === 400, "EXTRA_FIELD_PLAN_NOT_400_" + unknown.status);
@@ -684,7 +694,7 @@ await runCase("R12-21", "Original deadline exhausted before dispatch: zero sourc
   const wait = Date.parse(f.originalDeadline) - Date.now();
   if (wait > 0) await sleep(wait + 1500);
   const before = await planRevisions(f.workId);
-  const stalePlan = await plan(f, undefined);
+  const stalePlan = await call("primary-plan", f.intake);
   ensure(stalePlan.status >= 400 && stalePlan.status < 500 && await planRevisions(f.workId) === before, "EXPIRED_DEADLINE_PLAN_ACCEPTED_" + stalePlan.status);
   await submit(f);
   const read = await awaitProgramme(f, 120000);
