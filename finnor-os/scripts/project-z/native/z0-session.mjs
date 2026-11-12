@@ -11,13 +11,20 @@ import { createHash, randomUUID } from "node:crypto";
 import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
-  readNativeEnvironment, signInOwner, startOwnedWorker, createOriginalInstitutionParent,
+  readNativeEnvironment, signInOwner, startOwnedWorker, createOriginalInstitutionParent, prepareInstitutionFixtureResourcePool,
   driveAcquisitionToModelReady, submitInstitutionAcquisition, createStandaloneApplicationWork, reviseOriginalSource,
 } from "./x1-origin-fixture.mts";
 import { matchesOriginalOwnerArgument } from "../z0/native-original-oracle.mjs";
 
 const state = process.env.FINNOR_NATIVE_STATE, evidence = process.env.FINNOR_NATIVE_EVIDENCE;
 const workstreamMode = process.env.FINNOR_Z0_MODE === "workstream";
+const currentnessMode = process.env.FINNOR_Z0_MODE === "current";
+const boundaryMode = process.env.FINNOR_Z0_MODE === "boundaries";
+const dependencies = ["SOURCE", "PARENT", "TERMS", "RIGHTS"];
+const currentnessStages = ["INTAKE", "CLAIM"];
+const fixtureTags = Array.from({ length: currentnessMode ? 9 : boundaryMode ? 4 : 1 },
+  () => "a" + randomUUID().slice(0, 8));
+let resourcePool;
 if (!state || !evidence) throw Error("Z0_SCENARIO_NATIVE_ENVIRONMENT_REQUIRED");
 const env = readNativeEnvironment(state);
 const privateRoot = join(state, "z0-private");
@@ -149,7 +156,8 @@ for (const route of ["institution-mandate", "institution-register-source", "inst
 
 let parent = null, acquired = null;
 await runCase("P0-01", "Original institution parent reaches a quiescent checked state through owner code", async () => {
-  parent = await createOriginalInstitutionParent(env, { record, tag: "a" + randomUUID().slice(0, 6),
+  if (currentnessMode || boundaryMode) resourcePool = await prepareInstitutionFixtureResourcePool(env, fixtureTags);
+  parent = await createOriginalInstitutionParent(env, { record, tag: fixtureTags[0], resourcePool,
     shape: workstreamMode ? "gated-workstreams" : "gated-two-supported-and-unresolved" });
   ensure(parent.nativeStatus.liveJobs === 0, "PARENT_NOT_QUIESCENT");
   const w = await witness(parent);
@@ -298,20 +306,37 @@ if (process.env.FINNOR_Z0_MODE === "reject") {
  * dependency changed, worker restarted, so the first claim happens after the change). Each case uses its own fresh
  * original parent; the first parent is the untouched control whose owner state must not move.
  */
-if (process.env.FINNOR_Z0_MODE === "current") {
+if (currentnessMode) {
   const STOP = ["MODEL_READY", "FAILED", "BLOCKED", "UNKNOWN", "STALE", "CANCELLED"];
   const authorityRevision = async () => (await q("SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=$1", [parent.tenantId]))[0]?.revision ?? null;
   const mutations = {
-    SOURCE: async p => ({ via: "institution-register-source (new document version of the original CRM export)", ...(await reviseOriginalSource(env, p)) }),
-    PARENT: async p => { const r = await owner.operation("institution-revise", { workId: p.workId, workInputId: p.workInputId, grantIds: p.grantIds,
-      idempotencyKey: "z0-revise:" + randomUUID(), parentRequestId: p.compilerRequestId }); return { via: "institution-revise (new compiler revision of the same Work)", status: r.status, body: r.body }; },
-    TERMS: async p => { const r = await owner.call("/api/workforce/profiles", { key: `z0-native-${p.tag}`, name: "Revised governed terms",
-      capabilityGrants: [{ kind: "query", capability: "query:harness_program_v1" }], autonomyLimits: { maxActions: 0, maxQueries: 1, maxReplans: 1, maxPlannerCalls: 1, maxWallClockMs: 60000 },
-      planningHints: { qualification: "DISPOSABLE_ORDINARY_NO_PROTECTED_ADMISSION" } }); return { via: "POST /api/workforce/profiles (same key, narrower terms)", status: r.status, body: r.body }; },
+    SOURCE: async p => {
+      const changed = await reviseOriginalSource(env, p);
+      ensure(changed.status === 200, "ORIGINAL_SOURCE_REVISION_REFUSED_" + changed.status);
+      return changed;
+    },
+    PARENT: async p => {
+      const changed = await owner.operation("institution-revise", { workId: p.workId, workInputId: p.workInputId, grantIds: p.grantIds,
+        idempotencyKey: "z0-revise:" + randomUUID(), parentRequestId: p.compilerRequestId });
+      ensure(changed.status === 202 && changed.body.requestId !== p.compilerRequestId, "ORIGINAL_PARENT_REVISION_NOT_CREATED");
+      return { status: changed.status, requestId: changed.body.requestId };
+    },
+    TERMS: async p => {
+      const [prior] = await q("SELECT revision,rules,expires_at FROM finnor_os.x1_work_mandates WHERE tenant_id=$1 AND work_id=$2 AND principal_id=$3 AND revoked_at IS NULL",
+        [p.tenantId, p.workId, p.ownerId]);
+      ensure(prior, "ORIGINAL_MANDATE_TERMS_REQUIRED");
+      const rules = prior.rules.map(({ postconditionRef, observerRef, ...rule }) => ({ ...rule, materiality: "material for the revised scope" }));
+      const changed = await owner.operation("institution-mandate", { workId: p.workId, institutionId: p.institutionId,
+        rules, expiresAt: new Date(prior.expires_at).toISOString() });
+      ensure(changed.status === 200 && changed.body.revision && changed.body.revision !== prior.revision, "ORIGINAL_TERMS_REVISION_NOT_CREATED");
+      return { status: changed.status, revisionBefore: prior.revision, revisionAfter: changed.body.revision };
+    },
     RIGHTS: async () => { const before = await authorityRevision();
       // The row is a disposable role definition; the authority revision itself is bumped by the product's own trigger.
       await q("INSERT INTO finnor_os.employee_roles(tenant_id,key,name) VALUES($1,$2,'Z0 disposable rights revision')", [parent.tenantId, "z0-rights-" + randomUUID().slice(0, 8)]);
-      return { via: "employee_roles insert; product trigger bump_authority_revision", revisionBefore: before, revisionAfter: await authorityRevision() }; },
+      const after = await authorityRevision();
+      ensure(before !== after, "ORIGINAL_RIGHTS_REVISION_NOT_CHANGED");
+      return { revisionBefore: before, revisionAfter: after }; },
   };
   // Other parents of the same tenant add reservations, so the comparison is limited to the one original parent.
   const sameOriginal = (a, b) => a.original.envelopes === b.original.envelopes && a.original.status === b.original.status && a.episode === b.episode;
@@ -322,7 +347,9 @@ if (process.env.FINNOR_Z0_MODE === "current") {
     await submitted.handle.portal.stop();
   };
   const currentCase = (stage, dependency) => runCase(`CUR-${stage}-${dependency}`, `Currentness ${stage} x ${dependency}: an actual change of the dependency is refused or stops the affected work only`, async () => {
-    const p = await createOriginalInstitutionParent(env, { record, tag: `c${stage[0].toLowerCase()}${dependency[0].toLowerCase()}${randomUUID().slice(0, 4)}`, shape: "partial-unresolved" });
+    const tag = fixtureTags[1 + currentnessStages.indexOf(stage) * dependencies.length + dependencies.indexOf(dependency)];
+    const p = await createOriginalInstitutionParent(env, { record, tag, resourcePool, shape: "partial-unresolved" });
+    ensure(p.parentReservation.id !== parent.parentReservation.id, "FIXTURE_REUSED_THE_CONTROL_RESERVATION");
     const before = await witness(p);
     const sessionsOf = async () => (await q("SELECT id,status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND work_id=$2", [p.tenantId, p.workId]));
     if (stage === "INTAKE") {
@@ -368,7 +395,7 @@ if (process.env.FINNOR_Z0_MODE === "current") {
       if (!worker) worker = await startWorker(30);
     }
   });
-  for (const stage of ["INTAKE", "CLAIM"]) for (const dependency of ["SOURCE", "PARENT", "TERMS", "RIGHTS"]) await currentCase(stage, dependency);
+  for (const stage of currentnessStages) for (const dependency of dependencies) await currentCase(stage, dependency);
   const noFence = "no owner fence found: X1 pins its own installed compiler method identity (X1_INSTALLED_COMPILER_METHOD_CHANGED), but no application-semantics learner, checker or Z0 consumer source identity is bound by any owner read; a source-byte fault would only modify the running product, not exercise a fence";
   for (const stage of ["INTAKE", "CLAIM", "USE", "DISPATCH"]) for (const dependency of ["CODE", "CHECKER", "CONSUMER"]) notRun(`CUR-${stage}-${dependency}`, `Currentness ${stage} x ${dependency}`, noFence);
   for (const stage of ["USE", "DISPATCH"]) for (const dependency of ["SOURCE", "PARENT", "TERMS", "RIGHTS"]) notRun(`CUR-${stage}-${dependency}`, `Currentness ${stage} x ${dependency}`,
@@ -415,7 +442,7 @@ const TERMINAL = ["MODEL_READY", "FAILED", "BLOCKED", "UNKNOWN", "STALE", "CANCE
  * concurrent explicit resumes, SIGKILL right after the durable S4 acceptance. Each case uses its own fresh original parent;
  * the first parent is the untouched control. Only the owned worker process is stopped or killed.
  */
-if (process.env.FINNOR_Z0_MODE === "boundaries") {
+if (boundaryMode) {
   const readJournal = dir => { try { return readFileSync(join(dir, "provider", "journal.ndjson"), "utf8").trim().split("\n").filter(Boolean).flatMap(line => JSON.parse(line).events ?? []); } catch { return []; } };
   const controlBefore = await witness(parent);
   const sameOriginal = (a, b) => a.original.envelopes === b.original.envelopes && a.original.status === b.original.status && a.episode === b.episode;
@@ -430,11 +457,15 @@ if (process.env.FINNOR_Z0_MODE === "boundaries") {
     for (const event of events.filter(item => /^(submission\.accepted|approval\.committed)$/.test(item.type))) seen.set(event.requestId + "|" + event.type, (seen.get(event.requestId + "|" + event.type) ?? 0) + 1);
     return [...seen.entries()].filter(([, n]) => n > 1).map(([key]) => key);
   };
-  const freshParent = (prefix, shape) => createOriginalInstitutionParent(env, { record, tag: prefix + randomUUID().slice(0, 5), shape });
+  const freshParent = async (index, shape) => {
+    const original = await createOriginalInstitutionParent(env, { record, tag: fixtureTags[index], shape, resourcePool });
+    ensure(original.parentReservation.id !== parent.parentReservation.id, "FIXTURE_REUSED_THE_CONTROL_RESERVATION");
+    return original;
+  };
 
   await runCase("B-REVOKE-CLAIM", "Owner revocation of the application accounts between enqueue and worker claim stops the acquisition before any physical request", async () => {
     ensure(worker, "OWNED_WORKER_REQUIRED");
-    const p = await freshParent("br", "partial-unresolved");
+    const p = await freshParent(1, "partial-unresolved");
     const before = await witness(p);
     await worker.stop();
     worker = null;
@@ -467,7 +498,7 @@ if (process.env.FINNOR_Z0_MODE === "boundaries") {
 
   await runCase("B-KILL-CLAIM", "SIGKILL at the worker claim boundary (job running, no physical request), quarantine, two concurrent explicit resumes", async () => {
     ensure(worker, "OWNED_WORKER_REQUIRED");
-    const p = await freshParent("bk", "partial-unresolved");
+    const p = await freshParent(2, "partial-unresolved");
     const before = await witness(p);
     const submitted = await submitInstitutionAcquisition(env, p, { privateRoot, record }, owner);
     try {
@@ -539,7 +570,7 @@ if (process.env.FINNOR_Z0_MODE === "boundaries") {
 
   await runCase("B-KILL-ACCEPT", "SIGKILL immediately after the durable S4 acceptance on the gated parent; recovery neither repeats the acceptance nor double-charges the consumption", async () => {
     ensure(worker, "OWNED_WORKER_REQUIRED");
-    const p = await freshParent("ba", "gated-two-supported-and-unresolved");
+    const p = await freshParent(3, "gated-two-supported-and-unresolved");
     ensure(p.gated, "GATED_PARENT_REQUIRED");
     const before = await witness(p);
     const submitted = await submitInstitutionAcquisition(env, p, { privateRoot, record }, owner);

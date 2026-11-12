@@ -201,8 +201,56 @@ export interface OriginalInstitutionParent {
 
 export interface ParentOptions {
   tag?: string; shape?: ParentShape; record?: Recorder; timeoutMs?: number; ruleWindowMs?: number;
+  resourcePool?: InstitutionFixtureResourcePool;
   /** Original Work instruction text; a Work input cannot be appended later, so a caller whose instruction is itself a typed mapping must supply it here. */
   instruction?: string;
+}
+
+type InstitutionFixtureResourcePool = {
+  tenantId: string; userId: string;
+  deals: Map<string, { dealId: string; organizationId: string; registrationId: string }>;
+  resources: OriginalInstitutionParent["resources"];
+};
+
+/** Register the entire disposable portfolio before the first Work pins S5. */
+export async function prepareInstitutionFixtureResourcePool(env: NativeEnvironment, tags: readonly string[]): Promise<InstitutionFixtureResourcePool> {
+  if (!tags.length || tags.length > 16 || new Set(tags).size !== tags.length
+    || tags.some(tag => !/^[a-z0-9]{1,16}$/.test(tag))) throw Error("Z0_FIXTURE_RESOURCE_POOL_SCOPE");
+  const { pe, store, contracts } = await owners(env);
+  const { tenantId, userId } = await signInOwner(env);
+  const auth = { tenantId, userId, employeeId: userId, role: "owner" as const };
+  const sql = await admin(env);
+  const deals: InstitutionFixtureResourcePool["deals"] = new Map();
+  const now = Date.now(), startAt = new Date(now).toISOString();
+  try {
+    for (const tag of tags) {
+      const organizationId = randomUUID(), registrationId = `DEAL-${tag}-${randomUUID()}`;
+      await sql.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,'Z0 original-parent counterparty','other')",
+        [organizationId, tenantId, "z0-org-" + organizationId]);
+      const deal = await pe.createDeal({ auth, provenance: { sourceSystem: "existing-crm-owner", createdBy: userId, externalId: registrationId } },
+        { targetOrganizationId: organizationId, name: `Z0 original ${tag}`, dealLeadEmployeeId: userId,
+          signedLoiAt: new Date(now - 86400000), targetClosingAt: new Date(now + 86400000) });
+      deals.set(tag, { dealId: String(deal.row.id), organizationId, registrationId });
+    }
+    const revision = (await sql.query("SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1", [tenantId])).rows[0].revision;
+    const resources = { compute: "z0-compute-" + tags[0], human: "z0-human-" + tags[0] };
+    const ref = (owner: string, id: string) => ({ owner, id, version: "owner-fixture-v1", contentDigest: sha(id) });
+    const permittedRoots = [...deals.values()].map(({ dealId }) => ({ entityType: "pe_deal", entityId: dealId }));
+    for (const [resourceId, resourceClass, unit, capacity] of [[resources.compute, "COMPUTE", "request", 520], [resources.human, "HUMAN_ATTENTION", "seconds", 900]] as const) {
+      const amount = String(capacity * tags.length);
+      await store.putAllocationResource({ auth, provenance: { sourceSystem: "existing-crm-owner", createdBy: userId } },
+        contracts.parseAllocationResource({ schema: "finnor.allocation-resource.v1", resourceId, resourceClass, tenantId,
+          ownerRef: ref("BUSINESS_OWNER", userId), legalEntityRef: ref("S1", tenantId),
+          scopeRef: ref("BUSINESS_OWNER", "z0-fixture-pool-" + tags[0]), permittedRoots,
+          rightsRef: `authority:${tenantId}:${revision}`, unit, currency: null, kind: "CUMULATIVE_EXPENDITURE",
+          horizon: { startAt, periodMs: 3600000, periods: 2 }, sourceRef: ref("BUSINESS_OWNER", "capacity:" + resourceId),
+          asOf: startAt, knowledgeAt: startAt, validUntil: new Date(now + 2 * 3600000).toISOString(), beliefPins: [],
+          availability: Array.from({ length: 3 }, () => ({ amount, basis: "REPORTED_AVAILABLE" })),
+          existingUse: ["0", "0", "0"], safetyMargin: "0", covenants: [], revoked: false,
+          qualification: "AUTHENTICATED_OWNER_ASSERTION_UNADMITTED" }), null);
+    }
+    return { tenantId, userId, deals, resources };
+  } finally { await sql.end(); }
 }
 
 /**
@@ -226,7 +274,7 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
   const gatedShape = shape === "gated-two-supported-and-unresolved" || workstreamShape;
   const operation = workstreamShape ? "open_workstream" : "create_deal_request";
   const executableCount = gatedShape ? 2 : shape === "mixed-supported-and-unresolved" ? 1 : 0;
-  const { db, pe, dataPlatform, store, contracts } = await owners(env);
+  const { db, pe, dataPlatform } = await owners(env);
   const owner = await signInOwner(env);
   const { tenantId, userId } = owner;
   const ctxFor = (externalId?: string) => ({ auth: { tenantId, userId, employeeId: userId, role: "owner" as const },
@@ -236,15 +284,14 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
   const window = options.ruleWindowMs ?? 50 * 60000;
   const dutyDeadline = new Date(now + window).toISOString();
   const occurredAt = new Date(now - 120000).toISOString(), availableAt = new Date(now - 60000).toISOString();
-  const registrationId = `DEAL-${tag}-${randomUUID()}`;
+  const pool = options.resourcePool ?? await prepareInstitutionFixtureResourcePool(env, [tag]);
+  const registered = pool.deals.get(tag);
+  if (!registered || pool.tenantId !== tenantId || pool.userId !== userId) throw Error("Z0_FIXTURE_RESOURCE_POOL_OWNER_SCOPE");
+  const { dealId, organizationId, registrationId } = registered;
+  const { resources } = pool;
   const sql = await admin(env);
   try {
     await sql.query("INSERT INTO finnor_os.compute_resource_policies(resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,source) VALUES('native:p4',2,2,0,60,'explicit disposable Z0 validation capacity; not protected funding') ON CONFLICT(resource_key) DO NOTHING");
-    const organizationId = randomUUID();
-    await sql.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,'Z0 original-parent counterparty','other')", [organizationId, tenantId, "z0-org-" + organizationId]);
-    const deal = await pe.createDeal(ctxFor(registrationId), { targetOrganizationId: organizationId, name: `Z0 original ${tag}`,
-      dealLeadEmployeeId: userId, signedLoiAt: new Date(now - 86400000), targetClosingAt: new Date(now + 86400000) });
-    const dealId = String(deal.row.id);
     let workstreamExternalId: string | null = null, recipientExternalId: string | null = null;
     if (executableCount && !workstreamShape) {
       workstreamExternalId = "WS-" + randomUUID(); recipientExternalId = "PARTY-" + randomUUID();
@@ -263,24 +310,12 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
       autonomyLimits: { maxActions: 1, maxQueries: 8, maxReplans: 6, maxPlannerCalls: 8, maxWallClockMs: 3600000 },
       planningHints: { qualification: "DISPOSABLE_ORDINARY_NO_PROTECTED_ADMISSION" } });
     if (profile.status !== 201) throw Error("Z0_FIXTURE_WORKFORCE_PROFILE_" + profile.status);
-    const policy = await owner.call(`/api/policies/${tenantId}/${operation}`, { policy: { scope: "DISPOSABLE_INTERNAL_REQUEST_ONLY" }, requiresConfirmation: gatedShape }, { method: "PUT" });
-    if (policy.status !== 200) throw Error("Z0_FIXTURE_NATIVE_POLICY_" + policy.status);
-    await record("parent-02-workforce-and-policy", { profile: profile.status, policy: policy.status });
+    const policy = gatedShape ? await owner.call(`/api/policies/${tenantId}/${operation}`,
+      { policy: { scope: "DISPOSABLE_INTERNAL_REQUEST_ONLY" }, requiresConfirmation: true }, { method: "PUT" }) : null;
+    if (policy && policy.status !== 200) throw Error("Z0_FIXTURE_NATIVE_POLICY_" + policy.status);
+    await record("parent-02-workforce-and-policy", { profile: profile.status, policy: policy?.status ?? null });
 
     const rights = String((await sql.query("SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1", [tenantId])).rows[0].revision);
-    const ref = (ownerName: string, id: string) => ({ owner: ownerName, id, version: "owner-fixture-v1", contentDigest: sha(id) });
-    const resourceStart = new Date().toISOString();
-    const resources = { compute: `z0-compute-${tag}`, human: `z0-human-${tag}` };
-    for (const [resourceId, resourceClass, unit, amount] of [[resources.compute, "COMPUTE", "request", "520"], [resources.human, "HUMAN_ATTENTION", "seconds", "900"]]) {
-      await store.putAllocationResource(ctxFor(), contracts.parseAllocationResource({ schema: "finnor.allocation-resource.v1", resourceId, resourceClass, tenantId,
-        ownerRef: ref("BUSINESS_OWNER", userId), legalEntityRef: ref("S1", dealId), scopeRef: ref("BUSINESS_OWNER", institutionId),
-        permittedRoots: [{ entityType: "pe_deal", entityId: dealId }], rightsRef: `authority:${tenantId}:${rights}`,
-        unit, currency: null, kind: "CUMULATIVE_EXPENDITURE", horizon: { startAt: resourceStart, periodMs: 3600000, periods: 2 },
-        sourceRef: ref("BUSINESS_OWNER", "capacity:" + resourceId), asOf: resourceStart, knowledgeAt: resourceStart,
-        validUntil: new Date(now + 2 * 3600000).toISOString(), beliefPins: [],
-        availability: [{ amount, basis: "REPORTED_AVAILABLE" }, { amount, basis: "REPORTED_AVAILABLE" }, { amount, basis: "REPORTED_AVAILABLE" }],
-        existingUse: ["0", "0", "0"], safetyMargin: "0", covenants: [], revoked: false, qualification: "AUTHENTICATED_OWNER_ASSERTION_UNADMITTED" }), null);
-    }
 
     const triggerBase = { kind: "trigger", triggerKind: "evidence_request_needed", registrationId, occurredAt, availableAt,
       requestText: `Provide the original signed evidence schedule ${tag}`, requiresAcceptedDeliverable: true };
