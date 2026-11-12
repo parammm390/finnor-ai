@@ -13,6 +13,7 @@ import { resolveApplicationOperationProfile } from "@finnor/security";
 import type { PeMutationContext, PeWorldRootRef } from "../types";
 import { authorize, principal, schemaIdentity, tx, unavailable } from "../evidence-execution/store";
 import { enqueueOwnerDeliveryInTransaction } from "../../../governed-execution/src/owner-delivery-store";
+import { prefetchedProfile, profileScopeKey } from "./profile-scope";
 import type { AuthorizedApplicationProfile, OriginalApplicationParent } from "./ports";
 import type { ApplicationAcquireRequest, ApplicationExecuteRequest } from "./native-contracts";
 import { applicationRuntimeIdentity, parseApplicationCheck, parseApplicationModel, sameX2Ref, x2ByteDigest, x2Digest, x2Fault, x2Ref } from "./contracts";
@@ -190,6 +191,12 @@ export async function currentApplicationWork(ctx: PeMutationContext, row: Applic
   }
 }
 export async function nativeApplicationProfile(ctx: PeMutationContext, id: string): Promise<NativeApplicationProfile> {
+  const retained = prefetchedProfile<NativeApplicationProfile>(profileScopeKey(ctx.auth.tenantId, principal(ctx), id));
+  if (retained === undefined) x2Fault("X2_APPLICATION_PROFILE_NOT_PREFETCHED");
+  if (retained) {
+    if (!retained.ok) throw retained.error;
+    return retained.value;
+  }
   const selected = await tx(ctx, async (c) => (await c.query<{
     auth_profile_ref: string; application: string; connection_revision: number; updated_at: Date;
     private_binding: Record<string, unknown>;
@@ -239,6 +246,19 @@ export async function nativeApplicationProfile(ctx: PeMutationContext, id: strin
     allowedEntities: strings("allowedEntities", 64), grantBody: grant, privateProfileBinding: selected.private_binding,
     bindingDigest: x2Digest({ grant, privateProfileBinding: selected.private_binding, privateHeaderDigest: x2Digest(access.applicationHeaders) }) };
 }
+
+export async function assertNativeApplicationProfileCurrent(ctx: PeMutationContext, profile: NativeApplicationProfile,
+  c: PoolClient) {
+  const current = await c.query(`SELECT p.id FROM finnor_os.auth_profiles p
+    JOIN finnor_os.application_accounts a ON a.tenant_id=p.tenant_id AND a.id=p.application_account_id
+    WHERE p.tenant_id=$1 AND p.id=$2 AND ${NATIVE_APPLICATION_PROFILE_AUTHORITY_SQL}=$3::jsonb
+      AND p.status='active' AND a.status='active' AND p.connection_status IN ('active','degraded')
+      AND (p.token_expires_at IS NULL OR p.token_expires_at>clock_timestamp())
+      AND $4::timestamptz>clock_timestamp() FOR SHARE OF p,a`,
+  [ctx.auth.tenantId, profile.profile.id, JSON.stringify(profile.privateProfileBinding), profile.profile.validUntil]);
+  if (current.rowCount !== 1) x2Fault("X2_CURRENT_APPLICATION_PROFILE_CHANGED");
+}
+
 export function assertProfileTarget(profile: NativeApplicationProfile, target: { application: string; account: string; entity: string; id: string }) {
   if (target.application !== profile.profile.application || target.account !== profile.profile.account
     || !profile.profile.allowedTargets.includes(target.id) || !profile.allowedEntities.includes(target.entity)) x2Fault("X2_EXACT_AUTHORIZED_TARGET_REQUIRED", 403);
