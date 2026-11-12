@@ -122,7 +122,8 @@ try {
   const before = await cut();
   const query = { intent: "confidential_economic_computation_v1", workId, executionKey: randomUUID() };
   const reply = await owner.call("/api/queries", query);
-  const rejected = await peer.call("/api/queries", query);
+  const nonrecipient = await sessions[1].call("/api/queries", { ...query, executionKey: randomUUID() });
+  const rejected = await peer.call("/api/queries", { ...query, executionKey: randomUUID() });
   const result = reply.body?.result, data = result?.data;
   ensure(reply.status === 201, "Z0_Y4_QUERY_HTTP_" + reply.status);
   ensure(reply.body.workId === workId && reply.body.workInputId === workInputId
@@ -130,9 +131,13 @@ try {
   "Z0_Y4_QUERY_ORIGINAL_IDENTITY_REQUIRED");
   ensure(result.status === "partial" && data?.computationId === submitted.computationId && !data.recipientReleaseImported
     && !data.typedConsumerCurrent, "Z0_Y4_QUERY_CHECKED_METADATA_REQUIRED");
+  const participantData = nonrecipient.body?.result?.data;
+  ensure(nonrecipient.status === 201 && participantData?.computationId === submitted.computationId
+    && !participantData.recipientReleaseImported && !participantData.typedConsumerCurrent,
+  "Z0_Y4_QUERY_DECLARED_PARTICIPANT_METADATA_REQUIRED");
   ensure([403, 404].includes(rejected.status) && !JSON.stringify(rejected.body).includes(submitted.computationId),
-    "Z0_Y4_QUERY_NONPARTICIPANT_NOT_REFUSED");
-  const wire = JSON.stringify(reply.body);
+    "Z0_Y4_QUERY_NONPARTICIPANT_HTTP_" + rejected.status);
+  const wire = JSON.stringify([reply.body, nonrecipient.body]);
   ensure(!privateValues.some(value => wire.includes(value)) && !/openingNonce|private_cut|originalSha256/.test(wire),
     "Z0_Y4_QUERY_PRIVATE_DATA_VISIBLE");
   assert.deepEqual(await cut(), before, "Z0_Y4_QUERY_CHANGED_WORK");

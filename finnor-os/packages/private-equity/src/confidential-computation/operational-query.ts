@@ -21,6 +21,7 @@ export async function executeConfidentialComputationQuery(tenantId:string,input:
   if(!row)throw unavailable();
   const q=await computationTx(ctx,c,row.id);
   if(q.work_input_id!==options.workInputId)throw unavailable();
+  if(q.principal_id!==actor&&!q.request.function.participants.some(p=>p.authorityRef.id===actor))throw unavailable();
   let current=true;try{await allCurrentTx(ctx,c,q);}catch{current=false;}
   const imported=current&&(await c.query('SELECT 1 FROM finnor_os.y4_releases WHERE tenant_id=$1 AND computation_id=$2 AND principal_id=$3',
    [tenantId,q.id,principal(ctx)])).rowCount!==0;
