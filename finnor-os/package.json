@@ -2,7 +2,7 @@
   "name": "finnor-os",
   "version": "0.1.0",
   "private": true,
-  "description": "Finnor AI Operating System — governed Private Equity execution and evidence platform",
+  "description": "Finnor AI Operating System \u2014 governed Private Equity execution and evidence platform",
   "engines": {
     "node": ">=22"
   },
