@@ -43,7 +43,8 @@ async function runCase(id, title, body) {
     const detail = await body();
     results.push({ id, title, outcome: detail?.outcome ?? "PASS", started, detail: redact(detail?.detail ?? detail ?? null) });
   } catch (error) {
-    results.push({ id, title, outcome: "FAIL", started, error: String(error?.message ?? error).slice(0, 600) });
+    results.push({ id, title, outcome: "FAIL", started, error: String(error?.message ?? error).slice(0, 600),
+      errorCode: error?.code ?? null, errorType: error?.name ?? null });
   }
   record("case-" + id, results.at(-1));
   console.log(JSON.stringify({ case: id, outcome: results.at(-1).outcome, error: results.at(-1).error }));
@@ -735,13 +736,22 @@ const confirmAction = async actionId => {
   return { status: response.status, body: response.body, hashSent: Boolean(effect) };
 };
 const actionRow = async actionId => (await q("SELECT a.id::text,a.status,a.payload,a.authority_context,a.created_at,a.plan_revision_id::text,a.work_id::text,e.status effect_status FROM finnor_os.domain_actions a LEFT JOIN finnor_os.business_effects e ON e.tenant_id=a.tenant_id AND e.domain_action_id=a.id WHERE a.tenant_id=$1 AND a.id=$2", [parent.tenantId, actionId]))[0] ?? null;
-const programEvents = async () => q("SELECT e.kind,e.generation,e.created_at,e.body FROM finnor_os.p1_events e WHERE e.tenant_id=$1 AND e.request_id=$2 ORDER BY e.created_at,e.event_id", [parent.tenantId, parent.programId]);
-const continuationJobs = async () => q("SELECT id::text,status,created_at,left(coalesce(last_error,''),240) error FROM finnor_os.jobs WHERE tenant_id=$1 AND type='run_x1_institution_continuation_v1' AND payload->>'programId'=$2 ORDER BY created_at,id", [parent.tenantId, parent.programId]);
+const programEvents = async () => q(`SELECT e.kind,e.generation,e.created_at,e.body FROM finnor_os.p1_events e
+  WHERE e.tenant_id=$1 AND e.request_id=$2 AND e.principal_id=$3 ORDER BY e.created_at,e.id`,
+[parent.tenantId, parent.programId, parent.ownerId]);
+const continuationJobs = async () => q(`SELECT j.id::text,j.status,j.created_at,j.payload->>'stage' stage,left(coalesce(j.last_error,''),240) error
+  FROM finnor_os.jobs j JOIN finnor_os.p1_requests p ON p.tenant_id=j.tenant_id AND p.id::text=j.payload->>'programId'
+  WHERE j.tenant_id=$1 AND p.id=$2 AND p.principal_id=$3 AND j.type='run_x1_institution_continuation_v1'
+    AND j.payload->>'principalId'=p.principal_id::text AND j.payload->>'generation'=p.generation::text
+  ORDER BY j.created_at,j.id`, [parent.tenantId, parent.programId, parent.ownerId]);
 const quiet = async () => (await continuationJobs()).every(job => !["queued", "running"].includes(job.status));
 let p011 = null;
 await runCase("P0-11", "Original continuation consumes the accepted model for the undispatched duty (or records a direct fallback) and returns to the original Work", async () => {
   if (!acquired) return { outcome: "NOT_RUN", detail: "no accepted model" };
-  const [accepted] = await q("SELECT created_at,body->'detail'->'acceptanceRef' acceptance_ref FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 AND kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED' LIMIT 1", [parent.tenantId, acquired.sessionId]);
+  const [accepted] = await q(`SELECT created_at,body->'detail'->'acceptanceRef' acceptance_ref,
+    body->'detail'->'checkRef'->>'contentDigest' check_digest FROM finnor_os.application_semantics_events
+    WHERE tenant_id=$1 AND principal_id=$2 AND session_id=$3 AND kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED'`,
+  [parent.tenantId, parent.ownerId, acquired.sessionId]);
   if (!accepted) return { outcome: "NOT_RUN", detail: "the session has no S4 acceptance event, so there is no model to consume" };
   if (!parent.gated) return { outcome: "NOT_RUN", detail: { reason: "ORIGINAL_PARENT_HAS_NO_EXECUTABLE_UNDISPATCHED_DUTY" } };
   const g = parent.gated, A = g.heldActionId, B = g.undispatchedActionId;
@@ -752,7 +762,14 @@ await runCase("P0-11", "Original continuation consumes the accepted model for th
   [parent.tenantId, parent.parentReservation.id, parent.responsibilityIdentity]))[0].n;
   const preparationBefore = await preparationCount();
   // N2/N1: after acceptance the enqueued continuation must leave B undispatched while A still holds the Deal.
-  await waitUntil("POST_ACCEPTANCE_CONTINUATION_SETTLED", 180000, async () => (await continuationJobs()).some(job => job.created_at > accepted.created_at && job.status !== "queued" && job.status !== "running") && await quiet());
+  ensure(accepted.check_digest, "POST_ACCEPTANCE_CONTINUATION_CHECK_REF_MISSING");
+  const acceptedStage = `x2-model:${acquired.sessionId}:${accepted.check_digest}`;
+  const acceptedDelivery = await waitUntil("POST_ACCEPTANCE_CONTINUATION_SETTLED", 180000, async () => {
+    const job = (await continuationJobs()).find(row => row.stage === acceptedStage);
+    return job && job.status !== "queued" && job.status !== "running" ? job : null;
+  });
+  ensure(acceptedDelivery.status === "completed", `POST_ACCEPTANCE_CONTINUATION_FAILED:${acceptedDelivery.status}:${acceptedDelivery.error}`);
+  await waitUntil("POST_ACCEPTANCE_PROGRAMME_QUIET", 180000, quiet);
   const afterAcceptance = { jobs: await continuationJobs(), held: await actionRow(A), undispatched: await actionRow(B) };
   ensure(afterAcceptance.held?.status === "pending", "HELD_DUTY_NOT_PENDING_AFTER_ACCEPTANCE_" + afterAcceptance.held?.status);
   ensure(afterAcceptance.undispatched === null, "UNDISPATCHED_DUTY_DISPATCHED_BEFORE_HELD_DUTY_RESOLVED");

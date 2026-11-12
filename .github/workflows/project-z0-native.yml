@@ -46,10 +46,14 @@ jobs:
           const files = existsSync(scenario) ? readdirSync(scenario) : []
           const results = files.filter(name => /^z0-\d+-case-[A-Z0-9-]+[a-z]?\.json$/.test(name)).sort()
             .map(name => {
-              const { id, outcome, error, detail } = JSON.parse(readFileSync(join(scenario, name), 'utf8'))
-              const predicate = (typeof error === 'string' ? error : '').match(/^[A-Z][A-Z0-9_]{2,160}(?=[: ]|$)/)?.[0] ?? null
+              const { id, outcome, error, errorCode, errorType, detail } = JSON.parse(readFileSync(join(scenario, name), 'utf8'))
+              const predicate = (typeof error === 'string' ? error : '').match(/^[A-Z][A-Z0-9_]{2,160}(?=[: ]|$)/)?.[0]
+                ?? (/^[A-Z0-9_]{3,60}$/.test(errorCode ?? '') ? errorCode : null)
+                ?? (/^[A-Za-z]{3,30}$/.test(errorType ?? '') ? errorType : null)
               const path = ['MODEL_USED', 'DIRECT_FALLBACK'].includes(detail?.path) ? detail.path : null
-              return { id, outcome, predicate, path }
+              const fallbackReason = path === 'DIRECT_FALLBACK' && /^Z0_MODEL_[A-Z0-9_]{1,100}$/.test(detail?.fallbackReason ?? '')
+                ? detail.fallbackReason : null
+              return { id, outcome, predicate, path, fallbackReason }
             })
           const receipt = { sourceSha: process.env.GITHUB_SHA, results }
           writeFileSync(join(process.env.RUNNER_TEMP, 'z0-cases.json'), JSON.stringify(receipt, null, 2) + '\n')
