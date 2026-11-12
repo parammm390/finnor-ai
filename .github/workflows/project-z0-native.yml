@@ -2,7 +2,7 @@ name: Project Z0 native continuation
 
 on:
   push:
-    branches: [codex/project-z0-resume, codex/project-z0-identity]
+    branches: [codex/project-z0-resume, codex/project-z0-identity, codex/project-z0-useful, codex/project-z0-r12, codex/project-z0-mounted, codex/project-z0-recovery, codex/project-z0-economic, codex/project-z0-confidential]
 
 permissions:
   contents: read
@@ -15,6 +15,10 @@ jobs:
   original-owner:
     runs-on: ubuntu-latest
     timeout-minutes: 70
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: ${{ fromJSON(github.ref_name == 'codex/project-z0-recovery' && '["current-source","current-parent","current-terms","current-rights","kill","revoke","boundaries"]' || '["default"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -28,18 +32,61 @@ jobs:
             finnor-os/package-lock.json
       - run: npm ci --no-audit --no-fund
       - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Install the locked Chromium build
+        if: github.ref_name == 'codex/project-z0-mounted'
+        run: PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/z0-chromium" node node_modules/playwright/cli.js install --with-deps chromium
+      - name: Verify the installed economic programme reader
+        if: github.ref_name == 'codex/project-z0-economic'
+        working-directory: finnor-os
+        run: |
+          npm run db:bundle
+          npm run openapi
+          npm run build --workspace @finnor/api
+          node --import=tsx scripts/y1/build-runtime.mts
+          FINNOR_Y1_BUILT_API=1 FINNOR_Y1_EVIDENCE_DIR="$RUNNER_TEMP/z0-economic" \
+            node --import=tsx scripts/y1/run-installed.mts
       - name: Run the native owner scenario
+        if: github.ref_name != 'codex/project-z0-economic'
+        env:
+          Z0_RECOVERY_MODE: ${{ matrix.mode }}
         run: |
           scenario=z0-session.mjs
+          profiles=z0
+          launch_args=()
           if [ "$GITHUB_REF_NAME" = "codex/project-z0-identity" ]; then
             scenario=z0-d1-session.mjs
+          elif [ "$GITHUB_REF_NAME" = "codex/project-z0-confidential" ]; then
+            scenario=z0-confidential-query.mjs
+            profiles=y4
+          elif [ "$GITHUB_REF_NAME" = "codex/project-z0-useful" ]; then
+            export FINNOR_Z0_MODE=workstream
+          elif [ "$GITHUB_REF_NAME" = "codex/project-z0-r12" ]; then
+            scenario=z0-r12-session.mjs
+            profiles=v2
+          elif [ "$GITHUB_REF_NAME" = "codex/project-z0-mounted" ]; then
+            scenario=z0-mounted-session.mjs
+            export PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/z0-chromium"
+            launch_args+=(--budget-ms=3300000)
+          elif [ "$GITHUB_REF_NAME" = "codex/project-z0-recovery" ]; then
+            case "$Z0_RECOVERY_MODE" in
+              current-*)
+                export FINNOR_Z0_MODE=current
+                dependency="${Z0_RECOVERY_MODE#current-}"
+                export FINNOR_Z0_DEPENDENCY="${dependency^^}"
+                ;;
+              *) export FINNOR_Z0_MODE="$Z0_RECOVERY_MODE" ;;
+            esac
           fi
+          install -d -m 700 "$GITHUB_WORKSPACE/.centropy-certification"
           taskset -c 0,1 node scripts/project-z/run-native-scenario.mjs \
             --name="z0-ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
-            --evidence="$RUNNER_TEMP/z0-native" --profiles=z0 --no-worker \
+            --evidence="$RUNNER_TEMP/z0-native" --profiles="$profiles" --no-worker --forward-env=FINNOR_Z0_MODE \
+            --forward-env=PLAYWRIGHT_BROWSERS_PATH --forward-env=FINNOR_Z0_DEPENDENCY "${launch_args[@]}" \
             --scenario="$GITHUB_WORKSPACE/finnor-os/scripts/project-z/native/$scenario"
       - name: Record native case outcomes
         if: ${{ always() }}
+        env:
+          Z0_RECOVERY_MODE: ${{ matrix.mode }}
         run: |
           node --input-type=module <<'JS'
           import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -47,14 +94,29 @@ jobs:
 
           const root = join(process.env.RUNNER_TEMP, 'z0-native')
           const scenario = join(root, 'scenario-01')
+          const state = join(process.env.GITHUB_WORKSPACE, '.centropy-certification',
+            'z0-ci-' + process.env.GITHUB_RUN_ID + '-' + process.env.GITHUB_RUN_ATTEMPT)
           const files = existsSync(scenario) ? readdirSync(scenario) : []
           const typedCode = value => typeof value === 'string' && /^[A-Z0-9_]{3,160}$/.test(value) ? value : null
-          const results = files.filter(name => /^z0-\d+-case-[A-Z0-9-]+[a-z]?\.json$/.test(name)).sort()
+          const identifier = value => typeof value === 'string' && /^[a-zA-Z0-9_.]{1,160}$/.test(value) ? value : null
+          const predicateFrom = value => typeof value === 'string'
+            ? value.match(/^(?:[A-Za-z]+Error: |Error: )?([A-Z][A-Z0-9_]{2,160})(?=[: \n]|$)/)?.[1] ?? null : null
+          const sqlIdentifier = value => typeof value === 'string'
+            ? value.match(/(?:violates (?:check|foreign key|unique) constraint|column|relation) "([a-z0-9_.]{1,120})"/i)?.[1] ?? null : null
+          const jobFailure = job => ({
+            status: identifier(job.status),
+            predicate: predicateFrom(job.failure_detail) ?? predicateFrom(job.error),
+            identifier: sqlIdentifier(job.failure_detail) ?? sqlIdentifier(job.error),
+            location: (job.error ?? '').match(/\/finnor-os\/((?:packages|apps\/worker)\/[a-zA-Z0-9_./-]+\.m?ts:\d+:\d+)/)?.[1] ?? null,
+          })
+          const results = files.filter(name => /^(?:z0|r12)-\d+-case-[A-Z0-9-]+[a-z]?\.json$/.test(name)).sort()
             .map(name => {
-              const { id, outcome, error, errorCode, errorType, detail } = JSON.parse(readFileSync(join(scenario, name), 'utf8'))
-              const predicate = (typeof error === 'string' ? error : '').match(/^[A-Z][A-Z0-9_]{2,160}(?=[: ]|$)/)?.[0]
-                ?? typedCode(errorCode) ?? typedCode(detail?.predicate)
+              const { id, outcome, error, errorCode, errorType, detail, reason } = JSON.parse(readFileSync(join(scenario, name), 'utf8'))
+              const predicate = predicateFrom(error)
+                ?? typedCode(errorCode) ?? typedCode(detail?.predicate) ?? predicateFrom(detail?.reason ?? reason)
                 ?? (/^[A-Za-z]{3,30}$/.test(errorType ?? '') ? errorType : null)
+              const causePredicate = typeof error === 'string'
+                ? error.match(/^Z0_FIXTURE_TERMINAL_(?:COMPILER|PROGRAMME|SESSION)_[A-Z_]+:([A-Z0-9_]{3,160})(?=[: ]|$)/)?.[1] ?? null : null
               const path = ['MODEL_USED', 'DIRECT_FALLBACK'].includes(detail?.path) ? detail.path : null
               const fallbackReason = path === 'DIRECT_FALLBACK' && /^Z0_MODEL_[A-Z0-9_]{1,100}$/.test(detail?.fallbackReason ?? '')
                 ? detail.fallbackReason : null
@@ -72,15 +134,74 @@ jobs:
               })) : []
               const ownerRead = detail?.ownerRead && Number.isInteger(detail.ownerRead.status)
                 ? { status: detail.ownerRead.status, code: typedCode(detail.ownerRead.code) } : null
-              return { id, outcome, predicate, path, fallbackReason, httpStatus, responseCode, rejected, readbackFailures, ownerRead }
+              const continuationJobs = Array.isArray(detail?.continuationJobs) ? detail.continuationJobs.map(jobFailure) : []
+              const objective = detail?.objective ? {
+                state: identifier(detail.objective.loop?.state),
+                jobs: detail.objective.jobs.map(job => ({ type: identifier(job.type), ...jobFailure(job) })),
+                steps: detail.objective.steps.map(step => ({
+                  phase: identifier(step.phase), decision: identifier(step.decision_kind),
+                  outcome: identifier(step.iteration_outcome), failure: typedCode(step.failure?.code),
+                })),
+                queries: detail.objective.queries.map(query => ({
+                  status: identifier(query.status), failure: typedCode(query.failure?.code),
+                })),
+              } : null
+              return { id, outcome, predicate, causePredicate, sqlIdentifier: sqlIdentifier(error), path, fallbackReason,
+                httpStatus, responseCode, rejected, readbackFailures, ownerRead, continuationJobs, objective }
             })
-          const state = join(process.env.GITHUB_WORKSPACE, '.centropy-certification',
-            'z0-ci-' + process.env.GITHUB_RUN_ID + '-' + process.env.GITHUB_RUN_ATTEMPT)
+          const acquisitionFile = files.find(name => /^z0-\d+-acquisition-failure-session\.json$/.test(name))
+          const acquisition = acquisitionFile ? JSON.parse(readFileSync(join(scenario, acquisitionFile), 'utf8')) : null
+          const acquisitionFailure = acquisition ? {
+            status: typedCode(acquisition.session?.status),
+            reason: typedCode(acquisition.session?.reason),
+            dispositions: (acquisition.dispositions ?? []).map(({ disposition, reason, diagnostic }) => ({
+              disposition: typedCode(disposition), reason: typedCode(reason),
+              database: diagnostic ? Object.fromEntries(['code', 'constraint', 'table', 'databaseFunction', 'routine']
+                .map(field => [field, identifier(diagnostic[field])])) : null,
+            })),
+          } : null
+          const fixtureDirs = [scenario, join(state, 'z0m-private')]
+          const fixtureFailures = fixtureDirs.flatMap(dir => existsSync(dir) ? readdirSync(dir)
+            .filter(name => /^parent-[a-z0-9-]{1,48}-queue\.private\.json$/.test(name))
+            .map(name => join(dir, name)) : []).map(name => {
+            const { queue } = JSON.parse(readFileSync(name, 'utf8'))
+            return queue.filter(job => job.status !== 'completed').map(job => ({
+              type: identifier(job.type), compiler: typedCode(job.compiler_status), programme: typedCode(job.programme_status),
+              ...jobFailure({ status: job.status, error: job.reason }),
+            }))
+          })
+          const mountedFile = join(scenario, 'z0-mounted-session.v1.json')
+          if (existsSync(mountedFile)) {
+            const { cases } = JSON.parse(readFileSync(mountedFile, 'utf8'))
+            for (const { id, outcome, error, reason, checks } of cases) {
+              const browserOperation = typeof error === 'string'
+                ? error.match(/^(browserType\.launch|browser\.newContext|page\.goto|page\.waitForResponse|locator\.(?:fill|click|waitFor)):/)?.[1] ?? null : null
+              const networkError = typeof error === 'string' ? error.match(/net::(ERR_[A-Z_]{3,80})/)?.[1] ?? null : null
+              const setupFailure = checks.find(check => check.id === 'B.setup' && !check.pass)?.observed
+              const setupPredicate = typeof setupFailure === 'string' ? predicateFrom(setupFailure.replace(/^B:/, '')) : null
+              const setupCause = typeof setupFailure === 'string'
+                ? setupFailure.match(/^B:Z0_FIXTURE_TERMINAL_(?:COMPILER|PROGRAMME|SESSION)_[A-Z_]+:([A-Z0-9_]{3,160})(?=[: ]|$)/)?.[1] ?? null : null
+              results.push({ id, outcome, predicate: predicateFrom(error) ?? predicateFrom(reason),
+                browserOperation, networkError, setupPredicate, setupCause,
+                failedChecks: checks.filter(check => !check.pass).map(check => check.id)
+                  .filter(check => /^[a-zA-Z0-9_.-]{1,80}$/.test(check)) })
+            }
+          }
+          const economicCase = join(process.env.RUNNER_TEMP, 'z0-economic', 'cases', 'E-canonical-query-preserves-original-Work.json')
+          if (existsSync(economicCase)) {
+            const { status, observed, error } = JSON.parse(readFileSync(economicCase, 'utf8'))
+            results.push({ id: 'D1-02a', outcome: status === 'PASS' && observed?.canonicalReadDidNotSteerOrCompleteWork === true ? 'PASS' : 'FAIL',
+              predicate: predicateFrom(error) })
+          }
+          const appState = join(state, 'native-app-state.json')
+          const app = existsSync(appState) ? JSON.parse(readFileSync(appState, 'utf8')) : null
+          const launcher = app ? { status: typedCode(app.status), reason: typedCode(app.reason), failure: typedCode(app.failureCode),
+            buildStage: typedCode(app.productionBuild?.stage) } : null
           const apiLog = join(state, 'api-01.private.log')
           const serverErrorKinds = new Set()
           const retainErrorKind = value => {
             if (typeof value !== 'string') return
-            const kind = typedCode(value) ?? value.match(/(?:violates (?:check|foreign key) constraint|column|relation) "([a-z0-9_.]{1,120})"/i)?.[1]
+            const kind = typedCode(value) ?? sqlIdentifier(value)
             if (kind) serverErrorKinds.add(kind)
           }
           if (existsSync(apiLog)) {
@@ -99,10 +220,27 @@ jobs:
               } catch {}
             }
           }
-          const receipt = { sourceSha: process.env.GITHUB_SHA, results, serverErrorKinds: [...serverErrorKinds] }
+          const receipt = { sourceSha: process.env.GITHUB_SHA, results, acquisitionFailure, fixtureFailures, launcher, serverErrorKinds: [...serverErrorKinds] }
           writeFileSync(join(process.env.RUNNER_TEMP, 'z0-cases.json'), JSON.stringify(receipt, null, 2) + '\n')
-          const required = process.env.GITHUB_REF_NAME === 'codex/project-z0-identity'
-            ? ['D1-00', 'D1-B', 'D1-01'] : ['P0-00', 'P0-01', 'P0-10', 'P0-11']
+          const continuation = ['P0-00', 'P0-01', 'P0-10', 'P0-11']
+          const recovery = {
+            kill: ['P1-03'],
+            revoke: ['P1-05'],
+            boundaries: ['B-REVOKE-CLAIM', 'B-KILL-CLAIM', 'B-KILL-ACCEPT'],
+          }
+          const recoveryMode = process.env.Z0_RECOVERY_MODE
+          const recoveryRequired = recoveryMode.startsWith('current-')
+            ? ['INTAKE', 'CLAIM'].map(stage => 'CUR-' + stage + '-' + recoveryMode.slice(8).toUpperCase())
+            : recovery[recoveryMode]
+          const required = ({
+            'codex/project-z0-identity': ['D1-00', 'D1-B', 'D1-01'],
+            'codex/project-z0-economic': ['D1-02a'],
+            'codex/project-z0-confidential': ['D1-03a'],
+            'codex/project-z0-useful': [...continuation, 'P0-11b'],
+            'codex/project-z0-r12': ['R12-02', 'R12-03', 'R12-04'],
+            'codex/project-z0-mounted': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),
+            'codex/project-z0-recovery': recoveryRequired,
+          })[process.env.GITHUB_REF_NAME] ?? continuation
           for (const id of required) {
             const result = results.find(entry => entry.id === id)
             if (result?.outcome !== 'PASS') {
@@ -115,7 +253,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: project-z0-native-${{ github.run_id }}-${{ github.run_attempt }}
+          name: project-z0-native-${{ github.run_id }}-${{ github.run_attempt }}${{ matrix.mode != 'default' && format('-{0}', matrix.mode) || '' }}
           path: |
             ${{ runner.temp }}/z0-native/stack-result.json
             ${{ runner.temp }}/z0-cases.json
