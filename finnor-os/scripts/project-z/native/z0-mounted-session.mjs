@@ -84,7 +84,7 @@ const setup = { workerOwned: Boolean(worker), A: null, B: null, foreign: null, e
 let parentA = null, acqA = null, threadA = null, parentB = null, sessionB = null, threadB = null, acquisitionB = null, foreignCreds = null, foreignRow = null;
 const TERMINAL = ["MODEL_READY", "FAILED", "BLOCKED", "UNKNOWN", "STALE", "CANCELLED"];
 const tagA = "ma" + randomUUID().slice(0, 6), tagB = "mb" + randomUUID().slice(0, 6);
-let witnessBefore = null;
+let witnessBefore = null, workStatusBeforeMounted = null;
 
 await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_READY, blocked parent B, threads, foreign owner", async c => {
   if (!worker) notRun("SCENARIO_OWNED_WORKER_REQUIRES_NO_WORKER_LAUNCH");
@@ -179,7 +179,7 @@ const flat = text => (text ?? "").replace(/[\u202f\u00a0]/g, " ");
 const jsonOf = text => { try { return JSON.parse(text); } catch { return null; } };
 const hits = (haystack, markers) => markers.filter(marker => haystack.includes(marker.value)).map(marker => marker.label);
 const strongLabels = new Set(["sessionId", "programId", "compilerRequestId", "responsibilityIdentity", "reservationId", "computeResource", "humanResource", "institutionId"]);
-let referenceSignature = null, referenceCore = null, referenceTruthA = null, workStatusBeforeMounted = null;
+let referenceSignature = null, referenceCore = null, referenceTruthA = null;
 
 async function ensureOwnerOnWork(which = "A") {
   const target = which === "A" ? { thread: threadA, parent: parentA, root: rootA } : { thread: threadB, parent: parentB, root: rootB };
