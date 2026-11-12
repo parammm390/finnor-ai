@@ -114,7 +114,10 @@ const server = createServer(async (request, response) => {
       result = await transaction(directory, state => {
         const auth = authenticate(state, identity, "record.read", record?.[1], record?.[2]);
         if (pathname === "/openapi.json") return document(state.config);
-        if (pathname === "/api/context") return publicContext(state, auth);
+        if (pathname === "/api/context") {
+          const context = publicContext(state, auth);
+          return { ...context, entities: context.entities.filter(entity => entity.currency === "USD") };
+        }
         if (record && !record[3]) return view(state, auth);
         reject(404, "ROUTE_NOT_FOUND");
       });
