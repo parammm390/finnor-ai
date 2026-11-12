@@ -58,7 +58,9 @@ async function runCase(id, title, body) {
     const out = await body();
     results.push({ id, title, outcome: out?.outcome ?? "PASS", started, finished: new Date().toISOString(), detail: redact(out?.detail ?? out ?? null) });
   } catch (error) {
-    results.push({ id, title, outcome: "FAIL", started, finished: new Date().toISOString(), error: String(error?.message ?? error).slice(0, 900) });
+    results.push({ id, title, outcome: "FAIL", started, finished: new Date().toISOString(),
+      error: String(error?.message ?? error).slice(0, 900), errorType: error?.name ?? null, errorCode: error?.code ?? null,
+      ...(error?.objective ? { detail: { objective: error.objective } } : {}) });
   }
   record("case-" + id, results.at(-1));
   checkpoint();
@@ -71,7 +73,7 @@ async function waitFor(label, timeoutMs, probe, everyMs = 1500) {
   for (;;) {
     const value = await probe().catch(() => null);
     if (value) return value;
-    if (Date.now() > end) throw Error("R12_TIMEOUT_" + label);
+    if (Date.now() > end) throw Error("R12_TIMEOUT_" + label.toUpperCase());
     await sleep(everyMs);
   }
 }
@@ -266,6 +268,24 @@ async function plan(f, expected = 201) {
 }
 const loopOf = async workId => (await q("SELECT id::text,state,revision,step_count,query_count,deadline_at FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2", [tenantId, workId]))[0] ?? null;
 const executionsOf = async workId => await q("SELECT intent,status,result_summary,failure,started_at FROM finnor_os.work_query_executions WHERE tenant_id=$1 AND work_id=$2 AND intent='primary_diligence_v1' ORDER BY started_at", [tenantId, workId]);
+const stepsOf = loopId => q("SELECT step_number,started_at,phase,decision_kind,iteration_outcome,failure FROM finnor_os.work_objective_steps WHERE tenant_id=$1 AND objective_loop_id=$2 ORDER BY step_number", [tenantId, loopId]);
+async function awaitObjective(workId) {
+  const terminal = await waitFor("OBJECTIVE_TERMINAL", 180000, async () => {
+    const loop = await loopOf(workId);
+    return ["completed", "failed", "blocked", "cancelled"].includes(loop?.state) ? loop : null;
+  }, 2000).catch(error => error);
+  if (terminal?.state === "completed") return terminal;
+  const loop = await loopOf(workId);
+  const [jobs, steps, queries] = await Promise.all([
+    q(`SELECT type,status,left(coalesce(last_error,''),1000) error FROM finnor_os.jobs
+      WHERE tenant_id=$1 AND type IN ('run_objective_iteration','run_workforce_assignment')
+        AND payload->>'workId'=$2 ORDER BY run_at DESC,id LIMIT 12`, [tenantId, workId]),
+    loop ? stepsOf(loop.id) : [],
+    executionsOf(workId),
+  ]);
+  const error = terminal instanceof Error ? terminal : Error("R12_OBJECTIVE_" + String(loop?.state ?? "MISSING").toUpperCase());
+  throw Object.assign(error, { objective: { loop, jobs, steps, queries } });
+}
 const planRevisions = async workId => Number((await q("SELECT count(*)::int n FROM finnor_os.work_plan_revisions WHERE tenant_id=$1 AND work_id=$2", [tenantId, workId]))[0].n);
 const consumersOf = async findingId => await q("SELECT consumer_type,consumer_id::text FROM finnor_os.v2_consumer_dependencies WHERE tenant_id=$1 AND finding_id=$2", [tenantId, findingId]);
 const latestInput = async workId => (await q("SELECT id::text FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1", [tenantId, workId]))[0]?.id;
@@ -338,6 +358,7 @@ const unplannedWork = main?.workId ?? (await call("primary-open-work", { root, i
 await runCase("R12-03", "Full chain: plan -> submit -> worker -> independent checker -> consume -> wake -> objective success", async () => {
   const f = await build();
   main = f;
+  mainDigest = sha(f.intake);
   const planned = await plan(f);
   const waiting = await loopOf(f.workId);
   ensure(waiting?.state === "waiting" && Number(waiting.step_count) === 0, "LOOP_NOT_WAITING_BEFORE_SUBMIT:" + JSON.stringify(waiting));
@@ -372,7 +393,7 @@ await runCase("R12-03", "Full chain: plan -> submit -> worker -> independent che
   ensure(consumed.status === 200 && consumed.body.id, "CONSUME_NOT_200:" + consumed.status + JSON.stringify(consumed.body).slice(0, 300));
   mainRun = consumed.body; mainFinding = finding;
   ensure(consumed.body.objectiveWake?.woken === true, "WAKE_NOT_FIRED:" + JSON.stringify(consumed.body.objectiveWake));
-  const done = await waitFor("objective_completed", 180000, async () => (await loopOf(f.workId))?.state === "completed", 2000).then(() => loopOf(f.workId));
+  const done = await awaitObjective(f.workId);
   const executions = await executionsOf(f.workId);
   ensure(executions.some(e => e.status === "succeeded" && e.result_summary?.nativeOwnerConsumed === true && e.result_summary?.current === true), "NO_SUCCEEDED_NATIVE_QUERY_EXECUTION");
   const rows = await consumersOf(finding.artifactId);
@@ -381,7 +402,6 @@ await runCase("R12-03", "Full chain: plan -> submit -> worker -> independent che
   ensure(run?.work_id === f.workId, "RUN_WORK_MISMATCH");
   const after = await probe(f.workId);
   ensure(after.status === "ok" && after.data.nativeOwnerConsumed === true && after.data.current === true && after.data.status === "COMPLETE" && after.data.underwritingRunId === consumed.body.id, "READER_NOT_OK_AFTER_CONSUMPTION:" + JSON.stringify(after.data));
-  mainDigest = sha(f.intake);
   mainProbes.push(after);
   const charges = await q("SELECT count(*)::int n, coalesce(sum(actual_micro_usd::numeric),0)::text micro_usd, coalesce(sum(actual_cpu_micros::numeric),0)::text cpu_micros FROM finnor_os.s5_primary_charges WHERE tenant_id=$1 AND programme_id=$2", [tenantId, submitted.programmeId]);
   return { detail: { workId: f.workId, planRevision: planned.body.workRevisionRef, loopBefore: waiting, loopAfter: done, programmeId: submitted.programmeId, jobs, sourceCalls: calls.map(c => c.operation),
@@ -397,9 +417,10 @@ await runCase("R12-04", "Success reached by the owner wake: loop waited at zero 
   ensure(mainRun, "MAIN_CHAIN_UNAVAILABLE");
   const before = main.beforeConsumeLoop, now = await loopOf(main.workId);
   ensure(before.state === "waiting" && Number(before.step_count) === 0 && now.state === "completed", "LOOP_HISTORY_MISMATCH");
-  const stepRows = await q("SELECT step_number,created_at FROM finnor_os.work_objective_steps WHERE tenant_id=$1 AND objective_loop_id=$2 ORDER BY step_number", [tenantId, now.id]).catch(() => []);
+  const stepRows = await stepsOf(now.id);
   const consumedAt = (await q("SELECT created_at FROM finnor_os.v2_consumer_dependencies WHERE tenant_id=$1 AND consumer_id=$2", [tenantId, mainRun.id]))[0].created_at;
-  ensure(stepRows.every(row => new Date(row.created_at) >= new Date(consumedAt)), "OBJECTIVE_STEP_BEFORE_CONSUMER_ROW");
+  ensure(stepRows.length > 0, "NO_DURABLE_OBJECTIVE_STEP");
+  ensure(stepRows.every(row => new Date(row.started_at) >= new Date(consumedAt)), "OBJECTIVE_STEP_BEFORE_CONSUMER_ROW");
   return { detail: { loopBefore: before, loopAfter: now, consumerRowAt: consumedAt, steps: stepRows.length } };
 });
 
@@ -561,7 +582,7 @@ await runCase("R12-11", "Newer Work input supersedes: reader non-current; stale 
   ensure(f.read.status === "COMPLETE", "PROGRAMME_NOT_COMPLETE:" + f.read.status);
   const consumed = await consume(f, f.read.findings[0]);
   ensure(consumed.status === 200, "CONSUME_FAILED_" + consumed.status);
-  await waitFor("objective_completed", 180000, async () => (await loopOf(f.workId))?.state === "completed", 2000);
+  await awaitObjective(f.workId);
   const okBefore = await probe(f.workId);
   ensure(okBefore.status === "ok", "PRECONDITION_NOT_OK");
   const changed = await db.receiveWork({ tenantId, userId, workId: f.workId, instruction: "Additional independent Work input changes the frozen obligation", channel: "console", idempotencyKey: randomUUID(),
@@ -610,7 +631,7 @@ await runCase("R12-14", "Programme cancellation after consumption: reader non-cu
   ensure(f?.read?.findings?.length, "SECOND_WORK_UNAVAILABLE");
   const consumed = await consume(f, f.read.findings[0]);
   ensure(consumed.status === 200 && consumed.body.objectiveWake?.woken === true, "CONSUME_OR_WAKE_FAILED:" + consumed.status + JSON.stringify(consumed.body).slice(0, 200));
-  await waitFor("objective_completed", 180000, async () => (await loopOf(f.workId))?.state === "completed", 2000);
+  await awaitObjective(f.workId);
   const okReply = await probe(f.workId);
   ensure(okReply.status === "ok", "PRECONDITION_NOT_OK");
   const cancel = await call("primary-cancel", { programmeId: f.programmeId }, 202);
@@ -743,7 +764,7 @@ await runCase("R12-20", "Physical worker SIGKILL after source acceptance: quaran
   ensure(mandateRow.deadline === f.originalDeadline, "ORIGINAL_DEADLINE_CHANGED");
   const consumed = await consume(f, f.read.findings[0]);
   ensure(consumed.status === 200 && consumed.body.objectiveWake?.woken === true, "CONSUME_OR_WAKE_FAILED:" + consumed.status);
-  await waitFor("objective_completed", 180000, async () => (await loopOf(f.workId))?.state === "completed", 2000);
+  await awaitObjective(f.workId);
   const reply = await probe(f.workId);
   ensure(reply.status === "ok", "READER_NOT_OK_AFTER_RECOVERY:" + JSON.stringify(reply.data));
   return { detail: { killed, quarantined: { status: quarantined.status, fence: quarantined.claim_fence }, unknownReceiptsRetained: before.costReceipts.filter(r => r.status === "UNKNOWN").length, sourceCalls: calls.map(c => ({ op: c.operation, requestId: c.requestId })),
