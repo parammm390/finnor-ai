@@ -61,19 +61,26 @@ await owner.call("/api/queries", { intent: "harness_program_v1" }).catch(() => n
 
 let parent = null;
 await runCase("D1-00", "Original parent and three authenticated identities exist", async () => {
-  parent = await createOriginalInstitutionParent(env, { record, tag: "d" + randomUUID().slice(0, 6), shape: "partial-unresolved" });
-  const tenantPeer = await createForeignIdentity(env, { tenantId: parent.tenantId });
+  const tenantPeer = await createForeignIdentity(env, { tenantId: owner.tenantId });
   const foreignTenant = await createForeignIdentity(env);
-  parent.peer = { ...tenantPeer, session: await signInOwner(env, { email: tenantPeer.email, password: tenantPeer.password }) };
-  parent.foreign = { ...foreignTenant, session: await signInOwner(env, { email: foreignTenant.email, password: foreignTenant.password }) };
+  const peerSession = await signInOwner(env, { email: tenantPeer.email, password: tenantPeer.password });
+  const foreignSession = await signInOwner(env, { email: foreignTenant.email, password: foreignTenant.password });
+  // The tenant directory assigns roles on enrollment. Capture the original
+  // Work only after that authority revision has settled.
+  parent = await createOriginalInstitutionParent(env, { record, tag: "d" + randomUUID().slice(0, 6), shape: "partial-unresolved" });
+  parent.peer = { ...tenantPeer, session: peerSession };
+  parent.foreign = { ...foreignTenant, session: foreignSession };
   ensure(owner.tenantId === parent.tenantId, "OWNER_TENANT_MISMATCH");
   ensure(parent.peer.session.tenantId === parent.tenantId && parent.peer.session.userId !== owner.userId, "PEER_NOT_A_DIFFERENT_PRINCIPAL_IN_OWNER_TENANT");
   ensure(parent.foreign.session.tenantId !== parent.tenantId, "FOREIGN_TENANT_NOT_FOREIGN");
-  const [work] = await q("SELECT created_by FROM finnor_os.works WHERE tenant_id=$1 AND id=$2", [parent.tenantId, parent.workId]);
+  const [work] = await q(`SELECT w.created_by,p.status plan_status,p.work_input_id
+    FROM finnor_os.works w JOIN finnor_os.work_plan_revisions p ON p.tenant_id=w.tenant_id AND p.work_id=w.id
+    WHERE w.tenant_id=$1 AND w.id=$2 AND p.id=$3`, [parent.tenantId, parent.workId, parent.planRevisionId]);
+  ensure(work?.plan_status === "active" && work.work_input_id === parent.workInputId, "D1_ORIGINAL_PLAN_NOT_ACTIVE");
   return { detail: { workId: parent.workId, programId: parent.programId, workCreatedBy: work.created_by, ownerUserId: owner.userId,
     peer: { tenantId: parent.peer.session.tenantId, userId: parent.peer.session.userId }, foreign: { tenantId: parent.foreign.session.tenantId, userId: parent.foreign.session.userId } } };
 });
-if (!parent?.foreign) { record("summary", { results }); await sql.end(); await worker?.stop(); process.exit(1); }
+if (results.at(-1).outcome === "FAIL") { record("summary", { results }); await sql.end(); await worker?.stop(); process.exit(1); }
 
 const latestInput = async () => (await q("SELECT id FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1", [parent.tenantId, parent.workId]))[0]?.id ?? null;
 const snapshot = async () => ({
