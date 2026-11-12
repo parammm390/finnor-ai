@@ -6360,6 +6360,7 @@
         "e2e/centropy-real-demo.spec.ts",
         "e2e/phase9-institutional-workstation.spec.ts",
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
+        "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/private-equity-p1-upgrade.test.ts",
         "finnor-os/tests/integration/private-equity-p1-world-truth.test.ts",
         "finnor-os/tests/integration/private-equity-phase2.test.ts",

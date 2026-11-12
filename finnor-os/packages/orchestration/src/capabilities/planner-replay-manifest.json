@@ -1154,6 +1154,11 @@
       "sha256": "57a7766737c5039c8ff6c53b85bf47b46bd00e4bc278c0f0f7a81f7f318fee6a"
     },
     {
+      "file": "packages/orchestration/src/canonical-analysis.ts",
+      "bytes": 13632,
+      "sha256": "2bfba5c7712801bd9f88985f4c4f118d6aaaa668a5e8cbec68061a27afca60a3"
+    },
+    {
       "file": "packages/orchestration/src/capabilities/contracts.ts",
       "bytes": 8057,
       "sha256": "c39463cd62c34778efbafdb23eb5f22631113d40bcb830fbf3b80b21b7f8c840"
@@ -1290,8 +1295,8 @@
     },
     {
       "file": "packages/orchestration/src/index.ts",
-      "bytes": 110078,
-      "sha256": "078fbd7eb10f18091b29d8482ae94e85ccca5f52cc1fa5076b95ec941c0be470"
+      "bytes": 112306,
+      "sha256": "a7227e56a11b393a4dc3f4a4634d1fa3ec718956afe962742ed441126fa8de94"
     },
     {
       "file": "packages/orchestration/src/instruction-routing.ts",
@@ -3525,8 +3530,8 @@
     },
     {
       "file": "packages/tools/src/llm.ts",
-      "bytes": 47988,
-      "sha256": "63f4c1098dd0e38a7e2162e5b5a3b942101d7b4a9b297a81985e88fb67f0a562"
+      "bytes": 48430,
+      "sha256": "dbe512a87f6fd33846faaa3d8e7669bf30797bfeaaf98f844a682befa0051e75"
     },
     {
       "file": "packages/tools/src/logger.ts",
