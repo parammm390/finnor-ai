@@ -14,6 +14,7 @@ import {
 import { configureAgentProfile } from "../../packages/orchestration/src/workforce-runtime";
 import { createDeal, createDealRisk, createWorkstream, createFund, createOpportunity, createStrategy, type PeMutationContext } from "@finnor/private-equity";
 import { resolveProviderForPurpose } from "../../packages/orchestration/src/llm";
+import { isCanonicalAnalysisRead } from "../../packages/orchestration/src/canonical-analysis";
 import type { CanonicalOperationalQueryRequest, ObjectiveSuccessCondition, PeWorldRootRef } from "@finnor/shared-types";
 import { assertDisposableDatabaseTarget } from "../../packages/db/production-target-guard";
 import { CURRENT_MIGRATION_HEAD } from "../../packages/db/migration-head";
@@ -805,6 +806,18 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
       if (priorCritic === undefined) delete process.env.LLM_PROVIDER_CRITIC_TEXT; else process.env.LLM_PROVIDER_CRITIC_TEXT = priorCritic;
     }
   }, 60_000);
+
+  // Failure inventory: selected-root context must never hijack generic questions,
+  // hypothetical calculations or mixed requests that also require an artifact.
+  it.each([
+    "What is the weather in Paris?",
+    "Explain how to use this application.",
+    "Analyze this deal and generate a draft investment memo.",
+    "Evaluate this acquisition and produce a presentation.",
+    "Analyze this supplied hypothetical EBITDA example using USD 20 million at 8x.",
+  ])("refuses ungrounded or mixed-intent analysis routing: %s", (instruction) => {
+    expect(isCanonicalAnalysisRead(instruction)).toBe(false);
+  });
 
   it("asks for a source scope when the document comparison names no exact selected Deal or company", async () => {
     const instruction = "Identify conflicting financial figures across this deal's documents. Show both values and their sources.";
