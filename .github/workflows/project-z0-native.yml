@@ -48,25 +48,50 @@ jobs:
           const root = join(process.env.RUNNER_TEMP, 'z0-native')
           const scenario = join(root, 'scenario-01')
           const files = existsSync(scenario) ? readdirSync(scenario) : []
+          const typedCode = value => typeof value === 'string' && /^[A-Z0-9_]{3,160}$/.test(value) ? value : null
           const results = files.filter(name => /^z0-\d+-case-[A-Z0-9-]+[a-z]?\.json$/.test(name)).sort()
             .map(name => {
               const { id, outcome, error, errorCode, errorType, detail } = JSON.parse(readFileSync(join(scenario, name), 'utf8'))
               const predicate = (typeof error === 'string' ? error : '').match(/^[A-Z][A-Z0-9_]{2,160}(?=[: ]|$)/)?.[0]
-                ?? (/^[A-Z0-9_]{3,60}$/.test(errorCode ?? '') ? errorCode : null)
+                ?? typedCode(errorCode) ?? typedCode(detail?.predicate)
                 ?? (/^[A-Za-z]{3,30}$/.test(errorType ?? '') ? errorType : null)
               const path = ['MODEL_USED', 'DIRECT_FALLBACK'].includes(detail?.path) ? detail.path : null
               const fallbackReason = path === 'DIRECT_FALLBACK' && /^Z0_MODEL_[A-Z0-9_]{1,100}$/.test(detail?.fallbackReason ?? '')
                 ? detail.fallbackReason : null
-              return { id, outcome, predicate, path, fallbackReason }
+              const httpStatus = Number.isInteger(detail?.status) ? detail.status : null
+              const responseCode = typedCode(detail?.code)
+              const rejected = Array.isArray(detail?.failures) ? detail.failures.map(entry => ({
+                carrier: /^[a-z0-9_]{3,100}$/.test(entry.carrier ?? '') ? entry.carrier : null,
+                status: Number.isInteger(entry.status) ? entry.status : null,
+                code: typedCode(entry.code),
+              })) : []
+              return { id, outcome, predicate, path, fallbackReason, httpStatus, responseCode, rejected }
             })
-          const receipt = { sourceSha: process.env.GITHUB_SHA, results }
+          const state = join(process.env.GITHUB_WORKSPACE, '.centropy-certification',
+            'z0-ci-' + process.env.GITHUB_RUN_ID + '-' + process.env.GITHUB_RUN_ATTEMPT)
+          const apiLog = join(state, 'api-01.private.log')
+          const serverErrorKinds = new Set()
+          if (existsSync(apiLog)) {
+            for (const line of readFileSync(apiLog, 'utf8').split('\n')) {
+              if (!line.includes('unhandled route failure') && !line.includes('[route-error]')) continue
+              try {
+                const { err, cause } = JSON.parse(line.slice(line.indexOf('{')))
+                for (const value of [err, cause]) {
+                  if (typeof value !== 'string') continue
+                  const kind = typedCode(value) ?? value.match(/(?:violates check constraint|column|relation) "([a-z0-9_.]{1,120})"/i)?.[1]
+                  if (kind) serverErrorKinds.add(kind)
+                }
+              } catch {}
+            }
+          }
+          const receipt = { sourceSha: process.env.GITHUB_SHA, results, serverErrorKinds: [...serverErrorKinds] }
           writeFileSync(join(process.env.RUNNER_TEMP, 'z0-cases.json'), JSON.stringify(receipt, null, 2) + '\n')
           const required = process.env.GITHUB_REF_NAME === 'codex/project-z0-identity'
             ? ['D1-00', 'D1-B', 'D1-01'] : ['P0-01', 'P0-10', 'P0-11']
           for (const id of required) {
             const result = results.find(entry => entry.id === id)
             if (result?.outcome !== 'PASS') {
-              console.error(id, result?.outcome ?? 'MISSING', result?.predicate ?? '')
+              console.error(id, result?.outcome ?? 'MISSING', result?.predicate ?? '', result?.httpStatus ?? '', result?.responseCode ?? '')
               process.exitCode = 1
             }
           }

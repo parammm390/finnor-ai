@@ -136,7 +136,7 @@ const positive = (id, title, request, extra = () => null) => runCase(id, title, 
   const refused = !ok;
   const detail = { status: response.status, code: code(response), workId: response.body?.workId ?? null, workInputId: response.body?.workInputId ?? null, expectedInput: input,
     executionIdentity: response.body?.result?.execution ?? null, bodySha256: response.bodySha256, body: response.body, before, after, ...extra(response) };
-  if (refused) return { outcome: "FAIL", detail: { predicate: "READER_NOT_REACHED_ENVELOPE_REFUSED", ...detail } };
+  if (refused) return { outcome: "FAIL", detail: { predicate: "ORIGINAL_HARNESS_HTTP_READ_FAILED", ...detail } };
   ensure(response.body.workId === parent.workId && response.body.workInputId === input, "ORIGINAL_IDENTITY_NOT_PRESERVED");
   ensure(response.body.result?.execution?.workId === parent.workId && response.body.result?.execution?.workInputId === input, "READER_EXECUTION_IDENTITY_NOT_ORIGINAL");
   ensure(response.body.result?.data?.programId === request.programId, "READER_PROGRAMME_IDENTITY_NOT_ORIGINAL");
@@ -188,7 +188,8 @@ for (const [id, title, build, accepted] of rejects) {
     const scopeControlRequired = id === "R1" || id === "R2";
     const failures = carriers.filter(item => !item.statusAsExpected || !item.stateUnchanged || item.leaked.length
       || scopeControlRequired && item.carrier === harness.intent && item.ownerControl.status >= 300);
-    return { outcome: failures.length ? "FAIL" : "PASS", detail: { failures: failures.map(item => ({ carrier: item.carrier, status: item.status, stateUnchanged: item.stateUnchanged, leaked: item.leaked })), carriers } };
+    return { outcome: failures.length ? "FAIL" : "PASS", detail: { failures: failures.map(item => ({ carrier: item.carrier, status: item.status, code: item.code,
+      stateUnchanged: item.stateUnchanged, leaked: item.leaked })), carriers } };
   });
 }
 await runCase("D1-R9", "A key from an authorized read cannot return that programme for a different selector", async () => {
