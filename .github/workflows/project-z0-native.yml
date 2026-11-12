@@ -2,7 +2,7 @@ name: Project Z0 native continuation
 
 on:
   push:
-    branches: [codex/project-z0-resume, codex/project-z0-identity, codex/project-z0-useful, codex/project-z0-r12, codex/project-z0-mounted]
+    branches: [codex/project-z0-resume, codex/project-z0-identity, codex/project-z0-useful, codex/project-z0-r12, codex/project-z0-mounted, codex/project-z0-recovery]
 
 permissions:
   contents: read
@@ -15,6 +15,10 @@ jobs:
   original-owner:
     runs-on: ubuntu-latest
     timeout-minutes: 70
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: ${{ fromJSON(github.ref_name == 'codex/project-z0-recovery' && '["current","kill","revoke","boundaries"]' || '["default"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -32,6 +36,8 @@ jobs:
         if: github.ref_name == 'codex/project-z0-mounted'
         run: PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/z0-chromium" node node_modules/playwright/cli.js install --with-deps chromium
       - name: Run the native owner scenario
+        env:
+          Z0_RECOVERY_MODE: ${{ matrix.mode }}
         run: |
           scenario=z0-session.mjs
           profiles=z0
@@ -45,7 +51,10 @@ jobs:
           elif [ "$GITHUB_REF_NAME" = "codex/project-z0-mounted" ]; then
             scenario=z0-mounted-session.mjs
             export PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/z0-chromium"
+          elif [ "$GITHUB_REF_NAME" = "codex/project-z0-recovery" ]; then
+            export FINNOR_Z0_MODE="$Z0_RECOVERY_MODE"
           fi
+          install -d -m 700 "$GITHUB_WORKSPACE/.centropy-certification"
           taskset -c 0,1 node scripts/project-z/run-native-scenario.mjs \
             --name="z0-ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
             --evidence="$RUNNER_TEMP/z0-native" --profiles="$profiles" --no-worker --forward-env=FINNOR_Z0_MODE \
@@ -53,6 +62,8 @@ jobs:
             --scenario="$GITHUB_WORKSPACE/finnor-os/scripts/project-z/native/$scenario"
       - name: Record native case outcomes
         if: ${{ always() }}
+        env:
+          Z0_RECOVERY_MODE: ${{ matrix.mode }}
         run: |
           node --input-type=module <<'JS'
           import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -69,9 +80,9 @@ jobs:
             ? value.match(/(?:violates (?:check|foreign key|unique) constraint|column|relation) "([a-z0-9_.]{1,120})"/i)?.[1] ?? null : null
           const results = files.filter(name => /^(?:z0|r12)-\d+-case-[A-Z0-9-]+[a-z]?\.json$/.test(name)).sort()
             .map(name => {
-              const { id, outcome, error, errorCode, errorType, detail } = JSON.parse(readFileSync(join(scenario, name), 'utf8'))
+              const { id, outcome, error, errorCode, errorType, detail, reason } = JSON.parse(readFileSync(join(scenario, name), 'utf8'))
               const predicate = predicateFrom(error)
-                ?? typedCode(errorCode) ?? typedCode(detail?.predicate)
+                ?? typedCode(errorCode) ?? typedCode(detail?.predicate) ?? predicateFrom(detail?.reason ?? reason)
                 ?? (/^[A-Za-z]{3,30}$/.test(errorType ?? '') ? errorType : null)
               const path = ['MODEL_USED', 'DIRECT_FALLBACK'].includes(detail?.path) ? detail.path : null
               const fallbackReason = path === 'DIRECT_FALLBACK' && /^Z0_MODEL_[A-Z0-9_]{1,100}$/.test(detail?.fallbackReason ?? '')
@@ -146,11 +157,18 @@ jobs:
           const receipt = { sourceSha: process.env.GITHUB_SHA, results, acquisitionFailure, serverErrorKinds: [...serverErrorKinds] }
           writeFileSync(join(process.env.RUNNER_TEMP, 'z0-cases.json'), JSON.stringify(receipt, null, 2) + '\n')
           const continuation = ['P0-00', 'P0-01', 'P0-10', 'P0-11']
+          const recovery = {
+            current: ['INTAKE', 'CLAIM'].flatMap(stage => ['SOURCE', 'PARENT', 'TERMS', 'RIGHTS'].map(dependency => 'CUR-' + stage + '-' + dependency)),
+            kill: ['P1-03'],
+            revoke: ['P1-05'],
+            boundaries: ['B-REVOKE-CLAIM', 'B-KILL-CLAIM', 'B-KILL-ACCEPT'],
+          }
           const required = ({
             'codex/project-z0-identity': ['D1-00', 'D1-B', 'D1-01'],
             'codex/project-z0-useful': [...continuation, 'P0-11b'],
             'codex/project-z0-r12': ['R12-02', 'R12-03', 'R12-04'],
             'codex/project-z0-mounted': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),
+            'codex/project-z0-recovery': recovery[process.env.Z0_RECOVERY_MODE],
           })[process.env.GITHUB_REF_NAME] ?? continuation
           for (const id of required) {
             const result = results.find(entry => entry.id === id)
@@ -164,7 +182,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: project-z0-native-${{ github.run_id }}-${{ github.run_attempt }}
+          name: project-z0-native-${{ github.run_id }}-${{ github.run_attempt }}${{ matrix.mode != 'default' && format('-{0}', matrix.mode) || '' }}
           path: |
             ${{ runner.temp }}/z0-native/stack-result.json
             ${{ runner.temp }}/z0-cases.json
