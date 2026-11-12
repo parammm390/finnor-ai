@@ -15,12 +15,12 @@ export async function observeOriginalWork(input: unknown, ctx: TenantContext, op
     workId: options.workId, ...(options.workInputId ? { workInputId: options.workInputId } : {}),
   });
   if (!router.execute) x2Fault("Z0_NATIVE_OBSERVATION_EXECUTOR_UNAVAILABLE", 503);
-  const authority = await evaluateAuthority(ctx, queryAuthorityRequest(bound.request, bound.workId));
-  if (authority.outcome !== "allowed") x2Fault("Z0_NATIVE_OBSERVATION_AUTHORITY_REQUIRED", 403);
   const current = await latestWorkInput(ctx.tenantId, bound.workId);
   if (!current || bound.workInputId && current.id !== bound.workInputId) {
     x2Fault("Z0_NATIVE_ORIGINAL_INPUT_UNAVAILABLE", 404);
   }
+  const authority = await evaluateAuthority(ctx, queryAuthorityRequest(bound.request, bound.workId));
+  if (authority.outcome !== "allowed") x2Fault("Z0_NATIVE_OBSERVATION_AUTHORITY_REQUIRED", 403);
   const execution = await router.execute(bound.request, ctx, {
     workId: bound.workId, workInputId: current.id,
     executionKey: options.executionKey ?? options.idempotencyKey,

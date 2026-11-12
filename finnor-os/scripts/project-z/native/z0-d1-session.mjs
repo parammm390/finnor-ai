@@ -130,11 +130,13 @@ export { parseRequestBody };
 const positive = (id, title, request, extra = () => null) => runCase(id, title, async () => {
   const before = await snapshot(), input = await latestInput();
   const response = await call(owner, request);
+  const programmeRead = await owner.operation("program-read", { programId: request.programId });
   const after = await snapshot();
   const ok = response.status >= 200 && response.status < 300;
   ensure(after.works === before.works && after.originalInputs === before.originalInputs && after.allInputs === before.allInputs, "POSITIVE_CREATED_WORK_OR_INPUT");
   const refused = !ok;
-  const detail = { status: response.status, code: code(response), workId: response.body?.workId ?? null, workInputId: response.body?.workInputId ?? null, expectedInput: input,
+  const detail = { status: response.status, code: code(response), ownerRead: { status: programmeRead.status, code: code(programmeRead) },
+    workId: response.body?.workId ?? null, workInputId: response.body?.workInputId ?? null, expectedInput: input,
     executionIdentity: response.body?.result?.execution ?? null, bodySha256: response.bodySha256, body: response.body, before, after, ...extra(response) };
   if (refused) return { outcome: "FAIL", detail: { predicate: "ORIGINAL_HARNESS_HTTP_READ_FAILED", ...detail } };
   ensure(response.body.workId === parent.workId && response.body.workInputId === input, "ORIGINAL_IDENTITY_NOT_PRESERVED");
