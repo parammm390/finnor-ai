@@ -2,10 +2,11 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { closePool, receiveWork, tenants, transitionWork, users, workAggregate, withTenant } from "@finnor/db";
+import { closePool, receiveWork, tenants, transitionWork, users, workAggregate, WorkControlAuthorizationError, withTenant } from "@finnor/db";
 import { GET as listWorks } from "../../apps/api/app/api/works/route";
 import { GET as getWork } from "../../apps/api/app/api/works/[id]/route";
 import { POST as retryWork } from "../../apps/api/app/api/works/[id]/retry/route";
+import { POST as controlObjective } from "../../apps/api/app/api/works/[id]/objective/route";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const TENANT_ID = "00000000-0000-4000-8000-0000000093f2";
@@ -126,6 +127,49 @@ describe.skipIf(!available)("durable Work APIs", () => {
     expect(response.status).toBe(404);
     expect(await response.json()).toEqual({ error: "Work not found" });
     expect((await workAggregate(TENANT_ID, received.workId))!.work).toMatchObject({ status: "failed" });
+  });
+
+  it("refuses same-tenant objective cancellation and redirect from a different employee", async () => {
+    const original = await receiveWork({
+      tenantId: TENANT_ID, userId: RECOVERY_OWNER_ID,
+      instruction: "Complete the original company's diligence", channel: "text",
+    });
+    const unauthorized = { "x-user-id": RECOVERY_PEER_ID };
+    for (const body of [
+      { command: "cancel" },
+      { command: "interrupt" },
+      { command: "continue" },
+      { command: "redirect", objective: "Replace original objective without permission" },
+    ]) {
+      const response = await controlObjective(request(`/api/works/${original.workId}/objective`, TENANT_ID, {
+        method: "POST", headers: unauthorized, body: JSON.stringify(body),
+      }), { params: Promise.resolve({ id: original.workId }) });
+      expect(response.status).toBe(404);
+      expect(await response.json()).toEqual({ error: "Work not found" });
+    }
+    const after = await workAggregate(TENANT_ID, original.workId);
+    expect(after?.work).toMatchObject({ status: "received" });
+    expect(after?.inputs).toHaveLength(1);
+  });
+
+  it("checks current ownership before any redirected intake or idempotent replay", async () => {
+    const original = await receiveWork({
+      tenantId: TENANT_ID, userId: RECOVERY_OWNER_ID,
+      instruction: "Deliver the baseline Work outcome", channel: "text",
+    });
+    const redirected = {
+      tenantId: TENANT_ID, workId: original.workId, channel: "text" as const,
+      instruction: "Change the Work objective", idempotencyKey: `redirect:${randomUUID()}`,
+      requireCurrentEmployeeOwner: true,
+    };
+    await expect(receiveWork({ ...redirected, userId: RECOVERY_PEER_ID }))
+      .rejects.toBeInstanceOf(WorkControlAuthorizationError);
+    expect((await workAggregate(TENANT_ID, original.workId))?.inputs).toHaveLength(1);
+    const allowed = await receiveWork({ ...redirected, userId: RECOVERY_OWNER_ID });
+    expect(allowed).toMatchObject({ workId: original.workId, duplicate: false });
+    await expect(receiveWork({ ...redirected, userId: RECOVERY_PEER_ID }))
+      .rejects.toBeInstanceOf(WorkControlAuthorizationError);
+    expect((await workAggregate(TENANT_ID, original.workId))?.inputs).toHaveLength(2);
   });
 
   it("rejects retry for a completed Work before invoking the planner", async () => {
