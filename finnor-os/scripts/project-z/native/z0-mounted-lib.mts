@@ -51,7 +51,7 @@ export async function waitUntil<T>(label: string, timeoutMs: number, probe: () =
 
 /* ------------------------------------------------------------------ request watch */
 
-const READ_POSTS = /\/api\/centropy\/(company-brain\/(application-projection|institution-read|institution-sources)|me)$/;
+const READ_POSTS = /\/api\/centropy\/(company-brain\/(projection|application-projection|institution-read|institution-sources)|me)$/;
 const MUTATIONS = /\/api\/centropy\/(company-brain\/(application-(acquire|execute|cancel|resume)|institution-(submit|revise|cancel|resume|mandate|register-source|consent|revoke-consent))|actions(\/|$)|outcome-packs|threads$|works\/[^/]+\/objective|instructions\/[^/]+\/cancel)/;
 
 export type WatchRecord = { seq: number; at: number; page: string; method: string; origin: string; path: string; kind: string; operation: string | null;
@@ -372,7 +372,21 @@ export async function openWork(page: any, threadId: string, workId: string, root
     rootCarriedBy = "ROOT_URL_PARAMETER";
     await page.goto(workUrl(threadId, root), { waitUntil: "domcontentloaded", timeout: 120000 });
     await page.locator(shell).first().waitFor({ state: "visible", timeout: 120000 }).catch(() => undefined);
-    await waitForPanel(page, workId, 60000);
+    try { await waitForPanel(page, workId, 60000); }
+    catch {
+      // A 15-minute native run must identify which *read boundary* hid the
+      // mounted Work. Never log the actual tenant, Work, deal or bearer.
+      const diagnostic = await page.evaluate(() => ({
+        shell: Boolean(document.querySelector(".ct-topbar")),
+        canvas: Boolean(document.querySelector('main[aria-label="Investigation Canvas"]')),
+        workBlocks: document.querySelectorAll('section[data-type="work_execution"]').length,
+        applicationPanels: document.querySelectorAll(".ct-application-semantics").length,
+        sourceErrorCount: document.querySelectorAll(".ct-canvas__source-error").length,
+        emptyCanvas: Boolean(document.querySelector(".ct-canvas__empty-document")),
+        invalidCanvas: Boolean(document.querySelector(".ct-canvas__invalid")),
+      })).catch(() => ({ probe: "UNAVAILABLE" }));
+      throw Error("Z0_MOUNTED_APPLICATION_PANEL_MISSING:" + JSON.stringify(diagnostic));
+    }
   }
   return { rootCarriedBy };
 }
