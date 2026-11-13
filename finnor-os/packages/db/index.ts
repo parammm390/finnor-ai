@@ -1362,6 +1362,14 @@ export async function recordWorkResponse(
 
 const WORK_RECOVERY_CLAIM_TTL_MS = 15 * 60_000;
 
+/** A recovery request must never reveal or mutate another employee's Work. */
+export class WorkRecoveryAuthorizationError extends Error {
+  constructor() {
+    super("Work recovery is not available to this employee");
+    this.name = "WorkRecoveryAuthorizationError";
+  }
+}
+
 /** Atomically leases failed Work for one recovery request and returns the exact input
  * that lease owns. Distinct HTTP idempotency keys therefore cannot both reach the
  * planner. A process that dies before orchestration advances the Work can be taken
@@ -1384,6 +1392,20 @@ export async function claimWorkRecovery(params: {
       eq(schema.works.tenantId, params.tenantId),
     )).limit(1);
     if (!work) throw new Error("Work not found");
+
+    // Recheck the current Work owner under the Work row lock. A prior HTTP read,
+    // possession of a Work ID, or possession of an idempotency key is not authority.
+    // Fail closed for unowned Work: service recovery must use a separate governed
+    // service-principal path, never an employee-facing retry endpoint.
+    if ((work.currentOwnerId ?? work.createdBy) !== params.requestedBy) {
+      throw new WorkRecoveryAuthorizationError();
+    }
+    const [requester] = await db.select({ id: schema.users.id }).from(schema.users).where(and(
+      eq(schema.users.tenantId, params.tenantId),
+      eq(schema.users.id, params.requestedBy),
+      eq(schema.users.status, "active"),
+    )).limit(1);
+    if (!requester) throw new WorkRecoveryAuthorizationError();
 
     const [existingAttempt] = await db.select({ attemptKey: schema.workPlannerAttempts.attemptKey, status: schema.workPlannerAttempts.status })
       .from(schema.workPlannerAttempts)
