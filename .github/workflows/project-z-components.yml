@@ -1,0 +1,55 @@
+name: Project Z focused Linux processes
+
+on:
+  push:
+    branches: [codex/project-z-components]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: project-z-components-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  focused:
+    name: Original process ${{ matrix.phase }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.phase == 'z4' && 50 || 20 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        phase: [z1, z2, z3, z4]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: finnor-os/package-lock.json
+      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Build and verify the locked Z4 native assets
+        id: z4-build
+        if: ${{ matrix.phase == 'z4' }}
+        run: bash finnor-os/scripts/project-z/z4/build-ci-native.sh "$RUNNER_TEMP/project-z-z4-native-build"
+      - name: Run registered original process controls
+        env:
+          PROJECT_Z_PHASE: ${{ matrix.phase }}
+        run: taskset -c 0,1 node scripts/project-z/run-ci.mjs --phase="$PROJECT_Z_PHASE" --evidence="$RUNNER_TEMP/project-z-$PROJECT_Z_PHASE"
+      - name: Produce and independently check one frozen Z4 proof
+        if: ${{ !cancelled() && matrix.phase == 'z4' && steps.z4-build.outcome == 'success' }}
+        working-directory: finnor-os
+        run: taskset -c 0,1 node --import tsx scripts/project-z/z4/proof-smoke.mts --evidence "$RUNNER_TEMP/project-z-z4-proof"
+      - name: Retain phase-scoped process evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: project-z-focused-${{ matrix.phase }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/project-z-${{ matrix.phase }}/
+            ${{ runner.temp }}/project-z-${{ matrix.phase }}-native-build/
+            ${{ runner.temp }}/project-z-${{ matrix.phase }}-proof/
+          if-no-files-found: warn
+          retention-days: 7

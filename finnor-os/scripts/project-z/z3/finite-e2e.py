@@ -156,7 +156,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--freeze", action="store_true")
     parser.add_argument("--cli", type=pathlib.Path)
-    parser.add_argument("--checker", type=pathlib.Path, default=KERNEL / "checker.py")
+    parser.add_argument("--checker", type=pathlib.Path, default=KERNEL / "nonconflicting-checker.py")
     parser.add_argument("--output", type=pathlib.Path)
     args = parser.parse_args()
     if args.freeze:
@@ -264,7 +264,8 @@ def main():
               "nativeOwner": "NOT_RUN", "physicalRecovery": "NOT_RUN", "protected": "NOT_RUN",
               "financialCosts": None, "unknownCostsAreNotZero": True}
     (args.output / "report.json").write_text(canonical(report) + "\n")
-    print(canonical(report))
+    print(canonical({"status": report["status"], "requests": len(requests),
+                     "failures": len(failures), "report": str(args.output / "report.json")}))
     if failures:
         sys.exit(1)
 
