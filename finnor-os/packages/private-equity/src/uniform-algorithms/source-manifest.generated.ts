@@ -160,7 +160,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/uniform-algorithms/source-paths.ts",
-      "sha256": "c51fafa8e8b0532b1141f5a071e3a09c65b4063dac51259409639b68b2486e8b"
+      "sha256": "2524f2b4af57bd42bf7d1ec14adcc9d78f399ce37eacfb6a434b5c63e1f150fd"
     },
     {
       "path": "finnor-os/packages/private-equity/src/uniform-algorithms/source-cut.ts",
@@ -216,7 +216,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/index.ts",
-      "sha256": "c95a416a58a72859c1f0b8e5247eb7420e62d5df595dee78c15d4d76504c5730"
+      "sha256": "3b350d50a1baa8a7dd5d391cd815ceb52f9e5572102375b5da30f583ca613f0e"
     },
     {
       "path": "finnor-os/packages/db/execution-deadline.ts",
@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "131c881affc2fbc91a5c2e52e94b9dbfe597875423b5bd6d8c5f4c8bfb19c9dc"
+      "sha256": "004762e39152e7bc1e58a2753dbac26e8d24889303ff803e1c0cdefedd1616e8"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -332,7 +332,7 @@ export default {
     },
     {
       "path": "finnor-os/package.json",
-      "sha256": "57a92e266b9ac5996bb964c2716e1de3ae7dfc0755df8d15e7c4ac966d9ba013"
+      "sha256": "3a589ff7150bbf437ba9ae024cd496c9862e2efc08734eecacc4b2eb95dacf80"
     },
     {
       "path": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
@@ -364,7 +364,7 @@ export default {
     },
     {
       "path": "finnor-os/package-lock.json",
-      "sha256": "934a898e1c437342b4ffbb376d69b9f420f57a19b800006948c0d95e47c48442"
+      "sha256": "59250f233b6a704cf66ed39279d4c3e393e5f9575aa95718dd9b3dada9bb84ff"
     },
     {
       "path": "package-lock.json",
@@ -1436,7 +1436,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/orchestration/src/index.ts",
-      "sha256": "078fbd7eb10f18091b29d8482ae94e85ccca5f52cc1fa5076b95ec941c0be470"
+      "sha256": "a7227e56a11b393a4dc3f4a4634d1fa3ec718956afe962742ed441126fa8de94"
     },
     {
       "path": "finnor-os/packages/orchestration/src/instruction-routing.ts",
@@ -2304,7 +2304,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "1e8a7d00fccf9bd5fdb1694a71a8e7d69dde1f77274eeb69f8375b8691de2234"
+      "sha256": "0fa18b7dbe015a9d2999086a3d8891fcd6fc2382137d518df348733ea7c0e6ce"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2748,7 +2748,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "sha256": "1a8949627e7acb74767021e213b14b2d60608f4da281f63b5f72bf532ee1b284"
+      "sha256": "13410c6d3b99d8113a0de7e8013878ba479bc705dae042c41148861bcce5d257"
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-paths.ts",
@@ -3164,7 +3164,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts",
-      "sha256": "c4fd268ba3e7da79501c37b26d9e7b4097820dbc203ea851a3711a5a671da7b4"
+      "sha256": "97f6bc86842d79feb781fa3cd11229deeb86a1e8d5e9e583f98f799ac984e2e4"
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-paths.ts",
@@ -3596,7 +3596,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/tools/src/llm.ts",
-      "sha256": "63f4c1098dd0e38a7e2162e5b5a3b942101d7b4a9b297a81985e88fb67f0a562"
+      "sha256": "dbe512a87f6fd33846faaa3d8e7669bf30797bfeaaf98f844a682befa0051e75"
     },
     {
       "path": "finnor-os/packages/tools/src/logger.ts",
@@ -4893,7 +4893,11 @@ export default {
     {
       "path": "src/lib/auth/browser-session.ts",
       "sha256": "59a35b78bf931f087a7f5a5267ef7c899664c53a84616276d2e17b24e04a0eb4"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/canonical-analysis.ts",
+      "sha256": "2bfba5c7712801bd9f88985f4c4f118d6aaaa668a5e8cbec68061a27afca60a3"
     }
   ],
-  "sourceDigest": "fb0e6e81cec5371495814514df1266331a6cba4eba44c6649f22f03f714305d0"
+  "sourceDigest": "6d8a8c78123390540768a41e85a387d5f53271b25039d9fdbb7c4f0d03c5159f"
 } as const;
