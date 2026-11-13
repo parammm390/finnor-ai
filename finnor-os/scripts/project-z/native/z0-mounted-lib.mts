@@ -372,7 +372,21 @@ export async function openWork(page: any, threadId: string, workId: string, root
     rootCarriedBy = "ROOT_URL_PARAMETER";
     await page.goto(workUrl(threadId, root), { waitUntil: "domcontentloaded", timeout: 120000 });
     await page.locator(shell).first().waitFor({ state: "visible", timeout: 120000 }).catch(() => undefined);
-    await waitForPanel(page, workId, 60000);
+    try { await waitForPanel(page, workId, 60000); }
+    catch {
+      // A 15-minute native run must identify which *read boundary* hid the
+      // mounted Work. Never log the actual tenant, Work, deal or bearer.
+      const diagnostic = await page.evaluate(() => ({
+        shell: Boolean(document.querySelector(".ct-topbar")),
+        canvas: Boolean(document.querySelector('main[aria-label="Investigation Canvas"]')),
+        workBlocks: document.querySelectorAll('section[data-type="work_execution"]').length,
+        applicationPanels: document.querySelectorAll(".ct-application-semantics").length,
+        sourceErrorCount: document.querySelectorAll(".ct-canvas__source-error").length,
+        emptyCanvas: Boolean(document.querySelector(".ct-canvas__empty-document")),
+        invalidCanvas: Boolean(document.querySelector(".ct-canvas__invalid")),
+      })).catch(() => ({ probe: "UNAVAILABLE" }));
+      throw Error("Z0_MOUNTED_APPLICATION_PANEL_MISSING:" + JSON.stringify(diagnostic));
+    }
   }
   return { rootCarriedBy };
 }
