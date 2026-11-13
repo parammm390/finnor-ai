@@ -29,6 +29,9 @@ export const ApplicationExecuteSchema = z.object({
 export const ApplicationProjectionSchema = z.object({
   root: EvidenceRootSchema, workId: uuid,
 }).strict();
+export const ApplicationProjectionReadSchema = ApplicationProjectionSchema.extend({
+  includeAcquisition: z.boolean().optional(),
+});
 export const ApplicationSessionIdSchema = z.object({ sessionId: uuid }).strict();
 export const ApplicationComposeOwnerSchema = z.object({
   sessionId: uuid, target: ScopedApplicationIdentitySchema,

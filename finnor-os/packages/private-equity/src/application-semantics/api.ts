@@ -8,7 +8,7 @@ import type { PeMutationContext } from "../types";
 import { authorize, principal, schemaIdentity, tx, unavailable } from "../evidence-execution/store";
 import type { OriginalApplicationParent } from "./ports";
 import {
-  ApplicationAcquireSchema, ApplicationExecuteSchema, ApplicationProjectionSchema,
+  ApplicationAcquireSchema, ApplicationExecuteSchema, ApplicationProjectionReadSchema, ApplicationProjectionSchema,
   type ApplicationAcquireRequest,
 } from "./native-contracts";
 import { reserveApplicationParent, applicationParentCharges } from "./allocation";
@@ -219,7 +219,7 @@ export async function requestApplicationExecution(ctx: PeMutationContext, input:
     originalDeadline: parent.parent.deadlineAt, newAllowance: false };
 }
 export async function projectApplicationSemantics(ctx: PeMutationContext, input: unknown) {
-  const request = ApplicationProjectionSchema.parse(input);
+  const request = ApplicationProjectionReadSchema.parse(input);
   await authorize(ctx, request.root, [{ type: "work", id: request.workId }]);
   const rows = await tx(ctx, async (c) => (await c.query<ApplicationSessionRow>(
     "SELECT * FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND root=$4::jsonb ORDER BY created_at DESC,id DESC LIMIT 17",
@@ -250,8 +250,14 @@ export async function projectApplicationSemantics(ctx: PeMutationContext, input:
       + " WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.session_id=$3 ORDER BY r.created_at,r.id LIMIT 65",
       [ctx.auth.tenantId, principal(ctx), row.id])).rows, true);
     if (effects.length > 64) x2Fault("X2_EFFECT_PROJECTION_REQUIRES_PAGINATION");
+    const acquisition = request.includeAcquisition && row.id === row.parent_id
+      ? ApplicationAcquireSchema.safeParse(row.request) : null;
     sessions.push({ id: row.id, parentId: row.parent_id, status: row.status, reason: row.reason,
       generation: row.generation, deadlineAt: row.parent.deadlineAt, originalParentRef: row.original_parent_ref,
+      ...(request.includeAcquisition ? { acquisition: acquisition?.success ? {
+        targetIds: acquisition.data.targets.map(target => target.id),
+        resourceDemand: acquisition.data.resourceDemand, deadlineAt: acquisition.data.deadlineAt,
+      } : null } : {}),
       model, check, freshAuthority, composition: composition && row.composition_ref ? { ...composition, ref: row.composition_ref } : null,
       effects, charges: await applicationParentCharges(ctx, row.allocation_ref), billing: "UNKNOWN",
       institutional: await projectInstitutionApplication(ctx, row),
@@ -299,7 +305,7 @@ export const APPLICATION_OPERATIONS = ["application-acquire", "application-execu
 export const APPLICATION_OPERATION_SCHEMAS = {
   "application-acquire": ApplicationAcquireSchema,
   "application-execute": ApplicationExecuteSchema,
-  "application-projection": ApplicationProjectionSchema,
+  "application-projection": ApplicationProjectionReadSchema,
   "application-cancel": ApplicationProjectionSchema,
   "application-resume": ApplicationProjectionSchema.extend({ sessionId: ApplicationExecuteSchema.shape.sessionId }).strict(),
 } as const;

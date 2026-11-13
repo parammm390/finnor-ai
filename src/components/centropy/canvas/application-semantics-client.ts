@@ -493,6 +493,11 @@ const institutionViewSchema = z.object({
   }).strict(),
 }).strict()
 
+const resourceDemandSchema = z.array(z.object({
+  resourceId: label, unit: z.enum(["request", "seconds"]),
+  amount: z.string().regex(/^(?:0|[1-9][0-9]{0,3})$/),
+}).strict()).min(1).max(2)
+
 const sessionSchema = z.object({
   id: z.string().uuid(),
   parentId: z.string().uuid(),
@@ -508,6 +513,9 @@ const sessionSchema = z.object({
   freshAuthority: freshAuthoritySchema.nullable(),
   originalParentRef: ApplicationReferenceSchema,
   deadlineAt: timestamp,
+  acquisition: z.object({
+    targetIds: z.array(label).min(2).max(16), resourceDemand: resourceDemandSchema, deadlineAt: timestamp,
+  }).strict().nullable().optional(),
   effects: z.array(effectSchema).max(64),
   charges: z.array(chargeSchema).max(2048),
   institutional: institutionViewSchema.nullable().optional(),
@@ -592,6 +600,11 @@ export function parseApplicationProjection(value: unknown, expected: Application
   for (const session of data.sessions) {
     const { model, check, composition, freshAuthority } = session
     const institution = session.institutional
+    if (session.acquisition && (session.id !== session.parentId
+      || Date.parse(session.acquisition.deadlineAt) !== Date.parse(session.deadlineAt)
+      || new Set(session.acquisition.targetIds).size !== session.acquisition.targetIds.length)) {
+      throw new ApplicationProjectionError()
+    }
     if (institution && (institution.originalWorkId !== expected.workId
       || session.id !== session.parentId || freshAuthority !== null
       || institution.childDeadlineAt !== session.deadlineAt
@@ -771,7 +784,7 @@ export async function readApplicationProjection(
       credentials: "same-origin",
       redirect: "error",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-      body: JSON.stringify({ root: expected.root, workId: expected.workId }),
+      body: JSON.stringify({ root: expected.root, workId: expected.workId, includeAcquisition: true }),
       signal: controller.signal,
     })
     assertCurrentSession(currentUse.sessionKey, currentUse.signal)
@@ -887,10 +900,7 @@ const acquisitionRequestSchema = z.object({
   root: rootSchema, workId: z.string().uuid(),
   profileIds: z.array(z.string().uuid()).min(1).max(8),
   targets: z.array(identitySchema).min(2).max(16),
-  resourceDemand: z.array(z.object({
-    resourceId: label, unit: z.enum(["request", "seconds"]),
-    amount: z.string().regex(/^(?:0|[1-9][0-9]{0,3})$/),
-  }).strict()).min(1).max(2),
+  resourceDemand: resourceDemandSchema,
   deadlineAt: timestamp, idempotencyKey: label,
   institutionalOrigin: institutionSelectorSchema.optional(),
 }).strict()

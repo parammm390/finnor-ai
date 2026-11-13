@@ -298,9 +298,11 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
       await pe.createWorkstream(ctxFor(workstreamExternalId), { dealId, kind: "financial_diligence", name: "Evidence schedule", owner: { partyType: "employee", partyId: userId } });
       await pe.addDealParty(ctxFor(recipientExternalId), { dealId, party: { partyType: "external_organization", partyId: organizationId }, role: "target_management" });
     }
+    const root = { entityType: "pe_deal", entityId: dealId };
     const intake = await db.receiveWork({ tenantId, userId, channel: "console", idempotencyKey: `z0-original-intake:${tag}:${randomUUID()}`,
       instruction: options.instruction ?? "Maintain the supplied standing evidence responsibility from authorized originals, with no external approval or settlement",
-      activeContext: { entityType: "pe_deal", entityId: dealId }, authorityContext: { principalId: userId, scope: "DISPOSABLE_INTERNAL_REQUEST_CREATION_ONLY" } });
+      activeContext: { businessRoot: root, selectedEntities: [root] },
+      authorityContext: { principalId: userId, scope: "DISPOSABLE_INTERNAL_REQUEST_CREATION_ONLY" } });
     const workId = intake.workId as string;
     await db.attachWorkEntity(tenantId, workId, { entityType: "pe_deal", entityId: dealId, source: "Z0:original-owner-registration" });
     await record("parent-01-original-work", { tenantId, ownerId: userId, dealId, workId, shape, dutyDeadline });

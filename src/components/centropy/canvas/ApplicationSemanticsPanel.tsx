@@ -277,19 +277,50 @@ function ModelEvidence({ model, check, now }: {
   </>
 }
 
+function sessionNextAction(session: ApplicationSession, now: number): string | null {
+  if (session.status === "UNKNOWN") {
+    return "Review the retained effect records and have the original owner reconcile outstanding observations before any further action."
+  }
+  if (!["BLOCKED", "STALE", "FAILED"].includes(session.status)) return null
+  if (now >= Date.parse(session.deadlineAt)) {
+    return "The original deadline has passed. The Work owner can inspect the retained evidence and outstanding effects."
+  }
+  switch (session.reason) {
+    case "X2_CURRENT_APPLICATION_PROFILE_CHANGED":
+    case "X2_CURRENT_READ_PROFILE_CHANGED":
+    case "X2_CURRENT_PROFILE_EXPIRED":
+      return "The Work owner must ask the connection owner to verify access for the original application profile and refresh this Work."
+    case "X2_CURRENT_S1_RIGHTS_CHANGED":
+      return "The Work owner must verify current authorization for the original responsibility before requesting any continuation."
+    default:
+      return "The Work owner can review the recorded reason and refresh this Work after the required input or authority has been resolved."
+  }
+}
+
 function SessionEvidence({ session, now }: { session: ApplicationSession; now: number }) {
   const { model, composition } = session
+  const nextAction = sessionNextAction(session, now)
   return <>
     <section>
       <h4>{sessionLabels[session.status]}</h4>
       <p>Session {session.id} · native generation {session.generation} · parent session {session.parentId}.
         {" "}{session.id === session.parentId ? "Acquisition parent." : "Fresh execution child; original allocation is retained."}</p>
       <p>Reason: {session.reason ?? "No reason supplied."}</p>
+      {nextAction ? <p data-application-next-action>{nextAction}</p> : null}
       <p>Original parent: <Reference value={session.originalParentRef}/></p>
       <p>Original deadline: {session.deadlineAt}
         {now >= Date.parse(session.deadlineAt) ? " · expired; no fresh work is implied" : " · this is not a renewed allocation"}.</p>
       {session.cancelledAt ? <p>Cancellation requested at {session.cancelledAt}; this is not rollback or resource release.</p> : null}
     </section>
+    {session.acquisition ? <details>
+      <summary>Requested application computation</summary>
+      <p>Requested deadline: <time dateTime={session.acquisition.deadlineAt}>{session.acquisition.deadlineAt}</time></p>
+      <h5>Requested resource demand</h5>
+      <ul>{session.acquisition.resourceDemand.map(({ resourceId, amount, unit }) =>
+        <li key={resourceId}>Requested {amount} {unit} from <code>{resourceId}</code></li>)}</ul>
+      <h5>Requested targets</h5>
+      <ul>{session.acquisition.targetIds.map(id => <li key={id}><code>{id}</code></li>)}</ul>
+    </details> : null}
     {session.institutional ? <section>
       <h4>Original institutional responsibility</h4>
       <p>Original Work: {session.institutional.originalWorkId}. Input: {session.institutional.originalWorkInputId}.</p>

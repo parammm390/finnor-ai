@@ -7,6 +7,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { chmodSync, mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
+import { resolveProductRoute } from "../../../../src/lib/centropy/capability-manifest";
 
 export const FRONTEND = "http://127.0.0.1:3001";
 export const sha = (value: unknown) => createHash("sha256").update(typeof value === "string" ? value : JSON.stringify(value)).digest("hex");
@@ -51,7 +52,6 @@ export async function waitUntil<T>(label: string, timeoutMs: number, probe: () =
 
 /* ------------------------------------------------------------------ request watch */
 
-const READ_POSTS = /\/api\/centropy\/(company-brain\/(application-projection|institution-read|institution-sources)|me)$/;
 const MUTATIONS = /\/api\/centropy\/(company-brain\/(application-(acquire|execute|cancel|resume)|institution-(submit|revise|cancel|resume|mandate|register-source|consent|revoke-consent))|actions(\/|$)|outcome-packs|threads$|works\/[^/]+\/objective|instructions\/[^/]+\/cancel)/;
 
 export type WatchRecord = { seq: number; at: number; page: string; method: string; origin: string; path: string; kind: string; operation: string | null;
@@ -104,7 +104,12 @@ export class RequestWatch {
     if (url.origin === authOrigin) return url.pathname.endsWith("/logout") ? "auth-logout" : url.pathname.endsWith("/token") ? "auth-token" : "auth-other";
     if (/live-controls$/.test(url.pathname)) return operation === "end-delivery" ? "sign-out" : operation === "dispatch" ? "mutation" : "other-non-get";
     if (MUTATIONS.test(url.pathname)) return "mutation";
-    if (READ_POSTS.test(url.pathname)) return "read-post";
+    const prefix = "/api/centropy/";
+    if (url.origin === FRONTEND && method === "POST" && url.pathname.startsWith(prefix)) {
+      const route = resolveProductRoute("POST", url.pathname.slice(prefix.length).split("/"));
+      if (route?.classification === "READ") return "read-post";
+      if (route?.classification === "MUTATION") return "mutation";
+    }
     return "other-non-get";
   }
   mark() { return this.seq; }
@@ -336,7 +341,8 @@ export async function uiSignIn(page: any, email: string, password: string, watch
   if (settled.some(row => row.status !== "fulfilled")) throw Error("UI_SIGN_IN_ME_RESPONSE_NOT_OBSERVED");
   const response = (settled[0] as PromiseFulfilledResult<any>).value;
   const identity = await response.json();
-  await page.getByRole("heading", { name: "What needs to move forward?" }).waitFor({ state: "visible", timeout: 90000 });
+  await page.locator(".ct-topbar").waitFor({ state: "visible", timeout: 90000 })
+    .catch((cause: unknown) => { throw new Error("Z0_BROWSER_SIGN_IN_WORKSPACE_UNAVAILABLE", { cause }); });
   await watch.settle();
   const bearer = watch.lastBearer(row => row.path === "/api/centropy/me", mark);
   return { identity, bearer, meStatus: response.status() };
@@ -355,26 +361,31 @@ export const panelFor = (page: any, workId: string) => page.locator(`${APP}[data
 
 /** Waits for the panel of a Work to be mounted and to have finished its current read. */
 export async function waitForPanel(page: any, workId: string, timeoutMs = 60000) {
+  const shell = page.getByRole("main", { name: "Investigation Canvas", exact: true });
+  await shell.waitFor({ state: "visible", timeout: timeoutMs })
+    .catch((cause: unknown) => { throw new Error("Z0_BROWSER_INVESTIGATION_CANVAS_UNAVAILABLE", { cause }); });
   const panel = panelFor(page, workId);
-  await panel.waitFor({ state: "visible", timeout: timeoutMs });
-  await waitUntil("PANEL_SETTLED", timeoutMs, async () =>
-    (await panel.getAttribute("aria-busy")) === "false" && (await panel.getAttribute("data-application-session")) !== "none");
-  return panel;
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const state = await shell.evaluate((canvas: HTMLElement, { app, expectedWork }: { app: string; expectedWork: string }) => {
+      const mounted = canvas.querySelector(app);
+      if (!mounted) return canvas.querySelector(".ct-canvas__invalid") ? "CANVAS_INVALID" : "PANEL_UNMOUNTED";
+      if (mounted.querySelector('[role="alert"]')) return "PROJECTION_UNAVAILABLE";
+      if (mounted.getAttribute("data-application-work") !== expectedWork) return "WORK_NOT_PROJECTED";
+      if (mounted.getAttribute("aria-busy") !== "false") return "PROJECTION_BUSY";
+      if (mounted.getAttribute("data-application-session") === "none") return "SESSION_NOT_PROJECTED";
+      return "SETTLED";
+    }, { app: APP, expectedWork: workId }, { timeout: Math.max(1, deadline - Date.now()) });
+    if (state === "SETTLED") return panel;
+    if (Date.now() >= deadline) throw Error("Z0_BROWSER_" + state);
+    await sleep(250);
+  }
 }
 
-export async function openWork(page: any, threadId: string, workId: string, root: { entityType: string; entityId: string }) {
-  const shell = 'section[aria-label="CENTROPY conversation"], main[aria-label="Investigation Canvas"]';
+export async function openWork(page: any, threadId: string, workId: string) {
   await page.goto(workUrl(threadId), { waitUntil: "domcontentloaded", timeout: 120000 });
-  await page.locator(shell).first().waitFor({ state: "visible", timeout: 120000 }).catch(() => undefined);
-  let rootCarriedBy = "THREAD_PERSISTED_ROOT";
-  try { await waitForPanel(page, workId, 45000); }
-  catch {
-    rootCarriedBy = "ROOT_URL_PARAMETER";
-    await page.goto(workUrl(threadId, root), { waitUntil: "domcontentloaded", timeout: 120000 });
-    await page.locator(shell).first().waitFor({ state: "visible", timeout: 120000 }).catch(() => undefined);
-    await waitForPanel(page, workId, 60000);
-  }
-  return { rootCarriedBy };
+  await waitForPanel(page, workId);
+  return { rootCarriedBy: "THREAD_PERSISTED_ROOT" };
 }
 
 /* ------------------------------------------------------------------ evidence output */

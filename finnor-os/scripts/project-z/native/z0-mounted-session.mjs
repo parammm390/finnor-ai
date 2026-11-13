@@ -36,8 +36,7 @@ const authOrigin = new URL(env.SUPABASE_URL).origin;
 const startedAt = new Date();
 const costs = { sqlQueries: 0, nodeAuthGrants: 0, modelCalls: 0, money: "UNKNOWN" };
 
-const RERUN = "/home/factory-user/repos/project-z-worker-notes/rbg.sh w0m-native-NN /home/factory-user/repos/fzv-w-z0m stack -- "
-  + "/home/factory-user/repos/fzv-int-out/native-run-z0m.sh w0m-native-NN z0 finnor-os/scripts/project-z/native/z0-mounted-session.mjs --no-worker";
+const RERUN = "Project Z0 native continuation workflow on codex/project-z0-mounted";
 
 /* ---------------------------------------------------------------- results and checks */
 const cases = [];
@@ -101,9 +100,18 @@ await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_REA
   threadA = { id: created.body?.thread?.id, title: created.body?.thread?.title ?? title };
   const [thread] = await q("SELECT active_work_id FROM finnor_os.employee_conversation_threads WHERE tenant_id=$1 AND id=$2", [parentA.tenantId, threadA.id]);
   check(c, "A.thread", "owner thread whose active Work is the original Work", "O-SQL employee_conversation_threads", { status: created.status, activeWorkId: thread?.active_work_id ?? null }, created.status === 201 && thread?.active_work_id === parentA.workId);
+  const confirmRoot = async (label, parent) => {
+    const [input] = await q("SELECT context_snapshot->'businessRoot' root FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2 AND id=$3",
+      [parent.tenantId, parent.workId, parent.workInputId]);
+    const matches = input?.root?.entityType === "pe_deal" && input.root.entityId === parent.dealId;
+    check(c, label + ".input-root", "the original Work input carries its own canonical businessRoot",
+      "O-SQL work_inputs", { matches }, matches);
+  };
+  await confirmRoot("A", parentA);
 
   try {
     parentB = await createOriginalInstitutionParent(env, { record, tag: tagB, resourcePool });
+    await confirmRoot("B", parentB);
     if (parentA.parentReservation.id === parentB.parentReservation.id) throw Error("MOUNTED_FIXTURE_REUSED_A_RESERVATION");
     const submitted = await submitInstitutionAcquisition(env, parentB, { privateRoot, record }, owner);
     acquisitionB = submitted.request;
@@ -149,9 +157,8 @@ await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_REA
   setup.A = { tag: tagA, workId: parentA.workId, dealId: parentA.dealId, sessionId: acqA.sessionId, threadId: threadA.id, status: row?.status };
   setup.foreign = foreignRow;
 });
-const setupOk = Boolean(parentA && acqA && threadA?.id);
+const setupOk = cases[0]?.outcome === "PASS";
 const rootA = parentA ? { entityType: "pe_deal", entityId: parentA.dealId } : null;
-const rootB = parentB ? { entityType: "pe_deal", entityId: parentB.dealId } : null;
 const ownerCreds = { email: env.TEST_OWNER_EMAIL, password: env.TEST_OWNER_PASSWORD };
 
 /* ---------------------------------------------------------------- browser */
@@ -182,9 +189,9 @@ const strongLabels = new Set(["sessionId", "programId", "compilerRequestId", "re
 let referenceSignature = null, referenceCore = null, referenceTruthA = null;
 
 async function ensureOwnerOnWork(which = "A") {
-  const target = which === "A" ? { thread: threadA, parent: parentA, root: rootA } : { thread: threadB, parent: parentB, root: rootB };
+  const target = which === "A" ? { thread: threadA, parent: parentA } : { thread: threadB, parent: parentB };
   if (!(await page.locator(".ct-topbar").isVisible().catch(() => false))) await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
-  return openWork(page, target.thread.id, target.parent.workId, target.root);
+  return openWork(page, target.thread.id, target.parent.workId);
 }
 const mutationsOf = (c, mark, allowed = 0) => {
   const summary = watch.summary(mark);
@@ -202,7 +209,7 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
   check(c, "identity.me", "browser /api/centropy/me carried a Bearer, answered 200 for the owner of the original tenant", "O-IDP /auth/v1/user + O-SQL",
     { meStatus: login.meStatus, role: login.identity?.role, tenantMatches: login.identity?.tenantId === parentA.tenantId, principalMatches: login.identity?.userId === parentA.ownerId, idpStatus: idp.status, idpIdEqualsNativePrincipal: idp.id === login.identity?.userId },
     login.meStatus === 200 && login.identity?.role === "owner" && login.identity?.tenantId === parentA.tenantId && login.identity?.userId === parentA.ownerId && idp.status === 200);
-  const opened = await openWork(page, threadA.id, parentA.workId, rootA);
+  const opened = await openWork(page, threadA.id, parentA.workId);
   c.observations.rootCarriedBy = opened.rootCarriedBy;
   const truth = await readOwnerTruth({ q, owner, parent: parentA, sessionId: acqA.sessionId, acquisitionInput: acqA.request });
   referenceTruthA = truth;
@@ -491,7 +498,7 @@ await runCase("M-08", ["Z0-R09-C04", "Z0-R45-C04"], "Real logout then new sign-i
   c.observations.oldAccessTokenAtIdpAfterLogout = oldUser?.status ?? null;
   const mark2 = watch.mark();
   const login = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
-  await openWork(page, threadA.id, parentA.workId, rootA);
+  await openWork(page, threadA.id, parentA.workId);
   await waitForPanel(page, parentA.workId);
   await watch.settle();
   const reads = watch.since(mark2).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId);
@@ -535,7 +542,7 @@ await runCase("M-06", ["Z0-R09-C02", "Z0-R09-C04", "Z0-R45-C04"], "Principal swi
   await uiSignOut(page);
   const back = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
   const mark2 = watch.mark();
-  await openWork(page, threadA.id, parentA.workId, rootA);
+  await openWork(page, threadA.id, parentA.workId);
   await waitForPanel(page, parentA.workId);
   await watch.settle();
   const reads = watch.since(mark2).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId);
@@ -555,7 +562,7 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
   try {
     await clockPage.clock.install({ time: new Date() });
     await uiSignIn(clockPage, ownerCreds.email, ownerCreds.password, clockWatch);
-    await openWork(clockPage, threadA.id, parentA.workId, rootA);
+    await openWork(clockPage, threadA.id, parentA.workId);
     await waitForPanel(clockPage, parentA.workId);
     await clockWatch.settle();
     const before = await storageScan(clockPage, clockContext, referenceTruthA.markers);
