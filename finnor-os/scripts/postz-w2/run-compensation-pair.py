@@ -169,6 +169,13 @@ def main():
         assert all(row["exit"] is not None for row in result["processes"]), "OWNED_CHILD_EXIT_NOT_RECORDED"
         record["actualClosingOwnerStatus"] = observed["completed"]["q"]["status"]
         record["actualCompensationStatus"] = observed["compensation"]["observations"][0]["status"]
+        join_probe = owner / "workforce-compensation/sanitized-join-diagnostic.json"
+        if join_probe.exists():
+            verified_counts = json.loads(join_probe.read_text())
+            allowed = ("acceptedPromises", "paymentLinks", "closedCertificates",
+                "nativePaymentLinks", "verifiedPaymentOperations",
+                "reconciledPaymentConsumptions", "acceptedCurrentChecks")
+            record["joinDiagnostic"] = {key: int(verified_counts[key]) for key in allowed}
         if args.episode == "before-exact":
             assert not result["passed"] and child.returncode != 0
             assert record["actualClosingOwnerStatus"] == "CLOSED"
