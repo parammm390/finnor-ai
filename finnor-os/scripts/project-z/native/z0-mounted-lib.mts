@@ -51,7 +51,7 @@ export async function waitUntil<T>(label: string, timeoutMs: number, probe: () =
 
 /* ------------------------------------------------------------------ request watch */
 
-const READ_POSTS = /\/api\/centropy\/(company-brain\/(application-projection|institution-read|institution-sources)|me)$/;
+const READ_POSTS = /\/api\/centropy\/(company-brain\/(projection|application-projection|institution-read|institution-sources)|me)$/;
 const MUTATIONS = /\/api\/centropy\/(company-brain\/(application-(acquire|execute|cancel|resume)|institution-(submit|revise|cancel|resume|mandate|register-source|consent|revoke-consent))|actions(\/|$)|outcome-packs|threads$|works\/[^/]+\/objective|instructions\/[^/]+\/cancel)/;
 
 export type WatchRecord = { seq: number; at: number; page: string; method: string; origin: string; path: string; kind: string; operation: string | null;
