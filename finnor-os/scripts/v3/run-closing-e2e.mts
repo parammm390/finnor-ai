@@ -779,6 +779,33 @@ try {
     const portfolio = ok(await request(f, "/api/allocations/resources", {}));
     await save("workforce-compensation/settled-owner-before-projection-assertion.json",
       { completed, nativeCompletion, compensation, funding, portfolio });
+    // Failure-first owner diagnostics. Counts only: no Work, actor, evidence,
+    // compensation, credential, receipt or tenant identifiers leave this run.
+    const paymentJoinProbe = (await admin!.query(`
+      SELECT
+        (SELECT count(*)::int FROM finnor_os.s5_history WHERE tenant_id=$1
+          AND operation='WORKFORCE_COMPENSATION_ACCEPTANCE') AS "acceptedPromises",
+        (SELECT count(*)::int FROM finnor_os.s5_history WHERE tenant_id=$1
+          AND operation='WORKFORCE_CLOSING_PAYMENT') AS "paymentLinks",
+        (SELECT count(*)::int FROM finnor_os.pe_closed_transaction_certificates WHERE tenant_id=$1
+          AND transaction_id=$2) AS "closedCertificates",
+        (SELECT count(*)::int FROM finnor_os.pe_closing_node_links WHERE tenant_id=$1
+          AND programme_id=$3 AND node_key='pay-seller') AS "nativePaymentLinks",
+        (SELECT count(*)::int FROM finnor_os.pe_closing_node_links l
+          JOIN finnor_os.external_operations o ON o.tenant_id=l.tenant_id AND o.business_effect_id=l.business_effect_id
+          WHERE l.tenant_id=$1 AND l.programme_id=$3 AND l.node_key='pay-seller'
+            AND o.provider='finnor_closing_provider' AND o.verification_status='verified') AS "verifiedPaymentOperations",
+        (SELECT count(*)::int FROM finnor_os.pe_closing_node_links l
+          JOIN finnor_os.s5_consumptions co ON co.tenant_id=l.tenant_id AND co.consumption_id=l.consumption_ref->>'id'
+          JOIN finnor_os.s5_consumption_states st ON st.tenant_id=co.tenant_id AND st.consumption_id=co.consumption_id
+          WHERE l.tenant_id=$1 AND l.programme_id=$3 AND l.node_key='pay-seller'
+            AND st.status='RECONCILED') AS "reconciledPaymentConsumptions",
+        (SELECT count(*)::int FROM finnor_os.pe_closing_programmes q
+          JOIN finnor_os.pe_closing_checks ch ON ch.tenant_id=q.tenant_id AND ch.id=q.last_check_id
+          WHERE q.tenant_id=$1 AND q.id=$3 AND ch.accepted
+            AND ch.valid_until>clock_timestamp()) AS "acceptedCurrentChecks"
+    `, [f.tenant, f.dealId, f.programmeId])).rows[0];
+    await save("workforce-compensation/sanitized-join-diagnostic.json", paymentJoinProbe);
     assert.equal(JSON.stringify(compensation.records[0]), f.compensationFixture.acceptedBytes, "Immutable acceptance was rewritten");
     assert.equal(compensation.observations[0].status, compensationCase === "exact" ? "SETTLED" : "OPEN",
       "Exact receiving receipt join must pay only the original amount, payee and reservation");
