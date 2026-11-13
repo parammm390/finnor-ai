@@ -650,6 +650,8 @@ export interface ReceiveWorkParams {
   authorityContext?: Record<string, unknown>;
   employeeThreadContext?: { threadId: string; expectedRevision: number };
   requireExactIntake?: boolean;
+  /** Human objective redirect: do not append an input to another employee's Work. */
+  requireCurrentEmployeeOwner?: boolean;
 }
 
 export class ExactWorkIntakeConflict extends Error {
@@ -657,6 +659,35 @@ export class ExactWorkIntakeConflict extends Error {
     super("The original Work intake claim is bound to a different principal or exact input");
     this.name = "ExactWorkIntakeConflict";
   }
+}
+
+/** HTTP Work controls must not grant authority from possession of an ID or replay key. */
+export class WorkControlAuthorizationError extends Error {
+  constructor() {
+    super("Work control unavailable");
+    this.name = "WorkControlAuthorizationError";
+  }
+}
+
+/** The owner check runs in the caller's transaction, with the Work row locked.
+ * This is deliberately opt-in: historical service and system-created Work may
+ * not have a human owner, and those paths have separate authority contracts. */
+export async function assertCurrentEmployeeWorkOwnerTx(
+  db: Db, tenantId: string, workId: string, employeeId: string,
+): Promise<void> {
+  if (!isUuid(employeeId)) throw new WorkControlAuthorizationError();
+  await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.tenantId}=${tenantId} AND ${schema.works.id}=${workId} FOR NO KEY UPDATE`);
+  const [work] = await db.select({ currentOwnerId: schema.works.currentOwnerId, createdBy: schema.works.createdBy })
+    .from(schema.works).where(and(eq(schema.works.tenantId, tenantId), eq(schema.works.id, workId))).limit(1);
+  if (!work || (work.currentOwnerId ?? work.createdBy) !== employeeId) throw new WorkControlAuthorizationError();
+  const [active] = await db.select({ id: schema.users.id }).from(schema.users).where(and(
+    eq(schema.users.id, employeeId), eq(schema.users.tenantId, tenantId), eq(schema.users.status, "active"),
+  )).limit(1);
+  if (!active) throw new WorkControlAuthorizationError();
+}
+
+export async function assertCurrentEmployeeWorkOwner(tenantId: string, workId: string, employeeId: string): Promise<void> {
+  return withTenant(tenantId, db => assertCurrentEmployeeWorkOwnerTx(db, tenantId, workId, employeeId), employeeId);
 }
 
 export interface ReceivedWork {
@@ -805,6 +836,13 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
     ].sort();
     for (const claimKey of claimKeys) {
       await db.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${claimKey}, 0))`);
+    }
+    // Enforce before duplicate replay, attachments, input persistence and
+    // failed-Work status recovery. Keeping the lock through the transaction
+    // prevents a concurrent handoff from invalidating this intake decision.
+    if (params.requireCurrentEmployeeOwner) {
+      if (!params.workId) throw new WorkControlAuthorizationError();
+      await assertCurrentEmployeeWorkOwnerTx(db, params.tenantId, params.workId, params.userId ?? "");
     }
     let employeeThread: typeof schema.employeeConversationThreads.$inferSelect | undefined;
     if (params.employeeThreadContext) {
