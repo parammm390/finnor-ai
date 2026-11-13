@@ -285,6 +285,13 @@ function SessionEvidence({ session, now }: { session: ApplicationSession; now: n
       <p>Session {session.id} · native generation {session.generation} · parent session {session.parentId}.
         {" "}{session.id === session.parentId ? "Acquisition parent." : "Fresh execution child; original allocation is retained."}</p>
       <p>Reason: {session.reason ?? "No reason supplied."}</p>
+      {["BLOCKED", "FAILED", "STALE"].includes(session.status) ? <p data-application-next-action role="status">
+        Next action for the original Work owner: investigate the unresolved native prerequisite
+        {" "}{session.reason ?? "(reason not supplied)"} with its accountable authority. Revalidate current rights,
+        account/profile or source evidence as applicable, then use the original Work recovery controls
+        only if lawful authority exists. Do not retry this session, restore revoked access automatically,
+        or renew its original reservation or deadline here.
+      </p> : null}
       <p>Original parent: <Reference value={session.originalParentRef}/></p>
       <p>Original deadline: {session.deadlineAt}
         {now >= Date.parse(session.deadlineAt) ? " · expired; no fresh work is implied" : " · this is not a renewed allocation"}.</p>
