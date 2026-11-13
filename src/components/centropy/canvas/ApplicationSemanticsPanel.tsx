@@ -69,8 +69,12 @@ function Reference({ value }: { value: ApplicationReference }) {
   </code>
 }
 
-function ReferenceList({ title, values }: { title: string; values: ApplicationReference[] }) {
-  return <details>
+function ReferenceList({ title, values, claimClass }: {
+  title: string
+  values: ApplicationReference[]
+  claimClass?: "observed" | "inferred" | "predicted"
+}) {
+  return <details data-claim-class={claimClass}>
     <summary>{title} · {values.length} supplied reference{values.length === 1 ? "" : "s"}</summary>
     {values.length ? <ul>{values.map((value, index) =>
       <li key={`${index}:${value.owner}:${value.id}`}><Reference value={value}/></li>,
@@ -210,7 +214,18 @@ function ModelEvidence({ model, check, now }: {
           <summary>Counterexamples and remaining falsifiers</summary><JsonEvidence value={check.counterexamples}/>
         </details> : <p>No counterexamples supplied in this check. That is not a universal external proof.</p>}
       </> : <p>No independent model check supplied. Qualification is UNKNOWN, not accepted.</p>}
-      <p>Observed, declared, inferred and predicted claims are separate. A checked logical model is not admission or evidence that a requested external effect occurred.</p>
+      <p>Each claim retains its own evidence basis. The independent effect observation determines what happened outside FINNOR.</p>
+      <ReferenceList title="Observed claims" values={envelope.observed_claims} claimClass="observed"/>
+      <ReferenceList title="Inferred claims" values={envelope.inferred_claims} claimClass="inferred"/>
+      <ReferenceList title="Predicted claims" values={envelope.predicted_claims} claimClass="predicted"/>
+      <details data-claim-class="unresolved">
+        <summary>Unresolved claims · {envelope.unresolved_claims.length}</summary>
+        {envelope.unresolved_claims.length ? <ul>{envelope.unresolved_claims.map(({ code, reference }, index) => (
+          <li key={`${code}:${index}`}>
+            <code>{code}</code>{reference ? <> · <Reference value={reference}/></> : null}
+          </li>
+        ))}</ul> : <p>No unresolved claims supplied.</p>}
+      </details>
       <ReferenceList title="Source observations" values={model.source_observations}/>
       <ReferenceList title="Application identity/version evidence" values={model.application_identity_and_version_evidence}/>
       <ReferenceList title="Declared type-signature evidence" values={model.declared_type_signatures}/>
@@ -230,10 +245,6 @@ function ModelEvidence({ model, check, now }: {
           permittedExplorationRecord: model.permitted_exploration_record,
           checkerResults: model.checker_results,
           independentCheckRefs: envelope.independent_check_refs,
-          observedClaims: envelope.observed_claims,
-          inferredClaims: envelope.inferred_claims,
-          predictedClaims: envelope.predicted_claims,
-          unresolvedClaims: envelope.unresolved_claims,
         }}/>
       </details>
     </section>
@@ -358,7 +369,7 @@ function SessionEvidence({ session, now }: { session: ApplicationSession; now: n
     <section>
       <h4>Original resources and cost qualification</h4>
       <p>Billing: {session.billing}. Original resource release: {session.resourceReleaseGranted ? "granted" : "not granted"}.</p>
-      <p>S5 charges describe conservative occupation of the original parent, across its children. They are not provider billing, per-session totals or renewed allowances.</p>
+      <p>These S5 charges cover this application allocation and its children. The remaining resources above include all charges on the original reservation.</p>
       <dl className="ct-evidence__values">
         <div><dt>Money / currency-qualified billing</dt><dd data-application-cost="money">UNKNOWN</dd></div>
         <div><dt>Complete attributable human work</dt><dd data-application-cost="humanSeconds">UNKNOWN</dd></div>

@@ -24,17 +24,23 @@ export async function witness(q: Q, parent: any) {
 export async function readOwnerTruth(args: { q: Q; owner: any; parent: any; sessionId: string; acquisitionInput?: any }) {
   const { q, owner, parent, sessionId } = args;
   const root = { entityType: "pe_deal", entityId: parent.dealId };
-  const [session] = await q("SELECT id,status,reason,generation,deadline_at,cancel_requested_at,reservation_ref,original_parent_ref,parent_id,request,work_id FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parent.tenantId, sessionId]);
+  const [session] = await q("SELECT id,status,reason,generation,deadline_at,cancel_requested_at,reservation_ref,original_parent_ref,parent_id,request,work_id,allocation_ref FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parent.tenantId, sessionId]);
   const [episode] = await q("SELECT original_deadline,wall_deadline,attempts,acquisition_calls FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND id=$2", [parent.tenantId, parent.episodeId]);
   const [compiler] = await q("SELECT status,revision FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND id=$2", [parent.tenantId, parent.compilerRequestId]);
   const [reservation] = await q("SELECT status,envelopes FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND reservation_id=$2", [parent.tenantId, parent.parentReservation.id]);
-  const charges = await q("SELECT resource_id,unit,units::text units,phase,charge_key,created_at FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 ORDER BY created_at,charge_key", [parent.tenantId, parent.parentReservation.id]);
+  const charges = await q(`SELECT resource_id,unit,units::text units,phase,charge_key,created_at,
+    body->'allocationRef'=$3::jsonb application_charge
+    FROM finnor_os.s5_governed_resource_charges
+    WHERE tenant_id=$1 AND reservation_id=$2 ORDER BY created_at,charge_key`,
+  [parent.tenantId, parent.parentReservation.id, JSON.stringify(session.allocation_ref)]);
   const running = new Map<string, bigint>();
-  const chargeRows = charges.map((row: any) => {
+  const chargeRows = charges.flatMap((row: any) => {
     const key = row.resource_id + "|" + row.unit;
     const after = (running.get(key) ?? 0n) + units(row.units);
     running.set(key, after);
-    return { resourceId: row.resource_id, unit: row.unit, units: String(row.units), phase: row.phase, usedAfter: after.toString() };
+    return row.application_charge
+      ? [{ resourceId: row.resource_id, unit: row.unit, units: String(row.units), phase: row.phase, usedAfter: after.toString() }]
+      : [];
   });
   const budget = (reservation?.envelopes ?? []).map((envelope: any) => {
     const limit = (envelope.quantities as unknown[]).reduce((sum: bigint, quantity) => sum + units(quantity), 0n);

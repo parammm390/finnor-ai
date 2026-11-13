@@ -206,13 +206,22 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
   c.observations.rootCarriedBy = opened.rootCarriedBy;
   const truth = await readOwnerTruth({ q, owner, parent: parentA, sessionId: acqA.sessionId, acquisitionInput: acqA.request });
   referenceTruthA = truth;
+  c.observations.oracle = {
+    projectionStatus: truth.api.projectionStatus,
+    institutionReadStatus: truth.api.institutionReadStatus,
+    projectedSessionFound: Boolean(truth.api.session),
+    disagreements: truth.disagreements.map(value => value.split(": sql=", 1)[0]),
+  };
   check(c, "oracles.agree", "O-SQL and O-API agree before either is used as an expectation", "O-SQL vs O-API", truth.disagreements, truth.disagreements.length === 0);
   await waitForPanel(page, parentA.workId);
   const f0 = await readPanels(page);
   await shot(page, c, "open");
+  c.observations.reloadsSettled = 0;
   await page.reload({ waitUntil: "domcontentloaded" }); await waitForPanel(page, parentA.workId);
+  c.observations.reloadsSettled = 1;
   const f1 = await readPanels(page);
   await page.reload({ waitUntil: "domcontentloaded" }); await waitForPanel(page, parentA.workId);
+  c.observations.reloadsSettled = 2;
   const f2 = await readPanels(page);
   await shot(page, c, "after-second-reload");
   c.observations.signatures = { f0: signature(f0), f1: signature(f1), f2: signature(f2) };

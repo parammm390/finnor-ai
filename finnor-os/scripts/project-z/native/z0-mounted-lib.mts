@@ -209,17 +209,16 @@ export async function storageScan(page: any, context: any, markers: Marker[], se
 export const APP = ".ct-application-semantics";
 export const INST = 'section[aria-label="Institution responsibility"]';
 
-/** Opens every collapsed <details> in scope with real clicks, deepest last-to-first so indices stay valid. */
+/** Opens parent sections before their nested summaries become actionable. */
 export async function openAllDetails(page: any, scope: string) {
+  const closed = page.locator(`${scope} details:not([open]) > summary:visible`);
+  const deadline = Date.now() + 25000;
   let opened = 0;
-  for (let pass = 0; pass < 8; pass++) {
-    const closed = page.locator(`${scope} details:not([open]) > summary`);
-    const count = await closed.count();
-    if (!count) return opened;
-    for (let index = count - 1; index >= 0; index--) {
-      const done = await closed.nth(index).click({ timeout: 4000 }).then(() => true, () => false);
-      if (done) opened++;
-    }
+  while (await closed.count()) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) throw Error("MOUNTED_EVIDENCE_DETAILS_DID_NOT_OPEN");
+    await closed.first().click({ timeout: Math.min(1500, remaining) });
+    opened++;
   }
   return opened;
 }
@@ -283,8 +282,14 @@ export async function claimLabelProbe(page: any, claims: Array<{ cls: string; ke
     for (const claim of claims) {
       let hit: Element | null = null;
       const walker = document.createTreeWalker(root ?? document.body, NodeFilter.SHOW_TEXT);
-      for (let node = walker.nextNode(); node && !hit; node = walker.nextNode()) {
-        if ((node.nodeValue ?? "").includes(claim.key) && !(node.parentElement?.closest("pre"))) hit = node.parentElement;
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const el = node.parentElement;
+        if (!(node.nodeValue ?? "").includes(claim.key) || !el || el.closest("pre")) continue;
+        hit ??= el;
+        if (el.closest("[data-claim-class]")?.getAttribute("data-claim-class") === claim.cls) {
+          hit = el;
+          break;
+        }
       }
       if (!hit) { out.push({ ...claim, foundOutsidePre: false, ancestorClass: null, nearestHeading: null }); continue; }
       let ancestorClass: string | null = null;
