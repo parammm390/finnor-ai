@@ -216,7 +216,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/index.ts",
-      "sha256": "3b350d50a1baa8a7dd5d391cd815ceb52f9e5572102375b5da30f583ca613f0e"
+      "sha256": "87266b6a332534e1ae9218b76db80a2f1a221caa1f50bb858d40f219ed302c63"
     },
     {
       "path": "finnor-os/packages/db/execution-deadline.ts",
@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "004762e39152e7bc1e58a2753dbac26e8d24889303ff803e1c0cdefedd1616e8"
+      "sha256": "1e5232b237a5cda4cbd825ae0cc2d5daa80e7c7341a2514cc51516b198f3da70"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -1436,7 +1436,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/orchestration/src/index.ts",
-      "sha256": "a7227e56a11b393a4dc3f4a4634d1fa3ec718956afe962742ed441126fa8de94"
+      "sha256": "1829ab22f518d4513f963b9278d71c70f82098621feeadfc701f1fdc2bedec27"
     },
     {
       "path": "finnor-os/packages/orchestration/src/instruction-routing.ts",
@@ -1472,7 +1472,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/orchestration/src/objective-loop.ts",
-      "sha256": "01e63f179837d5fb7bca1a65610633dcaf5edd9d607154f86deab0d9b33257fb"
+      "sha256": "d13604f6547bccbf7b8b420534b5c00e0175a24063ee0a4f5b68d7a1a167200e"
     },
     {
       "path": "finnor-os/packages/orchestration/src/objective-success.ts",
@@ -2304,7 +2304,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "0fa18b7dbe015a9d2999086a3d8891fcd6fc2382137d518df348733ea7c0e6ce"
+      "sha256": "03a1287b6101264d367a0d5e576892b857d1e97c2cc9b2c63d9fc1a0a9341887"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2748,7 +2748,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "sha256": "13410c6d3b99d8113a0de7e8013878ba479bc705dae042c41148861bcce5d257"
+      "sha256": "0d8ad4199de7b36ad1226bb2007b0be3667a6b4ccadf881de2a9809f64f672ad"
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-paths.ts",
@@ -3164,7 +3164,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts",
-      "sha256": "97f6bc86842d79feb781fa3cd11229deeb86a1e8d5e9e583f98f799ac984e2e4"
+      "sha256": "f1f9c467c0e808ce122278157413c5f7e5c56fa7f37a0e3c031673d46c3f4e4a"
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-paths.ts",
@@ -4596,7 +4596,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/canvas-compose.ts",
-      "sha256": "013fb5070cd8a0cc95a4446d3d8ca208f3d103dcd177c232fa3dd95573c4967c"
+      "sha256": "d8906ebc01e7cc6026caea79e0612bf8b7b962beb849a6e7b87fd8aca4b410b0"
     },
     {
       "path": "src/components/centropy/canvas/causal-replay-contract.ts",
@@ -4899,5 +4899,5 @@ export default {
       "sha256": "2bfba5c7712801bd9f88985f4c4f118d6aaaa668a5e8cbec68061a27afca60a3"
     }
   ],
-  "sourceDigest": "6d8a8c78123390540768a41e85a387d5f53271b25039d9fdbb7c4f0d03c5159f"
+  "sourceDigest": "a9728636c71d8d073a9c2a1fba786841586d0743755d65a86d45a4714e62faac"
 } as const;

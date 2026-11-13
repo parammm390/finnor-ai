@@ -152,7 +152,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/index.ts",
-      "sha256": "3b350d50a1baa8a7dd5d391cd815ceb52f9e5572102375b5da30f583ca613f0e"
+      "sha256": "87266b6a332534e1ae9218b76db80a2f1a221caa1f50bb858d40f219ed302c63"
     },
     {
       "path": "finnor-os/packages/security/src/auth.ts",
@@ -188,7 +188,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/canvas-compose.ts",
-      "sha256": "013fb5070cd8a0cc95a4446d3d8ca208f3d103dcd177c232fa3dd95573c4967c"
+      "sha256": "d8906ebc01e7cc6026caea79e0612bf8b7b962beb849a6e7b87fd8aca4b410b0"
     },
     {
       "path": "src/components/centropy/canvas/canvas-contract.ts",
