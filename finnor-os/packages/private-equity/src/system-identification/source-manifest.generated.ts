@@ -140,7 +140,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "1bc04a5c50981e15501c474b4130e2e2170fb8665837c20dbd7bf899b45d58c5"
+      "sha256": "305e734000bc0b61df8fba1ee9b217256f6fd8ace7f8baa6af3ba7636b8cb621"
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
@@ -284,7 +284,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/index.ts",
-      "sha256": "c95a416a58a72859c1f0b8e5247eb7420e62d5df595dee78c15d4d76504c5730"
+      "sha256": "53c5c1bfbb06869716228ea636e4262495e97e120f17bc2116273110865623e2"
     },
     {
       "path": "finnor-os/packages/security/src/auth.ts",
@@ -372,7 +372,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "sha256": "3ee361eadc0d7e599b54ed7777075a9822e263b57b7b79d91682248481e39e80"
+      "sha256": "c546a416616d46b5bdc6ea7c8ca6080758bacf4df6e0b5c786de44dcced82b8e"
     },
     {
       "path": "finnor-os/packages/epistemic-runtime/src/identification.ts",

@@ -17,6 +17,7 @@ import { PE_WORLD_ROOT_TYPES, type ClosingWorkContinuation, type DomainAction, t
 import { OperatingInteractionContextSchema } from "@finnor/policy-schema";
 import {
   MAX_HIGH_EGRESS_ROWS,
+  assertCurrentEmployeeWorkOwnerTx,
   activeWorkPlanRevision,
   assertInstitutionPlanContinuationTx,
   beginWorkPlannerAttempt as beginCanonicalWorkPlannerAttempt,
@@ -3246,6 +3247,7 @@ export async function controlWorkObjective(params: {
   objective?: string;
   successCondition?: ObjectiveSuccessCondition;
   correlationId?: string;
+  requireCurrentEmployeeOwner?: boolean;
 }): Promise<typeof workObjectiveLoops.$inferSelect> {
   let cancellationAlreadyRecorded = false;
   const loop = await withTenant(params.tenantId, async (db) => {
@@ -3255,6 +3257,12 @@ export async function controlWorkObjective(params: {
     await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.workId}=${params.workId} AND ${workObjectiveLoops.tenantId}=${params.tenantId} FOR NO KEY UPDATE`);
     const [current] = await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.workId, params.workId))).limit(1);
     if (!current) throw new Error("Work has no objective loop");
+    // The authenticated HTTP control must still belong to the current employee
+    // at the actual Objective transaction, after any concurrent handoff.
+    // Service-originated controls continue through their existing authority path.
+    if (params.requireCurrentEmployeeOwner) {
+      await assertCurrentEmployeeWorkOwnerTx(db, params.tenantId, params.workId, params.actorId);
+    }
     const finishControl = async (updated: typeof workObjectiveLoops.$inferSelect) => {
       const workStatus = updated.state === "continue" ? "executing" : updated.state;
       // Commit the Objective and its parent Work together. A failed Work must be
