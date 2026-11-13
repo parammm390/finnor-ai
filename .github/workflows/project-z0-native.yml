@@ -2,7 +2,7 @@ name: Project Z0 native continuation
 
 on:
   push:
-    branches: [codex/project-z0-resume, codex/project-z0-identity, codex/project-z0-useful, codex/project-z0-r12, codex/project-z0-mounted, codex/project-z0-recovery, codex/project-z0-economic, codex/project-z0-confidential]
+    branches: [codex/project-z0-resume, codex/project-z0-identity, codex/project-z0-useful, codex/project-z0-r12, codex/project-z0-mounted, codex/project-z0-recovery, codex/project-z0-economic, codex/project-z0-confidential, codex/z0-mounted-readonly-post-fix-20261114]
 
 permissions:
   contents: read
@@ -33,7 +33,7 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm ci --prefix finnor-os --no-audit --no-fund
       - name: Install the locked Chromium build
-        if: github.ref_name == 'codex/project-z0-mounted'
+        if: github.ref_name == 'codex/project-z0-mounted' || github.ref_name == 'codex/z0-mounted-readonly-post-fix-20261114'
         run: PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/z0-chromium" node node_modules/playwright/cli.js install --with-deps chromium
       - name: Verify the installed economic programme reader
         if: github.ref_name == 'codex/project-z0-economic'
@@ -63,7 +63,7 @@ jobs:
           elif [ "$GITHUB_REF_NAME" = "codex/project-z0-r12" ]; then
             scenario=z0-r12-session.mjs
             profiles=v2
-          elif [ "$GITHUB_REF_NAME" = "codex/project-z0-mounted" ]; then
+          elif [ "$GITHUB_REF_NAME" = "codex/project-z0-mounted" ] || [ "$GITHUB_REF_NAME" = "codex/z0-mounted-readonly-post-fix-20261114" ]; then
             scenario=z0-mounted-session.mjs
             export PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/z0-chromium"
             launch_args+=(--budget-ms=3300000)
@@ -270,6 +270,7 @@ jobs:
             'codex/project-z0-useful': [...continuation, 'P0-11b'],
             'codex/project-z0-r12': ['R12-02', 'R12-03', 'R12-04'],
             'codex/project-z0-mounted': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),
+            'codex/z0-mounted-readonly-post-fix-20261114': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),
             'codex/project-z0-recovery': recoveryRequired,
           })[process.env.GITHUB_REF_NAME] ?? continuation
           for (const id of required) {
