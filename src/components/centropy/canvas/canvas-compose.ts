@@ -53,39 +53,51 @@ export function composeCanvasDocument(params: { thread: LoadedConversationThread
   const blocks: CanvasBlock[] = []
   if (work) {
     const asOf = work.work.updatedAt
-    const latestPlan = work.planRevisions[0]
-    const receipt = work.receipts.find((item) => item.finalizedAt) ?? work.receipts[0]
+    // workAggregate orders revisions and receipts oldest-first. An older verified
+    // plan or finalized action receipt must never certify a newer unresolved Work.
+    const latestPlan = work.planRevisions.at(-1)
+    const receipt = work.receipts.at(-1)
+    const completeCoverage = work.read?.complete !== false
     const completedReads = work.queryExecutions.filter((query) => query.status === "succeeded")
     const failedReads = work.queryExecutions.filter((query) => query.status === "failed")
     const verifiedEffects = work.businessEffects.filter(verifiedEffect).length
-    const verified = Boolean(latestPlan?.completionProof && typeof latestPlan.completionProof === "object" && !Array.isArray(latestPlan.completionProof) && (latestPlan.completionProof as Record<string, unknown>).verified === true)
+    const planVerified = completeCoverage && latestPlan?.status === "completed"
+      && Boolean(latestPlan.completionProof && typeof latestPlan.completionProof === "object" && !Array.isArray(latestPlan.completionProof)
+        && (latestPlan.completionProof as Record<string, unknown>).verified === true)
+    const workVerified = planVerified && work.work.status === "completed"
     blocks.push({
       id: `work:${work.work.id}`, type: "work_execution", schemaVersion: 1, sourceKind: "work", title: "Work and verification", payload: {
         objective: work.work.initialInstruction, status: work.work.status,
         stages: [
           { id: "objective", label: work.work.executionModel === "objective" ? "Objective" : "Instruction", state: "verified", detail: work.work.executionModel === "objective" ? "Captured as durable Work" : "Linked to durable Work" },
-          { id: "plan", label: "Work Plan", state: latestPlan ? stateOf(latestPlan.status) === "blocked" ? "blocked" : "verified" : "waiting", detail: latestPlan ? `Revision ${latestPlan.revision} · ${latestPlan.reason}` : "No selected Work Plan revision" },
+          { id: "plan", label: "Work Plan", state: latestPlan
+            ? ["blocked", "failed"].includes(latestPlan.status) ? "blocked" : planVerified ? "verified" : latestPlan.status === "active" ? "active" : "waiting"
+            : "waiting", detail: latestPlan ? `Revision ${latestPlan.revision} · ${latestPlan.reason} · ${latestPlan.status}` : "No selected Work Plan revision" },
           { id: "execution", label: "Work execution",
             state: work.actions.some((item) => stateOf(item.status) === "blocked") || failedReads.length ? "blocked"
-              : work.work.status === "completed" && (work.actions.length || completedReads.length) ? "verified"
-                : work.actions.length || completedReads.length ? "active" : "waiting",
+              : workVerified && (work.actions.length || completedReads.length) ? "verified"
+                : work.work.status === "completed" ? "waiting"
+                  : work.actions.length || completedReads.length ? "active" : "waiting",
             detail: `${work.actions.length} recorded Work action${work.actions.length === 1 ? "" : "s"} · ${completedReads.length} completed canonical read${completedReads.length === 1 ? "" : "s"}${completedReads.length ? ` (${[...new Set(completedReads.map((query) => query.intent.replaceAll("_", " ")))].join(", ")})` : ""} · ${work.businessEffects.length} recorded business effect${work.businessEffects.length === 1 ? "" : "s"} · ${verifiedEffects} independently verified outcome${verifiedEffects === 1 ? "" : "s"}` },
           ...work.businessEffects.map(effectStage),
-          { id: "verification", label: "Verification", state: verified || Boolean(receipt?.finalizedAt && !receipt.failure) ? "verified" : receipt?.failure ? "blocked" : receipt ? "active" : "waiting", detail: verified ? "Completion proof verified" : receipt?.finalizedAt ? "Finalized receipt recorded" : receipt ? "Receipt pending finalization" : "No finalized receipt" },
+          { id: "verification", label: "Verification", state: workVerified ? "verified" : receipt?.failure ? "blocked" : receipt && !receipt.finalizedAt ? "active" : "waiting",
+            detail: !completeCoverage ? `Work read incomplete: ${work.read?.truncatedTables.join(", ") ?? "unknown tables"}` : workVerified ? "Current plan completion proof verified"
+              : receipt?.finalizedAt ? "Action receipt finalized; current Work completion not independently verified" : receipt ? "Action receipt pending finalization" : "No current completion proof" },
           { id: "outcome", label: "Outcome",
             state: work.work.failure || ["failed", "cancelled"].includes(work.work.status) ? "blocked"
-              : work.work.status === "completed" && work.work.finalOutcome ? "verified" : "waiting",
+              : workVerified && work.work.finalOutcome ? "verified" : "waiting",
             detail: work.work.failure ? "Failure outcome recorded"
-              : work.work.status === "completed" && work.work.finalOutcome ? oneLine(work.work.finalOutcome) ?? "Structured outcome persisted"
+              : work.work.status === "completed" && work.work.finalOutcome
+                ? workVerified ? oneLine(work.work.finalOutcome) ?? "Verified structured outcome persisted" : "Outcome persisted; current completion proof not established"
                 : "Final outcome pending", },
         ],
         finalOutcome: oneLine(work.work.finalOutcome), failure: oneLine(work.work.failure),
       },
       entityRefs: [], sourceRefs: [...work.queryExecutions.map((query) => ({ owner: "Work", table: "work_query_executions", id: query.id })), ...work.businessEffects.map((effect) => ({ owner: "Work", table: "business_effects", id: effect.id }))],
       workRefs: [{ workId: work.work.id, recordType: "work" }, ...work.queryExecutions.map((query) => ({ workId: work.work.id, recordType: "work_query_execution", recordId: query.id })), ...work.businessEffects.map((effect) => ({ workId: work.work.id, recordType: "business_effect", recordId: effect.id }))],
-      truthState: "KNOWN", asOf, createdAt: work.work.createdAt, updatedAt: asOf,
+      truthState: completeCoverage ? "KNOWN" : "PARTIAL", asOf, createdAt: work.work.createdAt, updatedAt: asOf,
     })
-    if (receipt) blocks.push({ id: `receipt:${receipt.id}`, type: "decision_receipt", schemaVersion: 1, sourceKind: "work", title: "Decision receipt", payload: { status: receipt.failure ? "Failed" : receipt.finalizedAt ? "Finalized" : "Pending", result: oneLine(receipt.actualResult) ?? (receipt.actualResult ? "Structured result recorded" : "No actual result recorded"), finalizedAt: receipt.finalizedAt, failure: oneLine(receipt.failure) }, entityRefs: [], sourceRefs: [], workRefs: [{ workId: work.work.id, recordType: "decision_receipt", recordId: receipt.id }], truthState: receipt.finalizedAt ? "KNOWN" : "PARTIAL", asOf: receipt.finalizedAt ?? asOf, createdAt: asOf, updatedAt: receipt.finalizedAt ?? asOf })
+    if (receipt) blocks.push({ id: `receipt:${receipt.id}`, type: "decision_receipt", schemaVersion: 1, sourceKind: "work", title: "Latest action receipt (not Work completion)", payload: { status: receipt.failure ? "Failed" : receipt.finalizedAt ? "Finalized" : "Pending", result: oneLine(receipt.actualResult) ?? (receipt.actualResult ? "Structured result recorded" : "No actual result recorded"), finalizedAt: receipt.finalizedAt, failure: oneLine(receipt.failure) }, entityRefs: [], sourceRefs: [], workRefs: [{ workId: work.work.id, recordType: "decision_receipt", recordId: receipt.id }], truthState: receipt.finalizedAt ? "KNOWN" : "PARTIAL", asOf: receipt.finalizedAt ?? asOf, createdAt: asOf, updatedAt: receipt.finalizedAt ?? asOf })
   }
   if (projection) {
     const nodes = projection.nodes
