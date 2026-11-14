@@ -718,6 +718,36 @@ export async function canReadEmployeeWork(tenantId: string, workId: string, empl
   }, employeeId);
 }
 
+/** Select the employee-visible subset of a bounded set of Work IDs in ONE
+ * tenant-scoped SQL read. This shares canReadEmployeeWork's canonical predicate
+ * and avoids one DB round trip for each Company Brain Work node. Unknown and
+ * inactive humans fail closed, as do Work rows without a human relationship.
+ */
+export async function readableEmployeeWorkIds(
+  tenantId: string, candidateWorkIds: string[], employeeId: string,
+): Promise<string[]> {
+  if (!isUuid(employeeId)) return [];
+  const ids = [...new Set(candidateWorkIds)].filter(isUuid).slice(0, 100);
+  if (!ids.length) return [];
+  return withTenant(tenantId, async db => {
+    const rows = await db.select({ id: schema.works.id }).from(schema.works)
+      .innerJoin(schema.users, and(
+        eq(schema.users.id, employeeId),
+        eq(schema.users.tenantId, schema.works.tenantId),
+        eq(schema.users.status, "active"),
+      )).where(and(
+        eq(schema.works.tenantId, tenantId),
+        inArray(schema.works.id, ids),
+        or(
+          eq(schema.works.createdBy, employeeId),
+          eq(schema.works.currentOwnerId, employeeId),
+          eq(schema.works.assignedTo, employeeId),
+        ),
+      ));
+    return rows.map(row => row.id);
+  }, employeeId);
+}
+
 /** A legacy instruction is private to its author; a Work-linked instruction
  * follows existing Work participant relationships. Never treat knowledge of an
  * instruction ID, session ID or tenant as an employee share grant.
