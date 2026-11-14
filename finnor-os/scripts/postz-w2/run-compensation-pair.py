@@ -151,7 +151,8 @@ def main():
             "HOME": str(Path.home()), "TMPDIR": str(temporary), "LANG": "C.UTF-8",
             "NODE_OPTIONS": "--max-old-space-size=2048", "FINNOR_V3_EVIDENCE_DIR": str(owner),
             "FINNOR_S3_PYTHON": str(args.python), "FINNOR_S5_PYTHON": str(args.python),
-            "FINNOR_W2_COMPENSATION_CASE": selected, "OPENBLAS_NUM_THREADS": "1", "OMP_NUM_THREADS": "1"}
+            "FINNOR_W2_COMPENSATION_CASE": selected, "OPENBLAS_NUM_THREADS": "1", "OMP_NUM_THREADS": "1",
+            "FINNOR_W2_CUT_SECTION_DIAGNOSTIC": os.environ.get("FINNOR_W2_CUT_SECTION_DIAGNOSTIC", "0")}
         with (args.output / "driver.log").open("x") as log:
             child = subprocess.Popen(command, cwd=ROOT / "finnor-os", env=environment,
                 stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
@@ -176,6 +177,26 @@ def main():
                 "nativePaymentLinks", "verifiedPaymentOperations",
                 "reconciledPaymentConsumptions", "acceptedCurrentChecks")
             record["joinDiagnostic"] = {key: int(verified_counts[key]) for key in allowed}
+        cut_report = owner / "workforce-compensation/material-cut-section-diff.json"
+        if cut_report.exists():
+            cut_data = json.loads(cut_report.read_text())
+            permitted_keys = {"checkedPreCertificateSections", "changedSections",
+                "unchangedSections", "proofDomain", "financialSettlementClaimed"}
+            assert set(cut_data) == permitted_keys, "UNEXPECTED_CUT_PROBE_FIELDS"
+            assert cut_data["proofDomain"] == "DISPOSABLE_NATIVE_POSTCLOSE_DIAGNOSTIC_ONLY"
+            assert cut_data["financialSettlementClaimed"] is False
+            assert isinstance(cut_data["checkedPreCertificateSections"], int) and 0 <= cut_data["checkedPreCertificateSections"] <= 64
+            assert isinstance(cut_data["unchangedSections"], int) and 0 <= cut_data["unchangedSections"] <= 64
+            keys = cut_data["changedSections"]
+            assert isinstance(keys, list) and len(keys) <= 64
+            assert all(isinstance(key, str) and 0 < len(key) <= 64
+                and re.fullmatch(r"[a-z][a-zA-Z0-9_]*", key) for key in keys)
+            record["cutSectionDiagnostic"] = {
+                "sectionsCaptured": cut_data["checkedPreCertificateSections"],
+                "changedSections": keys,
+                "unchangedSectionCount": cut_data["unchangedSections"],
+                "qualification": "SANDBOX_SECTION_NAMES_ONLY_NOT_FINANCIAL_SETTLEMENT",
+            }
         # The real owner's debug evaluation is rollback-only; export only four
         # allowlisted non-identifying fields, not original financial or actor data.
         candidate_file = owner / "workforce-compensation/rollback-only-post-close-candidate.json"
