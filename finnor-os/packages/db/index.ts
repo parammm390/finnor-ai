@@ -6,7 +6,7 @@
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "./schema";
-import { and, asc, desc, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
 import {connectWithExecutionDeadline,queryWithExecutionDeadline} from "./execution-deadline";
 import { CURRENT_MIGRATION_HEAD } from "./migration-head";
@@ -650,6 +650,8 @@ export interface ReceiveWorkParams {
   authorityContext?: Record<string, unknown>;
   employeeThreadContext?: { threadId: string; expectedRevision: number };
   requireExactIntake?: boolean;
+  /** Human objective redirect: do not append an input to another employee's Work. */
+  requireCurrentEmployeeOwner?: boolean;
 }
 
 export class ExactWorkIntakeConflict extends Error {
@@ -657,6 +659,125 @@ export class ExactWorkIntakeConflict extends Error {
     super("The original Work intake claim is bound to a different principal or exact input");
     this.name = "ExactWorkIntakeConflict";
   }
+}
+
+/** HTTP Work controls must not grant authority from possession of an ID or replay key. */
+export class WorkControlAuthorizationError extends Error {
+  constructor() {
+    super("Work control unavailable");
+    this.name = "WorkControlAuthorizationError";
+  }
+}
+
+/** The owner check runs in the caller's transaction, with the Work row locked.
+ * This is deliberately opt-in: historical service and system-created Work may
+ * not have a human owner, and those paths have separate authority contracts. */
+export async function assertCurrentEmployeeWorkOwnerTx(
+  db: Db, tenantId: string, workId: string, employeeId: string,
+): Promise<void> {
+  if (!isUuid(employeeId)) throw new WorkControlAuthorizationError();
+  await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.tenantId}=${tenantId} AND ${schema.works.id}=${workId} FOR NO KEY UPDATE`);
+  const [work] = await db.select({ currentOwnerId: schema.works.currentOwnerId, createdBy: schema.works.createdBy })
+    .from(schema.works).where(and(eq(schema.works.tenantId, tenantId), eq(schema.works.id, workId))).limit(1);
+  if (!work || (work.currentOwnerId ?? work.createdBy) !== employeeId) throw new WorkControlAuthorizationError();
+  const [active] = await db.select({ id: schema.users.id }).from(schema.users).where(and(
+    eq(schema.users.id, employeeId), eq(schema.users.tenantId, tenantId), eq(schema.users.status, "active"),
+  )).limit(1);
+  if (!active) throw new WorkControlAuthorizationError();
+}
+
+export async function assertCurrentEmployeeWorkOwner(tenantId: string, workId: string, employeeId: string): Promise<void> {
+  return withTenant(tenantId, db => assertCurrentEmployeeWorkOwnerTx(db, tenantId, workId, employeeId), employeeId);
+}
+
+/** Employee-visible Work is an explicit relationship, not any row in the tenant.
+ * Keep source inputs, frozen contexts, execution receipts and replay out of reach
+ * until a separate, governed share grant has been defined. Created-by,
+ * current-owner and assigned-to are existing canonical relationships; this
+ * query deliberately does not invent a new share or administrator exemption.
+ * Internal system Work without any of those human principals fails closed.
+ */
+export async function canReadEmployeeWork(tenantId: string, workId: string, employeeId: string): Promise<boolean> {
+  if (!isUuid(employeeId) || !isUuid(workId)) return false;
+  return withTenant(tenantId, async db => {
+    const [accessible] = await db.select({ id: schema.works.id }).from(schema.works)
+      .innerJoin(schema.users, and(
+        eq(schema.users.id, employeeId),
+        eq(schema.users.tenantId, schema.works.tenantId),
+        eq(schema.users.status, "active"),
+      )).where(and(
+        eq(schema.works.tenantId, tenantId),
+        eq(schema.works.id, workId),
+        or(
+          eq(schema.works.createdBy, employeeId),
+          eq(schema.works.currentOwnerId, employeeId),
+          eq(schema.works.assignedTo, employeeId),
+        ),
+      )).limit(1);
+    return Boolean(accessible);
+  }, employeeId);
+}
+
+/** Select the employee-visible subset of a bounded set of Work IDs in ONE
+ * tenant-scoped SQL read. This shares canReadEmployeeWork's canonical predicate
+ * and avoids one DB round trip for each Company Brain Work node. Unknown and
+ * inactive humans fail closed, as do Work rows without a human relationship.
+ */
+export async function readableEmployeeWorkIds(
+  tenantId: string, candidateWorkIds: string[], employeeId: string,
+): Promise<string[]> {
+  if (!isUuid(employeeId)) return [];
+  const ids = [...new Set(candidateWorkIds)].filter(isUuid).slice(0, 100);
+  if (!ids.length) return [];
+  return withTenant(tenantId, async db => {
+    const rows = await db.select({ id: schema.works.id }).from(schema.works)
+      .innerJoin(schema.users, and(
+        eq(schema.users.id, employeeId),
+        eq(schema.users.tenantId, schema.works.tenantId),
+        eq(schema.users.status, "active"),
+      )).where(and(
+        eq(schema.works.tenantId, tenantId),
+        inArray(schema.works.id, ids),
+        or(
+          eq(schema.works.createdBy, employeeId),
+          eq(schema.works.currentOwnerId, employeeId),
+          eq(schema.works.assignedTo, employeeId),
+        ),
+      ));
+    return rows.map(row => row.id);
+  }, employeeId);
+}
+
+/** A legacy instruction is private to its author; a Work-linked instruction
+ * follows existing Work participant relationships. Never treat knowledge of an
+ * instruction ID, session ID or tenant as an employee share grant.
+ */
+export async function canReadEmployeeInstruction(tenantId: string, instructionId: string, employeeId: string): Promise<boolean> {
+  if (!isUuid(employeeId) || !isUuid(instructionId)) return false;
+  return withTenant(tenantId, async db => {
+    const [visible] = await db.select({ id: schema.instructionSessions.id })
+      .from(schema.instructionSessions)
+      .innerJoin(schema.users, and(
+        eq(schema.users.tenantId, schema.instructionSessions.tenantId),
+        eq(schema.users.id, employeeId),
+        eq(schema.users.status, "active"),
+      ))
+      .leftJoin(schema.works, and(
+        eq(schema.works.tenantId, schema.instructionSessions.tenantId),
+        eq(schema.works.id, schema.instructionSessions.workId),
+      ))
+      .where(and(
+        eq(schema.instructionSessions.tenantId, tenantId),
+        eq(schema.instructionSessions.id, instructionId),
+        or(
+          and(isNull(schema.instructionSessions.workId), eq(schema.instructionSessions.userId, employeeId)),
+          eq(schema.works.createdBy, employeeId),
+          eq(schema.works.currentOwnerId, employeeId),
+          eq(schema.works.assignedTo, employeeId),
+        ),
+      )).limit(1);
+    return Boolean(visible);
+  }, employeeId);
 }
 
 export interface ReceivedWork {
@@ -805,6 +926,13 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
     ].sort();
     for (const claimKey of claimKeys) {
       await db.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${claimKey}, 0))`);
+    }
+    // Enforce before duplicate replay, attachments, input persistence and
+    // failed-Work status recovery. Keeping the lock through the transaction
+    // prevents a concurrent handoff from invalidating this intake decision.
+    if (params.requireCurrentEmployeeOwner) {
+      if (!params.workId) throw new WorkControlAuthorizationError();
+      await assertCurrentEmployeeWorkOwnerTx(db, params.tenantId, params.workId, params.userId ?? "");
     }
     let employeeThread: typeof schema.employeeConversationThreads.$inferSelect | undefined;
     if (params.employeeThreadContext) {
@@ -1362,6 +1490,14 @@ export async function recordWorkResponse(
 
 const WORK_RECOVERY_CLAIM_TTL_MS = 15 * 60_000;
 
+/** A recovery request must never reveal or mutate another employee's Work. */
+export class WorkRecoveryAuthorizationError extends Error {
+  constructor() {
+    super("Work recovery is not available to this employee");
+    this.name = "WorkRecoveryAuthorizationError";
+  }
+}
+
 /** Atomically leases failed Work for one recovery request and returns the exact input
  * that lease owns. Distinct HTTP idempotency keys therefore cannot both reach the
  * planner. A process that dies before orchestration advances the Work can be taken
@@ -1384,6 +1520,20 @@ export async function claimWorkRecovery(params: {
       eq(schema.works.tenantId, params.tenantId),
     )).limit(1);
     if (!work) throw new Error("Work not found");
+
+    // Recheck the current Work owner under the Work row lock. A prior HTTP read,
+    // possession of a Work ID, or possession of an idempotency key is not authority.
+    // Fail closed for unowned Work: service recovery must use a separate governed
+    // service-principal path, never an employee-facing retry endpoint.
+    if ((work.currentOwnerId ?? work.createdBy) !== params.requestedBy) {
+      throw new WorkRecoveryAuthorizationError();
+    }
+    const [requester] = await db.select({ id: schema.users.id }).from(schema.users).where(and(
+      eq(schema.users.tenantId, params.tenantId),
+      eq(schema.users.id, params.requestedBy),
+      eq(schema.users.status, "active"),
+    )).limit(1);
+    if (!requester) throw new WorkRecoveryAuthorizationError();
 
     const [existingAttempt] = await db.select({ attemptKey: schema.workPlannerAttempts.attemptKey, status: schema.workPlannerAttempts.status })
       .from(schema.workPlannerAttempts)
@@ -2437,6 +2587,69 @@ export async function listEmployeeConversationThreads(
     )).orderBy(desc(schema.employeeConversationThreads.lastActivityAt), desc(schema.employeeConversationThreads.id)).limit(boundedLimit);
     return rows.map(conversationThread);
   }, ownerEmployeeId);
+}
+
+/** Employee-scoped keyset pagination, ordered by (activity timestamp, ID).
+ * A cursor is only a position, never an authorization grant. All reads retain
+ * the canonical tenant + exact employee-owner predicates.
+ */
+export interface EmployeeConversationThreadsPage {
+  threads: EmployeeConversationThreadSummary[];
+  nextCursor: string | null;
+}
+
+function parseEmployeeThreadCursor(cursor: string | undefined): { at: string; id: string } | null {
+  if (cursor === undefined) return null;
+  if (cursor.length === 0 || cursor.length > 512 || !/^[A-Za-z0-9_-]+$/.test(cursor))
+    throw new Error("INVALID_CONVERSATION_PAGE_CURSOR");
+  try {
+    const encoded = Buffer.from(cursor, "base64url");
+    if (encoded.toString("base64url") !== cursor) throw new Error("invalid encoding");
+    const parsed: unknown = JSON.parse(encoded.toString("utf8"));
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid cursor");
+    const value = parsed as { v?: unknown; at?: unknown; id?: unknown };
+    if (value.v !== 1 || typeof value.at !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/.test(value.at) ||
+        !Number.isFinite(Date.parse(value.at)) || new Date(value.at).toISOString() !== value.at.slice(0, 23) + "Z" ||
+        typeof value.id !== "string" || !isUuid(value.id)) throw new Error("invalid cursor");
+    return { at: value.at, id: value.id };
+  } catch {
+    throw new Error("INVALID_CONVERSATION_PAGE_CURSOR");
+  }
+}
+
+export async function pageEmployeeConversationThreads(params: {
+  tenantId: string;
+  ownerEmployeeId: string;
+  limit?: number;
+  cursor?: string;
+}): Promise<EmployeeConversationThreadsPage> {
+  requireEmployeeOwner(params.ownerEmployeeId);
+  const limit = Math.max(1, Math.min(params.limit ?? 30, 100));
+  const cursor = parseEmployeeThreadCursor(params.cursor);
+  return withTenant(params.tenantId, async db => {
+    // Preserve PostgreSQL microseconds; JS Date would lose records during pagination.
+    const rows = await db.select({ thread: schema.employeeConversationThreads,
+      instant: sql<string>`to_char(${schema.employeeConversationThreads.lastActivityAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`,
+    }).from(schema.employeeConversationThreads).where(and(
+      eq(schema.employeeConversationThreads.tenantId, params.tenantId),
+      eq(schema.employeeConversationThreads.ownerEmployeeId, params.ownerEmployeeId),
+      ...(cursor ? [or(
+        lt(schema.employeeConversationThreads.lastActivityAt, sql`${cursor.at}::timestamptz`),
+        and(eq(schema.employeeConversationThreads.lastActivityAt, sql`${cursor.at}::timestamptz`),
+          lt(schema.employeeConversationThreads.id, cursor.id)),
+      )] : []),
+    )).orderBy(desc(schema.employeeConversationThreads.lastActivityAt),
+      desc(schema.employeeConversationThreads.id)).limit(limit + 1);
+    const page = rows.slice(0, limit);
+    const last = page.at(-1);
+    return {
+      threads: page.map(({ thread }) => conversationThread(thread)),
+      nextCursor: rows.length > limit && last
+        ? Buffer.from(JSON.stringify({ v: 1, at: last.instant, id: last.thread.id })).toString("base64url")
+        : null,
+    };
+  }, params.ownerEmployeeId);
 }
 
 export interface LoadedEmployeeConversationThread {

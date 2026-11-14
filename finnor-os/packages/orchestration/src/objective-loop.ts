@@ -17,6 +17,7 @@ import { PE_WORLD_ROOT_TYPES, type ClosingWorkContinuation, type DomainAction, t
 import { OperatingInteractionContextSchema } from "@finnor/policy-schema";
 import {
   MAX_HIGH_EGRESS_ROWS,
+  assertCurrentEmployeeWorkOwnerTx,
   activeWorkPlanRevision,
   assertInstitutionPlanContinuationTx,
   beginWorkPlannerAttempt as beginCanonicalWorkPlannerAttempt,
@@ -656,8 +657,13 @@ export async function ensureObjectiveIterationDelivery(tenantId: string, objecti
 }
 
 export async function startWorkObjective(objective: string, ctx: TenantContext, options: StartObjectiveOptions = {}): Promise<StartObjectiveResult> {
+  // Explicit continuation is a human Work control unless invoked by a
+  // service principal. Reuse the same row-locked canonical owner predicate
+  // for all three entry paths: pre-received, ordinary intake and loop claim.
+  const humanOwner = options.workId && (ctx.employeeId ?? (!ctx.userId.startsWith("system:") ? ctx.userId : null));
   const preReceived = options.workId && options.workInputId && options.instructionId
     ? await withTenant(ctx.tenantId, async (db) => {
+        if (humanOwner) await assertCurrentEmployeeWorkOwnerTx(db, ctx.tenantId, options.workId!, humanOwner);
         const [row] = await db.select({ input: workInputs, work: works }).from(workInputs)
           .innerJoin(works, and(eq(works.tenantId, ctx.tenantId), eq(works.id, workInputs.workId)))
           .where(and(
@@ -679,6 +685,7 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
       workId: options.workId,
       userId: ctx.employeeId ?? ctx.userId,
       idempotencyKey: options.idempotencyKey,
+      requireCurrentEmployeeOwner: Boolean(humanOwner),
       // The caller may still be holding an unverified interaction context.
       // Resolve it after the durable Work/Input claim before persisting it.
       activeContext: undefined,
@@ -728,6 +735,9 @@ export async function startWorkObjective(objective: string, ctx: TenantContext, 
   }
   const loopClaim = await withTenant(ctx.tenantId, async (db) => {
     await db.execute(sql`SELECT id FROM ${works} WHERE ${works.id}=${input.workId} AND ${works.tenantId}=${ctx.tenantId} FOR NO KEY UPDATE`);
+    // Handoff may have happened after intake. Do not create or resume an
+    // Objective on a Work now owned by a different employee.
+    if (humanOwner) await assertCurrentEmployeeWorkOwnerTx(db, ctx.tenantId, input.workId, humanOwner);
     const [currentWork] = await db.select().from(works).where(and(eq(works.tenantId, ctx.tenantId), eq(works.id, input.workId))).limit(1);
     const [latestInput] = await db.select({ id: workInputs.id }).from(workInputs)
       .where(and(eq(workInputs.tenantId, ctx.tenantId), eq(workInputs.workId, input.workId)))
@@ -3246,6 +3256,7 @@ export async function controlWorkObjective(params: {
   objective?: string;
   successCondition?: ObjectiveSuccessCondition;
   correlationId?: string;
+  requireCurrentEmployeeOwner?: boolean;
 }): Promise<typeof workObjectiveLoops.$inferSelect> {
   let cancellationAlreadyRecorded = false;
   const loop = await withTenant(params.tenantId, async (db) => {
@@ -3255,6 +3266,12 @@ export async function controlWorkObjective(params: {
     await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE ${workObjectiveLoops.workId}=${params.workId} AND ${workObjectiveLoops.tenantId}=${params.tenantId} FOR NO KEY UPDATE`);
     const [current] = await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.workId, params.workId))).limit(1);
     if (!current) throw new Error("Work has no objective loop");
+    // The authenticated HTTP control must still belong to the current employee
+    // at the actual Objective transaction, after any concurrent handoff.
+    // Service-originated controls continue through their existing authority path.
+    if (params.requireCurrentEmployeeOwner) {
+      await assertCurrentEmployeeWorkOwnerTx(db, params.tenantId, params.workId, params.actorId);
+    }
     const finishControl = async (updated: typeof workObjectiveLoops.$inferSelect) => {
       const workStatus = updated.state === "continue" ? "executing" : updated.state;
       // Commit the Objective and its parent Work together. A failed Work must be
