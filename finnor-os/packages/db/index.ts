@@ -2609,7 +2609,7 @@ function parseEmployeeThreadCursor(cursor: string | undefined): { at: string; id
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid cursor");
     const value = parsed as { v?: unknown; at?: unknown; id?: unknown };
     if (value.v !== 1 || typeof value.at !== "string" ||
-        !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$/.test(value.at) ||
+        !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/.test(value.at) ||
         !Number.isFinite(Date.parse(value.at)) || new Date(value.at).toISOString() !== value.at.slice(0, 23) + "Z" ||
         typeof value.id !== "string" || !isUuid(value.id)) throw new Error("invalid cursor");
     return { at: value.at, id: value.id };
@@ -2646,7 +2646,7 @@ export async function pageEmployeeConversationThreads(params: {
     return {
       threads: page.map(({ thread }) => conversationThread(thread)),
       nextCursor: rows.length > limit && last
-        ? Buffer.from(JSON.stringify({ v: 1, at: last.instant, id: last.id })).toString("base64url")
+        ? Buffer.from(JSON.stringify({ v: 1, at: last.instant, id: last.thread.id })).toString("base64url")
         : null,
     };
   }, params.ownerEmployeeId);
