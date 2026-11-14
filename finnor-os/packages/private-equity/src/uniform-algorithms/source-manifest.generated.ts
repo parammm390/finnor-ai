@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "e6183f95d0d1a419b223fccb486f664292490217cf77e24673903e54aff1b800"
+      "sha256": "6cb5fa0b35f601a90eca5ea24230c6006fca664928842f26dabbd352c7df0163"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -1436,7 +1436,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/orchestration/src/index.ts",
-      "sha256": "1829ab22f518d4513f963b9278d71c70f82098621feeadfc701f1fdc2bedec27"
+      "sha256": "ab3e533a98f6d39b09104649b47a4b0aa60e1101b4a8f3667820343894cb96fb"
     },
     {
       "path": "finnor-os/packages/orchestration/src/instruction-routing.ts",
@@ -1472,7 +1472,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/orchestration/src/objective-loop.ts",
-      "sha256": "d13604f6547bccbf7b8b420534b5c00e0175a24063ee0a4f5b68d7a1a167200e"
+      "sha256": "cb4dd1f319bf3afdfe0ef41a5e718fa6444ec1d228262a4b6d2d021cb0b05b9a"
     },
     {
       "path": "finnor-os/packages/orchestration/src/objective-success.ts",
@@ -4899,5 +4899,5 @@ export default {
       "sha256": "2bfba5c7712801bd9f88985f4c4f118d6aaaa668a5e8cbec68061a27afca60a3"
     }
   ],
-  "sourceDigest": "fd235623b2cc685df3bdd63e391924f0f3eab18b0234cb31d483df351963fb7e"
+  "sourceDigest": "5e8589fb4cda6478cab49df565e41d74a6a4128e56cfba0e6ca3b0418faca403"
 } as const;

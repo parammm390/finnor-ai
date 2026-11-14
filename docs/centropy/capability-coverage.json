@@ -1,7 +1,7 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-14T01:17:03.244Z",
-  "sourceBaseCommit": "deffca091beaeafbb8b699224d672f60aa42f76b",
+  "generatedAt": "2026-11-14T02:10:14.545Z",
+  "sourceBaseCommit": "9269e2a57225cda78edfa352df054059806b500e",
   "manifestSha256": "5c1806214b2b629db0a3228952a404f348c0e767c2523f065c7394696c55f685",
   "formsSha256": "1bc12487fb34759988ed4490715c21560653608fb313a409f0e6bcc551340e89",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -5094,7 +5094,8 @@
       "timeoutClass": "READ",
       "tests": [
         "e2e/centropy-artifact-controls.spec.ts",
-        "e2e/centropy-workflow-outcome.spec.ts"
+        "e2e/centropy-workflow-outcome.spec.ts",
+        "finnor-os/tests/integration/capability-discovery-http.test.ts"
       ],
       "source": "finnor-os/apps/api/app/api/outcome-packs/route.ts",
       "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
@@ -32755,6 +32756,7 @@
       ],
       "timeoutClass": "WRITE",
       "tests": [
+        "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/water-retirement-forward-head.test.ts"
       ],
@@ -33819,7 +33821,8 @@
       "timeoutClass": "WRITE",
       "tests": [
         "e2e/centropy-artifact-controls.spec.ts",
-        "e2e/centropy-workflow-outcome.spec.ts"
+        "e2e/centropy-workflow-outcome.spec.ts",
+        "finnor-os/tests/integration/capability-discovery-http.test.ts"
       ],
       "source": "finnor-os/apps/api/app/api/outcome-packs/route.ts",
       "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
@@ -43293,7 +43296,9 @@
       ],
       "invalidationTags": [],
       "timeoutClass": "RUNTIME",
-      "tests": [],
+      "tests": [
+        "finnor-os/tests/integration/capability-discovery-http.test.ts"
+      ],
       "source": "finnor-os/packages/orchestration/src/plugin-registry.ts",
       "disposition": "CANONICAL_AGENT_CAPABILITY",
       "actualRouteOrTool": "query:economic_programme_v1",
