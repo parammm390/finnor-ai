@@ -1,4 +1,4 @@
-import { claimWorkRecovery, WorkRecoveryAuthorizationError, WorkTransitionConflictError, workAggregate } from "@finnor/db";
+import { assertCurrentEmployeeWorkOwner, claimWorkRecovery, WorkControlAuthorizationError, WorkRecoveryAuthorizationError, WorkTransitionConflictError, workAggregate } from "@finnor/db";
 import { z } from "zod";
 import { errorResponse, requireContext } from "../../../../../lib/auth";
 import { getOrchestrator } from "../../../../../lib/orchestrator";
@@ -59,7 +59,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         tenantId: ctx.tenantId,
         workId: id,
         command: "continue",
-        actorId: ctx.userId,
+        actorId,
+        // The claim's Work lock is released before Objective control starts.
+        // A concurrent handoff must be rechecked in that Objective transaction.
+        requireCurrentEmployeeOwner: true,
         correlationId: ctx.correlationId,
       });
       return Response.json({ workId: id, instructionId: input.instructionId, recovery: true, objective }, { status: 202 });
@@ -80,8 +83,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       recovery: true,
     }, { status: 201 });
   } catch (err) {
-    if (err instanceof WorkRecoveryAuthorizationError) return Response.json({ error: "Work not found" }, { status: 404 });
+    if (err instanceof WorkRecoveryAuthorizationError || err instanceof WorkControlAuthorizationError)
+      return Response.json({ error: "Work not found" }, { status: 404 });
     if (err instanceof Error && err.name === "PlannerAttemptAlreadyClaimedError" && requestContext && workId) {
+      try {
+        await assertCurrentEmployeeWorkOwner(requestContext.tenantId, workId, requestContext.employeeId ?? requestContext.userId);
+      } catch (authError) {
+        if (authError instanceof WorkControlAuthorizationError) return Response.json({ error: "Work not found" }, { status: 404 });
+        throw authError;
+      }
       return Response.json({ work: await workAggregate(requestContext.tenantId, workId), duplicate: true }, { status: 202 });
     }
     if (err instanceof WorkTransitionConflictError) {
@@ -91,6 +101,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       if (requestContext && workId && attemptKey) {
         const aggregate = await workAggregate(requestContext.tenantId, workId);
         if (objectiveRecoveryKey(aggregate) === attemptKey) {
+          try {
+            await assertCurrentEmployeeWorkOwner(requestContext.tenantId, workId, requestContext.employeeId ?? requestContext.userId);
+          } catch (authError) {
+            if (authError instanceof WorkControlAuthorizationError) return Response.json({ error: "Work not found" }, { status: 404 });
+            throw authError;
+          }
           return Response.json({ work: aggregate, duplicate: true, activeAttemptKey: attemptKey }, { status: 200 });
         }
       }
