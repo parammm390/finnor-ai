@@ -57,6 +57,9 @@ async function runCase(id, rows, title, body) {
   }
   if (c.outcome === "PASS" && c.checks.some(item => !item.pass)) c.outcome = "FAIL";
   if (c.outcome === "PASS" && c.checks.length === 0) { c.outcome = "FAIL"; c.error = "NO_CHECKS_EVALUATED"; }
+  if (id === "M-01" && c.outcome === "FAIL" && page) {
+    c.observations.renderBoundary = await renderBoundaryFacts().catch(() => ({ diagnosticUnavailable: true }));
+  }
   c.wallMs = Date.now() - t0;
   c.failedChecks = c.checks.filter(item => !item.pass).map(item => item.id);
   cases.push(c);
@@ -165,12 +168,60 @@ const ownerCreds = { email: env.TEST_OWNER_EMAIL, password: env.TEST_OWNER_PASSW
 /* ---------------------------------------------------------------- browser */
 const watch = new RequestWatch();
 let browser = null, context = null, page = null;
+const boundaryInputs = { thread: null, work: null, projection: null };
+const boundaryReads = [];
+const boundaryReadFailures = [];
+async function renderBoundaryFacts() {
+  await Promise.race([Promise.allSettled(boundaryReads), sleep(5000)]);
+  const dom = await page.evaluate(() => {
+    const canvas = document.querySelector('main[aria-label="Investigation Canvas"]');
+    return { canvasPresent: Boolean(canvas), documentPresent: Boolean(canvas?.querySelector('.ct-canvas-document')),
+      invalidDocument: Boolean(canvas?.querySelector('.ct-canvas__invalid')),
+      emptyDocument: Boolean(canvas?.querySelector('.ct-canvas__empty-document')),
+      sourceErrors: canvas?.querySelectorAll('.ct-canvas__source-error').length ?? 0,
+      workInstruments: canvas?.querySelectorAll('section[data-type="work_execution"]').length ?? 0,
+      unsupportedInstruments: canvas?.querySelectorAll('.ct-canvas-block:not([data-type])').length ?? 0 };
+  });
+  let composition = { attempted: false };
+  if (boundaryInputs.thread && boundaryInputs.work) {
+    try {
+      const { composeCanvasDocument } = await import('../../../../src/components/centropy/canvas/canvas-compose.ts');
+      const document = composeCanvasDocument(boundaryInputs);
+      composition = { attempted: true, valid: true, workBlockPresent: document.blocks.some(block => block.type === 'work_execution') };
+    } catch (error) {
+      composition = { attempted: true, valid: false, errorType: error?.name ?? 'Error',
+        issues: Array.isArray(error?.issues) ? error.issues.slice(0, 20).map(issue => ({
+          code: issue.code, path: issue.path.map(part => String(part)).join('.') })) : [] };
+    }
+  }
+  const routeKind = path => path === `/api/centropy/works/${parentA.workId}` ? 'WORK'
+    : path === `/api/centropy/threads/${threadA.id}` ? 'THREAD'
+      : path === '/api/centropy/company-brain/projection' ? 'COMPANY_PROJECTION' : null;
+  return { ...dom, threadResponseObserved: Boolean(boundaryInputs.thread), workResponseObserved: Boolean(boundaryInputs.work),
+    projectionResponseObserved: Boolean(boundaryInputs.projection), composition,
+    responseReadFailures: boundaryReadFailures.slice(0, 10),
+    sourceRequests: watch.records.flatMap(row => routeKind(row.path) ? [{ route: routeKind(row.path),
+      status: Number.isInteger(row.status) ? row.status : null, failed: Boolean(row.failure) }] : []).slice(-30) };
+}
 async function startBrowser() {
   const { chromium } = loadPlaywright(root);
   browser = await chromium.launch({ headless: true, env: { ...process.env, TMPDIR: browserTmp } });
   context = await newMountedContext(browser);
   page = await context.newPage();
   watch.attach(page, "main", authOrigin);
+  page.on('response', response => {
+    const path = new URL(response.url()).pathname;
+    const kind = path === `/api/centropy/works/${parentA.workId}` ? 'work'
+      : path === `/api/centropy/threads/${threadA.id}` ? 'thread'
+        : path === '/api/centropy/company-brain/projection' ? 'projection' : null;
+    if (!kind || response.status() !== 200 || boundaryReads.length >= 100) return;
+    boundaryReads.push((async () => {
+      const bytes = await response.body();
+      if (bytes.length > 2 * 1024 * 1024) { boundaryReadFailures.push('RESPONSE_BYTE_BOUND'); return; }
+      const body = JSON.parse(bytes.toString('utf8'));
+      boundaryInputs[kind] = kind === 'projection' ? body : body[kind] ?? null;
+    })().catch(() => { boundaryReadFailures.push('RESPONSE_UNREADABLE'); }));
+  });
 }
 
 const normalise = text => (text ?? "").replace(/Last successful scope read: \S+/g, "Last successful scope read: T");

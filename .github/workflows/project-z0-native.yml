@@ -200,6 +200,23 @@ jobs:
           const reloadFields = new Set(['work', 'session', 'status', 'application', 'institution', 'budget', 'charges', 'costs'])
           const budgetChecks = ['sqlAgreesBefore', 'sqlAgreesAfter', 'shownMatchesBefore', 'shownMatchesAfter', 'ownerBudgetUnchanged']
           const httpStatus = value => Number.isInteger(value) && value >= 100 && value <= 599 ? value : null
+          const renderBoundary = value => value && typeof value === 'object' ? {
+            ...Object.fromEntries(['diagnosticUnavailable', 'canvasPresent', 'documentPresent', 'invalidDocument',
+              'emptyDocument', 'threadResponseObserved', 'workResponseObserved', 'projectionResponseObserved']
+              .map(key => [key, value[key] === true])),
+            ...Object.fromEntries(['sourceErrors', 'workInstruments', 'unsupportedInstruments']
+              .map(key => [key, Number.isSafeInteger(value[key]) && value[key] >= 0 ? value[key] : null])),
+            composition: { attempted: value.composition?.attempted === true, valid: value.composition?.valid === true,
+              workBlockPresent: value.composition?.workBlockPresent === true,
+              errorType: ['ZodError', 'TypeError', 'ReferenceError', 'Error'].includes(value.composition?.errorType)
+                ? value.composition.errorType : null,
+              issues: (value.composition?.issues ?? []).slice(0, 20).map(issue => ({
+                code: /^[a-z_]{3,60}$/.test(issue.code ?? '') ? issue.code : null,
+                path: /^[a-zA-Z0-9_.]{1,180}$/.test(issue.path ?? '') ? issue.path : null })) },
+            responseReadFailures: (value.responseReadFailures ?? []).filter(code => ['RESPONSE_BYTE_BOUND', 'RESPONSE_UNREADABLE'].includes(code)).slice(0, 10),
+            sourceRequests: (value.sourceRequests ?? []).filter(row => ['WORK', 'THREAD', 'COMPANY_PROJECTION'].includes(row.route))
+              .slice(-30).map(row => ({ route: row.route, status: httpStatus(row.status), failed: row.failed === true })),
+          } : null
           for (const { id, outcome, error, reason, checks, observations, wallMs } of mountedCases) {
             const browserOperation = typeof error === 'string'
               ? error.match(/^(browserType\.launch|browser\.newContext|page\.(?:goto|reload|waitForResponse|evaluate)|locator\.(?:fill|click|evaluate|waitFor)):/)?.[1] ?? null : null
@@ -214,6 +231,7 @@ jobs:
             const rootCarriedBy = ['THREAD_PERSISTED_ROOT', 'ROOT_URL_PARAMETER'].includes(observations?.rootCarriedBy)
               ? observations.rootCarriedBy : null
             results.push({ id, outcome, predicate: predicateFrom(error) ?? predicateFrom(reason),
+              renderBoundary: renderBoundary(observations?.renderBoundary),
               browserOperation, browserProbeCause: browserProbeCauses.has(probeCause) ? probeCause : null,
               networkError, setupPredicate, setupCause,
               wallMs: Number.isSafeInteger(wallMs) && wallMs >= 0 ? wallMs : null,
