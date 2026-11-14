@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "10d65a888b7f9898f9cfb58609049de1556bdd9a84870b3279edf639c0ed35bd"
+      "sha256": "bc01b578c2521c8a65da02d46758f43df36b00eed71385554bb8f7b08425247f"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -4732,7 +4732,7 @@ export default {
     },
     {
       "path": "src/components/centropy/thread/use-investigation.ts",
-      "sha256": "c70a4abe77ec13bd82d843bb6b7f38d654f67ce491d9842222aed1055e2a764e"
+      "sha256": "dbf5d00ea406a791e11d40292089a48079db647fb74c23d6a2c04b52548d9a14"
     },
     {
       "path": "src/components/centropy/world/ConfidentialComputationPanel.tsx",
@@ -4899,5 +4899,5 @@ export default {
       "sha256": "2bfba5c7712801bd9f88985f4c4f118d6aaaa668a5e8cbec68061a27afca60a3"
     }
   ],
-  "sourceDigest": "6267f39986f526961e04c967be055f3a1a81c01196d2c18aa59b9fd0d6221941"
+  "sourceDigest": "4f50785cbfabe31b29a69f24980816cde3f2ae8651d131d8430120bb235979e8"
 } as const;
