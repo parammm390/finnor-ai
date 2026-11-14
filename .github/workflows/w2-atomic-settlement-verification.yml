@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - codex/w2-atomic-closing-settlement-20261114
+      - codex/w2-cut-section-diagnostics-20261114
 permissions:
   contents: read
 jobs:
