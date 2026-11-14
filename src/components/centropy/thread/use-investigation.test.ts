@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { olderPageFailureState, type InvestigationState } from "./use-investigation"
+import { olderPageFailureState, refreshFailureState, type InvestigationState } from "./use-investigation"
 
 const THREAD = "10000000-0000-4000-8000-000000000001"
 const OTHER_THREAD = "10000000-0000-4000-8000-000000000004"
@@ -80,5 +80,37 @@ describe("Investigation earlier-history recovery", () => {
     const original = state()
     expect(olderPageFailureState(original, OTHER_THREAD, SCOPE, new Error("late error"))).toBe(original)
     expect(olderPageFailureState(original, THREAD, "different-session", new Error("late error"))).toBe(original)
+  })
+})
+
+describe("Investigation latest-page refresh recovery", () => {
+  it("preserves the original Work and loaded messages after a network interruption", () => {
+    const previous = { ...state(), olderLoading: false }
+    const after = refreshFailureState(previous, THREAD, SCOPE, new Error("Network interrupted"))
+    expect(after.loaded).toBe(previous.loaded)
+    expect(after.loaded?.thread.activeWorkId).toBe(previous.loaded?.thread.activeWorkId)
+    expect(after.loaded?.messages[0]?.originalText).toBe("Continue my original Work")
+    expect(after).toMatchObject({ status: "ready", error: "Network interrupted", hasOlder: true, olderLoading: false })
+  })
+
+  it.each([429, 500, 503])("does not erase loaded Work on retryable HTTP %s", status => {
+    const previous = { ...state(), olderLoading: false }
+    const after = refreshFailureState(previous, THREAD, SCOPE, { status })
+    expect(after.loaded).toBe(previous.loaded)
+    expect(after).toMatchObject({ status: "ready", error: "Investigation refresh unavailable" })
+  })
+
+  it.each([401, 403, 404])("purges cached private Work and messages after HTTP %s", status => {
+    const after = refreshFailureState(state(), THREAD, SCOPE, { status })
+    expect(after.loaded).toBeNull()
+    expect(after.hasOlder).toBe(false)
+    expect(after).toMatchObject({ status: "error", error: "Investigation access is no longer available" })
+  })
+
+  it("does not leak another thread's messages into a newly selected Investigation", () => {
+    const after = refreshFailureState(state(), OTHER_THREAD, "other-employee:session", new Error("Unavailable"))
+    expect(after.loaded).toBeNull()
+    expect(after.forThreadId).toBe(OTHER_THREAD)
+    expect(after).toMatchObject({ status: "error", hasOlder: false })
   })
 })
