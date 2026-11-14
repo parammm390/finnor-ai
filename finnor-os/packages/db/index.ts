@@ -2598,7 +2598,7 @@ export interface EmployeeConversationThreadsPage {
   nextCursor: string | null;
 }
 
-function parseEmployeeThreadCursor(cursor: string | undefined): { at: Date; id: string } | null {
+function parseEmployeeThreadCursor(cursor: string | undefined): { at: string; id: string } | null {
   if (cursor === undefined) return null;
   if (cursor.length === 0 || cursor.length > 512 || !/^[A-Za-z0-9_-]+$/.test(cursor))
     throw new Error("INVALID_CONVERSATION_PAGE_CURSOR");
@@ -2609,10 +2609,10 @@ function parseEmployeeThreadCursor(cursor: string | undefined): { at: Date; id: 
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid cursor");
     const value = parsed as { v?: unknown; at?: unknown; id?: unknown };
     if (value.v !== 1 || typeof value.at !== "string" ||
-        !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$/.test(value.at) ||
-        !Number.isFinite(Date.parse(value.at)) || new Date(value.at).toISOString() !== value.at ||
+        !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{6}Z$/.test(value.at) ||
+        !Number.isFinite(Date.parse(value.at)) || new Date(value.at).toISOString() !== value.at.slice(0, 23) + "Z" ||
         typeof value.id !== "string" || !isUuid(value.id)) throw new Error("invalid cursor");
-    return { at: new Date(value.at), id: value.id };
+    return { at: value.at, id: value.id };
   } catch {
     throw new Error("INVALID_CONVERSATION_PAGE_CURSOR");
   }
@@ -2628,12 +2628,15 @@ export async function pageEmployeeConversationThreads(params: {
   const limit = Math.max(1, Math.min(params.limit ?? 30, 100));
   const cursor = parseEmployeeThreadCursor(params.cursor);
   return withTenant(params.tenantId, async db => {
-    const rows = await db.select().from(schema.employeeConversationThreads).where(and(
+    // Preserve PostgreSQL microseconds; JS Date would lose records during pagination.
+    const rows = await db.select({ thread: schema.employeeConversationThreads,
+      instant: sql<string>`to_char(${schema.employeeConversationThreads.lastActivityAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`,
+    }).from(schema.employeeConversationThreads).where(and(
       eq(schema.employeeConversationThreads.tenantId, params.tenantId),
       eq(schema.employeeConversationThreads.ownerEmployeeId, params.ownerEmployeeId),
       ...(cursor ? [or(
-        lt(schema.employeeConversationThreads.lastActivityAt, cursor.at),
-        and(eq(schema.employeeConversationThreads.lastActivityAt, cursor.at),
+        lt(schema.employeeConversationThreads.lastActivityAt, sql`${cursor.at}::timestamptz`),
+        and(eq(schema.employeeConversationThreads.lastActivityAt, sql`${cursor.at}::timestamptz`),
           lt(schema.employeeConversationThreads.id, cursor.id)),
       )] : []),
     )).orderBy(desc(schema.employeeConversationThreads.lastActivityAt),
@@ -2641,9 +2644,9 @@ export async function pageEmployeeConversationThreads(params: {
     const page = rows.slice(0, limit);
     const last = page.at(-1);
     return {
-      threads: page.map(conversationThread),
+      threads: page.map(({ thread }) => conversationThread(thread)),
       nextCursor: rows.length > limit && last
-        ? Buffer.from(JSON.stringify({ v: 1, at: last.lastActivityAt.toISOString(), id: last.id })).toString("base64url")
+        ? Buffer.from(JSON.stringify({ v: 1, at: last.instant, id: last.id })).toString("base64url")
         : null,
     };
   }, params.ownerEmployeeId);
