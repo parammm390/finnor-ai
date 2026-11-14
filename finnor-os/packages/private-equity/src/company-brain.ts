@@ -886,8 +886,12 @@ export function projectCompanyBrain(
   }
 
   const workRootRefs = new Map<string, PeWorldRootRef[]>();
+  const visibleWorkIds = new Set(bundle.works.map(aggregate => idOf(record(aggregate.work))).filter((id): id is string => Boolean(id)));
   for (const link of world.workLinks) {
-    const workId = text(link.workId); if (workId) workRootRefs.set(workId, rootRefs);
+    const workId = text(link.workId);
+    // Link existence must not reveal a private Work ID through an otherwise
+    // readable Deal node's workRefs or the workforce/attention graph.
+    if (workId && visibleWorkIds.has(workId)) workRootRefs.set(workId, rootRefs);
   }
   for (const aggregate of bundle.works) {
     const work = record(aggregate.work); const workId = idOf(work); if (!workId) continue;
@@ -943,7 +947,7 @@ export function projectCompanyBrain(
   }
   for (const link of world.workLinks) {
     const id = idOf(link); const entityType = text(link.entityType); const entityId = text(link.entityId); const workId = text(link.workId);
-    if (!id || !entityType || !entityId || !workId || !PE_TYPE_SET.has(entityType)) continue;
+    if (!id || !entityType || !entityId || !workId || !visibleWorkIds.has(workId) || !PE_TYPE_SET.has(entityType)) continue;
     const entityRef = peRef(entityType as PeEntityType, entityId); const workRef = coreRef("work", workId); const linkSource = sourceRef("@finnor/db", "work_entity_links", id);
     addEdge("work_entity_link", entityRef, workRef, linkSource, iso(link.createdAt, asOf));
     const entityNode = findNode(entityRef);
@@ -957,7 +961,7 @@ export function projectCompanyBrain(
   }
 
   if (bundle.workforce) {
-    const linkedWorkIds = new Set(workRootRefs.keys());
+    const linkedWorkIds = visibleWorkIds;
     const relevantAssignments = bundle.workforce.assignments.filter((assignment) => linkedWorkIds.has(assignment.workId));
     const relevantAgentIds = new Set(relevantAssignments.map((assignment) => assignment.agentProfileId));
     for (const worker of bundle.workforce.workers.filter((candidate) => relevantAgentIds.has(candidate.id))) {
@@ -990,6 +994,9 @@ export function projectCompanyBrain(
       Boolean(findNode(worldRootObjectRef(ref as PeWorldRootRef)))
     ));
     const linkedWork = workRootRefs.has(item.workId);
+    // A tenant-visible Deal attention item is not a disclosure grant for a
+    // private Work referenced by that item.
+    if (item.workId && !visibleWorkIds.has(item.workId)) continue;
     if (!exactRoot && !linkedWork) continue;
     const persistedSource = attentionPersistedSource(item);
     if (!persistedSource) continue;
