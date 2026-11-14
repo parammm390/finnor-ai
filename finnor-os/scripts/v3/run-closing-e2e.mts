@@ -496,7 +496,7 @@ async function fixture(label: string, fault?: string) {
       PRIMARY KEY(tenant_id,programme_id,section))`);
     await admin!.query(`CREATE FUNCTION finnor_os.w2_test_capture_close_cut()
       RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
-      SET search_path=pg_catalog,finnor_os AS $
+      SET search_path=pg_catalog,finnor_os AS $$
       DECLARE programme uuid;
       BEGIN
         SELECT q.id INTO programme FROM finnor_os.pe_closing_programmes q
@@ -510,7 +510,7 @@ async function fixture(label: string, fault?: string) {
           ON CONFLICT(tenant_id,programme_id,section) DO NOTHING;
         END IF;
         RETURN NEW;
-      END $`);
+      END $$`);
     await admin!.query(`CREATE TRIGGER aa_w2_cut_before_certificate
       AFTER UPDATE OF status ON finnor_os.pe_deals
       FOR EACH ROW WHEN (NEW.status='closed' AND OLD.status IS DISTINCT FROM NEW.status)
