@@ -6,7 +6,7 @@
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "./schema";
-import { and, asc, desc, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
 import {connectWithExecutionDeadline,queryWithExecutionDeadline} from "./execution-deadline";
 import { CURRENT_MIGRATION_HEAD } from "./migration-head";
@@ -2587,6 +2587,66 @@ export async function listEmployeeConversationThreads(
     )).orderBy(desc(schema.employeeConversationThreads.lastActivityAt), desc(schema.employeeConversationThreads.id)).limit(boundedLimit);
     return rows.map(conversationThread);
   }, ownerEmployeeId);
+}
+
+/** Employee-scoped keyset pagination, ordered by (activity timestamp, ID).
+ * A cursor is only a position, never an authorization grant. All reads retain
+ * the canonical tenant + exact employee-owner predicates.
+ */
+export interface EmployeeConversationThreadsPage {
+  threads: EmployeeConversationThreadSummary[];
+  nextCursor: string | null;
+}
+
+function parseEmployeeThreadCursor(cursor: string | undefined): { at: Date; id: string } | null {
+  if (cursor === undefined) return null;
+  if (cursor.length === 0 || cursor.length > 512 || !/^[A-Za-z0-9_-]+$/.test(cursor))
+    throw new Error("INVALID_CONVERSATION_PAGE_CURSOR");
+  try {
+    const encoded = Buffer.from(cursor, "base64url");
+    if (encoded.toString("base64url") !== cursor) throw new Error("invalid encoding");
+    const parsed: unknown = JSON.parse(encoded.toString("utf8"));
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid cursor");
+    const value = parsed as { v?: unknown; at?: unknown; id?: unknown };
+    if (value.v !== 1 || typeof value.at !== "string" ||
+        !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$/.test(value.at) ||
+        !Number.isFinite(Date.parse(value.at)) || new Date(value.at).toISOString() !== value.at ||
+        typeof value.id !== "string" || !isUuid(value.id)) throw new Error("invalid cursor");
+    return { at: new Date(value.at), id: value.id };
+  } catch {
+    throw new Error("INVALID_CONVERSATION_PAGE_CURSOR");
+  }
+}
+
+export async function pageEmployeeConversationThreads(params: {
+  tenantId: string;
+  ownerEmployeeId: string;
+  limit?: number;
+  cursor?: string;
+}): Promise<EmployeeConversationThreadsPage> {
+  requireEmployeeOwner(params.ownerEmployeeId);
+  const limit = Math.max(1, Math.min(params.limit ?? 30, 100));
+  const cursor = parseEmployeeThreadCursor(params.cursor);
+  return withTenant(params.tenantId, async db => {
+    const rows = await db.select().from(schema.employeeConversationThreads).where(and(
+      eq(schema.employeeConversationThreads.tenantId, params.tenantId),
+      eq(schema.employeeConversationThreads.ownerEmployeeId, params.ownerEmployeeId),
+      ...(cursor ? [or(
+        lt(schema.employeeConversationThreads.lastActivityAt, cursor.at),
+        and(eq(schema.employeeConversationThreads.lastActivityAt, cursor.at),
+          lt(schema.employeeConversationThreads.id, cursor.id)),
+      )] : []),
+    )).orderBy(desc(schema.employeeConversationThreads.lastActivityAt),
+      desc(schema.employeeConversationThreads.id)).limit(limit + 1);
+    const page = rows.slice(0, limit);
+    const last = page.at(-1);
+    return {
+      threads: page.map(conversationThread),
+      nextCursor: rows.length > limit && last
+        ? Buffer.from(JSON.stringify({ v: 1, at: last.lastActivityAt.toISOString(), id: last.id })).toString("base64url")
+        : null,
+    };
+  }, params.ownerEmployeeId);
 }
 
 export interface LoadedEmployeeConversationThread {
