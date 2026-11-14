@@ -20,7 +20,7 @@ import { useCanvasSources } from "../canvas/use-canvas-sources"
 import { WorldExplorer } from "../world/WorldExplorer"
 import { LiveInstitutionalControl } from "../controls/LiveInstitutionalControl"
 import { canonicalWorldFocus, operatingSelection } from "../world/world-context"
-import { createInvestigation, listInvestigations } from "../thread/thread-api"
+import { createInvestigation, listInvestigationPage } from "../thread/thread-api"
 import type { ConversationThreadSummary } from "../thread/thread-contract"
 import { useInvestigation } from "../thread/use-investigation"
 import { Composer } from "../thread/Composer"
@@ -104,6 +104,12 @@ function CentropyWorkspaceContent() {
   const [recent, setRecent] = useState<ConversationThreadSummary[]>([])
   const [recentError, setRecentError] = useState<string | null>(null)
   const [recentLoading, setRecentLoading] = useState(true)
+  const [recentNextCursor, setRecentNextCursor] = useState<string | null>(null)
+  const [recentOlderLoading, setRecentOlderLoading] = useState(false)
+  const [recentOlderError, setRecentOlderError] = useState<string | null>(null)
+  const [recentOwnerId, setRecentOwnerId] = useState<string | null>(null)
+  // Never display one employee's cached thread titles under another session.
+  const recentVisible = recentOwnerId && recentOwnerId === auth.session?.user.id ? recent : []
   const [answerWorkDetails, setAnswerWorkDetails] = useState<string | null>(null)
   const recentGeneration = useRef(0)
   const [busy, setBusy] = useState(false)
@@ -168,15 +174,50 @@ function CentropyWorkspaceContent() {
     if (!mutationIsCurrent(key)) return
     const generation = ++recentGeneration.current
     setRecent([])
+    setRecentOwnerId(null)
+    setRecentNextCursor(null)
+    setRecentOlderError(null)
+    setRecentOlderLoading(false)
+    setRecentError(null)
     setRecentLoading(true)
-    if (!ready) return
+    if (!ready || !auth.session) return
+    const ownerId = auth.session.user.id
     try {
-      const next = await listInvestigations()
-      if (mutationIsCurrent(key) && recentGeneration.current === generation) { setRecent(next); setRecentError(null); setRecentLoading(false) }
+      const next = await listInvestigationPage()
+      if (mutationIsCurrent(key) && recentGeneration.current === generation) {
+        setRecent(next.threads); setRecentNextCursor(next.nextCursor)
+        setRecentOwnerId(ownerId); setRecentError(null); setRecentLoading(false)
+      }
     } catch (cause) {
-      if (mutationIsCurrent(key) && recentGeneration.current === generation) { setRecent([]); setRecentError(cause instanceof Error ? cause.message : "Investigations are unavailable"); setRecentLoading(false) }
+      if (mutationIsCurrent(key) && recentGeneration.current === generation) {
+        setRecent([]); setRecentNextCursor(null); setRecentError(cause instanceof Error ? cause.message : "Investigations are unavailable"); setRecentLoading(false)
+      }
     }
-  }, [ready, mutationScopeKey, mutationIsCurrent])
+  }, [ready, auth.session?.user.id, mutationScopeKey, mutationIsCurrent])
+
+  const loadOlderRecent = useCallback(async () => {
+    if (!ready || !auth.session || recentLoading || recentOlderLoading || !recentNextCursor ||
+        recentOwnerId !== auth.session.user.id) return
+    const ownerId = auth.session.user.id
+    const generation = recentGeneration.current
+    const key = mutationScopeKey
+    setRecentOlderLoading(true)
+    setRecentOlderError(null)
+    try {
+      const page = await listInvestigationPage(30, recentNextCursor)
+      if (!mutationIsCurrent(key) || recentGeneration.current !== generation || ownerId !== auth.session?.user.id) return
+      setRecent(previous => {
+        const ids = new Set(previous.map(thread => thread.id))
+        return [...previous, ...page.threads.filter(thread => !ids.has(thread.id))]
+      })
+      setRecentNextCursor(page.nextCursor)
+    } catch (cause) {
+      if (mutationIsCurrent(key) && recentGeneration.current === generation)
+        setRecentOlderError(cause instanceof Error ? cause.message : "Older Investigations unavailable")
+    } finally {
+      if (mutationIsCurrent(key) && recentGeneration.current === generation) setRecentOlderLoading(false)
+    }
+  }, [ready, auth.session?.user.id, recentLoading, recentOlderLoading, recentNextCursor, recentOwnerId, mutationScopeKey, mutationIsCurrent])
 
   useEffect(() => { void refreshRecent() }, [refreshRecent])
   useEffect(() => () => traceRuntime.current?.stop(), [])
@@ -543,12 +584,12 @@ function CentropyWorkspaceContent() {
         {worldMode ? <WorldExplorer key={`${auth.session.user.id}:${auth.session.access_token}`} root={canvasRoot} projection={canvasSources.projection.data} projectionStatus={canvasSources.projection.status} projectionError={canvasSources.projection.error} initialObject={routeSelectedObject} workId={activeWorkId} onSelectRoot={selectWorldRoot} onSelectObject={selectWorldObject} onAsk={askAboutWorldNode} onRefresh={() => setCanvasRefresh((value) => value + 1)} />
           : threadId ? replayWorkId ? <CausalReplayPanel workId={replayWorkId} onClose={() => selectReplayWorkId(null)} /> : canvasDocument ? <CanvasDocument key={threadId} onSelectProgramWork={(workId) => {invalidateSelection();setResponseWork({threadId,workId});setRefreshToken(value=>value+1);setCanvasRefresh(value=>value+1)}} document={canvasDocument} root={canvasRoot} sourceErrors={canvasErrors} refreshing={canvasLoading} onRefresh={() => setCanvasRefresh((value) => value + 1)} onRefreshUnderwriting={() => setUnderwritingRefresh((value) => value + 1)} work={canvasSources.work.status === "ready" ? canvasSources.work.data : null} underwriting={canvasSources.underwriting.data} underwritingReady={canvasSources.underwriting.status === "ready"} ic={canvasSources.ic.data} icReady={canvasSources.ic.status === "ready"} onSelectIcCase={selectIcCase} onOpenReplay={selectReplayWorkId} onInspectEntity={(id) => { const node = canvasSources.projection.data?.nodes.find((item) => `${item.ref.type}:${item.ref.id}` === id); if (node && canvasRoot) { invalidateSelection(); setFocusedObject(node.ref); router.push(worldHref(canvasRoot, node.ref)) } }} /> : investigation.status === "loading" || canvasLoading ? <p className="ct-canvas__loading" role="status">Assembling Canvas from persisted records…</p> : <div className="ct-canvas__invalid" role="alert"><h2>Canvas unavailable</h2><p>The typed document could not be composed from the current source records.</p><button type="button" onClick={() => setCanvasRefresh((value) => value + 1)}>Retry from sources</button></div>
           : draftArtifactInUrl ? <Suspense fallback={<p role="status">Reading the exact artifact draft…</p>}><StandaloneArtifactCanvas key={`${searchParams.get("artifactDocumentId")}:${searchParams.get("artifactVersionId")}`} documentId={searchParams.get("artifactDocumentId")!} initialVersionId={searchParams.get("artifactVersionId")!} onClose={() => { invalidateSelection(); const query = new URLSearchParams(routeQuery); for (const key of ["artifactMode", "artifactDocumentId", "artifactVersionId"]) query.delete(key); router.replace(`${pathname}${query.size ? `?${query}` : ""}`, { scroll: false }) }} onVersionChange={(id) => { if (!UUID.test(id)) return; invalidateSelection(); const query = new URLSearchParams(routeQuery); query.set("artifactVersionId", id); router.replace(`${pathname}?${query}`, { scroll: false }) }} /></Suspense>
-          : <HomeCanvas recent={recent} recentError={recentError} recentLoading={recentLoading} onOpenInvestigation={openInvestigation} />}
+          : <HomeCanvas recent={recentVisible} recentError={recentError} recentLoading={recentLoading} onOpenInvestigation={openInvestigation} />}
         </>}
       </main>
     </div>
     {settingsOpen ? <Suspense fallback={<p role="status">Opening Settings…</p>}><SettingsDialog onClose={() => setSettingsOpen(false)} onChanged={() => { setCanvasRefresh((value) => value + 1); setRefreshToken((value) => value + 1) }} /></Suspense> : null}
 
-    <dialog className="ct-investigations" ref={drawer} aria-label="Recent Investigations"><header><div><span className="ct-eyebrow">CONTINUE WORK</span><h2>Investigations</h2></div><button type="button" onClick={() => drawer.current?.close()} aria-label="Close Investigations">×</button></header><button type="button" className="ct-investigations__new" onClick={() => { invalidateSelection(); drawer.current?.close(); setThreadId(null); router.push("/centropy") }}><Plus size={17} aria-hidden /> New Investigation</button>{recentLoading ? <p role="status">Loading your Investigations…</p> : recentError ? <p role="alert">{recentError}</p> : null}<ol>{recent.map((item) => <li key={item.id}><button type="button" onClick={() => openInvestigation(item.id)}><strong>{item.title || "Untitled Investigation"}</strong><span>{item.activeWorkId ? "Active Work · " : ""}{formatDate(item.lastActivityAt)}</span></button></li>)}</ol></dialog>
+    <dialog className="ct-investigations" ref={drawer} aria-label="Recent Investigations"><header><div><span className="ct-eyebrow">CONTINUE WORK</span><h2>Investigations</h2></div><button type="button" onClick={() => drawer.current?.close()} aria-label="Close Investigations">×</button></header><button type="button" className="ct-investigations__new" onClick={() => { invalidateSelection(); drawer.current?.close(); setThreadId(null); router.push("/centropy") }}><Plus size={17} aria-hidden /> New Investigation</button>{recentLoading ? <p role="status">Loading your Investigations…</p> : recentError ? <p role="alert">{recentError}</p> : null}<ol>{recentVisible.map((item) => <li key={item.id}><button type="button" onClick={() => openInvestigation(item.id)}><strong>{item.title || "Untitled Investigation"}</strong><span>{item.activeWorkId ? "Active Work · " : ""}{formatDate(item.lastActivityAt)}</span></button></li>)}</ol>{recentNextCursor && recentOwnerId === auth.session.user.id ? <button type="button" className="ct-investigations__more" onClick={() => void loadOlderRecent()} disabled={recentOlderLoading}>{recentOlderLoading ? "Loading older Investigations…" : "Load older Investigations"}</button> : null}{recentOlderError ? <p role="alert">{recentOlderError} <button type="button" onClick={() => void loadOlderRecent()}>Retry</button></p> : null}</dialog>
   </div>
 }
