@@ -39,6 +39,7 @@ jobs:
       - name: Exercise registered original and repaired receiving-owner joins
         env:
           FINNOR_COMPENSATION_EPISODE: ${{ inputs.episode }}
+          FINNOR_W2_CUT_SECTION_DIAGNOSTIC: ${{ github.ref_name == 'codex/w2-cut-section-diagnostics-20261114' && '1' || '0' }}
         run: python3 finnor-os/scripts/postz-w2/run-compensation-pair.py --episode "$FINNOR_COMPENSATION_EPISODE" --python "$RUNNER_TEMP/w2-scientific/bin/python" --output "$RUNNER_TEMP/w2-compensation"
       - name: Check exact source restoration
         if: ${{ always() }}
