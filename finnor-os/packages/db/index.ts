@@ -718,6 +718,38 @@ export async function canReadEmployeeWork(tenantId: string, workId: string, empl
   }, employeeId);
 }
 
+/** A legacy instruction is private to its author; a Work-linked instruction
+ * follows existing Work participant relationships. Never treat knowledge of an
+ * instruction ID, session ID or tenant as an employee share grant.
+ */
+export async function canReadEmployeeInstruction(tenantId: string, instructionId: string, employeeId: string): Promise<boolean> {
+  if (!isUuid(employeeId) || !isUuid(instructionId)) return false;
+  return withTenant(tenantId, async db => {
+    const [visible] = await db.select({ id: schema.instructionSessions.id })
+      .from(schema.instructionSessions)
+      .innerJoin(schema.users, and(
+        eq(schema.users.tenantId, schema.instructionSessions.tenantId),
+        eq(schema.users.id, employeeId),
+        eq(schema.users.status, "active"),
+      ))
+      .leftJoin(schema.works, and(
+        eq(schema.works.tenantId, schema.instructionSessions.tenantId),
+        eq(schema.works.id, schema.instructionSessions.workId),
+      ))
+      .where(and(
+        eq(schema.instructionSessions.tenantId, tenantId),
+        eq(schema.instructionSessions.id, instructionId),
+        or(
+          and(isNull(schema.instructionSessions.workId), eq(schema.instructionSessions.userId, employeeId)),
+          eq(schema.works.createdBy, employeeId),
+          eq(schema.works.currentOwnerId, employeeId),
+          eq(schema.works.assignedTo, employeeId),
+        ),
+      )).limit(1);
+    return Boolean(visible);
+  }, employeeId);
+}
+
 export interface ReceivedWork {
   workId: string;
   workInputId: string;
