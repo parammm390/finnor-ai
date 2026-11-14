@@ -60,6 +60,14 @@ describe("Investigation earlier-history recovery", () => {
     expect(after).toMatchObject({ status: "ready", olderLoading: false, hasOlder: true, olderError: "Network interrupted", error: null })
   })
 
+  it.each([429, 500, 503])("keeps existing Work visible for retryable HTTP %s", status => {
+    const original = state()
+    const after = olderPageFailureState(original, THREAD, SCOPE, { status })
+    expect(after.loaded).toBe(original.loaded)
+    expect(after).toMatchObject({ status: "ready", olderLoading: false, hasOlder: true, error: null })
+    expect(after.olderError).toBe("Older turns unavailable")
+  })
+
   it.each([401, 403, 404])("purges cached private content on access denial %s", status => {
     const original = state()
     const after = olderPageFailureState(original, THREAD, SCOPE, { status })
