@@ -460,8 +460,8 @@
     },
     {
       "file": "packages/db/index.ts",
-      "bytes": 156186,
-      "sha256": "fa22008592b1f9bb712c4d9c01b74f29a4f9c3328f3dfa415908646cbe189460"
+      "bytes": 157646,
+      "sha256": "6fd77fad86c8c3baaee5bfe04af58a4a012de9ca3420f4a5579eba64723ace49"
     },
     {
       "file": "packages/db/migration-head.ts",
@@ -1305,8 +1305,8 @@
     },
     {
       "file": "packages/orchestration/src/instruction-trace.ts",
-      "bytes": 19134,
-      "sha256": "2979e82448e32045563b5569847623df6cfea51c756c663c00b851b3dd47a88d"
+      "bytes": 20495,
+      "sha256": "a0354b8e9a560ba0bdb2fa27789d2094d86e939d78e06f3209277d4791babbb8"
     },
     {
       "file": "packages/orchestration/src/interaction-context.ts",
@@ -2141,7 +2141,7 @@
     {
       "file": "packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
       "bytes": 8809,
-      "sha256": "84863e7a8357128dea4aa254efb09f661b3b1ad1ae5f725e69a6e7821d2d01c5"
+      "sha256": "3116db64d02bb97b693925ceb350cc460d88d0eca163d6d4a2a1b3f7e70e58ab"
     },
     {
       "file": "packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2531,7 +2531,7 @@
     {
       "file": "packages/private-equity/src/policy-learning/source-manifest.generated.ts",
       "bytes": 13772,
-      "sha256": "9bc537ccf477ecd1cd634b1369d574913b13279bd45e10c3f25565889be9bbb4"
+      "sha256": "789ea1532f4dc2dbe37eb805bf0683781e358674bd0fc8baf1dd4d90785b410c"
     },
     {
       "file": "packages/private-equity/src/policy-learning/source-paths.ts",
@@ -2876,7 +2876,7 @@
     {
       "file": "packages/private-equity/src/system-identification/source-manifest.generated.ts",
       "bytes": 19716,
-      "sha256": "009a9316a198f14520d98a01ab38e489a6fe12aa20e283ad04cbc557756a00e6"
+      "sha256": "afc4d135ec065fbcfd1b9e2603f303411364ce12d9bfda69de8fe83aad459e53"
     },
     {
       "file": "packages/private-equity/src/system-identification/source-paths.ts",
@@ -2941,7 +2941,7 @@
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-manifest.generated.ts",
       "bytes": 212015,
-      "sha256": "8b0c358870347634f0f867bb97b1ba9ed194279f4dee184fd5833c680581eaa6"
+      "sha256": "2d73ad42ed55addb19e8c95689ec2598a761b774b8240e3c3e4972947f179302"
     },
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-paths.ts",
