@@ -333,6 +333,30 @@ describe.skipIf(!adminUrl)("authenticated capability discovery", () => {
     expect(foreignEconomic.body.workInputId).toBeUndefined();
     expect(foreignEconomic.body.instructionId).toBeUndefined();
 
+    // Every HTTP entry accepting an explicit Work ID must use the same
+    // authoritative current-owner claim. The peer is an active employee of
+    // this exact tenant, so a cross-tenant test would not catch these bugs.
+    for (const [path, body] of [
+      ["actions", {
+        instruction: "Continue the exact existing Work", channel: "text",
+        workId, instructionId: randomUUID(), idempotencyKey: randomUUID(),
+      }],
+      ["objectives", {
+        objective: "Continue the exact existing Work with an objective",
+        channel: "text", workId, instructionId: randomUUID(), idempotencyKey: randomUUID(),
+      }],
+      ["outcome-packs", {
+        packId: "deal_request_resolution", input: { dealId: randomUUID(), mode: "approval" },
+        channel: "console", workId, instructionId: randomUUID(), idempotencyKey: randomUUID(),
+      }],
+    ] as const) {
+      const denied = await http.request(path, body, "other");
+      await record("foreign Work continuation refused", { path, denied, workId });
+      expect(denied.status, `${path}: ${JSON.stringify(denied.body)}`).toBe(404);
+      expect(JSON.stringify(denied.body)).not.toContain(owned.body.workInputId);
+      expect(JSON.stringify(denied.body)).not.toContain(owned.body.instructionId);
+    }
+
     const [after] = (await admin.query(
       "SELECT status,(SELECT count(*)::int FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2) AS inputs FROM finnor_os.works WHERE tenant_id=$1 AND id=$2",
       [tenantId, workId],
