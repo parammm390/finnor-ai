@@ -199,6 +199,7 @@ jobs:
             'EVALUATION_TIMEOUT', 'BROWSER_PROTOCOL_ERROR', 'OTHER_EVALUATE_FAILURE'])
           const reloadFields = new Set(['work', 'session', 'status', 'application', 'institution', 'budget', 'charges', 'costs'])
           const budgetChecks = ['sqlAgreesBefore', 'sqlAgreesAfter', 'shownMatchesBefore', 'shownMatchesAfter', 'ownerBudgetUnchanged']
+          const budgetField = value => /^(status|originalDeadlineAt|wallDeadlineAt|childDeadlineAt|newReservation|releaseGranted|resources\.length|resources\.[0-9]{1,2}\.(resourceId|unit|limit|used|remaining|overdrawn))$/.test(value)
           const httpStatus = value => Number.isInteger(value) && value >= 100 && value <= 599 ? value : null
           const renderBoundary = value => value && typeof value === 'object' ? {
             ...Object.fromEntries(['diagnosticUnavailable', 'canvasPresent', 'documentPresent', 'invalidDocument',
@@ -232,6 +233,15 @@ jobs:
               ? observations.rootCarriedBy : null
             results.push({ id, outcome, predicate: predicateFrom(error) ?? predicateFrom(reason),
               renderBoundary: renderBoundary(observations?.renderBoundary),
+              originalIdentities: id === 'M-01' ? Object.fromEntries(['programId', 'compilerRequestId', 'responsibilityIdentity', 'reservationId', 'originalWorkInputId']
+                .map(key => [key, checks.find(check => check.id === '2.original-identities')?.observed?.[key] === true])) : null,
+              originalWorkState: id === 'M-02' ? Object.fromEntries(['before', 'after']
+                .map(key => [key, identifier(checks.find(check => check.id === '6.original-completion-owner')?.observed?.[key])])) : null,
+              ownerBudgetDifferences: (observations?.ownerBudgetDifferences ?? []).filter(budgetField),
+              shownBudgetDifferences: observations?.shownBudgetDifferences ? {
+                before: observations.shownBudgetDifferences.before.filter(budgetField),
+                after: observations.shownBudgetDifferences.after.filter(budgetField),
+              } : null,
               browserOperation, browserProbeCause: browserProbeCauses.has(probeCause) ? probeCause : null,
               networkError, setupPredicate, setupCause,
               wallMs: Number.isSafeInteger(wallMs) && wallMs >= 0 ? wallMs : null,

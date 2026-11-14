@@ -60,6 +60,9 @@ function formatDate(value: string): string {
 
 export function CentropyWorkspace() {
   const scope = usePrivateRequestScope("centropy-workspace")
+  const auth = useCentropyAuth()
+  if (auth.session && auth.role === "owner" && !scope.available)
+    return <div className="ct-auth-state" data-private-workspace-state="unavailable" role="status">Offline or hidden view. Private workspace content is cleared. Reconnecting requires fresh authorized reads.</div>
   return <CentropyWorkspaceContent key={scope.key} />
 }
 

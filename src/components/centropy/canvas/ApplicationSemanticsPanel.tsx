@@ -324,6 +324,7 @@ function SessionEvidence({ session, now }: { session: ApplicationSession; now: n
     {session.institutional ? <section>
       <h4>Original institutional responsibility</h4>
       <p>Original Work: {session.institutional.originalWorkId}. Input: {session.institutional.originalWorkInputId}.</p>
+      <p>Original compiler request: {session.institutional.compilerRequestId}.</p>
       <p>Original P1: {session.institutional.programId} · {session.institutional.programmeStatus}.
         Responsibility: <code>{session.institutional.responsibilityIdentity}</code>.</p>
       <p>Institution artifact: <Reference value={session.institutional.institutionalProgramRef}/></p>

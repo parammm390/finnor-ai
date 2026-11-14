@@ -366,7 +366,9 @@ export async function uiSignIn(page: any, email: string, password: string, watch
 
 export async function uiSignOut(page: any) {
   await page.locator('summary[aria-label="Account menu"]').click();
-  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  const logout = page.waitForResponse((response: any) => response.request().method() === "POST"
+    && new URL(response.url()).pathname === "/auth/v1/logout" && [200, 204].includes(response.status()), { timeout: 45000 });
+  await Promise.all([logout, page.getByRole("button", { name: "Sign out", exact: true }).click()]);
   await page.locator(".ct-topbar").waitFor({ state: "hidden", timeout: 45000 });
 }
 

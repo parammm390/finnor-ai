@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 import { getCurrentAccessToken, useCentropyAuth } from "./centropy-auth"
 import { advancePrivateReadGeneration } from "./private-read-generation"
+import { getPrivateWorkspaceAvailability, usePrivateWorkspaceAvailability } from "./private-workspace-availability"
 
 /** Monotone browser cache identity. A→B→A gets a new generation; credentials
  * stay in memory and are never part of a rendered key or public projection. */
@@ -10,21 +11,25 @@ export function usePrivateRequestScope(resourceIdentity: string) {
   const instance = useId()
   const [, render] = useState(0)
   const auth = useCentropyAuth()
-  const allowed = Boolean(auth.session && auth.role === "owner" && !auth.roleError && !auth.authError)
+  const availability = usePrivateWorkspaceAvailability()
+  const allowed = Boolean(auth.session && auth.role === "owner" && !auth.roleError && !auth.authError && availability.available)
   const credential = auth.session?.access_token ?? null
   const principal = auth.session?.user.id ?? "signed-out"
   const state = useRef<null | { credential: string | null; principal: string; resourceIdentity: string;
-    allowed: boolean; serial: number; key: string; mounted: boolean }>(null)
+    allowed: boolean; availabilityEpoch: number; serial: number; key: string; mounted: boolean }>(null)
   if (!state.current || state.current.credential !== credential || state.current.principal !== principal
-      || state.current.resourceIdentity !== resourceIdentity || state.current.allowed !== allowed) {
+      || state.current.resourceIdentity !== resourceIdentity || state.current.allowed !== allowed
+      || state.current.availabilityEpoch !== availability.epoch) {
     advancePrivateReadGeneration()
-    state.current = { credential, principal, resourceIdentity, allowed,
+    state.current = { credential, principal, resourceIdentity, allowed, availabilityEpoch: availability.epoch,
       serial: (state.current?.serial ?? -1) + 1, key: "", mounted: true }
   }
   const keyFor = () => `${instance}:${state.current!.principal}:${state.current!.serial}:${state.current!.resourceIdentity}:${state.current!.allowed ? "open" : "closed"}`
   state.current.key = keyFor()
   const isCurrent = useCallback((key: string) => Boolean(state.current?.mounted && state.current.key === key
-    && state.current.allowed && getCurrentAccessToken() === state.current.credential), [])
+    && state.current.allowed && getCurrentAccessToken() === state.current.credential
+    && getPrivateWorkspaceAvailability().available
+    && getPrivateWorkspaceAvailability().epoch === state.current.availabilityEpoch), [])
   const invalidate = useCallback(() => {
     if (!state.current) return
     state.current.serial += 1
@@ -36,5 +41,5 @@ export function usePrivateRequestScope(resourceIdentity: string) {
     state.current!.mounted = true
     return () => { state.current!.mounted = false; advancePrivateReadGeneration() }
   }, [])
-  return { key: state.current.key, isCurrent, invalidate, allowed }
+  return { key: state.current.key, isCurrent, invalidate, allowed, available: availability.available }
 }

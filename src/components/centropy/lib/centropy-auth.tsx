@@ -22,6 +22,8 @@ export type CentropyRole = "owner"
 let currentSession: Session | null = null
 let rejectedCredential: string | null = null
 let accessGeneration = 0
+let pendingSignOut: Promise<void> | null = null
+export function waitForCentropySignOut(): Promise<void> { return pendingSignOut ?? Promise.resolve() }
 const rejectionListeners = new Set<(reason: string) => void>()
 function adoptSession(next: Session | null): void {
   if (next?.access_token !== currentSession?.access_token || next?.user.id !== currentSession?.user.id) {
@@ -202,17 +204,25 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
   }, [])
 
   async function signOut(): Promise<void> {
+    if (pendingSignOut) return pendingSignOut
     const token = currentSession?.access_token
     // Close the local scope synchronously. A late response cannot resurrect
     // private state while provider logout or the delivery tombstone is pending.
-    currentSession = null
+    adoptSession(null)
     setSession(null); setRole(null); resolvedRoleUserIdRef.current = null
-    if (token) await fetch("/api/centropy/live-controls", {
+    const delivery = token ? fetch("/api/centropy/live-controls", {
       method: "POST", cache: "no-store", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-      body: JSON.stringify({ operation: "end-delivery", input: {} }), signal: AbortSignal.timeout(3000),
-    }).catch(() => undefined)
-    const supabaseBrowser = await getSupabaseBrowser()
-    await supabaseBrowser.auth.signOut()
+      body: JSON.stringify({ operation: "end-delivery", input: {} }), signal: AbortSignal.timeout(3000), keepalive: true,
+    }).catch(() => undefined) : Promise.resolve()
+    const logout = (async () => {
+      const supabaseBrowser = await getSupabaseBrowser()
+      const { error } = await supabaseBrowser.auth.signOut()
+      await delivery
+      if (error) throw error
+    })()
+    pendingSignOut = logout
+    try { await logout }
+    finally { if (pendingSignOut === logout) pendingSignOut = null }
   }
 
   return <CentropyAuthContext.Provider value={{ session, loading, authError, retryAuth, role, roleLoading, roleError, retryRole, signOut }}>{children}</CentropyAuthContext.Provider>

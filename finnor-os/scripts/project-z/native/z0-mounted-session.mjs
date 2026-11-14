@@ -232,6 +232,15 @@ const reloadDifferences = (before, after) => {
   const left = signatureFacts(before), right = signatureFacts(after);
   return Object.keys(left).filter(field => JSON.stringify(left[field]) !== JSON.stringify(right[field]));
 };
+const budgetDifferences = (before, after) => {
+  const fields = ['status', 'originalDeadlineAt', 'wallDeadlineAt', 'childDeadlineAt', 'newReservation', 'releaseGranted'];
+  const differences = fields.filter(field => !isDeepStrictEqual(before?.[field], after?.[field]));
+  if (before?.resources?.length !== after?.resources?.length) differences.push('resources.length');
+  for (let index = 0; index < Math.max(before?.resources?.length ?? 0, after?.resources?.length ?? 0); index++)
+    for (const field of ['resourceId', 'unit', 'limit', 'used', 'remaining', 'overdrawn'])
+      if (!isDeepStrictEqual(before?.resources?.[index]?.[field], after?.resources?.[index]?.[field])) differences.push(`resources.${index}.${field}`);
+  return differences;
+};
 const coreSignature = f => sha({ work: f.appAttributes?.work, session: f.appAttributes?.session, status: f.appAttributes?.status, budget: f.budgetJson, charges: f.charges.map(item => item.text), costs: f.appCosts });
 const instants = text => [...(text ?? "").matchAll(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)/g)].map(match => Date.parse(match[0]));
 const minuteText = value => new Date(value).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).replace(/[\u202f\u00a0]/g, " ");
@@ -457,6 +466,11 @@ await runCase("M-04", ["Z0-R45-C03", "Z0-R09-C01"], "Blocked/needs-action state 
     ownerBudgetUnchanged: Boolean(beforeBudget && afterBudget) && isDeepStrictEqual(beforeBudget, afterBudget),
   };
   c.observations.reloadBudget = reloadBudget;
+  c.observations.ownerBudgetDifferences = budgetDifferences(beforeBudget, afterBudget);
+  c.observations.shownBudgetDifferences = {
+    before: budgetDifferences(beforeBudget, jsonOf(f0.budgetJson)),
+    after: budgetDifferences(afterBudget, jsonOf(f1.budgetJson)),
+  };
   check(c, "budget.owner-agreement", "visible budget matches the original reservation in SQL and API before and after reload",
     "O-SQL charges + O-API + DOM", reloadBudget, reloadBudget.sqlAgreesBefore && reloadBudget.sqlAgreesAfter
       && reloadBudget.shownMatchesBefore && reloadBudget.shownMatchesAfter);
@@ -474,7 +488,8 @@ await runCase("M-05", ["Z0-R09-C02", "Z0-R45-C04"], "Work/root switch through th
   const select = async thread => {
     await page.getByRole("button", { name: "Investigations", exact: true }).click();
     const drawer = page.getByRole("dialog", { name: "Recent Investigations", exact: true });
-    const control = drawer.locator("ol li button").filter({ has: drawer.getByText(thread.title, { exact: true }) });
+    const control = drawer.locator("ol li button").filter({ has: page.getByText(thread.title, { exact: true }) });
+    await control.waitFor({ state: "visible", timeout: 30000 });
     if (await control.count() !== 1) throw Error("DRAWER_CONTROL_COUNT_" + await control.count());
     await control.focus(); await control.press("Enter");
     await page.waitForURL(url => url.pathname === "/centropy/investigations/" + thread.id, { timeout: 30000 });
@@ -517,13 +532,16 @@ await runCase("M-09", ["Z0-R09-C05"], "Offline then reconnect", async c => {
   const strong = markers.filter(marker => strongLabels.has(marker.label));
   const mark = watch.mark();
   await context.setOffline(true);
-  await waitUntil("OFFLINE_BOUNDARY", 20000, async () => /Offline or hidden view/.test((await page.locator(APP).first().innerText().catch(() => "")) ?? ""));
+  const offlineBoundary = page.locator('[data-private-workspace-state="unavailable"]');
+  await waitUntil("OFFLINE_BOUNDARY", 20000, async () => await offlineBoundary.isVisible()
+    || /Offline or hidden view/.test((await page.locator(APP).first().innerText().catch(() => "")) ?? ""));
   const f = await readPanels(page);
   await shot(page, c, "offline");
   const offlineStore = await storageScan(page, context, markers);
   const appHaystack = (f.app?.text ?? "") + " " + (f.app?.pres ?? []).join(" ");
+  const boundaryShown = await offlineBoundary.isVisible() || /Offline or hidden view/.test(f.app?.text ?? "");
   check(c, "offline.boundary", "while offline the panel shows the offline boundary and hides private evidence; no panel private value", "panel contract + O-SQL markers",
-    { boundary: /Offline or hidden view/.test(f.app?.text ?? ""), panelLeaks: hits(appHaystack, markers) }, /Offline or hidden view/.test(f.app?.text ?? "") && hits(appHaystack, markers).length === 0);
+    { boundary: boundaryShown, panelLeaks: hits(appHaystack, markers) }, boundaryShown && hits(appHaystack, markers).length === 0);
   check(c, "offline.page-level-private-values", "no application-private value (session, programme, compiler request, responsibility, reservation, resources) anywhere in the page DOM while offline", "O-SQL markers",
     { hits: hits(f.html, strong) }, hits(f.html, strong).length === 0);
   check(c, "offline.no-operable-mutating-control", "no enabled mutating control in the application panel while offline", "DOM", f.app?.buttons, (f.app?.buttons ?? []).every(b => b.disabled));
