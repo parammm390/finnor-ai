@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "8b3355e4a21d4985c5cf225346ac83036730c78869024bc75e01f1af4dadc442"
+      "sha256": "eb6b13b10110156389b3b191b66c90747d3a7bf6c3cf04cf167f620885cbc0d1"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -3208,7 +3208,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/world-state.ts",
-      "sha256": "74cc54cde96588ad29e329411ff3e9ddb6a5e763b77d0fba4c637b84d1f14ab1"
+      "sha256": "2c5325e39ce40e87427df905b102227bce7f09ea7c9a744ff520189c621fc769"
     },
     {
       "path": "finnor-os/packages/projections/src/index.ts",
@@ -4899,5 +4899,5 @@ export default {
       "sha256": "2bfba5c7712801bd9f88985f4c4f118d6aaaa668a5e8cbec68061a27afca60a3"
     }
   ],
-  "sourceDigest": "a45cd654a0439b7ca1d3b2b400a64c87055128687393da611ea82d1bdb73aea7"
+  "sourceDigest": "2f48c263bafee0b03c130df8062985f7f3051599cb5cf651cf2b56a36d725a19"
 } as const;
