@@ -24,6 +24,7 @@ import {
   workflowRuns,
   workflowSteps,
   works,
+  users,
   workEvents,
   workInputs,
   workPlannerAttempts,
@@ -45,6 +46,9 @@ const MAX_CHILD_ROWS_PER_TABLE = 1_000;
 export interface WorkCasesPageOptions {
   limit?: number;
   cursor?: string;
+  /** Human HTTP reads must be scoped to an existing Work relationship.
+   * Omitted only for trusted internal tenant-wide projections and legacy tests. */
+  employeeId?: string;
 }
 
 export interface WorkCasesPage {
@@ -757,9 +761,20 @@ export async function workCasesPage(tenantId: string, options: WorkCasesPageOpti
       if (rows.length > MAX_CHILD_ROWS_PER_TABLE) childRowsTruncated = true;
       return rows.slice(0, MAX_CHILD_ROWS_PER_TABLE);
     };
-    const cursor = decodeWorkCasesCursor(options.cursor);
-    const [canonicalWork] = await db.select({ id: works.id }).from(works).where(eq(works.tenantId, tenantId)).limit(1);
-    const rootScope: WorkCasesPage["page"]["rootScope"] = cursor?.scope ?? (canonicalWork ? "canonical_work" : "legacy_instruction");
+    const decodedCursor = decodeWorkCasesCursor(options.cursor);
+    // Employee endpoints have no user-owned legacy instruction records. Do not
+    // allow a caller-provided legacy cursor to bypass canonical Work scoping.
+    const cursor = options.employeeId && decodedCursor?.scope === "legacy_instruction" ? null : decodedCursor;
+    const employeeWorkScope = options.employeeId ? and(
+      or(eq(works.createdBy, options.employeeId), eq(works.currentOwnerId, options.employeeId), eq(works.assignedTo, options.employeeId)),
+      sql`EXISTS (SELECT 1 FROM ${users} current_employee
+         WHERE current_employee.tenant_id=${tenantId}::uuid
+           AND current_employee.id=${options.employeeId}::uuid
+           AND current_employee.status='active')`,
+    ) : undefined;
+    const [canonicalWork] = options.employeeId ? [] : await db.select({ id: works.id }).from(works).where(eq(works.tenantId, tenantId)).limit(1);
+    const rootScope: WorkCasesPage["page"]["rootScope"] = options.employeeId ? "canonical_work"
+      : cursor?.scope ?? (canonicalWork ? "canonical_work" : "legacy_instruction");
     const cursorDate = cursor?.updatedAt ? new Date(cursor.updatedAt) : null;
     const activityBucket = sql<number>`CASE WHEN ${works.status} IN ('completed','failed','cancelled') THEN 1 ELSE 0 END`;
     // JavaScript Date serializes milliseconds while PostgreSQL timestamps retain
@@ -781,16 +796,16 @@ export async function workCasesPage(tenantId: string, options: WorkCasesPageOpti
       : undefined;
 
     const fetchedWorkRows = rootScope === "canonical_work"
-      ? await db.select().from(works).where(and(eq(works.tenantId, tenantId), workCursor)).orderBy(asc(activityBucket), desc(workUpdatedAt), desc(works.id)).limit(limit + 1)
+      ? await db.select().from(works).where(and(eq(works.tenantId, tenantId), employeeWorkScope, workCursor)).orderBy(asc(activityBucket), desc(workUpdatedAt), desc(works.id)).limit(limit + 1)
       : [];
-    const fetchedLegacyInstructions = rootScope === "legacy_instruction"
+    const fetchedLegacyInstructions = !options.employeeId && rootScope === "legacy_instruction"
       ? await db.select().from(instructionSessions).where(and(eq(instructionSessions.tenantId, tenantId), isNull(instructionSessions.workId), legacyCursor)).orderBy(desc(legacyUpdatedAt), desc(instructionSessions.id)).limit(limit + 1)
       : [];
     const scopeHasMore = (rootScope === "canonical_work" ? fetchedWorkRows : fetchedLegacyInstructions).length > limit;
     const workRows = fetchedWorkRows.slice(0, limit);
     const legacyInstructionRoots = fetchedLegacyInstructions.slice(0, limit);
     const lastRoot = rootScope === "canonical_work" ? workRows.at(-1) : legacyInstructionRoots.at(-1);
-    const [legacyRemaining] = rootScope === "canonical_work" && !scopeHasMore
+    const [legacyRemaining] = !options.employeeId && rootScope === "canonical_work" && !scopeHasMore
       ? await db.select({ id: instructionSessions.id }).from(instructionSessions).where(and(
           eq(instructionSessions.tenantId, tenantId),
           isNull(instructionSessions.workId),
@@ -1379,7 +1394,7 @@ export async function workCasesPage(tenantId: string, options: WorkCasesPageOpti
         childRowLimitPerTable: MAX_CHILD_ROWS_PER_TABLE,
       },
     };
-  });
+  }, options.employeeId);
 }
 
 export async function workCases(tenantId: string): Promise<WorkCaseProjection[]> {
