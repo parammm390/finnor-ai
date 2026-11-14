@@ -566,7 +566,7 @@ interface Snapshot {
 }
 interface Notice {
   stamp: number
-  phase: "idle" | "reading" | "ready" | "error"
+  phase: "idle" | "reading" | "retrying" | "ready" | "error"
   message: string
 }
 interface ActionNotice {
@@ -616,6 +616,7 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
   // contains no parameters/result/token and cannot render until native identity
   // and scope are freshly matched. Canonical records remain the only truth.
   const unconfirmedRef = useRef<UnconfirmedUse | null>(null)
+  const projectionRetry = useRef<{ stamp: number; sequence: number } | null>(null)
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null)
   const [notice, setNotice] = useState<Notice | null>(null)
   const [actionNotice, setActionNotice] = useState<ActionNotice | null>(null)
@@ -645,7 +646,7 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
     setFormRevision(revision => revision + 1)
   }, [])
 
-  const readCanonical = useCallback(async (marker: Marker, message: string): Promise<Snapshot | null> => {
+  const readCanonical = useCallback(async (marker: Marker, message: string, allowRetry = false): Promise<Snapshot | null> => {
     if (!isCurrent(marker)) return null
     activeRead.current?.controller.abort()
     const request = { marker, controller: new AbortController() }
@@ -690,6 +691,7 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
       setClock(now)
       const next = { stamp: marker.stamp, scope, data, readAt: new Date(now).toISOString() }
       setSnapshot(next)
+      projectionRetry.current = null
       setNotice({
         stamp: marker.stamp,
         phase: "ready",
@@ -699,12 +701,16 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
       })
       return next
     } catch (error) {
-      if (!isCurrent(marker)) return null
+      if (!isCurrent(marker) || request.controller.signal.aborted) return null
       erasePrivate()
+      const retrying = allowRetry && error instanceof CentropyApiError && error.retryable
+        && projectionRetry.current?.stamp !== marker.stamp
+      if (retrying) projectionRetry.current = { stamp: marker.stamp, sequence: marker.sequence }
       setNotice({
         stamp: marker.stamp,
-        phase: "error",
-        message: error instanceof CentropyApiError && [401, 403, 404].includes(error.status)
+        phase: retrying ? "retrying" : "error",
+        message: retrying ? "The current owner read was interrupted. Retrying in this Work."
+          : error instanceof CentropyApiError && [401, 403, 404].includes(error.status)
           ? "Current application evidence is unavailable in this access scope. Private records and inputs have been cleared."
           : "The current-use projection could not be verified. Private records and inputs have been cleared; no ready or complete claim is retained.",
       })
@@ -719,8 +725,11 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
       || !navigator.onLine || document.visibilityState !== "visible") return
     const marker = { stamp, sequence: ++generation.current, sessionKey }
     activeRead.current?.controller.abort()
-    if (clear) erasePrivate()
-    await readCanonical(marker, "Reading the current native Work, principal, tenant and root scope…")
+    if (clear) {
+      erasePrivate()
+      projectionRetry.current = null
+    }
+    await readCanonical(marker, "Reading the current native Work, principal, tenant and root scope…", true)
   }, [ready, sessionKey, stamp, erasePrivate, readCanonical])
 
   const invalidate = useCallback((message: string) => {
@@ -728,6 +737,7 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
     activeRead.current?.controller.abort()
     actionController.current?.abort()
     activeAction.current = null
+    projectionRetry.current = null
     erasePrivate()
     setUnconfirmed(null)
     setActionNotice(null)
@@ -786,6 +796,16 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
     invalidate("Owner state or access changed. Private evidence and inputs are cleared pending current-use revalidation.")
     void refresh(false)
   }), [invalidate, refresh])
+
+  useEffect(() => {
+    if (currentNotice?.phase !== "retrying" || !sessionKey) return
+    const retry = projectionRetry.current
+    if (retry?.stamp !== stamp) return
+    const timer = window.setTimeout(() => {
+      if (isCurrent({ ...retry, sessionKey })) void refresh(false)
+    }, 1500)
+    return () => window.clearTimeout(timer)
+  }, [currentNotice, isCurrent, refresh, sessionKey, stamp])
 
   useEffect(() => {
     if (!visible || busy) return
@@ -948,7 +968,7 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
     data-application-work={visible?.workId ?? "none"}
     data-application-session={selected?.id ?? "none"}
     data-application-status={selected?.status ?? "none"}
-    aria-busy={Boolean(busy || currentNotice?.phase === "reading")}
+    aria-busy={Boolean(busy || currentNotice?.phase === "reading" || currentNotice?.phase === "retrying")}
   >
     <h3>Application operations · FRONTIER5.X2</h3>
     <p>Learned logical software semantics in maintained native Work. Acquisition, evidence, fresh binding, independent effects, admission and production activation are separate.</p>

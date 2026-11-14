@@ -207,7 +207,9 @@ async function renderBoundaryFacts() {
   }
   const routeKind = path => path === `/api/centropy/works/${parentA.workId}` ? 'WORK'
     : path === `/api/centropy/threads/${threadA.id}` ? 'THREAD'
-      : path === '/api/centropy/company-brain/projection' ? 'COMPANY_PROJECTION' : null;
+      : path === '/api/centropy/company-brain/projection' ? 'COMPANY_PROJECTION'
+        : path === '/api/centropy/company-brain/application-projection' ? 'APPLICATION_PROJECTION'
+          : path === '/api/centropy/me' ? 'ME' : null;
   return { ...dom, threadResponseObserved: Boolean(boundaryInputs.thread), workResponseObserved: Boolean(boundaryInputs.work),
     projectionResponseObserved: Boolean(boundaryInputs.projection), composition,
     responseReadFailures: boundaryReadFailures.slice(0, 10),

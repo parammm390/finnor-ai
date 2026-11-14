@@ -248,7 +248,8 @@ jobs:
                 code: /^[a-z_]{3,60}$/.test(issue.code ?? '') ? issue.code : null,
                 path: /^[a-zA-Z0-9_.]{1,180}$/.test(issue.path ?? '') ? issue.path : null })) },
             responseReadFailures: (value.responseReadFailures ?? []).filter(code => ['RESPONSE_BYTE_BOUND', 'RESPONSE_UNREADABLE'].includes(code)).slice(0, 10),
-            sourceRequests: (value.sourceRequests ?? []).filter(row => ['WORK', 'THREAD', 'COMPANY_PROJECTION'].includes(row.route))
+            sourceRequests: (value.sourceRequests ?? []).filter(row => ['WORK', 'THREAD', 'COMPANY_PROJECTION',
+              'APPLICATION_PROJECTION', 'ME'].includes(row.route))
               .slice(-30).map(row => ({ route: row.route, status: httpStatus(row.status), failed: row.failed === true })),
           } : null
           for (const { id, outcome, error, reason, checks, observations, wallMs } of mountedCases) {
