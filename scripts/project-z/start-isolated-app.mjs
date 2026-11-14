@@ -43,7 +43,7 @@ appUrl.password = "finnor_app"
 const adminEnv = { ...isolated, RAYON_NUM_THREADS: "2", TSX_DISABLE_CACHE: "1" }
 // Opt-in phase profiles reach only the application processes, never migrate/seed.
 const profiles = new Set(process.argv.filter(arg => arg.startsWith("--profile=")).flatMap(arg => arg.slice(10).split(",")))
-assert.ok([...profiles].every(profile => ["z1", "z2", "x1", "z3", "z4", "x2", "z0", "z5", "v2"].includes(profile)), "Unknown launcher profile")
+assert.ok([...profiles].every(profile => ["z1", "z2", "x1", "z3", "z4", "x2", "z0", "z5", "v2", "y4"].includes(profile)), "Unknown launcher profile")
 // The Z3 runtime pins the producer bundle by digest itself; only its location is supplied here.
 const z3Producer = process.argv.find(arg => arg.startsWith("--z3-producer="))?.slice(14)
 assert.ok(!profiles.has("z3") || (z3Producer && isAbsolute(z3Producer) && realpathSync(z3Producer) === z3Producer),
@@ -141,6 +141,7 @@ const profileEnv = {
   ...(profiles.has("z2") ? { FINNOR_Z2_DISPOSABLE_E2E: "1", FINNOR_Z2_CONVERGED_DEVELOPMENT: "1",
     FINNOR_Y1_PROFILE: "ordinary_disposable", FINNOR_Y3_PROFILE: "ordinary_disposable" } : {}),
   ...(profiles.has("x1") || profiles.has("z0") ? { FINNOR_P4_PROFILE: "ordinary_disposable" } : {}),
+  ...(profiles.has("y4") ? { FINNOR_Y4_ASSETS: join(backend, "packages/private-equity/src/confidential-computation") } : {}),
   ...(x2Profile ? { FINNOR_ENVIRONMENT: "staging", FINNOR_X2_PROFILE: "ordinary_disposable",
     FINNOR_X2_SOURCE_ROOT: root, FINNOR_X2_DISPOSABLE_SECRET_ROOT: x2SecretRoot } : {}),
   ...(profiles.has("z3") ? { FINNOR_Z3_PRODUCER_BUNDLE: z3Producer,
@@ -402,7 +403,8 @@ try {
   save()
   console.log(JSON.stringify({ status: receipt.status, state, pids: receipt.pids, authBypass: false, phasesAccepted: [] }))
 } catch (error) {
-  receipt.failureCode = /^[A-Z_]+$/.test(error?.message ?? "") ? error.message : error?.code ?? "SETUP_ASSERTION_FAILED"
+  receipt.failureCode = error?.message?.match(/^([A-Z][A-Z0-9_]{2,160})(?=\n|$)/)?.[1]
+    ?? error?.code ?? "SETUP_ASSERTION_FAILED"
   console.error("ISOLATED_APPLICATION_SETUP_FAILED_INSPECT_PRIVATE_LOCAL_LOGS")
   await stop(1, "ISOLATED_APPLICATION_SETUP_FAILED_INSPECT_PRIVATE_LOCAL_LOGS")
 }

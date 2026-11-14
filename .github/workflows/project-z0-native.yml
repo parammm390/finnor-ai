@@ -266,8 +266,12 @@ jobs:
           }
           const appState = join(state, 'native-app-state.json')
           const app = existsSync(appState) ? JSON.parse(readFileSync(appState, 'utf8')) : null
+          const setupLabel = value => typeof value === 'string' && /^[a-zA-Z0-9_.-]{1,80}$/.test(value) ? value : null
           const launcher = app ? { status: typedCode(app.status), reason: typedCode(app.reason), failure: typedCode(app.failureCode),
-            buildStage: typedCode(app.productionBuild?.stage) } : null
+            stage: setupLabel(app.stage), buildStage: typedCode(app.productionBuild?.stage),
+            steps: (Array.isArray(app.steps) ? app.steps : []).slice(0, 32).map(step => ({ label: setupLabel(step.label),
+              code: Number.isInteger(step.code) && step.code >= 0 && step.code <= 255 ? step.code : null,
+              signal: ['SIGTERM', 'SIGKILL', 'SIGABRT', 'SIGSEGV', 'SPAWN_ERROR'].includes(step.signal) ? step.signal : null })) } : null
           const apiLog = join(state, 'api-01.private.log')
           const serverErrorKinds = new Set()
           const retainErrorKind = value => {
