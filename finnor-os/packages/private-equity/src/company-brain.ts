@@ -1,4 +1,4 @@
-import { workAggregate, type WorkAggregate } from "@finnor/db";
+import { readableEmployeeWorkIds, workAggregate, type WorkAggregate } from "@finnor/db";
 import { executeAttentionQueueQuery, workforceStatus } from "@finnor/read-models";
 import type { AttentionItem, AttentionQueueResult, WorkforceStatusResult } from "@finnor/shared-types";
 import { getIcWorkspace, listIcCases } from "./ic-repository";
@@ -1073,7 +1073,18 @@ export async function loadCompanyBrainSourceBundle(
     const underwritingRows = await settledMany("P4 underwriting", investmentCaseIds.map(async (investmentCaseId) => ({ investmentCaseId, workspace: await listUnderwritingWorkspace(ctx, investmentCaseId) })), statuses);
     underwriting = underwritingRows;
     const workIds = [...new Set(world.workLinks.map((row) => text(row.workId)).filter((id): id is string => Boolean(id)))].slice(0, 100);
-    works = (await settledMany("P6 Work", workIds.map((workId) => workAggregate(ctx.auth.tenantId, workId)), statuses)).filter((value): value is WorkAggregate => value !== null);
+    // A PE root is not a grant to view another employee's private Work.
+    // The generic graph projects initial instructions, plans, receipts and
+    // evidence, so fence BEFORE aggregating or adding those graph nodes.
+    // Internal service principals retain their existing governed authority
+    // contract; authenticated humans use the same active/participant predicate
+    // as /api/works, in one bounded SQL read.
+    const actorId = ctx.auth.employeeId ?? ctx.auth.userId;
+    const employeeRead = Boolean(ctx.auth.employeeId) || !ctx.auth.userId.startsWith("system:");
+    const visibleWorkIds = employeeRead
+      ? await readableEmployeeWorkIds(ctx.auth.tenantId, workIds, actorId)
+      : workIds;
+    works = (await settledMany("P6 Work", visibleWorkIds.map((workId) => workAggregate(ctx.auth.tenantId, workId)), statuses)).filter((value): value is WorkAggregate => value !== null);
     const [workforceResult, attentionResult] = await Promise.allSettled([
       workforceStatus(ctx.auth.tenantId, { page: { limit: 100 } }),
       executeAttentionQueueQuery(ctx.auth.tenantId, { intent: "attention_queue", page: { limit: 100 } }, { employeeId: ctx.auth.employeeId, userId: ctx.auth.userId, verticalKey: "private_equity", maxRows: 100 }, new Date(world.stateAt)),
