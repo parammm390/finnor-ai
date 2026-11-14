@@ -215,9 +215,8 @@ export const APP = ".ct-application-semantics";
 export const INST = 'section[aria-label="Institution responsibility"]';
 
 /** Opens parent sections before their nested summaries become actionable. */
-export async function openAllDetails(page: any, scope: string) {
+export async function openAllDetails(page: any, scope: string, deadline = Date.now() + 25000) {
   const closed = page.locator(`${scope} details:not([open]) > summary:visible`);
-  const deadline = Date.now() + 25000;
   let opened = 0;
   while (await closed.count()) {
     const remaining = deadline - Date.now();
@@ -229,9 +228,9 @@ export async function openAllDetails(page: any, scope: string) {
 }
 
 /** DOM facts of both private panels plus the whole-document marker haystack. Collapsed content is opened first. */
-export async function readPanels(page: any) {
-  await openAllDetails(page, APP);
-  await openAllDetails(page, INST);
+export async function readPanels(page: any, deadline = Date.now() + 25000) {
+  await openAllDetails(page, APP, deadline);
+  await openAllDetails(page, INST, deadline);
   return page.evaluate(({ app, inst }: { app: string; inst: string }) => {
     const collapse = (value: string | null) => (value ?? "").replace(/\s+/g, " ").trim();
     const noPre = (root: Element) => { const copy = root.cloneNode(true) as Element; copy.querySelectorAll("pre").forEach(node => node.remove()); return collapse(copy.textContent); };
@@ -268,6 +267,10 @@ export async function readPanels(page: any) {
       counterexamplesJson: summaryPre("Counterexamples", appRoot),
       charges,
       inst: describe(instRoot),
+      instAttributes: instRoot ? { work: instRoot.getAttribute("data-institution-work"),
+        state: instRoot.getAttribute("data-institution-read-state"), busy: instRoot.getAttribute("aria-busy") } : null,
+      closedDisclosures: [appRoot, instRoot].flatMap(root => Array.from(root?.querySelectorAll("details:not([open]) > summary") ?? []))
+        .filter(node => node.getClientRects().length > 0).length,
       instRows: Array.from(instRoot?.querySelectorAll("table tbody tr") ?? []).map(row => Array.from(row.querySelectorAll("td")).map(cell => collapse((cell as HTMLElement).innerText))),
       instCounts: Object.fromEntries(Array.from(instRoot?.querySelectorAll("dl.ct-evidence__values > div") ?? []).map(node => [collapse(node.querySelector("dt")?.textContent ?? null), collapse(node.querySelector("dd")?.textContent ?? null)])),
       instWitnessJson: summaryPre("Evidence witnesses", instRoot),
@@ -277,6 +280,19 @@ export async function readPanels(page: any) {
       applicationCount: document.querySelectorAll(app).length,
     };
   }, { app: APP, inst: INST });
+}
+
+/** Checking and exercising the disclosures can cross a normal owner refresh. */
+export async function readSettledPanels(page: any, workId: string) {
+  const deadline = Date.now() + 60000;
+  while (Date.now() < deadline) {
+    await waitForPanel(page, workId, deadline - Date.now());
+    const facts = await readPanels(page, Math.min(deadline, Date.now() + 25000));
+    if (facts.appAttributes?.work === workId && facts.appAttributes.session !== "none" && facts.appAttributes.busy === "false"
+        && facts.instAttributes?.work === workId && facts.instAttributes.state === "settled"
+        && facts.instAttributes.busy === "false" && facts.closedDisclosures === 0) return facts;
+  }
+  throw Error("Z0_BROWSER_SETTLED_DISCLOSURES_UNOBSERVABLE");
 }
 
 /** Where, outside any <pre>, does a claim's identifying text appear and what class label governs it. */
@@ -362,14 +378,36 @@ export const panelFor = (page: any, workId: string) => page.locator(`${APP}[data
 /** Waits for both panels of the original Work to finish their current reads. */
 export async function waitForPanel(page: any, workId: string, timeoutMs = 60000) {
   const shell = page.getByRole("main", { name: "Investigation Canvas", exact: true });
-  const deadline = Date.now() + timeoutMs;
+  const deadline = performance.now() + timeoutMs;
   await shell.waitFor({ state: "visible", timeout: timeoutMs })
     .catch((cause: unknown) => { throw new Error("Z0_BROWSER_INVESTIGATION_CANVAS_UNAVAILABLE", { cause }); });
+  const instrument = shell.locator(`section[data-type="work_execution"][id="canvas-work-${workId}"]`);
+  await instrument.waitFor({ state: "attached", timeout: Math.max(1, deadline - performance.now()) })
+    .catch((cause: unknown) => { throw new Error("Z0_BROWSER_WORK_INSTRUMENT_UNAVAILABLE", { cause }); });
+  if (await instrument.locator(APP).count() === 0) {
+    const instruments = shell.getByRole("navigation", { name: "Canvas instruments", exact: true });
+    await instruments.getByRole("button", { name: /Work and verification$/ })
+      .click({ timeout: Math.max(1, deadline - performance.now()) })
+      .catch((cause: unknown) => { throw new Error("Z0_BROWSER_WORK_INSTRUMENT_NAVIGATION_UNAVAILABLE", { cause }); });
+  }
   const panel = panelFor(page, workId);
+  let lastState = "PROJECTION_PROBE_TIMEOUT";
   for (;;) {
-    const state = await shell.evaluate((canvas: HTMLElement, { app, institution, expectedWork }: { app: string; institution: string; expectedWork: string }) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const expired = new Promise<"PROJECTION_PROBE_TIMEOUT">(resolve => {
+      timer = setTimeout(() => resolve("PROJECTION_PROBE_TIMEOUT"), Math.max(1, deadline - performance.now()));
+    });
+    const probe = page.evaluate(({ app, institution, expectedWork }: { app: string; institution: string; expectedWork: string }) => {
+      const canvas = document.querySelector('main[aria-label="Investigation Canvas"]');
+      if (!canvas) return "INVESTIGATION_CANVAS_UNAVAILABLE";
       const mounted = canvas.querySelector(app);
-      if (!mounted) return canvas.querySelector(".ct-canvas__invalid") ? "CANVAS_INVALID" : "PANEL_UNMOUNTED";
+      if (!mounted) {
+        const workInstrument = document.getElementById("canvas-work-" + expectedWork);
+        if (!workInstrument || !canvas.contains(workInstrument)) {
+          return canvas.querySelector(".ct-canvas__invalid") ? "CANVAS_INVALID" : "WORK_INSTRUMENT_UNAVAILABLE";
+        }
+        return workInstrument.querySelector('[aria-busy="true"]') ? "WORK_INSTRUMENT_OUT_OF_VIEW" : "PANEL_UNMOUNTED";
+      }
       if (mounted.querySelector('[role="alert"]')) return "PROJECTION_UNAVAILABLE";
       if (mounted.getAttribute("data-application-work") !== expectedWork) return "WORK_NOT_PROJECTED";
       if (mounted.getAttribute("aria-busy") !== "false") return "PROJECTION_BUSY";
@@ -380,27 +418,24 @@ export async function waitForPanel(page: any, workId: string, timeoutMs = 60000)
       if (standingResponsibility.getAttribute("data-institution-read-state") === "unavailable") return "INSTITUTION_UNAVAILABLE";
       if (standingResponsibility.getAttribute("aria-busy") !== "false") return "INSTITUTION_BUSY";
       return "SETTLED";
-    }, { app: APP, institution: INST, expectedWork: workId }, { timeout: Math.max(1, deadline - Date.now()) })
+    }, { app: APP, institution: INST, expectedWork: workId })
       .catch((cause: unknown) => {
-        // The native owner previously reported only "unobservable" and erased
-        // the actual Playwright failure category. Classify without recording
-        // page text, bearer tokens, private URLs, or customer evidence.
         const message = cause instanceof Error ? cause.message : String(cause);
-        const reason = /Execution context was destroyed|context was destroyed/i.test(message)
-          ? "NAVIGATION_CONTEXT_DESTROYED"
-          : /Target page.*closed|page has been closed|browser has been closed/i.test(message)
-            ? "PAGE_OR_BROWSER_CLOSED"
-            : /__name is not defined/i.test(message) ? "EVALUATOR_HELPER_MISSING"
-              : /ReferenceError/i.test(message) ? "PAGE_EVALUATOR_REFERENCE_ERROR"
-                : /SyntaxError/i.test(message) ? "PAGE_EVALUATOR_SYNTAX_ERROR"
-                  : /TimeoutError|timed out|timeout/i.test(message) ? "EVALUATION_TIMEOUT"
-                    : /Protocol error/i.test(message) ? "BROWSER_PROTOCOL_ERROR"
-                      : "OTHER_EVALUATE_FAILURE";
+        const reason = /context was destroyed/i.test(message) ? "NAVIGATION_CONTEXT_DESTROYED"
+          : /Target page.*closed|page has been closed|browser has been closed/i.test(message) ? "PAGE_OR_BROWSER_CLOSED"
+          : /__name is not defined/i.test(message) ? "EVALUATOR_HELPER_MISSING"
+          : /ReferenceError/i.test(message) ? "PAGE_EVALUATOR_REFERENCE_ERROR"
+          : /SyntaxError/i.test(message) ? "PAGE_EVALUATOR_SYNTAX_ERROR"
+          : /TimeoutError|timed out|timeout/i.test(message) ? "EVALUATION_TIMEOUT"
+          : /Protocol error/i.test(message) ? "BROWSER_PROTOCOL_ERROR" : "OTHER_EVALUATE_FAILURE";
         throw new Error("Z0_BROWSER_CANVAS_PROJECTION_UNOBSERVABLE:" + reason, { cause });
       });
+    const state = await Promise.race([probe, expired]).finally(() => clearTimeout(timer));
     if (state === "SETTLED") return panel;
-    if (Date.now() >= deadline) throw Error("Z0_BROWSER_" + state);
-    await sleep(250);
+    if (state === "PROJECTION_PROBE_TIMEOUT") throw Error("Z0_BROWSER_" + lastState);
+    lastState = state;
+    if (performance.now() >= deadline) throw Error("Z0_BROWSER_" + state);
+    await sleep(Math.min(250, Math.max(0, deadline - performance.now())));
   }
 }
 

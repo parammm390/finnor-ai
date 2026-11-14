@@ -194,11 +194,17 @@ jobs:
             'original deadline', 'wall deadline', 'compiler status', 'compiler revision', 'compiler attempts', 'acquisition units'])
           const browserStages = new Set(['START_BROWSER', 'SIGN_IN', 'CONFIRM_IDENTITY', 'OPEN_ORIGINAL_WORK',
             'READ_OWNER_ORACLE', 'READ_INITIAL_PANELS', 'FIRST_RELOAD', 'SECOND_RELOAD', 'CHECK_RELOADED_PANELS'])
+          const browserProbeCauses = new Set(['NAVIGATION_CONTEXT_DESTROYED', 'PAGE_OR_BROWSER_CLOSED',
+            'EVALUATOR_HELPER_MISSING', 'PAGE_EVALUATOR_REFERENCE_ERROR', 'PAGE_EVALUATOR_SYNTAX_ERROR',
+            'EVALUATION_TIMEOUT', 'BROWSER_PROTOCOL_ERROR', 'OTHER_EVALUATE_FAILURE'])
           const reloadFields = new Set(['work', 'session', 'status', 'application', 'institution', 'budget', 'charges', 'costs'])
+          const budgetChecks = ['sqlAgreesBefore', 'sqlAgreesAfter', 'shownMatchesBefore', 'shownMatchesAfter', 'ownerBudgetUnchanged']
           const httpStatus = value => Number.isInteger(value) && value >= 100 && value <= 599 ? value : null
           for (const { id, outcome, error, reason, checks, observations, wallMs } of mountedCases) {
             const browserOperation = typeof error === 'string'
               ? error.match(/^(browserType\.launch|browser\.newContext|page\.(?:goto|reload|waitForResponse|evaluate)|locator\.(?:fill|click|evaluate|waitFor)):/)?.[1] ?? null : null
+            const probeCause = typeof error === 'string'
+              ? error.match(/^Z0_BROWSER_CANVAS_PROJECTION_UNOBSERVABLE:([A-Z_]+)$/)?.[1] : undefined
             const networkError = typeof error === 'string' ? error.match(/net::(ERR_[A-Z_]{3,80})/)?.[1] ?? null : null
             const setupFailure = checks.find(check => check.id === 'B.setup' && !check.pass)?.observed
             const setupPredicate = typeof setupFailure === 'string' ? predicateFrom(setupFailure.replace(/^B:/, '')) : null
@@ -208,10 +214,13 @@ jobs:
             const rootCarriedBy = ['THREAD_PERSISTED_ROOT', 'ROOT_URL_PARAMETER'].includes(observations?.rootCarriedBy)
               ? observations.rootCarriedBy : null
             results.push({ id, outcome, predicate: predicateFrom(error) ?? predicateFrom(reason),
-              browserOperation, networkError, setupPredicate, setupCause,
+              browserOperation, browserProbeCause: browserProbeCauses.has(probeCause) ? probeCause : null,
+              networkError, setupPredicate, setupCause,
               wallMs: Number.isSafeInteger(wallMs) && wallMs >= 0 ? wallMs : null,
               browserStage: browserStages.has(observations?.browserStage) ? observations.browserStage : null,
               reloadDifferences: (observations?.reloadDifferences ?? []).filter(field => reloadFields.has(field)),
+              reloadBudget: observations?.reloadBudget
+                ? Object.fromEntries(budgetChecks.map(key => [key, observations.reloadBudget[key] === true])) : null,
               rootCarriedBy, reloadsSettled: [0, 1, 2].includes(observations?.reloadsSettled) ? observations.reloadsSettled : null,
               oracle: oracle ? { projectionStatus: httpStatus(oracle.projectionStatus),
                 institutionReadStatus: httpStatus(oracle.institutionReadStatus),

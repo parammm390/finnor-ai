@@ -13,13 +13,14 @@ import { execFileSync } from "node:child_process";
 import { chmodSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
 import {
   readNativeEnvironment, signInOwner, startOwnedWorker, createOriginalInstitutionParent, prepareInstitutionFixtureResourcePool,
   driveAcquisitionToModelReady, submitInstitutionAcquisition,
 } from "./x1-origin-fixture.mts";
 import {
   APP, FRONTEND, INST, RequestWatch, claimLabelProbe, elementWith, ensureAuthCredential, idpUserId, loadPlaywright, newMountedContext,
-  openWork, panelFor, privateDir, readPanels, refreshGrantStatus, screenshots, sha, sleep, storageScan, uiSignIn, uiSignOut,
+  openWork, panelFor, privateDir, readPanels, readSettledPanels, refreshGrantStatus, screenshots, sha, sleep, storageScan, uiSignIn, uiSignOut,
   waitForPanel, waitUntil, workUrl, writePrivateJson,
 } from "./z0-mounted-lib.mts";
 import { readOwnerTruth, witness } from "./z0-mounted-oracle.mts";
@@ -227,18 +228,17 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
   };
   check(c, "oracles.agree", "O-SQL and O-API agree before either is used as an expectation", "O-SQL vs O-API", truth.disagreements, truth.disagreements.length === 0);
   c.observations.browserStage = "READ_INITIAL_PANELS";
-  await waitForPanel(page, parentA.workId);
-  const f0 = await readPanels(page);
+  const f0 = await readSettledPanels(page, parentA.workId);
   await shot(page, c, "open");
   c.observations.reloadsSettled = 0;
   c.observations.browserStage = "FIRST_RELOAD";
-  await page.reload({ waitUntil: "domcontentloaded" }); await waitForPanel(page, parentA.workId);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  const f1 = await readSettledPanels(page, parentA.workId);
   c.observations.reloadsSettled = 1;
-  const f1 = await readPanels(page);
   c.observations.browserStage = "SECOND_RELOAD";
-  await page.reload({ waitUntil: "domcontentloaded" }); await waitForPanel(page, parentA.workId);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  const f2 = await readSettledPanels(page, parentA.workId);
   c.observations.reloadsSettled = 2;
-  const f2 = await readPanels(page);
   c.observations.browserStage = "CHECK_RELOADED_PANELS";
   await shot(page, c, "after-second-reload");
   c.observations.signatures = { f0: signature(f0), f1: signature(f1), f2: signature(f2) };
@@ -378,9 +378,10 @@ await runCase("M-04", ["Z0-R45-C03", "Z0-R09-C01"], "Blocked/needs-action state 
   const opened = await ensureOwnerOnWork("B");
   c.observations.rootCarriedBy = opened.rootCarriedBy;
   const truth = await readOwnerTruth({ q, owner, parent: parentB, sessionId: sessionB, acquisitionInput: acquisitionB });
-  const f0 = await readPanels(page);
-  await page.reload({ waitUntil: "domcontentloaded" }); await waitForPanel(page, parentB.workId);
-  const f1 = await readPanels(page);
+  const f0 = await readSettledPanels(page, parentB.workId);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  const f1 = await readSettledPanels(page, parentB.workId);
+  const after = await readOwnerTruth({ q, owner, parent: parentB, sessionId: sessionB, acquisitionInput: acquisitionB });
   await shot(page, c, "blocked");
   const app = f1.app?.text ?? "";
   const nextAction = Boolean(await page.locator(`${APP} [data-application-next-action]`).count()) || /(next action|owner must|you must|re-?authori[sz]e|re-?enable|restore the|grant again)/i.test(f1.app?.textNoPre ?? "");
@@ -395,6 +396,19 @@ await runCase("M-04", ["Z0-R45-C03", "Z0-R09-C01"], "Blocked/needs-action state 
     { reasonShown: truth.session.reason ? app.includes(truth.session.reason) : null, nextActionStated: nextAction }, nextAction)) c.gaps.push({ id: "next-action", predicate: "UI_GAP_BLOCKED_STATE_NOT_ACTIONABLE" });
   const differences = reloadDifferences(f0, f1);
   c.observations.reloadDifferences = differences;
+  const beforeBudget = truth.api.session?.institutional?.budget;
+  const afterBudget = after.api.session?.institutional?.budget;
+  const reloadBudget = {
+    sqlAgreesBefore: Boolean(beforeBudget) && !truth.disagreements.some(value => value.startsWith("budget:")),
+    sqlAgreesAfter: Boolean(afterBudget) && !after.disagreements.some(value => value.startsWith("budget:")),
+    shownMatchesBefore: Boolean(beforeBudget) && isDeepStrictEqual(jsonOf(f0.budgetJson), beforeBudget),
+    shownMatchesAfter: Boolean(afterBudget) && isDeepStrictEqual(jsonOf(f1.budgetJson), afterBudget),
+    ownerBudgetUnchanged: Boolean(beforeBudget && afterBudget) && isDeepStrictEqual(beforeBudget, afterBudget),
+  };
+  c.observations.reloadBudget = reloadBudget;
+  check(c, "budget.owner-agreement", "visible budget matches the original reservation in SQL and API before and after reload",
+    "O-SQL charges + O-API + DOM", reloadBudget, reloadBudget.sqlAgreesBefore && reloadBudget.sqlAgreesAfter
+      && reloadBudget.shownMatchesBefore && reloadBudget.shownMatchesAfter);
   check(c, "reload-stable", "fact set after reload equals the set before it", "DOM facts", { differences }, differences.length === 0);
   mutationsOf(c, mark);
 });
