@@ -193,7 +193,8 @@ jobs:
           const oracleFields = new Set(['status', 'deadline', 'charge count', 'effect count', 'budget', 'consumed',
             'original deadline', 'wall deadline', 'compiler status', 'compiler revision', 'compiler attempts', 'acquisition units'])
           const browserStages = new Set(['START_BROWSER', 'SIGN_IN', 'CONFIRM_IDENTITY', 'OPEN_ORIGINAL_WORK',
-            'READ_OWNER_ORACLE', 'READ_INITIAL_PANELS', 'FIRST_RELOAD', 'SECOND_RELOAD', 'CHECK_RELOADED_PANELS'])
+            'READ_OWNER_ORACLE', 'READ_INITIAL_PANELS', 'FIRST_RELOAD', 'SECOND_RELOAD', 'CHECK_RELOADED_PANELS',
+            'BEFORE_LOGOUT_WORK', 'AUTH_LOGOUT', 'SIGN_IN_AGAIN', 'OPEN_WORK_AFTER_SIGN_IN', 'CHECK_RESTORED_WORK'])
           const browserProbeCauses = new Set(['NAVIGATION_CONTEXT_DESTROYED', 'PAGE_OR_BROWSER_CLOSED',
             'EVALUATOR_HELPER_MISSING', 'PAGE_EVALUATOR_REFERENCE_ERROR', 'PAGE_EVALUATOR_SYNTAX_ERROR',
             'EVALUATION_TIMEOUT', 'BROWSER_PROTOCOL_ERROR', 'OTHER_EVALUATE_FAILURE'])
@@ -201,6 +202,38 @@ jobs:
           const budgetChecks = ['sqlAgreesBefore', 'sqlAgreesAfter', 'shownMatchesBefore', 'shownMatchesAfter', 'ownerBudgetUnchanged']
           const budgetField = value => /^(status|originalDeadlineAt|wallDeadlineAt|childDeadlineAt|newReservation|releaseGranted|resources\.length|resources\.[0-9]{1,2}\.(resourceId|unit|limit|used|remaining|overdrawn))$/.test(value)
           const httpStatus = value => Number.isInteger(value) && value >= 100 && value <= 599 ? value : null
+          const member = (values, value) => values.includes(value) ? value : null
+          const count = value => Number.isSafeInteger(value) && value >= 0 ? value : null
+          const workStatus = value => member(['received', 'understanding', 'planning', 'ready', 'actionable', 'awaiting_approval',
+            'executing', 'completed', 'failed', 'recovery', 'waiting', 'blocked', 'cancelled'], value)
+          const ownerCutNames = ['beforeMount', 'open', 'afterOracle', 'initialPanels', 'firstReload', 'secondReload',
+            'afterRead', 'beforeOpen', 'reloaded', 'beforeOffline', 'afterReconnect']
+          const ownerCut = cut => ({
+            work: workStatus(cut.work),
+            programme: member(['QUEUED', 'RUNNING', 'WAITING', 'PARTIAL', 'OBSERVED', 'TESTED', 'INVALIDATED',
+              'FAILED', 'CANCELLED', 'UNKNOWN', 'CHECK_REJECTED'], cut.programme),
+            occupation: member(['PROGRESS', 'WAITING', 'BLOCKED', 'STOPPED', 'RECONCILING', 'FAILED', 'COMPLETE'], cut.occupation),
+            charges: (cut.charges ?? []).slice(0, 24).map(row => ({
+              schema: member(['finnor.s5.institution-consumption.v1', 'finnor.s5.application-resource-charge.v1',
+                'finnor.s5.governed-resource-charge.v1'], row.schema),
+              phase: member(['EXECUTION', 'RECOVERY', 'HUMAN', 'ACQUISITION', 'CHECK', 'COMPILE', 'PREPARATION',
+                'CONTROL', 'LIFECYCLE'], row.phase),
+              operation: member(['institution-sources', 'institution-read', 'institution-status', 'institution-witness',
+                'institution-mandate', 'institution-register-source', 'institution-submit', 'institution-cancel',
+                'institution-resume', 'institution-revise', 'institution-inputs', 'institution-consent'], row.operation),
+              count: count(row.count), since: count(row.since), units: count(row.units),
+            })),
+            transitions: (cut.transitions ?? []).slice(0, 12).map(row => ({
+              type: member(['programme_occupation_reconciled', 'objective_loop_reconciled', 'children_reconciled',
+                'work_received', 'work_status_changed'], row.type), from: workStatus(row.from), to: workStatus(row.to),
+            })),
+            jobs: (cut.jobs ?? []).slice(0, 24).map(row => ({
+              type: member(['run_x1_institution_compiler_v1', 'run_harness_program_v1', 'run_x1_institution_continuation_v1',
+                'run_application_semantics_v1'], row.type),
+              status: member(['queued', 'running', 'quarantined'], row.status),
+              currentGeneration: row.current_generation === true, due: row.due === true, count: count(row.count),
+            })),
+          })
           const renderBoundary = value => value && typeof value === 'object' ? {
             ...Object.fromEntries(['diagnosticUnavailable', 'canvasPresent', 'documentPresent', 'invalidDocument',
               'emptyDocument', 'threadResponseObserved', 'workResponseObserved', 'projectionResponseObserved']
@@ -246,6 +279,15 @@ jobs:
               networkError, setupPredicate, setupCause,
               wallMs: Number.isSafeInteger(wallMs) && wallMs >= 0 ? wallMs : null,
               browserStage: browserStages.has(observations?.browserStage) ? observations.browserStage : null,
+              ownerCuts: observations?.ownerCuts ? Object.fromEntries(ownerCutNames
+                .filter(name => observations.ownerCuts[name]).map(name => [name, ownerCut(observations.ownerCuts[name])])) : null,
+              foreignHttp: observations?.foreignHttp ? { projection: httpStatus(observations.foreignHttp.projection),
+                work: httpStatus(observations.foreignHttp.work), tenantDiffers: observations.foreignHttp.tenantDiffers === true } : null,
+              logoutRequests: observations?.logoutRequests?.slice(0, 24).map(row => ({
+                kind: member(['auth-token', 'auth-logout', 'sign-out', 'me', 'application-projection', 'institution-sources',
+                  'institution-read'], row.kind),
+                status: httpStatus(row.status), failed: row.failed === true,
+              })) ?? null,
               reloadDifferences: (observations?.reloadDifferences ?? []).filter(field => reloadFields.has(field)),
               reloadBudget: observations?.reloadBudget
                 ? Object.fromEntries(budgetChecks.map(key => [key, observations.reloadBudget[key] === true])) : null,

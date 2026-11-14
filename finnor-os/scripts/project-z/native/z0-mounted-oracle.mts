@@ -9,6 +9,60 @@ export type Q = (text: string, params?: unknown[]) => Promise<any[]>;
 const iso = (value: unknown) => new Date(value as string | Date).toISOString();
 const units = (value: unknown) => BigInt(typeof value === "number" ? value : String(value));
 
+/** A single SQL snapshot, scoped to the original owner records. Reading the
+ * institutional HTTP oracle itself consumes an S5 control unit. */
+export async function mountedOwnerCut(q: Q, parent: any, sessionId: string, after: string | null) {
+  const [cut] = await q(`WITH original_jobs AS (
+      SELECT type,status,run_at,j.payload->>'generation'=owner.generation::text current_generation
+      FROM finnor_os.jobs j JOIN LATERAL (
+        SELECT generation FROM finnor_os.x1_compiler_requests
+        WHERE j.type='run_x1_institution_compiler_v1' AND j.payload->>'requestId'=$4::uuid::text
+          AND tenant_id=$1 AND principal_id=$2 AND id=$4::uuid
+        UNION ALL
+        SELECT generation FROM finnor_os.p1_requests
+        WHERE j.type IN ('run_harness_program_v1','run_x1_institution_continuation_v1') AND j.payload->>'programId'=$5::uuid::text
+          AND tenant_id=$1 AND principal_id=$2 AND id=$5::uuid
+        UNION ALL
+        SELECT generation FROM finnor_os.application_semantics_sessions
+        WHERE j.type='run_application_semantics_v1' AND j.payload->>'sessionId'=$6::uuid::text
+          AND tenant_id=$1 AND principal_id=$2 AND id=$6::uuid
+      ) owner ON true
+      WHERE j.tenant_id=$1 AND j.payload->>'principalId'=$2::uuid::text AND j.status IN ('queued','running','quarantined')
+    ), reads AS (
+      SELECT DISTINCT body->'payload'->>'invocationId' invocation, body->'payload'->>'operation' operation
+      FROM finnor_os.s7_economic_records
+      WHERE tenant_id=$1 AND principal_id=$2 AND kind='COMPUTE'
+        AND body->'payload'->>'schema'='finnor.x1.api-compute.v1'
+        AND body->'payload'->>'workId'=$3::uuid::text AND body->'payload'->>'episodeId'=$7
+    ), charges AS (
+      SELECT body->>'schema' schema,phase,reads.operation,count(*)::int count,
+        count(*) FILTER (WHERE created_at >= $9::timestamptz)::int since,coalesce(sum(units),0)::int units
+      FROM finnor_os.s5_governed_resource_charges
+      LEFT JOIN reads ON reads.invocation=body->>'physicalInvocationId'
+      WHERE tenant_id=$1 AND principal_id=$2 AND reservation_id=$8
+      GROUP BY 1,2,3 ORDER BY 1,2,3
+    ), work_transitions AS (
+      SELECT seq,event_type type,from_status "from",to_status "to"
+      FROM finnor_os.work_events
+      WHERE tenant_id=$1 AND work_id=$3::uuid AND created_at >= $9::timestamptz
+      ORDER BY seq DESC LIMIT 12
+    )
+    SELECT statement_timestamp()::text captured_at,
+      (SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$3::uuid) work,
+      (SELECT status FROM finnor_os.p1_requests WHERE tenant_id=$1 AND principal_id=$2 AND id=$5::uuid) programme,
+      (SELECT status FROM finnor_os.work_programme_occupations
+       WHERE tenant_id=$1 AND work_id=$3::uuid AND programme_id=$5::uuid ORDER BY owner LIMIT 1) occupation,
+      (SELECT coalesce(jsonb_agg(to_jsonb(c)),'[]') FROM charges c) charges,
+      (SELECT coalesce(jsonb_agg(to_jsonb(e) ORDER BY e.seq),'[]') FROM work_transitions e) transitions,
+      (SELECT coalesce(jsonb_agg(to_jsonb(j)),'[]') FROM (
+        SELECT type,status,current_generation,run_at<=statement_timestamp() due,count(*)::int count
+        FROM original_jobs GROUP BY 1,2,3,4 ORDER BY 1,2,3,4
+      ) j) jobs`,
+    [parent.tenantId, parent.ownerId, parent.workId, parent.compilerRequestId, parent.programId, sessionId,
+      parent.episodeId, parent.parentReservation.id, after]);
+  return cut;
+}
+
 export async function witness(q: Q, parent: any) {
   const [reservations] = await q("SELECT count(*)::int count, md5(coalesce(string_agg(reservation_id||status||envelopes::text,'|' ORDER BY reservation_id),'')) digest FROM finnor_os.s5_reservations WHERE tenant_id=$1", [parent.tenantId]);
   const [charges] = await q("SELECT count(*)::int count, coalesce(sum(units),0)::text units FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1", [parent.tenantId]);

@@ -23,7 +23,7 @@ import {
   openWork, panelFor, privateDir, readPanels, readSettledPanels, refreshGrantStatus, screenshots, sha, sleep, storageScan, uiSignIn, uiSignOut,
   waitForPanel, waitUntil, workUrl, writePrivateJson,
 } from "./z0-mounted-lib.mts";
-import { readOwnerTruth, witness } from "./z0-mounted-oracle.mts";
+import { mountedOwnerCut, readOwnerTruth, witness } from "./z0-mounted-oracle.mts";
 
 const state = process.env.FINNOR_NATIVE_STATE, evidence = process.env.FINNOR_NATIVE_EVIDENCE, root = process.env.FINNOR_NATIVE_ROOT;
 if (!state || !evidence || !root) throw Error("Z0M_SCENARIO_NATIVE_ENVIRONMENT_REQUIRED");
@@ -60,6 +60,16 @@ async function runCase(id, rows, title, body) {
   if (id === "M-01" && c.outcome === "FAIL" && page) {
     c.observations.renderBoundary = await renderBoundaryFacts().catch(() => ({ diagnosticUnavailable: true }));
   }
+  if (id === "M-08" && c.outcome === "FAIL") {
+    c.observations.logoutRequests = watch.since(c.observations.logoutStart ?? watch.mark())
+      .flatMap(row => {
+        const kind = row.kind === "auth-token" || row.kind === "auth-logout" || row.kind === "sign-out" ? row.kind
+          : ["/api/centropy/me", "/api/centropy/company-brain/application-projection",
+            "/api/centropy/company-brain/institution-sources", "/api/centropy/company-brain/institution-read"].includes(row.path)
+            ? row.path.split("/").at(-1) : null;
+        return kind ? [{ kind, status: row.status, failed: Boolean(row.failure) }] : [];
+      }).slice(-24);
+  }
   c.wallMs = Date.now() - t0;
   c.failedChecks = c.checks.filter(item => !item.pass).map(item => item.id);
   cases.push(c);
@@ -87,7 +97,7 @@ const setup = { workerOwned: Boolean(worker), A: null, B: null, foreign: null, e
 let parentA = null, acqA = null, threadA = null, parentB = null, sessionB = null, threadB = null, acquisitionB = null, foreignCreds = null, foreignRow = null;
 const TERMINAL = ["MODEL_READY", "FAILED", "BLOCKED", "UNKNOWN", "STALE", "CANCELLED"];
 const tagA = "ma" + randomUUID().slice(0, 6), tagB = "mb" + randomUUID().slice(0, 6);
-let witnessBefore = null, workStatusBeforeMounted = null;
+let witnessBefore = null, ownerCutBeforeMounted = null, workStatusBeforeMounted = null;
 
 await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_READY, blocked parent B, threads, foreign owner", async c => {
   if (!worker) notRun("SCENARIO_OWNED_WORKER_REQUIRES_NO_WORKER_LAUNCH");
@@ -157,7 +167,8 @@ await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_REA
     } catch (error) { check(c, "foreign.owner", "real credential for an existing foreign owner", "Auth admin + API", String(error?.message ?? error).slice(0, 200), false); }
   } else check(c, "foreign.owner", "a launcher-seeded owner of another tenant exists", "O-SQL users", "none", false);
   witnessBefore = await witness(q, parentA);
-  workStatusBeforeMounted = (await q("SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2", [parentA.tenantId, parentA.workId]))[0]?.status ?? null;
+  ownerCutBeforeMounted = await mountedOwnerCut(q, parentA, acqA.sessionId, null);
+  workStatusBeforeMounted = ownerCutBeforeMounted.work;
   setup.A = { tag: tagA, workId: parentA.workId, dealId: parentA.dealId, sessionId: acqA.sessionId, threadId: threadA.id, status: row?.status };
   setup.foreign = foreignRow;
 });
@@ -277,8 +288,12 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
   c.observations.browserStage = "OPEN_ORIGINAL_WORK";
   const opened = await openWork(page, threadA.id, parentA.workId);
   c.observations.rootCarriedBy = opened.rootCarriedBy;
+  const ownerCuts = c.observations.ownerCuts = { beforeMount: ownerCutBeforeMounted };
+  const cut = () => mountedOwnerCut(q, parentA, acqA.sessionId, ownerCutBeforeMounted.captured_at);
+  ownerCuts.open = await cut();
   c.observations.browserStage = "READ_OWNER_ORACLE";
   const truth = await readOwnerTruth({ q, owner, parent: parentA, sessionId: acqA.sessionId, acquisitionInput: acqA.request });
+  ownerCuts.afterOracle = await cut();
   referenceTruthA = truth;
   c.observations.oracle = {
     projectionStatus: truth.api.projectionStatus,
@@ -289,15 +304,18 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
   check(c, "oracles.agree", "O-SQL and O-API agree before either is used as an expectation", "O-SQL vs O-API", truth.disagreements, truth.disagreements.length === 0);
   c.observations.browserStage = "READ_INITIAL_PANELS";
   const f0 = await readSettledPanels(page, parentA.workId);
+  ownerCuts.initialPanels = await cut();
   await shot(page, c, "open");
   c.observations.reloadsSettled = 0;
   c.observations.browserStage = "FIRST_RELOAD";
   await page.reload({ waitUntil: "domcontentloaded" });
   const f1 = await readSettledPanels(page, parentA.workId);
+  ownerCuts.firstReload = await cut();
   c.observations.reloadsSettled = 1;
   c.observations.browserStage = "SECOND_RELOAD";
   await page.reload({ waitUntil: "domcontentloaded" });
   const f2 = await readSettledPanels(page, parentA.workId);
+  ownerCuts.secondReload = await cut();
   c.observations.reloadsSettled = 2;
   c.observations.browserStage = "CHECK_RELOADED_PANELS";
   await shot(page, c, "after-second-reload");
@@ -370,6 +388,7 @@ await runCase("M-02", ["Z0-R08-C02", "Z0-R45-C03"], "S5/S6/S7 accounting, produc
   const f = await readPanels(page);
   await shot(page, c, "accounting");
   const truth = await readOwnerTruth({ q, owner, parent: parentA, sessionId: acqA.sessionId, acquisitionInput: acqA.request });
+  c.observations.ownerCuts = { afterRead: await mountedOwnerCut(q, parentA, acqA.sessionId, ownerCutBeforeMounted.captured_at) };
   const app = f.app?.text ?? "";
   const after = await witness(q, parentA);
   check(c, "1.same-parent", "reservation shown = original reservation; reservation count and envelope digest unchanged by the mounted phase", "O-SQL s5_reservations before/after",
@@ -435,13 +454,19 @@ await runCase("M-04", ["Z0-R45-C03", "Z0-R09-C01"], "Blocked/needs-action state 
   if (!page) notRun("BROWSER_NOT_STARTED");
   if (!setup.B?.raceReached || !TERMINAL.includes(setup.B.final?.status) || setup.B.final.status === "MODEL_READY") notRun("REVOCATION_RACE_NOT_REACHED");
   const mark = watch.mark();
+  const beforeOpen = await mountedOwnerCut(q, parentB, sessionB, null);
+  const ownerCuts = c.observations.ownerCuts = { beforeOpen };
+  const cut = () => mountedOwnerCut(q, parentB, sessionB, beforeOpen.captured_at);
   const opened = await ensureOwnerOnWork("B");
   c.observations.rootCarriedBy = opened.rootCarriedBy;
   const truth = await readOwnerTruth({ q, owner, parent: parentB, sessionId: sessionB, acquisitionInput: acquisitionB });
   const f0 = await readSettledPanels(page, parentB.workId);
+  ownerCuts.initialPanels = await cut();
   await page.reload({ waitUntil: "domcontentloaded" });
   const f1 = await readSettledPanels(page, parentB.workId);
+  ownerCuts.reloaded = await cut();
   const after = await readOwnerTruth({ q, owner, parent: parentB, sessionId: sessionB, acquisitionInput: acquisitionB });
+  ownerCuts.afterOracle = await cut();
   await shot(page, c, "blocked");
   const app = f1.app?.text ?? "";
   const nextAction = Boolean(await page.locator(`${APP} [data-application-next-action]`).count()) || /(next action|owner must|you must|re-?authori[sz]e|re-?enable|restore the|grant again)/i.test(f1.app?.textNoPre ?? "");
@@ -528,6 +553,8 @@ await runCase("M-09", ["Z0-R09-C05"], "Offline then reconnect", async c => {
   await ensureOwnerOnWork("A");
   await waitForPanel(page, parentA.workId);
   const before = await witness(q, parentA);
+  const beforeOffline = await mountedOwnerCut(q, parentA, acqA.sessionId, null);
+  c.observations.ownerCuts = { beforeOffline };
   const markers = referenceTruthA.markers;
   const strong = markers.filter(marker => strongLabels.has(marker.label));
   const mark = watch.mark();
@@ -555,6 +582,7 @@ await runCase("M-09", ["Z0-R09-C05"], "Offline then reconnect", async c => {
   const fresh = watch.since(mark2).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId);
   const after = await readPanels(page);
   const afterWitness = await witness(q, parentA);
+  c.observations.ownerCuts.afterReconnect = await mountedOwnerCut(q, parentA, acqA.sessionId, beforeOffline.captured_at);
   await shot(page, c, "reconnected");
   check(c, "reconnect.fresh-read-and-facts", "after reconnect a fresh projection request is observed and the facts equal the earlier ones", "browser request watch + M-01 reference signature",
     { freshReads: fresh.length, signatureEqual: signature(after) === referenceSignature }, fresh.length >= 1 && signature(after) === referenceSignature);
@@ -567,6 +595,7 @@ await runCase("M-09", ["Z0-R09-C05"], "Offline then reconnect", async c => {
 /* ---- M-08 */
 await runCase("M-08", ["Z0-R09-C04", "Z0-R45-C04"], "Real logout then new sign-in", async c => {
   if (!referenceTruthA) notRun("M-01_DID_NOT_READ_THE_ORIGINAL_WORK");
+  c.observations.browserStage = "BEFORE_LOGOUT_WORK";
   await ensureOwnerOnWork("A");
   await waitForPanel(page, parentA.workId);
   const markers = referenceTruthA.markers;
@@ -576,6 +605,8 @@ await runCase("M-08", ["Z0-R09-C04", "Z0-R45-C04"], "Real logout then new sign-i
   const secrets = [{ label: "previousAccessToken", value: oldBearer }, { label: "previousAccessTokenInStorage", value: prior.accessToken }, { label: "previousRefreshToken", value: prior.refreshToken }];
   check(c, "positive-control.session-present", "before logout the storage detector sees the Supabase session and the previous tokens", "harness", { sessionKey: prior.supabaseSessionKeyPresent, refreshTokenFound: Boolean(prior.refreshToken) }, prior.supabaseSessionKeyPresent && Boolean(prior.refreshToken));
   const mark = watch.mark();
+  c.observations.logoutStart = mark;
+  c.observations.browserStage = "AUTH_LOGOUT";
   await uiSignOut(page);
   await watch.settle();
   const rows = watch.since(mark);
@@ -594,12 +625,15 @@ await runCase("M-08", ["Z0-R09-C04", "Z0-R45-C04"], "Real logout then new sign-i
   const oldUser = oldBearer ? await idpUserId(env, oldBearer) : null;
   c.observations.oldAccessTokenAtIdpAfterLogout = oldUser?.status ?? null;
   const mark2 = watch.mark();
+  c.observations.browserStage = "SIGN_IN_AGAIN";
   const login = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
+  c.observations.browserStage = "OPEN_WORK_AFTER_SIGN_IN";
   await openWork(page, threadA.id, parentA.workId);
   await waitForPanel(page, parentA.workId);
   await watch.settle();
   const reads = watch.since(mark2).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId);
   const fresh = await readPanels(page);
+  c.observations.browserStage = "CHECK_RESTORED_WORK";
   await shot(page, c, "signed-in-again");
   check(c, "again.new-token-and-fresh-read", "the new sign-in carries a different access token, a new projection read is observed and the facts equal the earlier ones", "browser request watch + M-01 reference signature",
     { newToken: Boolean(login.bearer) && login.bearer !== oldBearer, freshReads: reads.length, signatureEqual: signature(fresh) === referenceSignature },
@@ -631,6 +665,8 @@ await runCase("M-06", ["Z0-R09-C02", "Z0-R09-C04", "Z0-R45-C04"], "Principal swi
   const nodeForeign = await signInOwner(env, foreignCreds); costs.nodeAuthGrants++;
   const denied = await nodeForeign.operation("application-projection", { root: rootA, workId: parentA.workId });
   const deniedWork = await nodeForeign.call(`/api/works/${parentA.workId}`);
+  c.observations.foreignHttp = { projection: denied.status, work: deniedWork.status,
+    tenantDiffers: nodeForeign.tenantId !== parentA.tenantId };
   check(c, "foreign.dom-clean", "the original Work's panel count is 0 and no original private value (including the thread title) is in the DOM", "O-SQL markers",
     { panels: f.applicationCount, leaked: hits(f.html, markers.filter(m => m.label !== "threadId")) }, f.applicationCount === 0 && hits(f.html, markers).length === 0);
   check(c, "foreign.storage-clean", "no original private value and no previous token in any storage", "storage scan", { markers: store.markerHitCount, secrets: store.secretHitCount }, store.markerHitCount === 0 && store.secretHitCount === 0);
