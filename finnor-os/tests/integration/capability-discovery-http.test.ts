@@ -300,6 +300,46 @@ describe.skipIf(!adminUrl)("authenticated capability discovery", () => {
     expect(preserved).toEqual({ ...lifecycle, response: accepted.body });
   });
 
+  it("refuses foreign Work IDs for typed and economic programme queries before private intake", async () => {
+    const owned = await http.request("queries", {
+      intent: "work_list", page: { limit: 10 }, idempotencyKey: randomUUID(),
+    }, "actor");
+    expect(owned.status, JSON.stringify(owned.body)).toBe(201);
+    const workId = owned.body.workId as string;
+    const [before] = (await admin.query(
+      "SELECT status,(SELECT count(*)::int FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2) AS inputs FROM finnor_os.works WHERE tenant_id=$1 AND id=$2",
+      [tenantId, workId],
+    )).rows;
+    expect(before).toBeDefined();
+
+    // A second employee in the *same tenant* knows the exact Work UUID. The
+    // query boundary must not turn that knowledge into a new Work input.
+    const foreignTyped = await http.request("queries", {
+      intent: "work_list", page: { limit: 10 }, workId, idempotencyKey: randomUUID(),
+    }, "other");
+    await record("foreign typed Work query refused", { foreignTyped, workId });
+    expect(foreignTyped.status, JSON.stringify(foreignTyped.body)).toBe(404);
+    expect(foreignTyped.body).toEqual({ error: "Work not found" });
+
+    // The special economic-programme reader previously resolved the latest
+    // input using only the tenant and Work ID. It must reject before that read,
+    // regardless of whether the requested programme exists.
+    const foreignEconomic = await http.request("queries", {
+      intent: "economic_programme_v1", programmeId: randomUUID(), workId,
+      idempotencyKey: randomUUID(),
+    }, "other");
+    await record("foreign economic programme Work query refused", { foreignEconomic, workId });
+    expect(foreignEconomic.status, JSON.stringify(foreignEconomic.body)).toBe(404);
+    expect(foreignEconomic.body.workInputId).toBeUndefined();
+    expect(foreignEconomic.body.instructionId).toBeUndefined();
+
+    const [after] = (await admin.query(
+      "SELECT status,(SELECT count(*)::int FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2) AS inputs FROM finnor_os.works WHERE tenant_id=$1 AND id=$2",
+      [tenantId, workId],
+    )).rows;
+    expect(after).toEqual(before);
+  });
+
   it("replays the original typed query snapshot after a later query on its Work", async () => {
     const input = { intent: "work_list", page: { limit: 100 }, idempotencyKey: randomUUID() };
     const first = await http.request("queries", input);
