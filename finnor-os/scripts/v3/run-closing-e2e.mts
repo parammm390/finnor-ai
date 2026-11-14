@@ -782,7 +782,8 @@ try {
     // episode, seed a payment, or turn the failing acceptance into a false pass.
     if (compensationCase === "exact") {
       const observed = { linkWouldInsertAfterClosed: false, rolledBack: false,
-        errorCode: null as string | null, durableLinkCount: -1 };
+        errorCode: null as string | null, durableLinkCount: -1,
+        stagedJoins: null as Record<string, number> | null };
       // Stage each canonical join using boolean/count witnesses only. Do not
       // export source rows, identities, amounts, document contents or credentials.
       const stagedJoins = (await admin!.query(`
