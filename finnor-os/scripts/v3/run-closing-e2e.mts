@@ -487,6 +487,35 @@ async function fixture(label: string, fault?: string) {
   assert.notEqual(submitted.body.status, "BLOCKED", JSON.stringify(submitted.body));
   f.programmeId = submitted.body.programmeId; f.workId = submitted.body.workId;
   assert(f.programmeId && f.workId);
+  if (workforceCompensation && compensationCase === "exact" && process.env.FINNOR_W2_CUT_SECTION_DIAGNOSTIC === "1") {
+    // Disposable fixture only: record hashes immediately before certificate issuance.
+    // No source data, money, identity or credential values enter the report.
+    await admin!.query(`CREATE TABLE finnor_os.w2_cut_probe (
+      tenant_id uuid NOT NULL, programme_id uuid NOT NULL,
+      section text NOT NULL, digest text NOT NULL,
+      PRIMARY KEY(tenant_id,programme_id,section))`);
+    await admin!.query(`CREATE FUNCTION finnor_os.w2_test_capture_close_cut()
+      RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+      SET search_path=pg_catalog,finnor_os AS $
+      DECLARE programme uuid;
+      BEGIN
+        SELECT q.id INTO programme FROM finnor_os.pe_closing_programmes q
+          WHERE q.tenant_id=NEW.tenant_id AND q.transaction_id=NEW.id
+          ORDER BY q.created_at DESC LIMIT 1;
+        IF programme IS NOT NULL THEN
+          INSERT INTO finnor_os.w2_cut_probe(tenant_id,programme_id,section,digest)
+          SELECT NEW.tenant_id,programme,part.key,
+            encode(sha256(convert_to(part.value::text,'UTF8')),'hex')
+          FROM jsonb_each(finnor_os.pe_closing_cut(NEW.tenant_id,programme)) part
+          ON CONFLICT(tenant_id,programme_id,section) DO NOTHING;
+        END IF;
+        RETURN NEW;
+      END $`);
+    await admin!.query(`CREATE TRIGGER aa_w2_cut_before_certificate
+      AFTER UPDATE OF status ON finnor_os.pe_deals
+      FOR EACH ROW WHEN (NEW.status='closed' AND OLD.status IS DISTINCT FROM NEW.status)
+      EXECUTE FUNCTION finnor_os.w2_test_capture_close_cut()`);
+  }
   ok(await observe(f, f.initialDebt));
   const eq = f.spec.funding[1];
   ok(await observe(f, fact(f, eq, "FUNDING_AVAILABLE", "receiving-authority", {
@@ -776,6 +805,24 @@ try {
       ok(await request(f, "/api/closing/resume", { programmeId: f.programmeId }));
     }
     const completed = await waitFor(f, q => q.status === "CLOSED" && q.certificate?.currentlyValid, 480000);
+    if (compensationCase === "exact" && process.env.FINNOR_W2_CUT_SECTION_DIAGNOSTIC === "1") {
+      const cutDiff = (await admin!.query(`
+        SELECT previous.section,
+          previous.digest IS DISTINCT FROM
+            encode(sha256(convert_to(now_cut.value::text,'UTF8')),'hex') AS changed
+        FROM finnor_os.w2_cut_probe previous
+        JOIN LATERAL jsonb_each(finnor_os.pe_closing_cut($1,$2)) now_cut
+          ON now_cut.key=previous.section
+        WHERE previous.tenant_id=$1 AND previous.programme_id=$2
+        ORDER BY previous.section`, [f.tenant, f.programmeId])).rows;
+      await save("workforce-compensation/material-cut-section-diff.json", {
+        checkedPreCertificateSections: cutDiff.length,
+        changedSections: cutDiff.filter(row => row.changed).map(row => String(row.section)),
+        unchangedSections: cutDiff.filter(row => !row.changed).length,
+        proofDomain: "DISPOSABLE_NATIVE_POSTCLOSE_DIAGNOSTIC_ONLY",
+        financialSettlementClaimed: false,
+      });
+    }
     const nativeCompletion = await completedNativeWork(f);
     // Diagnostic only: replay the real canonical receiving-link evaluator inside
     // a transaction that is always rolled back. This cannot repair the owner
