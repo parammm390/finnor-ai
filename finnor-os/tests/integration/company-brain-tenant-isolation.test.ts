@@ -115,7 +115,9 @@ describe.skipIf(!available)("Company Brain tenant isolation", () => {
     expect(hasWork(peerGraph, theirs.workId)).toBe(true);
     expect(hasWork(peerGraph, mine.workId)).toBe(false);
     expect(JSON.stringify(ownerGraph)).not.toContain(peerSecret);
+    expect(JSON.stringify(ownerGraph)).not.toContain(theirs.workId);
     expect(JSON.stringify(peerGraph)).not.toContain(ownerSecret);
+    expect(JSON.stringify(peerGraph)).not.toContain(mine.workId);
     // Raw Work remains canonical and unchanged. This is a read visibility
     // boundary, not a destructive migration or projection rewrite.
     expect((await workAggregate(tenantA, mine.workId))?.work.initialInstruction).toBe(ownerSecret);
