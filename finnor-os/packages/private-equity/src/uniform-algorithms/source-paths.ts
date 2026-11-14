@@ -1222,5 +1222,6 @@ export const UNIFORM_SOURCE_PATHS=[
   "src/components/centropy/canvas/AnswerCanvas.tsx",
   "src/components/centropy/canvas/answer-canvas.css",
   "src/components/centropy/canvas/answer-result.ts",
-  "src/lib/auth/browser-session.ts"
+  "src/lib/auth/browser-session.ts",
+  "finnor-os/packages/orchestration/src/canonical-analysis.ts"
 ] as const;

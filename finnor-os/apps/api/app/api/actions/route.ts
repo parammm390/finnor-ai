@@ -5,7 +5,7 @@ import { requireContext, errorResponse, enforceRouteRateLimit } from "../../../l
 import { getOrchestrator } from "../../../lib/orchestrator";
 import { enforceBatchBackpressure } from "../../../lib/backpressure";
 import { requireWorkerFleetReady } from "../../../lib/worker-readiness";
-import { receiveWork, attachValidatedWorkInputContext, recordWorkResponse, transitionWork, workAggregate, withTenant, domainActions, businessEffects } from "@finnor/db";
+import { receiveWork, attachValidatedWorkInputContext, recordWorkResponse, transitionWork, workAggregate, withTenant, domainActions, businessEffects, WorkControlAuthorizationError } from "@finnor/db";
 import { and, eq, inArray } from "drizzle-orm";
 import { classifyInstructionRoute, interactionAwareOperationalDecision, interpretOperationalQuery, isConversationalTurn, OperatingInteractionContextError, resolveOperatingInteractionContext } from "@finnor/orchestration";
 import { linkEmployeeConversationTurnToWork, persistEmployeeAssistantTurn, prepareEmployeeConversationTurn } from "@finnor/orchestration";
@@ -156,6 +156,7 @@ export async function POST(req: Request): Promise<Response> {
       instructionId,
       workId: body.data.workId,
       userId: ctx.employeeId ?? ctx.userId,
+      requireCurrentEmployeeOwner: Boolean(body.data.workId),
       idempotencyKey: body.data.idempotencyKey,
       // The request context is structurally schema-validated above, but its
       // tenant ownership is only established by resolveOperatingInteractionContext.
@@ -427,6 +428,7 @@ export async function POST(req: Request): Promise<Response> {
       headers: result.query ? { "Server-Timing": `query;dur=${result.query.metadata.durationMs.toFixed(1)}` } : undefined,
     });
   } catch (err) {
+    if (err instanceof WorkControlAuthorizationError) return Response.json({ error: "Work not found" }, { status: 404, headers: { "Cache-Control": "no-store" } });
     return errorResponse(err);
   }
 }
