@@ -2,9 +2,13 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import pg from "pg";
 import { migrate } from "../../packages/db/migrate";
-import { closePool, receiveWork, tenants, transitionWork, users, workAggregate, WorkControlAuthorizationError, withTenant } from "@finnor/db";
+import { closePool, receiveWork, tenants, transitionWork, users, works, workAggregate, WorkControlAuthorizationError, withTenant } from "@finnor/db";
 import { GET as listWorks } from "../../apps/api/app/api/works/route";
 import { GET as getWork } from "../../apps/api/app/api/works/[id]/route";
+import { GET as getWorkObjective } from "../../apps/api/app/api/works/[id]/objective/route";
+import { GET as getWorkExecution } from "../../apps/api/app/api/works/[id]/execution/route";
+import { GET as getWorkReplay } from "../../apps/api/app/api/works/[id]/replay/route";
+import { eq } from "drizzle-orm";
 import { POST as retryWork } from "../../apps/api/app/api/works/[id]/retry/route";
 import { POST as controlObjective } from "../../apps/api/app/api/works/[id]/objective/route";
 
@@ -58,6 +62,7 @@ describe.skipIf(!available)("durable Work APIs", () => {
       instructionId: randomUUID(),
       sessionId: "work-route-session",
       channel: "text",
+      userId: RECOVERY_OWNER_ID,
     });
     const list = await listWorks(request("/api/works?sessionId=work-route-session&active=true"));
     expect(list.status).toBe(200);
@@ -79,6 +84,7 @@ describe.skipIf(!available)("durable Work APIs", () => {
       instruction: "Keep this active Work discoverable",
       sessionId,
       channel: "text",
+      userId: RECOVERY_OWNER_ID,
     });
     const terminalWorkIds: string[] = [];
     for (const status of ["completed", "failed", "cancelled"] as const) {
@@ -87,6 +93,7 @@ describe.skipIf(!available)("durable Work APIs", () => {
         instruction: `Exclude ${status} Work from active discovery`,
         sessionId,
         channel: "text",
+        userId: RECOVERY_OWNER_ID,
       });
       await transitionWork(
         TENANT_ID,
@@ -104,6 +111,62 @@ describe.skipIf(!available)("durable Work APIs", () => {
     const body = await response.json() as { works: Array<{ id: string; status: string }> };
     expect(body.works).toEqual(expect.arrayContaining([expect.objectContaining({ id: active.workId, status: "received" })]));
     expect(body.works.some((work) => terminalWorkIds.includes(work.id))).toBe(false);
+  });
+
+  it("denies same-tenant private Work reads across all five read surfaces until assignment", async () => {
+    const sessionId = `private-work-${randomUUID()}`;
+    const secret = `private-intake-${randomUUID()}`;
+    const ownerWork = await receiveWork({
+      tenantId: TENANT_ID, instruction: secret, channel: "text",
+      userId: RECOVERY_OWNER_ID, sessionId,
+      activeContext: { internalSecret: "private-frozen-work-context" },
+    });
+    const sharedSessionForeignWork = await receiveWork({
+      tenantId: TENANT_ID, instruction: "Peer's own Work", channel: "text",
+      userId: RECOVERY_PEER_ID, sessionId,
+    });
+    const actorHeaders = { "x-user-id": RECOVERY_PEER_ID };
+    const peerList = await listWorks(request(`/api/works?sessionId=${sessionId}`, TENANT_ID, { headers: actorHeaders }));
+    expect(peerList.status).toBe(200);
+    expect(peerList.headers.get("cache-control")).toBe("private, no-store");
+    const peerBody = await peerList.json() as { works: Array<{ id: string; initialInstruction: string }> };
+    expect(peerBody.works.map(work => work.id)).toContain(sharedSessionForeignWork.workId);
+    expect(peerBody.works.map(work => work.id)).not.toContain(ownerWork.workId);
+    expect(JSON.stringify(peerBody)).not.toContain(secret);
+
+    const routes = [
+      (await getWork(request(`/api/works/${ownerWork.workId}`, TENANT_ID, { headers: actorHeaders }), { params: Promise.resolve({ id: ownerWork.workId }) })),
+      (await getWorkObjective(request(`/api/works/${ownerWork.workId}/objective`, TENANT_ID, { headers: actorHeaders }), { params: Promise.resolve({ id: ownerWork.workId }) })),
+      (await getWorkExecution(request(`/api/works/${ownerWork.workId}/execution`, TENANT_ID, { headers: actorHeaders }), { params: Promise.resolve({ id: ownerWork.workId }) })),
+      (await getWorkReplay(request(`/api/works/${ownerWork.workId}/replay`, TENANT_ID, { headers: actorHeaders }), { params: Promise.resolve({ id: ownerWork.workId }) })),
+    ];
+    for (const response of routes) {
+      expect(response.status).toBe(404);
+      expect(await response.json()).toEqual({ error: "Work not found" });
+    }
+    const ownerDetail = await getWork(request(`/api/works/${ownerWork.workId}`), { params: Promise.resolve({ id: ownerWork.workId }) });
+    expect(ownerDetail.status).toBe(200);
+    expect(ownerDetail.headers.get("cache-control")).toBe("private, no-store");
+    const ownerBody = await ownerDetail.json();
+    expect(JSON.stringify(ownerBody)).toContain(secret);
+
+    // Assignment is an existing canonical Work relationship, not an invented share grant.
+    await withTenant(TENANT_ID, db => db.update(works).set({ assignedTo: RECOVERY_PEER_ID })
+      .where(eq(works.id, ownerWork.workId)));
+    const assignedList = await listWorks(request(`/api/works?sessionId=${sessionId}`, TENANT_ID, { headers: actorHeaders }));
+    expect((await assignedList.json() as { works: Array<{ id: string }> }).works.map(work => work.id)).toContain(ownerWork.workId);
+    const assignedDetail = await getWork(request(`/api/works/${ownerWork.workId}`, TENANT_ID, { headers: actorHeaders }), { params: Promise.resolve({ id: ownerWork.workId }) });
+    expect(assignedDetail.status).toBe(200);
+
+    // Suspension immediately revokes the assigned person's read access.
+    await withTenant(TENANT_ID, db => db.update(users).set({ status: "suspended" })
+      .where(eq(users.id, RECOVERY_PEER_ID)));
+    const suspendedDetail = await getWork(request(`/api/works/${ownerWork.workId}`, TENANT_ID, { headers: actorHeaders }), { params: Promise.resolve({ id: ownerWork.workId }) });
+    expect(suspendedDetail.status).toBe(404);
+    const suspendedList = await listWorks(request(`/api/works?sessionId=${sessionId}`, TENANT_ID, { headers: actorHeaders }));
+    expect((await suspendedList.json() as { works: Array<{ id: string }> }).works).toHaveLength(0);
+    await withTenant(TENANT_ID, db => db.update(users).set({ status: "active" })
+      .where(eq(users.id, RECOVERY_PEER_ID)));
   });
 
   it("does not expose Work across tenants", async () => {
