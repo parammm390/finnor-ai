@@ -169,6 +169,23 @@ describe.skipIf(!available)("durable Work APIs", () => {
       .where(eq(users.id, RECOVERY_PEER_ID)));
   });
 
+  it("does not silently grant a human access to ownerless system Work", async () => {
+    const secret = `ownerless-system-work-${randomUUID()}`;
+    const received = await receiveWork({
+      tenantId: TENANT_ID,
+      instruction: secret,
+      channel: "console",
+      sessionId: `system-session-${randomUUID()}`,
+    });
+    const detail = await getWork(request(`/api/works/${received.workId}`), {
+      params: Promise.resolve({ id: received.workId }),
+    });
+    expect(detail.status).toBe(404);
+    expect(JSON.stringify(await detail.json())).not.toContain(secret);
+    const list = await listWorks(request(`/api/works?sessionId=${encodeURIComponent((await workAggregate(TENANT_ID, received.workId))!.work.sessionId as string)}`));
+    expect((await list.json() as { works: Array<{ id: string }> }).works.some(row => row.id === received.workId)).toBe(false);
+  });
+
   it("does not expose Work across tenants", async () => {
     const received = await receiveWork({ tenantId: TENANT_ID, instruction: "Private Work", channel: "console" });
     const response = await getWork(request(`/api/works/${received.workId}`, OTHER_TENANT_ID), { params: Promise.resolve({ id: received.workId }) });
