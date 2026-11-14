@@ -832,7 +832,25 @@ try {
             JOIN finnor_os.pe_closing_checks ch
               ON ch.tenant_id=q.tenant_id AND ch.id=q.last_check_id
             WHERE q.tenant_id=$1 AND q.id=$2 AND ch.valid_until>clock_timestamp()
-              AND ch.observation_cut_digest=finnor_os.pe_closing_cut_digest($1,$2)) AS "checkCutMatches"
+              AND ch.observation_cut_digest=finnor_os.pe_closing_cut_digest($1,$2)) AS "checkCutMatches",
+          (SELECT count(*)::int FROM finnor_os.pe_closed_transaction_certificates cert
+            JOIN finnor_os.pe_closing_checks ch
+              ON ch.tenant_id=cert.tenant_id AND ch.id=cert.check_id
+            WHERE cert.tenant_id=$1 AND cert.programme_id=$2
+              AND cert.body->'receiptAndCurrentness'->>'checkId'=ch.id::text) AS "certificateCheckIdentityMatches",
+          (SELECT count(*)::int FROM finnor_os.pe_closed_transaction_certificates cert
+            JOIN finnor_os.pe_closing_checks ch
+              ON ch.tenant_id=cert.tenant_id AND ch.id=cert.check_id
+            WHERE cert.tenant_id=$1 AND cert.programme_id=$2
+              AND cert.post_publication_cut_digest=ch.observation_cut_digest) AS "certificateOriginalCutMatches",
+          (SELECT count(*)::int FROM finnor_os.pe_closed_transaction_certificates cert
+            JOIN finnor_os.pe_closing_checks ch
+              ON ch.tenant_id=cert.tenant_id AND ch.id=cert.check_id
+            JOIN finnor_os.pe_deals d
+              ON d.tenant_id=cert.tenant_id AND d.id=cert.transaction_id
+            WHERE cert.tenant_id=$1 AND cert.programme_id=$2 AND d.status='closed'
+              AND cert.body->'receiptAndCurrentness'->>'checkId'=ch.id::text
+              AND cert.post_publication_cut_digest=finnor_os.pe_closing_cut_digest($1,$2)) AS "certificateCurrentCutMatches"
       `, [f.tenant, f.programmeId, f.compensationFixture.obligation.ref.id])).rows[0];
       // Counts are diagnostic only; no stage claims external settlement.
       observed.stagedJoins = Object.fromEntries(Object.entries(stagedJoins).map(([key,value]) => [key, Number(value)]));
