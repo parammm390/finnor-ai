@@ -12,88 +12,91 @@ const idle = <T,>(): SourceState<T> => ({ data: null, status: "idle", error: nul
 
 /** Loads only sources relevant to the selected Investigation. Previous data is never shown for a different identity. */
 export function useCanvasSources(workId: string | null, root: PeWorldRootRef | null, enabled: boolean, revision: number, underwritingRevision = 0, icCaseOverride: string | null = null) {
-  const scope = usePrivateRequestScope(`${workId ?? "none"}:${root?.entityType ?? "none"}:${root?.entityId ?? "none"}`)
-  enabled = enabled && scope.allowed
+  const { key: scopeKey, isCurrent, allowed } = usePrivateRequestScope(`${workId ?? "none"}:${root?.entityType ?? "none"}:${root?.entityId ?? "none"}`)
+  const { key: workScopeKey, isCurrent: isWorkCurrent, allowed: workAllowed } = usePrivateRequestScope(workId ?? "no-work")
+  enabled = enabled && allowed
+  const workEnabled = enabled && workAllowed
   const [work, setWork] = useState<SourceState<WorkAggregateView>>(idle)
   const [projection, setProjection] = useState<SourceState<CompanyBrainProjection>>(idle)
   const [underwriting, setUnderwriting] = useState<SourceState<UnderwritingWorkspace>>(idle)
   const [ic, setIc] = useState<SourceState<IcWorkspace>>(idle)
   const rootKey = root ? `${root.entityType}:${root.entityId}` : null
   const dealId = root?.entityType === "pe_deal" ? root.entityId : null
-  const caseId = projection.key === rootKey && projection.scope === scope.key ? projection.data?.nodes.find((node) => node.type === "pe_investment_case")?.ref.id ?? null : null
-  const workDeck = work.key === workId && work.scope === scope.key ? verifiedWorkDeck(work.data, dealId) : null
-  const workIcCaseId = work.key === workId && work.scope === scope.key ? verifiedWorkIcCase(work.data, dealId) : null
+  const caseId = projection.key === rootKey && projection.scope === scopeKey ? projection.data?.nodes.find((node) => node.type === "pe_investment_case")?.ref.id ?? null : null
+  const currentWork = workEnabled && work.key === workId && work.scope === workScopeKey ? work : idle<WorkAggregateView>()
+  const workDeck = verifiedWorkDeck(currentWork.data, dealId)
+  const workIcCaseId = verifiedWorkIcCase(currentWork.data, dealId)
   const icCaseId = dealId && icCaseOverride ? icCaseOverride : workIcCaseId
     ?? workDeck?.caseId
-    ?? (projection.key === rootKey && projection.scope === scope.key ? projection.data?.nodes.find((node) => node.type === "pe_ic_case")?.ref.id ?? null : null)
+    ?? (projection.key === rootKey && projection.scope === scopeKey ? projection.data?.nodes.find((node) => node.type === "pe_ic_case")?.ref.id ?? null : null)
 
   useEffect(() => {
-    if (!enabled || !workId) { setWork(idle()); return }
+    if (!workEnabled || !workId) { setWork(idle()); return }
     let active = true
     let timer: number | null = null
-    setWork((previous) => ({ data: previous.key === workId && previous.scope === scope.key ? previous.data : null, key: workId, scope: scope.key, status: "loading", error: null }))
+    setWork((previous) => ({ data: previous.key === workId && previous.scope === workScopeKey ? previous.data : null, key: workId, scope: workScopeKey, status: "loading", error: null }))
     const load = () => {
       void centropyGet<{ work: WorkAggregateView }>(`works/${workId}`).then((result) => {
-        if (!active || !scope.isCurrent(scope.key)) return
+        if (!active || !isWorkCurrent(workScopeKey)) return
         if (!result.work || result.work.work.id !== workId) throw new Error("Work response did not match the selected Investigation")
-        setWork({ data: result.work, status: "ready", error: null, key: workId, scope: scope.key })
+        setWork({ data: result.work, status: "ready", error: null, key: workId, scope: workScopeKey })
         if (!["completed", "failed", "cancelled"].includes(result.work.work.status)) timer = window.setTimeout(load, 5000)
       }).catch((cause) => {
-        if (!active || !scope.isCurrent(scope.key)) return
-        setWork({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Work unavailable", key: workId, scope: scope.key })
+        if (!active || !isWorkCurrent(workScopeKey)) return
+        setWork({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Work unavailable", key: workId, scope: workScopeKey })
         timer = window.setTimeout(load, 10000)
       })
     }
     load()
     return () => { active = false; if (timer !== null) window.clearTimeout(timer) }
-  }, [enabled, revision, workId, scope.key, scope.isCurrent])
+  }, [workEnabled, revision, workId, workScopeKey, isWorkCurrent])
 
   useEffect(() => {
     if (!enabled || !root || !rootKey) { setProjection(idle()); return }
     let active = true
-    setProjection((previous) => ({ data: previous.key === rootKey && previous.scope === scope.key ? previous.data : null, key: rootKey, scope: scope.key, status: "loading", error: null }))
+    setProjection((previous) => ({ data: previous.key === rootKey && previous.scope === scopeKey ? previous.data : null, key: rootKey, scope: scopeKey, status: "loading", error: null }))
     void centropyPost<CompanyBrainProjection>("company-brain/projection", { root: { entityType: root.entityType, entityId: root.entityId } }).then((result) => {
-      if (!active || !scope.isCurrent(scope.key)) return
+      if (!active || !isCurrent(scopeKey)) return
       if (result.root?.entityType !== root.entityType || result.root?.entityId !== root.entityId || !Array.isArray(result.nodes)) throw new Error("Company Brain response did not match the selected context")
-      setProjection({ data: result, status: "ready", error: null, key: rootKey, scope: scope.key })
+      setProjection({ data: result, status: "ready", error: null, key: rootKey, scope: scopeKey })
     }).catch((cause) => {
-      if (active && scope.isCurrent(scope.key)) setProjection({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Company Brain unavailable", key: rootKey, scope: scope.key })
+      if (active && isCurrent(scopeKey)) setProjection({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Company Brain unavailable", key: rootKey, scope: scopeKey })
     })
     return () => { active = false }
-  }, [enabled, revision, rootKey, root, scope.key, scope.isCurrent])
+  }, [enabled, revision, rootKey, root, scopeKey, isCurrent])
 
   useEffect(() => {
     if (!enabled || !caseId) { setUnderwriting(idle()); return }
     let active = true
-    setUnderwriting((previous) => ({ data: previous.key === caseId && previous.scope === scope.key ? previous.data : null, key: caseId, scope: scope.key, status: "loading", error: null }))
+    setUnderwriting((previous) => ({ data: previous.key === caseId && previous.scope === scopeKey ? previous.data : null, key: caseId, scope: scopeKey, status: "loading", error: null }))
     void centropyGet<UnderwritingWorkspace>(`investment-cases/${caseId}/underwriting`).then((result) => {
-      if (!active || !scope.isCurrent(scope.key)) return
+      if (!active || !isCurrent(scopeKey)) return
       if (result.investmentCase?.id !== caseId || (dealId && result.investmentCase.dealId !== dealId) || result.complete !== true || !Array.isArray(result.runs) || !Array.isArray(result.models)) throw new Error("Underwriting response did not match the selected Deal and Investment Case")
-      setUnderwriting({ data: result, status: "ready", error: null, key: caseId, scope: scope.key })
+      setUnderwriting({ data: result, status: "ready", error: null, key: caseId, scope: scopeKey })
     }).catch((cause) => {
-      if (active && scope.isCurrent(scope.key)) setUnderwriting({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Underwriting unavailable", key: caseId, scope: scope.key })
+      if (active && isCurrent(scopeKey)) setUnderwriting({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Underwriting unavailable", key: caseId, scope: scopeKey })
     })
     return () => { active = false }
-  }, [enabled, revision, underwritingRevision, caseId, dealId, scope.key, scope.isCurrent])
+  }, [enabled, revision, underwritingRevision, caseId, dealId, scopeKey, isCurrent])
 
   useEffect(() => {
     if (!enabled || !icCaseId) { setIc(idle()); return }
     let active = true
-    setIc((previous) => ({ data: previous.key === icCaseId && previous.scope === scope.key ? previous.data : null, key: icCaseId, scope: scope.key, status: "loading", error: null }))
+    setIc((previous) => ({ data: previous.key === icCaseId && previous.scope === scopeKey ? previous.data : null, key: icCaseId, scope: scopeKey, status: "loading", error: null }))
     void centropyGet<IcWorkspace>(`private-equity/ic/cases/${icCaseId}`).then((result) => {
-      if (!active || !scope.isCurrent(scope.key)) return
+      if (!active || !isCurrent(scopeKey)) return
       if (result.case?.id !== icCaseId || (dealId && result.case.dealId !== dealId) || !result.readiness || !Array.isArray(result.readiness.blockers) || !Array.isArray(result.questions)) throw new Error("IC response did not match the selected Deal and case")
-      setIc({ data: result, status: "ready", error: null, key: icCaseId, scope: scope.key })
+      setIc({ data: result, status: "ready", error: null, key: icCaseId, scope: scopeKey })
     }).catch((cause) => {
-      if (active && scope.isCurrent(scope.key)) setIc({ data: null, status: "error", error: cause instanceof Error ? cause.message : "IC unavailable", key: icCaseId, scope: scope.key })
+      if (active && isCurrent(scopeKey)) setIc({ data: null, status: "error", error: cause instanceof Error ? cause.message : "IC unavailable", key: icCaseId, scope: scopeKey })
     })
     return () => { active = false }
-  }, [enabled, revision, icCaseId, dealId, scope.key, scope.isCurrent])
+  }, [enabled, revision, icCaseId, dealId, scopeKey, isCurrent])
 
   return {
-    work: enabled && work.scope === scope.key && work.key === workId ? work : idle<WorkAggregateView>(),
-    projection: enabled && projection.scope === scope.key && projection.key === rootKey ? projection : idle<CompanyBrainProjection>(),
-    underwriting: enabled && underwriting.scope === scope.key && underwriting.key === caseId ? underwriting : idle<UnderwritingWorkspace>(),
-    ic: enabled && ic.scope === scope.key && ic.key === icCaseId ? ic : idle<IcWorkspace>(),
+    work: currentWork,
+    projection: enabled && projection.scope === scopeKey && projection.key === rootKey ? projection : idle<CompanyBrainProjection>(),
+    underwriting: enabled && underwriting.scope === scopeKey && underwriting.key === caseId ? underwriting : idle<UnderwritingWorkspace>(),
+    ic: enabled && ic.scope === scopeKey && ic.key === icCaseId ? ic : idle<IcWorkspace>(),
   }
 }
