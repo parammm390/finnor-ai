@@ -169,6 +169,41 @@ def main():
         assert all(row["exit"] is not None for row in result["processes"]), "OWNED_CHILD_EXIT_NOT_RECORDED"
         record["actualClosingOwnerStatus"] = observed["completed"]["q"]["status"]
         record["actualCompensationStatus"] = observed["compensation"]["observations"][0]["status"]
+        join_probe = owner / "workforce-compensation/sanitized-join-diagnostic.json"
+        if join_probe.exists():
+            verified_counts = json.loads(join_probe.read_text())
+            allowed = ("acceptedPromises", "paymentLinks", "closedCertificates",
+                "nativePaymentLinks", "verifiedPaymentOperations",
+                "reconciledPaymentConsumptions", "acceptedCurrentChecks")
+            record["joinDiagnostic"] = {key: int(verified_counts[key]) for key in allowed}
+        # The real owner's debug evaluation is rollback-only; export only four
+        # allowlisted non-identifying fields, not original financial or actor data.
+        candidate_file = owner / "workforce-compensation/rollback-only-post-close-candidate.json"
+        if candidate_file.exists():
+            candidate = json.loads(candidate_file.read_text())
+            assert isinstance(candidate.get("linkWouldInsertAfterClosed"), bool)
+            assert isinstance(candidate.get("rolledBack"), bool)
+            assert isinstance(candidate.get("durableLinkCount"), int)
+            error_code = candidate.get("errorCode")
+            assert error_code is None or error_code in (
+                "UNCLASSIFIED_REPLAY_ERROR", "WORKFORCE_CLOSING_PROMISE_PREIMAGE_INVALID",
+                "WORKFORCE_CLOSING_PROMISE_PREIMAGE_CHANGED", "WORKFORCE_CLOSING_ORIGINAL_ACCEPTANCE_REQUIRED",
+                "WORKFORCE_CLOSING_PAYMENT_ALREADY_ASSIGNED", "WORKFORCE_CLOSING_PAYMENT_PREIMAGE_CHANGED",
+                "WORKFORCE_CLOSING_PAYMENT_ORIGINAL_CONSUMPTION_CHANGED")
+            permitted = ("promiseBudgetJoined", "operationJoined", "consumptionOriginJoined",
+                "evidenceVersionJoined", "evidenceBound", "checkCutMatches",
+                "certificateCheckIdentityMatches", "certificateOriginalCutMatches",
+                "certificateCurrentCutMatches")
+            stages = candidate.get("stagedJoins")
+            assert isinstance(stages, dict) and set(stages) == set(permitted)
+            assert all(type(stages[key]) is int and 0 <= stages[key] <= 2 for key in permitted)
+            record["postCloseRollbackDiagnostic"] = {
+                "linkWouldInsertAfterClosed": candidate["linkWouldInsertAfterClosed"],
+                "rolledBack": candidate["rolledBack"],
+                "durableLinkCount": candidate["durableLinkCount"],
+                "errorCode": error_code,
+                "stageCounts": {key: stages[key] for key in permitted},
+            }
         if args.episode == "before-exact":
             assert not result["passed"] and child.returncode != 0
             assert record["actualClosingOwnerStatus"] == "CLOSED"

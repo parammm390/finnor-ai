@@ -22,6 +22,8 @@ import { ClosingSpecSchema } from "@finnor/shared-types";
 import { compensationCases, prepareCompensationFixture, compensationReadback, compensationFunding,
   type CompensationCase } from "../postz-w2/closing-compensation-fixture.mts";
 import { verifyClosingReaderPrivacy } from "./closing-reader-privacy.mts";
+import { recordWorkforceClosingPaymentsTx } from "../../packages/private-equity/src/workforce-compensation-closing";
+import { withS5PortfolioTransaction } from "../../packages/private-equity/src/allocation-store";
 
 process.umask(0o077); // Includes the database library's transient password file.
 const root = resolve(import.meta.dirname, "../../.."), backend = join(root, "finnor-os");
@@ -775,10 +777,133 @@ try {
     }
     const completed = await waitFor(f, q => q.status === "CLOSED" && q.certificate?.currentlyValid, 480000);
     const nativeCompletion = await completedNativeWork(f);
+    // Diagnostic only: replay the real canonical receiving-link evaluator inside
+    // a transaction that is always rolled back. This cannot repair the owner
+    // episode, seed a payment, or turn the failing acceptance into a false pass.
+    if (compensationCase === "exact") {
+      const observed = { linkWouldInsertAfterClosed: false, rolledBack: false,
+        errorCode: null as string | null, durableLinkCount: -1,
+        stagedJoins: null as Record<string, number> | null };
+      // Stage each canonical join using boolean/count witnesses only. Do not
+      // export source rows, identities, amounts, document contents or credentials.
+      const stagedJoins = (await admin!.query(`
+        WITH source AS (
+          SELECT l.tenant_id,l.programme_id,l.business_effect_id,l.consumption_ref,
+            o.observation,o.verification_status
+          FROM finnor_os.pe_closing_node_links l
+          JOIN finnor_os.external_operations o
+            ON o.tenant_id=l.tenant_id AND o.business_effect_id=l.business_effect_id
+          WHERE l.tenant_id=$1 AND l.programme_id=$2 AND l.node_key='pay-seller'
+            AND o.provider='finnor_closing_provider'
+        ), consumed AS (
+          SELECT s.*,co.reservation_id,co.body consumption,st.status consumption_status,
+            st.effect_ref,r.status reservation_status,ro.body financial_origin
+          FROM source s
+          JOIN finnor_os.s5_consumptions co
+            ON co.tenant_id=s.tenant_id AND co.consumption_id=s.consumption_ref->>'id'
+          JOIN finnor_os.s5_consumption_states st
+            ON st.tenant_id=co.tenant_id AND st.consumption_id=co.consumption_id
+          JOIN finnor_os.s5_reservation_origins ro
+            ON ro.tenant_id=co.tenant_id AND ro.reservation_id=co.reservation_id
+          JOIN finnor_os.s5_reservations r
+            ON r.tenant_id=ro.tenant_id AND r.reservation_id=ro.reservation_id
+        ), versioned AS (
+          SELECT c.*,v.id evidence_version_id,v.source_id,v.content_hash,v.content,v.snapshot
+          FROM consumed c
+          JOIN finnor_os.evidence_source_versions v
+            ON v.tenant_id=c.tenant_id
+            AND v.id=(c.observation->'closingEvidenceRef'->>'versionId')::uuid
+        )
+        SELECT
+          (SELECT count(*)::int FROM finnor_os.s5_history h
+            JOIN finnor_os.s5_history b ON b.tenant_id=h.tenant_id
+              AND b.subject_id=h.body->'originalReservation'->>'id'
+              AND b.operation='WORKFORCE_BUDGET'
+            WHERE h.tenant_id=$1 AND h.operation='WORKFORCE_COMPENSATION_ACCEPTANCE'
+              AND h.subject_id=$3) AS "promiseBudgetJoined",
+          (SELECT count(*)::int FROM source) AS "operationJoined",
+          (SELECT count(*)::int FROM consumed) AS "consumptionOriginJoined",
+          (SELECT count(*)::int FROM versioned) AS "evidenceVersionJoined",
+          (SELECT count(*)::int FROM versioned v
+            JOIN finnor_os.pe_closing_evidence_bindings b
+              ON b.tenant_id=v.tenant_id AND b.programme_id=v.programme_id
+                AND b.source_id=v.source_id) AS "evidenceBound",
+          (SELECT count(*)::int FROM finnor_os.pe_closing_programmes q
+            JOIN finnor_os.pe_closing_checks ch
+              ON ch.tenant_id=q.tenant_id AND ch.id=q.last_check_id
+            WHERE q.tenant_id=$1 AND q.id=$2 AND ch.valid_until>clock_timestamp()
+              AND ch.observation_cut_digest=finnor_os.pe_closing_cut_digest($1,$2)) AS "checkCutMatches",
+          (SELECT count(*)::int FROM finnor_os.pe_closed_transaction_certificates cert
+            JOIN finnor_os.pe_closing_checks ch
+              ON ch.tenant_id=cert.tenant_id AND ch.id=cert.check_id
+            WHERE cert.tenant_id=$1 AND cert.programme_id=$2
+              AND cert.body->'receiptAndCurrentness'->>'checkId'=ch.id::text) AS "certificateCheckIdentityMatches",
+          (SELECT count(*)::int FROM finnor_os.pe_closed_transaction_certificates cert
+            JOIN finnor_os.pe_closing_checks ch
+              ON ch.tenant_id=cert.tenant_id AND ch.id=cert.check_id
+            WHERE cert.tenant_id=$1 AND cert.programme_id=$2
+              AND cert.post_publication_cut_digest=ch.observation_cut_digest) AS "certificateOriginalCutMatches",
+          (SELECT count(*)::int FROM finnor_os.pe_closed_transaction_certificates cert
+            JOIN finnor_os.pe_closing_checks ch
+              ON ch.tenant_id=cert.tenant_id AND ch.id=cert.check_id
+            JOIN finnor_os.pe_deals d
+              ON d.tenant_id=cert.tenant_id AND d.id=cert.transaction_id
+            WHERE cert.tenant_id=$1 AND cert.programme_id=$2 AND d.status='closed'
+              AND cert.body->'receiptAndCurrentness'->>'checkId'=ch.id::text
+              AND cert.post_publication_cut_digest=finnor_os.pe_closing_cut_digest($1,$2)) AS "certificateCurrentCutMatches"
+      `, [f.tenant, f.programmeId, f.compensationFixture.obligation.ref.id])).rows[0];
+      // Counts are diagnostic only; no stage claims external settlement.
+      observed.stagedJoins = Object.fromEntries(Object.entries(stagedJoins).map(([key,value]) => [key, Number(value)]));
+      try {
+        await withS5PortfolioTransaction(f.ctx, async c => {
+          await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [`v3-material-cut:${f.tenant}`]);
+          await recordWorkforceClosingPaymentsTx(f.ctx, c, f.programmeId);
+          const hypothetical = (await c.query(`SELECT count(*)::int n FROM finnor_os.s5_history
+            WHERE tenant_id=$1 AND operation='WORKFORCE_CLOSING_PAYMENT'`, [f.tenant])).rows[0]?.n;
+          observed.linkWouldInsertAfterClosed = hypothetical === 1;
+          throw Error("W2_DIAGNOSTIC_ROLLBACK");
+        });
+      } catch (cause) {
+        if (cause instanceof Error && cause.message === "W2_DIAGNOSTIC_ROLLBACK") observed.rolledBack = true;
+        else observed.errorCode = cause instanceof Error && /^(WORKFORCE_|CLOSING_)/.test(cause.message)
+          ? cause.message : "UNCLASSIFIED_REPLAY_ERROR";
+      }
+      observed.durableLinkCount = (await admin!.query(`SELECT count(*)::int n FROM finnor_os.s5_history
+        WHERE tenant_id=$1 AND operation='WORKFORCE_CLOSING_PAYMENT'`, [f.tenant])).rows[0]?.n ?? -1;
+      await save("workforce-compensation/rollback-only-post-close-candidate.json", observed);
+      assert.equal(observed.durableLinkCount, 0, "Diagnostic rollback modified durable compensation state");
+    }
     const compensation = await compensationReadback({ f, request }), funding = await compensationFunding({ f });
     const portfolio = ok(await request(f, "/api/allocations/resources", {}));
     await save("workforce-compensation/settled-owner-before-projection-assertion.json",
       { completed, nativeCompletion, compensation, funding, portfolio });
+    // Failure-first owner diagnostics. Counts only: no Work, actor, evidence,
+    // compensation, credential, receipt or tenant identifiers leave this run.
+    const paymentJoinProbe = (await admin!.query(`
+      SELECT
+        (SELECT count(*)::int FROM finnor_os.s5_history WHERE tenant_id=$1
+          AND operation='WORKFORCE_COMPENSATION_ACCEPTANCE') AS "acceptedPromises",
+        (SELECT count(*)::int FROM finnor_os.s5_history WHERE tenant_id=$1
+          AND operation='WORKFORCE_CLOSING_PAYMENT') AS "paymentLinks",
+        (SELECT count(*)::int FROM finnor_os.pe_closed_transaction_certificates WHERE tenant_id=$1
+          AND transaction_id=$2) AS "closedCertificates",
+        (SELECT count(*)::int FROM finnor_os.pe_closing_node_links WHERE tenant_id=$1
+          AND programme_id=$3 AND node_key='pay-seller') AS "nativePaymentLinks",
+        (SELECT count(*)::int FROM finnor_os.pe_closing_node_links l
+          JOIN finnor_os.external_operations o ON o.tenant_id=l.tenant_id AND o.business_effect_id=l.business_effect_id
+          WHERE l.tenant_id=$1 AND l.programme_id=$3 AND l.node_key='pay-seller'
+            AND o.provider='finnor_closing_provider' AND o.verification_status='verified') AS "verifiedPaymentOperations",
+        (SELECT count(*)::int FROM finnor_os.pe_closing_node_links l
+          JOIN finnor_os.s5_consumptions co ON co.tenant_id=l.tenant_id AND co.consumption_id=l.consumption_ref->>'id'
+          JOIN finnor_os.s5_consumption_states st ON st.tenant_id=co.tenant_id AND st.consumption_id=co.consumption_id
+          WHERE l.tenant_id=$1 AND l.programme_id=$3 AND l.node_key='pay-seller'
+            AND st.status='RECONCILED') AS "reconciledPaymentConsumptions",
+        (SELECT count(*)::int FROM finnor_os.pe_closing_programmes q
+          JOIN finnor_os.pe_closing_checks ch ON ch.tenant_id=q.tenant_id AND ch.id=q.last_check_id
+          WHERE q.tenant_id=$1 AND q.id=$3 AND ch.accepted
+            AND ch.valid_until>clock_timestamp()) AS "acceptedCurrentChecks"
+    `, [f.tenant, f.dealId, f.programmeId])).rows[0];
+    await save("workforce-compensation/sanitized-join-diagnostic.json", paymentJoinProbe);
     assert.equal(JSON.stringify(compensation.records[0]), f.compensationFixture.acceptedBytes, "Immutable acceptance was rewritten");
     assert.equal(compensation.observations[0].status, compensationCase === "exact" ? "SETTLED" : "OPEN",
       "Exact receiving receipt join must pay only the original amount, payee and reservation");

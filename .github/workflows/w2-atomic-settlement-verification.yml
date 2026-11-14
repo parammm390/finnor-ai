@@ -1,0 +1,26 @@
+name: W2 atomic settlement isolated owner verification
+on:
+  push:
+    branches:
+      - codex/w2-atomic-closing-settlement-20261114
+permissions:
+  contents: read
+jobs:
+  exact:
+    uses: ./.github/workflows/w2-compensation-episode.yml
+    with:
+      episode: after-exact
+  controls:
+    needs: exact
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        episode:
+          - before-exact
+          - after-wrong-amount
+          - after-wrong-payee
+          - after-wrong-receipt
+    uses: ./.github/workflows/w2-compensation-episode.yml
+    with:
+      episode: ${{ matrix.episode }}
