@@ -381,7 +381,23 @@ export async function waitForPanel(page: any, workId: string, timeoutMs = 60000)
       if (standingResponsibility.getAttribute("aria-busy") !== "false") return "INSTITUTION_BUSY";
       return "SETTLED";
     }, { app: APP, institution: INST, expectedWork: workId }, { timeout: Math.max(1, deadline - Date.now()) })
-      .catch((cause: unknown) => { throw new Error("Z0_BROWSER_CANVAS_PROJECTION_UNOBSERVABLE", { cause }); });
+      .catch((cause: unknown) => {
+        // The native owner previously reported only "unobservable" and erased
+        // the actual Playwright failure category. Classify without recording
+        // page text, bearer tokens, private URLs, or customer evidence.
+        const message = cause instanceof Error ? cause.message : String(cause);
+        const reason = /Execution context was destroyed|context was destroyed/i.test(message)
+          ? "NAVIGATION_CONTEXT_DESTROYED"
+          : /Target page.*closed|page has been closed|browser has been closed/i.test(message)
+            ? "PAGE_OR_BROWSER_CLOSED"
+            : /__name is not defined/i.test(message) ? "EVALUATOR_HELPER_MISSING"
+              : /ReferenceError/i.test(message) ? "PAGE_EVALUATOR_REFERENCE_ERROR"
+                : /SyntaxError/i.test(message) ? "PAGE_EVALUATOR_SYNTAX_ERROR"
+                  : /TimeoutError|timed out|timeout/i.test(message) ? "EVALUATION_TIMEOUT"
+                    : /Protocol error/i.test(message) ? "BROWSER_PROTOCOL_ERROR"
+                      : "OTHER_EVALUATE_FAILURE";
+        throw new Error("Z0_BROWSER_CANVAS_PROJECTION_UNOBSERVABLE:" + reason, { cause });
+      });
     if (state === "SETTLED") return panel;
     if (Date.now() >= deadline) throw Error("Z0_BROWSER_" + state);
     await sleep(250);
