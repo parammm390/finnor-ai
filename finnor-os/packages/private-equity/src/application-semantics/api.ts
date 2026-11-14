@@ -221,9 +221,14 @@ export async function requestApplicationExecution(ctx: PeMutationContext, input:
 export async function projectApplicationSemantics(ctx: PeMutationContext, input: unknown) {
   const request = ApplicationProjectionReadSchema.parse(input);
   await authorize(ctx, request.root, [{ type: "work", id: request.workId }]);
-  const rows = await tx(ctx, async (c) => (await c.query<ApplicationSessionRow>(
-    "SELECT * FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND root=$4::jsonb ORDER BY created_at DESC,id DESC LIMIT 17",
-    [ctx.auth.tenantId, principal(ctx), request.workId, JSON.stringify(request.root)])).rows, true);
+  const rows = await tx(ctx, async (c) => {
+    const work = await c.query("SELECT 1 FROM finnor_os.works WHERE tenant_id=$1 AND id=$2",
+      [ctx.auth.tenantId, request.workId]);
+    if (!work.rowCount) throw unavailable();
+    return (await c.query<ApplicationSessionRow>(
+      "SELECT * FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND root=$4::jsonb ORDER BY created_at DESC,id DESC LIMIT 17",
+      [ctx.auth.tenantId, principal(ctx), request.workId, JSON.stringify(request.root)])).rows;
+  }, true);
   if (rows.length > 16) x2Fault("X2_SESSION_PROJECTION_REQUIRES_PAGINATION");
   const sessions = [];
   for (const row of rows) {

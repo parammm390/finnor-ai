@@ -1590,8 +1590,8 @@
     },
     {
       "file": "packages/private-equity/src/application-semantics/api.ts",
-      "bytes": 27486,
-      "sha256": "8a97c2484347b481a7c2933c368fb75eb44b819d8b43ab58a926700cdbd5bbbf"
+      "bytes": 28145,
+      "sha256": "d8d738c973eb4db38dea22c3c51619cfd2d4be7ec5c432f8a76993e25765596e"
     },
     {
       "file": "packages/private-equity/src/application-semantics/checker.ts",

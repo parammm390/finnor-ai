@@ -166,9 +166,14 @@ await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_REA
         { tenantDiffers: probe.tenantId !== parentA.tenantId, rowTenantMatches: probe.tenantId === foreign.tenant_id }, probe.tenantId !== parentA.tenantId && probe.tenantId === foreign.tenant_id);
     } catch (error) { check(c, "foreign.owner", "real credential for an existing foreign owner", "Auth admin + API", String(error?.message ?? error).slice(0, 200), false); }
   } else check(c, "foreign.owner", "a launcher-seeded owner of another tenant exists", "O-SQL users", "none", false);
+  const workBaseline = await owner.call(`/api/works/${parentA.workId}`);
   witnessBefore = await witness(q, parentA);
   ownerCutBeforeMounted = await mountedOwnerCut(q, parentA, acqA.sessionId, null);
   workStatusBeforeMounted = ownerCutBeforeMounted.work;
+  check(c, "A.canonical-work-baseline", "the original Work owner and SQL agree before browser observation", "O-API Work + O-SQL",
+    { http: workBaseline.status, api: workBaseline.body?.work?.status, sql: workStatusBeforeMounted },
+    workBaseline.status === 200 && workBaseline.body?.work?.id === parentA.workId
+      && workStatusBeforeMounted !== null && workBaseline.body.work.status === workStatusBeforeMounted);
   setup.A = { tag: tagA, workId: parentA.workId, dealId: parentA.dealId, sessionId: acqA.sessionId, threadId: threadA.id, status: row?.status };
   setup.foreign = foreignRow;
 });
