@@ -2141,7 +2141,6 @@
         "finnor-os/tests/integration/private-equity-phase3.test.ts",
         "finnor-os/tests/integration/scope3-compute-plane.test.ts",
         "finnor-os/tests/integration/user-prefs-route.test.ts",
-        "finnor-os/tests/integration/threads-pagination.test.ts",
         "finnor-os/tests/integration/work-investigation-http.test.ts"
       ],
       "source": "finnor-os/apps/api/app/api/activity/route.ts",
@@ -7461,7 +7460,6 @@
         "finnor-os/tests/integration/universal-actions-upgrade.test.ts",
         "finnor-os/tests/integration/water-retirement-forward-head.test.ts",
         "finnor-os/tests/integration/work-cases.test.ts",
-        "finnor-os/tests/integration/threads-pagination.test.ts",
         "finnor-os/tests/integration/work-investigation-http.test.ts",
         "finnor-os/tests/integration/work-kernel.test.ts",
         "finnor-os/tests/integration/work-routes.test.ts",
@@ -7948,7 +7946,6 @@
         "finnor-os/tests/integration/universal-actions-upgrade.test.ts",
         "finnor-os/tests/integration/water-retirement-forward-head.test.ts",
         "finnor-os/tests/integration/work-cases.test.ts",
-        "finnor-os/tests/integration/threads-pagination.test.ts",
         "finnor-os/tests/integration/work-investigation-http.test.ts",
         "finnor-os/tests/integration/work-kernel.test.ts"
       ],
