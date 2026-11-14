@@ -650,6 +650,8 @@ export interface ReceiveWorkParams {
   authorityContext?: Record<string, unknown>;
   employeeThreadContext?: { threadId: string; expectedRevision: number };
   requireExactIntake?: boolean;
+  /** Human objective redirect: do not append an input to another employee's Work. */
+  requireCurrentEmployeeOwner?: boolean;
 }
 
 export class ExactWorkIntakeConflict extends Error {
@@ -657,6 +659,63 @@ export class ExactWorkIntakeConflict extends Error {
     super("The original Work intake claim is bound to a different principal or exact input");
     this.name = "ExactWorkIntakeConflict";
   }
+}
+
+/** HTTP Work controls must not grant authority from possession of an ID or replay key. */
+export class WorkControlAuthorizationError extends Error {
+  constructor() {
+    super("Work control unavailable");
+    this.name = "WorkControlAuthorizationError";
+  }
+}
+
+/** The owner check runs in the caller's transaction, with the Work row locked.
+ * This is deliberately opt-in: historical service and system-created Work may
+ * not have a human owner, and those paths have separate authority contracts. */
+export async function assertCurrentEmployeeWorkOwnerTx(
+  db: Db, tenantId: string, workId: string, employeeId: string,
+): Promise<void> {
+  if (!isUuid(employeeId)) throw new WorkControlAuthorizationError();
+  await db.execute(sql`SELECT id FROM ${schema.works} WHERE ${schema.works.tenantId}=${tenantId} AND ${schema.works.id}=${workId} FOR NO KEY UPDATE`);
+  const [work] = await db.select({ currentOwnerId: schema.works.currentOwnerId, createdBy: schema.works.createdBy })
+    .from(schema.works).where(and(eq(schema.works.tenantId, tenantId), eq(schema.works.id, workId))).limit(1);
+  if (!work || (work.currentOwnerId ?? work.createdBy) !== employeeId) throw new WorkControlAuthorizationError();
+  const [active] = await db.select({ id: schema.users.id }).from(schema.users).where(and(
+    eq(schema.users.id, employeeId), eq(schema.users.tenantId, tenantId), eq(schema.users.status, "active"),
+  )).limit(1);
+  if (!active) throw new WorkControlAuthorizationError();
+}
+
+export async function assertCurrentEmployeeWorkOwner(tenantId: string, workId: string, employeeId: string): Promise<void> {
+  return withTenant(tenantId, db => assertCurrentEmployeeWorkOwnerTx(db, tenantId, workId, employeeId), employeeId);
+}
+
+/** Employee-visible Work is an explicit relationship, not any row in the tenant.
+ * Keep source inputs, frozen contexts, execution receipts and replay out of reach
+ * until a separate, governed share grant has been defined. Created-by,
+ * current-owner and assigned-to are existing canonical relationships; this
+ * query deliberately does not invent a new share or administrator exemption.
+ * Internal system Work without any of those human principals fails closed.
+ */
+export async function canReadEmployeeWork(tenantId: string, workId: string, employeeId: string): Promise<boolean> {
+  if (!isUuid(employeeId) || !isUuid(workId)) return false;
+  return withTenant(tenantId, async db => {
+    const [accessible] = await db.select({ id: schema.works.id }).from(schema.works)
+      .innerJoin(schema.users, and(
+        eq(schema.users.id, employeeId),
+        eq(schema.users.tenantId, schema.works.tenantId),
+        eq(schema.users.status, "active"),
+      )).where(and(
+        eq(schema.works.tenantId, tenantId),
+        eq(schema.works.id, workId),
+        or(
+          eq(schema.works.createdBy, employeeId),
+          eq(schema.works.currentOwnerId, employeeId),
+          eq(schema.works.assignedTo, employeeId),
+        ),
+      )).limit(1);
+    return Boolean(accessible);
+  }, employeeId);
 }
 
 export interface ReceivedWork {
@@ -805,6 +864,13 @@ export async function receiveWork(params: ReceiveWorkParams): Promise<ReceivedWo
     ].sort();
     for (const claimKey of claimKeys) {
       await db.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${claimKey}, 0))`);
+    }
+    // Enforce before duplicate replay, attachments, input persistence and
+    // failed-Work status recovery. Keeping the lock through the transaction
+    // prevents a concurrent handoff from invalidating this intake decision.
+    if (params.requireCurrentEmployeeOwner) {
+      if (!params.workId) throw new WorkControlAuthorizationError();
+      await assertCurrentEmployeeWorkOwnerTx(db, params.tenantId, params.workId, params.userId ?? "");
     }
     let employeeThread: typeof schema.employeeConversationThreads.$inferSelect | undefined;
     if (params.employeeThreadContext) {
@@ -1362,6 +1428,14 @@ export async function recordWorkResponse(
 
 const WORK_RECOVERY_CLAIM_TTL_MS = 15 * 60_000;
 
+/** A recovery request must never reveal or mutate another employee's Work. */
+export class WorkRecoveryAuthorizationError extends Error {
+  constructor() {
+    super("Work recovery is not available to this employee");
+    this.name = "WorkRecoveryAuthorizationError";
+  }
+}
+
 /** Atomically leases failed Work for one recovery request and returns the exact input
  * that lease owns. Distinct HTTP idempotency keys therefore cannot both reach the
  * planner. A process that dies before orchestration advances the Work can be taken
@@ -1384,6 +1458,20 @@ export async function claimWorkRecovery(params: {
       eq(schema.works.tenantId, params.tenantId),
     )).limit(1);
     if (!work) throw new Error("Work not found");
+
+    // Recheck the current Work owner under the Work row lock. A prior HTTP read,
+    // possession of a Work ID, or possession of an idempotency key is not authority.
+    // Fail closed for unowned Work: service recovery must use a separate governed
+    // service-principal path, never an employee-facing retry endpoint.
+    if ((work.currentOwnerId ?? work.createdBy) !== params.requestedBy) {
+      throw new WorkRecoveryAuthorizationError();
+    }
+    const [requester] = await db.select({ id: schema.users.id }).from(schema.users).where(and(
+      eq(schema.users.tenantId, params.tenantId),
+      eq(schema.users.id, params.requestedBy),
+      eq(schema.users.status, "active"),
+    )).limit(1);
+    if (!requester) throw new WorkRecoveryAuthorizationError();
 
     const [existingAttempt] = await db.select({ attemptKey: schema.workPlannerAttempts.attemptKey, status: schema.workPlannerAttempts.status })
       .from(schema.workPlannerAttempts)

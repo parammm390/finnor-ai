@@ -342,7 +342,7 @@ export class FinnorOrchestrator implements Orchestrator {
     return this.objectiveLoopRuntime.runIteration(params);
   }
 
-  async controlObjective(params: { tenantId: string; workId: string; command: "continue" | "interrupt" | "redirect" | "cancel"; actorId: string; objective?: string; successCondition?: import("@finnor/shared-types").ObjectiveSuccessCondition; correlationId?: string }) {
+  async controlObjective(params: { tenantId: string; workId: string; command: "continue" | "interrupt" | "redirect" | "cancel"; actorId: string; objective?: string; successCondition?: import("@finnor/shared-types").ObjectiveSuccessCondition; correlationId?: string; requireCurrentEmployeeOwner?: boolean }) {
     return controlWorkObjective(params);
   }
 

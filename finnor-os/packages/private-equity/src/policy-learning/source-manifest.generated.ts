@@ -140,7 +140,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "1bc04a5c50981e15501c474b4130e2e2170fb8665837c20dbd7bf899b45d58c5"
+      "sha256": "84863e7a8357128dea4aa254efb09f661b3b1ad1ae5f725e69a6e7821d2d01c5"
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
@@ -284,7 +284,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/index.ts",
-      "sha256": "c95a416a58a72859c1f0b8e5247eb7420e62d5df595dee78c15d4d76504c5730"
+      "sha256": "fa22008592b1f9bb712c4d9c01b74f29a4f9c3328f3dfa415908646cbe189460"
     },
     {
       "path": "finnor-os/packages/security/src/auth.ts",
@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/canvas-compose.ts",
-      "sha256": "013fb5070cd8a0cc95a4446d3d8ca208f3d103dcd177c232fa3dd95573c4967c"
+      "sha256": "d8906ebc01e7cc6026caea79e0612bf8b7b962beb849a6e7b87fd8aca4b410b0"
     },
     {
       "path": "src/components/centropy/canvas/canvas-contract.ts",

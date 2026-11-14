@@ -1,7 +1,7 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-11T01:42:22.687Z",
-  "sourceBaseCommit": "654bb2130c12661f469d819c2817e240ea8b1cb3",
+  "generatedAt": "2026-11-14T01:06:53.647Z",
+  "sourceBaseCommit": "7a1b69a625c9b5e143ff9cc22fbc6f3909dafd0c",
   "manifestSha256": "5c1806214b2b629db0a3228952a404f348c0e767c2523f065c7394696c55f685",
   "formsSha256": "1bc12487fb34759988ed4490715c21560653608fb313a409f0e6bcc551340e89",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -1437,7 +1437,7 @@
       },
       {
         "file": "src/components/centropy/canvas/canvas-compose.ts",
-        "sha256": "013fb5070cd8a0cc95a4446d3d8ca208f3d103dcd177c232fa3dd95573c4967c"
+        "sha256": "d8906ebc01e7cc6026caea79e0612bf8b7b962beb849a6e7b87fd8aca4b410b0"
       },
       {
         "file": "src/components/centropy/thread/thread-contract.ts",
@@ -3978,7 +3978,8 @@
       "timeoutClass": "READ",
       "tests": [
         "finnor-os/tests/integration/microsoft365-administration.test.ts",
-        "finnor-os/tests/integration/phase5-connection-lifecycle.test.ts"
+        "finnor-os/tests/integration/phase5-connection-lifecycle.test.ts",
+        "finnor-os/tests/integration/work-cases.test.ts"
       ],
       "source": "finnor-os/apps/api/app/api/employees/route.ts",
       "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
@@ -7454,6 +7455,7 @@
         "finnor-os/tests/integration/water-retirement-forward-head.test.ts",
         "finnor-os/tests/integration/work-cases.test.ts",
         "finnor-os/tests/integration/work-investigation-http.test.ts",
+        "finnor-os/tests/integration/work-kernel.test.ts",
         "finnor-os/tests/integration/work-routes.test.ts",
         "finnor-os/tests/integration/workspace-v3-repair.test.ts"
       ],

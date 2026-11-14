@@ -17,6 +17,8 @@ import {
 import { getProjection } from "@finnor/projections";
 import { PeDomainError, peTransaction, type PeMutationContext } from "@finnor/private-equity";
 
+const CANONICAL_EMPLOYEE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 async function requirePrivateEquityProduct(ctx: PeMutationContext["auth"]): Promise<void> {
   // P8 owns the active-product authority. Reuse that exact transactional guard
   // before exposing P9's unrooted firm attention/workforce views; otherwise a
@@ -80,10 +82,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ view: st
       return Response.json({ error: `Unknown read-model "${view}". Valid views: ${Object.keys(VIEWS).join(", ")}` }, { status: 404 });
     }
     if (view === "work-cases") {
+      const employeeId = ctx.employeeId ?? ctx.userId;
+      if (!CANONICAL_EMPLOYEE.test(employeeId)) return Response.json({ error: "Canonical employee required" }, { status: 403 });
       const rawLimit = searchParams.get("limit");
       const limit = rawLimit === null ? undefined : Number(rawLimit);
-      const result = await workCasesPage(ctx.tenantId, { limit, cursor: searchParams.get("cursor") ?? undefined });
-      return Response.json({ view, data: result.items, page: result.page });
+      const result = await workCasesPage(ctx.tenantId, { limit, cursor: searchParams.get("cursor") ?? undefined, employeeId });
+      return Response.json({ view, data: result.items, page: result.page }, { headers: { "Cache-Control": "private, no-store" } });
     }
     const data = await fn(ctx.tenantId, searchParams);
     return Response.json({ view, data });
