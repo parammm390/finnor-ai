@@ -120,8 +120,8 @@ describe.skipIf(!available)("Company Brain tenant isolation", () => {
     expect(JSON.stringify(peerGraph)).not.toContain(mine.workId);
     // Raw Work remains canonical and unchanged. This is a read visibility
     // boundary, not a destructive migration or projection rewrite.
-    expect((await workAggregate(tenantA, mine.workId))?.work.initialInstruction).toBe(ownerSecret);
-    expect((await workAggregate(tenantA, theirs.workId))?.work.initialInstruction).toBe(peerSecret);
+    expect(await workAggregate(tenantA, mine.workId)).toMatchObject({ work: { initialInstruction: ownerSecret } });
+    expect(await workAggregate(tenantA, theirs.workId)).toMatchObject({ work: { initialInstruction: peerSecret } });
   });
 
   it("cannot traverse, resolve provenance/history, or inspect a foreign ref", async () => {
