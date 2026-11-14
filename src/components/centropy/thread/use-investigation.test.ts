@@ -107,6 +107,16 @@ describe("Investigation latest-page refresh recovery", () => {
     expect(after).toMatchObject({ status: "error", error: "Investigation access is no longer available" })
   })
 
+  it("does not manufacture cached Work when the first request fails", () => {
+    const initial: InvestigationState = {
+      forThreadId: THREAD, forScope: SCOPE, loaded: null, status: "loading",
+      error: null, olderLoading: false, olderError: null, hasOlder: false,
+    }
+    const after = refreshFailureState(initial, THREAD, SCOPE, new Error("Connection timeout"))
+    expect(after.loaded).toBeNull()
+    expect(after).toMatchObject({ status: "error", error: "Connection timeout" })
+  })
+
   it("does not leak another thread's messages into a newly selected Investigation", () => {
     const after = refreshFailureState(state(), OTHER_THREAD, "other-employee:session", new Error("Unavailable"))
     expect(after.loaded).toBeNull()
