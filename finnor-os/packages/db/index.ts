@@ -690,6 +690,34 @@ export async function assertCurrentEmployeeWorkOwner(tenantId: string, workId: s
   return withTenant(tenantId, db => assertCurrentEmployeeWorkOwnerTx(db, tenantId, workId, employeeId), employeeId);
 }
 
+/** Employee-visible Work is an explicit relationship, not any row in the tenant.
+ * Keep source inputs, frozen contexts, execution receipts and replay out of reach
+ * until a separate, governed share grant has been defined. Created-by,
+ * current-owner and assigned-to are existing canonical relationships; this
+ * query deliberately does not invent a new share or administrator exemption.
+ * Internal system Work without any of those human principals fails closed.
+ */
+export async function canReadEmployeeWork(tenantId: string, workId: string, employeeId: string): Promise<boolean> {
+  if (!isUuid(employeeId) || !isUuid(workId)) return false;
+  return withTenant(tenantId, async db => {
+    const [accessible] = await db.select({ id: schema.works.id }).from(schema.works)
+      .innerJoin(schema.users, and(
+        eq(schema.users.id, employeeId),
+        eq(schema.users.tenantId, schema.works.tenantId),
+        eq(schema.users.status, "active"),
+      )).where(and(
+        eq(schema.works.tenantId, tenantId),
+        eq(schema.works.id, workId),
+        or(
+          eq(schema.works.createdBy, employeeId),
+          eq(schema.works.currentOwnerId, employeeId),
+          eq(schema.works.assignedTo, employeeId),
+        ),
+      )).limit(1);
+    return Boolean(accessible);
+  }, employeeId);
+}
+
 export interface ReceivedWork {
   workId: string;
   workInputId: string;
