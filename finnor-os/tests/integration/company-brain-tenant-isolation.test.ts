@@ -17,6 +17,7 @@ import {
   type PeMutationContext,
 } from "@finnor/private-equity";
 import { migrate } from "../../packages/db/migrate";
+import { loadPrivateEquityWorldState } from "../../packages/private-equity/src/world-state";
 
 const databaseUrl = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 
@@ -118,6 +119,25 @@ describe.skipIf(!available)("Company Brain tenant isolation", () => {
     expect(JSON.stringify(ownerGraph)).not.toContain(theirs.workId);
     expect(JSON.stringify(peerGraph)).not.toContain(ownerSecret);
     expect(JSON.stringify(peerGraph)).not.toContain(mine.workId);
+
+    // Test S1 itself, not only the graph renderer. A raw canonical-history
+    // belief claim contains workId in both value and exactSnapshotJson, and
+    // must be excluded before S1 computes its integrity and dependency digests.
+    const [ownerWorld, peerWorld] = await Promise.all([
+      loadPrivateEquityWorldState(ctxA, root),
+      loadPrivateEquityWorldState(ctxPeer, root),
+    ]);
+    expect(ownerWorld.workLinks.some(link => link.workId === mine.workId)).toBe(true);
+    expect(ownerWorld.workLinks.some(link => link.workId === theirs.workId)).toBe(false);
+    expect(peerWorld.workLinks.some(link => link.workId === theirs.workId)).toBe(true);
+    expect(peerWorld.workLinks.some(link => link.workId === mine.workId)).toBe(false);
+    expect(ownerWorld.beliefView?.claims.some(claim => claim.ownerRef.entityType === "work_entity_link")).toBe(true);
+    expect(peerWorld.beliefView?.claims.some(claim => claim.ownerRef.entityType === "work_entity_link")).toBe(true);
+    expect(JSON.stringify(ownerWorld.beliefView)).not.toContain(theirs.workId);
+    expect(JSON.stringify(peerWorld.beliefView)).not.toContain(mine.workId);
+    expect(ownerWorld.beliefView?.coverage.reasons).toContain("EMPLOYEE_PRIVATE_WORK_LINKS_OMITTED");
+    expect(peerWorld.beliefView?.coverage.reasons).toContain("EMPLOYEE_PRIVATE_WORK_LINKS_OMITTED");
+    expect(ownerWorld.beliefView?.contentDigest).not.toBe(peerWorld.beliefView?.contentDigest);
     // Raw Work remains canonical and unchanged. This is a read visibility
     // boundary, not a destructive migration or projection rewrite.
     expect(await workAggregate(tenantA, mine.workId)).toMatchObject({ work: { initialInstruction: ownerSecret } });
