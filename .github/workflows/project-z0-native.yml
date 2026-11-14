@@ -192,10 +192,13 @@ jobs:
             : existsSync(mountedFile) ? JSON.parse(readFileSync(mountedFile, 'utf8')).cases : []
           const oracleFields = new Set(['status', 'deadline', 'charge count', 'effect count', 'budget', 'consumed',
             'original deadline', 'wall deadline', 'compiler status', 'compiler revision', 'compiler attempts', 'acquisition units'])
+          const browserStages = new Set(['START_BROWSER', 'SIGN_IN', 'CONFIRM_IDENTITY', 'OPEN_ORIGINAL_WORK',
+            'READ_OWNER_ORACLE', 'READ_INITIAL_PANELS', 'FIRST_RELOAD', 'SECOND_RELOAD', 'CHECK_RELOADED_PANELS'])
+          const reloadFields = new Set(['work', 'session', 'status', 'application', 'institution', 'budget', 'charges', 'costs'])
           const httpStatus = value => Number.isInteger(value) && value >= 100 && value <= 599 ? value : null
           for (const { id, outcome, error, reason, checks, observations, wallMs } of mountedCases) {
             const browserOperation = typeof error === 'string'
-              ? error.match(/^(browserType\.launch|browser\.newContext|page\.goto|page\.waitForResponse|locator\.(?:fill|click|waitFor)):/)?.[1] ?? null : null
+              ? error.match(/^(browserType\.launch|browser\.newContext|page\.(?:goto|reload|waitForResponse|evaluate)|locator\.(?:fill|click|evaluate|waitFor)):/)?.[1] ?? null : null
             const networkError = typeof error === 'string' ? error.match(/net::(ERR_[A-Z_]{3,80})/)?.[1] ?? null : null
             const setupFailure = checks.find(check => check.id === 'B.setup' && !check.pass)?.observed
             const setupPredicate = typeof setupFailure === 'string' ? predicateFrom(setupFailure.replace(/^B:/, '')) : null
@@ -207,6 +210,8 @@ jobs:
             results.push({ id, outcome, predicate: predicateFrom(error) ?? predicateFrom(reason),
               browserOperation, networkError, setupPredicate, setupCause,
               wallMs: Number.isSafeInteger(wallMs) && wallMs >= 0 ? wallMs : null,
+              browserStage: browserStages.has(observations?.browserStage) ? observations.browserStage : null,
+              reloadDifferences: (observations?.reloadDifferences ?? []).filter(field => reloadFields.has(field)),
               rootCarriedBy, reloadsSettled: [0, 1, 2].includes(observations?.reloadsSettled) ? observations.reloadsSettled : null,
               oracle: oracle ? { projectionStatus: httpStatus(oracle.projectionStatus),
                 institutionReadStatus: httpStatus(oracle.institutionReadStatus),

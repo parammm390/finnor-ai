@@ -49,6 +49,7 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
   const { key: scopeKey, isCurrent, allowed } = usePrivateRequestScope(workId)
   const [sources, setSources] = useState<{ key: string; value: Sources } | null>(null)
   const [reading, setReading] = useState<{ key: string; value: Read } | null>(null)
+  const [readFailureScope, setReadFailureScope] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [configure, setConfigure] = useState(false)
@@ -60,6 +61,8 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
     && reading.value.workRevision === visibleSources?.workInputId
     && reading.value.requestId === visibleSources?.request?.id
     && reading.value.revision === visibleSources?.request?.revision ? reading.value : null
+  const phase = visibleSources && (!visibleSources.request || visible) ? "settled"
+    : readFailureScope === scopeKey ? "unavailable" : "reading"
   const refresh = useCallback(async () => {
     const key = scopeKey, generation = ++refreshGeneration.current
     const current = () => isCurrent(key) && refreshGeneration.current === generation
@@ -84,10 +87,12 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
         setReading({ key, value: result })
       } else setReading(null)
       setMessage(null)
+      setReadFailureScope(null)
     } catch (error) {
       if (!current()) return
       setSources(null); setReading(null)
       setMessage(error instanceof Error ? error.message : "Responsibility is unavailable in this scope")
+      setReadFailureScope(key)
     }
   }, [allowed, isCurrent, scopeKey, workId])
   useEffect(() => {
@@ -134,7 +139,8 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
   if (!allowed) return null
   const artifact = visible?.artifact, program = visible?.programme?.program
   const observed = new Map(program?.observedPostconditions.map(p => [p.stableIdentity, p]) ?? [])
-  return <section className="ct-canvas-block ct-institution" aria-label="Institution responsibility">
+  return <section className="ct-canvas-block ct-institution" aria-label="Institution responsibility"
+    aria-busy={busy || phase === "reading"} data-institution-read-state={phase} data-institution-work={workId}>
     <header><div><span className="ct-eyebrow">STANDING RESPONSIBILITY</span><h3>Institution programme</h3></div>
       <button type="button" onClick={() => void refresh()} disabled={busy}>Refresh current owners</button></header>
     <p>Compile this Work’s authorized sources into checked responsibilities and continue the permitted operations.</p>
@@ -147,8 +153,9 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
       {visible?.canResume ? <button type="button" disabled={busy} onClick={() => void control("resume")}>Resume retained continuation</button> : null}
       {visible && visible.status !== "CANCELLED"
         ? <button type="button" disabled={busy} onClick={() => void control("cancel")}>Cancel future continuation</button> : null}</div>
-    <p role="status" aria-live="polite">{message ?? (visible ? `Revision ${visible.revision} · ${visible.status.toLowerCase()}`
-      : visibleSources?.grants.length ? `${visibleSources.grants.length} current source bindings` : "Attach authorized sources and a standing responsibility to this Work.")}</p>
+    <p role="status" aria-live="polite">{phase === "reading" && !visible && !busy ? "Reading standing responsibility…"
+      : message ?? (visible ? `Revision ${visible.revision} · ${visible.status.toLowerCase()}`
+        : visibleSources?.grants.length ? `${visibleSources.grants.length} current source bindings` : "Attach authorized sources and a standing responsibility to this Work.")}</p>
     {visible?.status === "INVALIDATED" ? <p role="alert">The previous assumptions are invalid. Current readiness has been withdrawn; prior effects and costs remain retained.</p> : null}
     {visible?.reason ? <p>{intervention(visible.reason)}</p> : null}
     {artifact ? <>

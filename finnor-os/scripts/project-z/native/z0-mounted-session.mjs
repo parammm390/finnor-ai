@@ -172,13 +172,14 @@ async function startBrowser() {
   watch.attach(page, "main", authOrigin);
 }
 
-const normalise = (text, clock = false) => {
-  let out = (text ?? "").replace(/Last successful scope read: \S+/g, "Last successful scope read: T");
-  if (clock) out = out.replace(/ · expired; no fresh work is implied| · this is not a renewed allocation/g, "").replace(/within its time bounds|not currently within its time bounds/g, "VALIDITY");
-  return out;
+const normalise = text => (text ?? "").replace(/Last successful scope read: \S+/g, "Last successful scope read: T");
+const signatureFacts = f => ({ work: f.appAttributes?.work, session: f.appAttributes?.session, status: f.appAttributes?.status,
+  application: normalise(f.app?.text), institution: normalise(f.inst?.text), budget: f.budgetJson, charges: f.charges.map(item => item.text), costs: f.appCosts });
+const signature = f => sha(signatureFacts(f));
+const reloadDifferences = (before, after) => {
+  const left = signatureFacts(before), right = signatureFacts(after);
+  return Object.keys(left).filter(field => JSON.stringify(left[field]) !== JSON.stringify(right[field]));
 };
-const signature = (f, clock = false) => sha({ work: f.appAttributes?.work, session: f.appAttributes?.session, status: f.appAttributes?.status,
-  app: normalise(f.app?.text, clock), inst: normalise(f.inst?.text, clock), budget: f.budgetJson, charges: f.charges.map(item => item.text), costs: f.appCosts });
 const coreSignature = f => sha({ work: f.appAttributes?.work, session: f.appAttributes?.session, status: f.appAttributes?.status, budget: f.budgetJson, charges: f.charges.map(item => item.text), costs: f.appCosts });
 const instants = text => [...(text ?? "").matchAll(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)/g)].map(match => Date.parse(match[0]));
 const minuteText = value => new Date(value).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).replace(/[\u202f\u00a0]/g, " ");
@@ -202,15 +203,20 @@ const mutationsOf = (c, mark, allowed = 0) => {
 /* ---- M-01 */
 await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows original mandate/Work, terms, remaining resources, requested computation", async c => {
   if (!setupOk) notRun("M-00_PRECONDITIONS_NOT_MET");
+  c.observations.browserStage = "START_BROWSER";
   await startBrowser();
   const mark = watch.mark();
+  c.observations.browserStage = "SIGN_IN";
   const login = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
+  c.observations.browserStage = "CONFIRM_IDENTITY";
   const idp = login.bearer ? await idpUserId(env, login.bearer) : { status: 0, id: null };
   check(c, "identity.me", "browser /api/centropy/me carried a Bearer, answered 200 for the owner of the original tenant", "O-IDP /auth/v1/user + O-SQL",
     { meStatus: login.meStatus, role: login.identity?.role, tenantMatches: login.identity?.tenantId === parentA.tenantId, principalMatches: login.identity?.userId === parentA.ownerId, idpStatus: idp.status, idpIdEqualsNativePrincipal: idp.id === login.identity?.userId },
     login.meStatus === 200 && login.identity?.role === "owner" && login.identity?.tenantId === parentA.tenantId && login.identity?.userId === parentA.ownerId && idp.status === 200);
+  c.observations.browserStage = "OPEN_ORIGINAL_WORK";
   const opened = await openWork(page, threadA.id, parentA.workId);
   c.observations.rootCarriedBy = opened.rootCarriedBy;
+  c.observations.browserStage = "READ_OWNER_ORACLE";
   const truth = await readOwnerTruth({ q, owner, parent: parentA, sessionId: acqA.sessionId, acquisitionInput: acqA.request });
   referenceTruthA = truth;
   c.observations.oracle = {
@@ -220,16 +226,20 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
     disagreements: truth.disagreements.map(value => value.split(": sql=", 1)[0]),
   };
   check(c, "oracles.agree", "O-SQL and O-API agree before either is used as an expectation", "O-SQL vs O-API", truth.disagreements, truth.disagreements.length === 0);
+  c.observations.browserStage = "READ_INITIAL_PANELS";
   await waitForPanel(page, parentA.workId);
   const f0 = await readPanels(page);
   await shot(page, c, "open");
   c.observations.reloadsSettled = 0;
+  c.observations.browserStage = "FIRST_RELOAD";
   await page.reload({ waitUntil: "domcontentloaded" }); await waitForPanel(page, parentA.workId);
   c.observations.reloadsSettled = 1;
   const f1 = await readPanels(page);
+  c.observations.browserStage = "SECOND_RELOAD";
   await page.reload({ waitUntil: "domcontentloaded" }); await waitForPanel(page, parentA.workId);
   c.observations.reloadsSettled = 2;
   const f2 = await readPanels(page);
+  c.observations.browserStage = "CHECK_RELOADED_PANELS";
   await shot(page, c, "after-second-reload");
   c.observations.signatures = { f0: signature(f0), f1: signature(f1), f2: signature(f2) };
   referenceSignature = signature(f2);
@@ -284,7 +294,9 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
     { attr: f2.appAttributes?.status, owner: truth.session.status, completedShown: /\bCOMPLETED\b/.test(f2.html.replace(/<[^>]*>/g, " ")), effects: f2.appEffects.length },
     f2.appAttributes?.status === truth.session.status && !/\bCOMPLETED\b/.test(app) && (truth.session.status !== "MODEL_READY" || /fresh native binding is still required/.test(app))
       && f2.appEffects.every(effect => effect.state !== "VERIFIED" || !/No independent observation reference supplied/.test(effect.text)));
-  check(c, "7.reload-stable", "fact set after reload 2 equals reload 1", "DOM facts", { f1: signature(f1), f2: signature(f2) }, signature(f1) === signature(f2));
+  const differences = reloadDifferences(f1, f2);
+  c.observations.reloadDifferences = differences;
+  check(c, "7.reload-stable", "fact set after reload 2 equals reload 1", "DOM facts", { differences }, differences.length === 0);
   mutationsOf(c, mark);
   c.observations.truthSha256 = truth.truthSha256;
 });
@@ -381,7 +393,9 @@ await runCase("M-04", ["Z0-R45-C03", "Z0-R09-C01"], "Blocked/needs-action state 
     { acquireButtons: f1.app?.buttons.filter(b => /Request learning under original reservation|Request acquisition and native reservation/.test(b.name)).length }, (f1.app?.buttons ?? []).every(b => !/Request learning under original reservation|Request acquisition and native reservation/.test(b.name)));
   if (!check(c, "dom.next-action-stated", "the missing predicate and who acts next are stated for the blocked state", "O-SQL reason + product contract (blocked needs-action)",
     { reasonShown: truth.session.reason ? app.includes(truth.session.reason) : null, nextActionStated: nextAction }, nextAction)) c.gaps.push({ id: "next-action", predicate: "UI_GAP_BLOCKED_STATE_NOT_ACTIONABLE" });
-  check(c, "reload-stable", "fact set after reload equals the set before it", "DOM facts", { f0: signature(f0), f1: signature(f1) }, signature(f0) === signature(f1));
+  const differences = reloadDifferences(f0, f1);
+  c.observations.reloadDifferences = differences;
+  check(c, "reload-stable", "fact set after reload equals the set before it", "DOM facts", { differences }, differences.length === 0);
   mutationsOf(c, mark);
 });
 

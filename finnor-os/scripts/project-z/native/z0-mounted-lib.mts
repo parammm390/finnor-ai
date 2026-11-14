@@ -359,23 +359,29 @@ export const workUrl = (threadId: string, root?: { entityType: string; entityId:
 
 export const panelFor = (page: any, workId: string) => page.locator(`${APP}[data-application-work="${workId}"]`);
 
-/** Waits for the panel of a Work to be mounted and to have finished its current read. */
+/** Waits for both panels of the original Work to finish their current reads. */
 export async function waitForPanel(page: any, workId: string, timeoutMs = 60000) {
   const shell = page.getByRole("main", { name: "Investigation Canvas", exact: true });
+  const deadline = Date.now() + timeoutMs;
   await shell.waitFor({ state: "visible", timeout: timeoutMs })
     .catch((cause: unknown) => { throw new Error("Z0_BROWSER_INVESTIGATION_CANVAS_UNAVAILABLE", { cause }); });
   const panel = panelFor(page, workId);
-  const deadline = Date.now() + timeoutMs;
   for (;;) {
-    const state = await shell.evaluate((canvas: HTMLElement, { app, expectedWork }: { app: string; expectedWork: string }) => {
+    const state = await shell.evaluate((canvas: HTMLElement, { app, institution, expectedWork }: { app: string; institution: string; expectedWork: string }) => {
       const mounted = canvas.querySelector(app);
       if (!mounted) return canvas.querySelector(".ct-canvas__invalid") ? "CANVAS_INVALID" : "PANEL_UNMOUNTED";
       if (mounted.querySelector('[role="alert"]')) return "PROJECTION_UNAVAILABLE";
       if (mounted.getAttribute("data-application-work") !== expectedWork) return "WORK_NOT_PROJECTED";
       if (mounted.getAttribute("aria-busy") !== "false") return "PROJECTION_BUSY";
       if (mounted.getAttribute("data-application-session") === "none") return "SESSION_NOT_PROJECTED";
+      const standingResponsibility = canvas.querySelector(institution);
+      if (!standingResponsibility) return "INSTITUTION_UNMOUNTED";
+      if (standingResponsibility.getAttribute("data-institution-work") !== expectedWork) return "INSTITUTION_WORK_NOT_PROJECTED";
+      if (standingResponsibility.getAttribute("data-institution-read-state") === "unavailable") return "INSTITUTION_UNAVAILABLE";
+      if (standingResponsibility.getAttribute("aria-busy") !== "false") return "INSTITUTION_BUSY";
       return "SETTLED";
-    }, { app: APP, expectedWork: workId }, { timeout: Math.max(1, deadline - Date.now()) });
+    }, { app: APP, institution: INST, expectedWork: workId }, { timeout: Math.max(1, deadline - Date.now()) })
+      .catch((cause: unknown) => { throw new Error("Z0_BROWSER_CANVAS_PROJECTION_UNOBSERVABLE", { cause }); });
     if (state === "SETTLED") return panel;
     if (Date.now() >= deadline) throw Error("Z0_BROWSER_" + state);
     await sleep(250);
