@@ -22,6 +22,8 @@ import { ClosingSpecSchema } from "@finnor/shared-types";
 import { compensationCases, prepareCompensationFixture, compensationReadback, compensationFunding,
   type CompensationCase } from "../postz-w2/closing-compensation-fixture.mts";
 import { verifyClosingReaderPrivacy } from "./closing-reader-privacy.mts";
+import { recordWorkforceClosingPaymentsTx } from "../../packages/private-equity/src/workforce-compensation-closing";
+import { withS5PortfolioTransaction } from "../../packages/private-equity/src/allocation-store";
 
 process.umask(0o077); // Includes the database library's transient password file.
 const root = resolve(import.meta.dirname, "../../.."), backend = join(root, "finnor-os");
@@ -775,6 +777,31 @@ try {
     }
     const completed = await waitFor(f, q => q.status === "CLOSED" && q.certificate?.currentlyValid, 480000);
     const nativeCompletion = await completedNativeWork(f);
+    // Diagnostic only: replay the real canonical receiving-link evaluator inside
+    // a transaction that is always rolled back. This cannot repair the owner
+    // episode, seed a payment, or turn the failing acceptance into a false pass.
+    if (compensationCase === "exact") {
+      const observed = { linkWouldInsertAfterClosed: false, rolledBack: false,
+        errorCode: null as string | null, durableLinkCount: -1 };
+      try {
+        await withS5PortfolioTransaction(f.ctx, async c => {
+          await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [`v3-material-cut:${f.tenant}`]);
+          await recordWorkforceClosingPaymentsTx(f.ctx, c, f.programmeId);
+          const hypothetical = (await c.query(`SELECT count(*)::int n FROM finnor_os.s5_history
+            WHERE tenant_id=$1 AND operation='WORKFORCE_CLOSING_PAYMENT'`, [f.tenant])).rows[0]?.n;
+          observed.linkWouldInsertAfterClosed = hypothetical === 1;
+          throw Error("W2_DIAGNOSTIC_ROLLBACK");
+        });
+      } catch (cause) {
+        if (cause instanceof Error && cause.message === "W2_DIAGNOSTIC_ROLLBACK") observed.rolledBack = true;
+        else observed.errorCode = cause instanceof Error && /^(WORKFORCE_|CLOSING_)/.test(cause.message)
+          ? cause.message : "UNCLASSIFIED_REPLAY_ERROR";
+      }
+      observed.durableLinkCount = (await admin!.query(`SELECT count(*)::int n FROM finnor_os.s5_history
+        WHERE tenant_id=$1 AND operation='WORKFORCE_CLOSING_PAYMENT'`, [f.tenant])).rows[0]?.n ?? -1;
+      await save("workforce-compensation/rollback-only-post-close-candidate.json", observed);
+      assert.equal(observed.durableLinkCount, 0, "Diagnostic rollback modified durable compensation state");
+    }
     const compensation = await compensationReadback({ f, request }), funding = await compensationFunding({ f });
     const portfolio = ok(await request(f, "/api/allocations/resources", {}));
     await save("workforce-compensation/settled-owner-before-projection-assertion.json",
