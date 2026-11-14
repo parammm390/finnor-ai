@@ -190,11 +190,17 @@ def main():
                 "WORKFORCE_CLOSING_PROMISE_PREIMAGE_CHANGED", "WORKFORCE_CLOSING_ORIGINAL_ACCEPTANCE_REQUIRED",
                 "WORKFORCE_CLOSING_PAYMENT_ALREADY_ASSIGNED", "WORKFORCE_CLOSING_PAYMENT_PREIMAGE_CHANGED",
                 "WORKFORCE_CLOSING_PAYMENT_ORIGINAL_CONSUMPTION_CHANGED")
+            permitted = ("promiseBudgetJoined", "operationJoined", "consumptionOriginJoined",
+                "evidenceVersionJoined", "evidenceBound", "checkCutMatches")
+            stages = candidate.get("stagedJoins")
+            assert isinstance(stages, dict) and set(stages) == set(permitted)
+            assert all(type(stages[key]) is int and 0 <= stages[key] <= 2 for key in permitted)
             record["postCloseRollbackDiagnostic"] = {
                 "linkWouldInsertAfterClosed": candidate["linkWouldInsertAfterClosed"],
                 "rolledBack": candidate["rolledBack"],
                 "durableLinkCount": candidate["durableLinkCount"],
                 "errorCode": error_code,
+                "stageCounts": {key: stages[key] for key in permitted},
             }
         if args.episode == "before-exact":
             assert not result["passed"] and child.returncode != 0
