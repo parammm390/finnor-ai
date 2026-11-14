@@ -258,7 +258,7 @@ describe.skipIf(!adminUrl)("authenticated capability discovery", () => {
     } finally { await client.end(); }
   });
 
-  it("keeps legacy replies private across every shared Work read while retaining exact replay", async () => {
+  it("keeps legacy replies private across owner Work reads and denies same-tenant peers", async () => {
     const input = { instruction: "What can you do?", channel: "text", instructionId: randomUUID(), idempotencyKey: randomUUID() };
     const accepted = await http.request("actions", input);
     expect(accepted.status).toBe(201);
@@ -267,15 +267,30 @@ describe.skipIf(!adminUrl)("authenticated capability discovery", () => {
     await admin.query("UPDATE finnor_os.works SET final_outcome=$3::jsonb WHERE tenant_id=$1 AND id=$2", [tenantId, accepted.body.workId, JSON.stringify({ ...lifecycle, response: accepted.body })]);
     await admin.query("DELETE FROM finnor_os.work_input_responses WHERE tenant_id=$1 AND work_input_id=$2", [tenantId, accepted.body.workInputId]);
     for (const path of ["works", `works/${accepted.body.workId}`, `works/${accepted.body.workId}/execution`, "read-models/work-cases"]) {
-      const shared = await http.read(path, "other");
-      await record("legacy cache excluded from shared Work read", { path, shared });
-      expect(shared.status, JSON.stringify(shared.body)).toBe(200);
-      const work = path === "works" ? shared.body.works.find((row: { id: string }) => row.id === accepted.body.workId)
-        : path === "read-models/work-cases" ? shared.body.data.find((row: { durableWork?: { id: string } }) => row.durableWork?.id === accepted.body.workId)?.durableWork
-          : path.endsWith("/execution") ? shared.body.execution.work : shared.body.work.work;
-      expect(work, `Target Work must actually occur in ${path}`).toMatchObject({ id: accepted.body.workId, finalOutcome: lifecycle });
-      expect(JSON.stringify(shared.body)).not.toContain(accepted.body.assistantMessage.id);
-      expect(JSON.stringify(shared.body)).not.toContain('"response":');
+      const owner = await http.read(path, "actor");
+      await record("legacy cache redacted from authorized Work read", { path, owner });
+      expect(owner.status, JSON.stringify(owner.body)).toBe(200);
+      const ownedWork = path === "works" ? owner.body.works.find((row: { id: string }) => row.id === accepted.body.workId)
+        : path === "read-models/work-cases" ? owner.body.data.find((row: { durableWork?: { id: string } }) => row.durableWork?.id === accepted.body.workId)?.durableWork
+          : path.endsWith("/execution") ? owner.body.execution.work : owner.body.work.work;
+      expect(ownedWork, `Owner must retain original Work in ${path}`).toMatchObject({ id: accepted.body.workId, finalOutcome: lifecycle });
+      expect(JSON.stringify(owner.body)).not.toContain(accepted.body.assistantMessage.id);
+      expect(JSON.stringify(owner.body)).not.toContain('"response":');
+
+      const foreign = await http.read(path, "other");
+      await record("same-tenant peer Work privacy refusal", { path, foreign });
+      if (path === "works") {
+        expect(foreign.status, JSON.stringify(foreign.body)).toBe(200);
+        expect(foreign.body.works.some((row: { id: string }) => row.id === accepted.body.workId)).toBe(false);
+      } else if (path === "read-models/work-cases") {
+        expect(foreign.status, JSON.stringify(foreign.body)).toBe(200);
+        expect(foreign.body.data.some((row: { durableWork?: { id: string } }) => row.durableWork?.id === accepted.body.workId)).toBe(false);
+      } else {
+        expect(foreign.status, JSON.stringify(foreign.body)).toBe(404);
+      }
+      expect(JSON.stringify(foreign.body)).not.toContain(accepted.body.assistantMessage.id);
+      expect(JSON.stringify(foreign.body)).not.toContain(accepted.body.workInputId);
+      expect(JSON.stringify(foreign.body)).not.toContain('"response":');
     }
     const replay = await http.request("actions", input);
     await record("legacy cache exact-owner replay", replay);
@@ -283,6 +298,70 @@ describe.skipIf(!adminUrl)("authenticated capability discovery", () => {
     expect(replay.body).toMatchObject({ ...accepted.body, duplicate: true });
     const preserved = (await admin.query("SELECT final_outcome FROM finnor_os.works WHERE tenant_id=$1 AND id=$2", [tenantId, accepted.body.workId])).rows[0].final_outcome;
     expect(preserved).toEqual({ ...lifecycle, response: accepted.body });
+  });
+
+  it("refuses foreign Work IDs for typed and economic programme queries before private intake", async () => {
+    const owned = await http.request("queries", {
+      intent: "work_list", page: { limit: 10 }, idempotencyKey: randomUUID(),
+    }, "actor");
+    expect(owned.status, JSON.stringify(owned.body)).toBe(201);
+    const workId = owned.body.workId as string;
+    const [before] = (await admin.query(
+      "SELECT status,(SELECT count(*)::int FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2) AS inputs FROM finnor_os.works WHERE tenant_id=$1 AND id=$2",
+      [tenantId, workId],
+    )).rows;
+    expect(before).toBeDefined();
+
+    // A second employee in the *same tenant* knows the exact Work UUID. The
+    // query boundary must not turn that knowledge into a new Work input.
+    const foreignTyped = await http.request("queries", {
+      intent: "work_list", page: { limit: 10 }, workId, idempotencyKey: randomUUID(),
+    }, "other");
+    await record("foreign typed Work query refused", { foreignTyped, workId });
+    expect(foreignTyped.status, JSON.stringify(foreignTyped.body)).toBe(404);
+    expect(foreignTyped.body).toEqual({ error: "Work not found" });
+
+    // The special economic-programme reader previously resolved the latest
+    // input using only the tenant and Work ID. It must reject before that read,
+    // regardless of whether the requested programme exists.
+    const foreignEconomic = await http.request("queries", {
+      intent: "economic_programme_v1", programmeId: randomUUID(), workId,
+      idempotencyKey: randomUUID(),
+    }, "other");
+    await record("foreign economic programme Work query refused", { foreignEconomic, workId });
+    expect(foreignEconomic.status, JSON.stringify(foreignEconomic.body)).toBe(404);
+    expect(foreignEconomic.body.workInputId).toBeUndefined();
+    expect(foreignEconomic.body.instructionId).toBeUndefined();
+
+    // Every HTTP entry accepting an explicit Work ID must use the same
+    // authoritative current-owner claim. The peer is an active employee of
+    // this exact tenant, so a cross-tenant test would not catch these bugs.
+    for (const [path, body] of [
+      ["actions", {
+        instruction: "Continue the exact existing Work", channel: "text",
+        workId, instructionId: randomUUID(), idempotencyKey: randomUUID(),
+      }],
+      ["objectives", {
+        objective: "Continue the exact existing Work with an objective",
+        channel: "text", workId, instructionId: randomUUID(), idempotencyKey: randomUUID(),
+      }],
+      ["outcome-packs", {
+        packId: "deal_request_resolution", input: { dealId: randomUUID(), mode: "approval" },
+        channel: "console", workId, instructionId: randomUUID(), idempotencyKey: randomUUID(),
+      }],
+    ] as const) {
+      const denied = await http.request(path, body, "other");
+      await record("foreign Work continuation refused", { path, denied, workId });
+      expect(denied.status, `${path}: ${JSON.stringify(denied.body)}`).toBe(404);
+      expect(JSON.stringify(denied.body)).not.toContain(owned.body.workInputId);
+      expect(JSON.stringify(denied.body)).not.toContain(owned.body.instructionId);
+    }
+
+    const [after] = (await admin.query(
+      "SELECT status,(SELECT count(*)::int FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2) AS inputs FROM finnor_os.works WHERE tenant_id=$1 AND id=$2",
+      [tenantId, workId],
+    )).rows;
+    expect(after).toEqual(before);
   });
 
   it("replays the original typed query snapshot after a later query on its Work", async () => {

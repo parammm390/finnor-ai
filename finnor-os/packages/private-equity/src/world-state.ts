@@ -999,7 +999,43 @@ async function reconstructPrivateEquityWorldState(
     if (history.size > MAX_WORLD_ROWS) {
       reasons.push(`Combined world history exceeded the ${MAX_WORLD_ROWS}-row deterministic bound`);
     }
-    const safeHistory = [...history.values()].slice(0, MAX_WORLD_ROWS);
+    // A shared PE root does not authorize another employee's private Work.
+    // Remove unauthorized Work-link snapshots BEFORE constructing canonical
+    // S1 claims, provenance, hashes, coverage and Company Brain projections.
+    // Filtering only graph nodes is insufficient: exactSnapshotJson and S1
+    // dependency refs would otherwise expose the same private Work ID.
+    //
+    // Read rights in this existing repeatable-read transaction; opening a
+    // second database connection here can deadlock the hosted one-slot pool.
+    // Historical snapshots still use CURRENT employee rights: a past link
+    // cannot resurrect access revoked by a later handoff or suspension.
+    const actorId = ctx.auth.employeeId ?? ctx.auth.userId;
+    const employeeRead = Boolean(ctx.auth.employeeId) || !ctx.auth.userId.startsWith("system:");
+    const validActor = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(actorId);
+    const candidateWorkIds = [...new Set([...history.values()]
+      .filter((row) => row.entity_type === "work_entity_link")
+      .map((row) => row.snapshot.work_id)
+      .filter((id): id is string => typeof id === "string" &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)))];
+    let authorizedWorkIds: Set<string> | null = null;
+    if (employeeRead && candidateWorkIds.length) {
+      const rows = validActor ? await client.query<{ id: string }>(
+        `SELECT w.id::text AS id FROM finnor_os.works w
+         JOIN finnor_os.users u ON u.tenant_id=w.tenant_id
+           AND u.id=$2::uuid AND u.status='active'
+         WHERE w.tenant_id=$1 AND w.id=ANY($3::uuid[])
+           AND (w.created_by=u.id OR w.current_owner_id=u.id OR w.assigned_to=u.id)`,
+        [ctx.auth.tenantId, actorId, candidateWorkIds],
+      ) : { rows: [] as Array<{ id: string }> };
+      authorizedWorkIds = new Set(rows.rows.map((row) => row.id));
+    }
+    const selectedHistory = [...history.values()].filter((row) =>
+      row.entity_type !== "work_entity_link" ||
+      (authorizedWorkIds === null || authorizedWorkIds.has(String(row.snapshot.work_id ?? ""))));
+    if (selectedHistory.length !== history.size) {
+      reasons.push("EMPLOYEE_PRIVATE_WORK_LINKS_OMITTED");
+    }
+    const safeHistory = selectedHistory.slice(0, MAX_WORLD_ROWS);
     const safeMap = new Map(safeHistory.map((row) => [historyKey(row), row]));
     const strategyValues = arrayFor(safeMap, "pe_strategy");
     const opportunityValues = arrayFor(safeMap, "pe_opportunity");

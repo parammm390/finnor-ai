@@ -8,6 +8,7 @@ import { performance } from "node:perf_hooks";
 import { requireContext, errorResponse } from "../../../lib/auth";
 import { getOrchestrator } from "../../../lib/orchestrator";
 import { OperationalQueryReplayUnavailable, validateOperationalQueryRequest, type OperationalQueryRequest } from "@finnor/orchestration";
+import { WorkControlAuthorizationError } from "@finnor/db";
 import { EconomicFault } from "@finnor/private-equity/src/economic-action-theory/contracts";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -88,6 +89,12 @@ export async function POST(req: Request): Promise<Response> {
       },
     });
   } catch (err) {
+    // Possession of a Work UUID must not permit a foreign Work query or disclose
+    // whether that employee's Work exists. The DB enforced the owner check
+    // under the canonical Work row lock before any input or event was written.
+    if (err instanceof WorkControlAuthorizationError) {
+      return Response.json({ error: "Work not found" }, { status: 404, headers: { "Cache-Control": "no-store" } });
+    }
     if (err instanceof EconomicFault) return Response.json({ code: err.code }, {
       status: err.status, headers: { "Cache-Control": "no-store" },
     });
