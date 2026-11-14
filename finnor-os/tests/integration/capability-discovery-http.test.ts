@@ -258,7 +258,7 @@ describe.skipIf(!adminUrl)("authenticated capability discovery", () => {
     } finally { await client.end(); }
   });
 
-  it("keeps legacy replies private across every shared Work read while retaining exact replay", async () => {
+  it("keeps legacy replies private across owner Work reads and denies same-tenant peers", async () => {
     const input = { instruction: "What can you do?", channel: "text", instructionId: randomUUID(), idempotencyKey: randomUUID() };
     const accepted = await http.request("actions", input);
     expect(accepted.status).toBe(201);
@@ -267,15 +267,30 @@ describe.skipIf(!adminUrl)("authenticated capability discovery", () => {
     await admin.query("UPDATE finnor_os.works SET final_outcome=$3::jsonb WHERE tenant_id=$1 AND id=$2", [tenantId, accepted.body.workId, JSON.stringify({ ...lifecycle, response: accepted.body })]);
     await admin.query("DELETE FROM finnor_os.work_input_responses WHERE tenant_id=$1 AND work_input_id=$2", [tenantId, accepted.body.workInputId]);
     for (const path of ["works", `works/${accepted.body.workId}`, `works/${accepted.body.workId}/execution`, "read-models/work-cases"]) {
-      const shared = await http.read(path, "other");
-      await record("legacy cache excluded from shared Work read", { path, shared });
-      expect(shared.status, JSON.stringify(shared.body)).toBe(200);
-      const work = path === "works" ? shared.body.works.find((row: { id: string }) => row.id === accepted.body.workId)
-        : path === "read-models/work-cases" ? shared.body.data.find((row: { durableWork?: { id: string } }) => row.durableWork?.id === accepted.body.workId)?.durableWork
-          : path.endsWith("/execution") ? shared.body.execution.work : shared.body.work.work;
-      expect(work, `Target Work must actually occur in ${path}`).toMatchObject({ id: accepted.body.workId, finalOutcome: lifecycle });
-      expect(JSON.stringify(shared.body)).not.toContain(accepted.body.assistantMessage.id);
-      expect(JSON.stringify(shared.body)).not.toContain('"response":');
+      const owner = await http.read(path, "actor");
+      await record("legacy cache redacted from authorized Work read", { path, owner });
+      expect(owner.status, JSON.stringify(owner.body)).toBe(200);
+      const ownedWork = path === "works" ? owner.body.works.find((row: { id: string }) => row.id === accepted.body.workId)
+        : path === "read-models/work-cases" ? owner.body.data.find((row: { durableWork?: { id: string } }) => row.durableWork?.id === accepted.body.workId)?.durableWork
+          : path.endsWith("/execution") ? owner.body.execution.work : owner.body.work.work;
+      expect(ownedWork, `Owner must retain original Work in ${path}`).toMatchObject({ id: accepted.body.workId, finalOutcome: lifecycle });
+      expect(JSON.stringify(owner.body)).not.toContain(accepted.body.assistantMessage.id);
+      expect(JSON.stringify(owner.body)).not.toContain('"response":');
+
+      const foreign = await http.read(path, "other");
+      await record("same-tenant peer Work privacy refusal", { path, foreign });
+      if (path === "works") {
+        expect(foreign.status, JSON.stringify(foreign.body)).toBe(200);
+        expect(foreign.body.works.some((row: { id: string }) => row.id === accepted.body.workId)).toBe(false);
+      } else if (path === "read-models/work-cases") {
+        expect(foreign.status, JSON.stringify(foreign.body)).toBe(200);
+        expect(foreign.body.data.some((row: { durableWork?: { id: string } }) => row.durableWork?.id === accepted.body.workId)).toBe(false);
+      } else {
+        expect(foreign.status, JSON.stringify(foreign.body)).toBe(404);
+      }
+      expect(JSON.stringify(foreign.body)).not.toContain(accepted.body.assistantMessage.id);
+      expect(JSON.stringify(foreign.body)).not.toContain(accepted.body.workInputId);
+      expect(JSON.stringify(foreign.body)).not.toContain('"response":');
     }
     const replay = await http.request("actions", input);
     await record("legacy cache exact-owner replay", replay);
