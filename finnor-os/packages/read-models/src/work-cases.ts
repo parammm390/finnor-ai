@@ -767,7 +767,7 @@ export async function workCasesPage(tenantId: string, options: WorkCasesPageOpti
     const cursor = options.employeeId && decodedCursor?.scope === "legacy_instruction" ? null : decodedCursor;
     const employeeWorkScope = options.employeeId ? and(
       or(eq(works.createdBy, options.employeeId), eq(works.currentOwnerId, options.employeeId), eq(works.assignedTo, options.employeeId)),
-      sql`EXISTS (SELECT 1 FROM finnor_os.users current_employee
+      sql`EXISTS (SELECT 1 FROM ${users} current_employee
          WHERE current_employee.tenant_id=${tenantId}::uuid
            AND current_employee.id=${options.employeeId}::uuid
            AND current_employee.status='active')`,
