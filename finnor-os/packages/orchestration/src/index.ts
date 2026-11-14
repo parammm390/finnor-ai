@@ -21,6 +21,7 @@ import {
   withTenant, domainActions, domainPolicies, domainPolicyRevisions, actionLog,
   decisionReceipts, planRepairs, enqueueJob, receiveWork, recordWorkResponse, transitionWork,
   beginWorkPlannerAttempt, finishWorkPlannerAttempt, latestWorkInput, reconcileWorkStatus,
+  canReadEmployeeWork,
   recordRejectedWorkPlan, activeWorkPlanRevision,
   authorityStates,
   workObjectiveSteps,
@@ -342,7 +343,7 @@ export class FinnorOrchestrator implements Orchestrator {
     return this.objectiveLoopRuntime.runIteration(params);
   }
 
-  async controlObjective(params: { tenantId: string; workId: string; command: "continue" | "interrupt" | "redirect" | "cancel"; actorId: string; objective?: string; successCondition?: import("@finnor/shared-types").ObjectiveSuccessCondition; correlationId?: string }) {
+  async controlObjective(params: { tenantId: string; workId: string; command: "continue" | "interrupt" | "redirect" | "cancel"; actorId: string; objective?: string; successCondition?: import("@finnor/shared-types").ObjectiveSuccessCondition; correlationId?: string; requireCurrentEmployeeOwner?: boolean }) {
     return controlWorkObjective(params);
   }
 
@@ -531,6 +532,11 @@ export class FinnorOrchestrator implements Orchestrator {
       // Observation must not create a new Work input, invalidate the programme,
       // or mark the economic goal complete merely because a read succeeded.
       if (opts.workId !== request.workId) economicQueryFault("Y1_AUTHENTICATED_EXACT_QUERY_WORK_REQUIRED", 403);
+      // A query's canonical Work ID is not a share grant. Protect the original
+      // input and programme snapshot before reading any Work-linked evidence.
+      if (!(await canReadEmployeeWork(ctx.tenantId, request.workId, ctx.employeeId ?? ctx.userId))) {
+        economicQueryFault("Y1_QUERY_WORK_UNAVAILABLE", 404);
+      }
       const input = await latestWorkInput(ctx.tenantId, request.workId);
       if (!input) economicQueryFault("Y1_QUERY_WORK_UNAVAILABLE", 404);
       if (!this.fastReadOnlyRouter.execute) economicQueryFault("Y1_CANONICAL_QUERY_EXECUTOR_UNAVAILABLE", 503);
@@ -554,6 +560,10 @@ export class FinnorOrchestrator implements Orchestrator {
       idempotencyKey: opts.idempotencyKey,
       activeContext: opts.activeContext as Record<string, unknown> | undefined,
       authorityContext: await authorityContextForWork(ctx),
+      // Typed queries with an existing Work ID are a Work continuation, not a
+      // tenant-scoped observation. The Work row is locked and current ownership
+      // checked within receiveWork() before replay, input append, or transitions.
+      requireCurrentEmployeeOwner: Boolean(opts.workId),
     });
     if (received.duplicate) {
       const finalOutcome = received.finalOutcome && typeof received.finalOutcome === "object" ? received.finalOutcome as Record<string, unknown> : {};

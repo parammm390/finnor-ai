@@ -1,4 +1,4 @@
-import { autonomyEvaluations, outcomePackRuns, reconcileWorkStatus, withTenant, workAggregate, workExists } from "@finnor/db";
+import { autonomyEvaluations, outcomePackRuns, reconcileWorkStatus, withTenant, workAggregate, canReadEmployeeWork } from "@finnor/db";
 import { FinancialDocumentReviewReceiptSchema, type FinancialDocumentReview } from "@finnor/shared-types";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
@@ -19,7 +19,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   try {
     const { id } = await params;
     const ctx = await requireContext(req);
-    if (!(await workExists(ctx.tenantId, id))) return Response.json({ error: "Work not found" }, { status: 404 });
+    // Authorization must precede reconciliation: an unauthorized GET cannot mutate Work.
+    if (!(await canReadEmployeeWork(ctx.tenantId, id, ctx.employeeId ?? ctx.userId))) return Response.json({ error: "Work not found" }, { status: 404 });
     await reconcileWorkStatus(ctx.tenantId, id);
     const work = await workAggregate(ctx.tenantId, id);
     if (!work) return Response.json({ error: "Work not found" }, { status: 404 });
@@ -86,7 +87,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       return { ...run, latestAutonomyDecision: evaluation ?? null };
     });
     return Response.json({ work: { ...work, outcomePack, ...(documentReview ? { documentReview } : {}) } },
-      documentReview ? { headers: privateHeaders } : undefined);
+      { headers: privateHeaders });
   } catch (err) {
     return errorResponse(err);
   }

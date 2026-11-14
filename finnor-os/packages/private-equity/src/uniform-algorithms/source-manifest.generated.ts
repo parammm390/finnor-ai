@@ -160,7 +160,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/uniform-algorithms/source-paths.ts",
-      "sha256": "c51fafa8e8b0532b1141f5a071e3a09c65b4063dac51259409639b68b2486e8b"
+      "sha256": "2524f2b4af57bd42bf7d1ec14adcc9d78f399ce37eacfb6a434b5c63e1f150fd"
     },
     {
       "path": "finnor-os/packages/private-equity/src/uniform-algorithms/source-cut.ts",
@@ -216,7 +216,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/index.ts",
-      "sha256": "c95a416a58a72859c1f0b8e5247eb7420e62d5df595dee78c15d4d76504c5730"
+      "sha256": "828024f97117b579482f390cd559f5d0304328c1f6d0477501c2c3357f9ca20a"
     },
     {
       "path": "finnor-os/packages/db/execution-deadline.ts",
@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "131c881affc2fbc91a5c2e52e94b9dbfe597875423b5bd6d8c5f4c8bfb19c9dc"
+      "sha256": "10d65a888b7f9898f9cfb58609049de1556bdd9a84870b3279edf639c0ed35bd"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -332,7 +332,7 @@ export default {
     },
     {
       "path": "finnor-os/package.json",
-      "sha256": "57a92e266b9ac5996bb964c2716e1de3ae7dfc0755df8d15e7c4ac966d9ba013"
+      "sha256": "3a589ff7150bbf437ba9ae024cd496c9862e2efc08734eecacc4b2eb95dacf80"
     },
     {
       "path": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
@@ -364,7 +364,7 @@ export default {
     },
     {
       "path": "finnor-os/package-lock.json",
-      "sha256": "934a898e1c437342b4ffbb376d69b9f420f57a19b800006948c0d95e47c48442"
+      "sha256": "59250f233b6a704cf66ed39279d4c3e393e5f9575aa95718dd9b3dada9bb84ff"
     },
     {
       "path": "package-lock.json",
@@ -1436,7 +1436,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/orchestration/src/index.ts",
-      "sha256": "078fbd7eb10f18091b29d8482ae94e85ccca5f52cc1fa5076b95ec941c0be470"
+      "sha256": "ab3e533a98f6d39b09104649b47a4b0aa60e1101b4a8f3667820343894cb96fb"
     },
     {
       "path": "finnor-os/packages/orchestration/src/instruction-routing.ts",
@@ -1444,7 +1444,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/orchestration/src/instruction-trace.ts",
-      "sha256": "2979e82448e32045563b5569847623df6cfea51c756c663c00b851b3dd47a88d"
+      "sha256": "a0354b8e9a560ba0bdb2fa27789d2094d86e939d78e06f3209277d4791babbb8"
     },
     {
       "path": "finnor-os/packages/orchestration/src/interaction-context.ts",
@@ -1472,7 +1472,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/orchestration/src/objective-loop.ts",
-      "sha256": "01e63f179837d5fb7bca1a65610633dcaf5edd9d607154f86deab0d9b33257fb"
+      "sha256": "cb4dd1f319bf3afdfe0ef41a5e718fa6444ec1d228262a4b6d2d021cb0b05b9a"
     },
     {
       "path": "finnor-os/packages/orchestration/src/objective-success.ts",
@@ -1960,7 +1960,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/company-brain.ts",
-      "sha256": "abd34ccd98bed7f521e3a2c8213831ab5123eb26fd1c18cd74286f40680a6d82"
+      "sha256": "7b45821096947f651c16472db31e52489b3ff690eb2806767258352a8b0028ea"
     },
     {
       "path": "finnor-os/packages/private-equity/src/compute-search/admission.ts",
@@ -2304,7 +2304,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "1e8a7d00fccf9bd5fdb1694a71a8e7d69dde1f77274eeb69f8375b8691de2234"
+      "sha256": "b5d659fa0961bf61a48d71b5db12e23f832417c4b40235dac1f71acb90e05455"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2748,7 +2748,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "sha256": "1a8949627e7acb74767021e213b14b2d60608f4da281f63b5f72bf532ee1b284"
+      "sha256": "6799e0fb6e64777033274e801e935833d5625f4a8cf63e99c6590ac00386171b"
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-paths.ts",
@@ -3164,7 +3164,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts",
-      "sha256": "c4fd268ba3e7da79501c37b26d9e7b4097820dbc203ea851a3711a5a671da7b4"
+      "sha256": "66a3bbf48a3849fc0987f4e682329e27d49178266a1bdd8647621349279e7565"
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-paths.ts",
@@ -3208,7 +3208,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/world-state.ts",
-      "sha256": "74cc54cde96588ad29e329411ff3e9ddb6a5e763b77d0fba4c637b84d1f14ab1"
+      "sha256": "2c5325e39ce40e87427df905b102227bce7f09ea7c9a744ff520189c621fc769"
     },
     {
       "path": "finnor-os/packages/projections/src/index.ts",
@@ -3300,7 +3300,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/read-models/src/work-cases.ts",
-      "sha256": "b065062a475eba294ca7ef1fdf27560d233cf2be506f4e8e7da3198392862dd6"
+      "sha256": "5fbc42d4ed74dd2acbc5bd8436d3daee56584354b1a0b61085c6dafa5f552a2b"
     },
     {
       "path": "finnor-os/packages/read-models/src/workforce-status.ts",
@@ -3596,7 +3596,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/tools/src/llm.ts",
-      "sha256": "63f4c1098dd0e38a7e2162e5b5a3b942101d7b4a9b297a81985e88fb67f0a562"
+      "sha256": "dbe512a87f6fd33846faaa3d8e7669bf30797bfeaaf98f844a682befa0051e75"
     },
     {
       "path": "finnor-os/packages/tools/src/logger.ts",
@@ -4596,7 +4596,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/canvas-compose.ts",
-      "sha256": "013fb5070cd8a0cc95a4446d3d8ca208f3d103dcd177c232fa3dd95573c4967c"
+      "sha256": "d8906ebc01e7cc6026caea79e0612bf8b7b962beb849a6e7b87fd8aca4b410b0"
     },
     {
       "path": "src/components/centropy/canvas/causal-replay-contract.ts",
@@ -4664,7 +4664,7 @@ export default {
     },
     {
       "path": "src/components/centropy/shell/CentropyWorkspace.tsx",
-      "sha256": "3590aba937a38d4552c0785d147cd9bd60f781b312cd209bff3f6deabebb5fdc"
+      "sha256": "9260c9c63a34fc48e0f135ac016b1ba4ee782b55395604297aafb91641c4010c"
     },
     {
       "path": "src/components/centropy/shell/HomeCanvas.tsx",
@@ -4672,7 +4672,7 @@ export default {
     },
     {
       "path": "src/components/centropy/shell/centropy.css",
-      "sha256": "25cfc5eeb587778a957ae089617ad90bb6f08951c1acf5515d2e0fd0eba59642"
+      "sha256": "7bdadaa371dd8802ae2c1b14d407dbb9ba639b33ddc50aa88267db0322f7ad1c"
     },
     {
       "path": "src/components/centropy/thread/Composer.tsx",
@@ -4724,7 +4724,7 @@ export default {
     },
     {
       "path": "src/components/centropy/thread/thread-api.ts",
-      "sha256": "e311c751a724a55f05823fa0ea14b6e61417466403b30aac3b6e019563e8d03f"
+      "sha256": "f61a29b5fb7594aaafd6604e743429eae8238b21d45e9e3ea496079a1516b6c5"
     },
     {
       "path": "src/components/centropy/thread/thread-contract.ts",
@@ -4732,7 +4732,7 @@ export default {
     },
     {
       "path": "src/components/centropy/thread/use-investigation.ts",
-      "sha256": "bacd887f7d069377b0bf272ea1f25fdc85c26ebad6bd25ea3e4b61d7630fc78f"
+      "sha256": "c70a4abe77ec13bd82d843bb6b7f38d654f67ce491d9842222aed1055e2a764e"
     },
     {
       "path": "src/components/centropy/world/ConfidentialComputationPanel.tsx",
@@ -4893,7 +4893,11 @@ export default {
     {
       "path": "src/lib/auth/browser-session.ts",
       "sha256": "59a35b78bf931f087a7f5a5267ef7c899664c53a84616276d2e17b24e04a0eb4"
+    },
+    {
+      "path": "finnor-os/packages/orchestration/src/canonical-analysis.ts",
+      "sha256": "2bfba5c7712801bd9f88985f4c4f118d6aaaa668a5e8cbec68061a27afca60a3"
     }
   ],
-  "sourceDigest": "fb0e6e81cec5371495814514df1266331a6cba4eba44c6649f22f03f714305d0"
+  "sourceDigest": "6267f39986f526961e04c967be055f3a1a81c01196d2c18aa59b9fd0d6221941"
 } as const;

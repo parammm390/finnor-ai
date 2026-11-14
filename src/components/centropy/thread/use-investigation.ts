@@ -5,17 +5,41 @@ import { earliestMessageSequence, mergeConversationMessages, type LoadedConversa
 import { loadInvestigation } from "./thread-api"
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
 
-interface InvestigationState {
+export interface InvestigationState {
   forThreadId: string | null
   forScope?: string
   loaded: LoadedConversationThread | null
   status: "idle" | "loading" | "ready" | "error"
   error: string | null
   olderLoading: boolean
+  olderError: string | null
   hasOlder: boolean
 }
 
-const EMPTY: InvestigationState = { forThreadId: null, loaded: null, status: "idle", error: null, olderLoading: false, hasOlder: false }
+const EMPTY: InvestigationState = { forThreadId: null, loaded: null, status: "idle", error: null, olderLoading: false, olderError: null, hasOlder: false }
+
+/** A failed history fetch is not failure of the already-loaded conversation.
+ * Authentication / thread revocation is different: purge previously loaded
+ * private turns rather than leaving revoked content visible.
+ */
+export function olderPageFailureState(
+  previous: InvestigationState,
+  threadId: string,
+  scopeKey: string,
+  cause: unknown,
+): InvestigationState {
+  if (previous.forThreadId !== threadId || previous.forScope !== scopeKey || previous.loaded?.thread.id !== threadId) return previous
+  const status = cause && typeof cause === "object" && "status" in cause ? (cause as { status?: unknown }).status : null
+  if (status === 401 || status === 403 || status === 404) {
+    return { ...EMPTY, forThreadId: threadId, forScope: scopeKey, status: "error", error: "Investigation access is no longer available" }
+  }
+  return {
+    ...previous,
+    status: "ready",
+    olderLoading: false,
+    olderError: cause instanceof Error ? cause.message : "Older turns unavailable",
+  }
+}
 
 /** Browser state is a cache of the authenticated employee thread, never its owner. */
 export function useInvestigation(threadId: string | null, enabled: boolean, refreshToken = 0) {
@@ -28,7 +52,7 @@ export function useInvestigation(threadId: string | null, enabled: boolean, refr
     if (!threadId || !enabled) return
     const request = ++generation.current
     setState((previous) => previous.forScope === scope.key && previous.loaded?.thread.id === threadId
-      ? { ...previous, forThreadId: threadId, status: "ready", error: null, olderLoading: false }
+      ? { ...previous, forThreadId: threadId, status: "ready", error: null, olderLoading: false, olderError: null }
       : { ...EMPTY, forThreadId: threadId, forScope: scope.key, status: "loading" })
     try {
       const loaded = await loadInvestigation(threadId)
@@ -42,7 +66,7 @@ export function useInvestigation(threadId: string | null, enabled: boolean, refr
           forThreadId: threadId,
           forScope: scope.key,
           loaded: { thread: loaded.thread, messages },
-          status: "ready", error: null,
+          status: "ready", error: null, olderError: null,
           // Refreshing the latest page must not forget older pages already loaded.
           hasOlder: earliest !== null && earliest > 1 && (sameThread ? previous.hasOlder : loaded.messages.length === 100),
         }
@@ -68,18 +92,18 @@ export function useInvestigation(threadId: string | null, enabled: boolean, refr
     const earliest = earliestMessageSequence(state.loaded.messages)
     if (!earliest) return
     const request = generation.current
-    setState((previous) => ({ ...previous, olderLoading: true }))
+    setState((previous) => ({ ...previous, olderLoading: true, olderError: null }))
     try {
       const page = await loadInvestigation(threadId, { limit: 100, beforeSequence: earliest })
       if (request !== generation.current || !scope.isCurrent(scope.key)) return
       setState((previous) => previous.loaded?.thread.id !== threadId ? previous : ({
-        ...previous, olderLoading: false,
+        ...previous, olderLoading: false, olderError: null,
         loaded: { thread: previous.loaded.thread, messages: mergeConversationMessages(page.messages, previous.loaded.messages) },
         hasOlder: page.messages.length === 100 && earliestMessageSequence(page.messages) !== 1,
       }))
     } catch (cause) {
       if (request !== generation.current || !scope.isCurrent(scope.key)) return
-      setState({ ...EMPTY, forThreadId: threadId, forScope: scope.key, status: "error", error: cause instanceof Error ? cause.message : "Older turns unavailable" })
+      setState((previous) => olderPageFailureState(previous, threadId, scope.key, cause))
     }
   }, [enabled, state.hasOlder, state.loaded, state.olderLoading, threadId, scope.key, scope.isCurrent])
 
