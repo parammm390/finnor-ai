@@ -41,6 +41,27 @@ export function olderPageFailureState(
   }
 }
 
+/** A failed latest-page refresh is not permission to discard already loaded
+ * canonical messages and their linked Work. However, explicit access denial
+ * must purge private data immediately.
+ */
+export function refreshFailureState(
+  previous: InvestigationState,
+  threadId: string,
+  scopeKey: string,
+  cause: unknown,
+): InvestigationState {
+  const status = cause && typeof cause === "object" && "status" in cause ? (cause as { status?: unknown }).status : null
+  if ([401, 403, 404].includes(status as number)) {
+    return { ...EMPTY, forThreadId: threadId, forScope: scopeKey, status: "error", error: "Investigation access is no longer available" }
+  }
+  const message = cause instanceof Error ? cause.message : "Investigation refresh unavailable"
+  if (previous.forThreadId === threadId && previous.forScope === scopeKey && previous.loaded?.thread.id === threadId) {
+    return { ...previous, status: "ready", error: message, olderLoading: false }
+  }
+  return { ...EMPTY, forThreadId: threadId, forScope: scopeKey, status: "error", error: message }
+}
+
 /** Browser state is a cache of the authenticated employee thread, never its owner. */
 export function useInvestigation(threadId: string | null, enabled: boolean, refreshToken = 0) {
   const scope = usePrivateRequestScope(threadId ?? "none")
@@ -73,7 +94,7 @@ export function useInvestigation(threadId: string | null, enabled: boolean, refr
       })
     } catch (cause) {
       if (request !== generation.current || !scope.isCurrent(scope.key)) return
-      setState({ ...EMPTY, forThreadId: threadId, forScope: scope.key, status: "error", error: cause instanceof Error ? cause.message : "Investigation unavailable" })
+      setState((previous) => refreshFailureState(previous, threadId, scope.key, cause))
     }
   }, [enabled, threadId, scope.key, scope.isCurrent])
 
