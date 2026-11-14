@@ -176,6 +176,26 @@ def main():
                 "nativePaymentLinks", "verifiedPaymentOperations",
                 "reconciledPaymentConsumptions", "acceptedCurrentChecks")
             record["joinDiagnostic"] = {key: int(verified_counts[key]) for key in allowed}
+        # The real owner's debug evaluation is rollback-only; export only four
+        # allowlisted non-identifying fields, not original financial or actor data.
+        candidate_file = owner / "workforce-compensation/rollback-only-post-close-candidate.json"
+        if candidate_file.exists():
+            candidate = json.loads(candidate_file.read_text())
+            assert isinstance(candidate.get("linkWouldInsertAfterClosed"), bool)
+            assert isinstance(candidate.get("rolledBack"), bool)
+            assert isinstance(candidate.get("durableLinkCount"), int)
+            error_code = candidate.get("errorCode")
+            assert error_code is None or error_code in (
+                "UNCLASSIFIED_REPLAY_ERROR", "WORKFORCE_CLOSING_PROMISE_PREIMAGE_INVALID",
+                "WORKFORCE_CLOSING_PROMISE_PREIMAGE_CHANGED", "WORKFORCE_CLOSING_ORIGINAL_ACCEPTANCE_REQUIRED",
+                "WORKFORCE_CLOSING_PAYMENT_ALREADY_ASSIGNED", "WORKFORCE_CLOSING_PAYMENT_PREIMAGE_CHANGED",
+                "WORKFORCE_CLOSING_PAYMENT_ORIGINAL_CONSUMPTION_CHANGED")
+            record["postCloseRollbackDiagnostic"] = {
+                "linkWouldInsertAfterClosed": candidate["linkWouldInsertAfterClosed"],
+                "rolledBack": candidate["rolledBack"],
+                "durableLinkCount": candidate["durableLinkCount"],
+                "errorCode": error_code,
+            }
         if args.episode == "before-exact":
             assert not result["passed"] and child.returncode != 0
             assert record["actualClosingOwnerStatus"] == "CLOSED"
