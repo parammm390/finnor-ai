@@ -113,26 +113,27 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     let active = true
     let unsubscribe: (() => void) | null = null
+    const bootstrapGeneration = accessGeneration
     setLoading(true)
     setAuthError(null)
     void (async () => {
       try {
         const supabaseBrowser = await withTimeout(getSupabaseBrowser())
         if (!active) return
-        const { data, error } = await withTimeout(supabaseBrowser.auth.getSession())
-        if (error) throw error
-        if (!active) return
-        adoptSession(data.session)
-        setSession(data.session)
         const { data: sub } = supabaseBrowser.auth.onAuthStateChange((_event, next) => {
-          if (!active) return
+          if (!active || pendingSignOut && next) return
           adoptSession(next)
           setSession((previous) => previous?.user.id === next?.user.id && previous?.access_token === next?.access_token ? previous : next)
           setAuthError(null)
         })
         unsubscribe = () => sub.subscription.unsubscribe()
+        const { data, error } = await withTimeout(supabaseBrowser.auth.getSession())
+        if (error) throw error
+        if (!active || pendingSignOut || accessGeneration !== bootstrapGeneration) return
+        adoptSession(data.session)
+        setSession(data.session)
       } catch (error) {
-        if (!active) return
+        if (!active || pendingSignOut || accessGeneration !== bootstrapGeneration) return
         adoptSession(null)
         setSession(null)
         setAuthError(error instanceof Error ? error.message : "Authentication could not be restored.")

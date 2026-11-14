@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { centropyGet, centropyPost } from "@/components/centropy/lib/api"
+import { CentropyApiError, centropyGet, centropyPost } from "@/components/centropy/lib/api"
 import type { PeWorldRootRef, CompanyBrainProjection } from "@/components/centropy/pe/contracts"
 import type { IcWorkspace, UnderwritingWorkspace, WorkAggregateView } from "@/components/centropy/product/contracts"
 import { verifiedWorkDeck, verifiedWorkIcCase } from "./work-deck-model"
@@ -43,7 +43,9 @@ export function useCanvasSources(workId: string | null, root: PeWorldRootRef | n
         if (!["completed", "failed", "cancelled"].includes(result.work.work.status)) timer = window.setTimeout(load, 5000)
       }).catch((cause) => {
         if (!active || !isWorkCurrent(workScopeKey)) return
-        setWork({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Work unavailable", key: workId, scope: workScopeKey })
+        setWork(previous => ({ data: cause instanceof CentropyApiError && cause.retryable
+          && previous.key === workId && previous.scope === workScopeKey ? previous.data : null,
+          status: "error", error: cause instanceof Error ? cause.message : "Work unavailable", key: workId, scope: workScopeKey }))
         timer = window.setTimeout(load, 10000)
       })
     }
