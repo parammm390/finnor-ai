@@ -1,7 +1,7 @@
 {
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-14T02:10:14.545Z",
-  "sourceBaseCommit": "9269e2a57225cda78edfa352df054059806b500e",
+  "generatedAt": "2026-11-14T02:25:43.735Z",
+  "sourceBaseCommit": "e1c934a5b15fde68926515691ab46271cb8f29d0",
   "manifestSha256": "5c1806214b2b629db0a3228952a404f348c0e767c2523f065c7394696c55f685",
   "formsSha256": "1bc12487fb34759988ed4490715c21560653608fb313a409f0e6bcc551340e89",
   "method": "Actual API/planner manifest; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -3977,6 +3977,7 @@
       "invalidationTags": [],
       "timeoutClass": "READ",
       "tests": [
+        "finnor-os/tests/integration/company-brain-tenant-isolation.test.ts",
         "finnor-os/tests/integration/microsoft365-administration.test.ts",
         "finnor-os/tests/integration/phase5-connection-lifecycle.test.ts",
         "finnor-os/tests/integration/work-cases.test.ts"
