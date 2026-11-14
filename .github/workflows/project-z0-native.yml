@@ -263,6 +263,7 @@ jobs:
             const setupCause = typeof setupFailure === 'string'
               ? setupFailure.match(/^B:Z0_FIXTURE_TERMINAL_(?:COMPILER|PROGRAMME|SESSION)_[A-Z_]+:([A-Z0-9_]{3,160})(?=[: ]|$)/)?.[1] ?? null : null
             const oracle = observations?.oracle
+            const baseline = checks.find(check => check.id === 'A.canonical-work-baseline')?.observed
             const rootCarriedBy = ['THREAD_PERSISTED_ROOT', 'ROOT_URL_PARAMETER'].includes(observations?.rootCarriedBy)
               ? observations.rootCarriedBy : null
             results.push({ id, outcome, predicate: predicateFrom(error) ?? predicateFrom(reason),
@@ -271,6 +272,8 @@ jobs:
                 .map(key => [key, checks.find(check => check.id === '2.original-identities')?.observed?.[key] === true])) : null,
               originalWorkState: id === 'M-02' ? Object.fromEntries(['before', 'after']
                 .map(key => [key, identifier(checks.find(check => check.id === '6.original-completion-owner')?.observed?.[key])])) : null,
+              canonicalBaseline: baseline ? { http: httpStatus(baseline.http), idMatches: baseline.idMatches === true,
+                api: workStatus(baseline.api), sql: workStatus(baseline.sql) } : null,
               ownerBudgetDifferences: (observations?.ownerBudgetDifferences ?? []).filter(budgetField),
               shownBudgetDifferences: observations?.shownBudgetDifferences ? {
                 before: observations.shownBudgetDifferences.before.filter(budgetField),
