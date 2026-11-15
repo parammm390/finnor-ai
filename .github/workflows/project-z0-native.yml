@@ -71,6 +71,28 @@ jobs:
           assert.equal(report.rows[0].stage, 'EXPLICIT_SELECTION_WITHOUT_VISIBILITY')
           JS
           node scripts/centropy/verify-canvas-activation.mjs "$RUNNER_TEMP/canvas-after"
+      - name: Compare actual Workspace refresh, private scope and late responses
+        if: github.ref_name == 'codex/zw-integration-quality-20261115'
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/z0-chromium
+        run: |
+          set -euo pipefail
+          baseline=59fb04956507a883bb689f4ae774719a02389c66
+          git fetch --no-tags --depth=1 origin "$baseline"
+          if node scripts/centropy/verify-workspace-refresh.mjs "$RUNNER_TEMP/workspace-before" "--baseline=$baseline"; then
+            echo "::error::The original same-scope instrument reset was not reproduced"
+            exit 1
+          fi
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict'
+          import { readFileSync } from 'node:fs'
+          const report = JSON.parse(readFileSync(process.env.RUNNER_TEMP + '/workspace-before/result.json', 'utf8'))
+          assert.equal(report.rows.length, 2)
+          assert.equal(report.rows[0].status, 'PASS')
+          assert.equal(report.rows[1].status, 'FAIL')
+          assert.equal(report.rows[1].stage, 'HELD_SAME_SCOPE_REFRESH')
+          JS
+          node scripts/centropy/verify-workspace-refresh.mjs "$RUNNER_TEMP/workspace-after"
       - name: Retain Canvas comparison receipts
         if: ${{ always() && github.ref_name == 'codex/zw-integration-quality-20261115' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -79,6 +101,8 @@ jobs:
           path: |
             ${{ runner.temp }}/canvas-before/result.json
             ${{ runner.temp }}/canvas-after/result.json
+            ${{ runner.temp }}/workspace-before/result.json
+            ${{ runner.temp }}/workspace-after/result.json
           if-no-files-found: error
           retention-days: 7
       - name: Verify the installed economic programme reader

@@ -2,6 +2,7 @@
  * ordinary roles, native S3/S4/S5, separate checker/broker and durable oracle.
  * No route-handler calls, test authority bypass, seeded receipts or live effects. */
 import assert from "node:assert/strict";
+import { finiteFailureObservation, finiteRequestFailure } from "./failure-observation";
 import { createHash, generateKeyPairSync, randomBytes, randomUUID, sign, type KeyObject } from "node:crypto";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { appendFile, copyFile, mkdir, mkdtemp, readFile, readdir, statfs, writeFile } from "node:fs/promises";
@@ -71,6 +72,7 @@ let apiOrigin = "", authOrigin = "", providerOrigin = "", checkerDigest = "", wo
 let compensationWorkerEnv: NodeJS.ProcessEnv = {};
 let compensationHorizon: { startAt: string; periodMs: number; periods: number };
 let failed: any, current: any;
+const requestFailures = new WeakMap<object,ReturnType<typeof finiteRequestFailure>>();
 let resourceMonitor: NodeJS.Timeout | undefined, resourceFailure: Error | undefined;
 const resourceObservation = { profile: continuationProof ? "USER_AUTHORIZED_BOUNDED_CONTINUATION_ENGINEERING" : "ORIGINAL_DEFAULT",
   peakOwnedRssBytes: 0, minimumObservedFreeBytes: Number.MAX_SAFE_INTEGER, samples: 0 };
@@ -131,10 +133,17 @@ async function ready(service: Awaited<ReturnType<typeof launch>>, label: string)
 }
 async function request(f: any, path: string, body?: unknown, actorId?: string, token?: string) {
   const began = performance.now();
-  const response = await fetch(apiOrigin + path, { method: body === undefined ? "GET" : "POST", headers: {
-    authorization: "Bearer " + (token ?? bearer(f, actorId)), "content-type": "application/json",
-  }, body: JSON.stringify(body), signal: AbortSignal.timeout(90000) });
-  const text = await response.text();
+  let response:Response,text:string;
+  const method=body===undefined?'GET':'POST';
+  try {
+    response = await fetch(apiOrigin + path, { method, headers: {
+      authorization: "Bearer " + (token ?? bearer(f, actorId)), "content-type": "application/json",
+    }, body: JSON.stringify(body), signal: AbortSignal.timeout(90000) });
+    text = await response.text();
+  } catch(error) {
+    if(error&&typeof error==='object') requestFailures.set(error,finiteRequestFailure(error,path,method,performance.now()-began));
+    throw error;
+  }
   let parsed: any; try { parsed = JSON.parse(text); } catch { throw Error(`Actual Next returned ${response.status}: ${text.slice(0, 1000)}`); }
   const result = { status: response.status, body: parsed, elapsedMs: performance.now() - began };
   const row = { path, tenantId: f.tenant, actorId: actorId ?? f.principal, request: body, response: result };
@@ -1162,11 +1171,13 @@ try {
     assert(released, "Bounded mounted-browser hold expired without release");
   }
 } catch (error) {
-  failed = { message: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : null };
+  failed = { message: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : null,
+    observation:finiteFailureObservation(error,processes,error&&typeof error==='object'?requestFailures.get(error):undefined) };
   if (current?.tenant) try { await save("failed-canonical-readback.json", await snapshot(current)); } catch (e) { failed.readbackError = String(e); }
 } finally {
   if (resourceMonitor) clearInterval(resourceMonitor);
-  if (resourceFailure && !failed) failed = { message: resourceFailure.message, stack: resourceFailure.stack };
+  if (resourceFailure && !failed) failed = { message: resourceFailure.message, stack: resourceFailure.stack,
+    observation:finiteFailureObservation(resourceFailure,processes) };
   for (const cp of children) { try { process.kill(-cp.pid!, "SIGCONT"); process.kill(-cp.pid!, "SIGTERM"); } catch { cp.kill("SIGTERM"); } }
   await sleep(1200);
   for (const cp of children) { try { process.kill(-cp.pid!, "SIGKILL"); } catch { cp.kill("SIGKILL"); } }

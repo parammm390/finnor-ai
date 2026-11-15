@@ -312,3 +312,72 @@ The process/workflow suite passes all eight cases and thirteen damaged-workflow
 controls; pinned actionlint 1.7.12, mutation inventory and all sixteen official
 generated-input checks pass. GitHub artifact handoff and the full owner job
 still require their own hosted execution on the newly published source.
+
+## W2 first-failure and cleanup boundary
+
+The current exact owner fails a real resume fetch before settlement evidence is
+written. Its supervisor then throws FileNotFoundError, masking that first failure.
+Keep the original child exit and finite transport/process observations before
+cleanup. A cleanup SIGTERM must not be described as the cause of the request.
+Missing settlement evidence remains a failure, and expected baseline refusal
+still requires the unchanged completed-owner comparison evidence. Export no
+raw exception message/stack, request body, principal or financial payload through
+the public failure receipt. Unknown causes stay unknown. Preserve the original
+episode deadlines, resource floors, material-cut comparison and all five cases.
+
+## Mounted same-scope Work refresh
+
+The source hook already retains an authorized Work snapshot during a refresh or
+retryable read failure and masks it immediately on identity/scope change or a hard
+refusal. Composition uses that snapshot, while the Workspace-to-Canvas prop drops
+it whenever status is not ready. This gives one render two different Work
+identities and resets the opened instrument. Before changing it, reproduce in
+the actual Workspace/auth/source-hook/Canvas/application-panel browser path with
+controlled read-only HTTP responses. Test retained mount during a held refresh
+and retryable failure, hard-refusal clearing, Work replacement with a late old
+response and principal replacement. Preserve original private fences and native
+authority/currentness checks. Authored renderer evidence is not the eleven-case
+native Z0 acceptance journey or permission for any application effect.
+
+The actual production Workspace, WorkOS session adapter, private source hooks,
+Canvas and application panel reproduce the original reset: initial mount passes,
+then a held same-scope refresh removes the instrument. The repaired path passes
+all six Chromium 149.0.7827.55 cases: initial scoped projection, retained same
+instance during a held refresh and retryable failure, hard-refusal clearing,
+Work replacement with late old response, and principal replacement. No acquire,
+execute, cancel or action request is made. Existing source-error/stale reporting
+and the panel's own current native-scope checks remain intact. The original
+eleven-case native Z0 journey remains a separate open gate. CI now retains both
+the exact published baseline comparison and the repaired browser receipt.
+
+The actual W2 after-exact episode on local source
+71c9e763a0ca707f4deb3d2c59107c3c72862131, tree
+fb16771adb8f9d343d7716ae106d450a33c6ba83, passes beyond setup and reader planning:
+original closing CLOSED, compensation SETTLED, one durable/native payment link,
+one independently verified operation and reconciled consumption, all nine staged
+joins pass, and all twenty-five current-cut sections remain unchanged. Source
+restoration passes. This is controlled native settlement, not a real payment.
+
+The full comparison still fails. The baseline loses a closing/read HTTP socket
+after 6,514ms (UND_ERR_SOCKET); no direct child exit was observed before cleanup.
+The wrong-amount episode then receives HTTP 500 on closing/read, with an actual
+API log reporting PostgreSQL statement timeout. Neither reaches the unchanged
+settlement comparison. Both preserve the original failure and exact child exit
+instead of masking it with FileNotFoundError; both restore all six source files.
+Do not infer an API crash from cleanup exits, retry the payment, increase a
+deadline, or accept either early failure as the registered baseline/negative.
+The remaining read/currentness performance and transport causes require further
+native investigation; W2 current-cut acceptance remains OPEN.
+
+Finite diagnostic controls exercise a real refused HTTP connection, an actual
+aborted HTTP response, a real nonzero child exit, frozen pre-cleanup observations
+and arbitrary private nested strings. They pass without exporting private
+messages/stacks. Complete W2 types, root Next typegen/types, changed-source lint
+(zero errors; two existing hook warnings), pinned workflow validation, mutation
+inventory and all sixteen official generated-input checks pass. These finite
+checks do not establish an overall current-head CI PASS or zero P0/P1 defects.
+
+Before implementation, exercise finite error collection with an actual refused
+HTTP connection and an actual aborted local HTTP response, plus arbitrary nested
+private error strings and a real child exit. Then run the original W2 owner to
+identify the remaining native failure; diagnostic success cannot qualify W2.

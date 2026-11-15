@@ -8,8 +8,8 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-15T13:27:20.113Z",
-  "sourceBaseCommit": "2b7a158c95df2e5afd5f5dc9c2e8644b5fa79f61",
+  "generatedAt": "2026-11-15T21:19:04.077Z",
+  "sourceBaseCommit": "71c9e763a0ca707f4deb3d2c59107c3c72862131",
   "manifestSha256": "f0c423a9fd375211e4d31bba469dc762a311f737cf51ab0454a9371b13752491",
   "formsSha256": "682928710da6d6c0a81663ee7009966af9ddd9a619772bf1b89cd4a4fa204222",
   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -145,21 +145,21 @@
       "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
       "route": "works/:ref/objective",
       "method": "POST",
-      "line": 319,
+      "line": 323,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
       "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
       "route": "instructions/:ref/cancel",
       "method": "POST",
-      "line": 453,
+      "line": 457,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
       "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
       "route": "works/:ref",
       "method": "GET",
-      "line": 584,
+      "line": 588,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
@@ -1098,7 +1098,7 @@
       },
       {
         "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
-        "sha256": "9493582119d59345da7268317a28582e116906f1477b43e814a89fc3d8f082ab"
+        "sha256": "de8604e881717af361a4b4ecc0952da69ea95b8a3ae9c580c7a706f681fbd253"
       },
       {
         "file": "src/components/centropy/lib/use-private-request-scope.ts",
@@ -7906,7 +7906,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "works/:ref",
           "method": "GET",
-          "line": 584,
+          "line": 588,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
@@ -8320,7 +8320,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "actions",
           "method": "POST",
-          "line": 338,
+          "line": 342,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -34750,7 +34750,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "instructions/:ref/cancel",
           "method": "POST",
-          "line": 453,
+          "line": 457,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -36617,7 +36617,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "outcome-packs",
           "method": "POST",
-          "line": 403,
+          "line": 407,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -44316,7 +44316,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "works/:ref/objective",
           "method": "POST",
-          "line": 319,
+          "line": 323,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {

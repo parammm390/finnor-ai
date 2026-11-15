@@ -24,6 +24,22 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def finite_owner_failure(result):
+    failed = result.get("failed")
+    if not isinstance(failed, dict):
+        return None
+    observation = failed.get("observation")
+    if not isinstance(observation, dict) or observation.get("schema") != "finnor.v3.finite-first-failure.v1":
+        return {"code": "OWNER_FAILURE_DIAGNOSTICS_UNAVAILABLE"}
+    # This schema is emitted by failure-observation.ts, which excludes arbitrary
+    # messages, stacks, identity values and private HTTP/SQL response payloads.
+    allowed = {"schema", "at", "code", "request", "processes"}
+    assert set(observation) == allowed, "OWNER_FINITE_OBSERVATION_SCHEMA_CHANGED"
+    assert observation["code"] in ("OWNER_REQUEST_TIMEOUT", "OWNER_REQUEST_TRANSPORT_FAILED",
+        "OWNER_REQUEST_FAILED", "OWNER_ASSERTION_FAILED", "OWNER_RUNTIME_FAILED")
+    return observation
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--episode", required=True, choices=("before-exact", "after-exact",
@@ -174,10 +190,17 @@ def main():
                 assert time.monotonic() < deadline, "ORIGINAL_EPISODE_TIME_LIMIT"
                 assert shutil.disk_usage(ROOT).free >= 1536 * 1024 ** 2, "ORIGINAL_DISK_FLOOR_BREACHED"
                 time.sleep(1)
-        result = json.loads((owner / "results.json").read_text())
-        observed_path = owner / "workforce-compensation/settled-owner-before-projection-assertion.json"
-        observed = json.loads(observed_path.read_text())
         record["driverExitCode"] = child.returncode
+        result = json.loads((owner / "results.json").read_text())
+        record["ownerFailure"] = finite_owner_failure(result)
+        observed_path = owner / "workforce-compensation/settled-owner-before-projection-assertion.json"
+        if not observed_path.exists():
+            record["missingEvidence"] = ["settled-owner-before-projection-assertion.json"]
+            # A baseline refusal is accepted only after the original comparison
+            # reaches settlement. Setup/early owner failures never qualify it.
+            raise AssertionError("OWNER_FAILED_BEFORE_SETTLEMENT_EVIDENCE" if result.get("failed")
+                                 else "SETTLEMENT_EVIDENCE_MISSING")
+        observed = json.loads(observed_path.read_text())
         assert all(row["exit"] is not None for row in result["processes"]), "OWNED_CHILD_EXIT_NOT_RECORDED"
         record["actualClosingOwnerStatus"] = observed["completed"]["q"]["status"]
         record["actualCompensationStatus"] = observed["compensation"]["observations"][0]["status"]
@@ -262,7 +285,7 @@ def main():
         record.update(status="FAIL", errorType=type(error).__name__, error=str(error))
         if (owner / "results.json").exists():
             result = json.loads((owner / "results.json").read_text())
-            record["ownerFailure"] = result.get("failed")
+            record["ownerFailure"] = finite_owner_failure(result)
         canonical_failure = owner / "failed-canonical-readback.json"
         if canonical_failure.exists():
             canonical = json.loads(canonical_failure.read_text())
