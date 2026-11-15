@@ -287,6 +287,10 @@ jobs:
                 .filter(name => observations.ownerCuts[name]).map(name => [name, ownerCut(observations.ownerCuts[name])])) : null,
               foreignHttp: observations?.foreignHttp ? { projection: httpStatus(observations.foreignHttp.projection),
                 work: httpStatus(observations.foreignHttp.work), tenantDiffers: observations.foreignHttp.tenantDiffers === true } : null,
+              institutionRequests: observations?.institutionRequests?.slice(-24).map(row => ({
+                operation: member(['institution-sources', 'institution-read', 'institution-status'], row.operation),
+                status: httpStatus(row.status), failed: row.failed === true,
+              })) ?? null,
               logoutRequests: observations?.logoutRequests?.slice(0, 24).map(row => ({
                 kind: member(['auth-token', 'auth-logout', 'sign-out', 'me', 'application-projection', 'institution-sources',
                   'institution-read'], row.kind),

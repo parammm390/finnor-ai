@@ -49,6 +49,7 @@ const check = (c, id, expected, provenance, observed, pass) => {
 };
 async function runCase(id, rows, title, body) {
   const c = { id, rows, title, outcome: "PASS", startedAt: new Date().toISOString(), checks: [], observations: {}, screenshots: [], gaps: [], error: null, reason: null };
+  const caseMark = id === "M-00" ? null : watch.mark();
   const t0 = Date.now();
   try { await body(c); }
   catch (error) {
@@ -59,6 +60,12 @@ async function runCase(id, rows, title, body) {
   if (c.outcome === "PASS" && c.checks.length === 0) { c.outcome = "FAIL"; c.error = "NO_CHECKS_EVALUATED"; }
   if (id === "M-01" && c.outcome === "FAIL" && page) {
     c.observations.renderBoundary = await renderBoundaryFacts().catch(() => ({ diagnosticUnavailable: true }));
+  }
+  if (caseMark !== null && c.error === "Z0_BROWSER_INSTITUTION_UNAVAILABLE") {
+    c.observations.institutionRequests = watch.since(caseMark)
+      .filter(row => ["/api/centropy/company-brain/institution-sources",
+        "/api/centropy/company-brain/institution-read", "/api/centropy/company-brain/institution-status"].includes(row.path))
+      .slice(-24).map(row => ({ operation: row.path.split("/").at(-1), status: row.status, failed: Boolean(row.failure) }));
   }
   if (id === "M-08" && c.outcome === "FAIL") {
     c.observations.logoutRequests = watch.since(c.observations.logoutStart ?? watch.mark())
@@ -652,8 +659,15 @@ await runCase("M-08", ["Z0-R09-C04", "Z0-R45-C04"], "Real logout then new sign-i
 
 /* ---- M-06 */
 await runCase("M-06", ["Z0-R09-C02", "Z0-R09-C04", "Z0-R45-C04"], "Principal switch: logout, then a different real owner", async c => {
-  if (!referenceTruthA) notRun("M-01_DID_NOT_READ_THE_ORIGINAL_WORK");
   if (!foreignCreds) notRun("FOREIGN_OWNER_NOT_SEEDED");
+  const nodeForeign = await signInOwner(env, foreignCreds); costs.nodeAuthGrants++;
+  const denied = await nodeForeign.operation("application-projection", { root: rootA, workId: parentA.workId });
+  const deniedWork = await nodeForeign.call(`/api/works/${parentA.workId}`);
+  const tenantDiffers = nodeForeign.tenantId !== parentA.tenantId;
+  c.observations.foreignHttp = { projection: denied.status, work: deniedWork.status, tenantDiffers };
+  check(c, "foreign.owner-read-refused", "the original Work's projection and Work read made with the foreign owner's own bearer are refused", "O-API (Node-side grant of the foreign owner)",
+    c.observations.foreignHttp, tenantDiffers && [403, 404].includes(denied.status) && [403, 404].includes(deniedWork.status));
+  if (!referenceTruthA) notRun("M-01_DID_NOT_READ_THE_ORIGINAL_WORK");
   await ensureOwnerOnWork("A");
   await waitForPanel(page, parentA.workId);
   const markers = [...referenceTruthA.markers, { label: "threadTitle", value: threadA.title }];
@@ -671,16 +685,9 @@ await runCase("M-06", ["Z0-R09-C02", "Z0-R09-C04", "Z0-R45-C04"], "Principal swi
   const f = await readPanels(page);
   await shot(page, c, "foreign-on-original-url");
   const store = await storageScan(page, context, markers, secrets);
-  const nodeForeign = await signInOwner(env, foreignCreds); costs.nodeAuthGrants++;
-  const denied = await nodeForeign.operation("application-projection", { root: rootA, workId: parentA.workId });
-  const deniedWork = await nodeForeign.call(`/api/works/${parentA.workId}`);
-  c.observations.foreignHttp = { projection: denied.status, work: deniedWork.status,
-    tenantDiffers: nodeForeign.tenantId !== parentA.tenantId };
   check(c, "foreign.dom-clean", "the original Work's panel count is 0 and no original private value (including the thread title) is in the DOM", "O-SQL markers",
     { panels: f.applicationCount, leaked: hits(f.html, markers.filter(m => m.label !== "threadId")) }, f.applicationCount === 0 && hits(f.html, markers).length === 0);
   check(c, "foreign.storage-clean", "no original private value and no previous token in any storage", "storage scan", { markers: store.markerHitCount, secrets: store.secretHitCount }, store.markerHitCount === 0 && store.secretHitCount === 0);
-  check(c, "foreign.owner-read-refused", "the original Work's projection and Work read made with the foreign owner's own bearer are refused", "O-API (Node-side grant of the foreign owner)",
-    { projection: denied.status, work: deniedWork.status }, [403, 404].includes(denied.status) && [403, 404].includes(deniedWork.status));
   await uiSignOut(page);
   const back = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
   const mark2 = watch.mark();
