@@ -105,6 +105,11 @@ function normalizeCallOptions(opts: LLMCallOptions): LLMCallOptions {
   return { ...opts, deadlineAt: Date.now() + Math.max(0, relative) };
 }
 
+function providerCallCeiling(opts: LLMCallOptions, defaultMs: number): number {
+  return opts.timeoutMs !== undefined && Number.isFinite(opts.timeoutMs)
+    ? Math.max(0, Math.min(25_000, opts.timeoutMs)) : defaultMs;
+}
+
 function remainingMs(opts: LLMCallOptions, fallbackMs: number): number {
   const remaining = Number.isFinite(opts.deadlineAt) ? Number(opts.deadlineAt) - Date.now() : fallbackMs;
   return Math.max(0, Math.min(fallbackMs, remaining));
@@ -131,6 +136,7 @@ function assertSelectedAwsRegion(region: string): void {
  * deadlineAt and therefore cannot restart the full timeout budget. */
 async function fetchWithCallBudget(url: string, init: RequestInit, opts: LLMCallOptions, providerCeilingMs = 8_000): Promise<Response> {
   const normalized = normalizeCallOptions(opts);
+  providerCeilingMs = providerCallCeiling(normalized, providerCeilingMs);
   const budgetMs = remainingMs(normalized, providerCeilingMs);
   if (budgetMs <= 0) throw new LLMDeadlineExceededError(normalized.deadlineAt ?? Date.now());
 
@@ -416,7 +422,7 @@ export class BedrockConverseProvider implements LLMProvider {
       };
       let data: { output?: { message?: { content?: Array<{ text?: string }> } }; usage?: { inputTokens?: number; outputTokens?: number }; stopReason?: string };
       if (iam) {
-        const budgetMs = remainingMs(opts, planningCall ? 25_000 : 8_000);
+        const budgetMs = remainingMs(opts, providerCallCeiling(opts, planningCall ? 25_000 : 8_000));
         if (budgetMs <= 0) throw new LLMDeadlineExceededError(opts.deadlineAt!);
         // Routing owns retries and one shared deadline across every physical attempt.
         this.client ??= new BedrockRuntimeClient({ region: this.region, maxAttempts: 1, authSchemePreference: ["aws.auth#sigv4"] });
@@ -427,6 +433,7 @@ export class BedrockConverseProvider implements LLMProvider {
         } catch (error) {
           if (opts.signal?.aborted) throw opts.signal.reason ?? Object.assign(new Error("LLM request aborted"), { name: "AbortError" });
           if (Date.now() >= opts.deadlineAt!) throw new LLMDeadlineExceededError(opts.deadlineAt!);
+          if (signal.aborted) throw Object.assign(new Error("LLM provider timeout"), { name: "ProviderTimeoutError" });
           throw error;
         }
       } else {

@@ -17,7 +17,7 @@ export async function buildMemorySnapshot(opts: {
   const { tenantId, employeeId, sessionId, semanticQuery } = opts;
   const semanticLimit = Math.max(0, Math.min(opts.semanticLimit ?? 5, 10));
   const [shortTerm, longTerm, pgvectorHits, zepHits, episodic, patterns] = await Promise.all([
-    employeeId && sessionId ? readShortTerm(tenantId, sessionId).catch(() => null) : Promise.resolve(null),
+    employeeId && sessionId ? readShortTerm(tenantId, employeeId, sessionId).catch(() => null) : Promise.resolve(null),
     Promise.resolve(null),
     semanticQuery && semanticLimit > 0 ? querySemantic(tenantId, semanticQuery, semanticLimit).catch(() => []) : Promise.resolve([] as SemanticHit[]),
     // Additive, not a replacement: absent ZEP_API_KEY this resolves to [] instantly

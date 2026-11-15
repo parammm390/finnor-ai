@@ -1,10 +1,13 @@
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { join, relative, resolve } from "node:path"
 import { readCanonicalPlanner } from "./canonical-planner.mjs"
+import { createRequire } from "node:module"
 
 const project = resolve(import.meta.dirname, "../..")
 const apiRoot = join(project, "finnor-os/apps/api/app/api")
 const output = join(project, "src/lib/centropy/capability-manifest.generated.json")
+const require = createRequire(import.meta.url)
+const ts = require(require.resolve("typescript", { paths: [project, join(project, "finnor-os")] }))
 
 function files(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -20,11 +23,34 @@ function block(source, start, end) {
   return source.slice(begin + start.length, finish)
 }
 
+function namedOperations(file, source) {
+  const parsed = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true)
+  const operations = new Set()
+  function visit(node) {
+    if (ts.isSwitchStatement(node) && (ts.isIdentifier(node.expression) && node.expression.text === "operation"
+      || ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "operation")) {
+      for (const clause of node.caseBlock.clauses) {
+        if (ts.isCaseClause(clause) && ts.isStringLiteral(clause.expression)) operations.add(clause.expression.text)
+      }
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(parsed)
+  if (operations.size === 0) throw new Error(`No named operation cases found in ${relative(project, file)}`)
+  return [...operations].sort()
+}
+
+// This route delegates its operation switch to its actual domain owner.
+const delegatedOperationSources = new Map([
+  ["elicitation-protocols/:operation", join(project, "finnor-os/packages/private-equity/src/r3/api.ts")],
+])
+
 const companyBrainSource = readFileSync(join(apiRoot, "company-brain/[operation]/route.ts"), "utf8")
 const r1Operations = registeredOperations("finnor-os/packages/private-equity/src/r1/api.ts", "R1_OPERATIONS")
 const r1Reads=new Set(["r1-read","r1-review","r1-projection","r1-history","r1-record"])
 const viabilityOperations = registeredOperations("finnor-os/packages/private-equity/src/project-z/z3-viability/contracts.ts", "Z3_OPERATIONS")
 if (!companyBrainSource.includes("VIABILITY_OPERATIONS")) throw new Error("Viability operations must be actually delegated")
+const serviceOperations = registeredOperations("finnor-os/packages/private-equity/src/real-world-service/api.ts", "SERVICE_OPERATIONS")
 function registeredOperations(path, name) {
   const source = readFileSync(join(project, path), "utf8")
   const match = source.match(new RegExp(`export\\s+const\\s+${name}\\s*=\\s*(?:new\\s+Set\\s*\\(\\s*)?\\[([\\s\\S]*?)\\]`))
@@ -59,6 +85,7 @@ const delegatedRegistries = [
   ["CONTINUATION_OPERATIONS", "live-recompilation/api.ts"],
   ["PROCEDURE_OPERATIONS", "procedure-induction/api.ts"],
   ["DELIBERATION_OPERATIONS", "deliberation/api.ts"],
+  ["ECONOMIC_ORCHESTRATION_OPERATIONS", "economic-orchestration/api.ts"],
   ["APPLICATION_OPERATIONS", "application-semantics/api.ts"],
 ]
 const identificationOperations = registeredOperations("finnor-os/packages/private-equity/src/r4/contracts.ts", "R4_OPERATIONS")
@@ -115,6 +142,7 @@ const companyBrainReads = new Set([
   "bilateral-context", "bilateral-read", "bilateral-handoff",
   "program-read", "program-witness", "program-module", "program-projection", "program-artifact", "program-ports", "program-interface-module",
   "compute-search-read", "compute-search-projection",
+  "economic-orchestration-read", "economic-orchestration-projection",
   "interface-read", "interface-projection", "interface-catalogue", "interface-module", "interface-ports",
   "application-read", "application-record", "application-list", "application-history", "application-asset", "application-impact", "application-admission",
   "learning-read", "learning-list", "learning-experience", "learning-admission",
@@ -136,19 +164,32 @@ const companyBrainReads = new Set([
 ])
 const elicitationOperations=registeredOperations("finnor-os/packages/epistemic-runtime/src/incentive-rule-synthesis/contracts.ts","ELICITATION_OPERATIONS")
 const elicitationReads=new Set(["context","read","status","history"])
+const uniformAlgorithmClasses=new Map([
+ ["specification","READ"],["submit","MUTATION"],["submit-total","MUTATION"],
+ ["record-task-episode","MUTATION"],
+ ["read","READ"],["list","READ"],["consume","MUTATION"],["consume-total","MUTATION"],
+ ["cancel","CONTROL"],["invalidate","CONTROL"],["assign-evaluation","MUTATION"],
+ ["evaluate","MUTATION"],["s8-propose","MUTATION"],["admission","READ"],
+])
 const ownerLeafOperations=new Map()
-for(const family of ["interventions","policies","allocations","obligations","experiments","economic-outcomes","coalition-programmes"]){
+for(const family of ["interventions","policies","allocations","obligations","experiments","economic-outcomes","coalition-programmes","uniform-algorithms"]){
  const source=readFileSync(join(apiRoot,`${family}/[operation]/route.ts`),"utf8")
  const operations = new Set([
    ...[...source.matchAll(/case\s+['"]([a-z][a-z0-9-]*)['"]\s*:/g)].map(m=>m[1]),
    ...[...source.matchAll(/route\.operation\s*===?\s*['"]([a-z][a-z0-9-]*)['"]/g)].map(m=>m[1]),
  ])
  if (!operations.size) throw new Error(`Missing owner operation dispatch: ${family}`)
+ if(family==="uniform-algorithms"){
+  for(const operation of operations)if(!uniformAlgorithmClasses.has(operation))throw new Error(`Unclassified uniform owner operation: ${operation}`)
+  if(process.argv.includes("--check"))for(const operation of uniformAlgorithmClasses.keys())
+   if(!operations.has(operation))throw new Error(`Registered uniform owner operation is not dispatched: ${operation}`)
+  for(const operation of uniformAlgorithmClasses.keys())operations.add(operation)
+ }
  ownerLeafOperations.set(family,[...operations])
 }
 const ownerLeafReads=new Set(["read-pywhy-assessment","query","validate","finite-preference","experiment-projection","read","read-mechanism",
  "resources","budget-status","read-commitment","read-execution-handoff","check-budget","check-dispatch",
- "history","execution-evidence","learning-assessment"])
+ "history","execution-evidence","learning-assessment","list","admission"])
 const readModelsSource = readFileSync(join(apiRoot, "read-models/[view]/route.ts"), "utf8")
 const readModels = ["attention", ...[...block(readModelsSource, "const VIEWS:", "export async function GET").matchAll(/^[ \t]+"([a-z-]+)":/gm)].map((match) => match[1])]
 const artifactOperations = {
@@ -176,8 +217,9 @@ for (const operation of ["response-model-cancel", "response-model-resume", "resp
   operationClasses.set(`company-brain/${operation}`, "CONTROL")
 for (const [family, operations] of ownerLeafOperations) for (const operation of operations)
   operationClasses.set(`${family}/${operation}`, ownerLeafReads.has(operation) ? "READ" :
-    ["cancel-delivery", "reconcile-request", "reconcile"].includes(operation) ? "CONTROL" : "MUTATION")
+    ["cancel-delivery", "reconcile-request", "reconcile", "cancel", "invalidate"].includes(operation) ? "CONTROL" : "MUTATION")
 for (const [family, operations] of [
+  ["uniform-algorithms", uniformAlgorithmClasses],
   ["branches", branchOperations], ["decision-atlases", atlasOperations], ["company-brain", m4Operations],
   ["identification-plans", new Map(identificationOperations.map(operation => [operation,
     identificationReads.has(operation) ? "READ" : operation === "cancel" ? "CONTROL" : "MUTATION"]))],
@@ -185,6 +227,8 @@ for (const [family, operations] of [
     r1Reads.has(operation) ? "READ" : ["r1-cancel", "r1-reconcile"].includes(operation) ? "CONTROL" : "MUTATION"]))],
   ["elicitation-protocols", new Map(elicitationOperations.map(operation => [operation,
     elicitationReads.has(operation) ? "READ" : operation === "cancel" ? "CONTROL" : "MUTATION"]))],
+  ["real-world-services", new Map(serviceOperations.map(operation => [operation,
+    ["read", "inbox"].includes(operation) ? "READ" : operation === "advance" ? "CONTROL" : "MUTATION"]))],
 ]) for (const [operation, classification] of operations) operationClasses.set(`${family}/${operation}`, classification)
 for (const [path, classification] of coalitionOperations) {
   if (!ownerLeafOperations.get(path.split("/")[0])?.includes(path.split("/")[1]))
@@ -194,6 +238,7 @@ for (const [path, classification] of coalitionOperations) {
 const routeOperations = new Map([...ownerLeafOperations].map(([family, operations]) => [`${family}/:operation`, operations]))
 for (const [path, operations] of [
   ["company-brain/:operation", companyBrainOperations], ["elicitation-protocols/:operation", elicitationOperations],
+  ["real-world-services/:operation", serviceOperations],
   ["closing/:operation", closingOperations], ["branches/:operation", [...branchOperations.keys()]],
   ["identification-plans/:operation", identificationOperations], ["decision-atlases/:operation", [...atlasOperations.keys()]],
   ["policies/:operation", [...new Set([...ownerLeafOperations.get("policies"), ...r1Operations])]],
@@ -202,6 +247,9 @@ for (const [path, operations] of [
 
 const familyRules = [
   [/^capabilities\//, "capability-upgrades", "@finnor/orchestration", ["CANVAS"]],
+  [/^uniform-algorithms\//, "uniform-algorithm", "@finnor/private-equity", ["CANVAS"]],
+  [/^workforce\/execution-programs/, "workforce-execution", "@finnor/orchestration", ["CANVAS"]],
+  [/^real-world-services\//, "real-world-service", "@finnor/private-equity", ["WORLD"]],
   [/^policies\/r1-/, "exact-control", "@finnor/private-equity", ["CANVAS"]],
   [/^identification-plans\//, "identification-plan", "@finnor/private-equity", ["CANVAS"]],
   [/^decision-atlases\//, "decision-atlas", "@finnor/private-equity", ["CANVAS"]],
@@ -246,6 +294,7 @@ const denyPrefixes = [
 const restrictedOperations = new Set(["allocations/coalition-release", "obligations/coalition-consent"])
 const humanOnlyPatterns = [
   /^company-brain\/z1-admit-shared-work$/,
+  /^real-world-services\/(?:intake|prepare-native|source|submit|invite|consent|report)$/,
   /^company-brain\/confidential-(?:consent|revoke|import-release)$/,
   /^company-brain\/interaction-(?:consent|observe|action)$/,
   /^elicitation-protocols\/(?:report|event|review|close|use)$/,
@@ -273,6 +322,9 @@ function familyFor(path) {
 
 function tags(family) {
   const byFamily = {
+    "uniform-algorithm": ["work", "company-brain"],
+    "workforce-execution": ["workforce", "agents", "work", "authority"],
+    "real-world-service": ["work", "source", "authority", "company-brain"],
     "exact-control": ["work", "company-brain"],
     "coalition-programme": ["work", "company-brain", "authority"],
     "decision-atlas": ["work", "company-brain"],
@@ -301,7 +353,7 @@ function routeEntry(method, path, source) {
   const read = method === "GET" || ownerClassification==="READ" || (family === "company-brain" && companyBrainReads.has(path.slice("company-brain/".length))) || ["query", "semantic-activity"].includes(family) || family === "closing" && ["read", "projection", "ports"].includes(path.slice("closing/".length))
   const adminOnly = restrictedOperations.has(path) || !r1 && !coalitionClassification && denyPrefixes.some((prefix) => `${path}/`.startsWith(prefix)) ||
     (family === "read-model" && /read-models\/(reliability|readiness|readiness-slo|failure-injections)/.test(path))
-  const control = r1&&["r1-cancel","r1-reconcile"].includes(path.slice("policies/".length)) || path === "live-controls" || path === "closing/stop" || controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|interface|decision-slice|deliberation|capital-program|capital-formation|application)-(?:cancel|resume|reconcile|advance)$/.test(path)
+  const control = r1&&["r1-cancel","r1-reconcile"].includes(path.slice("policies/".length)) || path === "live-controls" || path === "closing/stop" || controls.test(path) || path === "company-brain/procedure-induction-cancel" || /^company-brain\/(?:evidence|program|compute-search|economic-orchestration|interface|decision-slice|deliberation|capital-program|capital-formation|application)-(?:cancel|resume|reconcile|advance)$/.test(path) || path === "company-brain/economic-orchestration-invalidate"
   const classification = adminOnly ? "ADMIN" : stream ? "STREAM" : ownerClassification ?? (read ? "READ" : control ? "CONTROL" : "MUTATION")
   const systemOnly = path.startsWith("webhooks/") || ["ready", "release", "vitals", "health"].includes(path)
   const humanOnly = humanOnlyPatterns.some((pattern) => pattern.test(path))
@@ -345,6 +397,9 @@ for (const file of files(apiRoot)) {
   for (const method of methods) {
     if (routeOperations.has(path)) {
       for (const operation of routeOperations.get(path)) routes.push(routeEntry(method, path.replace(":operation", operation), source))
+    } else if (path.endsWith("/:operation") && !path.startsWith("policies/")) {
+      const operationFile = delegatedOperationSources.get(path) ?? file;
+      for (const operation of namedOperations(operationFile, operationFile === file ? code : readFileSync(operationFile, "utf8"))) routes.push(routeEntry(method, path.replace(":operation", operation), source));
     } else if (path === "read-models/:view") {
       for (const view of readModels) routes.push(routeEntry(method, `read-models/${view}`, source))
     } else if (path === "documents/:id/artifact/[...action]") {

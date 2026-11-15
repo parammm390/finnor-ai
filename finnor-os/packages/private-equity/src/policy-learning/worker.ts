@@ -55,7 +55,7 @@ export async function compileLearnedPolicyJob(raw:Record<string,unknown>,executi
   if(sha(environment)!==sha(current.environment))fail('X5_DEPENDENCY_OR_DEPLOYMENT_CHANGED');
   leases=await acquireComputeResourceLeases({tenantId:p.tenantId,resourceKeys:['native:x5-learning'],requiredResourceKeys:['native:x5-learning'],workloadClass:'INTERACTIVE',ownerId:'x5:'+e.deliveryAttemptId});
   const heartbeat=async()=>!!await renewComputeResourceLeases(leases)&&tx(ctx,async c=>!!await owned(ctx,c,p,e));
-  e.registerHeartbeat(heartbeat);
+  e.registerHeartbeat(heartbeat, { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
   if(p.stage==='TRAIN'){
    const started=await tx(ctx,async c=>{
     const a=await owned(ctx,c,p,e);if(!a)return null;

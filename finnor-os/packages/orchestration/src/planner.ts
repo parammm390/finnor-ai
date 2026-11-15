@@ -5,7 +5,12 @@ import { buildConversationModelInput } from "./conversation-prompt";
 
 import { and, desc, eq, inArray, lte } from "drizzle-orm";
 import { z } from "zod";
+import { EconomicReadRequestSchema, economicReadAcceptanceRequests, isEconomicReadIntent, redactEconomicReadPayload } from "@finnor/shared-types";
+import { canReadEconomicQuery } from "@finnor/private-equity/src/economic-reads/reader";
+import { economicObjectiveRequestsPositiveEffect } from "./objective-economic-reads";
 import {
+  CANONICAL_ENTITY_TYPES,
+  canonicalEntityRefToPartyRef,
   OPERATIONAL_QUERY_INTENTS,
   PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
   PRIVATE_EQUITY_VERTICAL,
@@ -16,6 +21,7 @@ import {
   type ObjectiveSuccessCondition,
   type OperatingContext,
   type TenantContext,
+  type PartyRef,
 } from "@finnor/shared-types";
 import { domainPolicyRevisions, resolveTenantVertical, withTenant } from "@finnor/db";
 import {
@@ -52,7 +58,7 @@ import { clarificationContinuationAction, enforceExternalResearchRoute, safeRead
 import { resolveCompetitorResearch } from "./research-context";
 import { applyOperatingInteractionTargets } from "./interaction-targeting";
 import { interactionBusinessRoot } from "./interaction-context";
-import { defaultObjectiveSuccessCondition, growthRateLessBps } from "./objective-success";
+import { defaultObjectiveSuccessCondition, growthRateLessBps, objectiveForbidsCommunication } from "./objective-success";
 import { planningHealthForAction } from "./planning-health";
 import { parseModelJson } from "./model-json";
 
@@ -140,6 +146,7 @@ export interface CompileCandidatePlansInput {
 }
 
 function boundedPromptValue(value: unknown, maxChars: number): unknown {
+  value = redactEconomicReadPayload(value);
   const serialized = JSON.stringify(value);
   if (serialized !== undefined && serialized.length <= maxChars) return value;
   if (maxChars < 16 || value === null || value === undefined) return null;
@@ -210,6 +217,16 @@ function plannerConstraintContext(constraints: ConstraintSet): Record<string, un
 function plannerSnapshotContext(snapshot: PlanningWorldSnapshot): Record<string, unknown> {
   const dealId = snapshot.canonicalEntities.find((entity) => entity.kind === "entity" && entity.type === "pe_deal")?.id;
   const businessRoot = snapshot.businessRoot ?? (dealId ? { entityType: "pe_deal", entityId: dealId } : null);
+  const partyRefs = new Map<string, PartyRef>();
+  if (snapshot.authority.employeeId) {
+    partyRefs.set(`employee:${snapshot.authority.employeeId}`, { partyType: "employee", partyId: snapshot.authority.employeeId });
+  }
+  for (const entity of snapshot.canonicalEntities) {
+    if (entity.kind !== "entity") continue;
+    const type = z.enum(CANONICAL_ENTITY_TYPES).safeParse(entity.type);
+    const ref = type.success ? canonicalEntityRefToPartyRef({ entityType: type.data, entityId: entity.id }) : null;
+    if (ref) partyRefs.set(`${ref.partyType}:${ref.partyId}`, ref);
+  }
   const availableReads = snapshot.capabilities
     .filter((item) => item.kind === "query" && item.available && item.health !== "unavailable")
     .flatMap((item) => {
@@ -219,9 +236,15 @@ function plannerSnapshotContext(snapshot: PlanningWorldSnapshot): Record<string,
         : PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS.some((value) => value === intent) && dealId
           ? { intent, dealId }
           : item.requiredReferences.length === 0 ? { intent } : null;
-      if (!request) return [];
-      const valid = validateOperationalQueryRequest(request);
-      return valid.success ? [{ request: valid.request }] : [];
+      const requests = [
+        ...(request ? [request] : []),
+        ...(intent === "party_context" || intent === "party_lookup"
+          ? [...partyRefs.values()].map((ref) => ({ intent, ref })) : []),
+      ];
+      return requests.flatMap((candidate) => {
+        const valid = validateOperationalQueryRequest(candidate);
+        return valid.success ? [{ request: valid.request }] : [];
+      });
     });
   return {
     capturedAt: snapshot.capturedAt,
@@ -485,12 +508,14 @@ function icMemoSelectionCandidate(goal: GoalSpec, planningContext: unknown): Can
   const parsedCutoff = new Date(String(draft.created_at));
   if (Number.isNaN(parsedCutoff.getTime())) return null;
   const cutoff = parsedCutoff.toISOString();
+  const sourceCompleteness = draft.source_completeness === "INCOMPLETE" || draft.source_completeness === "CONFLICTING"
+    ? draft.source_completeness : "COMPLETE";
   return boundedIcActionCandidate(goal, "select_ic_memo_version", {
     dealId: current.basis.dealId, icCaseId: current.caseRow.id,
     expectedCaseVersion: current.caseRow.version, artifactRole: "MEMO",
     documentId: draft.document_id, documentVersionId: draft.document_version_id,
     underwritingRunId: current.caseRow.primaryUnderwritingRunId,
-    evidenceCutoffAt: cutoff, sourceCompleteness: "COMPLETE",
+    evidenceCutoffAt: cutoff, sourceCompleteness,
     changeClassification: recovering && current.caseRow.currentMemoId ? "NON_MATERIAL" : current.caseRow.currentMemoId ? "MATERIAL" : "INITIAL",
   }, recovering ? "grounded-ic-memo-selection-recovery" : "grounded-ic-memo-selection");
 }
@@ -876,16 +901,29 @@ export class LLMPlanner implements Planner {
     });
   }
 
-  private async constraints(tenantContext: TenantContext, verticalKey: string, opts: PlannerOptions): Promise<ConstraintSet> {
-    if (opts.constraints) return opts.constraints;
+  private async constraints(instruction: string, tenantContext: TenantContext, verticalKey: string, opts: PlannerOptions): Promise<ConstraintSet> {
+    const communicationForbidden = objectiveForbidsCommunication(instruction);
+    if (opts.constraints && !communicationForbidden) return opts.constraints;
     const { planningCapabilitiesForVertical } = await import("./plugin-registry");
     const manifest = planningCapabilitiesForVertical(this.plugins, verticalKey);
+    const prohibited = communicationForbidden
+      ? manifest.filter((item) => item.externalSideEffect
+        || ["delegate_objective", "handoff_work", "request_acknowledgement"].includes(item.capability)).map((item) => item.capability)
+      : [];
+    if (opts.constraints) {
+      const generated = new Set(buildConstraintSet({ ...opts.constraints, constraints: [] }).constraints.map((item) => sha256(item)));
+      return buildConstraintSet({
+        ...opts.constraints,
+        prohibitedCapabilities: [...opts.constraints.prohibitedCapabilities, ...prohibited],
+        constraints: opts.constraints.constraints.filter((item) => !generated.has(sha256(item))),
+      });
+    }
     return buildConstraintSet({
       tenantId: tenantContext.tenantId,
       verticalKey,
       allowedCapabilities: manifest.filter((item) => item.modelProposable).map((item) => item.capability),
       humanOnlyCapabilities: manifest.filter((item) => !item.modelProposable).map((item) => item.capability),
-      prohibitedCapabilities: [],
+      prohibitedCapabilities: prohibited,
       authorityRevision: opts.operatingContext?.authority.revision ?? tenantContext.authorityRevision ?? null,
       budgets: { ...DEFAULT_PLAN_BUDGETS, ...opts.planBudgets },
       constraints: opts.hardConstraints ?? [],
@@ -1110,6 +1148,7 @@ export class LLMPlanner implements Planner {
 
   private async compilationFacts(params: {
     candidates: unknown[];
+    goal: GoalSpec;
     tenantContext: TenantContext;
     verticalKey: string;
     snapshot: PlanningWorldSnapshot;
@@ -1244,15 +1283,24 @@ export class LLMPlanner implements Planner {
           const capability = manifest.get(capabilityKey);
           const validation = validateOperationalQueryRequest(node.request);
           const wrongVertical = validation.success
-            && PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS.includes(validation.request.intent as (typeof PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS)[number])
+            && (isEconomicReadIntent(validation.request.intent)
+              || PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS.includes(validation.request.intent as (typeof PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS)[number]))
             && params.verticalKey !== PRIVATE_EQUITY_VERTICAL;
+          const financial = validation.success && isEconomicReadIntent(validation.request.intent);
+          const readAcceptance = economicReadAcceptanceRequests(params.goal.successCondition);
+          const nativeRead = financial && readAcceptance?.some(request => sha256(request) === sha256(node.request)) === true
+            && !economicObjectiveRequestsPositiveEffect(params.goal.statement, readAcceptance);
           const queryAuthority = params.useDatabase && validation.success && !wrongVertical
-            ? await canExerciseAuthority(params.tenantContext, queryAuthorityRequest(validation.request, params.operatingContext?.activeWork?.id)).catch(() => false)
-            : validation.success && !wrongVertical;
+            ? financial
+              ? nativeRead && await canReadEconomicQuery({ auth: params.tenantContext,
+                provenance: { sourceSystem: "POSTZ.W1:objective-query-compiler-preflight" } }, EconomicReadRequestSchema.parse(validation.request))
+              : await canExerciseAuthority(params.tenantContext, queryAuthorityRequest(validation.request, params.operatingContext?.activeWork?.id)).catch(() => false)
+            : !financial && validation.success && !wrongVertical;
           nodes[node.key] = {
             registered: Boolean(capability?.available),
-            schemaValid: validation.success && !wrongVertical,
-            schemaErrors: validation.success ? (wrongVertical ? ["Private Equity query is not available for this tenant vertical"] : []) : [validation.error],
+            schemaValid: validation.success && !wrongVertical && (!financial || nativeRead),
+            schemaErrors: validation.success ? (wrongVertical ? ["Private Equity query is not available for this tenant vertical"]
+              : financial && !nativeRead ? ["Financial queries require unchanged explicit native read acceptance, not a general or fact-dependent Objective"] : []) : [validation.error],
             grounded: validation.success && !wrongVertical,
             crossTenant: false,
             stale: false,
@@ -1261,7 +1309,7 @@ export class LLMPlanner implements Planner {
             risk: "low",
             irreversible: false,
             wrongVerticalRoot: wrongVertical,
-            policyAllowed: true,
+            policyAllowed: !financial || nativeRead,
             preconditionsSatisfied: true,
             deadlineFeasible: true,
             supportedRecoveryModes: capability?.supportedRecoveryModes ?? [],
@@ -1304,6 +1352,7 @@ export class LLMPlanner implements Planner {
   async compileCandidatePlans(input: CompileCandidatePlansInput): Promise<PlanningResult> {
     const facts = await this.compilationFacts({
       candidates: input.candidates,
+      goal: input.goal,
       tenantContext: input.tenantContext,
       verticalKey: input.verticalKey,
       snapshot: input.snapshot,
@@ -1338,7 +1387,7 @@ export class LLMPlanner implements Planner {
     const verticalKey = await this.verticalKey(tenantContext, opts);
     if (isRetiredWaterAction(instruction)) throw new RetiredVerticalError("water");
     const goal = this.goal(instruction, opts);
-    const constraints = await this.constraints(tenantContext, verticalKey, opts);
+    const constraints = await this.constraints(instruction, tenantContext, verticalKey, opts);
     const snapshot = await this.snapshot(tenantContext, verticalKey, opts);
     const { plannerActionTypesForVertical } = await import("./plugin-registry");
     const allActionTypes = plannerActionTypesForVertical(this.plugins, verticalKey);

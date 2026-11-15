@@ -142,7 +142,11 @@ test("the actual image layout imports every worker owner and rechecks source cus
       env: { PATH: dirname(process.execPath), NODE_ENV: "test", TSX_TSCONFIG_PATH: join(deployed, "tsconfig.json") },
     })
     prebuild.push({ command: "planner manifest check after API source stamping", exitCode: check.status, stdout: check.stdout, stderr: check.stderr })
-    assert.equal(check.status, 0, JSON.stringify(prebuild))
+    const changedPinnedSources = [...before].flatMap(([file, digest]) => {
+      const actual = createHash("sha256").update(readFileSync(join(deployed, file))).digest("hex")
+      return actual === digest ? [] : [{ file, beforeSha256: digest, afterSha256: actual }]
+    })
+    assert.equal(check.status, 0, JSON.stringify({ prebuild, changedPinnedSources }))
     for (const [file, digest] of before) assert.equal(createHash("sha256").update(readFileSync(join(deployed, file))).digest("hex"), digest, `API prebuild changed pinned source: ${file}`)
 
     result = spawnSync(process.execPath, [

@@ -72,7 +72,7 @@ async function evaluate(input: z.infer<typeof payloadSchema>, x: Readonly<JobExe
       throw new LiveControlError('ORIGINAL_NATIVE_GRANT_FENCED', 'The original native grant cannot be replaced or enlarged');
     leases = await acquireComputeResourceLeases({ resourceKeys: ['native:p2'], requiredResourceKeys: ['native:p2'],
       tenantId: ctx.auth.tenantId, workloadClass: 'INTERACTIVE', ownerId: 'v5:' + x.deliveryAttemptId });
-    x.registerHeartbeat(async () => released || renewComputeResourceLeases(leases));
+    x.registerHeartbeat(async () => released || renewComputeResourceLeases(leases), { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
     await controlTransaction(ctx, async client => {
       const row = await evaluationRow(ctx, input.evaluationId, client);
       await physicalClaim(ctx, x, client);

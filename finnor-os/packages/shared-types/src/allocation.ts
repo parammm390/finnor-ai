@@ -159,7 +159,8 @@ export interface AllocationConsumption {
 }
 export interface S5ExperienceEvent {
   schema: 'finnor.s5.experience.v1'; semanticOwner: 'S5'; eventId: string; episodeId: string;
-  type: 'REQUEST' | 'CANDIDATE' | 'REFUSAL' | 'RESERVATION' | 'INVALIDATION' | 'REVISION' | 'CONSUMPTION' | 'RECONCILIATION' | 'RELEASE' | 'COST' | 'OVERRIDE';
+  type: 'REQUEST' | 'CANDIDATE' | 'REFUSAL' | 'RESERVATION' | 'INVALIDATION' | 'REVISION' | 'CONSUMPTION' | 'RECONCILIATION' | 'RELEASE' | 'COST' | 'OVERRIDE'
+    | 'TOTAL_TASK_REQUEST' | 'TOTAL_TASK_RESULT' | 'TOTAL_TASK_COST';
   tenantId: string; principalId: string; rightsRef: string; revisionRef: string; contentDigest: string;
   knowledgeAt: string; validAt: string; preparedParentRefs: string[]; causalParents: [];
   dependencyRefs: string[]; horizon: 'H0' | 'H1'; uncertainty: 'MODEL_CONDITIONAL_UNADMITTED';

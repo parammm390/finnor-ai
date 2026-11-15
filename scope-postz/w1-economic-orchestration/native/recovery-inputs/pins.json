@@ -1,0 +1,31 @@
+{
+  "schema": "finnor.w1.history-free-recovery-inputs.v1",
+  "recoveredAt": "2026-10-31T05:58:06.633444+00:00",
+  "recoveryPairs": [
+    {
+      "id": "physical",
+      "target": "finnor-os/packages/private-equity/src/compute-search/api.ts",
+      "brokenSource": "scope-postz/w1-economic-orchestration/native/recovery-inputs/physical-broken.source",
+      "brokenSha256": "9432cef52e0431c3543c3811cfdcf2fd038b67b6ef9717050fc344b7ff6fdb13",
+      "contract": "scope-postz/w1-economic-orchestration/native/recovery-inputs/physical-failure-oracle-contract.md",
+      "contractSha256": "cf8736af5cc7133598d9117611c1f0e10cd71666519e8b5e750ed8caa22401dc",
+      "originalGitObjectProvenance": "d8bc78e0c^:finnor-os/packages/private-equity/src/compute-search/api.ts"
+    },
+    {
+      "id": "control",
+      "target": "finnor-os/packages/private-equity/src/economic-orchestration/controller.ts",
+      "brokenSource": "scope-postz/w1-economic-orchestration/native/recovery-inputs/control-broken.source",
+      "brokenSha256": "b9a21fd41416fb62dd46f795dc10d7626ca91957343212e9065cc0155e5fdeba",
+      "contract": "scope-postz/w1-economic-orchestration/native/control-recovery-failure-contract-v1.md",
+      "contractSha256": "9f82277d94f8b516414b54ce6588326341412514df152ffde8aa3c605fc78b21",
+      "originalGitObjectProvenance": "64df89fc4^:finnor-os/packages/private-equity/src/economic-orchestration/controller.ts"
+    }
+  ],
+  "runtimeGitHistoryRequired": false,
+  "structuralInputs": {
+    "directory": "scope-postz/w1-economic-orchestration/native/structural-inputs",
+    "inventorySha256": "6125c7f03bac3d51f01a443e3030dbf72f55c1d6e7d425ebab8f77475dd67cab",
+    "caseCount": 128,
+    "protectedCustody": false
+  }
+}

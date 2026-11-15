@@ -1,3 +1,6 @@
+import { submitWorkforceExecutionSchema, intakeWorkforceExecutionSchema, recipientWorkforceActionSchema,
+  workforceParticipantProposalSchema, workforceParticipantDispositionSchema, reconcileWorkforceExecutionSchema,
+} from "../packages/orchestration/src/workforce-execution/contracts";
 import { ExperimentRefSchema } from "@finnor/epistemic-runtime";
 import { CapabilityRequestSchema, PywhyAssessmentRequestSchema } from "../packages/orchestration/src/capabilities/contracts";
 import { NangoConnectInputSchema } from "../packages/orchestration/src/capabilities/nango-bindings";
@@ -9,8 +12,9 @@ import { ExpressionSchema as SharedWorkExpressionSchema, PredicateSchema as Shar
 // Water webhook payloads are intentionally opaque quarantine receipts and never
 // regain an executable public schema here.
 import {createHash} from "node:crypto";
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { z } from "zod";
+import { EconomicReadReplySchema, RevenueReadRequestSchema, QuoteReadRequestSchema } from "@finnor/shared-types/src/economic-reads";
 import {
   SubmitInstructionSchema,
   StartObjectiveSchema,
@@ -94,14 +98,31 @@ import { PROCEDURE_OPERATIONS, PROCEDURE_OPERATION_SCHEMAS } from "../packages/p
 import { APPLICATION_OPERATIONS as APPLICATION_SEMANTICS_OPERATIONS, APPLICATION_OPERATION_SCHEMAS as APPLICATION_SEMANTICS_OPERATION_SCHEMAS } from "../packages/private-equity/src/application-semantics/api";
 import { INSTITUTION_OPERATIONS } from "../packages/private-equity/src/institution-program/api";
 import { DELIBERATION_OPERATIONS } from "../packages/private-equity/src/deliberation/api";
+import { ECONOMIC_ORCHESTRATION_OPERATIONS, ECONOMIC_ORCHESTRATION_OPERATION_SCHEMAS } from "../packages/private-equity/src/economic-orchestration/api";
 import { ElicitationOperationSchemas } from "../packages/epistemic-runtime/src/incentive-rule-synthesis/contracts";
 import { R3OwnerOperationSchemas, R3WorkReviewSchema } from "../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts";
+import { ServiceOperationSchemas } from "../packages/private-equity/src/real-world-service/boundaries";
 import { ObligationOperationSchemas } from "../packages/private-equity/src/obligation-contracts";
 import { ComputeSearchRequestSchema, SearchIdSchema, SearchProjectionSchema } from "../packages/private-equity/src/compute-search/contracts";
 import { R4_OPERATIONS, R4_OPERATION_SCHEMAS } from "../packages/private-equity/src/r4/contracts";
 import { OperationSchemas as DecisionAtlasOperationSchemas } from "../packages/private-equity/src/r7/contracts";
 import { CalibrationRequestSchema, DeliberationRequestSchema, DeliberationEvidenceReadSchema, DeliberationCurrentReaderSchema, DeliberationProjectionSchema, DeliberationModuleReaderSchema } from "../packages/private-equity/src/deliberation/contracts";
 import { LIVE_CONTROL_OPERATION_SCHEMAS } from "../packages/private-equity/src/live-controls/contracts";
+import {OperationSchemas as UniformAlgorithmOperationSchemas} from "../packages/private-equity/src/uniform-algorithms/contracts";
+import {AssignSchema as UniformAssignSchema,EvaluateSchema as UniformEvaluateSchema,AdmissionRequestSchema as UniformAdmissionRequestSchema,AdmissionCurrentSchema as UniformAdmissionCurrentSchema} from "../packages/private-equity/src/uniform-algorithms/admission";
+import {SpecificationReadSchema} from "../packages/private-equity/src/uniform-algorithms/specification";
+import {TotalSubmitSchema,TotalConsumeSchema,TotalReadSchema} from "../packages/private-equity/src/uniform-algorithms/total-contracts";
+import {RecordTotalTaskSchema} from "../packages/private-equity/src/allocation-total-episodes";
+
+const uniformAlgorithmOperations={
+ ...UniformAlgorithmOperationSchemas,
+ specification:SpecificationReadSchema,
+ 'record-task-episode':RecordTotalTaskSchema,
+ 'submit-total':TotalSubmitSchema,'consume-total':TotalConsumeSchema,
+ read:TotalReadSchema,
+ 'assign-evaluation':UniformAssignSchema,evaluate:UniformEvaluateSchema,
+ 's8-propose':UniformAdmissionRequestSchema,admission:UniformAdmissionCurrentSchema,
+};
 
 const page = z.object({ limit: z.number().int().min(1).max(100).optional(), cursor: z.string().min(1).max(4096).optional() }).strict();
 const workforcePage = z.object({ limit: z.number().int().min(1).max(100).optional(), cursor: z.string().uuid().optional() }).strict();
@@ -245,6 +266,8 @@ const ArtifactTemplateSchema = z.object({ documentId: z.string().uuid(), version
 const ArtifactTemplateInstantiateSchema = z.object({ title: z.string().trim().min(1).max(500) }).strict();
 
 const OperationalQuerySchema = z.discriminatedUnion("intent", [
+  RevenueReadRequestSchema.extend(queryEnvelope),
+  QuoteReadRequestSchema.extend(queryEnvelope),
   z.object({ intent: z.literal("work_list"), ...queryEnvelope, section: z.enum(["all", "works", "tasks"]).optional(), openOnly: z.boolean().optional(), statuses: z.array(z.string().min(1).max(80)).max(20).optional(), recordId: z.string().uuid().optional(), page: page.optional() }).strict(),
   // Employee/tenant identity is injected from the authenticated context. In
   // particular, this branch deliberately exposes no selector that could turn
@@ -343,6 +366,7 @@ const applicationComponents={schemas:Object.fromEntries([
  ...Object.entries(InteractionOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(CoalitionOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
  ...Object.entries(Z5_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
+ ...Object.entries(uniformAlgorithmOperations).map(([name,schema])=>['Y5Uniform-'+name,applicationSchema(schema)]),
  ["X3Expression",applicationSchema((ApplicationExpressionSchema instanceof z.ZodLazy ? ApplicationExpressionSchema.unwrap() : ApplicationExpressionSchema))],
 ])};
 const secured = [{ bearerAuth: [] }];
@@ -473,7 +497,7 @@ const paths = {
   "/api/vitals": { get: { security: secured, responses: { "200": { description: "Queue and runtime vitals" } } } },
   "/api/activity": { get: { security: secured, responses: { "200": { description: "Tenant-scoped raw diagnostic activity", ...json(RawActivityPageSchema) } } } },
   "/api/semantic-activity": { post: { security: secured, requestBody: json(SemanticActivityInputSchema), responses: { "200": { description: "Deterministic tenant-scoped PE semantic activity from P1-P7 canonical records" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "PE root absent from the authenticated tenant" } } } },
-  "/api/company-brain/{operation}": { post: { security: secured, parameters: [{ name: "operation", in: "path", required: true, schema: { type: "string", enum: ["opportunity-promote", "belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context", ...EVIDENCE_OPERATIONS, ...PROGRAM_OPERATIONS, ...COMPUTE_SEARCH_OPERATIONS, ...INTERFACE_OPERATIONS, ...M1_OPERATIONS, ...CONTINUATION_OPERATIONS, ...PROCEDURE_OPERATIONS, ...DELIBERATION_OPERATIONS, ...Object.keys(CAPITAL_FORMATION_OPERATIONS)] } }], responses: { "200": { description: "Tenant-scoped Company Brain operation. Owner request schemas and current authority are checked by each delegated handler." }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Root or object absent from the authenticated tenant" } } } },
+  "/api/company-brain/{operation}": { post: { security: secured, parameters: [{ name: "operation", in: "path", required: true, schema: { type: "string", enum: ["opportunity-promote", "belief-view", "belief-pin", "roots", "projection", "search", "object", "traverse", "provenance", "history", "evidence-lineage", "decision-lineage", "available-actions", "context", ...EVIDENCE_OPERATIONS, ...PROGRAM_OPERATIONS, ...COMPUTE_SEARCH_OPERATIONS, ...INTERFACE_OPERATIONS, ...M1_OPERATIONS, ...CONTINUATION_OPERATIONS, ...PROCEDURE_OPERATIONS, ...DELIBERATION_OPERATIONS, ...ECONOMIC_ORCHESTRATION_OPERATIONS, ...Object.keys(CAPITAL_FORMATION_OPERATIONS)] } }], responses: { "200": { description: "Tenant-scoped Company Brain operation. Owner request schemas and current authority are checked by each delegated handler." }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Root or object absent from the authenticated tenant" } } } },
   "/api/private-equity/digital-twin": { post: { security: secured, requestBody: json(PeDigitalTwinRequestSchema), responses: { "200": { description: "Tenant-scoped PE Digital Twin query or transition" }, "201": { description: "Evidence-backed canonical PE fact, identity, observation, or exact relation created" }, "400": { description: "Strict request schema rejected unknown or invalid input" }, "404": { description: "Canonical reference absent from the authenticated tenant" }, "409": { description: "Expected version or concurrent canonical truth conflict" }, "422": { description: "Canonical invariant rejected the requested fact" } } } },
   "/api/workflows/runs": { get: { security: secured, responses: { "200": { description: "Tenant-scoped workflow runs" } } } },
   "/api/workflows/runs/{id}/pause": { post: { security: secured, parameters: [documentIdParameter], requestBody: json(WorkflowRunControlSchema), responses: { "200": { description: "Authorized workflow pause" } } } },
@@ -610,8 +634,38 @@ const paths = {
   "/api/objectives/{id}/control": { post: { security: secured, parameters: [{name:"id",in:"path",required:true,schema:{type:"string",format:"uuid"}}], requestBody: json(ControlObjectiveSchema), responses: { "200": { description: "Control recorded" } } } },
   "/api/works/{id}/handoff": { post: { security: secured, parameters: [documentIdParameter], requestBody: json(HandoffWorkSchema), responses: { "200": { description: "Handoff recorded" } } } },
   "/api/outcome-packs": { post: { security: secured, requestBody: json(StartOutcomePackSchema), responses: { "201": { description: "Outcome pack started" } } } },
-  "/api/queries": { post: { security: secured, requestBody: json(OperationalQuerySchema), responses: { "201": { description: "Canonical query completed" }, "400": { description: "Invalid or retired query" } } } },
+  "/api/queries": {
+    get: { security: secured, description: "Original-human private retrieval of one native Objective query; IDs select custody and never authorize it.",
+      parameters: ["workId","workInputId","objectiveStepId"].map(name => ({name,in:"query",required:true,schema:{type:"string",format:"uuid"}})),
+      responses: { "200": {description:"Immutable original canonical query and native provenance; Cache-Control: no-store",...json(EconomicReadReplySchema)},
+        "400": {description:"Invalid or additional selectors"}, "401": {description:"Authentication required"},
+        "404": {description:"Unavailable original custody or current query/source rights; no financial payload"} } },
+    post: { security: secured, requestBody: json(OperationalQuerySchema), responses: { "201": { description: "Canonical query completed" }, "400": { description: "Invalid or retired query" } } },
+  },
   "/api/read-models/workforce-status": { get: { security: secured, parameters: workforcePageParameters, responses: { "200": { description: "Source-backed configured AI workforce, assignments, verified metrics, governed learning state, truthful truncation, and a next cursor" } } } },
+  "/api/workforce/participants": {
+    get: { security: secured, responses: { "200": { description: "Current principal-scoped existing-contact binding proposals and dispositions" } } },
+    post: { security: secured, requestBody: json(workforceParticipantProposalSchema), responses: { "202": { description: "Existing-contact purpose and identity binding proposed; no contact sent or assignment acceptance implied" }, "400": { description: "Invalid binding input" }, "403": { description: "Current enrollment authority required" }, "404": { description: "Existing contact or principal unavailable" }, "409": { description: "Current binding or idempotency conflict" }, "413": { description: "Request bound exceeded" } } },
+  },
+  "/api/workforce/participants/{id}": {
+    post: { security: secured, parameters: [documentIdParameter], requestBody: json(workforceParticipantDispositionSchema), responses: { "200": { description: "Exact recipient binding confirmation or revocation retained; assignment acceptance remains separate" }, "400": { description: "Invalid disposition input" }, "403": { description: "Exact current recipient or original proposer rights required" }, "404": { description: "Binding unavailable" }, "409": { description: "Binding revision, proposal or idempotency changed" }, "413": { description: "Request bound exceeded" } } },
+  },
+  "/api/workforce/execution-programs": {
+    get: { security: secured, parameters: [{ name: "workId", in: "query", required: true, schema: { type: "string", format: "uuid" } }], responses: { "200": { description: "Current principal-visible execution programmes for the exact canonical Work" }, "400": { description: "Work identifier required" }, "404": { description: "Work unavailable" } } },
+    post: { security: secured, requestBody: json(submitWorkforceExecutionSchema), responses: { "202": { description: "Exact Work input submitted to the bounded durable execution owner; not completion" }, "400": { description: "Invalid original input reference" }, "403": { description: "Current execution authority required" }, "404": { description: "Work or input unavailable" }, "409": { description: "Original input, resource or idempotency conflict" }, "413": { description: "Request bound exceeded" } } },
+  },
+  "/api/workforce/execution-programs/intake": {
+    post: { security: secured, requestBody: json(intakeWorkforceExecutionSchema), responses: { "202": { description: "Exact original outcome accepted as canonical Work input before bounded execution" }, "400": { description: "Invalid original outcome" }, "403": { description: "Current Work and actor authority required" }, "404": { description: "Work or actor source unavailable" }, "409": { description: "Original scope, resource or idempotency conflict" }, "413": { description: "Request bound exceeded" } } },
+  },
+  "/api/workforce/execution-programs/{id}": {
+    get: { security: secured, parameters: [documentIdParameter], responses: { "200": { description: "Exact principal-visible programme, retained assignments and actual execution history" }, "400": { description: "Programme identifier required" }, "404": { description: "Programme unavailable" } } },
+  },
+  "/api/workforce/execution-programs/{id}/actions": {
+    post: { security: secured, parameters: [documentIdParameter], requestBody: json(recipientWorkforceActionSchema), responses: { "200": { description: "Exact authenticated assignment action retained under its original terms and authority" }, "400": { description: "Invalid assignment action" }, "403": { description: "Current exact actor authority required" }, "404": { description: "Programme or assignment unavailable" }, "409": { description: "Terms, revision, deadline, resource or idempotency conflict" }, "413": { description: "Request bound exceeded" } } },
+  },
+  "/api/workforce/execution-programs/{id}/reconcile": {
+    post: { security: secured, parameters: [documentIdParameter], requestBody: json(reconcileWorkforceExecutionSchema), responses: { "202": { description: "Recovery of the quarantined original requested under its retained resources; not a replacement execution" }, "400": { description: "Invalid recovery input" }, "403": { description: "Current original Work authority required" }, "404": { description: "Programme unavailable" }, "409": { description: "Original delivery, revision, recovery bound or idempotency conflict" }, "413": { description: "Request bound exceeded" } } },
+  },
   "/api/workforce/profiles": {
     get: { security: secured, parameters: workforcePageParameters, responses: { "200": { description: "Source-backed governed workforce state with truthful bounded-page metadata" } } },
     post: { security: secured, requestBody: json(WorkforceConfigureProfileSchema), responses: { "200": { description: "New immutable configuration revision created" }, "201": { description: "AgentProfile and first immutable revision created" }, "400": { description: "Invalid capability or bounded configuration" }, "403": { description: "Authenticated employee lacks workforce governance authority" } } },
@@ -908,6 +962,35 @@ for(const operation of APPLICATION_OPERATIONS){
  }}}});
 }
 
+for (const operation of Object.keys(uniformAlgorithmOperations)) {
+ const submission=operation==='submit'||operation==='submit-total';
+ Object.assign(paths,{['/api/uniform-algorithms/'+operation]:{post:{
+  security:secured,requestBody:{required:true,content:{'application/json':{schema:{$ref:'#/components/schemas/Y5Uniform-'+operation}}}},
+  responses:{
+   [submission?'202':'200']:{description:submission
+    ?'Original principal/Work-bound finite discovery accepted for durable native proof search. No checked result or admission yet.'
+    :operation==='record-task-episode'
+     ?'Canonical S5 model-only task request, result and cost episode recorded or replayed from authenticated specification/task Work references under the original invocation deadline. No inline values, answer, acceptance, protected family credit, reservation or S6 effects.'
+    :operation==='specification'
+     ?'Current authenticated specification Work resolved to its immutable typed definition and separately qualified semantic acceptance. Public development is not protected family credit.'
+     :operation==='read'
+      ?'Current authorized lightweight status by default for v2. Capsule and retained history require explicit includeCapsule/includeHistory; bound payloads are withheld when source authorization is unavailable.'
+      :operation==='consume-total'
+       ?'Same kernel-checked typed definition applied to a separate original S5 task Work under the original finite use allowance. No inline values, algorithm, reservation, S6 effects or protected admission.'
+       :'Current authorized development theorem, same-definition original S5 use, retained history or typed disposable S8 state. No reservation, S6 effects or production authority.'},
+   '400':{description:'Strict bounded request or original S4/S5 semantic contract rejected.'},
+   '401':{description:'Current signed bearer required.'},
+   '403':{description:'Current owner or distinct evaluator authority absent.'},
+   '404':{description:'Absent or unauthorized private owner, Work or assignment.'},
+   '408':{description:'Original authenticated body or 28.5-second invocation deadline exceeded; no renewed compute allowance.'},
+   '409':{description:'Original source, rights, Work, generation, instance, deadline or idempotency preimage changed.'},
+   '413':{description:'Original request, storage or finite resource bound exceeded.'},
+   '422':{description:'Required original semantic-owner predicate unavailable.'},
+   '503':{description:'Native capacity, diagnostic profile or independently configured S8 owner unavailable.'},
+  },
+ }}});
+}
+
 for (const [operation,schema] of Object.entries(DecisionAtlasOperationSchemas)) {
   Object.assign(paths, { ["/api/decision-atlases/" + operation]: { post: {
     security: secured, requestBody: json(schema), responses: {
@@ -958,6 +1041,23 @@ for (const operation of PROCEDURE_OPERATIONS) {
       "400": { description: "Strict bounded procedure schema rejected" },
       "404": { description: "Absent or unauthorized principal-scoped procedure resource" },
       "422": { description: "Rights, currentness, grant or unsupported protected-port predicate unpassed" },
+    },
+  } } });
+}
+
+for (const operation of ECONOMIC_ORCHESTRATION_OPERATIONS) {
+  Object.assign(paths, { ["/api/company-brain/" + operation]: { post: {
+    security: secured, parameters: [{ in: "header", name: "x-deliberation-deadline-ms", required: false,
+      description: "Existing shared whole-transport attenuation; no new Work deadline or compute grant",
+      schema: { type: "integer", minimum: 1, maximum: 30000, default: 30000 } }],
+    requestBody: json(ECONOMIC_ORCHESTRATION_OPERATION_SCHEMAS[operation]), responses: {
+      "200": { description: "Authenticated principal-scoped native policy, measured response or lifecycle receipt; no protected authority" },
+      "202": { description: "Original P1/S4/S5-bound ordinary W1 work accepted" },
+      "400": { description: "Strict bounded native contract rejected" },
+      "401": { description: "Authentication required" },
+      "404": { description: "Absent or unauthorized private Work is indistinguishable" },
+      "413": { description: "Inherited whole-transport deadline exhausted" },
+      "422": { description: "Original owner, currentness, unsupported port or resource predicate unpassed" },
     },
   } } });
 }
@@ -1021,6 +1121,15 @@ for (const [operation,{schema}] of Object.entries(M4Operations)) {
   }}});
 }
 
+for (const [operation, schema] of Object.entries(ServiceOperationSchemas)) {
+ Object.assign(paths, {["/api/real-world-services/"+operation]: {post: {security: secured, requestBody: json(schema),
+  responses: {"200": {description: "Current original Work service programme, purpose-bound participant original or native coordination. CONTROLLED development only; no admission or physical truth granted."},
+   "400": {description: "Strict bounded input rejected"}, "401": {description: "Bearer identity required"},
+   "404": {description: "Permitted original Work or participant protocol unavailable"},
+   "409": {description: "Original terms, source, claim, resources or deadline fenced"},
+   "413": {description: "Byte or declared scope bound exceeded"},
+   "422": {description: "Profile unadmitted"}, "504": {description: "Initial response bound exhausted"}}}}});
+}
 for (const [operation,schema] of Object.entries(ElicitationOperationSchemas)) {
  Object.assign(paths,{["/api/elicitation-protocols/"+operation]:{post:{security:secured,requestBody:json(schema),
   responses:{"200":{description:"Current exact proposed finite mechanism, owner receipt or historical responsibility. Not private truth, consent, admission or settlement.",
@@ -1137,5 +1246,9 @@ function rewriteDefinitionReferences(node:unknown){
 }
 rewriteDefinitionReferences(document);
 
-writeFileSync(new URL("../openapi.json", import.meta.url), `${JSON.stringify(document, null, 2)}\n`);
+const output = new URL("../openapi.json", import.meta.url);
+const rendered = `${JSON.stringify(document, null, 2)}\n`;
+if (process.argv.includes("--check")) {
+  if (readFileSync(output, "utf8") !== rendered) throw new Error("OPENAPI_STALE: npm run release:generate");
+} else writeFileSync(output, rendered);
 console.log(`Generated openapi.json with ${Object.keys(paths).length} active/quarantine paths.`);

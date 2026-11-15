@@ -1,188 +1,55 @@
-export {};
+import { createHash } from 'node:crypto';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { z } from 'zod';
 
-/*
- * Scheduled/manual tenant-isolation probe for the active Private Equity product.
- *
- * This is deliberately black-box: it authenticates as two real principals and
- * proves that a canonical root visible to tenant A cannot be resolved by tenant B.
- * No client-supplied tenant id is ever used as authority.
- */
-
-type PeRoot = {
-  entityType: "pe_strategy" | "pe_opportunity" | "pe_deal";
-  entityId: string;
-};
-
-type RootResult = {
-  rootRefs?: PeRoot[];
-};
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-function required(name: string): string {
+const Root = z.object({ entityType: z.string().regex(/^[a-z][a-z0-9_]{1,63}$/), entityId: z.string().uuid() }).strict();
+const Identity = z.object({ userId: z.string().uuid(), tenantId: z.string().uuid() });
+const Roots = z.object({ results: z.array(z.object({ rootRefs: z.array(Root) })).max(50) });
+const outputAt = process.argv.indexOf('--out');
+const output = resolve(outputAt >= 0 ? process.argv[outputAt + 1] ?? '' : process.env.TENANT_ISOLATION_EVIDENCE_DIR ?? 'tenant-isolation-evidence');
+const hash = (value: string) => createHash('sha256').update(value).digest('hex');
+const required = (name: string) => {
   const value = process.env[name]?.trim();
-  if (!value) throw new Error(`${name} is required`);
-  return value.replace(/\/$/, "");
-}
-
-const stagingUrl = required("STAGING_API_URL");
-const productionUrl = required("PRODUCTION_API_URL");
-const tenantAJwt = required("TENANT_A_PROBE_JWT");
-const tenantBJwt = required("TENANT_B_PROBE_JWT");
-const vercelBypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim() || null;
-
-function headers(jwt: string, json = false): Record<string, string> {
-  return {
-    authorization: `Bearer ${jwt}`,
-    ...(json ? { "content-type": "application/json" } : {}),
-    ...(vercelBypass ? {
-      "x-vercel-protection-bypass": vercelBypass,
-      "x-vercel-set-bypass-cookie": "true",
-    } : {}),
-  };
-}
-
-async function request(
-  baseUrl: string,
-  jwt: string,
-  path: string,
-  init: { method?: "GET" | "POST"; body?: unknown } = {},
-): Promise<{ status: number; body: unknown }> {
-  const method = init.method ?? "GET";
-  const response = await fetch(`${baseUrl}${path}`, {
-    method,
-    headers: headers(jwt, method !== "GET"),
-    cache: "no-store",
-    ...(method !== "GET" ? { body: JSON.stringify(init.body ?? {}) } : {}),
-  });
-  const text = await response.text();
-  let body: unknown = null;
-  if (text.trim()) {
-    try { body = JSON.parse(text); }
-    catch { body = text.slice(0, 1_000); }
-  }
-  return { status: response.status, body };
-}
-
-function bodyRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? value as Record<string, unknown>
-    : {};
-}
-
-function rootResults(value: unknown): RootResult[] {
-  const results = bodyRecord(value).results;
-  return Array.isArray(results)
-    ? results.filter((entry): entry is RootResult => Boolean(entry) && typeof entry === "object" && !Array.isArray(entry))
-    : [];
-}
-
-function rootsFrom(value: unknown): PeRoot[] {
-  const roots = rootResults(value).flatMap((entry) => Array.isArray(entry.rootRefs) ? entry.rootRefs : []);
-  const unique = new Map<string, PeRoot>();
-  for (const root of roots) {
-    if (!root || !["pe_strategy", "pe_opportunity", "pe_deal"].includes(root.entityType) || !UUID.test(root.entityId)) continue;
-    unique.set(`${root.entityType}:${root.entityId}`, root);
-  }
-  return [...unique.values()];
-}
-
-function rootKey(root: PeRoot): string {
-  return `${root.entityType}:${root.entityId}`;
-}
-
-async function assertAuthenticated(baseUrl: string, jwt: string, principal: string): Promise<void> {
-  const result = await request(baseUrl, jwt, "/api/me");
-  if (result.status !== 200) {
-    throw new Error(`${principal} authentication probe failed with HTTP ${result.status}: ${JSON.stringify(result.body)}`);
-  }
-}
-
-async function rootsFor(baseUrl: string, jwt: string): Promise<{ status: number; body: unknown; roots: PeRoot[] }> {
-  const result = await request(baseUrl, jwt, "/api/company-brain/roots", {
-    method: "POST",
-    body: { query: "", limit: 50 },
-  });
-  return { ...result, roots: result.status === 200 ? rootsFrom(result.body) : [] };
-}
-
-async function assertRootHidden(
-  label: string,
-  baseUrl: string,
-  foreignJwt: string,
-  root: PeRoot,
-): Promise<void> {
-  const result = await request(baseUrl, foreignJwt, "/api/company-brain/projection", {
-    method: "POST",
-    body: { root },
-  });
-  // 404/422 are both valid fail-closed outcomes: the foreign tenant either cannot
-  // resolve the canonical object or does not have the PE vertical active. 401/403
-  // are NOT accepted here because both principals were already required to pass /me;
-  // seeing one now would make the isolation proof ambiguous rather than green.
-  if (result.status === 200) {
-    throw new Error(`${label}: CROSS-TENANT LEAK — foreign principal resolved ${rootKey(root)}`);
-  }
-  if (![404, 422].includes(result.status)) {
-    throw new Error(`${label}: foreign projection returned unexpected HTTP ${result.status}: ${JSON.stringify(result.body)}`);
-  }
-}
-
-async function probeEnvironment(label: string, baseUrl: string): Promise<Record<string, unknown>> {
-  await Promise.all([
-    assertAuthenticated(baseUrl, tenantAJwt, `${label} tenant A`),
-    assertAuthenticated(baseUrl, tenantBJwt, `${label} tenant B`),
-  ]);
-
-  const [a, b] = await Promise.all([
-    rootsFor(baseUrl, tenantAJwt),
-    rootsFor(baseUrl, tenantBJwt),
-  ]);
-
-  if (a.status !== 200) {
-    throw new Error(`${label}: tenant A root discovery failed with HTTP ${a.status}: ${JSON.stringify(a.body)}`);
-  }
-  if (a.roots.length === 0) {
-    throw new Error(`${label}: tenant A has no canonical PE root; isolation cannot be certified from an empty fixture`);
-  }
-
-  // A root must never appear in B's own discovery result when B is PE-enabled.
-  if (b.status === 200) {
-    const bKeys = new Set(b.roots.map(rootKey));
-    const overlap = a.roots.map(rootKey).filter((key) => bKeys.has(key));
-    if (overlap.length) throw new Error(`${label}: CROSS-TENANT LEAK — root discovery overlaps: ${overlap.join(", ")}`);
-  } else if (b.status !== 422) {
-    throw new Error(`${label}: tenant B root discovery returned unexpected HTTP ${b.status}: ${JSON.stringify(b.body)}`);
-  }
-
-  const aRoot = a.roots.find((root) => root.entityType === "pe_deal") ?? a.roots[0]!;
-  await assertRootHidden(label, baseUrl, tenantBJwt, aRoot);
-
-  // If B has its own PE root, prove the boundary in the opposite direction too.
-  if (b.status === 200 && b.roots.length) {
-    const bRoot = b.roots.find((root) => root.entityType === "pe_deal") ?? b.roots[0]!;
-    await assertRootHidden(label, baseUrl, tenantAJwt, bRoot);
-  }
-
-  return {
-    environment: label,
-    tenantARoots: a.roots.length,
-    tenantBRootStatus: b.status,
-    tenantBRoots: b.roots.length,
-    sampledTenantARoot: rootKey(aRoot),
-    bidirectional: b.status === 200 && b.roots.length > 0,
-  };
-}
+  if (!value) throw new Error(`Missing tenant probe configuration: ${name}`);
+  return value;
+};
 
 async function main(): Promise<void> {
-  const results = [];
-  for (const [label, baseUrl] of [["staging", stagingUrl], ["production", productionUrl]] as const) {
-    results.push(await probeEnvironment(label, baseUrl));
+  await mkdir(output, { recursive: true });
+  const environments: { name: string; status: 'PASS' | 'FAIL'; observed?: unknown; error?: string }[] = [];
+  for (const name of ['staging', 'production'] as const) {
+    try {
+      const base = new URL(required(name.toUpperCase() + '_API_URL'));
+      const loopback = process.env.FINNOR_TENANT_PROBE_ALLOW_LOOPBACK === '1' && process.env.NODE_ENV === 'test' && ['localhost', '127.0.0.1', '[::1]'].includes(base.hostname);
+      if ((base.protocol !== 'https:' && !loopback) || base.username || base.password || base.search || base.hash || base.pathname !== '/') throw new Error('Probe requires an HTTPS API origin, or an explicit disposable loopback origin');
+      const marker = Root.parse(JSON.parse(required(name.toUpperCase() + '_TENANT_A_MARKER_ROOT_REF')));
+      const tokenA = required('TENANT_A_PROBE_JWT'), tokenB = required('TENANT_B_PROBE_JWT');
+      if (tokenA === tokenB) throw new Error('Tenant probe identities must be different');
+      const request = async (path: string, token: string, body?: unknown) => {
+        const response = await fetch(new URL(path, base), { method: body === undefined ? 'GET' : 'POST', redirect: 'error', signal: AbortSignal.timeout(10_000),
+          headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', ...(process.env.VERCEL_AUTOMATION_BYPASS_SECRET ? { 'x-vercel-protection-bypass': process.env.VERCEL_AUTOMATION_BYPASS_SECRET } : {}) },
+          ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+        if (!response.ok) { await response.body?.cancel(); throw new Error(`${path} returned HTTP ${response.status}`); }
+        const text = await response.text();
+        if (Buffer.byteLength(text) > 65_536) throw new Error('Tenant probe response exceeded its byte budget');
+        return JSON.parse(text) as unknown;
+      };
+      const [identityA, identityB] = await Promise.all([request('/api/me', tokenA).then(value => Identity.parse(value)), request('/api/me', tokenB).then(value => Identity.parse(value))]);
+      if (identityA.tenantId === identityB.tenantId) throw new Error('Probe JWTs resolved to the same tenant');
+      const body = { query: marker.entityId, limit: 1 };
+      const [a, b] = await Promise.all([request('/api/company-brain/roots', tokenA, body).then(value => Roots.parse(value)), request('/api/company-brain/roots', tokenB, body).then(value => Roots.parse(value))]);
+      const containsMarker = (rows: z.infer<typeof Roots>) => rows.results.some(row => row.rootRefs.some(ref => ref.entityType === marker.entityType && ref.entityId === marker.entityId));
+      if (!containsMarker(a)) throw new Error('Tenant A positive-control marker is not visible to tenant A');
+      if (containsMarker(b)) throw new Error('Tenant A marker is visible to tenant B');
+      environments.push({ name, status: 'PASS', observed: { distinctAuthenticatedTenants: true, tenantAHash: hash(identityA.tenantId), tenantBHash: hash(identityB.tenantId), markerHash: hash(JSON.stringify(marker)), markerVisibleToA: true, markerVisibleToB: false } });
+    } catch (error) { environments.push({ name, status: 'FAIL', error: error instanceof Error ? error.message : 'Unknown probe failure' }); }
   }
-  console.log(JSON.stringify({ ok: true, invariant: "authenticated tenant A canonical roots are invisible to tenant B", results }, null, 2));
+  const status = environments.length === 2 && environments.every(environment => environment.status === 'PASS') ? 'PASS' : 'FAIL';
+  await writeFile(resolve(output, 'tenant-isolation.json'), JSON.stringify({ schema: 'finnor.tenant-isolation-probe.v1', generatedAt: new Date().toISOString(), status, environments,
+    qualification: 'Read-only authenticated identity and exact known-marker visibility checks for both configured environments. A finite marker challenge, not an exhaustive RLS certification.',
+    rerun: 'Set the documented environment URLs, two JWTs, and an independently provisioned tenant-A PE marker root per environment, then run node --import=tsx scripts/probe-tenant-isolation.ts --out <directory>.' }, null, 2));
+  console.log(JSON.stringify({ status, environments }));
+  if (status !== 'PASS') process.exitCode = 1;
 }
-
-main().catch((error) => {
-  console.error(error instanceof Error ? error.stack ?? error.message : String(error));
-  process.exitCode = 1;
-});
+main().catch(error => { console.error(error instanceof Error ? error.message : 'Tenant probe failed'); process.exitCode = 1; });

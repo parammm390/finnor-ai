@@ -2,7 +2,8 @@ import type { DomainAction, OperatingInteractionContext } from "@finnor/shared-t
 import type { PlanGraph } from "@finnor/planning";
 import type { OperationalQueryDecision } from "./fast-read-lane";
 import { isConsequentialAction } from "./compiler";
-import { INFORMATIONAL_QUESTION, REQUESTED_WORK, isReadOnlyConversationQuestion } from "./conversation-intent";
+import { INFORMATIONAL_QUESTION, REQUESTED_WORK, hasRequestedBusinessEffect, isDocumentFinancialReviewQuestion, isReadOnlyConversationQuestion, isSuppliedAnalysisQuestion } from "./conversation-intent";
+import { ATOMIC_VERB } from "./instruction-effects";
 
 export const INSTRUCTION_ROUTING_POLICY_VERSION = 1 as const;
 
@@ -24,7 +25,6 @@ const OBJECTIVE_SIGNALS = [
   /\b(?:across|multi[- ]?step|workflow|browser|computer)\b/i,
 ];
 
-const ATOMIC_VERB = /^(?:please\s+)?(?:send|text|email|message|call|assign|update|set|mark|reschedule|cancel|create|record)\b/i;
 const DIRECT_TARGET = /(?:\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b|\+\d{8,15}\b|\b[^\s@]+@[^\s@]+\.[^\s@]+\b)/i;
 const NAMED_TARGET = /\b(?:to|for|on)\s+(?:the\s+)?[\p{L}\d][\p{L}\d'’&.-]*(?:\s+[\p{L}\d][\p{L}\d'’&.-]*){0,5}\s*$/iu;
 const PREPARED_EFFECT = /\b(?:this|that|already[- ]prepared|exact)\b.*\b(?:message|task|document|finding|risk|condition|record)\b/i;
@@ -64,16 +64,19 @@ export function classifyInstructionRoute(input: {
   conversational?: boolean;
 }): InstructionRouteDecision {
   if (input.conversational) return { version: 1, route: "CONVERSATION", reasonCodes: ["non_business_conversation"] };
-  if (input.fastReadDecision.route === "fast_read") {
+  if (isDocumentFinancialReviewQuestion(input.instruction)) return { version: 1, route: "CONVERSATION", reasonCodes: ["document_financial_review"] };
+  if (isSuppliedAnalysisQuestion(input.instruction)) return { version: 1, route: "CONVERSATION", reasonCodes: ["supplied_conditional_analysis"] };
+  const requestedEffect = hasRequestedBusinessEffect(input.instruction);
+  if (!requestedEffect && input.fastReadDecision.route === "fast_read") {
     return { version: 1, route: "QUERY", reasonCodes: ["deterministic_canonical_read"], queryDecision: input.fastReadDecision };
   }
-  if (isReadOnlyConversationQuestion(input.instruction)) {
+  if (!requestedEffect && isReadOnlyConversationQuestion(input.instruction)) {
     return { version: 1, route: "CONVERSATION", reasonCodes: ["private_conversation_recall"] };
   }
   // A plain informational question outside the typed business-read grammar is
   // still not an objective. Keep it on the lightweight answer lane; business
   // terms, mutations, and external/research requests remain fail-closed.
-  if (isLightweightInformationalQuestion(input.instruction, input.fastReadDecision)) {
+  if (!requestedEffect && isLightweightInformationalQuestion(input.instruction, input.fastReadDecision)) {
     return { version: 1, route: "CONVERSATION", reasonCodes: ["lightweight_informational_question"] };
   }
   if (strictAtomicCandidate(input.instruction, input.activeContext)) {

@@ -1,5 +1,5 @@
 import type { PoolClient } from "pg";
-import { withTenantTransaction, type Db } from "@finnor/db";
+import { lockTenantMaterialCutTx, withTenantTransaction, DatabaseExecutionDeadlineError, type Db } from "@finnor/db";
 import type { EvidenceDependency } from "@finnor/shared-types";
 import { authorizeBeliefResources, authorizeBeliefSourceScopes } from "./enterprise-beliefs";
 import { PeDomainError, type PeMutationContext, type PeWorldRootRef } from "./types";
@@ -10,8 +10,7 @@ export const tx = <T>(ctx: PeMutationContext, fn: (client: PoolClient, db: Db) =
   withTenantTransaction(ctx.auth.tenantId, { userId: principal(ctx), readOnly }, (db, client) => fn(client, db));
 export const closingTx = <T>(ctx: PeMutationContext, fn: (client: PoolClient, db: Db) => Promise<T>, readOnly = false) =>
   tx(ctx, async (client, db) => {
-    if (!readOnly) await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))",
-      [`v3-material-cut:${ctx.auth.tenantId}`]);
+    if (!readOnly) await lockTenantMaterialCutTx(db, ctx.auth.tenantId);
     return fn(client, db);
   }, readOnly);
 
@@ -21,7 +20,11 @@ export async function authorize(ctx: PeMutationContext, root: PeWorldRootRef,
     const rights = await authorizeBeliefResources(ctx, [{ type: root.entityType, id: root.entityId }, ...resources], client);
     await authorizeBeliefSourceScopes(ctx, root, sources, client);
     return rights;
-  } catch { throw unavailable(); }
+  } catch (error) {
+    // An exhausted request deadline is not evidence that the resource is outside the caller's scope.
+    if (error instanceof DatabaseExecutionDeadlineError) throw error;
+    throw unavailable();
+  }
 }
 
 export async function revisions(ctx: PeMutationContext, keys: string[], client?: PoolClient, lock = false): Promise<EvidenceDependency[]> {

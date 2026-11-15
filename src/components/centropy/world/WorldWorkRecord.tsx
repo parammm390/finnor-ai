@@ -20,6 +20,7 @@ import { ExecutionProofPanel } from "../../../../finnor-os/packages/private-equi
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
 import { SharedWorkPanel } from "../../../../finnor-os/packages/private-equity/src/project-z/z1-shared-work/work-panel"
 import { InstitutionCompositionPanel } from "./InstitutionCompositionPanel"
+import { RealWorldServicePanel } from "./RealWorldServicePanel"
 
 const label = (value: string) => value.replaceAll("_", " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase()
 const record = (value: unknown): Record<string, unknown> | null => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null
@@ -74,6 +75,7 @@ export function WorldWorkRecord({ workId, root, onChanged }: { workId: string; r
       <p className="ct-world-work__objective">{aggregate.work.initialInstruction}</p>
       {root?.entityType === "pe_deal" ? <SharedWorkPanel key={`z1:${scope.key}`} root={{entityType:"pe_deal",entityId:root.entityId}} workId={workId} /> : null}
       <ClosingProgrammePanel key={workId} workId={workId} onChanged={onChanged} />
+      <RealWorldServicePanel key={`service:${scope.key}`} workId={workId} />
       {root ? <EconomicActionTheoryPanel key={`${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
       {root ? <StrategicResponsePanel key={`response:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
       {root ? <ConfidentialComputationPanel key={workId} root={root} workId={workId} /> : null}

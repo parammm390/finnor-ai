@@ -20,7 +20,7 @@ import {
   type ArtifactWriteMode,
 } from "@finnor/artifacts";
 import { requireContext } from "../../../../../../lib/auth";
-import { artifactActor, artifactErrorResponse, boundedJson, requiredString, requiredUuid, UUID } from "../../../../../../lib/artifacts";
+import { artifactActor, artifactErrorResponse, boundedJson, requireReadableArtifact, requiredString, requiredUuid, UUID } from "../../../../../../lib/artifacts";
 
 export const runtime = "nodejs";
 
@@ -41,7 +41,9 @@ export async function GET(req: Request, { params }: RouteParams): Promise<Respon
   try {
     const { id, action } = await params;
     if (!UUID.test(id)) return Response.json({ error: "Invalid Document ID", code: "invalid_id" }, { status: 400 });
-    const actor = artifactActor(await requireContext(req));
+    const ctx = await requireContext(req);
+    await requireReadableArtifact(ctx, id);
+    const actor = artifactActor(ctx);
     const url = new URL(req.url);
     let result: unknown;
     if (segment(action, 0) === "versions" && action.length === 2) {
@@ -91,7 +93,9 @@ export async function POST(req: Request, { params }: RouteParams): Promise<Respo
   try {
     const { id, action } = await params;
     if (!UUID.test(id)) return Response.json({ error: "Invalid Document ID", code: "invalid_id" }, { status: 400 });
-    const actor = artifactActor(await requireContext(req));
+    const ctx = await requireContext(req);
+    await requireReadableArtifact(ctx, id);
+    const actor = artifactActor(ctx);
     const body = await boundedJson(req);
     let result: unknown;
     let responseStatus = 201;

@@ -65,7 +65,11 @@ import {
   type PeMutationContext,
   type PeMutationResult,
 } from "@finnor/private-equity";
-import type { UnderwritingScenario } from "@finnor/underwriting";
+import { scenarioHash, type CommitteeEbitdaSelection, type UnderwritingScenario } from "@finnor/underwriting";
+import { discoverCommitteeMemoAlternativeRunIds, readCommitteeMemoAlternatives, resolveCommitteeEbitdaScenario } from "@finnor/private-equity/src/underwriting-repository";
+import { exactBinary } from "@finnor/private-equity/src/evidence-execution/exact";
+import { documentSourceLocation, formatDocumentAmount, type ReviewedFinancialDocuments } from "@finnor/shared-types";
+import { reviewFinancialDocuments } from "@finnor/private-equity/src/document-financial-review";
 import { resolveParty } from "@finnor/read-models";
 import type {
   DomainAction,
@@ -227,6 +231,8 @@ function sourcedMemoSections(input: {
   caseId: string;
   run: Row;
   graph: DealExecutionGraph;
+  financialReview?: ReviewedFinancialDocuments;
+  comparison?: Awaited<ReturnType<typeof readCommitteeMemoAlternatives>>;
 }): GroundedMemoSection[] {
   const runId = String(input.run.id);
   const runRef = `underwriting_run:${runId}`;
@@ -248,6 +254,29 @@ function sourcedMemoSections(input: {
       ? `Recorded revenue growth (${String(growth.status ?? "status unavailable")}, decimal rate): ${memoValue(growth.value)}.`
       : "The Run does not expose an explicit revenue series or growth input in its snapshot.";
   if (inputText.length > 3_500) throw new PeDomainError("IC_MEMO_SOURCE_LIMIT", "The revenue input series exceeds the memo source limit");
+  const entryAmounts = [
+    { node: "transaction.entry_enterprise_value", label: "Entry enterprise value" },
+    { node: "transaction.purchase_equity_value", label: "Purchase equity value" },
+    { node: "sources_uses.sponsor_equity", label: "Sponsor equity funding" },
+  ].flatMap(({ node, label }) => {
+    const output = recordedOutput(outputs, node);
+    if (typeof output.value !== "string" || typeof output.currency !== "string") return [];
+    return [fact(`${label} · ${output.currency} ${output.value}.`, runRef)];
+  });
+  const workbookEvidence = [
+    { node: "entry.enterprise_value", label: "Entry enterprise value" },
+    { node: "entry.metric_value", label: "Entry valuation metric" },
+    { node: "entry.multiple", label: "Entry multiple" },
+  ].flatMap(({ node, label }) => {
+    const value = record(values[node]);
+    if (value.status !== "KNOWN" || !Array.isArray(value.provenance)) return [];
+    return value.provenance.map(record).flatMap(source => {
+      if (source.kind !== "artifact_anchor" || typeof source.versionId !== "string"
+        || typeof source.anchorId !== "string" || typeof source.semanticHash !== "string") return [];
+      return [fact(`${label} uses workbook anchor ${source.anchorId} (anchor SHA-256 ${source.semanticHash}).`,
+        runRef, `document_version:${source.versionId}`)];
+    });
+  });
   const highlightedOutputs = ["returns.gross_sponsor_irr", "returns.gross_sponsor_moic", "returns.sponsor_exit_proceeds", "exit.enterprise_value"]
     .flatMap((key) => {
       const output = recordedOutput(outputs, key);
@@ -256,6 +285,39 @@ function sourcedMemoSections(input: {
       if (raw.length > 2_000) throw new PeDomainError("IC_MEMO_SOURCE_LIMIT", `Output ${key} exceeds the memo source limit`);
       return [fact(`${key.replaceAll(".", " ").replaceAll("_", " ")}: ${raw} (${String(output.unit ?? "unit not recorded")}; ${String(output.truthClass ?? "truth class unavailable")}).`, runRef)];
     });
+  const review = input.financialReview;
+  const financialEvidence = review ? [
+    fact("The registered Committee sources are a limited evidence set. Reconcile any differences before treating an amount as a settled basis for decision.", runRef),
+    ...review.gaps.map(gap => fact(gap, `pe_ic_case:${input.caseId}`)),
+    ...review.findings.flatMap(finding => {
+      const unit = finding.currency ?? finding.unit;
+      return [
+        fact(`${finding.metric} for ${finding.periodStart.slice(0, 10)} to ${finding.periodEnd.slice(0, 10)} differs by ${formatDocumentAmount(finding.spread, unit)} across the recorded assertions.`, `pe_ic_case:${input.caseId}`),
+        ...finding.assertions.map(({ value, source }) => fact(
+          `${source.title} · ${documentSourceLocation(source.anchor)} · ${formatDocumentAmount(value, unit)} (document SHA-256 ${source.sha256}).`,
+          `document_version:${source.versionId}`,
+        )),
+      ];
+    }),
+  ] : [];
+  const comparison = input.comparison;
+  const alternativeAmounts = comparison?.alternatives.map(alternative => alternative.enterpriseValue) ?? [];
+  const highest = alternativeAmounts[0];
+  const lowest = alternativeAmounts.at(-1);
+  const alternatives = comparison && highest && lowest ? [{
+    heading: "Underwriting alternatives for disputed EBITDA",
+    paragraphs: [
+      fact(`Conditional scenarios for annual EBITDA through ${comparison.periodEnd} at the recorded ${comparison.multiple}× entry multiple. All use one base snapshot with all other inputs held constant. The Committee primary run is recorded separately.`,
+        `underwriting_run:${comparison.baseRunId}`),
+      ...comparison.alternatives.map(alternative => fact(
+        `${alternative.sourceTitle} · ${alternative.location} · EBITDA ${formatDocumentAmount(alternative.ebitda, comparison.currency)} · Enterprise value ${formatDocumentAmount(alternative.enterpriseValue, comparison.currency)} · Purchase equity ${formatDocumentAmount(alternative.purchaseEquity, comparison.currency)} · Sponsor equity funding ${formatDocumentAmount(alternative.sponsorEquity, comparison.currency)}.`,
+        `underwriting_run:${alternative.runId}`, `document_version:${alternative.documentVersionId}`,
+      )),
+      fact(`Enterprise value spread · ${formatDocumentAmount(exactBinary("subtract", highest, lowest), comparison.currency)}. Reconcile the reported EBITDA before selecting a transaction basis.`,
+        ...comparison.alternatives.map(alternative => `underwriting_run:${alternative.runId}`)),
+    ],
+  }] : [];
+  if (financialEvidence.length > 100) throw new PeDomainError("IC_MEMO_SOURCE_LIMIT", "The Committee financial evidence exceeds the memo source limit");
   return [
     {
       heading: "Basis and source cutoff",
@@ -264,6 +326,11 @@ function sourcedMemoSections(input: {
         fact("This working memo copies recorded inputs and outputs. It does not resolve diligence findings or make the committee's investment decision.", `pe_ic_case:${input.caseId}`, runRef),
       ],
     },
+    ...(entryAmounts.length || workbookEvidence.length
+      ? [{ heading: "Entry valuation and funding", paragraphs: [...entryAmounts, ...workbookEvidence] }]
+      : []),
+    ...(financialEvidence.length ? [{ heading: "Registered Committee financial evidence", paragraphs: financialEvidence }] : []),
+    ...alternatives,
     { heading: "Revenue assumption and underwriting", paragraphs: [fact(inputText, runRef), ...highlightedOutputs] },
     {
       heading: "Open Deal risks",
@@ -458,6 +525,13 @@ async function groundIcPlannerAction(params: {
       }, { readOnly: true });
       groundedPayload.push({ field: "investmentCaseId", status: "verified" }, { field: "modelVersionId", status: "verified" }, { field: "worldAt", status: "verified" });
       if (scenarioId) groundedPayload.push({ field: "scenarioId", status: "verified" });
+      if (payload.committeeEbitda && baseRunId) {
+        const scenario = await resolveCommitteeEbitdaScenario(ctx, {
+          dealId, investmentCaseId, modelVersionId, baseRunId, selection: payload.committeeEbitda as CommitteeEbitdaSelection,
+        });
+        payload.committeeScenarioHash = scenarioHash(scenario);
+        groundedPayload.push({ field: "committeeEbitda", status: "verified" });
+      }
       if (payload.scenario) groundedPayload.push({ field: "scenario.overrides", status: "verified" });
       if (baseRunId) groundedPayload.push({ field: "baseRunId", status: "verified" });
       entities.push({ entityType: "pe_investment_case", entityId: investmentCaseId, state: grounded.investment.state, version: grounded.investment.version });
@@ -530,15 +604,25 @@ async function groundIcPlannerAction(params: {
         entities.push({ entityType: "document_version", entityId: template.version_id, state: "active" });
         break;
       }
-      case "create_ic_memo_draft":
+      case "create_ic_memo_draft": {
         icExpectedVersion(process, payload.expectedCaseVersion, "ICCase");
         icState(process, ["PREPARING", "READY_FOR_REVIEW", "QUESTIONS_OPEN"], actionType);
         if (!process.primaryUnderwritingRunId || !workspace.underwriting?.eligibleUnderPinnedPolicy) {
           throw new ActionGroundingError("IC_UNDERWRITING_REQUIRED", "A policy-eligible primary Underwriting Run must be pinned before drafting the memo");
         }
+        const scope = { dealId, workId, icCaseId: String(process.id), investmentCaseId: String(process.investmentCaseId) };
+        if (Array.isArray(payload.alternativeRunIds)) {
+          const financial = await reviewFinancialDocuments(ctx, { entityType: "pe_deal", entityId: dealId }, undefined, scope.icCaseId);
+          await readCommitteeMemoAlternatives(ctx, { ...scope, runIds: payload.alternativeRunIds, financial });
+        } else {
+          const runIds = await discoverCommitteeMemoAlternativeRunIds(ctx, scope);
+          if (runIds) payload.alternativeRunIds = runIds;
+        }
+        if (payload.alternativeRunIds) groundedPayload.push({ field: "alternativeRunIds", status: "verified" });
         groundedPayload.push({ field: "expectedCaseVersion", status: "verified" }, { field: "title", status: "verified" });
         entities.push({ entityType: "underwriting_run", entityId: String(process.primaryUnderwritingRunId), state: "eligible" });
         break;
+      }
       case "select_ic_memo_version":
         icExpectedVersion(process, payload.expectedCaseVersion, "ICCase");
         icState(process, ["PREPARING", "READY_FOR_REVIEW", "QUESTIONS_OPEN", "READY_FOR_VOTE", "VOTING", "CONDITIONS_PENDING", "BLOCKED"], actionType);
@@ -1005,10 +1089,21 @@ async function executeMutation(actionType: PrivateEquityActionType, payload: Pay
   switch (actionType) {
     case "execute_closing_operation": throw new PeDomainError("CLOSING_NATIVE_TRANSPORT_REQUIRED", "Closing provider execution is not a canonical PE row mutation");
     case "create_underwriting_run": {
-      const scenario = payload.scenario as { name: string; overrides: UnderwritingScenario["overrides"] } | undefined;
+      let scenario = payload.scenario as Pick<UnderwritingScenario, "name" | "overrides" | "committeeEbitdaBasis"> | undefined;
+      if (payload.committeeEbitda) {
+        const resolved = await resolveCommitteeEbitdaScenario(ctx, {
+          dealId: String(payload.dealId), investmentCaseId: String(payload.investmentCaseId),
+          modelVersionId: String(payload.modelVersionId), baseRunId: String(payload.baseRunId),
+          selection: payload.committeeEbitda as CommitteeEbitdaSelection,
+        });
+        if (scenarioHash(resolved) !== payload.committeeScenarioHash) {
+          throw new PeDomainError("IC_SCENARIO_SOURCE_CONFLICT", "The current Committee source basis differs from the approved scenario");
+        }
+        scenario = resolved;
+      }
       const createdScenario = scenario ? await createUnderwritingScenario(ctx, {
         investmentCaseId: String(payload.investmentCaseId), modelVersionId: String(payload.modelVersionId),
-        scenario: { schemaVersion: "underwriting-scenario.v1", name: scenario.name, overrides: scenario.overrides },
+        scenario: { schemaVersion: "underwriting-scenario.v1", ...scenario },
       }) : null;
       const scenarioId = createdScenario ? String(createdScenario.id) : payload.scenarioId as string | undefined;
       const persisted = await createUnderwritingRun(ctx, {
@@ -1116,9 +1211,22 @@ async function executeMutation(actionType: PrivateEquityActionType, payload: Pay
         throw new PeDomainError("IC_MEMO_RUN_MISMATCH", "Memo source must be the valid Run created by this Work for the exact Investment Case");
       }
       const actor = { tenantId: ctx.auth.tenantId, userId: ctx.auth.userId, role: "owner" as const };
+      const caseId = String(payload.icCaseId);
+      const alternativeRunIds = Array.isArray(payload.alternativeRunIds) ? payload.alternativeRunIds : undefined;
+      const hasCommitteeSources = graph.documentLinks.some(link => link.entityType === "pe_ic_case"
+        && link.entityId === caseId && link.linkRole === "governing" && link.archivedAt == null);
+      const financial = hasCommitteeSources || alternativeRunIds
+        ? await reviewFinancialDocuments(ctx, { entityType: "pe_deal", entityId: String(payload.dealId) }, undefined, caseId)
+        : undefined;
+      const comparison = alternativeRunIds && financial ? await readCommitteeMemoAlternatives(ctx, {
+        icCaseId: caseId, investmentCaseId: String(workspace.case.investmentCaseId),
+        workId: String(payload.workId), runIds: alternativeRunIds, financial,
+      }) : undefined;
+      const financialReview = financial?.review;
       const created = await createGroundedMemoArtifact(actor, {
         actionId: String(draft.domainActionId), title: String(payload.title),
-        sections: sourcedMemoSections({ caseId: String(payload.icCaseId), run, graph }),
+        sections: sourcedMemoSections({ caseId, run, graph, financialReview, comparison }),
+        ...(financialReview ? { financialSourceCompleteness: financialReview.findings.length ? "CONFLICTING" : "INCOMPLETE" } : {}),
       });
       const observed = await getArtifact(actor, created.documentId, created.version.id);
       if (observed.ir.kind !== "docx" || observed.document.external_id !== draft.domainActionId
@@ -1137,7 +1245,10 @@ async function executeMutation(actionType: PrivateEquityActionType, payload: Pay
         entities: [{ entityType: "pe_ic_case", entityId: String(payload.icCaseId), relationship: "target" }],
       });
       return {
-        row: { ...link.row, documentVersionId: created.version.id, sourceCompleteness: "COMPLETE", draftKind: "IC_MEMO_DRAFT" },
+        row: {
+          ...link.row, documentVersionId: created.version.id,
+          sourceCompleteness: created.financialSourceCompleteness ?? "COMPLETE", draftKind: "IC_MEMO_DRAFT",
+        },
         changed: !created.replayed || link.changed,
         idempotent: created.replayed && link.idempotent,
       };

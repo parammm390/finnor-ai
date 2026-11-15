@@ -85,7 +85,7 @@ export async function linkInstitutionComponentsJob(raw: Record<string, unknown>,
     leases = await acquireComputeResourceLeases({ tenantId: p.tenantId,
       resourceKeys: ["native:z5-institution-linker"], requiredResourceKeys: ["native:z5-institution-linker"],
       workloadClass: "INTERACTIVE", ownerId: "z5:" + e.deliveryAttemptId });
-    e.registerHeartbeat(heartbeat);
+    e.registerHeartbeat(heartbeat, { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
     const start = await transaction<{ row: SessionRow | null; exhausted?: { row: SessionRow; attempts: number | null } }>(ctx, async c => {
       const current = await requestTx(ctx, c, p.requestId, true);
       await assertDeliveryTx(ctx, c, current, e);

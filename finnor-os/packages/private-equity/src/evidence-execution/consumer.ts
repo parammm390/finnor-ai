@@ -1,12 +1,12 @@
 import {z} from 'zod';
 import {attachWorkEntity} from '@finnor/db';
-import {compileUnderwritingModel,type ResolvedInput,type UnderwritingInputSnapshot,type UnderwritingModelIR} from '@finnor/underwriting';
+import {compileUnderwritingModel,type CommitteeEbitdaBasis,type ResolvedInput,type UnderwritingInputSnapshot,type UnderwritingModelIR} from '@finnor/underwriting';
 import {FinancialSemanticsSchema,EvidenceUnderwritingBindingSchema,type EvidenceUnderwritingBinding,type EvidenceDerivation,type ExperimentRef} from '@finnor/shared-types';
 import type {PoolClient} from 'pg';
 import {createUnderwritingRun} from '../underwriting-repository';
 import {assertPrimarySnapshotCurrent} from '../primary-diligence/consumer';
 import {assertConfidentialSnapshotCurrent,refuseUnadmittedConfidentialSink} from '../confidential-computation/consumer';
-import type {PeMutationContext} from '../types';
+import { PeDomainError, type PeMutationContext } from '../types';
 import {authorizeBeliefResources} from '../enterprise-beliefs';
 import {assertDependencies,authorize,currentDerivation,sha,stable,tx} from './store';
 export {EvidenceUnderwritingBindingSchema,type EvidenceUnderwritingBinding};
@@ -38,7 +38,62 @@ export async function resolveEvidenceUnderwritingInputs(ctx:PeMutationContext,in
  }
  return resolved;
 }
+export async function assertCommitteeFinancialSourceCurrent(
+  ctx: PeMutationContext,
+  investmentCaseId: string,
+  source: Pick<CommitteeEbitdaBasis, "icCaseId" | "documentId" | "documentVersionId" | "byteSha256">,
+  client: PoolClient,
+  lock = false,
+): Promise<void> {
+  const row = (await client.query<{ dealId: string }>(
+    `SELECT ic.deal_id::text "dealId"
+       FROM finnor_os.pe_ic_cases ic
+       JOIN finnor_os.pe_document_links link
+         ON link.tenant_id=ic.tenant_id AND link.deal_id=ic.deal_id
+        AND link.entity_type='pe_ic_case' AND link.entity_id=ic.id
+        AND link.link_role='governing' AND link.archived_at IS NULL
+       JOIN finnor_os.documents document
+         ON document.tenant_id=link.tenant_id AND document.id=link.document_id AND document.archived_at IS NULL
+       JOIN finnor_os.document_version_heads head
+         ON head.tenant_id=document.tenant_id AND head.document_id=document.id AND head.kind='current' AND head.head_key='default'
+       JOIN finnor_os.document_versions version
+         ON version.tenant_id=head.tenant_id AND version.id=head.version_id AND version.document_id=document.id
+       JOIN finnor_os.artifact_bindings binding
+         ON binding.tenant_id=version.tenant_id AND binding.version_id=version.id
+        AND binding.target_kind='canonical_entity' AND binding.target_entity_type='pe_ic_case' AND binding.target_id=ic.id
+      WHERE ic.tenant_id=$1 AND ic.id=$2 AND ic.investment_case_id=$3
+        AND document.id=$4 AND version.id=$5 AND version.byte_sha256=$6
+      LIMIT 1${lock ? " FOR SHARE OF document, link, head" : ""}`,
+    [ctx.auth.tenantId, source.icCaseId, investmentCaseId, source.documentId, source.documentVersionId, source.byteSha256],
+  )).rows[0];
+  if (!row) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "Committee financial source is unavailable in the authenticated scope");
+  await authorize(ctx, { entityType: "pe_deal", entityId: row.dealId }, [
+    { type: "pe_ic_case", id: source.icCaseId }, { type: "document", id: source.documentId },
+  ], [], client);
+}
+
+async function assertCommitteeFinancialInputsCurrent(
+  ctx: PeMutationContext, snapshot: UnderwritingInputSnapshot, client?: PoolClient, lock = false,
+): Promise<void> {
+  const sources = Object.values(snapshot.values).flatMap(input =>
+    input.provenance.filter(ref => ref.kind === "committee_financial_assertion"));
+  if (!sources.length) return;
+  const verify = async (scoped: PoolClient) => {
+    for (const source of sources) {
+      if (!source.committeeCaseId || !source.versionId || !source.byteSha256) {
+        throw new PeDomainError("PE_ENTITY_NOT_FOUND", "Committee financial source is unavailable in the authenticated scope");
+      }
+      await assertCommitteeFinancialSourceCurrent(ctx, snapshot.investmentCaseId, {
+        icCaseId: source.committeeCaseId, documentId: source.id, documentVersionId: source.versionId, byteSha256: source.byteSha256,
+      }, scoped, lock);
+    }
+  };
+  if (client) await verify(client);
+  else await tx(ctx, verify, !lock);
+}
+
 export async function assertEvidenceSnapshotCurrent(ctx:PeMutationContext,snapshot:UnderwritingInputSnapshot,client?:PoolClient,lock=false){
+ await assertCommitteeFinancialInputsCurrent(ctx,snapshot,client,lock);
  await assertConfidentialSnapshotCurrent(ctx,snapshot,client,lock);
  await assertPrimarySnapshotCurrent(ctx,snapshot,client,lock);
  for(const input of Object.values(snapshot.values))for(const ref of input.provenance.filter(r=>r.kind==='evidence_derivation')){
@@ -53,7 +108,7 @@ export async function assertEvidenceRunTransactionCurrent(client:PoolClient,tena
  const row=(await client.query<{input_snapshot:UnderwritingInputSnapshot}>('SELECT input_snapshot FROM finnor_os.underwriting_runs WHERE tenant_id=$1 AND id=$2',[tenantId,runId])).rows[0];
  if(!row)throw Error('CURRENT_UNDERWRITING_RUN_UNAVAILABLE');
  refuseUnadmittedConfidentialSink(row.input_snapshot);
- if(!Object.values(row.input_snapshot.values).some(v=>v.provenance.some(p=>p.kind==='evidence_derivation'||p.kind==='primary_finding')))return false;
+ if(!Object.values(row.input_snapshot.values).some(v=>v.provenance.some(p=>p.kind==='evidence_derivation'||p.kind==='primary_finding'||p.kind==='committee_financial_assertion')))return false;
  const identity=(await client.query<{id:string;role:string;status:string;transaction_read_only:string}>("SELECT id::text,role,status,current_setting('transaction_read_only') transaction_read_only FROM finnor_os.users WHERE tenant_id=$1 AND id=NULLIF(current_setting('app.user_id',true),'')::uuid",[tenantId])).rows[0];
  if(!identity||identity.status!=='active'||identity.role!=='owner')throw Error('CURRENT_AUTHENTICATED_PRINCIPAL_UNAVAILABLE');
  if(!['on','off'].includes(identity.transaction_read_only))throw Error('CURRENT_TRANSACTION_MODE_UNAVAILABLE');

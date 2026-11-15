@@ -1,7 +1,7 @@
 import type { MemorySnapshot } from "@finnor/shared-types";
 
 const RESEARCH_READ = /\b(?:research|search(?: the)? web|look up|online|latest|current (?:news|benchmark|market|source|industry)|competitor|market|reviews?|weather|benchmarks?|sources?|source-backed|cite|citations?)\b/i;
-const MUTATION_REQUEST = /\b(?:create|send|record|update|change|delete|remove|approve|reject|call|text|email|pay|charge|launch|assign|execute|run|start)\b/i;
+const MUTATION_REQUEST = /\b(?:create|send|record|update|change|delete|remove|approve|reject|call|text|email|pay|charge|launch|assign|execute|run|start|submit|verify|satisfy|resolve|waive|declare|open|close|attach|reconcile|revoke|bind|grant|finalize)\b/i;
 
 export interface SafeReadFallback {
   action_type: "search_web";
@@ -12,7 +12,7 @@ export interface SafeReadFallback {
 /** A provider failure may fall back only to the one registered public-research read.
  * Internal business questions stay on the deterministic operational-query plane. */
 export function safeReadFallbackForInstruction(instruction: string, actionTypes: readonly string[]): SafeReadFallback | null {
-  const normalized = instruction.trim().replace(/\\s+/g, " ");
+  const normalized = instruction.trim().replace(/\s+/g, " ");
   if (!normalized || MUTATION_REQUEST.test(normalized)) return null;
   if (!RESEARCH_READ.test(normalized) || !actionTypes.includes("search_web")) return null;
   return {
@@ -28,7 +28,7 @@ export function enforceExternalResearchRoute(
   actions: Array<{ action_type: string; payload: Record<string, unknown>; reasoning?: string; depends_on?: number[] }>,
   actionTypes: readonly string[],
 ) {
-  const normalized = instruction.trim().replace(/\\s+/g, " ");
+  const normalized = instruction.trim().replace(/\s+/g, " ");
   if (!normalized || MUTATION_REQUEST.test(normalized) || !RESEARCH_READ.test(normalized) || !actionTypes.includes("search_web")) {
     return actions;
   }

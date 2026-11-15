@@ -63,30 +63,48 @@ export async function browserHttpFixture(admin:pg.Client,tenant:string,actor:str
   try{
    const url=new URL(req.url??'/','http://127.0.0.1'),segments=url.pathname.split('/').filter(Boolean).slice(1);
    if(!url.pathname.startsWith('/api/')||segments.some(s=>!/^[a-zA-Z0-9_-]+$/.test(s))){res.writeHead(404);res.end('{}');return;}
-   const route=paths.find(r=>r.segments.length===segments.length&&r.segments.every((s,i)=>s.startsWith('[')||s===segments[i]));
+   const route=paths.find(r=>{
+    const catchAll=r.segments.at(-1)?.startsWith('[...');
+    if(catchAll ? segments.length<r.segments.length : segments.length!==r.segments.length)return false;
+    return r.segments.every((s,i)=>s.startsWith('[')||s===segments[i]);
+   });
    if(!route){res.writeHead(404);res.end('{}');return;}
-   const params:Record<string,string>={};route.segments.forEach((s,i)=>{if(s.startsWith('['))params[s.slice(1,-1)]=segments[i]!;});
+   const params:Record<string,string|string[]>={};
+   route.segments.forEach((s,i)=>{
+    if(s.startsWith('[...'))params[s.slice(4,-1)]=segments.slice(i);
+    else if(s.startsWith('['))params[s.slice(1,-1)]=segments[i]!;
+   });
    const handler=(await import(pathToFileURL(route.file).href))[req.method??'GET'];
    if(typeof handler!=='function'){res.writeHead(405);res.end('{}');return;}
    let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>1048576)throw Error('OWNED_REQUEST_BOUND');}
    const headers=new Headers();for(const [key,value]of Object.entries(req.headers))if(typeof value==='string')headers.set(key,value);
    const result:Response=await handler(new NextRequest(url,{method:req.method,headers,...(body?{body}:{})}),{params:Promise.resolve(params)});
-   res.writeHead(result.status,{'content-type':result.headers.get('content-type')??'application/json'});res.end(Buffer.from(await result.arrayBuffer()));
+   const responseHeaders: Record<string, string> = {'content-type':result.headers.get('content-type')??'application/json'};
+   for (const name of ['content-disposition','cache-control']) {
+    const value=result.headers.get(name);if(value)responseHeaders[name]=value;
+   }
+   res.writeHead(result.status,responseHeaders);res.end(Buffer.from(await result.arrayBuffer()));
    observed.apiRequests.push({operation:(req.method??'GET')+' '+url.pathname,status:result.status});
   }catch(error){console.error('OWNED_BROWSER_ROUTE_FAILURE',error instanceof Error?error.message:'UNKNOWN');res.writeHead(500);res.end('{"code":"OWNED_BROWSER_HTTP_FAILURE"}');}
  });
  const origin=await listen(api),token=issue(actor),otherToken=issue(otherActor);
- const request=async(path:string,body:unknown,identity:'actor'|'other'|'anonymous'|'invalid'='actor',upstream=origin,method:'POST'|'GET'='POST')=>{
+ const rawRequest=(path:string,body:unknown,identity:'actor'|'other'|'anonymous'|'invalid',upstream:string,method:'POST'|'GET',query?:Record<string,string>)=>{
   if(!/^[a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9_-]+)*$/.test(path))throw Error('EXACT_OWNED_API_PATH_REQUIRED');
   const headers:Record<string,string>={'content-type':'application/json'};
   if(identity!=='anonymous')headers.authorization='Bearer '+(identity==='other'?otherToken:identity==='invalid'?'invalid.disposable.token':token);
-  const response=await fetch(upstream+'/api/'+path,{method,headers,...(method==='POST'?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(15000)});
+  const url=new URL(upstream+'/api/'+path);
+  if(query)url.search=new URLSearchParams(query).toString();
+  return fetch(url,{method,headers,...(method==='POST'?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(15000)});
+ };
+ const request=async(path:string,body:unknown,identity:'actor'|'other'|'anonymous'|'invalid'='actor',upstream=origin,method:'POST'|'GET'='POST')=>{
+  const response=await rawRequest(path,body,identity,upstream,method);
   return {status:response.status,body:await response.json() as any};
  };
  const call=async(operation:string,body:unknown,identity:'actor'|'other'|'anonymous'|'invalid'='actor',upstream=origin)=>
   request('company-brain/'+operation,body,identity,upstream);
  const read=(path:string,identity:'actor'|'other'|'anonymous'|'invalid'='actor')=>request(path,undefined,identity,origin,'GET');
- return {origin,authOrigin,loginEmail:users.find(u=>u.id===actor)!.email,call,request,read,observed,close:async()=>{
+ const readResponse=(path:string,query:Record<string,string>,identity:'actor'|'other'='actor')=>rawRequest(path,undefined,identity,origin,'GET',query);
+ return {origin,authOrigin,loginEmail:users.find(u=>u.id===actor)!.email,call,request,read,readResponse,observed,close:async()=>{
   for(const server of [api,auth]){server.closeAllConnections();await new Promise<void>(yes=>server.close(()=>yes()));}
   for(const [key,value]of Object.entries(prior)){if(value===undefined)delete process.env[key];else process.env[key]=value;}
  }};

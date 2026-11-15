@@ -47,6 +47,9 @@ export interface EmployeeConversationMessage {
   resolutionProvenance?: Array<Record<string, unknown>>;
   companyTruthSnapshot?: Record<string, unknown> | null;
   outcomeRefs: Array<Record<string, unknown>>;
+  /** Gated financial text re-derived at read time after a current
+   * authorization check; never persisted in conversation history (R1). */
+  hydratedText?: string | null;
   createdAt: string;
 }
 

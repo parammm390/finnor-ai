@@ -109,7 +109,7 @@ export async function runSolverSynthesisJob(payload:Record<string,unknown>,execu
    try{return await tx(ctx,async c=>{const current=await solverRow(ctx,row.id,c);
     if(current.status==='COMPLETE'&&current.claim_token===execution.claimToken&&Number(current.claim_fence)===Number(execution.claimFence))return true;
     await jobFence(ctx,current,execution,c);return true;});}catch{abort.abort();return false;}
-  });
+  }, { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
   let evidenceRequest=row.id;
   if(row.parent_request_id){
    const parent=await solverRow(ctx,row.parent_request_id);

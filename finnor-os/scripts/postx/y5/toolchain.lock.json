@@ -1,0 +1,15 @@
+{
+  "schema": "finnor.postx.y5.native-toolchain.v1",
+  "version": "4.34.1",
+  "platform": "darwin",
+  "architecture": "arm64",
+  "release": "https://api.github.com/repos/leanprover/lean4/releases/tags/v4.34.1",
+  "url": "https://github.com/leanprover/lean4/releases/download/v4.34.1/lean-4.34.1-darwin_aarch64.zip",
+  "archiveBytes": 797037816,
+  "sha256": "9019fcd34e93fddf0ecf9d40d28f05a86ba563ac3b701a9c5116ce1c96379360",
+  "archiveRoot": "lean-4.34.1-darwin_aarch64",
+  "license": "Apache-2.0",
+  "licenseSourceSha256": "8b28515ffffc5c0fe2807d8ae3735b00b324d9b7ce807dd63ff6ac8922fbce7e",
+  "profile": "NATIVE_LEAN_INTERPRETER_AND_KERNEL_NO_C_COMPILER",
+  "trustPolicyApproval": "NOT_ESTABLISHED"
+}

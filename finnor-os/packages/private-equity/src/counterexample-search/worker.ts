@@ -65,7 +65,7 @@ export async function runCounterexampleSearchJob(payload:Record<string,unknown>,
       await fence(ctx,current,execution,c,true);return true;
     });}
     catch{abort.abort();return false;}
-  });
+  }, { leaseSeconds: 90 });
   let status='FAILED',failure:string|null=null;
   try{
     await withIssuedCapitalChallengeRead(()=>inChallengeEpisode(row.deadline_at.getTime()-Date.now(),()=>inM1Episode(remainingMs(),async()=>{

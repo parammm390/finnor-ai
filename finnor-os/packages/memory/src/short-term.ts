@@ -1,9 +1,23 @@
-// Short-term memory: Redis, keyed by session id, TTL 30 minutes (§10).
+// Short-term memory: principal-scoped Redis sessions, TTL 30 minutes (§10).
 
+import { setTimeout } from "node:timers/promises";
 import Redis from "ioredis";
+import { z } from "zod";
 
 const TTL_SECONDS = 30 * 60;
 const MAX_SHORT_TERM_TURNS = 20;
+const MAX_APPEND_ATTEMPTS = 64;
+const ShortTermSchema = z.record(z.string(), z.unknown());
+const COMPARE_AND_SET = `
+local current = redis.call('GET', KEYS[1])
+if ARGV[1] == 'missing' then
+  if current ~= false then return 0 end
+elseif current ~= ARGV[2] then
+  return 0
+end
+redis.call('SET', KEYS[1], ARGV[3], 'EX', ARGV[4])
+return 1
+`;
 
 let redis: Redis | null = null;
 
@@ -20,37 +34,51 @@ function getRedis(): Redis {
   return redis;
 }
 
-function key(tenantId: string, sessionId: string): string {
-  return `stm:${tenantId}:${sessionId}`;
+function key(tenantId: string, employeeId: string, sessionId: string): string {
+  return `stm:${tenantId}:${employeeId}:${sessionId}`;
 }
 
 export async function writeShortTerm(
   tenantId: string,
+  employeeId: string,
   sessionId: string,
   data: Record<string, unknown>,
 ): Promise<void> {
-  await getRedis().set(key(tenantId, sessionId), JSON.stringify(data), "EX", TTL_SECONDS);
+  await getRedis().set(key(tenantId, employeeId, sessionId), JSON.stringify(data), "EX", TTL_SECONDS);
 }
 
 export async function readShortTerm(
   tenantId: string,
+  employeeId: string,
   sessionId: string,
 ): Promise<Record<string, unknown> | null> {
-  const raw = await getRedis().get(key(tenantId, sessionId));
-  return raw ? (JSON.parse(raw) as Record<string, unknown>) : null;
+  const raw = await getRedis().get(key(tenantId, employeeId, sessionId));
+  return raw === null ? null : ShortTermSchema.parse(JSON.parse(raw));
 }
 
 export async function appendShortTerm(
   tenantId: string,
+  employeeId: string,
   sessionId: string,
   entry: Record<string, unknown>,
 ): Promise<void> {
-  const existing = (await readShortTerm(tenantId, sessionId)) ?? { turns: [] };
-  const turns = Array.isArray(existing.turns) ? existing.turns : [];
-  const last = turns[turns.length - 1];
-  if (JSON.stringify(last) !== JSON.stringify(entry)) turns.push(entry);
-  if (turns.length > MAX_SHORT_TERM_TURNS) turns.splice(0, turns.length - MAX_SHORT_TERM_TURNS);
-  await writeShortTerm(tenantId, sessionId, { ...existing, turns });
+  const client = getRedis();
+  const sessionKey = key(tenantId, employeeId, sessionId);
+  const encodedEntry = JSON.stringify(entry);
+  for (let attempt = 0; attempt < MAX_APPEND_ATTEMPTS; attempt += 1) {
+    const raw = await client.get(sessionKey);
+    const existing = raw === null ? {} : ShortTermSchema.parse(JSON.parse(raw));
+    const turns = Array.isArray(existing.turns) ? existing.turns.slice() : [];
+    if (JSON.stringify(turns.at(-1)) !== encodedEntry) turns.push(entry);
+    const next = JSON.stringify({ ...existing, turns: turns.slice(-MAX_SHORT_TERM_TURNS) });
+    // Compare raw bytes so JSON remains lossless in JavaScript. The Redis script
+    // changes the value and TTL only if no other process has changed this cut.
+    const written = await client.eval(COMPARE_AND_SET, 1, sessionKey,
+      raw === null ? "missing" : "present", raw ?? "", next, TTL_SECONDS);
+    if (written === 1) return;
+    await setTimeout(Math.min(25, attempt + 1));
+  }
+  throw new Error("Short-term memory append contention exceeded its retry bound");
 }
 
 export async function closeShortTerm(): Promise<void> {

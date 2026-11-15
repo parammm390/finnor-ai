@@ -11,8 +11,8 @@ import {digest} from '../../packages/capability-evolution/src/contracts';
 import {createCapabilityLifecycle} from '../s8/lifecycle-fixture.mts';
 import {createEconomicLedger} from '../s7/ledger-fixture.mts';
 import {artifact,hash} from './environment.mts';
-export async function lifecycleCall(service:Awaited<ReturnType<typeof createCapabilityLifecycle>>,role:string,operation:string,body:unknown){
- const response=await fetch(service.endpoint()+'/command',{method:'POST',headers:{authorization:'Bearer '+service.tokens[role],'content-type':'application/json'},body:JSON.stringify({operation,requestId:randomUUID(),body}),signal:AbortSignal.timeout(10000)});
+export async function lifecycleCall(service:Awaited<ReturnType<typeof createCapabilityLifecycle>>,role:string,operation:string,body:unknown,timeoutMs=10000){
+ const response=await fetch(service.endpoint()+'/command',{method:'POST',headers:{authorization:'Bearer '+service.tokens[role],'content-type':'application/json'},body:JSON.stringify({operation,requestId:randomUUID(),body}),signal:AbortSignal.timeout(timeoutMs)});
  return {status:response.status,body:await response.json() as any};
 }
 export async function applicationS8Proof(f:any){

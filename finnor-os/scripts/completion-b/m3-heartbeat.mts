@@ -26,12 +26,13 @@ export async function m3Heartbeat(input:{
  queue.register('run_capital_program_v2',async(payload,execution)=>{
   assert(execution);assert.equal(payload.queryId,queryId);
   actualExecution=execution;
-  const observedExecution=Object.freeze({...execution,registerHeartbeat(callback:()=>Promise<boolean>){
+  const observedExecution=Object.freeze({...execution,registerHeartbeat(callback:()=>Promise<boolean>,lease:Parameters<typeof execution.registerHeartbeat>[1]){
    callbacks.push(callback);
-   execution.registerHeartbeat(async()=>{
+   const retire=execution.registerHeartbeat(async()=>{
     const accepted=await callback();observations.push({phase:'ACTUAL_QUEUE_HEARTBEAT',accepted,at:new Date().toISOString()});return accepted;
-   });
+   },lease);
    if(input.cancelAfterRegistration)cancellation??=api(scope,'capital-program-cancel',{queryId});
+   return retire;
   }});
   await runCapitalProgramJob(payload,observedExecution);
   if(cancellation)assert.equal((await cancellation).body.status,'CANCELLED');

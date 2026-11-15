@@ -7,7 +7,8 @@ import { withTenant, documents } from "@finnor/db";
 import { getDocumentContent } from "@finnor/data-platform";
 import { loadDocumentVersion } from "@finnor/data-platform";
 import { and, eq } from "drizzle-orm";
-import { requireContext, errorResponse } from "../../../../lib/auth";
+import { requireContext } from "../../../../lib/auth";
+import { artifactErrorResponse, requireReadableArtifact } from "../../../../lib/artifacts";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -18,6 +19,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const ctx = await requireContext(req);
     const versionId = new URL(req.url).searchParams.get("versionId");
     if (versionId && !UUID.test(versionId)) return Response.json({ error: "Invalid Document version ID" }, { status: 400 });
+    await requireReadableArtifact(ctx, id);
     const result = await withTenant(ctx.tenantId, async (db) => {
       const [doc] = await db
         .select()
@@ -51,6 +53,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       },
     });
   } catch (err) {
-    return errorResponse(err);
+    return artifactErrorResponse(err);
   }
 }

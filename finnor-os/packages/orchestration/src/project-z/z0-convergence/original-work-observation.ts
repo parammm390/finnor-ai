@@ -1,4 +1,4 @@
-import { latestWorkInput } from "@finnor/db";
+import { canReadEmployeeWork, latestWorkInput, WorkControlAuthorizationError } from "@finnor/db";
 import { evaluateAuthority } from "@finnor/authority";
 import type { TenantContext } from "@finnor/shared-types";
 import type { FastReadOnlyRouter } from "../../fast-read-lane";
@@ -14,6 +14,10 @@ export async function observeOriginalWork(input: unknown, ctx: TenantContext, op
   const bound = nativeObservationRequest(input, {
     workId: options.workId, ...(options.workInputId ? { workInputId: options.workInputId } : {}),
   });
+  const employeeId = ctx.employeeId ?? ctx.userId;
+  if (!employeeId || !await canReadEmployeeWork(ctx.tenantId, bound.workId, employeeId)) {
+    throw new WorkControlAuthorizationError();
+  }
   if (!router.execute) x2Fault("Z0_NATIVE_OBSERVATION_EXECUTOR_UNAVAILABLE", 503);
   const authority = await evaluateAuthority(ctx, queryAuthorityRequest(bound.request, bound.workId));
   if (authority.outcome !== "allowed") x2Fault("Z0_NATIVE_OBSERVATION_AUTHORITY_REQUIRED", 403);

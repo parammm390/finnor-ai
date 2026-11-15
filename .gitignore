@@ -5,6 +5,7 @@
 node_modules
 .next
 .next-x1-install
+.next-w2-install
 .next.prebuild-*
 
 # local artifacts and secrets
@@ -42,6 +43,8 @@ vercel_output.txt
 /.r3-runtime/
 /.r3-upstream-runtime/
 /.r3-scratch
+/.y5-tools/
+/.y5-scratch/
 /scope-r/r3-incentive-rule-synthesis/evidence/
 /scope-r/r3-incentive-rule-synthesis/handoff/*.bundle
 /scope-r/r3-incentive-rule-synthesis/handoff/*.patch
@@ -68,3 +71,10 @@ vercel_output.txt
 
 # Synthetic memory verification transcripts and provider evidence.
 /memory-evidence/
+# W3 disposable databases, local signing material, builds and verification logs.
+/scope-postz/w3-real-world-fulfillment/evidence/
+/scope-postz/w3-real-world-fulfillment/handoff/
+/scope-postz/w3-real-world-fulfillment/*.log
+/finnor-os/.w3-venv/
+/finnor-os/.w3-s5-venv/
+/finnor-os/dist-w3/

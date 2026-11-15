@@ -53,7 +53,7 @@ export async function runConfidentialEconomicJob(raw:Record<string,unknown>,exec
    requiredResourceKeys:['native:y4-confidential'],workloadClass:'INTERACTIVE',ownerId:'y4:'+e.deliveryAttemptId});
   dispatched=true;
   const heartbeat=async()=>!!await renewComputeResourceLeases(leases)&&!!await tx(ctx,c=>owned(ctx,c,p,e));
-  e.registerHeartbeat(heartbeat);
+  e.registerHeartbeat(heartbeat, { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
   if(p.stage==='COMPILE'){
    const start=await tx(ctx,async c=>{
     const q=await owned(ctx,c,p,e);if(!q)return null;

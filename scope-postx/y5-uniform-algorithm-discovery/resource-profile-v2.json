@@ -1,0 +1,24 @@
+{
+  "schema": "finnor.y5.development-profile-revision.v1",
+  "priorEvidence": ["evidence/y5-native-attempt-2", "evidence/y5-native-attempt-3", "evidence/y5-native-attempt-4"],
+  "observedCause": "The pinned Lean imports and kernel exceed the initially proposed 1024 MiB limit, even with one elaborator thread.",
+  "diagnosis": {
+    "command": "lean -j 1 -M 2048 -T 200000 -o Candidate.olean Candidate.lean",
+    "exitCode": 0,
+    "maximumResidentBytes": 1094041600,
+    "peakMemoryFootprintBytes": 208764680,
+    "wallSeconds": 13.97,
+    "artifact": "evidence/y5-preparation/kernel-memory-diagnosis.metrics"
+  },
+  "revision": {
+    "elaboratorMemoryMiB": 2048,
+    "elaboratorThreads": 1,
+    "nativeWallMilliseconds": 30000,
+    "outerAggregateGiB": 16,
+    "replayMemory": "NOT_ENFORCED_BY_LEANCHECKER; qualification remains blocked",
+    "fullToolInventory": "Rehash all installed asset bytes before each high-level native operation",
+    "formalDefinitionsAndAcceptancePredicatesChanged": false,
+    "qualificationExposure": "NONE"
+  },
+  "requiredRerun": "All affected native/checker/runtime cases under the revised development profile. No protected qualification or resource pass is inferred."
+}

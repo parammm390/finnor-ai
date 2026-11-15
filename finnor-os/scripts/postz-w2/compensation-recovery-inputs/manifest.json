@@ -1,0 +1,26 @@
+{
+  "schema": "finnor.w2.compensation-recovery-preimages.v1",
+  "sourceArchiveSha256": "8d573a1ad9905f5219ff8ba284dad307dc5f5f89a70a4bce6b1732dbe9e84e37",
+  "recoveredAt": "2026-10-31T03:00:28Z",
+  "isolatedFixedCommit": "9b8b863e0fdacb8fd3576b9eef298d08814a7dbd",
+  "files": [
+    {
+      "target": "finnor-os/packages/private-equity/src/workforce-allocation.ts",
+      "beforeSource": "0.source.txt",
+      "beforeSha256": "996ae576f7a83130e3deeac0ccc9ccf074bbc5fe67d0dc1978c4d6ff4f57e85f",
+      "fixedSha256": "c1ec19c0200418f7c68b7a9d45d72e485fbea3243cfe7f07bbf0856d7d2c9008"
+    },
+    {
+      "target": "finnor-os/packages/private-equity/src/workforce-compensation.ts",
+      "beforeSource": "1.source.txt",
+      "beforeSha256": "fa11a41394ad0cb1e12c4e731d3b8158779d8c701bfdc6568b209c046e22d5eb",
+      "fixedSha256": "747071ea148d0f33cc83ec02ff783ff4235e62dc4afbcd235a8dce6b97e1aea8"
+    },
+    {
+      "target": "finnor-os/packages/private-equity/src/closing/check-client.ts",
+      "beforeSource": "2.source.txt",
+      "beforeSha256": "3baeefc3f19aa554ebf8e8fdbd9f5ddb8f2535f3ba865a9b3d7abb8a18d0e7f2",
+      "fixedSha256": "e331725c78c4edcb28928f39da0113f68e4350ede0fb4f6b3e73bdc68912d129"
+    }
+  ]
+}

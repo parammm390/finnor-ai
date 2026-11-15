@@ -53,11 +53,13 @@ export type SeriesValue = Readonly<Record<string, ScalarValue>>;
 export type ModelValue = ScalarValue | SeriesValue;
 
 export interface InputProvenanceRef {
-  kind: "p1_assumption" | "evidence_version" | "model_parameter" | "human_input" | "artifact_anchor" | "evidence_derivation" | "primary_finding" | "confidential_computation";
+  kind: "p1_assumption" | "evidence_version" | "model_parameter" | "human_input" | "artifact_anchor" | "evidence_derivation" | "primary_finding" | "confidential_computation" | "committee_financial_assertion";
   id: string;
   versionId?: string;
   anchorId?: string;
   semanticHash?: string;
+  byteSha256?: string;
+  committeeCaseId?: string;
   effectiveAt?: string;
   observedAt?: string;
   retrievedAt?: string;
@@ -211,6 +213,7 @@ export interface StandardLboRuntimeDefinition {
   returnMethod?: "decimal34_horner_npv_v2";
   currency: string;
   entryValuationMethod: "direct_enterprise_value" | "metric_multiple";
+  entryValuationMetric?: "EBITDA";
   revenueMethod: "explicit" | "growth";
   ebitdaMethod: "explicit" | "margin";
   dAndATreatment: "explicit" | "ebitda_equals_ebit";
@@ -340,12 +343,28 @@ export interface ScenarioOverride {
   reason?: string;
 }
 
+export interface CommitteeEbitdaSelection {
+  icCaseId: string;
+  documentVersionId: string;
+  periodEnd: string;
+}
+
+export interface CommitteeEbitdaBasis extends CommitteeEbitdaSelection {
+  dealId: string;
+  baseRunId: string;
+  reviewDigest: string;
+  documentId: string;
+  byteSha256: string;
+  location: string;
+}
+
 export interface UnderwritingScenario {
   schemaVersion: "underwriting-scenario.v1";
   id?: string;
   name: string;
   parentScenarioId?: string;
   overrides: readonly ScenarioOverride[];
+  committeeEbitdaBasis?: CommitteeEbitdaBasis;
   semanticHash?: string;
 }
 

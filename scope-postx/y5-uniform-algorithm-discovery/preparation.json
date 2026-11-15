@@ -1,0 +1,194 @@
+{
+  "schema": "finnor.postx.y5.preparation.v1",
+  "sourceCommit": "a7028e5816e24ff13206bf2bce20a7fc8f3d2aca",
+  "sourceTree": "2736e2c63854769b444510dbbbb77161c7500c37",
+  "sourceCommitMeaning": "Preparation base, not the final task code commit; later source/object receipts identify the committed task snapshot.",
+  "initialCommittedTaskSource": {"commit": "86b403be0844a91f466dd1a1cf62977bc5a320cc", "tree": "6fca2a5630f4402cf06d30658a9e8ac8187bb12f", "paths": 79, "stagedDiffSha256": "7fbf9ed5ffd4f6d77f15a546fb93ccf34aeaaf1906a8a43310cca19a1c3ca0cc", "classification": "PUBLIC_DEVELOPMENT_FOUNDATION_NOT_FULL_Y5"},
+  "correctedIndependentReconstruction": {
+    "status": "PASS_SOURCE_OBJECTS_FRESH_LOCK_BUILD_INSTALLED_OWNER_AND_COMPILED_FAULTS_ONLY",
+    "sourceCommit": "7e8e1636aa1a04ae650c377e0efe01840b2a6871",
+    "sourceTree": "87237cdb2e2ef2e170986d33ba9b8ad594e3a0de",
+    "snapshotCommit": "44ae60741d3ea78fa79c373d7c892e4c49ebb823",
+    "sanitizedSnapshotTree": "521c8e9a36be8dd6d4ca803c3c8e5f3e8fbbb55f",
+    "sourceDigest": "ded91d42b2c7e927dd83c199f4dc7b022e81e353f478f2205eddc8ab6825a6b5",
+    "sourcePinsVerified": 66,
+    "files": 3679,
+    "bytes": 86917782,
+    "excludedPaths": 415,
+    "buildId": "y5-bb8fd8c2028c1dce5e5c09a60d1d1f6eb6676e2edc58b2f5f4859a5afddf95a6",
+    "buildWallMs": 388855.78229199996,
+    "freshNpmCiIncludeDev": true,
+    "locksUnchanged": true,
+    "buildSourceTrackedDiffEmpty": true,
+    "sourceReceipt": "../y5-reconstructed-third/source-object-reconstruction.json",
+    "stageReview": "../y5-reconstructed-third/staged-source-review.json",
+    "buildManifest": "../y5-reconstructed-installed-second/build-manifest.json",
+    "runtimeEvidence": "evidence/y5-reconstructed-owner-first",
+    "firstRuntimeResult": {"status": "FAIL_BASE_CONSUME_ORIGINAL_REQUEST_DEADLINE_BEFORE_COMPILED_FAULT_CASES", "launcherSeconds": 107.2, "failure": "evidence/y5-reconstructed-owner-first/failure.json", "physicalOutcome": "Specification child closed exit 0; independent build reached original native deadline, SIGKILL and physical close observed. No complete-use or compiled-fault pass."},
+    "finalRuntimeTrial": "evidence/y5-reconstructed-owner-second",
+    "finalRuntimeResult": {"status": "PASS_PUBLIC_DEVELOPMENT_INSTALLED_OWNER_AND_COMPILED_FAULTS_ONLY", "report": "evidence/y5-reconstructed-owner-second/results.json", "wallMs": 242399, "launcherSeconds": 251.2, "actualBuiltNextApi": true, "emittedProductionWorker": true, "completedUseExpiredRetry": "PASS_ORIGINAL_DEADLINE_NO_NEW_NATIVE", "durableStartedApiSigkill": "PASS_SAME_USE_UNKNOWN_NO_NEW_NATIVE", "compiledFaultCasesPassed": 2, "otherRepairCasesExplicitlySkipped": 7, "mounted": "NOT_RUN_RENDERER_BLOCKED", "completeMoney": null, "aggregatePeakBytes": null},
+    "limits": "Fresh npm CI and version-pinned Python reinstall; declared Lean/Python base native assets, not a new toolchain download or full license/trust audit. No protected admission or mounted proof."
+  },
+  "classification": "SCOPED_OBSERVATIONS_WITH_SEPARATE_UNESTABLISHED_GATES",
+  "scope": "Observed preparation and public development infrastructure; not protected Y5 discovery, installed delivery or activation",
+  "rootInstall": {
+    "command": "npm ci --no-audit --no-fund",
+    "exitCode": 0,
+    "toolElapsedSeconds": 20.4,
+    "packagesReported": 599,
+    "log": "evidence/y5-preparation/root-install.log",
+    "warnings": ["Existing @napi-rs/wasm-runtime peer conflict", "eslint 9.39.5 deprecation"],
+    "lockUnchanged": true
+  },
+  "backendInstall": {
+    "command": "npm ci --no-audit --no-fund",
+    "exitCode": 0,
+    "toolElapsedSeconds": 36.5,
+    "packagesReported": 431,
+    "log": "evidence/y5-preparation/backend-install.log",
+    "warnings": ["Existing @esbuild-kit esm-loader/core-utils deprecations", "node-domexception deprecation"],
+    "lockUnchanged": true
+  },
+  "workspaceBinding": {
+    "db": "finnor-os/packages/db/index.ts",
+    "privateEquity": "finnor-os/packages/private-equity/src/index.ts",
+    "bothResolvedInsideTaskWorktree": true,
+    "fsExtNativeImport": "PASS",
+    "embeddedPostgresPackage": "18.4.0-beta.17",
+    "embeddedPostgresStarted": true,
+    "embeddedPostgresDisposition": "Real source-owner E2Es started disposable PostgreSQL, upgraded from 0188 through all 219 migrations, verified empty replay and ordinary app/worker roles, then stopped normally",
+    "runtime": {"node": "v22.22.3", "platform": "darwin", "arch": "arm64"}
+  },
+  "postInstallStorage": {
+    "rootNodeModulesKiB": 876492,
+    "backendNodeModulesKiB": 966380,
+    "freeDiskKiB": 4853184
+  },
+  "nextGuides": {
+    "root": "Read installed Next route.md, use-client.md and authentication introduction; preserve promised params, serializable client boundary and server-side authorization.",
+    "backend": "Installed Next 15 has no dist/docs tree. Inspected actual app-route/module.d.ts; params is a Promise. Root installed guide is not claimed as a backend-package guide."
+  },
+  "formalToolCandidate": {
+    "status": "PINNED_TASK_LOCAL_DARWIN_RUNTIME_INSTALLED_AND_DEVELOPMENT_KERNEL_PATH_EXECUTED",
+    "version": "Lean 4.34.1",
+    "hostAsset": "lean-4.34.1-darwin_aarch64.zip",
+    "releasePublishedAt": "2026-09-24T20:24:21Z",
+    "archiveBytes": 797037816,
+    "officialReleaseApiDigest": "9019fcd34e93fddf0ecf9d40d28f05a86ba563ac3b701a9c5116ce1c96379360",
+    "unselectedTarCandidate": {"archiveBytes": 562038070, "sha256": "65f22a4f047738ec742667b3247e836a86ebf06eabc12655c3dee00637e37866"},
+    "runtimeInventoryDigest": "70fd8542a051a0cae60f61fa30154d6743c490f1b6b069fc599d50f6c73b667a",
+    "identityDigest": "f0f646c8591cd87a90149e2f61cf9802174a9c33584856ab8b94dd6cb32269cb",
+    "selectedFiles": 17646,
+    "selectedBytes": 2568307522,
+    "installWallSeconds": 154.4,
+    "archiveRetained": false,
+    "archiveDisposition": "Only the task ZIP and task uv-cache were deleted after explicit approval and verified archive size/hash; selected runtime, source, licenses, proofs and evidence were preserved",
+    "license": "Apache-2.0; commercial use permitted subject to its conditions",
+    "licenseSourceSha256": "8b28515ffffc5c0fe2807d8ae3735b00b324d9b7ce807dd63ff6ac8922fbce7e",
+    "transitiveRuntimeLicenses": "Supplied LICENSES headings and first 490 lines inspected; not a complete license audit, redistribution approval or FINNOR trust-policy approval",
+    "policyApproval": "NOT_ESTABLISHED",
+    "decision": "No native_decide/unchecked native computation will be treated as a kernel proof. Inspect exact expected type and all axioms; Lean standard axioms do not constitute FINNOR trust-policy approval."
+  },
+  "scientificRuntime": {
+    "interpreter": "Task-local isolated Python 3.12",
+    "requirements": "finnor-os/packages/epistemic-runtime/src/intervention-requirements.txt",
+    "numpy": "2.3.3", "scipy": "1.16.2", "statsmodels": "0.14.5", "arch": "8.0.0",
+    "installation": "evidence/y5-preparation/s3-numerics-install.log",
+    "coldImport": "evidence/y5-preparation/scientific-import.log",
+    "coldImportWallSeconds": 39.287831292,
+    "originalS3InvocationCapSeconds": 20,
+    "originalS3CapWeakened": false,
+    "uvCacheRetained": false,
+    "installedRuntimeRetained": true
+  },
+  "installedPreparation": {
+    "firstAttempt": {"status": "FAIL_BEFORE_COMPILATION", "log": "evidence/y5-preparation/installed-first.log", "cause": "Node COPYFILE_FICLONE_FORCE unsupported on Darwin, ENOSYS"},
+    "repair": "Source-pinned host clonefile primitive, no full-copy fallback; final symlink relocation/no-escape and byte inventories remain required",
+    "secondAttempt": {"status": "BUILD_PASS_OLDER_CUT_DECLARED_COPIED_DEPENDENCIES", "log": "evidence/y5-preparation/installed-second.log", "wallSeconds": 367.4, "buildId": "y5-4dd6151bb585d3a495c9f48b71fcc7e87cd0ab2350a193e539678d6176d89738", "methodSourceDigest": "1362434057cccfa91b06b0048db22f137be1bf630ef105319ab2db692e59b1ba"},
+    "olderInstalledBackendExecution": {"status": "PASS_BACKEND_ONLY_NOT_MOUNTED_NOT_REPAIRED_CUT", "artifact": "evidence/y5-installed-owner-third/results.json", "wallMs": 724678},
+    "mountedExecution": {"status": "BLOCKED_FAILED_NOT_PASSED", "artifact": "evidence/y5-installed-owner-third/browser-renderer-blocked.json", "limits": "Actual SDK auth and maintained standalone; last instrument stayed opening with no observed animation frame in 2 seconds. Backend-only phase files do not prove UI behavior."},
+    "repairedBuild": {"status": "BUILD_PASS_CURRENT_66_PATH_PRODUCT_CUT_COPIED_DEPENDENCIES", "buildId": "y5-64aee611547a917874c3741289ece3fd038059a00f28698c3014257f5c8e3aba", "artifact": "../y5-installed-third/build-manifest.json", "wallMs": 322695.684667},
+    "repairedInstalledExecution": {"status": "FAIL_CURRENT_FULL_REPAIR_MATRIX_ORIGINAL_REQUEST_DEADLINE", "interruptedAttempt": "evidence/y5-installed-owner-fourth/interruption.json", "failedAttempt": "evidence/y5-installed-owner-fifth/failure.json", "limits": "Fractional native use/evaluation passed. Two-term 2e12 native execution closed successfully but authenticated consume exceeded unchanged request deadline. Compiled interruption/deadline cases were not reached."},
+    "compiledFaultSelection": {"status": "PASS_COMPILED_FAULT_CASES_ONLY_FROM_FRESH_RECONSTRUCTION", "flag": "--review-faults", "requires": ["--built-api", "--installed-worker"], "report": "evidence/y5-reconstructed-owner-second/review-repairs/results.json", "skippedCasesAreNotPassed": true, "missingBuiltGuard": "evidence/y5-preparation/compiled-fault-selection-missing-built.log"},
+    "sourceObjectLinkCases": {"status": "PASS_DISPOSABLE_INFRASTRUCTURE_CLI_CASES", "artifact": "evidence/y5-reconstruction-faults-first/results.json", "fullRepositoryReconstruction": false},
+    "freshIndependentReconstruction": {
+      "status": "SOURCE_OBJECT_AND_INDEX_PASS_FRESH_BUILD_FAIL_MISSING_DECLARED_BUILD_TYPES",
+      "sourceCommit": "86b403be0844a91f466dd1a1cf62977bc5a320cc",
+      "sourceTree": "6fca2a5630f4402cf06d30658a9e8ac8187bb12f",
+      "snapshotCommit": "86ef7f2ab050dd57b71c11fee8935c21ca5a7fc9",
+      "sanitizedSnapshotTree": "075b41e1a47df406c6f791f95461593c8cba2d08",
+      "files": 3679,
+      "excludedPaths": 415,
+      "bytes": 86909944,
+      "allGitBlobSha256AndModesVerified": true,
+      "sourcePinsVerified": 66,
+      "receipt": "../y5-reconstructed-first/source-object-reconstruction.json",
+      "stageReview": "../y5-reconstructed-first/staged-source-review.json",
+      "freshBuildOutput": "../y5-reconstructed-installed-first",
+      "buildFailure": "../y5-reconstructed-installed-first/build-failure.json",
+      "buildWallMs": 170997.84725,
+      "repair": "SUPERSEDED_BY_VERIFIED_CORRECTED_FRESH_RECONSTRUCTION_RECORDED_ABOVE",
+      "scopedCleanup": {"status": "USER_AUTHORIZED_FOUR_DERIVED_DIRECTORIES_REMOVED_AFTER_INVENTORY", "receipt": "../y5-reconstructed-installed-first/derived-cleanup-result.json", "inventorySha256": "3e71f0c72b2979fe2d53c198eef5b920a9f2fa53e8ec5d0c9de00ae9d7e152a7", "availableDiskAfter": 5070536704, "broaderCleanup": false},
+      "runtimeExecuted": false,
+      "limits": "Sanitized source tree, not original whole tree. Inherited whitespace warnings preserved byte-for-byte; task diff check passes. No copied host npm dependencies or Git store. Declared Lean/Python native assets remain a separate trust boundary."
+    }
+  },
+  "reviewRepairState": {
+    "contract": "scope-postx/y5-uniform-algorithm-discovery/review-repair-contract.md",
+    "fullReviewInput": "evidence/y5-preparation/review-input-third.json",
+    "fullReviewDiffSha256": "0921d5d71f0ab68092e0e46513967bd8b1353310eb7bc7a01a4ee3bb213440c0",
+    "currentMethodSourceDigest": "ded91d42b2c7e927dd83c199f4dc7b022e81e353f478f2205eddc8ab6825a6b5",
+    "currentMethodSourcePaths": 66,
+    "backendTypes": {"status": "PASS", "artifact": "evidence/y5-preparation/backend-typecheck-review-repairs-fourth.log"},
+    "frontendTypesAndPanelLint": "PASS_AT_CURRENT_PANEL_CUT",
+    "sourceRepairMatrix": {"status": "PASS_ALL_SEVEN_EXECUTED_SOURCE_REPAIR_CASES", "artifact": "evidence/y5-owner-review-fourth/results.json", "wallMs": 324458, "builtFaultsAndMountedChecks": "EXPLICITLY_NOT_RUN"},
+    "priorNumericPrivacySubsetEvidence": "evidence/y5-owner-review-third/review-repairs/progress.json",
+    "originalS5Compatibility": {"status": "PASS_ALL_NINE_REGISTERED_CASES", "artifact": "scope-5/scope-evidence/run-2026-10-22T01-33-29-e3667947/results.json", "hostedAuthentication": false},
+    "builtProcessInterruptionAndOriginalDeadline": "PASS_TWO_PREREGISTERED_CASES_FRESH_RECONSTRUCTION_NOT_FULL_REPAIR_MATRIX",
+    "mountedPollLazyEvidenceAndCleanup": "NOT_PASSED"
+  },
+  "finalStaticParity": {
+    "authorization": "PASS_AFTER_EXISTING_GENERATOR_ADDED_ONLY_Y5_ROUTE_ROW",
+    "workspaceClientManifestForms": "PASS",
+    "coverage": "PASS_AFTER_EXISTING_GENERATOR_REFRESHED_SOURCE_IMPORT_GRAPH",
+    "productSourceClosure": "REGENERATED_ded91d42b2c7e927dd83c199f4dc7b022e81e353f478f2205eddc8ab6825a6b5_66_PATHS_AFTER_PINNED_INSTALLER_FIX",
+    "retainedStalePinRejection": "evidence/y5-preparation/source-object-reconstruction-second.log",
+    "logs": "evidence/y5-preparation/final-parity-*",
+    "currentFinalWorkspaceClientManifestFormsCoverageAuthorization": "PASS",
+    "mountedExecutionProved": false
+  },
+  "retainedReferences": [
+    {
+      "source": "cursor/plugins",
+      "commit": "ccb5507cec1546dc88135c1139c811e6c59115ba",
+      "path": "cursor-team-kit/skills/thermo-nuclear-code-quality-review/SKILL.md",
+      "observation": "Exact supplied GitHub file fetched HTTP 200 and read",
+      "application": "Review full owner changes, remove duplicate ownership/wrappers, preserve types and atomic transitions; justify any file crossing 1000 lines."
+    },
+    {
+      "source": "openclaw/openclaw",
+      "commit": "b90a911280addee572e1f1ed9d02c9226adf64a7",
+      "path": ".agents/skills/test-audit/SKILL.md",
+      "observation": "Exact supplied GitHub file fetched HTTP 200 and read in full",
+      "application": "Require an observable contract, credible regression, distinct missing coverage and owning boundary before each new test. No copied expectations, fixture admission or wrong-guard negatives. No foreign runner/publication authority inherited."
+    },
+    {
+      "source": "https://lean-lang.org/doc/reference/latest/ValidatingProofs/",
+      "observation": "Official full validation guide read through WebSearch",
+      "application": "Proof term/type/trust are separate; malicious meta-code and imports require isolation and independent rechecking. Standard blue ticks and exit zero alone are insufficient."
+    },
+    {
+      "source": "https://arxiv.org/html/2504.21801v1",
+      "observation": "DeepSeek-Prover-V2 proof-generation/decomposition method inspected",
+      "application": "Generated sketches/subgoals are untrusted. No model, API, local checkpoint, license or compute grant is inferred."
+    },
+    {
+      "source": "https://deepmind.google/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/",
+      "observation": "Evaluator-guided algorithm search description inspected",
+      "application": "Development counterexamples can reject candidates, but evaluator scores cannot establish uniform correctness."
+    }
+  ],
+  "costGaps": ["Complete human effort", "Aggregate simultaneous peak memory", "Preparation dollars", "Disk/network lifecycle cost"],
+  "protectedEvidence": "NONE",
+  "outwardWrites": "NONE"
+}

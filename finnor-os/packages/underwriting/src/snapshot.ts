@@ -75,7 +75,10 @@ export function scenarioHash(scenario: UnderwritingScenario): string {
   const normalized = [...scenario.overrides]
     .map(({ nodeId, value }) => ({ nodeId, value }))
     .sort((left, right) => left.nodeId.localeCompare(right.nodeId));
-  return semanticHash({ schemaVersion: scenario.schemaVersion, parentScenarioId: scenario.parentScenarioId, overrides: normalized });
+  return semanticHash({
+    schemaVersion: scenario.schemaVersion, parentScenarioId: scenario.parentScenarioId, overrides: normalized,
+    ...(scenario.committeeEbitdaBasis ? { committeeEbitdaBasis: scenario.committeeEbitdaBasis } : {}),
+  });
 }
 
 export function applyScenario(
@@ -91,19 +94,29 @@ export function applyScenario(
   if (scenario.semanticHash && scenario.semanticHash !== hash) fail("MODEL_SEMANTIC_HASH_MISMATCH", "Scenario semantic hash does not match its overrides");
   const values = structuredClone(baseline.values) as Record<string, ResolvedInput>;
   const seen = new Set<string>();
+  const basis = scenario.committeeEbitdaBasis;
+  if (basis && (scenario.overrides.length !== 1 || scenario.overrides[0]?.nodeId !== "entry.metric_value")) {
+    fail("SCENARIO_INVALID_TARGET", "Committee EBITDA applies to one exact entry valuation input");
+  }
   for (const override of scenario.overrides) {
     if (seen.has(override.nodeId)) fail("SCENARIO_INVALID_TARGET", "Scenario contains duplicate targets", { nodeId: override.nodeId });
     seen.add(override.nodeId);
     const node = model.nodeById[override.nodeId];
     const current = values[override.nodeId];
     if (!node || node.kind !== "input" || !current) fail("SCENARIO_INVALID_TARGET", "Scenario target is not an existing resolved InputNode", { nodeId: override.nodeId });
+    if (basis && current.provenance.some(ref => ref.kind === "confidential_computation")) {
+      fail("SCENARIO_INVALID_TARGET", "Committee evidence cannot replace a confidential input");
+    }
     values[override.nodeId] = {
       ...current,
       value: normalizeValue(override.value, current),
       truthClass: "SCENARIO_OVERRIDE",
       status: "KNOWN",
       reason: override.reason,
-      provenance: current.provenance,
+      provenance: basis ? [{
+        kind: "committee_financial_assertion", id: basis.documentId, versionId: basis.documentVersionId,
+        anchorId: basis.location, byteSha256: basis.byteSha256, committeeCaseId: basis.icCaseId,
+      }] : current.provenance,
     };
   }
   return {

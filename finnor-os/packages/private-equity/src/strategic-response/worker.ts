@@ -55,7 +55,7 @@ export async function strategicResponseJob(raw:Record<string,unknown>,execution?
   if(!await transaction(ctx,c=>owned(c)))return;
   leases=await acquireComputeResourceLeases({tenantId:p.tenantId,resourceKeys:['native:y2-strategic-response'],
    requiredResourceKeys:['native:y2-strategic-response'],workloadClass:'INTERACTIVE',ownerId:'y2:'+e.deliveryAttemptId});
-  e.registerHeartbeat(heartbeat);
+  e.registerHeartbeat(heartbeat, { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
   const initial=await transaction(ctx,async c=>{
    const live=await owned(c);if(!live)return null;
    const {row,use}=live;

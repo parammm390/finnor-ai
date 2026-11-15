@@ -54,6 +54,10 @@ async function assertDelegationResponderTx(db: Db, tenantId: string, delegationI
   throw new Error("Delegation target cannot acknowledge or accept this objective");
 }
 
+export async function lockDelegationTransitionsTx(db: Db, tenantId: string): Promise<void> {
+  await db.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${tenantId}, 904))`);
+}
+
 async function transitionDelegationTx(
   db: Db,
   params: {
@@ -68,7 +72,7 @@ async function transitionDelegationTx(
   // All event-producing P2 transitions take the same tenant lock before their
   // canonical rows. A simultaneous deadline therefore has one deterministic order:
   // acknowledgement-before-deadline or deadline-before-acknowledgement, never both.
-  await db.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${params.tenantId}, 904))`);
+  await lockDelegationTransitionsTx(db, params.tenantId);
   await db.execute(sql`SELECT id FROM ${delegations} WHERE ${delegations.tenantId}=${params.tenantId} AND ${delegations.id}=${params.delegationId} FOR UPDATE`);
   const [row] = await db.select().from(delegations).where(and(eq(delegations.tenantId, params.tenantId), eq(delegations.id, params.delegationId))).limit(1);
   if (!row) throw new Error("Delegation not found");
@@ -172,4 +176,17 @@ export async function acceptDelegation(params: { tenantId: string; delegationId:
 
 export async function completeDelegation(params: { tenantId: string; delegationId: string; actorId?: string; evidence?: Record<string, unknown> }) {
   return transitionDelegation({ ...params, to: "completed", eventType: "completed" });
+}
+
+export async function completeTaskDelegationTx(db: Db, params: { tenantId: string; taskId: string; actorId?: string }): Promise<void> {
+  const [linked] = await db.select({ id: delegations.id, status: delegations.status, acceptedAt: delegations.acceptedAt })
+    .from(delegations).where(and(eq(delegations.tenantId, params.tenantId), eq(delegations.taskId, params.taskId))).limit(1).for("update");
+  if (!linked) return;
+  const accepted = linked.status === "accepted"
+    || (linked.acceptedAt && (linked.status === "escalated" || linked.status === "overdue"));
+  if (!accepted) return;
+  await transitionDelegationTx(db, {
+    tenantId: params.tenantId, delegationId: linked.id, to: "completed", eventType: "completed",
+    actorId: params.actorId, evidence: { taskId: params.taskId },
+  });
 }

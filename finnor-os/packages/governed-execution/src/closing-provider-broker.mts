@@ -9,6 +9,7 @@ import { ClosingSpecSchema } from "@finnor/shared-types";
 import { ClosingProfileSchema } from "../../private-equity/src/closing/contracts";
 import { validateClosingAdmission } from "../../capability-evolution/src/closing-admission";
 import { ClosingBrokerRequestSchema, closingOperationRequest, closingProviderContractDigest, originalClosingRequirement } from "./closing-provider";
+import { workforceCompensationPrepareSchema, workforceCompensationBoundaryRefusal } from "../../private-equity/src/workforce-compensation-payment";
 import { brokerOrigin, brokerPrivateFile, brokerRequest, brokerToken } from "./broker-io";
 
 const url = process.env.FINNOR_V3_BROKER_DATABASE_URL;
@@ -184,10 +185,23 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1
     if (Buffer.byteLength(supplied) !== Buffer.byteLength(expected) || !timingSafeEqual(Buffer.from(supplied), Buffer.from(expected))) {
       res.writeHead(401); res.end(); return;
     }
-    if (req.method !== "POST" || !["/dispatch", "/read"].includes(req.url ?? "")) { res.writeHead(404); res.end(); return; }
+    if (req.method !== "POST" || !["/dispatch", "/read", "/workforce-compensation/prepare"].includes(req.url ?? "")) { res.writeHead(404); res.end(); return; }
     try {
       const chunks: Buffer[] = []; let length = 0;
       for await (const chunk of req) { length += chunk.length; if (length > 8192) throw Error("Request bound"); chunks.push(chunk); }
+      if (req.url === "/workforce-compensation/prepare") {
+        // W2 compensation payment preparation is answered before any
+        // credential resolution or provider transport. While no qualified W2
+        // outbound financial settlement provider is installed, the only
+        // honest answer is the exact durable content-addressed refusal.
+        const parsed = workforceCompensationPrepareSchema.safeParse(JSON.parse(Buffer.concat(chunks).toString("utf8")));
+        if (!parsed.success) {
+          res.writeHead(422, { "content-type": "application/json" });
+          res.end(JSON.stringify({ error: "S6_W2_PAYMENT_PREPARE_REQUEST_INVALID" })); return;
+        }
+        res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" });
+        res.end(JSON.stringify(workforceCompensationBoundaryRefusal(parsed.data))); return;
+      }
       const result = await brokerClosingOperation(JSON.parse(Buffer.concat(chunks).toString("utf8")), req.url === "/dispatch");
       res.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" }); res.end(JSON.stringify(result));
     } catch (error) {

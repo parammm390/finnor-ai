@@ -5,7 +5,7 @@
 // than silently returning an empty list, so the poller can tell "nothing new yet"
 // apart from "this id isn't yours."
 
-import { MAX_INSTRUCTION_EVENT_PAGE, withTenant, instructionSessions, instructionEvents } from "@finnor/db";
+import { MAX_INSTRUCTION_EVENT_PAGE, canReadEmployeeInstruction, withTenant, instructionSessions, instructionEvents } from "@finnor/db";
 import { and, asc, eq, gt } from "drizzle-orm";
 import { requireContext, errorResponse, AuthError } from "../../../../../lib/auth";
 
@@ -13,6 +13,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   try {
     const { id } = await params;
     const ctx = await requireContext(req);
+    if (!(await canReadEmployeeInstruction(ctx.tenantId, id, ctx.employeeId ?? ctx.userId))) return Response.json({ error: "Instruction not found" }, { status: 404 });
     const url = new URL(req.url);
     const afterParam = url.searchParams.get("after");
     const after = afterParam ? Number.parseInt(afterParam, 10) : 0;
@@ -47,7 +48,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         hasMore,
         nextAfter: hasMore ? rows.at(-1)?.seq ?? after : null,
       },
-    });
+    }, { headers: { "cache-control": "private, no-store" } });
   } catch (err) {
     return errorResponse(err);
   }

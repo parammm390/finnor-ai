@@ -42,6 +42,9 @@ const r4ApiPin = ["ad107d01a61c9ba1df2c71ca8e128851c6", "f3b1fee3f9377d5159c34d6
 const r4AuthMode = ["DISPOSABLE", "RS256", "NO", "BYPASS"].join("_")
 const migrationsPath = "docs/release/completed-release-2026-10-08/migration-allocation.json"
 const prosePaths = ["scope-pm/completion-c/all-ten-gates.json", "scope-pm/completion-c/all-ten-requirements.json"]
+const y5PreparationPath = "scope-postx/y5-uniform-algorithm-discovery/preparation.json"
+const y5DigestField = ["official", "Release", "Api", "Digest"].join("")
+const y5ReleaseDigest = sha("Authored public Y5 Lean release digest fixture")
 const json = (value) => JSON.stringify(value, null, 2) + "\n"
 const credential = (field = "apiKey", value = authoredNegative) => `const ${field} = '${value}';\n`
 const objectFixture = (name, field, value, spacing = "") => `const ${name}={${field}:${spacing}'${value}'};\n`
@@ -81,6 +84,7 @@ const metadata = [
   { name: "x1-historical-plan", path: x1PlanPath, fields: ["candidateKey"], baselineCount: 1,
     bytes: objectFixture("candidate", "candidateKey", x1PlanIdentity) },
   { name: "y3-continuation-premise", path: y3CheckerPath, fields: ["key in choices"], baselineCount: 1, bytes: y3ContinuationCheck },
+  { name: "y5-release-digest", path: y5PreparationPath, fields: [y5DigestField], baselineCount: 1, bytes: json({ [y5DigestField]: y5ReleaseDigest }) },
 ]
 const scans = []
 const historyScans = []
@@ -212,6 +216,8 @@ try {
   }
   scan("r4-auth-mode-altered", r4BrowserPath, credential("authentication"), "configured", 1, ["authentication"])
   scan("r4-auth-mode-wrong-field", r4BrowserPath, credential("apiKey", r4AuthMode), "configured", 1, ["apiKey"])
+  scan("y5-release-digest-altered-value", y5PreparationPath, json({ [y5DigestField]: authoredNegative }), "configured", 1, [y5DigestField])
+  scan("y5-release-digest-wrong-field", y5PreparationPath, credential("apiKey", y5ReleaseDigest), "configured", 1, ["apiKey"])
   for (const name of Object.keys(migrationPins)) scan(`migration-altered-${name}`, migrationsPath, json({ [name]: authoredNegative }), "configured", 1, [name])
   scan("prose-altered-value", prosePaths[0], json({ verbatim: `token semantics, ${authoredNegative} time` }), "configured", 1, ["verbatim"])
   const aws = scan("default-aws-rule-active", m1Path, `const aws_access_key_id = '${authoredAwsId}';\n`, "configured", 1, ["aws_access_key_id"])

@@ -6,6 +6,7 @@ import { createServer } from "node:net";
 import { fileURLToPath } from "node:url";
 import { strict as assert } from "node:assert";
 import { performance } from "node:perf_hooks";
+import { setTimeout as wait } from "node:timers/promises";
 import { migrate, type MigrationFile } from "../../packages/db/migrate";
 import { CURRENT_MIGRATION_HEAD } from "../../packages/db/migration-head";
 import pg from "pg";
@@ -22,6 +23,7 @@ import { testEvidence, testDefinition, TEST_NOW, TEST_TENANT } from "../../packa
 import { comparePrivateEquityOutcomeAssessment, prepareTenantPrivateEquityEpistemicGraph,
   satisfyClosingCondition } from "@finnor/private-equity";
 import { causalReplayProjection } from "@finnor/read-models";
+import { startHeartbeat, WORKER_HEARTBEAT_ID } from "../../apps/worker/src/heartbeat";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)),"../..");
 const REPORT_DIR = process.env.FINNOR_S1_DURABLE_EVIDENCE_DIR ?? resolve(REPO,`../scope-evidence/durable-${new Date().toISOString().replace(/[:.]/g,"-")}-${randomUUID().slice(0,8)}`);
@@ -33,6 +35,35 @@ type BenchmarkResult = { scenario:string; propositions:number; fullMedianMs:numb
 const gates: Gate[] = [];
 const benchmarks: BenchmarkResult[] = [];
 function pass(id: string, evidence: string): void { gates.push({ id,status:"PASS_INTEGRATION",evidence }); }
+
+async function activateWithWorkerHeartbeat(client: pg.Client, input: Parameters<typeof activateDurableEpistemicImpact>[0]): Promise<void> {
+  const savedSha = process.env.FINNOR_COMMIT_SHA;
+  const savedPing = process.env.HEALTHCHECK_PING_URL;
+  process.env.FINNOR_COMMIT_SHA = input.releaseSha;
+  delete process.env.HEALTHCHECK_PING_URL;
+  const controller = new AbortController();
+  const heartbeat = startHeartbeat(30_000, controller.signal, { workloadClass: "BACKGROUND", ownsScheduler: () => false });
+  try {
+    const deadline = Date.now() + 5_000;
+    let migrationHead: string | undefined;
+    while (!migrationHead && Date.now() < deadline) {
+      const result = await client.query<{ migration_head: string }>(`SELECT migration_head FROM finnor_os.service_release_heartbeats
+        WHERE service='compute-background' AND instance_id=$1 AND release_sha=$2 AND capabilities @> ARRAY['epistemic-v2']::text[]`,
+      [WORKER_HEARTBEAT_ID, input.releaseSha]);
+      migrationHead = result.rows[0]?.migration_head;
+      if (!migrationHead) await wait(25);
+    }
+    assert.equal(migrationHead, CURRENT_MIGRATION_HEAD, "Current worker must publish its actual migration head");
+    await activateDurableEpistemicImpact(input);
+  } finally {
+    controller.abort();
+    await heartbeat.markDraining();
+    if (savedSha === undefined) delete process.env.FINNOR_COMMIT_SHA;
+    else process.env.FINNOR_COMMIT_SHA = savedSha;
+    if (savedPing === undefined) delete process.env.HEALTHCHECK_PING_URL;
+    else process.env.HEALTHCHECK_PING_URL = savedPing;
+  }
+}
 
 async function migrationFiles(): Promise<MigrationFile[]> {
   const directory = resolve(REPO,"packages/db/migrations");
@@ -464,10 +495,7 @@ async function digitalTwinRestatement(): Promise<void> {
       assert.equal(baseline?.belief.status,"KNOWN");
       assert.equal((await compareDurableShadowWithOracle(tenantId)).equivalent,true);
       const releaseSha="b".repeat(40);
-      await client.query(`INSERT INTO finnor_os.service_release_heartbeats
-        (service,instance_id,release_sha,build_id,version,release_source,migration_head,capabilities,environment)
-        VALUES('worker','scope5-twin',$1,'scope5-twin','scope5-twin','certification','0140_scope5_epistemic_impact.sql',ARRAY['epistemic-v2'],'test')`,[releaseSha]);
-      await activateDurableEpistemicImpact({tenantId,graphVersionId:prepared.graphVersionId!,releaseSha});
+      await activateWithWorkerHeartbeat(client,{tenantId,graphVersionId:prepared.graphVersionId!,releaseSha});
       const replacementId=randomUUID(),replacementVersionId=randomUUID();
       await client.query("BEGIN");
       try {
@@ -688,10 +716,7 @@ await withDatabase("fresh",async (url) => {
     const releaseSha = "a".repeat(40);
     await assert.rejects(activateDurableEpistemicImpact({tenantId,graphVersionId:staged.graphVersionId,releaseSha}),
       /No fresh protocol-2 epistemic worker/);
-    await client.query(`INSERT INTO finnor_os.service_release_heartbeats
-      (service,instance_id,release_sha,build_id,version,release_source,migration_head,capabilities,environment)
-      VALUES('worker','scope5-smoke',$1,'scope5-smoke','scope5-smoke','certification','0140_scope5_epistemic_impact.sql',ARRAY['epistemic-v2'],'test')`,[releaseSha]);
-    await activateDurableEpistemicImpact({tenantId,graphVersionId:staged.graphVersionId,releaseSha});
+    await activateWithWorkerHeartbeat(client,{tenantId,graphVersionId:staged.graphVersionId,releaseSha});
     const postActivationPinGuard = (await client.query<{reasons:string[]}>(
       "SELECT finnor_os.epistemic_execution_block_reasons($1,$2,$3,true) reasons",[tenantId,planId,"high-risk-node"])).rows[0]!.reasons;
     assert(postActivationPinGuard.includes("EPISTEMIC_PIN_STALE"));
@@ -776,7 +801,7 @@ await withDatabase("fresh",async (url) => {
     const refreshOracle = await compareDurableShadowWithOracle(tenantId);
     assert.equal(refreshOracle.equivalent,true);
     assert.equal(refreshOracle.checked,refreshed.propositionCount);
-    await activateDurableEpistemicImpact({tenantId,graphVersionId:refreshed.graphVersionId,releaseSha});
+    await activateWithWorkerHeartbeat(client,{tenantId,graphVersionId:refreshed.graphVersionId,releaseSha});
     const reactivated = (await client.query("SELECT mode,graph_structure_epoch,staged_structure_epoch FROM finnor_os.epistemic_runtime_controls WHERE tenant_id=$1",[tenantId])).rows[0];
     assert.equal(reactivated.mode,"active");
     assert.equal(reactivated.graph_structure_epoch,reactivated.staged_structure_epoch);

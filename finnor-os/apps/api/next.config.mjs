@@ -47,10 +47,10 @@ const nextConfig = {
   serverExternalPackages: ["pg", "ioredis", "groq-sdk", "pdf-parse", "pino", "thread-stream", "pino-pretty", "@axiomhq/pino", "tsx", "esbuild", "fs-ext", "@finnor/source-custody"],
   // The separately compiled S6 runtime uses Node ESM .js specifiers. Resolve
   // those same imports to original TS when bundling the ordinary API client.
-  experimental: { extensionAlias: { ".js": [".ts", ".tsx", ".js"] },
+  experimental: { cpus: 2, extensionAlias: { ".js": [".ts", ".tsx", ".js"] },
     ...(process.env.FINNOR_Z2_BUILD_GRAPH === "1" ? { cpus: 1, webpackMemoryOptimizations: true } : {}),
   },
-  webpack: (config, { webpack, isServer, nextRuntime }) => {
+  webpack: (config, { webpack, isServer, nextRuntime, dev }) => {
     // Native numerical workers read and hash their original files. Webpack's
     // asset URL wrapper is not a Node file URL and cannot replace that binding.
     config.module.parser = {
@@ -67,7 +67,8 @@ const nextConfig = {
       config.node = { ...config.node, __filename: false, __dirname: false };
       // API release builds use an isolated context once. Avoid writing a large
       // disposable disk cache alongside the immutable function artifacts.
-      config.cache = { type: "memory" };
+      // Development retains Next's bounded cache across repeated compilations.
+      if (!dev) config.cache = { type: "memory" };
       // These four imports deliberately load retained, hashed TS producer
       // files. A webpack expression-context module cannot represent file URLs.
       config.module.rules.push({
@@ -115,6 +116,9 @@ const nextConfig = {
       "../../packages/private-equity/src/primary-diligence/checker-spec.md",
       "../../packages/private-equity/src/bilateral-opportunities/checker-spec.md",
       "../../packages/**/*.m", "../../packages/**/*.py", "../../packages/**/*.sql",
+      "../../packages/epistemic-runtime/src/uniform-algorithms/*.lean",
+      "../../packages/epistemic-runtime/src/uniform-algorithms/*.sb",
+      "../../packages/epistemic-runtime/src/uniform-algorithms/total/*.lean",
       "../../packages/**/*.mjs", "../../packages/**/*.cjs",
       "../../packages/private-equity/src/capital-formation/method-files.json",
       "../../packages/private-equity/src/economic-action-theory/profile.json",
@@ -136,6 +140,7 @@ const nextConfig = {
       "../../../src/components/centropy/canvas/*.ts", "../../../src/components/centropy/canvas/*.tsx",
       "../../../src/lib/centropy/capability-manifest.generated.json",
       "../../scripts/x3/stamp-source.mts", "../../scripts/x5/stamp-source.mts", "../../scripts/x4/stamp-source.mts",
+      "../../scripts/postx/y5/*.{mts,mjs,py,json}",
       "../../Dockerfile.worker", "./next.config.mjs",
       // Z4 installed verification binds both source and native runtime, never build-host fallback.
       "../../../package.json", "../../package.json",

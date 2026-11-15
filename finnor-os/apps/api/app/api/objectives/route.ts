@@ -2,7 +2,7 @@ import { StartObjectiveSchema } from "@finnor/policy-schema";
 import { errorResponse, requireContext } from "../../../lib/auth";
 import { getOrchestrator } from "../../../lib/orchestrator";
 import { requireWorkerFleetReady } from "../../../lib/worker-readiness";
-import { receiveWork, recordWorkResponse, transitionWork } from "@finnor/db";
+import { receiveWork, recordWorkResponse, transitionWork, WorkControlAuthorizationError } from "@finnor/db";
 import { ensureObjectiveIterationDelivery, linkEmployeeConversationTurnToWork, OperatingInteractionContextError, parseObjectiveSuccessCondition, persistEmployeeAssistantTurn, prepareEmployeeConversationTurn, resolveOperatingInteractionContext } from "@finnor/orchestration";
 import { randomUUID } from "node:crypto";
 
@@ -115,6 +115,7 @@ export async function POST(req: Request): Promise<Response> {
       instructionId,
       workId: parsed.data.workId,
       userId: ctx.employeeId ?? ctx.userId,
+      requireCurrentEmployeeOwner: Boolean(parsed.data.workId),
       idempotencyKey: parsed.data.idempotencyKey,
       // Tenant ownership is established by resolveOperatingInteractionContext
       // after this claim; the initial Work row must not store unverified refs.
@@ -278,6 +279,7 @@ export async function POST(req: Request): Promise<Response> {
     }
     return Response.json(objectiveResponse, { status: objectiveResponse.objective.duplicate ? 200 : 202 });
   } catch (error) {
+    if (error instanceof WorkControlAuthorizationError) return Response.json({ error: "Work not found" }, { status: 404, headers: { "Cache-Control": "no-store" } });
     return errorResponse(error);
   }
 }

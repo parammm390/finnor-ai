@@ -39,7 +39,8 @@ try {
   // never implement a second approximation of its partition algorithm.
   const program = `
     import { createVitest } from './node_modules/vitest/dist/node.js';
-    const context = await createVitest('test', { root: process.cwd(), watch: false, exclude: [${JSON.stringify(excluded)}] });
+    import { configDefaults } from './node_modules/vitest/dist/config.js';
+    const context = await createVitest('test', { root: process.cwd(), watch: false, exclude: [...configDefaults.exclude, ${JSON.stringify(excluded)}] });
     try {
       const specs = await context.globTestSpecifications();
       const Sequencer = context.config.sequence.sequencer;

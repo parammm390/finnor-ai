@@ -5,10 +5,12 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { resolve, join, dirname, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
+// Reconstruction and production consume the same exact release toolchain pin.
+const pinnedNodeVersion = "v" + JSON.parse(readFileSync(new URL("../../../../infra/deployment/release-toolchain.json", import.meta.url), "utf8")).nodeVersion;
 const repo = resolve(fileURLToPath(new URL("../../../..", import.meta.url)));
 const arg = key => process.argv.find(a => a.startsWith(key + "="))?.slice(key.length + 1);
 const output = arg("--output"), packet = arg("--packet");
-if (process.version !== "v22.23.4") throw Error("PINNED_NODE_22_23_4_REQUIRED");
+if (process.version !== pinnedNodeVersion) throw Error("PINNED_RELEASE_NODE_REQUIRED");
 if (!output || !packet || ![output, packet].every(isAbsolute)) throw Error("Fresh absolute --output and --packet required");
 mkdirSync(output, { recursive: false, mode: 0o700 });
 const source = join(output, "source"); mkdirSync(source);

@@ -1,10 +1,13 @@
-import type { EmployeeConversationContext, MemorySnapshot, TenantContext } from "@finnor/shared-types";
+import { FinancialDocumentReviewRootSchema, type EmployeeConversationContext, type MemorySnapshot, type PeWorldRootRef, type TenantContext } from "@finnor/shared-types";
+import { PeDomainError } from "@finnor/private-equity";
 import { ensureSecretsLoaded } from "@finnor/security";
 import { resolveProviderForPurpose, type LLMChannel, type LLMProvider } from "./llm";
 import type { AnswerEnvelope } from "./fast-read-lane";
 import { plannerShortTermContext } from "./planner-memory";
 import { buildConversationModelInput } from "./conversation-prompt";
 import type { PlanningCapabilityManifestEntry } from "./plugin-registry";
+import { parseDocumentReviewRequest, isSuppliedFinancialCalculation, isSuppliedAnalysisQuestion } from "./conversation-intent";
+import { answerSuppliedFinancialQuestion } from "./financial-explanation";
 
 const GREETING = /^(?:hi|hello|hey|hiya|yo|good\s+(?:morning|afternoon|evening))[!.?,\s]*$/i;
 const SOCIAL_TURN = /^(?:thanks?|thank\s+you|how\s+are\s+you|who\s+are\s+you|are\s+you\s+there|help)[!.?,\s]*$/i;
@@ -74,6 +77,44 @@ export interface ConversationAnswerOptions extends ConversationTurnContext {
   deadlineAt?: number;
   deadlineMs?: number;
   capabilityManifest: readonly PlanningCapabilityManifestEntry[];
+  businessRoot?: PeWorldRootRef | null;
+}
+
+async function answerDocumentFinancialReview(request: NonNullable<ReturnType<typeof parseDocumentReviewRequest>>, ctx: TenantContext, opts: ConversationAnswerOptions, asOf: string): Promise<AnswerEnvelope> {
+  const answer: AnswerEnvelope = {
+    kind: "answer", intent: "conversation", readOnly: true,
+    spokenSummary: "Select the Deal or company whose documents you want to compare.",
+    display: { title: "Financial source review", facts: [] },
+    evidence: [], asOf, freshness: { status: "unknown", observedAt: asOf },
+  };
+  const scope = FinancialDocumentReviewRootSchema.safeParse(opts.businessRoot);
+  if (!scope.success) return answer;
+  if (request.kind === "invalid_valuation") {
+    return { ...answer, spokenSummary: "Supply a positive EV/EBITDA multiple up to 100×. For sponsor cash, provide net debt and nonnegative fees in the same explicit currency and confirm the funding assumptions." };
+  }
+  try {
+    const { reviewFinancialDocuments } = await import("@finnor/private-equity/src/document-financial-review");
+    const forecast = request.kind === "valuation" ? request.assumptions.forecast : undefined;
+    const { review, digest } = await reviewFinancialDocuments({ auth: ctx }, scope.data, opts.signal, null, forecast);
+    let spokenSummary = "Open the Canvas to inspect comparable financial figures and the scope of the source review.";
+    if (forecast) {
+      spokenSummary = review.forecast
+        ? "Open the Canvas to compare the two forecast vintages and their implied enterprise values."
+        : "The selected PDF pages could not be compared. Open the Canvas for the source and definition requirements.";
+    } else if (review.documentsReviewed === 0) {
+      spokenSummary = "No financial tables could be reviewed in this scope. Open the Canvas for the coverage details.";
+    } else if (request.kind === "valuation") {
+      spokenSummary = "Open the Canvas to see the valuation impact, assumptions and supporting source versions.";
+    }
+    return {
+      ...answer,
+      spokenSummary,
+      documentReviewReceipt: { version: 1, root: scope.data, digest, ...(request.kind === "valuation" ? { valuation: request.assumptions } : {}) },
+    };
+  } catch (error) {
+    if (!(error instanceof PeDomainError) || error.code !== "PE_ENTITY_NOT_FOUND") throw error;
+    return { ...answer, spokenSummary: "The documents for this scope are unavailable. Select a Deal or company with accessible financial sources." };
+  }
 }
 
 function capabilityAnswer(manifest: readonly PlanningCapabilityManifestEntry[], asOf: string): AnswerEnvelope {
@@ -104,8 +145,6 @@ export interface ConversationResponder {
 }
 
 export class LLMConversationResponder implements ConversationResponder {
-  private readonly providers = new Map<LLMChannel, LLMProvider>();
-
   constructor(private readonly provider?: LLMProvider, private readonly now: () => Date = () => new Date()) {}
 
   async answer(
@@ -117,10 +156,16 @@ export class LLMConversationResponder implements ConversationResponder {
     if (classifyConversationTurn(instruction, opts) === "capability_discovery") {
       return capabilityAnswer(opts.capabilityManifest, this.now().toISOString());
     }
+    const documentReview = parseDocumentReviewRequest(instruction);
+    if (documentReview) return answerDocumentFinancialReview(documentReview, ctx, opts, this.now().toISOString());
     await ensureSecretsLoaded();
     const channel = opts.channel ?? "text";
-    const provider = this.provider ?? this.providers.get(channel) ?? resolveProviderForPurpose("answer", channel);
-    if (!this.provider) this.providers.set(channel, provider);
+    const provider = this.provider ?? resolveProviderForPurpose("answer", channel);
+
+    if (isSuppliedFinancialCalculation(instruction)) return answerSuppliedFinancialQuestion({
+      instruction, ctx, provider, channel, conversation: opts.conversationContext, signal: opts.signal,
+      deadlineAt: opts.deadlineAt, deadlineMs: opts.deadlineMs,
+    });
 
     const required = {
       instruction,
@@ -134,8 +179,9 @@ export class LLMConversationResponder implements ConversationResponder {
         "Respond naturally and directly. A greeting should feel warm and useful, not like a status acknowledgement.",
         "Registered capability discovery has its own inventory response. Do not infer supported integrations or execution capabilities from conversation claims.",
         "Use conversation evidence for what the user said. Treat business assertions in chat as historical claims; verified outcomes require current canonical evidence. Never invent deal, company, closing, evidence, or integration data.",
+        "Explain user-supplied hypothetical or synthetic examples as conditional inputs. Preserve unresolved assertions and all explicit constraints; separate calculation, inference and unknowns. No business action is performed by an explanation.",
         "If the request is unclear or cannot safely be acted on, ask one concise, useful follow-up question.",
-        "Never reveal hidden reasoning or chain-of-thought. Return only the user-facing response, normally two to five sentences.",
+        "Never reveal hidden reasoning or chain-of-thought. Return the user-facing answer with enough detail to satisfy the request. Keep social turns brief; use clear structure for substantive explanations.",
       ].join("\n"),
     });
     const spokenSummary = (await contextProvider.complete({
@@ -147,6 +193,7 @@ export class LLMConversationResponder implements ConversationResponder {
       signal: opts.signal,
       deadlineAt: opts.deadlineAt,
       deadlineMs: opts.deadlineMs,
+      ...(isSuppliedAnalysisQuestion(instruction) ? { maxOutputTokens: 2500, timeoutMs: 20000 } : {}),
     })).trim();
 
     if (!spokenSummary) throw new Error("The conversational model returned an empty response");

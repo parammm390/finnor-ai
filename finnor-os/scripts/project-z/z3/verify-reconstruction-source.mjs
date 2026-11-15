@@ -6,6 +6,8 @@ import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
 import { join, isAbsolute } from "node:path";
 
+// Reconstruction and production consume the same exact release toolchain pin.
+const pinnedNodeVersion = "v" + JSON.parse(readFileSync(new URL("../../../../infra/deployment/release-toolchain.json", import.meta.url), "utf8")).nodeVersion;
 const arg = key => process.argv.find(a => a.startsWith(key + "="))?.slice(key.length + 1);
 const reconstruction = arg("--reconstruction"), output = arg("--output"), original = arg("--original-repository");
 if (![reconstruction, output].every(p => p && isAbsolute(p)) || original && !isAbsolute(original)) {
@@ -49,7 +51,7 @@ function apply(before, patch, reverse = false) {
 }
 
 try {
-  need(process.version === "v22.23.4", "PINNED_NODE_22_23_4_REQUIRED");
+  need(process.version === pinnedNodeVersion, "PINNED_RELEASE_NODE_REQUIRED");
   const manifestBody = read(join(reconstruction, "manifest.json"));
   manifest = JSON.parse(manifestBody);
   need(manifest.schema === "finnor.z3.reconstruction-source.v3", "SOURCE_SCHEMA_CHANGED");

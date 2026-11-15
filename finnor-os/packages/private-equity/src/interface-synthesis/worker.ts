@@ -26,7 +26,7 @@ export async function runInterfaceAcquisitionJob(payload:Record<string,unknown>,
   if(process.env.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('P5_ORDINARY_RUNTIME_REQUIRED');
   const {grant}=await assertCurrent(ctx,row);
   leases=await acquireComputeResourceLeases({tenantId:row.tenant_id,resourceKeys:['native:p5'],requiredResourceKeys:['native:p5'],workloadClass:'INTERACTIVE',ownerId:'p5:'+execution.deliveryAttemptId});
-  execution.registerHeartbeat(async()=>released||await renewComputeResourceLeases(leases));
+  execution.registerHeartbeat(async()=>released||await renewComputeResourceLeases(leases), { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
   const prior=await attemptRow(ctx,row);
   if(prior?.possible_egress){
    await tx(ctx,async c=>{await c.query("UPDATE finnor_os.p5_acquisitions SET status='UNKNOWN',reason='P5_POSSIBLE_EGRESS_READ_ONLY_RECOVERY_REQUIRED' WHERE tenant_id=$1 AND principal_id=$2 AND id=$3",[row.tenant_id,row.principal_id,row.id]);await append(ctx,row,'REDELIVERY_RECONCILIATION_REQUIRED',{originalAttempt:prior.body,mutationReplay:false},c);});

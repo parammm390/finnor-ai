@@ -19,9 +19,11 @@ import { findRuntimeOperatorControlTx, recordRuntimeOperatorControlTx, runtimeOp
 
 // Overridable (FINNOR_STEP_LEASE_SECONDS) so the chaos-test script can prove real
 // lease-expiry recovery in seconds rather than waiting out the production default.
-function leaseSeconds(): number {
+export function workflowStepLeaseSeconds(): number {
   const override = process.env.FINNOR_STEP_LEASE_SECONDS;
-  return override ? Number(override) : 300;
+  const seconds = override ? Number(override) : 300;
+  if (!Number.isFinite(seconds) || seconds <= 0) throw new Error("Workflow step lease lifetime must be positive and finite");
+  return seconds;
 }
 
 export type WorkflowStepRow = typeof workflowSteps.$inferSelect;
@@ -426,7 +428,7 @@ export async function heartbeatStepClaim(tenantId: string, stepId: string, fence
   const heartbeatAt = new Date();
   return withTenant(tenantId, async (db) => {
     const [owned] = await db.update(workflowSteps).set({
-      leaseExpiresAt: new Date(heartbeatAt.getTime() + leaseSeconds() * 1_000),
+      leaseExpiresAt: new Date(heartbeatAt.getTime() + workflowStepLeaseSeconds() * 1_000),
       leaseHeartbeatAt: heartbeatAt,
       updatedAt: heartbeatAt,
     }).where(and(
@@ -504,7 +506,7 @@ export async function claimStep(
         claimToken: token,
         claimFence: sql`${workflowSteps.claimFence} + 1`,
         claimOwner: effectiveContext?.workerId ?? "legacy-runtime",
-        leaseExpiresAt: new Date(eligibleAt.getTime() + leaseSeconds() * 1000),
+        leaseExpiresAt: new Date(eligibleAt.getTime() + workflowStepLeaseSeconds() * 1000),
         leaseHeartbeatAt: eligibleAt,
         attempts: sql`${workflowSteps.attempts} + 1`,
         updatedAt: eligibleAt,

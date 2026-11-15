@@ -62,7 +62,7 @@ export async function runDecisionAtlasJob(payload:Record<string,unknown>,executi
         ['RUNNING','COMPLETE','INCOMPLETE'].includes(q.status)&&Boolean(await claim(c,false));
     });
   };
-  execution.registerHeartbeat(async()=>{try{return await current();}catch{return false;}});
+  execution.registerHeartbeat(async()=>{try{return await current();}catch{return false;}}, { leaseSeconds: 90 });
   const checkpoint=async()=>{if(!await current())throw new R7Error('STALE_INPUT','Original claim/generation/episode deadline fenced');};
   try{
     await checkpoint();await assertR7Owner(ctx,family);

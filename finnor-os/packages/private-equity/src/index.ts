@@ -14,6 +14,7 @@ export * from "./underwriting-telemetry";
 export * from "./ic-types";
 export * from "./ic-aggregation";
 export * from "./ic-repository";
+export { canReadGeneratedCommitteeMemo } from "./ic-memo-access";
 export * from "./ic-telemetry";
 export * from "./company-brain-types";
 export * from "./company-brain-relationships";
@@ -74,3 +75,4 @@ export type {ContinuationPatch,ContinuationRef} from './live-recompilation/contr
 export {PROCEDURE_OPERATIONS,PROCEDURE_OPERATION_SCHEMAS,submitProcedureInduction,handleProcedureOperation} from './procedure-induction/api';
 export type {ProcedureCapsule,EpisodeCut} from './procedure-induction/contracts';
 export * from "./r6/verified-capital-compiler";
+export * from "./financial-explanation";

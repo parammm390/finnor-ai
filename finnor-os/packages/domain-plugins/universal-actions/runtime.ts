@@ -31,7 +31,7 @@ import {
 import type { ToolRegistry } from "@finnor/tools";
 import { and, eq, sql } from "drizzle-orm";
 import { expandInternalRecipients, resolveCommunicationTargets } from "./endpoint-resolver";
-import { completeDelegation, transitionDelegation } from "./delegation-state";
+import { completeTaskDelegationTx, lockDelegationTransitionsTx, transitionDelegation } from "./delegation-state";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const INTERNAL_PARTIES = new Set<PartyRef["partyType"]>(["employee", "team", "location"]);
@@ -670,6 +670,7 @@ async function executeUpdateTask(payload: Record<string, unknown>, tools: ToolRe
   const scope = requireScope(tools);
   const taskId = String(object(payload.taskRef).taskId);
   const row = await withTenant(scope.tenantId, async (db) => {
+    await lockDelegationTransitionsTx(db, scope.tenantId);
     await db.execute(sql`SELECT id FROM ${tasks} WHERE ${tasks.tenantId}=${scope.tenantId} AND ${tasks.id}=${taskId}::uuid FOR UPDATE`);
     const [existing] = await db.select().from(tasks).where(and(eq(tasks.tenantId, scope.tenantId), eq(tasks.id, taskId))).limit(1);
     if (!existing) throw new Error("Task not found");
@@ -681,12 +682,9 @@ async function executeUpdateTask(payload: Record<string, unknown>, tools: ToolRe
       updatedAt: new Date(),
     }).where(and(eq(tasks.tenantId, scope.tenantId), eq(tasks.id, taskId))).returning();
     await db.insert(businessEvents).values({ tenantId: scope.tenantId, entityType: "task", entityId: taskId, eventType: "task_updated", payload: { domainActionId: scope.domainActionId, status: updated!.status }, source: "universal_action" });
+    if (updated!.status === "done") await completeTaskDelegationTx(db, { tenantId: scope.tenantId, taskId, actorId: scope.actorId });
     return updated!;
   });
-  if (row.status === "done") {
-    const [linked] = await withTenant(scope.tenantId, (db) => db.select({ id: delegations.id, status: delegations.status }).from(delegations).where(and(eq(delegations.tenantId, scope.tenantId), eq(delegations.taskId, row.id))).limit(1));
-    if (linked?.status === "accepted") await completeDelegation({ tenantId: scope.tenantId, delegationId: linked.id, actorId: scope.actorId, evidence: { taskId: row.id } });
-  }
   await appendUniversalEvent({ scope, actionType: "update_task", eventType: "task_updated", route: "native", subject: { type: "task", id: row.id }, evidence: { taskId: row.id, status: row.status, priority: row.priority } });
   return { status: "success" as const, output: { taskRef: { taskId: row.id }, status: row.status, priority: row.priority, dueAt: row.dueAt?.toISOString() ?? null, route: decideUniversalActionRoute({ actionType: "update_task" }) }, expected: { updated: true } };
 }

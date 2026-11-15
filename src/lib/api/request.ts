@@ -52,3 +52,42 @@ export function escapeHtml(value: string) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;")
 }
+
+export async function readTextBody(request: Request, maxBytes: number): Promise<string> {
+  return (await readBoundedBody(request, maxBytes)).text()
+}
+
+async function readBoundedBody(request: Request, maxBytes: number): Promise<Response> {
+  const contentLength = Number(request.headers.get("content-length") || 0)
+  if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+    throw new ApiRequestError("Request body is too large.", 413)
+  }
+
+  const chunks: Uint8Array[] = []
+  let size = 0
+  const reader = request.body?.getReader()
+  if (reader) {
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        size += value.byteLength
+        if (size > maxBytes) {
+          void reader.cancel().catch(() => {})
+          throw new ApiRequestError("Request body is too large.", 413)
+        }
+        chunks.push(value)
+      }
+    } finally {
+      reader.releaseLock()
+    }
+  }
+
+  const body = new Uint8Array(size)
+  let offset = 0
+  for (const chunk of chunks) {
+    body.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return new Response(body, { headers: { "content-type": request.headers.get("content-type") || "" } })
+}

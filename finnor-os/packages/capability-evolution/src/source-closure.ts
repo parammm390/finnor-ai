@@ -1,5 +1,6 @@
 /** Minimum audited loaded-source closure. Not a production image attestation. */
-import { readFile } from 'node:fs/promises';
+import { readFile,open } from 'node:fs/promises';
+import {constants} from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { byteDigest, fault, type CapabilityRevisionBody } from './contracts';
@@ -80,4 +81,71 @@ export async function assertConfidentialSourceClosure(pins:Array<{path:string;sh
  const expected=await confidentialLoaded;
  if(pins.length>256||expected.length>256||expected.some(e=>!pins.some(p=>p.path===e.path&&p.sha256===e.sha256)))
   fault('S8_CONFIDENTIAL_SOURCE_CLOSURE_MISSING_OR_CHANGED',503);
+}
+export const TOTAL_UNIFORM_SOURCE_LIMITS={maxPins:4096,maxPinsBytes:1048576,maxFileBytes:16777216,maxTotalBytes:67108864} as const;
+export function assertTotalUniformPinBounds(pins:Array<{path:string;sha256:string}>){
+ if(!pins.length||pins.length>TOTAL_UNIFORM_SOURCE_LIMITS.maxPins||
+  Buffer.byteLength(JSON.stringify(pins))>TOTAL_UNIFORM_SOURCE_LIMITS.maxPinsBytes||
+  new Set(pins.map(p=>p.path)).size!==pins.length)
+  fault('S8_TOTAL_UNIFORM_SOURCE_PIN_BOUND_OR_DUPLICATE',413);
+}
+export async function uniformAlgorithmSourcePaths(profile:'V1'|'TOTAL_V2'='V1'){
+ const {UNIFORM_SOURCE_PATHS}=await import('../../private-equity/src/uniform-algorithms/source-paths');
+ const total=profile==='TOTAL_V2'?[
+  '../../private-equity/src/allocation-total-task.ts',
+  ...['total-contracts.ts','total-owner.ts','total-service.ts','total-consumer.ts','total-worker.ts','total-admission.ts',
+   'specification.ts'].map(p=>'../../private-equity/src/uniform-algorithms/'+p),
+  '../../shared-types/src/total-algorithm-theory.ts',
+  ...['index.ts','capsule.ts','syntax.ts','search.ts','proof.ts','model-asset.ts','model-pin.generated.ts','Total.lean']
+   .map(p=>'../../epistemic-runtime/src/uniform-algorithms/total/'+p),
+ ].map(p=>fileURLToPath(new URL(p,import.meta.url))):[];
+ return [...new Set([...requiredCapabilitySourcePaths,...UNIFORM_SOURCE_PATHS.map(p=>fileURLToPath(new URL('../../../../'+p,import.meta.url))),...total,
+  fileURLToPath(new URL('./uniform-algorithm-port.ts',import.meta.url)),fileURLToPath(new URL('./uniform-algorithm-consumer.ts',import.meta.url)),
+  fileURLToPath(new URL('../../private-equity/src/uniform-algorithms/source-manifest.generated.ts',import.meta.url))])];
+}
+let uniformLoaded:Promise<Array<{path:string;sha256:string}>>|undefined;
+let totalUniformLoaded:Promise<Array<{path:string;sha256:string}>>|undefined;
+async function readTotalUniformClosure(){
+ const paths=await uniformAlgorithmSourcePaths('TOTAL_V2');
+ if(paths.length>TOTAL_UNIFORM_SOURCE_LIMITS.maxPins)fault('S8_TOTAL_UNIFORM_SOURCE_COUNT_BOUND',413);
+ const pins:Array<{path:string;sha256:string}>=[];let bytes=0;
+ for(let offset=0;offset<paths.length;offset+=8){
+  const batch=await Promise.allSettled(paths.slice(offset,offset+8).map(async path=>{
+   const fd=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW|constants.O_NONBLOCK);
+   try{
+    const before=await fd.stat();
+    if(!before.isFile()||before.size>TOTAL_UNIFORM_SOURCE_LIMITS.maxFileBytes)fault('S8_TOTAL_UNIFORM_SOURCE_FILE_BOUND',413);
+    bytes+=before.size;
+    if(bytes>TOTAL_UNIFORM_SOURCE_LIMITS.maxTotalBytes)fault('S8_TOTAL_UNIFORM_SOURCE_TOTAL_BYTE_BOUND',413);
+    const buffer=Buffer.alloc(before.size+1);let used=0;
+    while(used<buffer.length){
+     const {bytesRead}=await fd.read(buffer,used,buffer.length-used,null);
+     if(!bytesRead)break;used+=bytesRead;
+    }
+    const raw=buffer.subarray(0,used),after=await fd.stat();
+    if(raw.length!==before.size||after.size!==before.size||after.mtimeMs!==before.mtimeMs)fault('S8_TOTAL_UNIFORM_SOURCE_CHANGED_DURING_READ');
+    return {path,sha256:byteDigest(raw),bytes:raw.length};
+   }finally{await fd.close();}
+  }));
+  for(const result of batch){
+   if(result.status==='rejected')throw result.reason;
+   pins.push({path:result.value.path,sha256:result.value.sha256});
+  }
+ }
+ assertTotalUniformPinBounds(pins);return pins;
+}
+export async function assertUniformAlgorithmSourceClosure(pins:Array<{path:string;sha256:string}>,profile:'V1'|'TOTAL_V2'='V1'){
+ if(profile==='TOTAL_V2'){
+  assertTotalUniformPinBounds(pins);totalUniformLoaded??=readTotalUniformClosure();void totalUniformLoaded.catch(()=>undefined);
+  const [loaded,current]=await Promise.all([totalUniformLoaded,readTotalUniformClosure()]);
+  const supplied=new Map(pins.map(p=>[p.path,p.sha256])),now=new Map(current.map(p=>[p.path,p.sha256]));
+  if(loaded.length!==pins.length||loaded.length!==current.length||
+   loaded.some(p=>supplied.get(p.path)!==p.sha256||now.get(p.path)!==p.sha256))
+   fault('S8_TOTAL_UNIFORM_COMPLETE_SOURCE_CLOSURE_MISSING_OR_CHANGED',503);
+  return;
+ }
+ await assertCapabilitySourceClosure(pins);
+ uniformLoaded??=uniformAlgorithmSourcePaths().then(paths=>Promise.all(paths.map(async path=>({path,sha256:byteDigest(await readFile(path))}))));
+ const expected=await uniformLoaded;
+ if(pins.length>256||expected.length>256||expected.some(e=>!pins.some(p=>p.path===e.path&&p.sha256===e.sha256)))fault('S8_UNIFORM_ALGORITHM_SOURCE_CLOSURE_MISSING_OR_CHANGED',503);
 }

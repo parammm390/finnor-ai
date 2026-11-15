@@ -21,6 +21,7 @@ import {
   foreignKey,
   check,
   bigint,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { PE_WORLD_ROOT_TYPES, type PeWorldRootType } from "@finnor/shared-types";
@@ -235,7 +236,7 @@ export const users = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
     email: text("email").notNull().unique(),
-    role: text("role", { enum: ["owner", "dispatcher", "technician"] }).notNull(),
+    role: text("role", { enum: ["owner", "participant", "dispatcher", "technician"] }).notNull(),
     displayName: text("display_name"),
     phoneNumber: text("phone_number"),
     status: text("status", { enum: ["active", "suspended"] }).notNull().default("active"),
@@ -642,6 +643,7 @@ export const oauthConnectionRequests = pgTable(
     pkceChallenge: text("pkce_challenge").notNull(),
     redirectUri: text("redirect_uri").notNull(),
     requestedScopes: text("requested_scopes").array().notNull(),
+    connectionRevision: integer("connection_revision"),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     consumedAt: timestamp("consumed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -1017,11 +1019,12 @@ export const workInputResponses = pgTable(
   {
     tenantId: uuid("tenant_id").notNull(),
     workInputId: uuid("work_input_id").notNull(),
+    replyKey: text("reply_key").notNull().default("input"),
     response: jsonb("response").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    primaryKey({ columns: [t.tenantId, t.workInputId] }),
+    primaryKey({ columns: [t.tenantId, t.workInputId, t.replyKey] }),
     foreignKey({ columns: [t.tenantId, t.workInputId], foreignColumns: [workInputs.tenantId, workInputs.id] }),
   ],
 );
@@ -1096,6 +1099,8 @@ export const workQueryExecutions = pgTable(
     tenantId: uuid("tenant_id").notNull().references(() => tenants.id),
     workId: uuid("work_id").notNull().references(() => works.id),
     workInputId: uuid("work_input_id").references(() => workInputs.id),
+    objectiveStepId: uuid("objective_step_id"),
+    objectiveClaimOwner: text("objective_claim_owner"),
     intent: text("intent", {
       enum: [
         "customer_lookup",
@@ -1125,6 +1130,8 @@ export const workQueryExecutions = pgTable(
         "economic_programme_v1",
         "confidential_economic_computation_v1",
         "execution_proof_capsule_v1",
+        "company_revenue",
+        "stock_quote",
       ],
     }).notNull(),
     request: jsonb("request").notNull().default({}),
@@ -1142,6 +1149,9 @@ export const workQueryExecutions = pgTable(
     index("work_query_executions_tenant_work_started_idx").on(t.tenantId, t.workId, t.startedAt),
     index("work_query_executions_tenant_status_started_idx").on(t.tenantId, t.status, t.startedAt),
     index("work_query_executions_tenant_input_idx").on(t.tenantId, t.workInputId),
+    unique("work_query_executions_objective_step_key").on(t.tenantId, t.objectiveStepId),
+    foreignKey({ columns: [t.tenantId, t.objectiveStepId], foreignColumns: [workObjectiveSteps.tenantId, workObjectiveSteps.id],
+      name: "work_query_executions_objective_step_fkey" }),
   ],
 );
 
@@ -1911,7 +1921,7 @@ export const workObjectiveSteps = pgTable(
     decision: jsonb("decision"),
     decisionReason: text("decision_reason"),
     authorityDecisionId: uuid("authority_decision_id").references(() => authorityDecisions.id),
-    queryExecutionId: uuid("query_execution_id").references(() => workQueryExecutions.id),
+    queryExecutionId: uuid("query_execution_id").references((): AnyPgColumn => workQueryExecutions.id),
     domainActionId: uuid("domain_action_id").references(() => domainActions.id),
     planRevisionId: uuid("plan_revision_id").references(() => workPlanRevisions.id),
     planNodeId: text("plan_node_id"),

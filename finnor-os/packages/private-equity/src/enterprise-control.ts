@@ -12,7 +12,7 @@ import type { InterventionModel, ContingentPolicy, ContingentChoiceHandoff, Cont
 import { assertContingentPolicy, AllocationContractError, ControlContractError, createInterventionControlAdapter, controlInstrumentSupports, controlSourcesCurrent, decideContingentPolicy, epistemicHash,
  ExperimentRefSchema, immutableControl, interventionSpecificationRef, parseControlDecision, parseControlProblem, parseEconomicMandate, prepareS4Experience, restoreInterventionControlAdapter, synthesizeContingentControl, checkPolicyAllocation, type InterventionControlSnapshot } from '@finnor/epistemic-runtime';
 import { readEnterpriseInterventionMetadataForObservation, resolveEnterpriseInterventionModelForControl } from './enterprise-interventions';
-import { loadEnterpriseBeliefView, validateBeliefViewPin } from './enterprise-beliefs';
+import { loadEnterpriseBeliefView, validateBeliefViewPin, assertEnterpriseBeliefViewPinSourceVisibility } from './enterprise-beliefs';
 import { validateEnterpriseExperiment, projectEnterpriseExperiment, projectEnterpriseControlObservation } from './enterprise-experiments';
 import { PeDomainError, type PeMutationContext, type PeWorldRootRef } from './types';
 import {enqueueNativeReferences,enqueueNativePreparedEvents,enqueueNativeMandate,nativeRecordReference,nativeReference,nativeOwnerTransportConfigured} from './native-experience-transport';
@@ -27,6 +27,7 @@ import type {CoalitionSelection} from '@finnor/shared-types/src/coalition-progra
 import {R5_VERSION} from '@finnor/shared-types/src/coalition-programme';
 import {coalitionCheckerIdentity} from './capital-program/r2-native';
 import {assertR5SelectionCurrent} from './capital-program/r5-owners';
+import {sharedWithinResolution} from './resolution-memo';
 
 const actor=(ctx:PeMutationContext)=>ctx.auth.employeeId??ctx.auth.userId;
 /** S4-owned finite sourcing policy. The score is registered mandate coverage per
@@ -114,8 +115,22 @@ async function readPolicy(ctx:PeMutationContext,value:unknown):Promise<Contingen
   try{if(!(await file.stat()).isFile()||(await file.stat()).size>8*1024*1024)throw unavailable();const data:unknown=JSON.parse(await file.readFile('utf8'));assertContingentPolicy(data);policy=data;}finally{await file.close();}
   if(policy.tenantId!==ctx.auth.tenantId||policy.principalId!==actor(ctx)||epistemicHash(policy.ref)!==epistemicHash(parsed.data))throw unavailable();return policy;
  }catch{throw unavailable();}}
-async function readable(ctx:PeMutationContext,policy:ContingentPolicy):Promise<void>{for(const pin of policy.bindings.beliefPins)await loadEnterpriseBeliefView(ctx,{root:pin.root as PeWorldRootRef});await recoverPolicyExperience(ctx,policy);}
-async function current(ctx:PeMutationContext,policy:ContingentPolicy):Promise<string|null>{
+async function readable(ctx:PeMutationContext,policy:ContingentPolicy,client?:PoolClient):Promise<void>{for(const pin of policy.bindings.beliefPins)await loadEnterpriseBeliefView(ctx,{root:pin.root as PeWorldRootRef},{client});await recoverPolicyExperience(ctx,policy);}
+function currentReadBatch(ctx:PeMutationContext,client?:PoolClient){
+ const methods=new Map<string,ReturnType<typeof controlSourcesCurrent>>();
+ const pins=new Map<string,ReturnType<typeof validateBeliefViewPin>>();
+ const models=new Map<string,ReturnType<typeof resolveEnterpriseInterventionModelForControl>>();
+ const once=<T>(cache:Map<string,Promise<T>>,value:unknown,read:()=>Promise<T>):Promise<T>=>{
+  const key=epistemicHash(value),existing=cache.get(key);if(existing)return existing;
+  const pending=read();cache.set(key,pending);return pending;
+ };
+ return {
+  method:(digests:Parameters<typeof controlSourcesCurrent>[0])=>once(methods,digests,()=>controlSourcesCurrent(digests)),
+  pin:(pin:Parameters<typeof validateBeliefViewPin>[1])=>once(pins,pin,()=>validateBeliefViewPin(ctx,pin,client)),
+  model:(ref:ExperimentRef)=>once(models,ref,()=>resolveEnterpriseInterventionModelForControl(ctx,ref)),
+ };
+}
+async function current(ctx:PeMutationContext,policy:ContingentPolicy,client?:PoolClient,reads=currentReadBatch(ctx,client)):Promise<string|null>{
  if(policy.bindings.modelRef.version==='postx-y2-strategic-response-v1'){
   try{await (await import('./strategic-response/store')).assertStrategicPolicyCurrent(ctx,policy);return null;}
   catch{return 'Y2_STRATEGIC_MODEL_POLICY_OR_ADMISSION_NOT_CURRENT';}
@@ -131,9 +146,9 @@ async function current(ctx:PeMutationContext,policy:ContingentPolicy):Promise<st
   if(policy.exactProfile.durableRunId)await (await import('./r1/api')).assertR1PolicyPublished(ctx,policy.exactProfile.durableRunId,policy.ref);
   return null;
  }catch(error){return (error as Error).message.match(/^[A-Z][A-Z0-9_]+$/)?.[0]??'R1_CURRENT_OWNER_BINDING_UNPASSED';}}
- if(Date.now()>=Date.parse(policy.validUntil))return 'POLICY_EXPIRED';if(!await controlSourcesCurrent(policy.compute.backend.sourceDigests))return 'S4_LOADED_METHOD_CHANGED';
- for(const pin of policy.bindings.beliefPins)if((await validateBeliefViewPin(ctx,pin)).status!=='CURRENT')return 'S1_SOURCE_RIGHTS_COVERAGE_OR_INTERPRETATION_CHANGED';
- try{await resolveEnterpriseInterventionModelForControl(ctx,policy.bindings.modelRef);}catch{return 'S3_MODEL_REVISED_REVOKED_OR_UNSUPPORTED';}
+ if(Date.now()>=Date.parse(policy.validUntil))return 'POLICY_EXPIRED';if(!await reads.method(policy.compute.backend.sourceDigests))return 'S4_LOADED_METHOD_CHANGED';
+ for(const pin of policy.bindings.beliefPins)if((await reads.pin(pin)).status!=='CURRENT')return 'S1_SOURCE_RIGHTS_COVERAGE_OR_INTERPRETATION_CHANGED';
+ try{await reads.model(policy.bindings.modelRef);}catch{return 'S3_MODEL_REVISED_REVOKED_OR_UNSUPPORTED';}
  return null;
 }
 /** Existing durable effects are independently read. A caller cannot hide an
@@ -221,20 +236,44 @@ export async function synthesizeEnterpriseControl(ctx:PeMutationContext,input:{m
  return {...result,experience:events};
 }
 export interface R3ControlPolicyRead {schema:'finnor.s4.r3-policy-read.v1';policyRef:ExperimentRef}
-export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:R3ControlPolicyRead):Promise<Awaited<ReturnType<typeof import('./r3/control').readR3UsePolicy>>>;
-export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown):Promise<ContingentPolicy>;
-export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown){
+export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:R3ControlPolicyRead,client?:PoolClient):Promise<Awaited<ReturnType<typeof import('./r3/control').readR3UsePolicy>>>;
+export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown,client?:PoolClient):Promise<ContingentPolicy>;
+export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown,client?:PoolClient){
  if(value&&typeof value==='object'&&'schema' in value&&value.schema==='finnor.s4.r3-policy-read.v1')
   return (await import('./r3/control')).readR3UsePolicy(ctx,ExperimentRefSchema.parse((value as R3ControlPolicyRead).policyRef));
+ return readCurrentPolicy(ctx,value,currentReadBatch(ctx,client),client);
+}
+/** One S5 owner read shares only identical immutable dependency tuples. Each
+ * subsequent call gets fresh source, rights, model and method checks. */
+export async function readEnterpriseCurrentContingentPolicies(ctx:PeMutationContext,refs:ExperimentRef[],client?:PoolClient):Promise<ContingentPolicy[]>{
+ const reads=currentReadBatch(ctx,client),policies:ContingentPolicy[]=[];
+ for(let start=0;start<refs.length;start+=4){
+  const batch=await Promise.allSettled(refs.slice(start,start+4).map(ref=>readCurrentPolicy(ctx,ref,reads,client)));
+  const failure=batch.find(result=>result.status==='rejected');if(failure?.status==='rejected')throw failure.reason;
+  for(const result of batch)if(result.status==='fulfilled')policies.push(result.value);
+ }
+ return policies;
+}
+async function readCurrentPolicy(ctx:PeMutationContext,value:unknown,reads:ReturnType<typeof currentReadBatch>,client?:PoolClient){
  const policy=await readPolicy(ctx,value);
- // Exact source resolution already authorizes and validates these same S1
- // pins. Keep that canonical current read and its durable publication fence.
- if(!policy.exactProfile)await readable(ctx,policy);
- if(await current(ctx,policy)){
-  if(policy.exactProfile)await readable(ctx,policy);
+ // The canonical current predicate authorizes the S1 pins and model itself.
+ // Do not repeat that full world read or prepared-history recovery on success.
+ const strategic=policy.bindings.modelRef.version==='postx-y2-strategic-response-v1';
+ if(strategic)await readable(ctx,policy,client);
+ if(await current(ctx,policy,client,reads)){
+  if(!strategic)await readable(ctx,policy,client);
   throw unavailable();
  }
  await recoverPolicyExperience(ctx,policy);return immutableControl(policy);
+}
+/** Historical readback authorizes the original policy's bound S1 sources only.
+ * A stale method, model or pin is a currentness result, not source withdrawal. */
+export function readEnterpriseContingentPolicySources(ctx:PeMutationContext,value:unknown):Promise<ContingentPolicy>{
+ return sharedWithinResolution(ctx,'contingent-policy-sources',value,async()=>{
+  const policy=await readPolicy(ctx,value),pins=new Map([...policy.bindings.beliefPins,...(policy.exactProfile?.beliefPins??[])].map(pin=>[epistemicHash(pin),pin]));
+  for(const pin of pins.values())await assertEnterpriseBeliefViewPinSourceVisibility(ctx,pin);
+  await recoverPolicyExperience(ctx,policy);return immutableControl(policy);
+ });
 }
 /** Narrow current S4-owned reader. A caller cannot add terms to a P2 request
  * or mistake supplied utility conversion for independently reconciled money. */

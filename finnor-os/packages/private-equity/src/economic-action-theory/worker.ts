@@ -49,7 +49,7 @@ export async function constructEconomicActionTheoryJob(raw:Record<string,unknown
   const initial=await transaction(ctx,c=>owned(c));if(!initial)return;
   leases=await acquireComputeResourceLeases({tenantId:p.tenantId,resourceKeys:['native:y1-construction'],
    requiredResourceKeys:['native:y1-construction'],workloadClass:'INTERACTIVE',ownerId:'y1:'+e.deliveryAttemptId});
-  e.registerHeartbeat(heartbeat);
+  e.registerHeartbeat(heartbeat, { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
   original=await transaction(ctx,async c=>{
    const row=await owned(c);if(!row)return undefined;
    if(row.attempts_used>=PROFILE.maxAttempts)fail('Y1_ORIGINAL_ATTEMPT_BOUND');

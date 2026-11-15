@@ -45,7 +45,9 @@
     ".next-x1-install/types/**/*.ts",
     ".next-x1-install/dev/types/**/*.ts",
     ".next-z1-install/types/**/*.ts",
-    ".next-z1-install/dev/types/**/*.ts"
+    ".next-z1-install/dev/types/**/*.ts",
+    ".next-w2-install/types/**/*.ts",
+    ".next-w2-install/dev/types/**/*.ts"
   ],
   "exclude": [
     "finnor-os",

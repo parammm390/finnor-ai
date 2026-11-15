@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/i;
-const CURRENT_MIGRATION_HEAD = "postz_zi_integrated_source_change_fences.sql";
+const CURRENT_MIGRATION_HEAD = "postz_zz_w2_participant_authority_boundary.sql";
 const CUTOVER_PROTOCOL = 5;
 
 const DILIGENCE_RECORD = Object.freeze({

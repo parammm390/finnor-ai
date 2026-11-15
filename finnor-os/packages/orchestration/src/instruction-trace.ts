@@ -5,7 +5,7 @@
 // markers are different: they are execution fences, so their write/read paths are
 // explicitly fail-closed.
 
-import { withTenant, instructionSessions, instructionEvents, receiveWork } from "@finnor/db";
+import { withTenant, instructionSessions, instructionEvents, works, users, receiveWork, transitionWorkTx, assertCurrentEmployeeWorkOwnerTx, WorkControlAuthorizationError, type Db } from "@finnor/db";
 import { and, eq, sql } from "drizzle-orm";
 import { getLogger } from "@finnor/tools";
 import { redactStructured, redactText } from "@finnor/security";
@@ -301,19 +301,7 @@ export async function emitInstructionEvent(
       // sequence number. Cancellation is a separate HTTP request and can race a
       // planning trace; locking the owning session makes the append-only ledger
       // genuinely monotonic instead of relying on the old single-writer assumption.
-      await db.execute(sql`SELECT id FROM ${instructionSessions} WHERE ${instructionSessions.id} = ${instructionId} AND ${instructionSessions.tenantId} = ${tenantId} FOR UPDATE`);
-      const [row] = await db
-        .select({ maxSeq: sql<number>`coalesce(max(${instructionEvents.seq}), 0)::int` })
-        .from(instructionEvents)
-        .where(eq(instructionEvents.instructionId, instructionId));
-      const nextSeq = (row?.maxSeq ?? 0) + 1;
-      await db.insert(instructionEvents).values({
-        tenantId,
-        instructionId,
-        seq: nextSeq,
-        phase,
-        payload,
-      });
+      await appendInstructionEventTx(db, tenantId, instructionId, phase, payload);
     });
   } catch (err) {
     getLogger().warn(
@@ -324,6 +312,66 @@ export async function emitInstructionEvent(
     );
     if (options.required) throw err;
   }
+}
+
+async function lockInstructionTx(db: Db, tenantId: string, instructionId: string) {
+  await db.execute(sql`SELECT id FROM ${instructionSessions} WHERE ${instructionSessions.id} = ${instructionId} AND ${instructionSessions.tenantId} = ${tenantId} FOR UPDATE`);
+}
+
+async function appendInstructionEventTx(db: Db, tenantId: string, instructionId: string, phase: InstructionEventPhase, payload: object) {
+  await lockInstructionTx(db, tenantId, instructionId);
+  const [row] = await db.select({ maxSeq: sql<number>`coalesce(max(${instructionEvents.seq}), 0)::int` })
+    .from(instructionEvents).where(eq(instructionEvents.instructionId, instructionId));
+  await db.insert(instructionEvents).values({ tenantId, instructionId, seq: (row?.maxSeq ?? 0) + 1, phase, payload });
+}
+
+/** The accepted answer and its public completion event share the cancellation and active-input fence. */
+export async function publishInstructionAnswer(input: {
+  tenantId: string; workId: string; workInputId: string; instructionId: string; route: string; answer: AnswerEnvelope;
+}): Promise<boolean> {
+  return withTenant(input.tenantId, async db => {
+    await lockInstructionTx(db, input.tenantId, input.instructionId);
+    const cancellations = await db.select({ payload: instructionEvents.payload }).from(instructionEvents)
+      .where(and(eq(instructionEvents.tenantId, input.tenantId), eq(instructionEvents.instructionId, input.instructionId), eq(instructionEvents.phase, "cancelled")));
+    if (cancellations.some(event => isInstructionCancellationPayload(event.payload))) return false;
+    await transitionWorkTx(db, input.tenantId, input.workId, "completed", "answer_completed", { route: input.route }, {
+      finalOutcome: { kind: "answer", route: input.route, spokenSummary: input.answer.spokenSummary, answer: input.answer },
+      expectedWorkInputId: input.workInputId,
+    });
+    await appendInstructionEventTx(db, input.tenantId, input.instructionId, "completed", createInstructionTraceAnswerEnvelope(`conversation:${input.instructionId}`, input.answer));
+    return true;
+  });
+}
+
+export async function recordInstructionCancellationFence(input: {
+  tenantId: string; instructionId: string; workId: string | null; requestedBy: string;
+}): Promise<boolean> {
+  return withTenant(input.tenantId, async db => {
+    await lockInstructionTx(db, input.tenantId, input.instructionId);
+    const [session] = await db.select({ workId: instructionSessions.workId, userId: instructionSessions.userId })
+      .from(instructionSessions)
+      .where(and(eq(instructionSessions.tenantId, input.tenantId), eq(instructionSessions.id, input.instructionId))).limit(1);
+    if (!session || session.workId !== input.workId) throw new WorkControlAuthorizationError();
+    if (session.workId) {
+      // Same transaction and lock ordering as answer publication: instruction
+      // row first, canonical Work row second. A handoff cannot race this fence.
+      await assertCurrentEmployeeWorkOwnerTx(db, input.tenantId, session.workId, input.requestedBy);
+    } else {
+      // Historical instruction-only sessions have no current Work owner.
+      // They remain private to the original active human principal.
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(input.requestedBy)
+        || session.userId !== input.requestedBy) throw new WorkControlAuthorizationError();
+      const [active] = await db.select({ id: users.id }).from(users).where(and(
+        eq(users.id, input.requestedBy), eq(users.tenantId, input.tenantId), eq(users.status, "active"),
+      )).limit(1);
+      if (!active) throw new WorkControlAuthorizationError();
+    }
+    const [work] = input.workId ? await db.select({ status: works.status }).from(works)
+      .where(and(eq(works.tenantId, input.tenantId), eq(works.id, input.workId))).limit(1) : [];
+    if (work?.status === "completed") return false;
+    await appendInstructionEventTx(db, input.tenantId, input.instructionId, "cancelled", { requestedBy: input.requestedBy, source: "product", fence: true, canonical: false });
+    return true;
+  });
 }
 
 export function isInstructionCancellationPayload(value: unknown): boolean {

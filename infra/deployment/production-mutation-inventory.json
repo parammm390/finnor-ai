@@ -293,7 +293,13 @@
         ".github/workflows/source-checks.yml",
         ".github/workflows/release-readiness.yml",
         ".github/workflows/dealer-zero-replay.yml",
-        ".github/workflows/tenant-isolation-nightly.yml"
+        ".github/workflows/tenant-isolation-nightly.yml",
+        ".github/workflows/w123-native-verification.yml",
+        ".github/workflows/w2-compensation-episode.yml",
+        ".github/workflows/w1-owning-episode.yml",
+        ".github/workflows/w1-owning-verification.yml",
+        ".github/workflows/w3-owning-episode.yml",
+        ".github/workflows/w3-owning-verification.yml"
       ],
       "classification": "READ_ONLY",
       "state": "ACTIVE"
@@ -311,6 +317,30 @@
       "classification": "READ_ONLY",
       "state": "DECLARATIVE_SOURCE_ONLY",
       "reason": "Repository code does not provide an independent apply path; active release mutations consume the contract and separately authorize each write."
+    },
+    {
+      "id": "current-planner-live-evaluation",
+      "path": ".github/workflows/planner-live-evals.yml",
+      "classification": "READ_ONLY",
+      "state": "ACTIVE",
+      "reason": "Plan-only candidate evaluation; no database seed, business execution or deployment. Provider credentials remain scoped to its evaluation step."
+    },
+    {
+      "id": "disposable-staging-load-probe",
+      "path": ".github/workflows/k6-nightly-lite.yml",
+      "classification": "READ_ONLY",
+      "state": "PRODUCTION_BLOCKED",
+      "reason": "Dedicated staging fixture writes only; the driver refuses canonical production origins and requires staging release metadata before any mutation. This classification grants no production mutation authority."
+
+    },
+    {
+      "id": "repository-release-input-generation",
+      "paths": [
+        "scripts/release/generate-release-inputs.mjs"
+      ],
+      "classification": "READ_ONLY",
+      "state": "DECLARATIVE_SOURCE_ONLY",
+      "reason": "Generates and checks repository build inputs and intended release metadata; no external target, deployment, production database or independent production mutation entry point."
     }
   ]
 }

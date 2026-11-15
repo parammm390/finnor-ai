@@ -128,7 +128,11 @@ export function extractNamedExpressions(instruction: string): NamedExpression[] 
   for (const match of instruction.matchAll(new RegExp(
     `\\b(?:email|call|text|contact|message|notify|ask|tell)\\s+(?:the\\s+)?${name}${boundary}`,
     "giu",
-  ))) add(match[1], undefined, "party", match.index ?? 0);
+  ))) {
+    const artifactToRecipient = /^(?:calculation|analysis|findings|results|memo|report|summary|document|model|update|draft|note)$/i.test(match[1] ?? "")
+      && /^\s+to\b/i.test(instruction.slice((match.index ?? 0) + match[0].length));
+    if (!artifactToRecipient) add(match[1], undefined, "party", match.index ?? 0);
+  }
   for (const match of instruction.matchAll(new RegExp(
     `\\b(?:spoke|talked|met)\\s+(?:to|with)\\s+${name}(?:\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?))?${boundary}`,
     "giu",
@@ -428,14 +432,19 @@ export async function persistEmployeeAssistantTurn(params: {
   workId?: string;
   workInputId?: string;
   outcomeRefs: Array<Record<string, unknown>>;
+  /** Non-sensitive stand-in REQUIRED for outcome-bearing turns (R1). */
+  referenceText?: string;
 }): Promise<EmployeeConversationMessage> {
+  if (params.outcomeRefs.length > 0 && !params.referenceText?.trim())
+    throw new Error("Outcome-bearing assistant turns persist a non-sensitive reference, never the financial prose (R1)");
+  const storedText = params.outcomeRefs.length > 0 ? params.referenceText!.trim() : params.text;
   const appended = await appendEmployeeConversationMessage({
     tenantId: params.tenantId,
     ownerEmployeeId: params.employeeId,
     threadId: params.threadId,
     role: "assistant",
     channel: params.channel,
-    originalText: params.text,
+    originalText: storedText,
     instructionId: params.instructionId,
     workId: params.workId,
     workInputId: params.workInputId,
@@ -456,7 +465,7 @@ export async function persistEmployeeAssistantTurn(params: {
     threadId: params.threadId,
     messageId: appended.message.id,
     role: "assistant",
-    content: params.text,
+    content: storedText,
     createdAt: appended.message.createdAt,
   });
   return appended.message;

@@ -1,0 +1,98 @@
+{
+  "schema": "finnor.postx.y5.verification-plan.v1",
+  "state": "PUBLIC_DEVELOPMENT_AND_OLDER_INSTALLED_BACKEND_VERIFIED_REPAIRED_CUT_AND_RECONSTRUCTION_IN_PROGRESS",
+  "baseCommit": "a7028e5816e24ff13206bf2bce20a7fc8f3d2aca",
+  "baseTree": "2736e2c63854769b444510dbbbb77161c7500c37",
+  "host": {"os": "macOS 26.6.2", "build": "25G83", "architecture": "arm64", "memoryBytes": 17179869184},
+  "runtime": {"node": "22.22.3", "npm": "10.9.8", "systemPython": "3.9.6", "scientificPython": "task-local 3.12", "prover": "task-local Lean 4.34.1 darwin-arm64, pinned ZIP and selected runtime inventory"},
+  "locks": {
+    "package-lock.json": "458999539b0e9bb21d9202e1962a73e1e7b905eacf55d3bb8ee6debe186ae22c",
+    "finnor-os/package-lock.json": "21806af0fa408429cb12ce3089a4a1d4159bee107d2403e559bb3eb6a5ec4cd6"
+  },
+  "limits": {
+    "preparationInstallWallSecondsPerWorkspace": 600,
+    "preparationInstallMaximumParallelWorkspaces": 1,
+    "preparationInstallDiskEstimateBytes": 2100000000,
+    "minimumFreeDiskBeforeInstallBytes": 4000000000,
+    "episodeLimits": {"usd": 100, "humanSeconds": 900, "aggregatePeakGiB": 16, "initialResponseSeconds": 30, "wallSeconds": 3600},
+    "aggregateCampaign": "NOT_STARTED; freeze separately before runtime/proof qualification",
+    "cleanupOwner": "POSTX.Y5, task-owned paths and children only",
+    "rerunRule": "Repair an observed bounded cause, retain original output, rerun affected cases only; no deadline/grant reset."
+  },
+  "cases": [
+    {
+      "id": "Y5-ENV-ROOT",
+      "requirement": "Task-local supported locked dependencies; no global SDK replacement",
+      "boundary": "root npm lock and native macOS installation",
+      "oracle": "npm integrity verification and unchanged exact package-lock bytes",
+      "cwd": "/Users/paramdave/.factory/worktrees/postx-y5-uniform-algorithm-discovery/FINNOR",
+      "command": "npm ci --no-audit --no-fund",
+      "artifact": "evidence/y5-preparation/root-install.log",
+      "acceptance": "Exit zero, lock identity unchanged; not a product/theorem/qualification pass",
+      "status": "PASS_LOCKED_DEPENDENCY_PREPARATION_ONLY"
+    },
+    {
+      "id": "Y5-ENV-BACKEND",
+      "requirement": "Actual project-local API/worker/native dependencies",
+      "boundary": "finnor-os npm lock and workspace aliases",
+      "oracle": "npm integrity verification and unchanged exact package-lock bytes",
+      "cwd": "/Users/paramdave/.factory/worktrees/postx-y5-uniform-algorithm-discovery/FINNOR/finnor-os",
+      "command": "npm ci --no-audit --no-fund",
+      "artifact": "evidence/y5-preparation/backend-install.log",
+      "acceptance": "Exit zero, actual workspace links and lock identity unchanged; not installed owner proof",
+      "status": "PASS_LOCKED_DEPENDENCY_PREPARATION_ONLY"
+    }
+  ],
+  "nativeToolPreparation": {
+    "id": "Y5-ENV-KERNEL",
+    "boundary": "Pinned native prover asset installation, not theorem/admission acceptance",
+    "command": "npm --prefix finnor-os run y5:toolchain:install -- --tool-root /Users/paramdave/.factory/worktrees/postx-y5-uniform-algorithm-discovery/FINNOR/.y5-tools",
+    "artifact": "evidence/y5-preparation/lean-install.log",
+    "oracle": "Official release API SHA-256 and size; pinned Apache-2.0 license; installed file inventory and actual native --version",
+    "wallSeconds": 600,
+    "maximumSelectedUncompressedBytes": 2800000000,
+    "minimumFreeAfterExtractBytes": 1000000000,
+    "archiveBytes": 797037816,
+    "sha256": "9019fcd34e93fddf0ecf9d40d28f05a86ba563ac3b701a9c5116ce1c96379360",
+    "cleanup": "Only the specifically approved task ZIP and task uv-cache were deleted. Runtime/source/licenses/proofs/evidence remain. No broader cleanup or global SDK repair.",
+    "status": "PASS_PINNED_NATIVE_INSTALLATION_AND_DEVELOPMENT_KERNEL_INVOCATION_NOT_TRUST_APPROVAL"
+  },
+  "runtimeVerification": {
+    "status": "REGISTERED_IN_VERIFICATION_CONTRACT_AND_PARTIALLY_EXECUTED",
+    "contract": "scope-postx/y5-uniform-algorithm-discovery/verification-contract.md",
+    "reason": "The fixed development-family pipeline is implemented and several real E2E paths pass; this does not establish autonomous structural learning or the protected qualification profile.",
+    "requiredFamilies": ["discovery-origin", "uniform-kernel-type-trust", "source-runtime-correspondence", "per-instance-applicability", "rights-and-oracle-isolation", "authenticated-owner-use", "physical-recovery-contention-fallback", "mounted-Work", "final-installed-reconstruction", "equipped-comparison"],
+    "protectedTwelveFamilyCustody": "NOT_ESTABLISHED",
+    "publicMarkovFixture": "NOT_IMPLEMENTED_OR_QUALIFIED; supplied answer alone cannot replace arbitrary-horizon absorption/martingale proof",
+    "observations": [
+      {"id": "N1-N3", "status": "PASS_NAMED_DEVELOPMENT_BOUNDARIES", "artifact": "evidence/y5-native-seventh/report.json", "limits": "Source/theorem/import mutations rejected at named correspondence guards, not an unsafe-proof kernel challenge; trust-policy approval remains absent"},
+      {"id": "A1-A2-L1", "status": "PASS_SOURCE_OWNER_PUBLIC_DEVELOPMENT", "artifact": "evidence/y5-owner-ninth/results.json", "sourceDigest": "e325632ac91d3e6e50dbd4ebe4cce9780dd893980ae2a43d5ac488e1c7e91217", "limits": "Actual local signed auth/SQL queue/native S5/separate signed S8/restart/P7; DISPOSABLE_TEST_AUTHORITY only"},
+      {"id": "A4-GUARDIAN", "status": "PASS_COMPONENT_REAL_PROCESS_BOUNDARIES", "artifact": "evidence/y5-native-faults-second/native-parent-loss.json", "limits": "Actual invoking-worker SIGKILL and physical child close/absence; no simultaneous guardian/host-loss claim"},
+      {"id": "A4-ACCEPTED-CHILD", "status": "PASS_REAL_QUEUE_RECOVERY", "artifact": "evidence/y5-owner-tenth/recovery.json", "sourceDigest": "d406b4f2b2b259a3ab9a156a478eeb5d080aa6a78a02b41efe543e369ff7550a", "limits": "Real expired job/native leases, stale claim denial, attempt/fence two, retained proof recheck and one publication, no patched status/date/counter"},
+      {"id": "A5", "status": "PASS_PREPARED_NATIVE_RESPONSIBILITY_PRESERVATION", "artifact": "evidence/y5-owner-tenth/s6-responsibility.json", "limits": "Original S6 prepared effect and conservative S5 UNKNOWN retained byte-for-byte; no egress attempt or protected provider-UNKNOWN qualification"},
+      {"id": "A3", "status": "PARTIAL", "limits": "Absent bearer checked. Full cross-tenant, Work-input, source and authority fault matrix not yet qualified."},
+      {"id": "A4-REMAINDER", "status": "NOT_RUN", "limits": "Owner cancellation during physical work, full capacity-contention matrix and in-flight durable-kernel worker loss remain distinct from the passed accepted-child boundary"},
+      {"id": "S5-ORIGINAL-COMPATIBILITY", "status": "PASS_NINE_REGISTERED_ORIGINAL_CASES_AFTER_NUMERIC_REPAIRS", "artifact": "scope-5/scope-evidence/run-2026-10-22T01-33-29-e3667947/results.json", "limits": "Real original handlers/SQL/numerics, development header identity; not hosted authentication or protected qualification"},
+      {"id": "REVIEW-R1-R2-R8-SUBSETS", "status": "PASS_SCOPED_CASES_WITH_LATER_DRIVER_EXPECTATION_FAILURE", "artifact": "evidence/y5-owner-review-third/review-repairs/progress.json", "sourceDigest": "56ce666b7c6f9b7ed33146b812d5add46219e3d446942b6dcb08aaddd0b8fc49", "limits": "Three numeric use/evaluation cases, original rational clear, eight prepared/full checker subsets and second-root historical privacy. Later null case stopped on incorrect driver status expectation, not a pass for the remaining matrix."},
+      {"id": "REVIEW-CURRENT-SOURCE", "status": "PASS_ALL_SEVEN_EXECUTED_SOURCE_REPAIR_CASES", "artifact": "evidence/y5-owner-review-fourth/results.json", "sourceDigest": "088a97796fc52b5d627f3b21769250b0cff7a201b9cd20cd579ad7f6ec0feffe", "limits": "324458 ms. Original null availability preserved; 423296-row stress refused before expansion/native Lean. Actual compiled-process crash/deadline and mounted checks explicitly NOT_RUN."},
+      {"id": "I1-OLDER-COPIED-ASSET-BUILD", "status": "BUILD_PASS_OLDER_CUT", "artifact": "evidence/y5-preparation/installed-second.log", "limits": "367.4 seconds; declared copied dependencies/native assets, not fresh-lock reconstruction. First pre-compilation clone failure retained."},
+      {"id": "I1-OLDER-INSTALLED-BACKEND", "status": "PASS_BACKEND_ONLY_NOT_MOUNTED", "artifact": "evidence/y5-installed-owner-third/results.json", "limits": "724678 ms; compiled API/emitted worker/native S5/S8/P7/S6. Explicit backend-only phase completion after renderer blockage, not repaired-cut proof."},
+      {"id": "I1-REPAIRED-BUILD", "status": "BUILD_PASS_CURRENT_PRODUCT_CUT_COPIED_ASSETS", "artifact": "../y5-installed-third/build-manifest.json", "buildId": "y5-64aee611547a917874c3741289ece3fd038059a00f28698c3014257f5c8e3aba", "limits": "322695.684667 ms; no fresh npm lock or full reconstruction claim."},
+      {"id": "I1-REPAIRED-OWNER-INTERRUPTED", "status": "USER_INTERRUPTED_NO_FINAL_RESULT", "artifact": "evidence/y5-installed-owner-fourth/interruption.json", "limits": "88-second enclosing script included 15.659927208-second preparation imports. Recorded processes absent and disposable DB directory gone."},
+      {"id": "I1-REPAIRED-OWNER", "status": "FAIL_ORIGINAL_REQUEST_DEADLINE_PARTIAL_REPAIR_CASES_ONLY", "artifact": "evidence/y5-installed-owner-fifth/failure.json", "sourceDigest": "088a97796fc52b5d627f3b21769250b0cff7a201b9cd20cd579ad7f6ec0feffe", "limits": "289.6-second launcher. Fractional native use/evaluation passed. 2e12 consume returned 408 at 28535.522 ms despite all native children closing successfully; no budget increase and no compiled-crash pass."},
+      {"id": "I1-COMPILED-FAULT-SELECTION", "status": "PASS_CURRENT_FRESH_RECONSTRUCTION_TWO_CASES_ONLY", "artifact": "evidence/y5-reconstructed-owner-second/review-repairs/results.json", "contract": "scope-postx/y5-uniform-algorithm-discovery/review-repair-contract.md", "limits": "--review-faults requires actual built API/emitted worker, skips other repairs explicitly and is not the full matrix."},
+      {"id": "GENERATED-PARITY", "status": "PASS_SCOPED_STATIC_CONTRACTS_AFTER_REGENERATION", "artifact": "evidence/y5-preparation/generation-parity-*", "limits": "OpenAPI/workspace/client/manifest/forms/authz/coverage; stale authz and coverage failures retained. No mounted or scientific evidence inferred."},
+      {"id": "I1-RECONSTRUCTED-SOURCE", "status": "PASS_COMMITTED_SANITIZED_SOURCE_OBJECTS_AND_INDEX_ONLY", "artifact": "../y5-reconstructed-first/staged-source-review.json", "sourceCommit": "86b403be0844a91f466dd1a1cf62977bc5a320cc", "snapshotCommit": "86ef7f2ab050dd57b71c11fee8935c21ca5a7fc9", "limits": "3679 files, 86909944 bytes; all original blob IDs, new-source SHA256/modes and independent index verified. 415 unsafe/runtime-evidence paths excluded. Fresh build failed; runtime pending."},
+      {"id": "I1-FRESH-LOCK-BUILD-FIRST", "status": "FAIL_OMITTED_DECLARED_BUILD_TYPES", "artifact": "../y5-reconstructed-installed-first/build-failure.json", "wallMs": 170997.84725, "limits": "Actual Next type checker required @types/react. Builder's production npm ci omitted dev dependencies. Preregistered --include=dev repair needs new committed source and new output; disk preflight remains unchanged."},
+      {"id": "I1-FRESH-LOCK-BUILD-SECOND", "status": "PASS_FRESH_BUILD_RUNTIME_RESULT_SEPARATELY_RECORDED", "artifact": "../y5-reconstructed-installed-second/build-manifest.json", "sourceCommit": "7e8e1636aa1a04ae650c377e0efe01840b2a6871", "snapshotCommit": "44ae60741d3ea78fa79c373d7c892e4c49ebb823", "sourceDigest": "ded91d42b2c7e927dd83c199f4dc7b022e81e353f478f2205eddc8ab6825a6b5", "wallMs": 388855.78229199996, "limits": "All 3679 source blobs/index verified; independent Git store, unchanged fresh npm locks including dev, API/frontend build and type checks; numerical reinstall and declared native base assets. Compiled owner/fault execution passed separately with explicit scope."},
+      {"id": "I1-RECONSTRUCTED-RUNTIME-FIRST", "status": "FAIL_BASE_USE_DEADLINE_COMPILED_FAULTS_NOT_REACHED", "artifact": "evidence/y5-reconstructed-owner-first/failure.json", "sourceDigest": "ded91d42b2c7e927dd83c199f4dc7b022e81e353f478f2205eddc8ab6825a6b5", "limits": "107.2-second launcher. Authenticated S3/S4 and emitted-worker discovery CHECKED; consume 408 at original 28.5-second boundary. Independent native build hit original deadline and physically closed after SIGKILL. Final separate trial retains the same limits."},
+      {"id": "I1-RECONSTRUCTED-RUNTIME-SECOND", "status": "PASS_PUBLIC_DEVELOPMENT_INSTALLED_OWNER_AND_COMPILED_FAULTS_ONLY", "artifact": "evidence/y5-reconstructed-owner-second/results.json", "sourceDigest": "ded91d42b2c7e927dd83c199f4dc7b022e81e353f478f2205eddc8ab6825a6b5", "wallMs": 242399, "limits": "Actual built API/emitted worker, original S3/S4/S5, disposable signed S8, P7 withdrawal and original S6 UNKNOWN preservation. Both real API crash cases pass: completed-use expiry and durable STARTED retry, same use/no new native starts. Seven other source repair cases explicitly skipped; mounted not run. Prior deadline failures remain charged."},
+      {"id": "I1-REPAIRED-RECONSTRUCTION", "status": "NOT_YET_RUN_FULL_REPOSITORY_SOURCE_LOCK_BUILD", "contract": "scope-postx/y5-uniform-algorithm-discovery/reconstruction-contract.md"},
+      {"id": "I1-SOURCE-OBJECT-LINK-FAULTS", "status": "PASS_DISPOSABLE_INFRASTRUCTURE_CLI_CASES_ONLY", "artifact": "evidence/y5-reconstruction-faults-first/results.json", "limits": "Internal link accepted; forward escape/cycle rejected before verified receipt. Real 66-pin fixture, not whole repository/dependency/build reconstruction."},
+      {"id": "U1", "status": "BLOCKED_FAILED_NOT_PASSED", "artifact": "evidence/y5-installed-owner-third/browser-renderer-blocked.json", "limits": "Maintained standalone/actual SDK login exercised. Last actual Canvas instrument remained opening despite visible geometry; no frame observed in 2 seconds. Repaired polling, lazy evidence, late Work and cleanup faults remain unqualified."},
+      {"id": "Q1", "status": "NOT_RUN_NO_INDEPENDENT_CUSTODY_OR_QUALIFIED_COMPARATOR"},
+      {"id": "M1", "status": "NOT_IMPLEMENTED"}
+    ],
+    "noNotRunIsPass": true
+  }
+}

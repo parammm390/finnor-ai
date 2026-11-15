@@ -11,10 +11,14 @@ import { builtinModules } from 'node:module';
 
 const backend = fileURLToPath(new URL('../../../', import.meta.url)), root = dirname(backend.slice(0, -1));
 const args = process.argv.slice(2);
+const w2 = args.length === 4 && args[2] === '--profile' && args[3] === 'postz-w2';
+if (w2) args.splice(2);
+const label = w2 ? 'w2' : 'x1';
 if (args.length !== 2 || args[0] !== '--output' || !args[1].startsWith('/') || existsSync(args[1]))
   throw Error('X1_NEW_ABSOLUTE_INSTALLATION_OUTPUT_REQUIRED');
 const output = resolve(args[1]), started = Date.now();
-const limits = JSON.parse(await readFile(join(root, 'scope-frontier5/x1-institutional-programme-compiler/verification-plan.json'), 'utf8')).limits;
+const limits = JSON.parse(await readFile(join(root, w2 ? 'scope-postz/w2-accountable-workforce/verification-plan.json' :
+  'scope-frontier5/x1-institutional-programme-compiler/verification-plan.json'), 'utf8')).limits;
 const capacity = statfsSync(root, { bigint: true });
 if (capacity.bavail * capacity.bsize < BigInt(limits.finalBuildMinimumFreeBytes)) throw Error('X1_FINAL_BUILD_CAPACITY_REFUSED');
 const timer = setTimeout(() => { console.error('X1_FINAL_BUILD_WALL_BOUND'); process.exit(1); }, limits.finalBuildWallSeconds * 1000);
@@ -23,7 +27,7 @@ const git = (...argv) => execFileSync('git', argv, { cwd: root, encoding: 'utf8'
 const frozen = { commit: git('rev-parse', 'HEAD'), tree: git('rev-parse', 'HEAD^{tree}'), dirty: git('status', '--porcelain=v1', '-uall') };
 if (frozen.dirty.split('\n').filter(Boolean).some(line => line.slice(3) !== 'AGENTS.md')) throw Error('X1_BUILD_REQUIRES_COMMITTED_PRODUCT_SOURCE');
 await mkdir(output, { mode: 0o700 });
-const runtimeDir = join(output, 'finnor-os/x1-runtime'); await mkdir(runtimeDir, { recursive: true });
+const runtimeDir = join(output, 'finnor-os/' + label + '-runtime'); await mkdir(runtimeDir, { recursive: true });
 let outputBytes = 0;
 const files = new Map(), packages = [], sourcePreimages = [], links = new Map();
 async function save(path, bytes, kind, mode = 0o444) {
@@ -135,7 +139,8 @@ const generated = join(runtimeDir, 'api-registry.entry.mjs');
 await writeFile(generated, registry, { flag: 'wx', mode: 0o600 });
 const externals = new Set(), native = new Set([...builtinModules, ...builtinModules.map(name => 'node:' + name)]);
 const compiled = await build({ absWorkingDir: backend, entryPoints: { api: generated,
-  worker: join(backend, 'apps/worker/src/dev-entry.mts'), checker: join(backend, 'scripts/frontier5/x1/checker-command.mts'),
+  worker: join(backend, w2 ? 'scripts/postz-w2/physical-worker.mts' : 'apps/worker/src/dev-entry.mts'),
+  checker: join(backend, w2 ? 'packages/workforce/src/execution-program/index.ts' : 'scripts/frontier5/x1/checker-command.mts'),
   migrations: join(backend, 'packages/db/migrate.ts') },
   outdir: runtimeDir, bundle: true, splitting: true, format: 'esm', platform: 'node', target: 'node22',
   outExtension: { '.js': '.mjs' }, write: false, metafile: true, sourcemap: false, tsconfig: join(backend, 'tsconfig.base.json'),
@@ -173,11 +178,11 @@ for (const path of retainedMigrations) {
 const checkerPins = [...files.values()].filter(p => p.kind === 'COMPILED'
   || /(?:institution-program\/(?:checker|checker-raw|canonical-json|installed-runtime)\.ts|source-custody\/(?:index|installation)\.cjs|checker-command\.mts|package-lock\.json)$/.test(p.path)
   || p.path.startsWith('finnor-os/node_modules/zod/')).map(p => p.path).sort();
-const manifest = { schema: 'finnor.x1.development-installation.v1', mode: 'DEVELOPMENT_ONLY',
+const manifest = { schema: w2 ? 'finnor.postz.w2.development-installation.v1' : 'finnor.x1.development-installation.v1', mode: 'DEVELOPMENT_ONLY',
   builtAt: new Date().toISOString(), source: frozen, sourcePreimages, files: [...files.values()].sort((a, b) => a.path.localeCompare(b.path)),
   links: [...links.values()].sort((a, b) => a.path.localeCompare(b.path)),
-  entrypoints: { api: 'finnor-os/x1-runtime/api.mjs', worker: 'finnor-os/x1-runtime/worker.mjs', checker: 'finnor-os/x1-runtime/checker.mjs',
-    migrations: 'finnor-os/x1-runtime/migrations.mjs' },
+  entrypoints: { api: `finnor-os/${label}-runtime/api.mjs`, worker: `finnor-os/${label}-runtime/worker.mjs`, checker: `finnor-os/${label}-runtime/checker.mjs`,
+    migrations: `finnor-os/${label}-runtime/migrations.mjs` },
   checkerPins, routes: routes.map(({ path, ...rest }) => rest), packages, externalImports: [...externals].sort(),
   runtime: { node: process.version, platform: process.platform, architecture: process.arch, nodeBinarySha256: digest(await readFile(process.execPath)) },
   schemaState: { retainedBase: base, retainedMigrations: legacy, migrationCount: files.size ? [...files.keys()].filter(p => p.startsWith(prefix) && p.endsWith('.sql')).length : 0 },
@@ -185,7 +190,7 @@ const manifest = { schema: 'finnor.x1.development-installation.v1', mode: 'DEVEL
 if (git('rev-parse', 'HEAD') !== frozen.commit || git('status', '--porcelain=v1', '-uall') !== frozen.dirty) throw Error('X1_BUILD_SOURCE_CHANGED');
 const manifestBytes = JSON.stringify(manifest, null, 2) + '\n';
 if (outputBytes + Buffer.byteLength(manifestBytes) > limits.finalBuildOutputBytes) throw Error('X1_FINAL_BUILD_OUTPUT_BOUND');
-await writeFile(join(output, 'finnor-os/x1-development-installation.json'), manifestBytes, { flag: 'wx', mode: 0o444 });
+await writeFile(join(output, `finnor-os/${label}-development-installation.json`), manifestBytes, { flag: 'wx', mode: 0o444 });
 clearTimeout(timer);
 console.log(JSON.stringify({ output, source: frozen, compiledAssets: [...files.values()].filter(p => p.kind === 'COMPILED').length,
   actualRoutes: routes.length, packages: packages.length, outputBytes, elapsedMs: manifest.elapsedMs,

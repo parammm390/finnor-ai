@@ -1,0 +1,182 @@
+{
+  "schema": "finnor.postz.w1.read-http-verification.v4",
+  "verificationProfile": "HTTP_V4",
+  "proposalValidation": "NOT_RUN",
+  "priorProfile": "HTTP_V3",
+  "requiredSource": [
+    "SOURCE_REVENUE",
+    "SOURCE_BASIS_MISMATCH",
+    "SOURCE_CURRENCY_MISMATCH",
+    "SOURCE_QUOTE",
+    "SOURCE_DELAYED",
+    "SOURCE_STALE",
+    "SOURCE_RIGHTS_REVOKED"
+  ],
+  "requiredPriorHttp": [
+    "TYPED_API_REVENUE",
+    "NATURAL_AND_DUPLICATE",
+    "CORE_PRIOR_CLASSIFICATION",
+    "AUTHENTICATION",
+    "FOREIGN_TENANT",
+    "TYPED_API_QUOTE_CURRENT",
+    "TYPED_API_REVENUE_DUPLICATE",
+    "CORE_DUPLICATE",
+    "NAMED_COMPANY_NO_SUBSTITUTION",
+    "MIXED_NEGATION_EFFECT_PRESERVED",
+    "MISSING_REPORTING_CALENDAR",
+    "PROVISIONAL_CASH_FISCAL_REVENUE",
+    "TYPED_API_STALE_QUOTE",
+    "TYPED_API_UNAVAILABLE_QUOTE",
+    "TYPED_API_QUOTE_REPLAY_REVOKED",
+    "UNAVAILABLE_REPLAY_CURRENTNESS"
+  ],
+  "requiredReview": [
+    "SHARED_ECONOMIC_REDACTION",
+    "CONTEXT_READ_NO_FLEET",
+    "REVENUE_NAMED_FORMS",
+    "REVENUE_SELECTORS",
+    "POSITIVE_EFFECT_VOCABULARY",
+    "MULTILINE_NEGATION",
+    "RESOLVED_RESOURCE_SCOPES",
+    "SCOPED_GRANT_CURRENTNESS",
+    "COMMITTED_RECEIPT_RECOVERY_NO_KEY",
+    "TRACE_FAILURE_BEST_EFFORT",
+    "QUOTE_EXPLICIT_SUBJECT",
+    "SIMULTANEOUS_QUOTE_VALIDITY",
+    "EXACT_CAPABILITY_DENIES",
+    "SUPPLIED_ID_RECOVERY_CUSTODY",
+    "PRIVATE_INSERT_ATOMIC_RECOVERY",
+    "ANCILLARY_RESPONSE_FAILURE_REPLAY",
+    "ASSISTANT_PROJECTION_FAILURE_REPLAY",
+    "QUOTE_POSSESSIVE",
+    "EFFECT_WORD_ENTITY",
+    "TYPED_REQUEST_RECOVERY",
+    "COMPLETE_OUTPUT_REPLAY_VALIDATION",
+    "ORIGINAL_INPUT_PRINCIPAL_IDENTITY",
+    "BACKGROUND_PRINCIPAL_NO_ACTIVATION",
+    "IN_FLIGHT_DUPLICATE_RECEIPT"
+  ],
+  "findingPredicates": {
+    "1": [
+      "SHARED_ECONOMIC_REDACTION"
+    ],
+    "2": [
+      "CONTEXT_READ_NO_FLEET"
+    ],
+    "3": [
+      "REVENUE_NAMED_FORMS"
+    ],
+    "4": [
+      "REVENUE_SELECTORS"
+    ],
+    "5": [
+      "POSITIVE_EFFECT_VOCABULARY"
+    ],
+    "6": [
+      "MULTILINE_NEGATION",
+      "MIXED_NEGATION_EFFECT_PRESERVED"
+    ],
+    "7": [
+      "RESOLVED_RESOURCE_SCOPES",
+      "SCOPED_GRANT_CURRENTNESS"
+    ],
+    "8": [
+      "COMMITTED_RECEIPT_RECOVERY_NO_KEY",
+      "TRACE_FAILURE_BEST_EFFORT"
+    ],
+    "9": [
+      "QUOTE_EXPLICIT_SUBJECT"
+    ],
+    "10": [
+      "SIMULTANEOUS_QUOTE_VALIDITY"
+    ],
+    "11": [
+      "EXACT_CAPABILITY_DENIES",
+      "SCOPED_GRANT_CURRENTNESS"
+    ],
+    "12": [
+      "SUPPLIED_ID_RECOVERY_CUSTODY"
+    ],
+    "13": [
+      "PRIVATE_INSERT_ATOMIC_RECOVERY",
+      "ANCILLARY_RESPONSE_FAILURE_REPLAY",
+      "ASSISTANT_PROJECTION_FAILURE_REPLAY"
+    ],
+    "14": [
+      "QUOTE_POSSESSIVE"
+    ],
+    "15": [
+      "EFFECT_WORD_ENTITY"
+    ],
+    "16": [
+      "TYPED_REQUEST_RECOVERY",
+      "ORIGINAL_INPUT_PRINCIPAL_IDENTITY"
+    ]
+  },
+  "mandatoryForEveryEpisode": {
+    "zeroDeltaTables": [
+      "jobs",
+      "workforce_assignments",
+      "computer_runs",
+      "sandbox_outbox",
+      "s5_reservations",
+      "business_effects",
+      "compute_resource_leases",
+      "work_planner_attempts"
+    ],
+    "paidProviderCalls": 0,
+    "externalNetworkAttempts": 0,
+    "cloudChanges": 0,
+    "backgroundQueueRoots": "Enqueued before the bounded read episode; the episode must create no additional jobs.",
+    "receiptCustody": "One financial receipt and one original-input private reply after commit; neither accepted original data nor metadata may be recomputed on replay.",
+    "faults": "Real targeted disposable SQL triggers; explicitly remove each before retry; never production fault switches.",
+    "outerEpisodeSeconds": 1200,
+    "outerWatchdog": "Driver setup/source IO/native queue/shutdown and mandatory verifier are bounded; final PASS is not persisted before complete cleanup",
+    "privateNativeCustody": "Same existing work_input_responses owner, default input or objective:<stepUUID> slot, one step-bound receipt, immutable canonical full reply; no manufactured human inputs, second cache or UPDATE privilege",
+    "nativeSetup": "An actual scripted candidate passes the real compiler and admission owner, then a real SQL reservation fault stops it before any native query dispatch. The original root queue delivery and ordinary parent planner attempt are recorded before zero-delta dispatch meters. No read child job, workforce assignment, recovery planner or fabricated plan/receipt is setup.",
+    "nativeOracles": "Independent SQL source snapshot/text/hash and current committed plan/input/node/step/receipt/private JSONB bytes. Real authenticated private HTTP/native replay, current grants and mapped source rights, full nested isolated-clone corruption, model callback/shared projections, original acceptance and all eight meters are separately checked.",
+    "ancillaryDistinction": "Normal canonical-to-HTTP projection is insert-only and not degraded merely because the row deliberately stores no HTTP envelope. The original real ANCILLARY_RESPONSE_FAILURE_REPLAY fault remains required, and a metadata-only existing Work event records that real response-projection failure."
+  },
+  "literalOracle": {
+    "revenue": "950.25",
+    "unrelatedCashReceiptNotRevenue": "999999",
+    "quote": "100.125",
+    "undisplayableQuoteMustNeverLeak": "200.875",
+    "foreignProvisionalCashEur": "41.75",
+    "typedRecoverableInputPrefix": "Typed economic query v1: ",
+    "selectedContext": "Must not replace the request's exact company or issuer.",
+    "namedRevenue": "At/for/of/possessive/bare-company forms; Unrelated Holdings never substitutes the tenant binding.",
+    "selectors": "Explicit CASH/EUR retained; explicit CALENDAR/FISCAL retained and boundedly UNAVAILABLE.",
+    "effectNegativeControl": "503 worker_fleet_unavailable, not an economic answer.",
+    "committedReceiptFault": "work_events.event_type=query_execution_completed fails after canonical receipt/private reply commit; actual retry without original idempotency key preserves original complete query.",
+    "traceFault": "instruction_events.phase=verifying failure remains best-effort; first read succeeds.",
+    "uncommittedPrivateFault": "Private INSERT failure cannot leave succeeded receipt; explicit retry rearms the same receipt.",
+    "ancillaryFault": "Private INSERT/UPDATE denied only when receipt already succeeded; canonical private insertion happens while running and survives ancillary failure.",
+    "sameTimeQuote": "Lower UUID carries expired quote, higher UUID current; repeat with freshness reversed; both stale stays STALE; price/session/delay disagreement stays CONFLICTED.",
+    "scopedAuthority": "Application owner role is not a business wildcard: a separate fixture employee has only real exact-resource financial grants. Test missing/relevant/unrelated deny, active/expired assignment and role/user currentness.",
+    "tampering": "Actual private JSONB corruptions of metadata, source/meta, page/count/status, IDs, intent/outcome and financial facts must refuse replay; keeping answer.query in sync must not bypass complete validation."
+  },
+  "acceptance": "All 65 independently observed predicates must PASS. Fixed verifier IDs, actual rows/literals/identities/private bytes, app and worker principals, source/auth/network custody, zero activation, completed bounded shutdown and combined driver/verifier elapsed time are required. Missing, FAIL, NOT_RUN, duplicate IDs, source drift or unknown profile never qualify. SOURCE_V1 is diagnostic only.",
+  "installedReviewReadsV2": "INSTALLED, including parent corrections; the original 47 remain required",
+  "requiredObjective": [
+    "OBJ_PLAN_SCOPED_RESOLUTION",
+    "OBJ_MULTI_QUERY_PRIVATE_CUSTODY",
+    "OBJ_NATIVE_PROVENANCE_BINDING",
+    "OBJ_ORIGINAL_HUMAN_ONLY",
+    "OBJ_SAME_PRINCIPAL_REPLAY",
+    "OBJ_COMMITTED_STEP_RECOVERY",
+    "OBJ_UNCOMMITTED_PRIVATE_RECOVERY",
+    "OBJ_CURRENT_GRANTS_REPLAY",
+    "OBJ_SOURCE_RIGHTS_REPLAY",
+    "OBJ_SHARED_REDACTION",
+    "OBJ_MODEL_CONTEXT_NO_FACTS",
+    "OBJ_QUEUE_INLINE_NO_ACTIVATION",
+    "OBJ_REQUEST_CONFLICT_NODE_PROVENANCE",
+    "OBJ_BUDGET_DEADLINE_NO_ACTIVATION",
+    "OBJ_UNSUPPORTED_GENERAL_OBJECTIVE",
+    "CANONICAL_HTTP_INSERT_ONLY",
+    "CANONICAL_HTTP_METADATA_STABILITY",
+    "OBJ_COMPLETE_PRIVATE_VALIDATION"
+  ],
+  "proposalIntegrationScope": "Only explicit metadata-only financial canonical-query acceptance on the original native human/input/accepted selected query-and-check-only PlanGraph is supported. General, mixed, fact-dependent or unprovable native financial goals block unchanged; they are not claimed integrated. This isolated source proposal has not been installed or executed."
+}

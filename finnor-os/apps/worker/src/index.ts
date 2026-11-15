@@ -1,5 +1,7 @@
 import { createSharedWorkJobHandler, createSharedWorkProjectionJobHandler } from '../../../packages/orchestration/src/project-z/z1-shared-work/worker';
 import {runDecisionAtlasJob} from '../../../packages/private-equity/src/r7/worker';
+import {discoverUniformAlgorithmJob} from '../../../packages/private-equity/src/uniform-algorithms/worker';
+import {runWorkforceExecutionJob} from '../../../packages/orchestration/src/workforce-execution/worker';
 import {buildEnterpriseApplicationJob} from '../../../packages/private-equity/src/enterprise-applications/worker';
 import {compileLearnedPolicyJob} from '../../../packages/private-equity/src/policy-learning/worker';
 import {runConfidentialEconomicJob} from '../../../packages/private-equity/src/confidential-computation/worker';
@@ -13,6 +15,7 @@ import {runComputeSearchUnitJob} from '@finnor/private-equity/src/compute-search
 import {runHarnessProgramJob,runX1InstitutionContinuationJob} from '@finnor/private-equity/src/program-synthesis/worker';
 import {runInstitutionCompilerJob} from '@finnor/private-equity/src/institution-program/worker';
 import {runInstitutionUpdateJob} from '@finnor/private-equity/src/live-recompilation/institution-worker';
+import {compileRealWorldServiceJob,advanceRealWorldServiceJob} from '@finnor/private-equity/src/real-world-service/worker';
 import {runInterfaceAcquisitionJob} from '@finnor/private-equity/src/interface-synthesis/worker';
 import {runApplicationSemanticsJob} from '@finnor/private-equity/src/application-semantics/worker';
 import {runProgrammeContinuationJob} from '@finnor/private-equity/src/live-recompilation/worker';
@@ -79,12 +82,16 @@ export function createWorker(): JobQueue {
   queue.register('run_shared_work_program_v1',createSharedWorkJobHandler(),PRODUCTION_JOB_CONTRACTS.run_shared_work_program_v1);
   queue.register('consume_shared_work_projection_v1',createSharedWorkProjectionJobHandler(),PRODUCTION_JOB_CONTRACTS.consume_shared_work_projection_v1);
   queue.register('link_institution_components_v1',linkInstitutionComponentsJob,PRODUCTION_JOB_CONTRACTS.link_institution_components_v1);
+  queue.register('run_workforce_execution_v1',runWorkforceExecutionJob,PRODUCTION_JOB_CONTRACTS.run_workforce_execution_v1);
+  queue.register('compile_real_world_service_v1',compileRealWorldServiceJob,PRODUCTION_JOB_CONTRACTS.compile_real_world_service_v1);
+  queue.register('advance_real_world_service_v1',advanceRealWorldServiceJob,PRODUCTION_JOB_CONTRACTS.advance_real_world_service_v1);
   queue.register('learn_strategic_response_model_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.learn_strategic_response_model_v1);
   queue.register('evaluate_strategic_response_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.evaluate_strategic_response_v1);
   queue.register('construct_interaction_protocol_v1',dispatchInteractionProtocolJob,PRODUCTION_JOB_CONTRACTS.construct_interaction_protocol_v1);
   queue.register('construct_economic_action_theory_v1',constructEconomicActionTheoryJob,PRODUCTION_JOB_CONTRACTS.construct_economic_action_theory_v1);
   queue.register('run_economic_programme_v1',runEconomicProgrammeJob,PRODUCTION_JOB_CONTRACTS.run_economic_programme_v1);
   queue.register('run_confidential_economic_computation_v1',runConfidentialEconomicJob,PRODUCTION_JOB_CONTRACTS.run_confidential_economic_computation_v1);
+  queue.register('discover_uniform_algorithm_v1',discoverUniformAlgorithmJob,PRODUCTION_JOB_CONTRACTS.discover_uniform_algorithm_v1);
   queue.register('identify_digital_system_v1',identifyDigitalSystemJob,PRODUCTION_JOB_CONTRACTS.identify_digital_system_v1);
   queue.register('compile_learned_policy_v1',compileLearnedPolicyJob,PRODUCTION_JOB_CONTRACTS.compile_learned_policy_v1);
   queue.register('build_enterprise_application_v1',buildEnterpriseApplicationJob,PRODUCTION_JOB_CONTRACTS.build_enterprise_application_v1);

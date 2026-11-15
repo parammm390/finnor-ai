@@ -219,6 +219,11 @@ export interface ExecutionControl {
   reason: string;
 }
 
+export interface WorkflowRetryBlocker {
+  code: "incomplete_steps" | "unresolved_effect" | "no_failed_step" | "step_not_retryable" | "effect_not_retryable";
+  reason: string;
+}
+
 export interface ExecutionWorkflow {
   id: string;
   workflowType: string;
@@ -227,6 +232,7 @@ export interface ExecutionWorkflow {
   actionIds: string[];
   steps: ExecutionWorkflowStep[];
   controls: ExecutionControl[];
+  retryBlocked?: WorkflowRetryBlocker;
   createdAt: string;
   updatedAt: string;
   sourceRef: string;

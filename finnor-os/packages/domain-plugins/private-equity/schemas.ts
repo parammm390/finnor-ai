@@ -63,7 +63,11 @@ export const PRIVATE_EQUITY_ACTION_SCHEMAS = {
       }).strict()).min(1).max(100),
     }).strict().optional(),
     baseRunId: uuid.optional(),
+    committeeEbitda: z.object({ icCaseId: uuid, documentVersionId: uuid, periodEnd: z.iso.date() }).strict().optional(),
   }).strict().superRefine((value, context) => {
+    if (value.committeeEbitda && (!value.baseRunId || value.scenario || value.scenarioId)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, message: "Committee EBITDA requires one baseRunId and supplies its own scenario" });
+    }
     if (value.scenario && value.scenarioId) {
       context.addIssue({ code: z.ZodIssueCode.custom, message: "Choose one existing scenarioId or one new scenario" });
     }
@@ -95,6 +99,8 @@ export const PRIVATE_EQUITY_ACTION_SCHEMAS = {
     icCaseId: uuid,
     expectedCaseVersion: version,
     title: shortText,
+    alternativeRunIds: z.array(uuid).min(2).max(6)
+      .refine(ids => new Set(ids).size === ids.length, "Choose distinct underwriting runs").optional(),
   }).strict(),
   select_ic_memo_version: z.object({
     dealId: uuid,

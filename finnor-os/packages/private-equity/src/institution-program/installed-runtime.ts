@@ -2,7 +2,7 @@ import { createRequire } from "node:module";
 
 export type DevelopmentInstallation = {
   root: string; manifestPath: string; manifestDigest: string;
-  manifest: { source: { commit: string; tree: string }; runtime: Record<string, string>;
+  manifest: { schema: string; source: { commit: string; tree: string }; runtime: Record<string, string>;
     files: Array<{ path: string; sha256: string }>; checkerPins: string[];
     entrypoints: Record<string, string> };
   entrypoint(name: string): string; checkerPins(): Record<string, string>;

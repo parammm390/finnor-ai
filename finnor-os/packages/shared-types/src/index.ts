@@ -1,5 +1,7 @@
 export * from './identified-system';
 export type * from './strategic-response';
+export * from './algorithm-theory';
+export type * from './total-algorithm-theory';
 export type {LearnedPolicyCapsule,LearnedPolicyEnvelope,LearnedPolicyProcedure,LearnedControllerCheckpoint,LearningUnknown,LearnedPolicyEventReference} from './learned-policy';
 export type {ApplicationReleaseBinding,EnterpriseApplicationRelease,FrontierArtifactEnvelope,FrontierEventCollectionReference,EnterpriseApplicationPackage} from './enterprise-applications';
 export * from "./closing";
@@ -7,6 +9,7 @@ export * from "./closing";
 // Every subsystem (orchestration, plugins, memory, tools, workers) compiles against these.
 
 export * from "./operational-queries";
+export * from "./economic-reads";
 export * from "./company-graph";
 export * from "./operating-context";
 export * from "./operating-interaction";
@@ -29,7 +32,7 @@ export * from "./elicitation-protocol";
 export * from "./primary-diligence";
 export * from "./bilateral-opportunities";
 
-export type Role = "owner";
+export type Role = "owner" | "participant";
 
 export interface TenantContext {
   tenantId: string;
@@ -424,3 +427,5 @@ export * from './certified-state-reduction';
 export * from "./decision-proof";
 export * from './capital-formation';
 export * from "./conversation-memory";
+export * from "./financial-explanation";
+export * from "./document-financial-review";

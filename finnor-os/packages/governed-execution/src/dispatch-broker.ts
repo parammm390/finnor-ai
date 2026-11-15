@@ -12,7 +12,10 @@ const object=(v:any):ObjectValue=>v&&typeof v==='object'&&!Array.isArray(v)?v:fa
 const exact=(v:ObjectValue,keys:string[])=>{if(Object.keys(v).length!==keys.length||keys.some(k=>!Object.hasOwn(v,k)))fail(400,'BROKER_FIELD_SET_INVALID');};
 const same=(a:unknown,b:unknown)=>hash(a)===hash(b);
 const signature=(v:ObjectValue,key:string)=>{const {signature,...body}=v;if(typeof signature!=='string'||signature.length>256||!verify(null,Buffer.from(canonical(body)),key,Buffer.from(signature,'base64')))fail(403,'BROKER_SIGNATURE_INVALID');return body;};
-const sourcePaths=['enterprise-obligations.ts','enterprise-allocation.ts','enterprise-control.ts','enterprise-beliefs.ts','allocation-store.ts','obligation-contracts.ts'].map(name=>fileURLToPath(new URL('../../private-equity/src/'+name,import.meta.url))).concat(fileURLToPath(new URL('../../../apps/api/app/api/obligations/[operation]/route.ts',import.meta.url)));
+const sourcePaths=['enterprise-obligations.ts','enterprise-allocation.ts','enterprise-control.ts','enterprise-beliefs.ts','allocation-store.ts','obligation-contracts.ts',
+ 'real-world-service/consumer.ts','real-world-service/store.ts','real-world-service/boundaries.ts',
+ 'real-world-service/contracts.ts','real-world-service/checker.ts','real-world-service/projection.ts',
+ 'real-world-service/participants.ts','real-world-service/identity.ts'].map(name=>fileURLToPath(new URL('../../private-equity/src/'+name,import.meta.url))).concat(fileURLToPath(new URL('../../../apps/api/app/api/obligations/[operation]/route.ts',import.meta.url)));
 
 export class GovernedDispatchBroker {
  private queue:Promise<unknown>=Promise.resolve();private queued=0;

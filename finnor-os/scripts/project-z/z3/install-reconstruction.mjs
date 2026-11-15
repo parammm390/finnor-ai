@@ -5,6 +5,8 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import { join, isAbsolute, dirname } from "node:path";
+// Reconstruction and production consume the same exact release toolchain pin.
+const pinnedNodeVersion = "v" + JSON.parse(readFileSync(new URL("../../../../infra/deployment/release-toolchain.json", import.meta.url), "utf8")).nodeVersion;
 const arg = key => process.argv.find(a => a.startsWith(key + "="))?.slice(key.length + 1);
 const reconstruction = arg("--reconstruction"), output = arg("--output");
 if (![reconstruction, output].every(p => p && isAbsolute(p))) throw Error("Absolute reconstruction and fresh output required");
@@ -28,7 +30,7 @@ for (const p of [join(source, "node_modules"), join(backend, "node_modules")]) {
 }
 const disk = statfsSync(source), freeBytes = disk.bavail * disk.bsize;
 const preflight = { schema: "finnor.z3.install-preflight.v1",
-  status: process.version !== "v22.23.4" ? "BLOCKED_TOOLCHAIN"
+  status: process.version !== pinnedNodeVersion ? "BLOCKED_TOOLCHAIN"
     : freeBytes < 4 * 1024 ** 3 ? "BLOCKED_DISK_HEADROOM" : "READY_NOT_INSTALLED",
   sourceManifestSha256: sha(readFileSync(join(reconstruction, "manifest.json"))),
   node: process.version, freeBytes, requiredFreeBytes: 4 * 1024 ** 3,

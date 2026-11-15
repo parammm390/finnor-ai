@@ -29,5 +29,12 @@ jobs:
           PRODUCTION_API_URL: ${{ secrets.TENANT_PROBE_PRODUCTION_API_URL }}
           TENANT_A_PROBE_JWT: ${{ secrets.TENANT_PROBE_A_JWT }}
           TENANT_B_PROBE_JWT: ${{ secrets.TENANT_PROBE_B_JWT }}
+          PRODUCTION_TENANT_A_MARKER_ROOT_REF: ${{ secrets.TENANT_PROBE_PRODUCTION_MARKER_ROOT_REF }}
+          STAGING_TENANT_A_MARKER_ROOT_REF: ${{ secrets.TENANT_PROBE_STAGING_MARKER_ROOT_REF }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.TENANT_PROBE_VERCEL_AUTOMATION_BYPASS_SECRET }}
-        run: npx tsx scripts/probe-tenant-isolation.ts
+        run: npx tsx scripts/probe-tenant-isolation.ts --out "$RUNNER_TEMP/tenant-isolation"
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        if: always()
+        with:
+          name: tenant-isolation-probe
+          path: ${{ runner.temp }}/tenant-isolation
