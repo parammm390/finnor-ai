@@ -112,6 +112,7 @@ jobs:
       actions: read
       contents: read
       issues: write
+      pull-requests: read
     uses: ./.github/workflows/ci-completion.yml
     with:
       pr_number: 187

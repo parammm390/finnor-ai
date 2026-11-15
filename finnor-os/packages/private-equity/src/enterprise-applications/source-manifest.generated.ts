@@ -96,7 +96,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "7a231609f3ad2e2870c0160d15ee5a42e990106bb4912235cdc084fe718a3a7d"
+      "sha256": "551ff32cb20a7cb95be8072a5b3b24a13b3b7924e822b9fd864afb56d1d8ee5e"
     },
     {
       "path": "finnor-os/packages/db/migrations/0189_x3_enterprise_applications.sql",

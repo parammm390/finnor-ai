@@ -36,6 +36,17 @@ jobs:
           "$RUNNER_TEMP/w2-uv" pip sync --require-hashes --only-binary :all: --python "$RUNNER_TEMP/w2-scientific/bin/python" finnor-os/scripts/postz-w1/requirements-native.txt
       - name: Check the complete W2 owner and driver types
         run: node --max-old-space-size=2048 finnor-os/node_modules/typescript/bin/tsc -p finnor-os/scripts/postz-w2/tsconfig.native.json
+      - name: Verify all existing reader plans and confidentiality boundaries
+        working-directory: finnor-os
+        run: node --import=tsx scripts/audits/verify-reader-policy-plans.mts "$RUNNER_TEMP/w2-reader-policies"
+      - name: Retain rolled-back reader-policy proof
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: w2-reader-policies-${{ inputs.episode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/w2-reader-policies/result.json
+          if-no-files-found: error
+          retention-days: 7
       - name: Exercise registered original and repaired receiving-owner joins
         env:
           FINNOR_COMPENSATION_EPISODE: ${{ inputs.episode }}

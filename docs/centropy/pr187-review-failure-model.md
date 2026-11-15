@@ -40,3 +40,17 @@ checker currentness; mounted ordinary user paths; shared resource accounting;
 and independently observed business completion. Static/process success cannot
 substitute for installed native or real-effect acceptance. A CI PASS is not a
 Z/W completion declaration and does not establish absence of all P0/P1 defects.
+
+## Hosted follow-up findings
+
+The native Canvas baseline comparison reproduces the original failure and passes
+all repaired cases. The new actual W2 run then reproduces SQL 42501: Z1 added a
+RESTRICTIVE S5 policy using z1_s5_visible without granting its execution to the
+existing native readers. Audit every existing SELECT entitlement and restore
+only the necessary policy-function execution, preserving all row predicates,
+private Y4 restrictions, table privileges and business authority.
+
+The terminal relay reaches its first PR API read with Actions/Contents read and
+Issues write but lacks Pull Requests read, producing HTTP 403. Add only the
+missing read scope to the reusable workflow and callers. The source gate also
+rejects a test-local variable named module under Next's lint rule; rename it.

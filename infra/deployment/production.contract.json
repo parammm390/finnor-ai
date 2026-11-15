@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "postz_zz_w2_participant_authority_boundary.sql",
+    "requiredMigrationHead": "postz_zzz_native_reader_policy_acl.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",
