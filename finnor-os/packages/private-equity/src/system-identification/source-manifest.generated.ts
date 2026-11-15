@@ -448,7 +448,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/api/next.config.mjs",
-      "sha256": "5b017de1813aa2647e28a20a37b80c1f8a4b8b6138a4aea26ab3d3817474f812"
+      "sha256": "fe4b82043bc647ebfd7ddece5ca7c80b26fef132ed2b5b7060ed52aedd726954"
     },
     {
       "path": "finnor-os/packages/governed-execution/src/canonical.ts",
