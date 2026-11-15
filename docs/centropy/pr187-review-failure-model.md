@@ -54,3 +54,28 @@ The terminal relay reaches its first PR API read with Actions/Contents read and
 Issues write but lacks Pull Requests read, producing HTTP 403. Add only the
 missing read scope to the reusable workflow and callers. The source gate also
 rejects a test-local variable named module under Next's lint rule; rename it.
+
+The next hosted relay passes its PR read but fails the PR-comment POST. Its
+reporter needs Pull Requests write for that endpoint, while Issues can be reduced
+to read. It must still execute no checkout, third-party action, source write,
+merge, or deployment operation. Verify permissions for all three callers.
+
+The complete W2 TypeScript closure has 3,765 files and measures over 2 GiB. Its
+2 GiB compiler heap aborts before native execution. Qualify the unchanged full
+closure under a bounded 3 GiB compiler heap; retain every native episode's
+original 1,200-second, initial-memory, and continuous disk constraints.
+
+After the Canvas activation repair, M01 reaches the mounted panel but reports
+WORK_NOT_PROJECTED with no application-projection request observed. Observe only
+finite existing boundary messages, scope-match booleans, and bounded request
+counts/ages to distinguish authentication, visibility, native identity, and read
+admission. Never retain arbitrary DOM text, tokens, identity values, or response
+bodies in the shared receipt. No mounted expectation, retry, or timeout changes.
+
+The full release tests also find that the installed R3 smoke command no longer
+matches its source-commit guard. Inspection shows an older explicit 2 GiB CLI
+heap overrides the later 1 GiB NODE_OPTIONS campaign bound added by a3c50043a.
+Remove that stale override and duplicate container-memory flag; retain the
+later 1 GiB campaign heap and 4 GiB hard container/swap ceiling. The existing
+relocated-owner/source-commit proof must pass, and installed native success is
+still a separate required gate.

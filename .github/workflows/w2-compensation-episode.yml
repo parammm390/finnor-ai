@@ -35,7 +35,9 @@ jobs:
           "$RUNNER_TEMP/w2-uv" venv --python 3.12.13 "$RUNNER_TEMP/w2-scientific"
           "$RUNNER_TEMP/w2-uv" pip sync --require-hashes --only-binary :all: --python "$RUNNER_TEMP/w2-scientific/bin/python" finnor-os/scripts/postz-w1/requirements-native.txt
       - name: Check the complete W2 owner and driver types
-        run: node --max-old-space-size=2048 finnor-os/node_modules/typescript/bin/tsc -p finnor-os/scripts/postz-w2/tsconfig.native.json
+        # The complete merged import closure measures about 2.5 GiB in tsc.
+        # This compiler process exits before native-owner resource accounting.
+        run: node --max-old-space-size=3072 finnor-os/node_modules/typescript/bin/tsc -p finnor-os/scripts/postz-w2/tsconfig.native.json
       - name: Verify all existing reader plans and confidentiality boundaries
         working-directory: finnor-os
         run: node --import=tsx scripts/audits/verify-reader-policy-plans.mts "$RUNNER_TEMP/w2-reader-policies"

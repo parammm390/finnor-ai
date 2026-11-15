@@ -18,8 +18,8 @@ jobs:
     permissions:
       actions: read
       contents: read
-      issues: write
-      pull-requests: read
+      issues: read
+      pull-requests: write
     uses: ./.github/workflows/ci-completion.yml
     with:
       pr_number: 187
@@ -297,9 +297,18 @@ jobs:
                 code: /^[a-z_]{3,60}$/.test(issue.code ?? '') ? issue.code : null,
                 path: /^[a-zA-Z0-9_.]{1,180}$/.test(issue.path ?? '') ? issue.path : null })) },
             responseReadFailures: (value.responseReadFailures ?? []).filter(code => ['RESPONSE_BYTE_BOUND', 'RESPONSE_UNREADABLE'].includes(code)).slice(0, 10),
+            applicationBoundary: value.applicationBoundary ? {
+              ...Object.fromEntries(['workMatches', 'sessionPresent', 'busy', 'visible', 'online']
+                .map(key => [key, value.applicationBoundary[key] === true])),
+              codes: (value.applicationBoundary.codes ?? []).filter(code => ['AUTH_PENDING', 'SIGNED_OUT',
+                'AUTH_UNVERIFIED', 'ENVIRONMENT_UNAVAILABLE', 'NATIVE_SCOPE_PENDING', 'NATIVE_SCOPE_READING',
+                'READ_INTERRUPTED', 'ACCESS_UNAVAILABLE', 'PROJECTION_UNVERIFIED', 'ENVIRONMENT_CHANGED',
+                'OWNER_CHANGED', 'READ_READY', 'NO_SESSIONS'].includes(code)).slice(0, 13),
+            } : null,
             sourceRequests: (value.sourceRequests ?? []).filter(row => ['WORK', 'THREAD', 'COMPANY_PROJECTION',
               'APPLICATION_PROJECTION', 'ME'].includes(row.route))
-              .slice(-30).map(row => ({ route: row.route, status: httpStatus(row.status), failed: row.failed === true })),
+              .slice(-30).map(row => ({ route: row.route, status: httpStatus(row.status), failed: row.failed === true,
+                ageMs: Number.isSafeInteger(row.ageMs) && row.ageMs >= 0 && row.ageMs <= 3600000 ? row.ageMs : null })),
           } : null
           for (const { id, outcome, error, reason, checks, observations, wallMs } of mountedCases) {
             const browserOperation = typeof error === 'string'

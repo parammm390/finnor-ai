@@ -198,15 +198,40 @@ const boundaryReads = [];
 const boundaryReadFailures = [];
 async function renderBoundaryFacts() {
   await Promise.race([Promise.allSettled(boundaryReads), sleep(5000)]);
-  const dom = await page.evaluate(() => {
+  const dom = await page.evaluate(expectedWork => {
     const canvas = document.querySelector('main[aria-label="Investigation Canvas"]');
+    const application = canvas?.querySelector('.ct-application-semantics');
+    const messages = [...(application?.querySelectorAll('p[aria-live="polite"]') ?? [])].map(node => node.textContent ?? '');
+    const boundaries = [
+      ['AUTH_PENDING', 'Revalidating authentication and workspace rights.'],
+      ['SIGNED_OUT', 'Sign in to read private native Work application evidence.'],
+      ['AUTH_UNVERIFIED', 'Current authentication or rights could not be verified.'],
+      ['ENVIRONMENT_UNAVAILABLE', 'Offline or hidden view.'],
+      ['NATIVE_SCOPE_PENDING', 'Waiting for a current native scope read.'],
+      ['NATIVE_SCOPE_READING', 'Reading the current native Work, principal, tenant and root scope'],
+      ['READ_INTERRUPTED', 'The current owner read was interrupted.'],
+      ['ACCESS_UNAVAILABLE', 'Current application evidence is unavailable in this access scope.'],
+      ['PROJECTION_UNVERIFIED', 'The current-use projection could not be verified.'],
+      ['ENVIRONMENT_CHANGED', 'Connectivity or visibility changed.'],
+      ['OWNER_CHANGED', 'Owner state or access changed.'],
+      ['READ_READY', 'Canonical scope matched.'],
+      ['NO_SESSIONS', 'No X2 application sessions supplied for this native Work.'],
+    ];
+    const applicationBoundary = application ? {
+      workMatches: application.getAttribute('data-application-work') === expectedWork,
+      sessionPresent: ![null, 'none'].includes(application.getAttribute('data-application-session')),
+      busy: application.getAttribute('aria-busy') === 'true',
+      visible: document.visibilityState === 'visible', online: navigator.onLine,
+      codes: boundaries.filter(([, text]) => messages.some(message => message.startsWith(text))).map(([code]) => code),
+    } : null;
     return { canvasPresent: Boolean(canvas), documentPresent: Boolean(canvas?.querySelector('.ct-canvas-document')),
       invalidDocument: Boolean(canvas?.querySelector('.ct-canvas__invalid')),
       emptyDocument: Boolean(canvas?.querySelector('.ct-canvas__empty-document')),
       sourceErrors: canvas?.querySelectorAll('.ct-canvas__source-error').length ?? 0,
       workInstruments: canvas?.querySelectorAll('section[data-type="work_execution"]').length ?? 0,
-      unsupportedInstruments: canvas?.querySelectorAll('.ct-canvas-block:not([data-type])').length ?? 0 };
-  });
+      unsupportedInstruments: canvas?.querySelectorAll('.ct-canvas-block:not([data-type])').length ?? 0,
+      applicationBoundary };
+  }, parentA.workId);
   let composition = { attempted: false };
   if (boundaryInputs.thread && boundaryInputs.work) {
     try {
@@ -228,7 +253,8 @@ async function renderBoundaryFacts() {
     projectionResponseObserved: Boolean(boundaryInputs.projection), composition,
     responseReadFailures: boundaryReadFailures.slice(0, 10),
     sourceRequests: watch.records.flatMap(row => routeKind(row.path) ? [{ route: routeKind(row.path),
-      status: Number.isInteger(row.status) ? row.status : null, failed: Boolean(row.failure) }] : []).slice(-30) };
+      status: Number.isInteger(row.status) ? row.status : null, failed: Boolean(row.failure),
+      ageMs: Math.min(3600000, Math.max(0, Date.now() - row.at)) }] : []).slice(-30) };
 }
 async function startBrowser() {
   const { chromium } = loadPlaywright(root);

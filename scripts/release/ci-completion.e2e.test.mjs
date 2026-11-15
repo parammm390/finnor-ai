@@ -3,11 +3,23 @@ import { readFileSync } from "node:fs"
 import { createServer } from "node:http"
 import { spawn } from "node:child_process"
 import test from "node:test"
+import { load as parse } from "js-yaml"
 
 const source = readFileSync(new URL("../../.github/workflows/ci-completion.yml", import.meta.url), "utf8")
 const script = source.split("node --input-type=module <<'NODE'\n")[1]?.split("\n          NODE")[0]?.split("\n").map(line => line.slice(10)).join("\n")
 assert(script, "The actual reusable completion workflow must contain its reporting program")
 const head = "a".repeat(40), other = "b".repeat(40)
+
+test("the no-checkout relay and every caller can write PR comments without source write access", () => {
+  const workflow = parse(source)
+  const expected = { actions: "read", contents: "read", issues: "read", "pull-requests": "write" }
+  assert.deepEqual(workflow.permissions, expected)
+  assert(workflow.jobs.report.steps.every(step => !step.uses), "The reporting token must never execute checked-out source or actions")
+  for (const path of ["pr-verdict.yml", "project-z0-native.yml", "w2-atomic-settlement-verification.yml"]) {
+    const caller = parse(readFileSync(new URL(`../../.github/workflows/${path}`, import.meta.url), "utf8"))
+    assert.deepEqual(caller.jobs["completion-receipt"].permissions, expected, path)
+  }
+})
 
 async function fixture(options = {}) {
   const requests = [], posted = []
