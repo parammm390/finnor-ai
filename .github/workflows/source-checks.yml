@@ -109,7 +109,9 @@ jobs:
       - name: Check all root types against the workspace
         id: types
         continue-on-error: true
-        run: npx --no-install tsc --noEmit -p tsconfig.json
+        run: |
+          npx --no-install next typegen
+          npx --no-install tsc --noEmit -p tsconfig.json
       - name: Check shared frontend inventories and retirement boundary
         id: inventory
         continue-on-error: true

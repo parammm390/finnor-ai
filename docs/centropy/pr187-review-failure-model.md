@@ -136,3 +136,84 @@ source transformations. All six sources restore exactly afterward. This proves
 comparison setup and restoration only, not settlement. Complete W2 TypeScript
 and all official generated-input checks pass on the repaired source; hosted
 current-head exact/baseline/adverse native episodes are still required.
+
+## Current-head universal receipt 43732453888
+
+The current required verdict fails, while source consistency, frontend, canonical
+graph, public Z1/Z2/Z3, replay and the repaired worker-image job pass. The bot
+receipt and failed required-pr-verdict are verified on ab4b6a2b9.
+
+Four denied-role route suites return 500 because durable denial evidence links
+an unverified development-header employee to a canonical foreign key. Always
+deny that role; link its denial only to a principal actually found in this
+tenant, otherwise retain a null employee and explicit rejected-identity evidence.
+Do not synthesize users, suppress denial evidence, or expand any authority.
+
+Historical pre-V3 close fixtures now call the W2 post-publication hook before its
+certificate tables exist. Gate only that additive hook on the installed V3
+certificate-issuer function. Keep the old canonical close path and all current
+V3 independent-check, publication and W2 receiving predicates intact.
+
+Next itself rewrites the tracked root next-env.d.ts between dev and production
+paths, tripping the artifact immutability check. Follow the installed Next guide:
+untrack/ignore that framework-generated file, generate it before root type checks,
+and keep the canonical source-drift assertion. Do not exempt arbitrary changes.
+
+The route inventory does not recognize the five actual requireCapabilityActor
+routes, although that shared boundary resolves requireContext and denies non-owner
+capability access. Register only those named audited routes; preserve all other
+boundary requirements and the existing authenticated route evidence.
+
+Other failures remain open: Z4 assets are absent before chmod, OSV maintenance
+advisories remain failing, and the financial-analysis answer assertions need
+their own causal review. Setup and legacy-fixture corrections are not phase proof.
+
+The legacy-close compatibility revision is sealed into the W2 atomic-publication
+preimage. Reversing the complete additive installed-owner guard and hook yields
+the identical original repository preimage hash. This preserves baseline
+causality while qualifying pre-V3 close behavior separately from current V3
+settlement. Fourteen historical-close SQL cases pass without skips; 25 denial
+and route-inventory cases pass. Framework type generation and root types pass.
+These are targeted checks, not full current-head CI or phase acceptance.
+
+## Receipt and correction handoff (15 November 2026)
+
+All three accepted bot receipts bind repository 1306076635, PR 187, branch
+codex/zw-integration-quality-20261115, exact head
+ab4b6a2b961bfd21aa3136662ebe321cfe6b540c, and attempt 1. Actions API
+run/job identities were checked before changes; duplicate deliveries are no-ops.
+
+| Bot comment | Actions run | Completed required gate | Conclusion |
+| --- | --- | --- | --- |
+| 6897282024 | 43732447489 | w2-pair-verdict | failure |
+| 6897359877 | 43732447509 | original-owner (default) | failure |
+| 6897549613 | 43732453888 | required-pr-verdict | failure |
+
+W2 correction published as a50da25532d83e8fa4f1074d1326a762983231bb,
+complete tree 856e7e492e8309a4dfcdc06cbdf3201a41bd13b9. The complete tree
+matches checked local source. That push starts new required verification; old
+successes and new queued/running/skipped jobs are not current acceptance.
+
+The P7 actual job 132868679120 fails only the Phase 2 canonical-close case
+on the missing pe_closed_transaction_certificates relation. Its retained
+artifact 14169520238 has SHA-256
+b8f9f2e6742cbee394d6fc49a36baf48d5824cdf6ba851bcf17b6dfc9a8c92c3.
+This is the same installed-owner compatibility defect covered by the 14-case
+real SQL correction, not a separately established P7 qualification.
+
+The four financial-analysis assertion failures reveal an unresolved read
+contract: assistant turns deliberately persist reference-only text, while the
+authorized Thread tests still require the original answer on reload. The
+existing hydration reads summary/observation, whereas accepted answer outcomes
+use spokenSummary/answer. Restoring text also needs current Work, principal,
+source/rights and active-input checks; tenant equality or a previously accepted
+answer alone is insufficient. No persistence exemption, test relaxation or
+cache-based financial disclosure was added. This remains a functional blocker.
+
+Z0 still fails its original mounted Work display; the native Z4 binaries are
+absent before chmod and the two unmaintained Rust dependencies remain failing.
+W2's full five-episode settlement comparison remains open. W4/W5 governing
+implementation is unavailable. All Z/W phases retain the separate source,
+installed-owner, protected-effect and measured-business acceptance gates.
+The completion webhook remains enabled; only a new source-bound receipt resumes
+CI judgment. No main merge, deployment or new effect authority is authorized.

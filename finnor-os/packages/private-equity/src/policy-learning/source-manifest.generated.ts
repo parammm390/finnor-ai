@@ -140,11 +140,11 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "1cdee089f9584d7047692284e3a4a502432f8e93c52c9a7244326be44ffe1309"
+      "sha256": "8f6e07576f3ab1075344716fffa821d1b014c5a0bbd5e55784d7df8602912aec"
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
-      "sha256": "aaf39a2faa14cc2d8ca0e3d2698b4deae23bd1fc9f751718b2d7a7d4c41345ac"
+      "sha256": "8597ca50ef4425f00d29a2997546b19f067661baee3079817d69a450bf275416"
     },
     {
       "path": "finnor-os/packages/private-equity/src/owner-context.ts",

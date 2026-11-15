@@ -72,7 +72,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
-      "sha256": "aaf39a2faa14cc2d8ca0e3d2698b4deae23bd1fc9f751718b2d7a7d4c41345ac"
+      "sha256": "8597ca50ef4425f00d29a2997546b19f067661baee3079817d69a450bf275416"
     },
     {
       "path": "finnor-os/packages/private-equity/src/owner-context.ts",

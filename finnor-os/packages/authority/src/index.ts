@@ -365,8 +365,11 @@ async function evaluateAuthorityOnDb(ctx: TenantContext, request: AuthorityReque
     if (ctx.role !== "owner") {
       const [state] = await db.select({ revision: authorityStates.revision }).from(authorityStates)
         .where(eq(authorityStates.tenantId, ctx.tenantId)).limit(1);
-      return insertDecision(db, { ctx, request, employeeId: ctx.employeeId ?? null,
-        revision: state?.revision ?? 1, outcome: "denied", reasonCode: "participant_requires_scoped_workforce_authority", evidence: {} });
+      const [employee] = ctx.employeeId ? await db.select({ id: users.id }).from(users)
+        .where(and(eq(users.tenantId, ctx.tenantId), eq(users.id, ctx.employeeId))).limit(1) : [];
+      return insertDecision(db, { ctx, request, employeeId: employee?.id ?? null,
+        revision: state?.revision ?? 1, outcome: "denied", reasonCode: "participant_requires_scoped_workforce_authority",
+        evidence: ctx.employeeId && !employee ? { unverifiedEmployeeRejected: true } : {} });
     }
     const employeeId = ctx.employeeId ?? (UUID.test(ctx.userId) ? ctx.userId : null);
     // Service principals are explicit and never synthesized from a human role.
