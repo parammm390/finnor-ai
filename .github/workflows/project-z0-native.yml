@@ -12,6 +12,20 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  completion-receipt:
+    needs: original-owner
+    if: ${{ always() && github.ref_name == 'codex/zw-integration-quality-20261115' }}
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+    uses: ./.github/workflows/ci-completion.yml
+    with:
+      pr_number: 187
+      head_sha: ${{ github.sha }}
+      gate: original-owner (default)
+      result: ${{ needs.original-owner.result }}
+
   original-owner:
     runs-on: ubuntu-latest
     timeout-minutes: 70
@@ -35,6 +49,37 @@ jobs:
       - name: Install the locked Chromium build
         if: github.ref_name == 'codex/project-z0-mounted' || github.ref_name == 'codex/zw-integration-quality-20261115'
         run: PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/z0-chromium" node node_modules/playwright/cli.js install --with-deps chromium
+      - name: Compare real Canvas activation before and after the repair
+        if: github.ref_name == 'codex/zw-integration-quality-20261115'
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/z0-chromium
+        run: |
+          set -euo pipefail
+          baseline=2b7a158c95df2e5afd5f5dc9c2e8644b5fa79f61
+          git fetch --no-tags --depth=1 origin "$baseline"
+          if node scripts/centropy/verify-canvas-activation.mjs "$RUNNER_TEMP/canvas-before" "--baseline=$baseline"; then
+            echo "::error::The original navigation defect was not reproduced"
+            exit 1
+          fi
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict'
+          import { readFileSync } from 'node:fs'
+          const report = JSON.parse(readFileSync(process.env.RUNNER_TEMP + '/canvas-before/result.json', 'utf8'))
+          assert.equal(report.rows.length, 1)
+          assert.equal(report.rows[0].status, 'FAIL')
+          assert.equal(report.rows[0].stage, 'EXPLICIT_SELECTION_WITHOUT_VISIBILITY')
+          JS
+          node scripts/centropy/verify-canvas-activation.mjs "$RUNNER_TEMP/canvas-after"
+      - name: Retain Canvas comparison receipts
+        if: ${{ always() && github.ref_name == 'codex/zw-integration-quality-20261115' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: canvas-activation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/canvas-before/result.json
+            ${{ runner.temp }}/canvas-after/result.json
+          if-no-files-found: error
+          retention-days: 7
       - name: Verify the installed economic programme reader
         if: github.ref_name == 'codex/project-z0-economic'
         working-directory: finnor-os

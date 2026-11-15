@@ -261,7 +261,7 @@
         "scripts/release/vercel-auth.e2e.test.mjs",
         "scripts/release/worker-image-layout.e2e.test.mjs",
         "scripts/release/production-artifact.e2e.mjs",
-    "scripts/release/project-z-ci.e2e.mjs",
+        "scripts/release/project-z-ci.e2e.mjs",
         "scripts/release/api-build-context.e2e.test.mjs",
         "scripts/release/api-artifact.e2e.test.mjs",
         "scripts/release/run-capability-ui-e2e.mjs",
@@ -299,10 +299,14 @@
         ".github/workflows/w1-owning-episode.yml",
         ".github/workflows/w1-owning-verification.yml",
         ".github/workflows/w3-owning-episode.yml",
-        ".github/workflows/w3-owning-verification.yml"
+        ".github/workflows/w3-owning-verification.yml",
+        ".github/workflows/project-z0-native.yml",
+        ".github/workflows/w2-atomic-settlement-verification.yml",
+        ".github/workflows/ci-completion.yml"
       ],
       "classification": "READ_ONLY",
-      "state": "ACTIVE"
+      "state": "ACTIVE",
+      "reason": "Verification uses disposable fixtures and retained receipts. CI completion may write a source-bound PR comment only; it grants no production, product-authority, or business-effect mutation."
     },
     {
       "id": "declarative-production-source",
@@ -331,7 +335,6 @@
       "classification": "READ_ONLY",
       "state": "PRODUCTION_BLOCKED",
       "reason": "Dedicated staging fixture writes only; the driver refuses canonical production origins and requires staging release metadata before any mutation. This classification grants no production mutation authority."
-
     },
     {
       "id": "repository-release-input-generation",
@@ -341,6 +344,16 @@
       "classification": "READ_ONLY",
       "state": "DECLARATIVE_SOURCE_ONLY",
       "reason": "Generates and checks repository build inputs and intended release metadata; no external target, deployment, production database or independent production mutation entry point."
+    },
+    {
+      "id": "ci-completion-protocol-verification",
+      "path": "scripts/release/ci-completion.e2e.test.mjs",
+      "classification": "READ_ONLY",
+      "state": "ACTIVE",
+      "reason": "Exercises the actual completion reporting program against a disposable local HTTP protocol fixture; no hosted writes.",
+      "supportingPaths": [
+        "scripts/release/pr-verdict-transport.e2e.test.mjs"
+      ]
     }
   ]
 }

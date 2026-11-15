@@ -184,7 +184,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/CanvasDocument.tsx",
-      "sha256": "79f51302d918eea68a02cdbb4652ab2c54b5987fe0773fbecf13f0b845c2627b"
+      "sha256": "d2067b63e662a3d027eace7d0ad33f7b8023d533033dccc057942f47f1e873fa"
     },
     {
       "path": "src/components/centropy/canvas/canvas-compose.ts",

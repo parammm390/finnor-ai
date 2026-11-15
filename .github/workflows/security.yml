@@ -27,6 +27,7 @@ jobs:
       # One pinned scanner covers the complete history, including side parents
       # and each merge parent; the overlapping first-page action is unnecessary.
       - name: Scan complete base-to-head history
+        id: secret-history
         shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -50,6 +51,7 @@ jobs:
           tar -xzf "${tooling}/${archive}" -C "$tooling" gitleaks || fail "Cannot extract verified scanner"
           scanner="${tooling}/gitleaks"
           [[ "$("$scanner" version)" == "$version" ]] || fail "Scanner version mismatch"
+          printf 'gitleaks=%s\n' "$scanner" >> "$GITHUB_OUTPUT"
           : > "${tooling}/no-ignore-file"
 
           if [[ -n "$PR_BASE_SHA" || -n "$PR_HEAD_SHA" ]]; then
@@ -80,12 +82,23 @@ jobs:
             --ignore-gitleaks-allow --gitleaks-ignore-path="${tooling}/no-ignore-file" \
             --report-format=json --report-path="${RUNNER_TEMP}/finnor-secret-history-redacted.json" \
             --log-opts="-m ${scan_range}"
+      - name: Verify exact exceptions and adversarial history controls
+        if: ${{ always() && steps.secret-history.outputs.gitleaks != '' }}
+        env:
+          GITLEAKS_BIN: ${{ steps.secret-history.outputs.gitleaks }}
+          GIT_AUTHOR_NAME: FINNOR scanner fixture
+          GIT_AUTHOR_EMAIL: fixture@example.invalid
+          GIT_COMMITTER_NAME: FINNOR scanner fixture
+          GIT_COMMITTER_EMAIL: fixture@example.invalid
+        run: node scripts/centropy/verify-secret-scan-policy.mjs "$GITLEAKS_BIN" "$RUNNER_TEMP/finnor-secret-policy-proof.json"
       - name: Retain redacted complete-history findings
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: secret-history-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/finnor-secret-history-redacted.json
+          path: |
+            ${{ runner.temp }}/finnor-secret-history-redacted.json
+            ${{ runner.temp }}/finnor-secret-policy-proof.json
           if-no-files-found: warn
           retention-days: 7
   osv:

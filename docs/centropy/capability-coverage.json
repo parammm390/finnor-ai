@@ -8,8 +8,8 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-15T11:42:54.219Z",
-  "sourceBaseCommit": "14543a5404d646d6f1f9b1552960295db3692236",
+  "generatedAt": "2026-11-15T13:27:20.113Z",
+  "sourceBaseCommit": "2b7a158c95df2e5afd5f5dc9c2e8644b5fa79f61",
   "manifestSha256": "f0c423a9fd375211e4d31bba469dc762a311f737cf51ab0454a9371b13752491",
   "formsSha256": "682928710da6d6c0a81663ee7009966af9ddd9a619772bf1b89cd4a4fa204222",
   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -1122,7 +1122,7 @@
       },
       {
         "file": "src/components/centropy/canvas/CanvasDocument.tsx",
-        "sha256": "79f51302d918eea68a02cdbb4652ab2c54b5987fe0773fbecf13f0b845c2627b"
+        "sha256": "d2067b63e662a3d027eace7d0ad33f7b8023d533033dccc057942f47f1e873fa"
       },
       {
         "file": "src/components/centropy/product/contracts.ts",
@@ -1138,7 +1138,7 @@
       },
       {
         "file": "src/components/centropy/canvas/CanvasSectionNav.tsx",
-        "sha256": "b297cfd7d948ab79af42ae42769cb3fcba92e40574f5d77b001e2dbe16404d52"
+        "sha256": "6a0650ffbea3b70a9d0b7553b62687081761dac8b63a601da14978d3b1dd7a42"
       },
       {
         "file": "src/components/centropy/canvas/CanvasInstrument.tsx",

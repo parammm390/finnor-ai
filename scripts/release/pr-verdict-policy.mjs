@@ -1,4 +1,21 @@
 import { readGit } from "./worktree-state.mjs"
+import { createHash } from "node:crypto"
+import { readFileSync, writeFileSync } from "node:fs"
+
+export function writeChangedFilesEvidence({ path, files, head, base }) {
+  const body = JSON.stringify({ schema: "finnor.pr-changed-files.v1", head, base, files }) + "\n"
+  writeFileSync(path, body, { flag: "wx" })
+  return createHash("sha256").update(body).digest("hex")
+}
+
+export function readChangedFilesEvidence({ path, expectedSha256, head, base }) {
+  const body = readFileSync(path)
+  if (!/^[a-f0-9]{64}$/.test(expectedSha256 ?? "") || createHash("sha256").update(body).digest("hex") !== expectedSha256) throw Error("changed-file evidence digest mismatch")
+  const manifest = JSON.parse(body.toString("utf8"))
+  if (manifest.schema !== "finnor.pr-changed-files.v1" || manifest.head !== head || manifest.base !== base || !/^[a-f0-9]{40}$/.test(head ?? "") || !/^[a-f0-9]{40}$/.test(base ?? "")) throw Error("changed-file evidence identity mismatch")
+  if (!Array.isArray(manifest.files) || manifest.files.some(path => typeof path !== "string")) throw Error("changed-file evidence is invalid")
+  return manifest.files
+}
 
 export function classifyPullRequestFiles(files) {
   return {
