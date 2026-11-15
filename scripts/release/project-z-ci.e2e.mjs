@@ -19,7 +19,11 @@ assert.ok(nativeJob.includes("node scripts/project-z/run-native-ci.mjs"), "PROJE
 assert.ok(!/^ {4}if:/m.test(nativeJob), "PROJECT_Z_REAL_OWNER_JOB_MUST_NOT_BE_OPTIONAL")
 const job = workflowJob(ci, "project-z-public")
 assert.ok(job.includes("node scripts/project-z/run-ci.mjs"), "PROJECT_Z_REQUIRED_PROCESS_JOB_MISSING")
-assert.ok(job.includes("phase: [z1, z2, z3, z4]"), "PROJECT_Z_COMPLETE_PUBLIC_MATRIX_MISSING")
+assert.ok(job.includes("phase: [z1, z2, z3]"), "PROJECT_Z_COMPLETE_PUBLIC_MATRIX_MISSING")
+const z4 = workflowJob(ci, "project-z-public-z4")
+assert.ok(z4.includes("node scripts/project-z/run-ci.mjs --phase=z4"), "PROJECT_Z_REQUIRED_Z4_PROCESS_MISSING")
+assert.ok(!/^ {4}if:/m.test(z4), "PROJECT_Z_REQUIRED_Z4_MUST_NOT_BE_OPTIONAL")
+assert.ok(z4.includes("needs: project-z-native-assets") && z4.includes("ci-native.py install"), "PROJECT_Z_Z4_VERIFIED_NATIVE_ASSETS_MISSING")
 assert.ok(job.includes("fail-fast: false"), "PROJECT_Z_INDEPENDENT_RESULTS_MUST_BE_COLLECTED")
 assert.ok(!/^\s{4}if:/m.test(job), "PROJECT_Z_REQUIRED_JOB_MUST_NOT_BE_OPTIONAL")
 assert.deepEqual(verifyCiProcess(root).failures, [])
@@ -45,6 +49,16 @@ for (const file of readdirSync(join(root, ".github/workflows"))) {
 }
 assert.ok(verifyCiProcess(damaged).failures.some(value => value.includes("Project Z")))
 rows.push({ case: "removed-project-z-job", rejected: true })
+const withoutZ4 = mkdtempSync(join(tmpdir(), "finnor-project-z4-workflow-"))
+mkdirSync(join(withoutZ4, ".github/workflows"), { recursive: true })
+for (const file of readdirSync(join(root, ".github/workflows"))) {
+  if (!/\.ya?ml$/.test(file)) continue
+  const body = readFileSync(join(root, ".github/workflows", file), "utf8")
+  writeFileSync(join(withoutZ4, ".github/workflows", file), file === "ci.yml"
+    ? body.replace(/^  project-z-public-z4:\n[\s\S]*?(?=^  [\w-]+:|(?![\s\S]))/m, "") : body)
+}
+assert.ok(verifyCiProcess(withoutZ4).failures.some(value => value.includes("Project Z")))
+rows.push({ case: "removed-project-z4-job", rejected: true })
 const receipt = {
   schema: "finnor.project-z.ci-process-e2e.v1", status: "PASS",
   workflowSha256: createHash("sha256").update(ci).digest("hex"),

@@ -381,3 +381,15 @@ Before implementation, exercise finite error collection with an actual refused
 HTTP connection and an actual aborted local HTTP response, plus arbitrary nested
 private error strings and a real child exit. Then run the original W2 owner to
 identify the remaining native failure; diagnostic success cannot qualify W2.
+
+## Complete governance call-chain repair
+
+On source 59fb04956507a883bb689f4ae774719a02389c66, universal run
+43761446202 job 132957570327 passes 83 release cases and eight process cases,
+then fails the separate project-z-ci.e2e verifier with
+PROJECT_Z_COMPLETE_PUBLIC_MATRIX_MISSING. The native-preparation refactor moved
+Z4 into its own mandatory producer-dependent job but left this verifier assuming
+one four-element matrix. Preserve the original four-phase requirement: verify
+Z1-Z3 plus the required Z4 command, its verified native-asset dependency and
+non-optional execution; exercise deletion of both the fast public job and Z4.
+Run the complete four-command governance entrypoint before publishing this repair.
