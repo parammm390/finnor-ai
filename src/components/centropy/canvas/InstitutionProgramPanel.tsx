@@ -53,7 +53,9 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [configure, setConfigure] = useState(false)
+  const [refreshingScope, setRefreshingScope] = useState<string | null>(null)
   const refreshGeneration = useRef(0)
+  const pendingRefresh = useRef<{ key: string; generation: number; task: Promise<void> } | null>(null)
   const head = useRef<{ key: string; inputId: string | null; revision: number; requestId: string } | null>(null)
   if (head.current?.key !== scopeKey) head.current = null
   const visibleSources = allowed && sources?.key === scopeKey ? sources.value : null
@@ -63,48 +65,61 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
     && reading.value.revision === visibleSources?.request?.revision ? reading.value : null
   const phase = visibleSources && (!visibleSources.request || visible) ? "settled"
     : readFailureScope === scopeKey ? "unavailable" : "reading"
-  const refresh = useCallback(async () => {
-    const key = scopeKey, generation = ++refreshGeneration.current
+  const refresh = useCallback(async (afterMutation = false) => {
+    const key = scopeKey
+    if (!allowed || !isCurrent(key)) return
+    const pending = pendingRefresh.current
+    if (!afterMutation && pending?.key === key && pending.generation === refreshGeneration.current) return pending.task
+    const generation = ++refreshGeneration.current
     const current = () => isCurrent(key) && refreshGeneration.current === generation
-    if (!allowed) return
-    try {
-      const next = await centropyPost<Sources>("company-brain/institution-sources", { workId })
-      if (!current()) return
-      if (next.workId !== workId) throw Error("Responsibility sources returned another Work")
-      const prior = head.current
-      if (prior?.key === key && prior.inputId === next.workInputId
-          && (!next.request || next.request.revision < prior.revision
-            || next.request.revision === prior.revision && next.request.id !== prior.requestId)) return
-      head.current = next.request ? { key, inputId: next.workInputId,
-        revision: next.request.revision, requestId: next.request.id } : null
-      setSources({ key, value: next })
-      if (next.request) {
-        const result = await centropyPost<Read>("company-brain/institution-read", { requestId: next.request.id })
+    setRefreshingScope(key)
+    const task = (async () => {
+      try {
+        const next = await centropyPost<Sources>("company-brain/institution-sources", { workId })
         if (!current()) return
-        if (result.workId !== workId || result.workRevision !== next.workInputId
-          || result.requestId !== next.request.id || result.revision !== next.request.revision)
-          throw Error("Responsibility returned a different Work input or programme revision")
-        setReading({ key, value: result })
-      } else setReading(null)
-      setMessage(null)
-      setReadFailureScope(null)
-    } catch (error) {
-      if (!current()) return
-      setSources(null); setReading(null)
-      setMessage(error instanceof Error ? error.message : "Responsibility is unavailable in this scope")
-      setReadFailureScope(key)
-    }
+        if (next.workId !== workId) throw Error("Responsibility sources returned another Work")
+        const prior = head.current
+        if (prior?.key === key && prior.inputId === next.workInputId
+            && (!next.request || next.request.revision < prior.revision
+              || next.request.revision === prior.revision && next.request.id !== prior.requestId)) return
+        head.current = next.request ? { key, inputId: next.workInputId,
+          revision: next.request.revision, requestId: next.request.id } : null
+        setSources({ key, value: next })
+        if (next.request) {
+          const result = await centropyPost<Read>("company-brain/institution-read", { requestId: next.request.id })
+          if (!current()) return
+          if (result.workId !== workId || result.workRevision !== next.workInputId
+            || result.requestId !== next.request.id || result.revision !== next.request.revision)
+            throw Error("Responsibility returned a different Work input or programme revision")
+          setReading({ key, value: result })
+        } else setReading(null)
+        setMessage(null)
+        setReadFailureScope(null)
+      } catch (error) {
+        if (!current()) return
+        setSources(null); setReading(null)
+        setMessage(error instanceof Error ? error.message : "Responsibility is unavailable in this scope")
+        setReadFailureScope(key)
+      } finally {
+        if (pendingRefresh.current?.generation === generation) {
+          pendingRefresh.current = null
+          if (isCurrent(key)) setRefreshingScope(null)
+        }
+      }
+    })()
+    pendingRefresh.current = { key, generation, task }
+    return task
   }, [allowed, isCurrent, scopeKey, workId])
   useEffect(() => {
     setSources(null); setReading(null); setMessage(null); setBusy(false); setConfigure(false)
     void refresh()
   }, [refresh])
   useEffect(() => {
-    if (!visibleSources?.request || visible?.status === "CANCELLED") return
+    if (busy || refreshingScope === scopeKey || !visibleSources?.request || visible?.status === "CANCELLED") return
     const active = ["QUEUED", "RUNNING", "WAITING"].includes(visible?.status ?? "")
     const timer = window.setTimeout(() => void refresh(), active ? 3000 : 15000)
     return () => window.clearTimeout(timer)
-  }, [refresh, visible, visibleSources])
+  }, [busy, refreshingScope, scopeKey, refresh, visible, visibleSources])
 
   async function compile() {
     const key = scopeKey, metadata = visibleSources
@@ -145,7 +160,7 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
       <button type="button" onClick={() => void refresh()} disabled={busy}>Refresh current owners</button></header>
     <p>Compile this Work’s authorized sources into checked responsibilities and continue the permitted operations.</p>
     <button type="button" onClick={() => setConfigure(value => !value)} disabled={busy}>{configure ? "Close input configuration" : "Configure responsibility inputs"}</button>
-    {configure ? <InstitutionInputForm key={scopeKey} workId={workId} onSaved={async () => { if (isCurrent(scopeKey)) await refresh() }} /> : null}
+    {configure ? <InstitutionInputForm key={scopeKey} workId={workId} onSaved={async () => { if (isCurrent(scopeKey)) await refresh(true) }} /> : null}
     <div className="ct-evidence__actions"><button type="button" disabled={busy || !visibleSources?.workInputId
       || !visibleSources.grants.length || visibleSources.grants.length > 16
       || ["QUEUED", "RUNNING", "CANCELLED"].includes(visible?.status ?? "")}

@@ -61,7 +61,7 @@ async function runCase(id, rows, title, body) {
   if (id === "M-01" && c.outcome === "FAIL" && page) {
     c.observations.renderBoundary = await renderBoundaryFacts().catch(() => ({ diagnosticUnavailable: true }));
   }
-  if (caseMark !== null && c.error === "Z0_BROWSER_INSTITUTION_UNAVAILABLE") {
+  if (caseMark !== null && (c.error === "Z0_BROWSER_INSTITUTION_UNAVAILABLE" || c.error === "Z0_BROWSER_INSTITUTION_BUSY")) {
     c.observations.institutionRequests = watch.since(caseMark)
       .filter(row => ["/api/centropy/company-brain/institution-sources",
         "/api/centropy/company-brain/institution-read", "/api/centropy/company-brain/institution-status"].includes(row.path))
@@ -610,9 +610,17 @@ await runCase("M-09", ["Z0-R09-C05"], "Offline then reconnect", async c => {
   await shot(page, c, "reconnected");
   check(c, "reconnect.fresh-read-and-facts", "after reconnect a fresh projection request is observed and the facts equal the earlier ones", "browser request watch + M-01 reference signature",
     { freshReads: fresh.length, signatureEqual: signature(after) === referenceSignature }, fresh.length >= 1 && signature(after) === referenceSignature);
-  check(c, "reconnect.no-replay", "no queued request replays: owner witness (sessions, cancel requests, requests, charges) unchanged", "O-SQL witness before/after",
-    { before: { sessions: before.sessions, requests: before.requests, charges: before.charges }, after: { sessions: afterWitness.sessions, requests: afterWitness.requests, charges: afterWitness.charges } },
-    JSON.stringify([before.sessions, before.requests, before.charges]) === JSON.stringify([afterWitness.sessions, afterWitness.requests, afterWitness.charges]));
+  const chargeIncrease = afterWitness.charges.count - before.charges.count;
+  const beforeChargeKeys = new Set(before.chargeKeys);
+  const readIncrease = afterWitness.meteredOriginalReadKeys.filter(key => !beforeChargeKeys.has(key)).length;
+  const unitIncrease = BigInt(afterWitness.charges.units) - BigInt(before.charges.units);
+  const allNewChargesAreOwnerReads = chargeIncrease >= 0 && chargeIncrease === readIncrease
+    && unitIncrease === BigInt(chargeIncrease);
+  check(c, "reconnect.no-replay", "sessions, cancel requests and owner requests unchanged; S5 charge increases match original S7 read receipts", "O-SQL tenant-wide S5 and original S7 witnesses",
+    { before: { sessions: before.sessions, requests: before.requests, charges: before.charges },
+      after: { sessions: afterWitness.sessions, requests: afterWitness.requests, charges: afterWitness.charges },
+      chargeIncrease, readIncrease, allNewChargesAreOwnerReads },
+    isDeepStrictEqual(before.sessions, afterWitness.sessions) && before.requests === afterWitness.requests && allNewChargesAreOwnerReads);
   mutationsOf(c, mark);
 });
 

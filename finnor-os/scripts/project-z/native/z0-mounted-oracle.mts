@@ -135,13 +135,37 @@ export async function mountedOwnerCut(q: Q, parent: any, sessionId: string, afte
 
 export async function witness(q: Q, parent: any) {
   const [reservations] = await q("SELECT count(*)::int count, md5(coalesce(string_agg(reservation_id||status||envelopes::text,'|' ORDER BY reservation_id),'')) digest FROM finnor_os.s5_reservations WHERE tenant_id=$1", [parent.tenantId]);
-  const [charges] = await q("SELECT count(*)::int count, coalesce(sum(units),0)::text units FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1", [parent.tenantId]);
+  const [{ charges, chargeKeys, meteredOriginalReadKeys }] = await q(`WITH classified AS (
+    SELECT jsonb_build_array(charge.reservation_id,charge.charge_key)::text charge_identity, charge.units,
+      CASE WHEN charge.principal_id=$2 AND charge.reservation_id=$3
+      AND charge.phase='CONTROL' AND charge.unit='request' AND charge.units=1
+      AND charge.body->>'schema'='finnor.s5.institution-consumption.v1'
+      THEN EXISTS (
+        SELECT 1 FROM finnor_os.s7_economic_records meter
+        WHERE meter.tenant_id=charge.tenant_id AND meter.principal_id=charge.principal_id
+          AND meter.kind='COMPUTE'
+          AND meter.idempotency_key=('x1-api-compute:'||(charge.body->>'physicalInvocationId'))
+          AND meter.body->'payload'->>'schema'='finnor.x1.api-compute.v1'
+          AND meter.body->'payload'->>'workId'=$4 AND meter.body->'payload'->>'episodeId'=$5
+          AND meter.body->'payload'->'parentReservation'->>'id'=$3
+          AND meter.body->'payload'->>'invocationId'=charge.body->>'physicalInvocationId'
+          AND meter.body->'payload'->'resourceCharge'->'ref'=charge.body->'ref'
+          AND meter.body->'payload'->>'statusCode'='200'
+          AND meter.body->'payload'->>'operation' IN ('institution-read','institution-sources')
+      ) ELSE false END original_read
+    FROM finnor_os.s5_governed_resource_charges charge WHERE charge.tenant_id=$1
+  )
+  SELECT jsonb_build_object('count',count(*)::int,'units',coalesce(sum(units),0)::text) charges,
+    coalesce(jsonb_agg(charge_identity),'[]'::jsonb) "chargeKeys",
+    coalesce(jsonb_agg(charge_identity) FILTER (WHERE original_read),'[]'::jsonb) "meteredOriginalReadKeys"
+  FROM classified`, [parent.tenantId, parent.ownerId, parent.parentReservation.id, parent.workId, parent.episodeId]);
   const [sessions] = await q("SELECT count(*)::int count, count(cancel_requested_at)::int cancels, md5(coalesce(string_agg(id::text||status||generation::text,'|' ORDER BY id),'')) digest FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1", [parent.tenantId]);
   const [requests] = await q("SELECT count(*)::int count FROM finnor_os.application_semantics_requests WHERE tenant_id=$1", [parent.tenantId]);
   const [works] = await q("SELECT count(*)::int count, md5(coalesce(string_agg(id::text||status,'|' ORDER BY id),'')) digest FROM finnor_os.works WHERE tenant_id=$1", [parent.tenantId]);
   const [peRequests] = await q("SELECT count(*)::int count FROM finnor_os.pe_requests WHERE tenant_id=$1", [parent.tenantId]);
   const jobs = await q("SELECT type,status,count(*)::int n FROM finnor_os.jobs WHERE tenant_id=$1 AND type LIKE '%application%' GROUP BY 1,2 ORDER BY 1,2", [parent.tenantId]);
-  return { reservations, charges, sessions, requests: requests.count, works, peRequests: peRequests.count, applicationJobs: jobs };
+  return { reservations, charges, chargeKeys, meteredOriginalReadKeys, sessions, requests: requests.count,
+    works, peRequests: peRequests.count, applicationJobs: jobs };
 }
 
 /** Everything a mounted fact is compared against for one original Work and one of its sessions. */
