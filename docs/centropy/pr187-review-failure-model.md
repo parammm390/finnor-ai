@@ -217,3 +217,53 @@ implementation is unavailable. All Z/W phases retain the separate source,
 installed-owner, protected-effect and measured-business acceptance gates.
 The completion webhook remains enabled; only a new source-bound receipt resumes
 CI judgment. No main merge, deployment or new effect authority is authorized.
+
+## Continued code and CI review, current source edb2044f
+
+The completed universal run 43737966736 now passes P7, both readiness gates,
+production artifacts, source/governance, root checks, and backend shards 1/3.
+Shard 2 still fails four original financial-answer Thread reload assertions.
+Z4 and real-owner setup still fail before execution because native assets are
+absent. The dependency gate still reports the two maintenance advisories.
+W2 run 43737960014 fails before the settlement output and retains fetch failed;
+the missing-file exception masks that original failure. Controller waiting and
+outstanding-effect observations alone do not identify a transport crash cause.
+
+The Thread loader has a related privacy failure: generic outcome hydration
+checks an active principal and tenant, but does not bind the exact input,
+current Work relationship, cancellation, or source/rights witness. It also
+performs two database reads for every assistant message. Adding spokenSummary
+to that fallback would restore the happy path while widening private disclosure.
+
+Before implementation, verify the following failure model with actual HTTP/SQL:
+stored and mirrored messages remain reference-only; authorized original answer
+reload succeeds; peers and inactive identities cannot read it; cancellation or
+replacement of the accepted input cannot resurrect its answer; canonical source
+change or rights revocation removes the prior answer; an answer without its
+server-produced read witness fails closed. A read must not invoke a model,
+publish source-experience deliveries, or create business actions.
+
+Use one bounded candidate query and one repeatable-read, read-only transaction
+for the current projection. Its PostgreSQL snapshot defines the authorization
+cut; a later request always takes a new cut. Reuse the existing S1 currentness
+comparison with experience publication disabled for this read. Share identical
+pin checks only within that transaction, never across requests or principals.
+Keep the original tests and protect both supplied-input and canonical analysis.
+
+The original 57-case HTTP/ordinary-SQL suite reproduces exactly four failures
+before the repair (53 pass, zero skipped). After the repair all 57 pass. The
+same suite now exercises reference-only storage, private no-store delivery,
+same-tenant peer/inactive refusal, absent-witness refusal, a canonical
+cancellation, a newer Work input, and current canonical rights revocation.
+An action-scoped historical refusal still permits the original sibling answer;
+the read uses the existing instruction-cancellation fence semantics. Complete
+backend TypeScript passes. Source/process and field acceptance remain separate.
+
+The same accepted private answer is reachable through Work detail and duplicate
+intake replay. Apply its exact input/current-source validation there too, before
+returning their retained payloads. Revocation must refuse all three routes;
+duplicate refusal must not replan, call a model, or issue another effect.
+The unchanged 57-case suite passes with those additional Work/replay refusals
+and no skips. Its private receipt records the exact parent, patch digest and
+each input/observation. This is actual authenticated HTTP and ordinary SQL with
+deterministic model proposals, not mounted, installed, protected or field proof.

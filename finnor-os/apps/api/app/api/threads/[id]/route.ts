@@ -1,5 +1,5 @@
 import { loadEmployeeConversationThread } from "@finnor/db";
-import { resolveCanonicalHumanPrincipal } from "@finnor/orchestration";
+import { resolveCanonicalHumanPrincipal, hydrateEmployeeConversationAnswers } from "@finnor/orchestration";
 import { errorResponse, requireContext } from "../../../../lib/auth";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
@@ -18,7 +18,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       beforeSequence: before,
     });
     if (!loaded) return Response.json({ error: "conversation_thread_not_found" }, { status: 404 });
-    return Response.json(loaded);
+    return Response.json(await hydrateEmployeeConversationAnswers(ctx, loaded, req.signal),
+      { headers: { "cache-control": "private, no-store" } });
   } catch (error) {
     if (error instanceof Error && error.message.startsWith("canonical_human_principal")) return Response.json({ error: error.message }, { status: 403 });
     return errorResponse(error);

@@ -160,11 +160,52 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
       expect(current.queries).toEqual([]); expect(effects).toEqual([]); expect(calls).toHaveLength(expectedCalls);
       const thread = await http.read(`threads/${response.body.threadId}`);
       expect(thread.body.messages).toEqual(expect.arrayContaining([expect.objectContaining({ role: "assistant", originalText: response.body.answer.spokenSummary })]));
+      const stored = (await admin.query("SELECT original_text FROM finnor_os.employee_conversation_messages WHERE tenant_id=$1 AND thread_id=$2 AND role='assistant'", [tenantId, response.body.threadId])).rows;
+      expect(stored).toHaveLength(1);
+      expect(stored[0].original_text).not.toContain("160,000,000");
+      expect(thread.body.messages.find((item: { role: string }) => item.role === "assistant").hydratedText).toBe(response.body.answer.spokenSummary);
+      expect((await http.read(`threads/${response.body.threadId}`, "other")).status).toBe(404);
+      const privateRead = await http.readResponse(`threads/${response.body.threadId}`, {});
+      expect(privateRead.headers.get("cache-control")).toBe("private, no-store");
+      await privateRead.arrayBuffer();
       const replay = await http.request("actions", body);
       expect(replay.body.answer.analysis).toEqual(response.body.answer.analysis);
       expect(calls).toHaveLength(expectedCalls);
       const aggregate = await http.read(`works/${response.body.workId}`);
       expect(aggregate.body.work.work.finalOutcome.answer.analysis).toEqual(response.body.answer.analysis);
+      await admin.query("UPDATE finnor_os.users SET status='suspended' WHERE tenant_id=$1 AND id=$2", [tenantId, actorId]);
+      try {
+        expect((await http.read(`threads/${response.body.threadId}`)).status).toBe(403);
+      } finally {
+        await admin.query("UPDATE finnor_os.users SET status='active' WHERE tenant_id=$1 AND id=$2", [tenantId, actorId]);
+      }
+      await record("private-financial-thread-reload", { selected, stored, restored: thread, peerDenied: true, inactiveDenied: true });
+      const savedOutcome = (await admin.query("SELECT final_outcome FROM finnor_os.works WHERE tenant_id=$1 AND id=$2", [tenantId, response.body.workId])).rows[0].final_outcome;
+      await admin.query("UPDATE finnor_os.works SET final_outcome=final_outcome #- '{answer,readback}' WHERE tenant_id=$1 AND id=$2", [tenantId, response.body.workId]);
+      try {
+        const unwitnessed = await http.read(`threads/${response.body.threadId}`);
+        expect(unwitnessed.body.messages.find((item: { role: string }) => item.role === "assistant").originalText).toBe(stored[0].original_text);
+        expect((await http.read(`works/${response.body.workId}`)).status).toBe(404);
+      } finally {
+        await admin.query("UPDATE finnor_os.works SET final_outcome=$3::jsonb WHERE tenant_id=$1 AND id=$2", [tenantId, response.body.workId, JSON.stringify(savedOutcome)]);
+      }
+      if (!selected) {
+        const appendCancellation = (payload: object) => admin.query(`INSERT INTO finnor_os.instruction_events(tenant_id,instruction_id,seq,phase,payload)
+          SELECT $1,$2,coalesce(max(seq),0)+1,'cancelled',$3::jsonb FROM finnor_os.instruction_events WHERE tenant_id=$1 AND instruction_id=$2`,
+        [tenantId, response.body.instructionId, JSON.stringify(payload)]);
+        await appendCancellation({ actionId: randomUUID(), source: "historical-action-refusal-control" });
+        const actionRefusal = await http.read(`threads/${response.body.threadId}`);
+        expect(actionRefusal.body.messages.find((item: { role: string }) => item.role === "assistant").originalText).toBe(response.body.answer.spokenSummary);
+        await appendCancellation({ fence: true, canonical: true, source: "disposable-cancellation-control" });
+      } else {
+        await admin.query(`INSERT INTO finnor_os.work_inputs(id,tenant_id,work_id,instruction_id,channel,instruction_text,created_by)
+          VALUES($1,$2,$3,$4,'text','Independent newer-input refusal control',$5)`,
+        [randomUUID(), tenantId, response.body.workId, randomUUID(), actorId]);
+      }
+      const withdrawn = await http.read(`threads/${response.body.threadId}`);
+      expect(withdrawn.body.messages.find((item: { role: string }) => item.role === "assistant").originalText).toBe(stored[0].original_text);
+      expect((await http.read(`works/${response.body.workId}`)).status).toBe(404);
+      await record("private-financial-thread-withdrawn", { selected, reason: selected ? "newer_input" : "canonical_cancellation", response: withdrawn });
     } finally {
       releaseSecondProposal();
       if (prior === undefined) delete process.env.LLM_PROVIDER_ANSWER_TEXT; else process.env.LLM_PROVIDER_ANSWER_TEXT = prior;
@@ -797,6 +838,18 @@ describe.skipIf(!available)("authenticated PE objective world scope", () => {
       expect(current.loop).toBeUndefined();
       expect(current.queries).toEqual(expect.arrayContaining([expect.objectContaining({ intent: "pe_world_state", status: "succeeded" })]));
       expect((await admin.query("SELECT id FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2", [tenantId, response.body.workId])).rows).toEqual([]);
+      if (mode === "supported" || mode === "polite_supported") {
+        denyId = String((await admin.query("INSERT INTO finnor_os.role_authority_grants(tenant_id,role_id,capability,resource_type,effect,max_risk,approval_required) VALUES($1,$2,'query:pe_world_state','*','deny','high',false) RETURNING id", [tenantId, roleId])).rows[0].id);
+        const revoked = await http.read(`threads/${response.body.threadId}`);
+        expect(revoked.status).toBe(200);
+        expect(JSON.stringify(revoked.body.messages.filter((item: { role: string }) => item.role === "assistant"))).not.toContain(statement);
+        expect((await http.read(`works/${response.body.workId}`)).status).toBe(404);
+        const replayAfterRevocation = await http.request("actions", body);
+        expect(replayAfterRevocation.status).toBe(404);
+        expect(JSON.stringify(replayAfterRevocation.body)).not.toContain(statement);
+        expect(modelInputs.filter((value: any) => value.phase === "grounded_analysis")).toHaveLength(1);
+        await record("grounded-analysis-thread-rights-revoked", { mode, response: revoked });
+      }
       if (liveModels) {
         expect(liveCalls).toEqual(expect.arrayContaining([expect.objectContaining({ purpose: "answer", status: "completed" }), expect.objectContaining({ purpose: "critic", status: "completed" })]));
       }

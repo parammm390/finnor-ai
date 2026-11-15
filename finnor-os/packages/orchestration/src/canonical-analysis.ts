@@ -144,6 +144,7 @@ export async function answerCanonicalAnalysis(input: {
   if (Buffer.byteLength(spokenSummary) > 60_000) throw new Error("GROUNDED_ANALYSIS_OUTPUT_LIMIT");
   return {
     kind: "answer", intent: "pe_world_state", readOnly: true, spokenSummary,
+    readback: { kind: "canonical_analysis", pin: view.pin },
     display: { title: "Sourced analysis", facts: selected.map(({ claim }) => ({ label: claim.kind, value: claimLabel(claim) })) },
     evidence, asOf: result.asOf, freshness: { status: "unknown", observedAt: result.asOf },
   };

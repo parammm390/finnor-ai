@@ -3025,25 +3025,9 @@ export async function loadEmployeeConversationThread(params: {
       before,
       params.throughSequence !== undefined ? sql`${schema.employeeConversationMessages.sequence} <= ${params.throughSequence}` : sql`true`,
     )).orderBy(desc(schema.employeeConversationMessages.sequence)).limit(messageLimit);
-    // R1: outcome-bearing assistant turns store only a non-sensitive
-    // reference. Hydrate the gated financial text solely after a current
-    // authorization check: the owning principal must still be active and
-    // the referenced Work must still belong to this tenant scope.
-    const hydratedRows = await Promise.all(rows.map(async (row) => {
-      if (row.role !== "assistant" || !row.workId
-          || !Array.isArray(row.outcomeRefs) || row.outcomeRefs.length === 0) return row;
-      const [principal] = await db.select({ id: schema.users.id }).from(schema.users).where(and(
-        eq(schema.users.tenantId, params.tenantId), eq(schema.users.id, params.ownerEmployeeId),
-        eq(schema.users.status, "active"))).limit(1);
-      if (!principal) return row;
-      const [workRow] = await db.select({ status: schema.works.status, finalOutcome: schema.works.finalOutcome })
-        .from(schema.works).where(and(
-          eq(schema.works.tenantId, params.tenantId), eq(schema.works.id, row.workId))).limit(1);
-      const outcome = workRow ? jsonObject(workRow.finalOutcome) : {};
-      const summary = workRow && !["cancelled", "failed"].includes(workRow.status)
-        ? outcome.summary ?? outcome.observation : null;
-      return typeof summary === "string" && summary ? { ...row, hydratedText: summary } : row;
-    }));
+    // Stored conversation/memory is reference-only. The authenticated read owner
+    // may project an exact answer after its current input/source/rights checks;
+    // tenant membership alone cannot hydrate a historical Work outcome.
     return {
       thread: {
         ...conversationThread(thread),
@@ -3052,7 +3036,7 @@ export async function loadEmployeeConversationThread(params: {
         unresolvedReferences: Array.isArray(thread.unresolvedReferences) ? thread.unresolvedReferences as Array<Record<string, unknown>> : [],
         outcomeRefs: Array.isArray(thread.outcomeRefs) ? thread.outcomeRefs as Array<Record<string, unknown>> : [],
       },
-      messages: hydratedRows.reverse().map(conversationMessage),
+      messages: rows.reverse().map(conversationMessage),
     };
   }, params.ownerEmployeeId);
 }

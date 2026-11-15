@@ -1,4 +1,5 @@
 import type { EmployeeConversationContext, FinancialExplanation, TenantContext } from "@finnor/shared-types";
+import { createHash } from "node:crypto";
 import { checkFinancialExplanation, incompleteFinancialExplanation } from "@finnor/private-equity";
 import { buildConversationModelInput } from "./conversation-prompt";
 import { parseModelJson } from "./model-json";
@@ -40,6 +41,7 @@ export async function answerSuppliedFinancialQuestion(input: {
   ].join("\n\n");
   const asOf = new Date().toISOString();
   return { kind: "answer", intent: "conversation", readOnly: true, spokenSummary, analysis,
+    readback: { kind: "supplied_financial", instructionDigest: createHash("sha256").update(input.instruction).digest("hex") },
     display: { title: analysis.title, facts: analysis.calculations.map(item => ({ label: item.label, value: item.value.formatted })) },
     evidence: analysis.sources.map(source => ({ source: "user_supplied_conditional_input", ref: source.id, timestamp: asOf, kind: "SESSION" })),
     asOf, freshness: { status: "unknown", observedAt: asOf } };

@@ -18,6 +18,7 @@ import {
   type PeWorldRootRef,
   type FinancialExplanation,
   type FinancialDocumentReviewReceipt,
+  type BeliefViewPin,
 } from "@finnor/shared-types";
 import type { OperationalQueryOptions } from "@finnor/read-models";
 import { executeTenantOperationalQuery } from "./operational-query-runtime";
@@ -123,6 +124,9 @@ export interface AnswerEnvelope {
   query?: OperationalQueryExecution;
   analysis?: FinancialExplanation;
   documentReviewReceipt?: FinancialDocumentReviewReceipt;
+  /** Server-produced witness for private, freshly authorized Thread readback. */
+  readback?: { kind: "supplied_financial"; instructionDigest: string }
+    | { kind: "canonical_analysis"; pin: BeliefViewPin };
 }
 
 export type FastReadOnlyClassification =

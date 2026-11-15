@@ -3,6 +3,7 @@ import { readWorkInputResponse } from "@finnor/db";
 import { isEconomicReadIntent, storedEconomicQuery, type TenantContext } from "@finnor/shared-types";
 import { PeDomainError } from "@finnor/private-equity/src/types";
 import { assertEconomicReadReplayAccess } from "@finnor/private-equity/src/economic-reads/reader";
+import { assertPrivateAnswerReadAccess, isPrivateAnalysisAnswer } from "./conversation-answer-read";
 
 export { storedEconomicQuery } from "@finnor/shared-types";
 const record = (value: unknown): Record<string, unknown> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
@@ -17,11 +18,15 @@ export async function assertEconomicReadReplyAccess(
 ): Promise<void> {
   const owned = await readWorkInputResponse({ tenantId: ctx.tenantId, userId: ctx.userId, ...input });
   const body = record(record(value).response ?? value), query = record(body.query ?? body);
+  const originalBody = record(record(owned.response).response ?? owned.response);
+  if (isPrivateAnalysisAnswer(body.answer) || isPrivateAnalysisAnswer(originalBody.answer)) {
+    if (!isDeepStrictEqual(body.answer, originalBody.answer)) throw unavailable();
+    await assertPrivateAnswerReadAccess(ctx, body.answer, input);
+  }
   const request = record(query.request), result = record(query.result);
   const financial = owned.queryExecutions.length > 0 || isEconomicReadIntent(request.intent) || isEconomicReadIntent(result.intent) || result.economicRead !== undefined;
   if (!financial) return;
   const execution = storedEconomicQuery(value), original = storedEconomicQuery(owned.response);
-  const originalBody = record(record(owned.response).response ?? owned.response);
   if (!execution || !original || !isDeepStrictEqual(execution, original) || owned.input.instructionId !== input.instructionId
       || originalBody.workId !== input.workId || originalBody.workInputId !== input.workInputId || originalBody.instructionId !== input.instructionId
       || execution.result.execution.workId !== input.workId || execution.result.execution.workInputId !== input.workInputId
