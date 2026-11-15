@@ -3485,8 +3485,8 @@
     },
     {
       "file": "packages/private-equity/src/workforce-compensation-closing.ts",
-      "bytes": 26523,
-      "sha256": "2717d29c3a2d99a61a72c5ee98d28aebafdac40cdc46f68d49485986d0d14ca7"
+      "bytes": 27605,
+      "sha256": "5e2ae7994ab36ad5d2350c72e55d626e7ea47de4fcebf6d92baba7758f16b6c4"
     },
     {
       "file": "packages/private-equity/src/world-repository.ts",

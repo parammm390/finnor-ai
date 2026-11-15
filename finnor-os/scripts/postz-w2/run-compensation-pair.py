@@ -44,9 +44,12 @@ def main():
     command = [node, "--import=tsx", "scripts/v3/run-closing-e2e.mts", "--case", "workforce-compensation"]
     selected = args.episode.removeprefix("after-") if args.episode.startswith("after-") else "exact"
     manifest = json.loads((INPUTS / "manifest.json").read_text())
-    assert manifest["schema"] == "finnor.w2.compensation-recovery-preimages.v1"
-    paths = [ALLOCATION, *[row["target"] for row in manifest["files"]], JOIN]
-    assert len(paths) == 5 and len(set(paths)) == 5
+    assert manifest["schema"] == "finnor.w2.compensation-recovery-preimages.v2"
+    atomic = manifest["atomicPublication"]
+    assert atomic["target"] == PREFIX + "repository.ts"
+    assert atomic["introducingCommit"] == "68f17825381eac740ee739f54c23cb38558c43ed"
+    paths = [ALLOCATION, *[row["target"] for row in manifest["files"]], atomic["target"], JOIN]
+    assert len(paths) == 6 and len(set(paths)) == 6
     fixed = {path: (ROOT / path).read_bytes() for path in paths}
     reversed_bytes = dict(fixed)
     for treatment, original in (
@@ -63,6 +66,13 @@ def main():
         assert digest(fixed[row["target"]]) == row["fixedSha256"], "REPAIRED_OWNER_PREIMAGE_CHANGED"
         reversed_bytes[row["target"]] = before
     reversed_bytes[JOIN] = None
+    assert atomic["hunkSource"] == "3.atomic-publication.source.txt"
+    atomic_hunk = (INPUTS / atomic["hunkSource"]).read_bytes()
+    assert digest(atomic_hunk) == atomic["hunkSha256"]
+    assert digest(fixed[atomic["target"]]) == atomic["fixedSha256"], "ATOMIC_PUBLICATION_PREIMAGE_CHANGED"
+    assert fixed[atomic["target"]].count(atomic_hunk) == 1, "EXACT_ATOMIC_PUBLICATION_TREATMENT_REQUIRED"
+    reversed_bytes[atomic["target"]] = fixed[atomic["target"]].replace(atomic_hunk, b"", 1)
+    assert digest(reversed_bytes[atomic["target"]]) == atomic["beforeSha256"]
     assert not subprocess.check_output(["git", "diff", "--name-only"], cwd=ROOT).strip(), "CLEAN_TRACKED_SOURCE_REQUIRED"
     record = {"schema": "finnor.w2.compensation-owner-comparison.v1", "status": "RUNNING",
         "episode": args.episode, "selected": selected, "startedAt": time.time(), "command": command,
@@ -206,6 +216,9 @@ def main():
             assert isinstance(candidate.get("linkWouldInsertAfterClosed"), bool)
             assert isinstance(candidate.get("rolledBack"), bool)
             assert isinstance(candidate.get("durableLinkCount"), int)
+            assert isinstance(candidate.get("preexistingLinkCount"), int)
+            assert 0 <= candidate["preexistingLinkCount"] <= 8192
+            assert candidate["durableLinkCount"] == candidate["preexistingLinkCount"], "DIAGNOSTIC_ROLLBACK_CHANGED_DURABLE_LINKS"
             error_code = candidate.get("errorCode")
             assert error_code is None or error_code in (
                 "UNCLASSIFIED_REPLAY_ERROR", "WORKFORCE_CLOSING_PROMISE_PREIMAGE_INVALID",
@@ -223,6 +236,7 @@ def main():
                 "linkWouldInsertAfterClosed": candidate["linkWouldInsertAfterClosed"],
                 "rolledBack": candidate["rolledBack"],
                 "durableLinkCount": candidate["durableLinkCount"],
+                "preexistingLinkCount": candidate["preexistingLinkCount"],
                 "errorCode": error_code,
                 "stageCounts": {key: stages[key] for key in permitted},
             }

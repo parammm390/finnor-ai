@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { createHash, generateKeyPairSync, randomBytes, randomUUID, sign, type KeyObject } from "node:crypto";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { appendFile, copyFile, mkdir, mkdtemp, readFile, readdir, statfs, writeFile } from "node:fs/promises";
-import { constants as fsConstants } from "node:fs";
+import { constants as fsConstants, existsSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import { tmpdir, totalmem } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -22,7 +22,6 @@ import { ClosingSpecSchema } from "@finnor/shared-types";
 import { compensationCases, prepareCompensationFixture, compensationReadback, compensationFunding,
   type CompensationCase } from "../postz-w2/closing-compensation-fixture.mts";
 import { verifyClosingReaderPrivacy } from "./closing-reader-privacy.mts";
-import { recordWorkforceClosingPaymentsTx } from "../../packages/private-equity/src/workforce-compensation-closing";
 import { withS5PortfolioTransaction } from "../../packages/private-equity/src/allocation-store";
 
 process.umask(0o077); // Includes the database library's transient password file.
@@ -55,6 +54,19 @@ const keys = new Map<string, { publicKey: KeyObject; privateKey: KeyObject }>();
 const fixtures: Record<string, any> = {};
 const startedAt = new Date().toISOString();
 let admin: pg.Client | undefined, authServer: Server | undefined, postgresRunning = false;
+
+// The material-cut functions deliberately refuse an unset tenant. Administrative
+// diagnostics must observe the same explicit tenant/principal, then roll back.
+async function tenantDiagnostic<T>(f: { tenant: string; principal: string }, read: (client: pg.Client) => Promise<T>): Promise<T> {
+  assert(admin);
+  await admin.query('BEGIN READ ONLY');
+  try {
+    await admin.query("SELECT set_config('app.tenant_id',$1,true),set_config('app.user_id',$2,true)", [f.tenant, f.principal]);
+    return await read(admin);
+  } finally {
+    await admin.query('ROLLBACK');
+  }
+}
 let apiOrigin = "", authOrigin = "", providerOrigin = "", checkerDigest = "", worker: ChildProcess | undefined;
 let compensationWorkerEnv: NodeJS.ProcessEnv = {};
 let compensationHorizon: { startAt: string; periodMs: number; periods: number };
@@ -533,7 +545,9 @@ async function fixture(label: string, fault?: string) {
 }
 const databasePort = await port();
 const postgres = new EmbeddedPostgres({ databaseDir: dbDirectory, user: "finnor_v3", password,
-  port: databasePort, persistent: true, onLog: () => undefined });
+  port: databasePort, persistent: true,
+  postgresFlags: ['-c', 'unix_socket_directories=', '-c', 'listen_addresses=127.0.0.1', '-c', 'track_commit_timestamp=on'],
+  onLog: () => undefined });
 try {
   let freeMemoryBytesEstimate: number, memoryProbe: string;
   if (process.platform === "linux") {
@@ -806,7 +820,7 @@ try {
     }
     const completed = await waitFor(f, q => q.status === "CLOSED" && q.certificate?.currentlyValid, 480000);
     if (compensationCase === "exact" && process.env.FINNOR_W2_CUT_SECTION_DIAGNOSTIC === "1") {
-      const cutDiff = (await admin!.query(`
+      const cutDiff = (await tenantDiagnostic(f, client => client.query(`
         SELECT previous.section,
           previous.digest IS DISTINCT FROM
             encode(sha256(convert_to(now_cut.value::text,'UTF8')),'hex') AS changed
@@ -814,7 +828,7 @@ try {
         JOIN LATERAL jsonb_each(finnor_os.pe_closing_cut($1,$2)) now_cut
           ON now_cut.key=previous.section
         WHERE previous.tenant_id=$1 AND previous.programme_id=$2
-        ORDER BY previous.section`, [f.tenant, f.programmeId])).rows;
+        ORDER BY previous.section`, [f.tenant, f.programmeId]))).rows;
       await save("workforce-compensation/material-cut-section-diff.json", {
         checkedPreCertificateSections: cutDiff.length,
         changedSections: cutDiff.filter(row => row.changed).map(row => String(row.section)),
@@ -827,13 +841,14 @@ try {
     // Diagnostic only: replay the real canonical receiving-link evaluator inside
     // a transaction that is always rolled back. This cannot repair the owner
     // episode, seed a payment, or turn the failing acceptance into a false pass.
-    if (compensationCase === "exact") {
+    if (compensationCase === "exact" && existsSync(join(backend, "packages/private-equity/src/workforce-compensation-closing.ts"))) {
+      const { recordWorkforceClosingPaymentsTx } = await import("../../packages/private-equity/src/workforce-compensation-closing");
       const observed = { linkWouldInsertAfterClosed: false, rolledBack: false,
-        errorCode: null as string | null, durableLinkCount: -1,
+        errorCode: null as string | null, durableLinkCount: -1, preexistingLinkCount: -1,
         stagedJoins: null as Record<string, number> | null };
       // Stage each canonical join using boolean/count witnesses only. Do not
       // export source rows, identities, amounts, document contents or credentials.
-      const stagedJoins = (await admin!.query(`
+      const stagedJoins = (await tenantDiagnostic(f, client => client.query(`
         WITH source AS (
           SELECT l.tenant_id,l.programme_id,l.business_effect_id,l.consumption_ref,
             o.observation,o.verification_status
@@ -898,16 +913,19 @@ try {
             WHERE cert.tenant_id=$1 AND cert.programme_id=$2 AND d.status='closed'
               AND cert.body->'receiptAndCurrentness'->>'checkId'=ch.id::text
               AND cert.post_publication_cut_digest=finnor_os.pe_closing_cut_digest($1,$2)) AS "certificateCurrentCutMatches"
-      `, [f.tenant, f.programmeId, f.compensationFixture.obligation.ref.id])).rows[0];
+      `, [f.tenant, f.programmeId, f.compensationFixture.obligation.ref.id]))).rows[0];
       // Counts are diagnostic only; no stage claims external settlement.
       observed.stagedJoins = Object.fromEntries(Object.entries(stagedJoins).map(([key,value]) => [key, Number(value)]));
+      observed.preexistingLinkCount = (await admin!.query(`SELECT count(*)::int n FROM finnor_os.s5_history
+        WHERE tenant_id=$1 AND operation='WORKFORCE_CLOSING_PAYMENT'`, [f.tenant])).rows[0]?.n ?? -1;
+      assert(observed.preexistingLinkCount >= 0, "Existing durable link count must be observed");
       try {
         await withS5PortfolioTransaction(f.ctx, async c => {
           await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [`v3-material-cut:${f.tenant}`]);
           await recordWorkforceClosingPaymentsTx(f.ctx, c, f.programmeId);
           const hypothetical = (await c.query(`SELECT count(*)::int n FROM finnor_os.s5_history
             WHERE tenant_id=$1 AND operation='WORKFORCE_CLOSING_PAYMENT'`, [f.tenant])).rows[0]?.n;
-          observed.linkWouldInsertAfterClosed = hypothetical === 1;
+          observed.linkWouldInsertAfterClosed = hypothetical > observed.preexistingLinkCount;
           throw Error("W2_DIAGNOSTIC_ROLLBACK");
         });
       } catch (cause) {
@@ -918,7 +936,7 @@ try {
       observed.durableLinkCount = (await admin!.query(`SELECT count(*)::int n FROM finnor_os.s5_history
         WHERE tenant_id=$1 AND operation='WORKFORCE_CLOSING_PAYMENT'`, [f.tenant])).rows[0]?.n ?? -1;
       await save("workforce-compensation/rollback-only-post-close-candidate.json", observed);
-      assert.equal(observed.durableLinkCount, 0, "Diagnostic rollback modified durable compensation state");
+      assert.equal(observed.durableLinkCount, observed.preexistingLinkCount, "Diagnostic rollback modified durable compensation state");
     }
     const compensation = await compensationReadback({ f, request }), funding = await compensationFunding({ f });
     const portfolio = ok(await request(f, "/api/allocations/resources", {}));

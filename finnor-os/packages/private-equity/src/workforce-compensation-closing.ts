@@ -2,7 +2,8 @@ import type { PoolClient } from "pg";
 import { z } from "zod";
 import {
   ClosingObservationSchema, ClosingOwnerRefSchema, ClosingSpecSchema,
-  type AllocationEnvelope, type AllocationOutstandingCommitment, type ClosingOwnerRef, type ExperimentRef,
+  type AllocationConsumption, type AllocationEnvelope, type AllocationOutstandingCommitment,
+  type AllocationReservation, type ClosingOwnerRef, type ExperimentRef,
 } from "@finnor/shared-types";
 import { allocationDerivedQuantity, allocationRef, sameAllocationRef } from "../../epistemic-runtime/src/allocation-contracts";
 import { workforceTermsSchema } from "../../workforce/src/execution-program/schema";
@@ -80,12 +81,26 @@ async function originalPromise(c: PoolClient, tenantId: string, reference: Exper
   return { promise, budget: row.budget };
 }
 
+type PaymentSourceRow = {
+  id: string; tenant_id: string; transaction_id: string; principal_id: string;
+  spec: unknown; spec_digest: string; approved_terms_revision: string; profile_digest: string;
+  last_check_id: string | null; status: string; profile: unknown; profile_status: string;
+  profile_content_digest: string; profile_valid_until: Date | string; node_key: string;
+  consumption_ref: ClosingOwnerRef & { reservationRef?: ClosingOwnerRef };
+  semantic_hash: string; verification_status: string;
+  observation: { closingEvidenceRef?: { versionId?: string } } | null;
+  consumption: AllocationConsumption; consumption_principal_id: string;
+  consumption_status: string; effect_ref: ExperimentRef | null; evidence_version_id: string;
+  financial_origin: AllocationReservation; reservation_status: string; financial_envelopes: unknown;
+  content: string; content_hash: string; snapshot: { closingObservation?: unknown } | null;
+};
+
 async function paymentSource(c: PoolClient, tenantId: string, programmeId: string, effectId: string, versionId: string) {
-  const rows = (await c.query(`SELECT q.id,q.tenant_id,q.transaction_id,q.principal_id,q.spec,q.spec_digest,
+  const rows = (await c.query<PaymentSourceRow>(`SELECT q.id,q.tenant_id,q.transaction_id,q.principal_id,q.spec,q.spec_digest,
       q.approved_terms_revision,q.profile_digest,q.last_check_id,q.status,
       p.body profile,p.status profile_status,p.digest profile_content_digest,p.valid_until profile_valid_until,
       l.node_key,l.consumption_ref,e.semantic_hash,o.verification_status,o.observation,
-      co.body consumption,st.status consumption_status,st.effect_ref,v.id evidence_version_id,
+      co.body consumption,co.principal_id consumption_principal_id,st.status consumption_status,st.effect_ref,v.id evidence_version_id,
       ro.body financial_origin,r.status reservation_status,r.envelopes financial_envelopes,
       v.content,v.content_hash,v.snapshot
     FROM finnor_os.pe_closing_programmes q
@@ -101,8 +116,9 @@ async function paymentSource(c: PoolClient, tenantId: string, programmeId: strin
     JOIN finnor_os.pe_closing_evidence_bindings b ON b.tenant_id=q.tenant_id AND b.programme_id=q.id AND b.source_id=v.source_id
     WHERE q.tenant_id=$1 AND q.id=$2 AND e.id=$3 AND o.provider='finnor_closing_provider' LIMIT 2`,
   [tenantId, programmeId, effectId, versionId])).rows;
-  if (rows.length !== 1) return null;
-  const row = rows[0], spec = ClosingSpecSchema.parse(row.spec), profile = ClosingProfileSchema.parse(row.profile);
+  const row = rows[0];
+  if (rows.length !== 1 || !row) return null;
+  const spec = ClosingSpecSchema.parse(row.spec), profile = ClosingProfileSchema.parse(row.profile);
   const observation = ClosingObservationSchema.parse(row.snapshot?.closingObservation);
   const step = spec.steps.find(step => step.key === row.node_key);
   const flow = spec.fundsFlows.find(flow => flow.key === step?.requirementKey);
@@ -130,7 +146,7 @@ async function paymentSource(c: PoolClient, tenantId: string, programmeId: strin
       !sameAllocationRef(reservationRef, allocationRef("S5", "allocation-reservation", reservationBody)) ||
       !sameAllocationRef(row.consumption.reservationRef, reservationRef) ||
       !step.allocationRef || !sameAllocationRef(strip(step.allocationRef), row.consumption.certificateRef) ||
-      row.consumption.principalId !== flow.workforceCompensation.payerPrincipalId ||
+      row.consumption_principal_id !== flow.workforceCompensation.payerPrincipalId ||
       row.effect_ref?.id !== effectId || row.effect_ref.contentDigest !== row.semantic_hash ||
       !sameAllocationRef({ owner: row.consumption_ref.owner, id: row.consumption_ref.id,
         version: row.consumption_ref.version, contentDigest: row.consumption_ref.contentDigest }, row.consumption.ref) ||
@@ -145,7 +161,7 @@ async function paymentSource(c: PoolClient, tenantId: string, programmeId: strin
 
 async function currentReceipt(c: PoolClient, tenantId: string, source: NonNullable<Awaited<ReturnType<typeof paymentSource>>>) {
   const { row, spec, profile, flow } = source;
-  if (row.profile_status !== "ACTIVE" || Date.parse(row.profile_valid_until) <= Date.now() ||
+  if (row.profile_status !== "ACTIVE" || Date.parse(String(row.profile_valid_until)) <= Date.now() ||
       row.verification_status !== "verified" || row.observation?.closingEvidenceRef?.versionId !== row.evidence_version_id)
     return null;
   const check = (await c.query(`SELECT ch.id,ch.body,ch.checker_digest,ch.observation_cut_digest,ch.valid_until,

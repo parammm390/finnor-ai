@@ -79,3 +79,60 @@ Remove that stale override and duplicate container-memory flag; retain the
 later 1 GiB campaign heap and 4 GiB hard container/swap ceiling. The existing
 relocated-owner/source-commit proof must pass, and installed native success is
 still a separate required gate.
+
+## Current-head W2 receipt 43732447489
+
+The Actions bot's receipt on ab4b6a2b9 is verified against the PR head and the
+completed w2-pair-verdict. The relay actually delivered. Compiler and all-reader
+proof pass; the unchanged repaired exact owner reaches CLOSED, but compensation
+remains OPEN with no inserted payment link.
+
+The receiving join compares consumption JSON's principalId with the payer. The
+canonical AllocationConsumption contract has no principalId: recordAllocationConsumption
+stores that owner in s5_consumptions.principal_id, separately from immutable JSON.
+Project and check that canonical column; do not invent a JSON field, mutate old
+consumptions, weaken the owner check, or seed a settlement. Retain the baseline
+and all three wrong-amount/payee/receipt controls.
+
+The existing administrative cut diagnostics call a tenant-bound SQL function
+without setting app.tenant_id. Their zero sections and false cut comparisons
+therefore do not establish stale production currentness. Perform those reads
+inside an explicit read-only tenant/principal transaction that always rolls
+back. Do not change the production current-cut predicate or repin certificates.
+
+The isolated native fixture must disable filesystem PostgreSQL sockets and bind
+TCP to loopback to run in this workspace. This only changes owned disposable
+database transport; preserve authentication, physical worker recovery, limits,
+episode assertions and all effects/independent-observer checks.
+
+## Receiving comparison integrity
+
+The registered baseline removes the new payment join but leaves a static import
+in the diagnostic driver and the atomic production call introduced by 68f1782538.
+That cannot reach the required independently CLOSED/original OPEN counterexample.
+Register and reverse only that exact atomic insertion, preserving all unrelated
+owner source, and skip the optional rollback diagnostic when its module is absent.
+
+The rollback-only probe also assumes the durable link count is zero. A successful
+real production insertion makes that assumption false. Compare before/after
+counts and distinguish a preexisting link from a hypothetical new one, without
+changing the original exact or adverse-control settlement assertions.
+
+Verified Z0 receipt 43732447509 on ab4b6a2b9 still fails M01/M04. Its Work and
+Company Brain sources time out during the mounted path; the original application
+panel disappears. M06's foreign reads return 404, but the incomplete journey is
+not a privacy/phase pass. Preserve the failing original mounted cases.
+
+The first local payer repair records one durable payment link and all nine staged
+joins pass. All 25 material-cut sections are captured and unchanged. It then fails
+the diagnostic's invalid zero-link assertion; this is not an overall native pass.
+After correcting that probe, a new full attempt times out at an existing approval
+request before closing. Preserve both failed attempts. No retry, longer timeout,
+settlement assertion change, or complete W2 qualification follows from them.
+
+The repaired fixed and reversed-baseline driver import graphs both reach the
+original unsupported-case guard without a missing module, using the actual six
+source transformations. All six sources restore exactly afterward. This proves
+comparison setup and restoration only, not settlement. Complete W2 TypeScript
+and all official generated-input checks pass on the repaired source; hosted
+current-head exact/baseline/adverse native episodes are still required.

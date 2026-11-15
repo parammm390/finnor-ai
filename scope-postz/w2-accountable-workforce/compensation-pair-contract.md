@@ -15,8 +15,19 @@ worker recovery and historical-capacity assertions.
 Reverse only the two exact compensation adapter hunks in the allocation owner,
 preserving all integrated W1 behavior. The other three production preimages
 must match their registered repaired hashes before reversal. The new join module
-is absent in the baseline. Retain all five before/after hashes and restore every
+is absent in the baseline. Also reverse the exact atomic publication hunk
+introduced by commit 68f17825381eac740ee739f54c23cb38558c43ed: otherwise the
+baseline still imports the join module that it removes and fails during close,
+rather than reaching the required original missing-join assertion. Register its
+exact hunk, current full-file hash and reconstructed prior full-file hash before
+running; preserve every other owner change. Retain all six before/after hashes and restore every
 byte in a finally block. Unrelated tracked source drift invalidates the run.
+
+The driver's optional rollback-only receiving-link diagnostic must not import a
+removed baseline module. On the repaired source it compares durable link counts
+before and after rollback; an existing production link is preserved, not asserted
+to be zero. A hypothetical insert is distinguished from an already present link.
+These are diagnostic corrections, not changes to any settlement expectation.
 
 Each episode retains the original 1,200-second bound, 4 GiB initial available
 memory requirement, and 1.5 GiB disk floor. The supervisor requires 4 GiB initial

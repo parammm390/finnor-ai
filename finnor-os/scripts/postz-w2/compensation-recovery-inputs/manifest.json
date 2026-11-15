@@ -1,5 +1,5 @@
 {
-  "schema": "finnor.w2.compensation-recovery-preimages.v1",
+  "schema": "finnor.w2.compensation-recovery-preimages.v2",
   "sourceArchiveSha256": "8d573a1ad9905f5219ff8ba284dad307dc5f5f89a70a4bce6b1732dbe9e84e37",
   "recoveredAt": "2026-10-31T03:00:28Z",
   "isolatedFixedCommit": "9b8b863e0fdacb8fd3576b9eef298d08814a7dbd",
@@ -22,5 +22,13 @@
       "beforeSha256": "3baeefc3f19aa554ebf8e8fdbd9f5ddb8f2535f3ba865a9b3d7abb8a18d0e7f2",
       "fixedSha256": "e331725c78c4edcb28928f39da0113f68e4350ede0fb4f6b3e73bdc68912d129"
     }
-  ]
+  ],
+  "atomicPublication": {
+    "target": "finnor-os/packages/private-equity/src/repository.ts",
+    "introducingCommit": "68f17825381eac740ee739f54c23cb38558c43ed",
+    "hunkSource": "3.atomic-publication.source.txt",
+    "hunkSha256": "6abe0c0e1739ddf9113081577e25ae2dacbd0827d9e247b76c2e84f31375a72a",
+    "fixedSha256": "913552f03f33e0337246f4c8207ad50fd27d4f66955a7248a0898d3b7ea5fac1",
+    "beforeSha256": "3e630cdd80cda643096a98a93f9b7dc4576af564f6ef51cd07820b126bf91859"
+  }
 }
