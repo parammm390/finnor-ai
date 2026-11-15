@@ -96,13 +96,26 @@ def git(repository, *args):
                           capture_output=True, text=True, check=True).stdout.strip()
 
 
-def native_source_digest(native):
+def native_source_files(native):
     source = []
     rels = ["Cargo.toml", "Cargo.lock", "rust-toolchain.toml", "supervise.py"] + \
            [str(x.relative_to(native)) for x in sorted((native / "src").glob("*.rs"))]
     for rel in sorted(rels):
         source.append({"path": rel, "sha256": digest_file(native / rel)})
-    return digest_bytes(canonical(source))
+    return source
+
+
+def native_source_digest(native):
+    return digest_bytes(canonical(native_source_files(native)))
+
+
+def native_build_identity(native, proof, diagnostic, rustc):
+    """One identity format for isolated reconstruction and CI preparation."""
+    return {"schema": "finnor.z4.native-build.v1", "profile": PROFILE, "backend": BACKEND,
+            "binarySha256": digest_file(proof), "binaryBytes": proof.stat().st_size,
+            "sourceFiles": native_source_files(native), "sourceDigest": native_source_digest(native),
+            "cargoLockSha256": digest_file(native / "Cargo.lock"), "rustc": rustc,
+            "target": "x86_64-unknown-linux-gnu", "diagnosticBinarySha256": digest_file(diagnostic)}
 
 
 def cmd_inventory(a):
@@ -425,20 +438,10 @@ def cmd_build(a):
                 temporary.unlink()
     install(native / "target/release/finnor-z4-execution-proof", destination / "z4-proof")
     install(native / "target/release/z4-field-falsifier", destination / "z4-field-falsifier")
-    rebuilt = {"schema": "finnor.z4.native-build.v1", "profile": PROFILE, "backend": BACKEND,
-               "binarySha256": digest_file(destination / "z4-proof"),
-               "binaryBytes": (destination / "z4-proof").stat().st_size,
-               "sourceDigest": native_source_digest(native),
-               "cargoLockSha256": digest_file(native / "Cargo.lock"),
-               "rustc": subprocess.run([str(original_toolchain / "rustc"), "--version"], env=env,
-                                       capture_output=True, text=True, check=True).stdout.strip(),
-               "target": "x86_64-unknown-linux-gnu",
-               "diagnosticBinarySha256": digest_file(destination / "z4-field-falsifier")}
-    source_files = []
-    for rel in sorted(["Cargo.toml", "Cargo.lock", "rust-toolchain.toml", "supervise.py"] +
-                      [str(x.relative_to(native)) for x in (native / "src").glob("*.rs")]):
-        source_files.append({"path": rel, "sha256": digest_file(native / rel)})
-    rebuilt["sourceFiles"] = source_files
+    rustc = subprocess.run([str(original_toolchain / "rustc"), "--version"], env=env,
+                           capture_output=True, text=True, check=True).stdout.strip()
+    rebuilt = native_build_identity(native, destination / "z4-proof",
+                                    destination / "z4-field-falsifier", rustc)
     original = json.loads((a.repository / "finnor-os/packages/epistemic-runtime/native/z4-execution-proof/build-identity.json").read_text())
     comparison = {"sourceDigestEqual": rebuilt["sourceDigest"] == original["sourceDigest"],
                   "cargoLockEqual": rebuilt["cargoLockSha256"] == original["cargoLockSha256"],

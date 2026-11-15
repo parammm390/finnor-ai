@@ -15,16 +15,50 @@ defaults:
   run:
     working-directory: finnor-os
 jobs:
-  project-z-owner-smoke:
-    name: Project Z real owner transport (not phase admission)
+  project-z-native-assets:
+    name: Project Z locked native test assets (not phase admission)
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    defaults:
+      run:
+        working-directory: .
+    outputs:
+      artifact_name: ${{ steps.identity.outputs.artifact_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Prepare existing locked native backend
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: python3 finnor-os/scripts/project-z/z4/ci-native.py prepare --repository "$GITHUB_WORKSPACE" --expected-sha "$SOURCE_SHA" --output "$RUNNER_TEMP/z4-assets" --work "$RUNNER_TEMP/z4-build"
+      - name: Name the successful producer artifact for failed-job reruns
+        id: identity
+        run: echo "artifact_name=project-z-native-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ${{ steps.identity.outputs.artifact_name }}
+          path: ${{ runner.temp }}/z4-assets/
+          if-no-files-found: error
+          retention-days: 7
+
+  project-z-owner-smoke:
+    name: Project Z real owner transport (not phase admission)
+    needs: project-z-native-assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
     defaults:
       run:
         working-directory: .
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -38,10 +72,14 @@ jobs:
       - run: npx --no-install playwright install --with-deps chromium
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/project-z-browsers
-      - name: Preserve declared read-only native asset mode
-        run: |
-          chmod 0500 finnor-os/packages/epistemic-runtime/native/z4-execution-proof/bin/z4-proof
-          chmod 0500 finnor-os/packages/epistemic-runtime/native/z4-execution-proof/bin/z4-field-falsifier
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ${{ needs.project-z-native-assets.outputs.artifact_name }}
+          path: ${{ runner.temp }}/z4-assets
+      - name: Verify exact source, recipe and compiled assets before installation
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: python3 finnor-os/scripts/project-z/z4/ci-native.py install --repository "$GITHUB_WORKSPACE" --expected-sha "$SOURCE_SHA" --artifact "$RUNNER_TEMP/z4-assets"
       - name: Fresh real Auth, disposable DB, actual owner and mounted reload
         env:
           PROJECT_Z_NATIVE_NAME: project-z-ci-${{ github.run_id }}-${{ github.run_attempt }}
@@ -63,7 +101,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        phase: [z1, z2, z3, z4]
+        phase: [z1, z2, z3]
     defaults:
       run:
         working-directory: .
@@ -80,11 +118,6 @@ jobs:
             finnor-os/package-lock.json
       - run: npm ci --no-audit --no-fund
       - run: npm ci --prefix finnor-os --no-audit --no-fund
-      - name: Preserve declared read-only native asset mode
-        if: ${{ matrix.phase == 'z4' }}
-        run: |
-          chmod 0500 finnor-os/packages/epistemic-runtime/native/z4-execution-proof/bin/z4-proof
-          chmod 0500 finnor-os/packages/epistemic-runtime/native/z4-execution-proof/bin/z4-field-falsifier
       - name: Run actual public processes without hosted credentials
         env:
           PROJECT_Z_PHASE: ${{ matrix.phase }}
@@ -95,6 +128,54 @@ jobs:
         with:
           name: project-z-public-${{ matrix.phase }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/project-z-${{ matrix.phase }}/**
+          if-no-files-found: warn
+          retention-days: 7
+
+  project-z-public-z4:
+    name: Project Z public original-semantics (z4)
+    needs: project-z-native-assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ${{ needs.project-z-native-assets.outputs.artifact_name }}
+          path: ${{ runner.temp }}/z4-assets
+      - name: Reject corrupt and mismatched artifacts without changing installed assets
+        run: node finnor-os/scripts/project-z/z4/ci-assets-e2e.mjs "$RUNNER_TEMP/z4-assets" "$RUNNER_TEMP/z4-install-controls.json"
+      - name: Verify exact source, recipe and compiled assets before installation
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: python3 finnor-os/scripts/project-z/z4/ci-native.py install --repository "$GITHUB_WORKSPACE" --expected-sha "$SOURCE_SHA" --artifact "$RUNNER_TEMP/z4-assets"
+      - name: Run unchanged original and native-critical rejection processes
+        run: taskset -c 0,1 node scripts/project-z/run-ci.mjs --phase=z4 --evidence="$RUNNER_TEMP/project-z-z4"
+      - name: Retain original inputs, native identity and observed process results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: project-z-public-z4-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/project-z-z4/**
+            ${{ runner.temp }}/z4-install-controls.json
+            ${{ runner.temp }}/z4-assets/receipt.json
           if-no-files-found: warn
           retention-days: 7
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { execFileSync, spawnSync } from "node:child_process"
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -16,7 +16,7 @@ const startedAt = new Date().toISOString()
 test.after(() => {
   const evidence = process.env.FINNOR_CI_PROCESS_EVIDENCE_DIR
   if (!evidence) return
-  const files = ["scripts/release/ci-process.e2e.test.mjs", "scripts/release/pr-verdict-policy.mjs", "scripts/release/ci-process-policy.mjs", "scripts/release/worktree-state.mjs", ".github/workflows/production-release.yml"]
+  const files = ["scripts/release/ci-process.e2e.test.mjs", "scripts/release/pr-verdict-policy.mjs", "scripts/release/ci-process-policy.mjs", "scripts/release/worktree-state.mjs", ...readdirSync(join(root, ".github/workflows")).filter(name => /\.ya?ml$/.test(name)).sort().map(name => `.github/workflows/${name}`)]
   const inputs = Object.fromEntries(files.map(path => [path, createHash("sha256").update(readFileSync(join(root, path))).digest("hex")]))
   const receipt = { schema: "finnor.ci-process-e2e.v1", status: records.length === 8 ? "PASS" : "FAIL", startedAt, finishedAt: new Date().toISOString(), inputs, records, rerun: "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs", applicationTestsExecuted: false }
   mkdirSync(evidence, { recursive: true })
@@ -139,6 +139,11 @@ test("actual process graph passes and damaged workflow copies are rejected", () 
     ["production-misses-security", "production-release.yml", text => text.replace(", security-release-gate", "")],
     ["production-cancelled", "production-release.yml", text => text.replace("cancel-in-progress: false", "cancel-in-progress: true")],
     ["missing-test-shard", "ci.yml", text => text.replace("shard: [1, 2, 3]", "shard: [1, 2]")],
+    ["missing-z4-native-build", "ci.yml", text => text.replace("ci-native.py prepare", "ci-native.py omitted")],
+    ["wrong-z4-producer-output", "ci.yml", text => text.replaceAll("needs.project-z-native-assets.outputs.artifact_name", "github.run_attempt")],
+    ["wrong-z4-source", "ci.yml", text => text.replaceAll("ref: ${{ github.event.pull_request.head.sha || github.sha }}", "ref: main")],
+    ["missing-z4-install-validation", "ci.yml", text => text.replaceAll("ci-native.py install", "ci-native.py unchecked")],
+    ["missing-public-z4", "ci.yml", text => text.replace("--phase=z4", "--phase=z3")],
     ["source-bypasses-workflow-validation", "source-checks.yml", text => text.replace("needs: validate", "needs: []")],
     ["missing-readiness-certification", "release-readiness.yml", text => text.replace("certification: [scope4, scope5]", "certification: [scope4]")],
     ["missing-source-aggregate", "source-checks.yml", text => text.replace("sourceCheckFailures", "ignoredSourceFailures")],

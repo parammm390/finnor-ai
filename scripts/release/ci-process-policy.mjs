@@ -33,14 +33,32 @@ export function verifyCiProcess(root) {
   const pr = workflows["pr-verdict.yml"] ?? ""
   const production = workflows["production-release.yml"] ?? ""
   const projectZ = workflowJob(ci, "project-z-public")
+  const projectZ4 = workflowJob(ci, "project-z-public-z4")
+  const projectZAssets = workflowJob(ci, "project-z-native-assets")
   const projectZOwner = workflowJob(ci, "project-z-owner-smoke")
   require(projectZOwner.includes("node scripts/project-z/run-native-ci.mjs")
     && projectZOwner.length > 0 && !/^ {4}if:/m.test(projectZOwner)
     && !/AUTH_DEV_BYPASS/.test(projectZOwner),
     "Project Z real owner transport must be required, isolated and without auth bypass")
   require(projectZ.includes("node scripts/project-z/run-ci.mjs")
-    && projectZ.includes("phase: [z1, z2, z3, z4]") && projectZ.includes("fail-fast: false"),
+    && projectZ.includes("phase: [z1, z2, z3]") && projectZ.includes("fail-fast: false")
+    && projectZ4.includes("node scripts/project-z/run-ci.mjs --phase=z4")
+    && projectZ4.length > 0 && !/^ {4}if:/m.test(projectZ4),
     "Project Z must execute every declared independent public phase process")
+  require(projectZAssets.includes("ci-native.py prepare") && projectZAssets.includes("if-no-files-found: error")
+    && projectZAssets.includes("artifact_name: ${{ steps.identity.outputs.artifact_name }}")
+    && !/^ {4}if:/m.test(projectZAssets), "Z4 test assets require a fail-closed locked build producer")
+  for (const [name, job] of [["owner", projectZOwner], ["public Z4", projectZ4]]) {
+    require(job.includes("needs: project-z-native-assets")
+      && job.includes("needs.project-z-native-assets.outputs.artifact_name")
+      && job.includes("ci-native.py install") && job.includes('--expected-sha "$SOURCE_SHA"'),
+      `${name}: native consumers must verify and install the successful producer artifact`)
+  }
+  for (const job of [projectZAssets, projectZOwner, projectZ4]) {
+    require(job.includes("ref: ${{ github.event.pull_request.head.sha || github.sha }}"),
+      "Native producer and consumers must use the same exact current source")
+  }
+  require(projectZ4.includes("ci-assets-e2e.mjs"), "Native artifact corruption controls must execute")
   require(projectZ.length > 0 && !/^ {4}if:/m.test(projectZ),
     "Project Z required backend/release check must not be optional")
   for (const file of ["ci.yml", "security.yml", "marketing-ci.yml", "source-checks.yml", "release-readiness.yml"]) {

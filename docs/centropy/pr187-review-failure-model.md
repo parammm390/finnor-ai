@@ -267,3 +267,48 @@ The unchanged 57-case suite passes with those additional Work/replay refusals
 and no skips. Its private receipt records the exact parent, patch digest and
 each input/observation. This is actual authenticated HTTP and ordinary SQL with
 deterministic model proposals, not mounted, installed, protected or field proof.
+
+## Native CI artifact preparation failure model
+
+The native Z4 binaries are not tracked. Both native jobs currently chmod them
+without a producer. Pinned Rust 1.92.0 plus the unchanged Cargo.lock builds both
+actual binaries successfully; the repair must prepare those inputs explicitly.
+Build once, retain the source/tree, recipe, compiler and binary identities, and
+share the exact producer artifact across the Z4 and owner consumers. Fast public
+Z1/Z2/Z3 checks should continue independently. Failed-job reruns must use the
+successful producer's artifact name, not assume that producer ran again.
+
+Before implementation, require an actual native-identity/process check and
+adversarial installation refusals for wrong source SHA, changed source/recipe,
+tampered proof/falsifier bytes and undeclared artifact members. Validate every
+input before writing. Never reuse an artifact from another source or disguise
+a new binary as the old compiled hash. Reuse the official reconstruction identity
+generator, retain its source/lock/profile bindings, and record actual rebuilt
+binary hashes. Do not change proof semantics, budgets, negative expectations or
+the failing dependency gate. Installation here is test preparation before any
+runtime process starts, not admission or a live runtime replacement.
+
+Actual local preparation on source 38ec7e4e55fbbf6e54827c45fe9ab95bcf24a7b8,
+tree 843321164f1dc9e994100f01173477e1e117c196, uses hash-checked official Rust
+1.92.0 archives, locked vendoring and frozen offline compilation. The first
+attempt exposed this host's required public-network proxy; preparation now
+passes only the named transport proxy variables to dependency fetching and
+strips them again for compilation. No product/database environment is inherited.
+Actual proof binary SHA256 is
+0bae492b374b44e00c2f68dd36d2684d2a34dfda9d094495bfd9a4833ee58c77;
+diagnostic binary is
+ba2820df6cf216d527ee8b208329b1ed6ca541cd6e67dec2283bc17cbef6d5fe.
+These are rebuilt bytes, not the old checked-in build's byte identities.
+
+The actual native-identity consumer passes. Six bad-artifact controls (wrong
+source, either corrupt binary, changed source identity, changed recipe identity,
+undeclared member) refuse before altering installed files. The unchanged Z4
+public process then passes all twelve original/native-critical rejection cases
+with two CPUs, zero new positive proofs and no protected/phase admission. Its
+process report SHA256 is
+fa9c5e43dbccdb743a77b4ba03d1631752846058defcbfd3b2b71a66309e937a.
+The installation verifier's repository traversal was corrected before this run.
+The process/workflow suite passes all eight cases and thirteen damaged-workflow
+controls; pinned actionlint 1.7.12, mutation inventory and all sixteen official
+generated-input checks pass. GitHub artifact handoff and the full owner job
+still require their own hosted execution on the newly published source.
