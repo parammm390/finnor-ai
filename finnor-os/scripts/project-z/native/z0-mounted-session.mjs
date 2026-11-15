@@ -23,7 +23,7 @@ import {
   openWork, panelFor, privateDir, readPanels, readSettledPanels, refreshGrantStatus, screenshots, sha, sleep, storageScan, uiSignIn, uiSignOut,
   waitForPanel, waitUntil, workUrl, writePrivateJson,
 } from "./z0-mounted-lib.mts";
-import { mountedOwnerCut, readOwnerTruth, witness } from "./z0-mounted-oracle.mts";
+import { compareObservedBudget, mountedOwnerCut, readOriginalBudgetLedger, readOwnerTruth, witness } from "./z0-mounted-oracle.mts";
 
 const state = process.env.FINNOR_NATIVE_STATE, evidence = process.env.FINNOR_NATIVE_EVIDENCE, root = process.env.FINNOR_NATIVE_ROOT;
 if (!state || !evidence || !root) throw Error("Z0M_SCENARIO_NATIVE_ENVIRONMENT_REQUIRED");
@@ -324,13 +324,16 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
   await shot(page, c, "open");
   c.observations.reloadsSettled = 0;
   c.observations.browserStage = "FIRST_RELOAD";
+  const beforeFirstReload = await readOriginalBudgetLedger(q, parentA);
   await page.reload({ waitUntil: "domcontentloaded" });
   const f1 = await readSettledPanels(page, parentA.workId);
+  const betweenReloads = await readOriginalBudgetLedger(q, parentA);
   ownerCuts.firstReload = await cut();
   c.observations.reloadsSettled = 1;
   c.observations.browserStage = "SECOND_RELOAD";
   await page.reload({ waitUntil: "domcontentloaded" });
   const f2 = await readSettledPanels(page, parentA.workId);
+  const afterSecondReload = await readOriginalBudgetLedger(q, parentA);
   ownerCuts.secondReload = await cut();
   c.observations.reloadsSettled = 2;
   c.observations.browserStage = "CHECK_RELOADED_PANELS";
@@ -358,10 +361,12 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
   check(c, "3.deadlines", "original, wall deadline and learning cutoff shown as the owner instants; cutoff <= both", "O-SQL x1_compiler_episodes + O-API institutional.childDeadlineAt",
     { original: shownInstants.includes(orig), wall: shownInstants.includes(wall), cutoffMatchesApi: cutoff === Date.parse(apiInst?.childDeadlineAt), cutoffWithin: cutoff <= orig && cutoff <= wall, sqlSessionDeadlineEqualsCutoff: Date.parse(truth.session.deadlineAt) === cutoff },
     shownInstants.includes(orig) && shownInstants.includes(wall) && cutoff === Date.parse(apiInst?.childDeadlineAt) && cutoff <= orig && cutoff <= wall);
-  const budget = jsonOf(f2.budgetJson);
-  const shownBudget = (budget?.resources ?? []).map(r => ({ resourceId: r.resourceId, unit: r.unit, limit: r.limit, used: r.used, remaining: r.remaining }));
+  const budgetCutChecks = c.observations.budgetCutChecks = {
+    firstReload: compareObservedBudget(jsonOf(f1.budgetJson), beforeFirstReload, betweenReloads),
+    secondReload: compareObservedBudget(jsonOf(f2.budgetJson), betweenReloads, afterSecondReload),
+  };
   check(c, "4.remaining-resources", "remaining per resource = limit - sum(charges) of the original reservation; no new reservation, no release", "O-SQL s5_reservations + s5_governed_resource_charges",
-    { shownBudget, expected: truth.budget, newReservation: budget?.newReservation, releaseGranted: budget?.releaseGranted }, JSON.stringify(shownBudget) === JSON.stringify(truth.budget) && budget?.newReservation === false && budget?.releaseGranted === false);
+    budgetCutChecks, budgetCutChecks.firstReload === "MATCH" && budgetCutChecks.secondReload === "MATCH");
 
   const rules = truth.api.institution?.artifact?.obligation_derivation_rules ?? [];
   const rows = f2.instRows;
@@ -473,13 +478,16 @@ await runCase("M-04", ["Z0-R45-C03", "Z0-R09-C01"], "Blocked/needs-action state 
   const beforeOpen = await mountedOwnerCut(q, parentB, sessionB, null);
   const ownerCuts = c.observations.ownerCuts = { beforeOpen };
   const cut = () => mountedOwnerCut(q, parentB, sessionB, beforeOpen.captured_at);
+  const beforeOpenBudget = await readOriginalBudgetLedger(q, parentB);
   const opened = await ensureOwnerOnWork("B");
   c.observations.rootCarriedBy = opened.rootCarriedBy;
   const truth = await readOwnerTruth({ q, owner, parent: parentB, sessionId: sessionB, acquisitionInput: acquisitionB });
   const f0 = await readSettledPanels(page, parentB.workId);
+  const beforeReloadBudget = await readOriginalBudgetLedger(q, parentB);
   ownerCuts.initialPanels = await cut();
   await page.reload({ waitUntil: "domcontentloaded" });
   const f1 = await readSettledPanels(page, parentB.workId);
+  const afterReloadBudget = await readOriginalBudgetLedger(q, parentB);
   ownerCuts.reloaded = await cut();
   const after = await readOwnerTruth({ q, owner, parent: parentB, sessionId: sessionB, acquisitionInput: acquisitionB });
   ownerCuts.afterOracle = await cut();
@@ -499,19 +507,19 @@ await runCase("M-04", ["Z0-R45-C03", "Z0-R09-C01"], "Blocked/needs-action state 
   c.observations.reloadDifferences = differences;
   const beforeBudget = truth.api.session?.institutional?.budget;
   const afterBudget = after.api.session?.institutional?.budget;
+  const budgetCutChecks = c.observations.budgetCutChecks = {
+    initial: compareObservedBudget(jsonOf(f0.budgetJson), beforeOpenBudget, beforeReloadBudget),
+    reloaded: compareObservedBudget(jsonOf(f1.budgetJson), beforeReloadBudget, afterReloadBudget),
+  };
   const reloadBudget = {
     sqlAgreesBefore: Boolean(beforeBudget) && !truth.disagreements.some(value => value.startsWith("budget:")),
     sqlAgreesAfter: Boolean(afterBudget) && !after.disagreements.some(value => value.startsWith("budget:")),
-    shownMatchesBefore: Boolean(beforeBudget) && isDeepStrictEqual(jsonOf(f0.budgetJson), beforeBudget),
-    shownMatchesAfter: Boolean(afterBudget) && isDeepStrictEqual(jsonOf(f1.budgetJson), afterBudget),
+    shownMatchesBefore: budgetCutChecks.initial === "MATCH",
+    shownMatchesAfter: budgetCutChecks.reloaded === "MATCH",
     ownerBudgetUnchanged: Boolean(beforeBudget && afterBudget) && isDeepStrictEqual(beforeBudget, afterBudget),
   };
   c.observations.reloadBudget = reloadBudget;
   c.observations.ownerBudgetDifferences = budgetDifferences(beforeBudget, afterBudget);
-  c.observations.shownBudgetDifferences = {
-    before: budgetDifferences(beforeBudget, jsonOf(f0.budgetJson)),
-    after: budgetDifferences(afterBudget, jsonOf(f1.budgetJson)),
-  };
   check(c, "budget.owner-agreement", "visible budget matches the original reservation in SQL and API before and after reload",
     "O-SQL charges + O-API + DOM", reloadBudget, reloadBudget.sqlAgreesBefore && reloadBudget.sqlAgreesAfter
       && reloadBudget.shownMatchesBefore && reloadBudget.shownMatchesAfter);

@@ -3,11 +3,81 @@
  * API called from Node with its own password grant (O-API). Neither is ever the
  * browser's token or the panel's code path.
  */
+import { isDeepStrictEqual } from "node:util";
+import { z } from "zod";
 import { sha } from "./z0-mounted-lib.mts";
 
 export type Q = (text: string, params?: unknown[]) => Promise<any[]>;
 const iso = (value: unknown) => new Date(value as string | Date).toISOString();
 const units = (value: unknown) => BigInt(typeof value === "number" ? value : String(value));
+
+const integer = z.string().regex(/^(0|[1-9][0-9]*)$/);
+const reference = z.object({ owner: z.literal("S5"), id: z.string(),
+  version: z.string(), contentDigest: z.string().regex(/^[a-f0-9]{64}$/) }).strict();
+const resource = z.object({ resourceId: z.string(), unit: z.enum(["request", "seconds"]) });
+const originalLedger = z.object({
+  reservation: reference, status: z.string(),
+  envelopes: z.array(resource.extend({ quantities: z.array(integer) })).min(1).max(16),
+  charges: z.array(resource.extend({ units: integer, usedAfter: integer })),
+});
+const displayedBudget = z.object({
+  originalReservationRef: reference, status: z.string(),
+  newReservation: z.literal(false), releaseGranted: z.literal(false),
+  resources: z.array(resource.extend({ limit: integer, used: integer, chargeCount: z.number().int().nonnegative(),
+    remaining: z.string(), overdrawn: z.boolean() })).min(1).max(16),
+});
+
+export async function readOriginalBudgetLedger(q: Q, parent: { tenantId: string; ownerId: string; parentReservation: { id: string } }) {
+  const [snapshot] = await q(`SELECT o.body->'ref' reservation,s.status,s.envelopes,
+    COALESCE((SELECT jsonb_agg(jsonb_build_object('resourceId',ch.resource_id,'unit',ch.unit,
+      'units',ch.units::text,'usedAfter',ch.body->>'usedAfter'))
+      FROM finnor_os.s5_governed_resource_charges ch
+      WHERE ch.tenant_id=o.tenant_id AND ch.reservation_id=o.reservation_id),'[]'::jsonb) charges
+    FROM finnor_os.s5_reservation_origins o JOIN finnor_os.s5_reservations s USING(tenant_id,reservation_id)
+    WHERE o.tenant_id=$1 AND o.principal_id=$2 AND o.reservation_id=$3`,
+    [parent.tenantId, parent.ownerId, parent.parentReservation.id]);
+  const cut = originalLedger.parse(snapshot);
+  const resources = cut.envelopes.map(({ resourceId, unit, quantities }) => {
+    const rows = cut.charges.filter(charge => charge.resourceId === resourceId && charge.unit === unit)
+      .sort((a, b) => units(a.usedAfter) < units(b.usedAfter) ? -1 : units(a.usedAfter) > units(b.usedAfter) ? 1 : 0);
+    const occupied = [0n];
+    for (const row of rows) {
+      const charge = units(row.units);
+      const actual = (occupied.at(-1) ?? 0n) + charge;
+      if (charge <= 0n || actual !== units(row.usedAfter)) throw Error("Z0_MOUNTED_ORIGINAL_CHARGE_CHAIN_INVALID");
+      occupied.push(actual);
+    }
+    return { resourceId, unit, limit: quantities.reduce((sum, quantity) => sum + units(quantity), 0n), occupied };
+  });
+  if (resources.reduce((sum, row) => sum + row.occupied.length - 1, 0) !== cut.charges.length)
+    throw Error("Z0_MOUNTED_ORIGINAL_CHARGE_RESOURCE_INVALID");
+  return { reservation: cut.reservation, status: cut.status, resources };
+}
+
+type OriginalBudgetLedger = Awaited<ReturnType<typeof readOriginalBudgetLedger>>;
+export function compareObservedBudget(value: unknown, before: OriginalBudgetLedger, after: OriginalBudgetLedger) {
+  const result = displayedBudget.safeParse(value);
+  if (!result.success) return "INVALID_PROJECTION";
+  const actual = result.data;
+  if (!isDeepStrictEqual(actual.originalReservationRef, before.reservation)
+    || !isDeepStrictEqual(before.reservation, after.reservation)) return "RESERVATION_MISMATCH";
+  if (actual.status !== before.status || actual.status !== after.status
+    || actual.resources.length !== before.resources.length || actual.resources.length !== after.resources.length)
+    return "ENVELOPE_MISMATCH";
+  for (const [index, shown] of actual.resources.entries()) {
+    const earlier = before.resources[index], later = after.resources[index];
+    if (!earlier || !later || shown.resourceId !== earlier.resourceId || shown.resourceId !== later.resourceId
+      || shown.unit !== earlier.unit || shown.unit !== later.unit || units(shown.limit) !== earlier.limit
+      || earlier.limit !== later.limit) return "ENVELOPE_MISMATCH";
+    if (!isDeepStrictEqual(earlier.occupied, later.occupied.slice(0, earlier.occupied.length))) return "LEDGER_NOT_APPEND_ONLY";
+    if (shown.chargeCount < earlier.occupied.length - 1) return "STALE_CHARGE_COUNT";
+    const consumed = later.occupied[shown.chargeCount];
+    if (consumed === undefined) return "FUTURE_CHARGE_COUNT";
+    if (shown.used !== consumed.toString() || shown.remaining !== (later.limit - consumed).toString()
+      || shown.overdrawn !== (consumed > later.limit)) return "BALANCE_MISMATCH";
+  }
+  return "MATCH";
+}
 
 /** A single SQL snapshot, scoped to the original owner records. Reading the
  * institutional HTTP oracle itself consumes an S5 control unit. */
@@ -107,7 +177,9 @@ export async function readOwnerTruth(args: { q: Q; owner: any; parent: any; sess
   const [work] = await q("SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2", [parent.tenantId, parent.workId]);
   const [program] = await q("SELECT jsonb_array_length(coalesce(body->'nodes','[]'::jsonb)) nodes, (SELECT count(*)::int FROM jsonb_array_elements(coalesce(body->'nodes','[]'::jsonb)) n WHERE n->'action' IS NOT NULL AND n->'action' <> 'null'::jsonb) executable FROM finnor_os.p1_programs WHERE tenant_id=$1 AND id=$2", [parent.tenantId, parent.headId]);
 
+  const beforeProjection = await readOriginalBudgetLedger(q, parent);
   const projectionCall = await owner.operation("application-projection", { root, workId: parent.workId });
+  const afterProjection = await readOriginalBudgetLedger(q, parent);
   const projection = projectionCall.body;
   const api = projection?.sessions?.find((item: any) => item.id === sessionId) ?? null;
   const readCall = await owner.operation("institution-read", { requestId: parent.compilerRequestId });
@@ -121,7 +193,7 @@ export async function readOwnerTruth(args: { q: Q; owner: any; parent: any; sess
     same("deadline", iso(session.deadline_at), iso(api.deadlineAt));
     same("charge count", chargeRows.length, api.charges?.length);
     same("effect count", requests.length, api.effects?.length);
-    same("budget", budget, (api.institutional?.budget?.resources ?? []).map((r: any) => ({ resourceId: r.resourceId, unit: r.unit, limit: r.limit, used: r.used, remaining: r.remaining })));
+    same("budget", "MATCH", compareObservedBudget(api.institutional?.budget, beforeProjection, afterProjection));
     same("consumed", consumed.n > 0, api.institutional?.modelConsumedByOriginalP1);
     same("original deadline", iso(episode.original_deadline), api.institutional?.originalDeadlineAt && iso(api.institutional.originalDeadlineAt));
     same("wall deadline", iso(episode.wall_deadline), api.institutional?.wallDeadlineAt && iso(api.institutional.wallDeadlineAt));

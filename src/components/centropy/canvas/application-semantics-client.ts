@@ -487,6 +487,7 @@ const institutionViewSchema = z.object({
     resources: z.array(z.object({
       resourceId: label, unit: z.enum(["request", "seconds"]),
       limit: unsignedInteger, used: unsignedInteger,
+      chargeCount: z.number().int().nonnegative().optional(),
       remaining: z.string().max(96).regex(/^-?(?:0|[1-9][0-9]*)$/), overdrawn: z.boolean(),
     }).strict()).min(1).max(16),
     monetaryCost: z.null(), monetaryCostStatus: z.literal("UNKNOWN"),

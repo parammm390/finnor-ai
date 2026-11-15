@@ -285,8 +285,9 @@ export async function inheritedApplicationEffectState(ctx: PeMutationContext, c:
 export async function projectInheritedApplicationBudget(ctx: PeMutationContext, ref: ExperimentRef) {
   return withS5PortfolioTransaction(ctx, async c => {
     const frame = await storedFrame(ctx, ref, c, true);
-    const usage = (await c.query<{ resourceId: string; unit: string; units: string }>(
-      `SELECT resource_id "resourceId",unit,sum(units)::text units FROM finnor_os.s5_governed_resource_charges
+    const usage = (await c.query<{ resourceId: string; unit: string; units: string; chargeCount: number }>(
+      `SELECT resource_id "resourceId",unit,sum(units)::text units,count(*)::int "chargeCount"
+       FROM finnor_os.s5_governed_resource_charges
        WHERE tenant_id=$1 AND reservation_id=$2 GROUP BY resource_id,unit`,
       [ctx.auth.tenantId, frame.reservation.ref.id])).rows;
     // A projection reports exhaustion instead of requiring a new positive grant.
@@ -295,10 +296,11 @@ export async function projectInheritedApplicationBudget(ctx: PeMutationContext, 
       wallDeadlineAt: frame.origin.body.wallDeadlineAt, childDeadlineAt: frame.certificate.deadlineAt,
       resources: frame.reservation.envelopes.map(envelope => {
         const limit = envelope.quantities.reduce((sum, quantity) => sum + exactUnits(quantity), 0n);
-        const used = usage.filter(line => line.resourceId === envelope.resourceId && line.unit === envelope.unit)
-          .reduce((sum, line) => sum + exactUnits(line.units), 0n);
+        const recorded = usage.find(line => line.resourceId === envelope.resourceId && line.unit === envelope.unit);
+        const used = exactUnits(recorded?.units ?? "0");
         return { resourceId: envelope.resourceId, unit: envelope.unit, limit: limit.toString(),
-          used: used.toString(), remaining: (limit - used).toString(), overdrawn: used > limit };
+          used: used.toString(), chargeCount: recorded?.chargeCount ?? 0,
+          remaining: (limit - used).toString(), overdrawn: used > limit };
       }), monetaryCost: null, monetaryCostStatus: "UNKNOWN" };
   });
 }

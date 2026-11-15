@@ -200,7 +200,10 @@ jobs:
             'EVALUATION_TIMEOUT', 'BROWSER_PROTOCOL_ERROR', 'OTHER_EVALUATE_FAILURE'])
           const reloadFields = new Set(['work', 'session', 'status', 'application', 'institution', 'budget', 'charges', 'costs'])
           const budgetChecks = ['sqlAgreesBefore', 'sqlAgreesAfter', 'shownMatchesBefore', 'shownMatchesAfter', 'ownerBudgetUnchanged']
-          const budgetField = value => /^(status|originalDeadlineAt|wallDeadlineAt|childDeadlineAt|newReservation|releaseGranted|resources\.length|resources\.[0-9]{1,2}\.(resourceId|unit|limit|used|remaining|overdrawn))$/.test(value)
+          const budgetCuts = ['firstReload', 'secondReload', 'initial', 'reloaded']
+          const budgetCutResults = ['MATCH', 'INVALID_PROJECTION', 'RESERVATION_MISMATCH', 'ENVELOPE_MISMATCH',
+            'LEDGER_NOT_APPEND_ONLY', 'STALE_CHARGE_COUNT', 'FUTURE_CHARGE_COUNT', 'BALANCE_MISMATCH']
+          const budgetField = value => /^(status|originalDeadlineAt|wallDeadlineAt|childDeadlineAt|newReservation|releaseGranted|resources\.length|resources\.[0-9]{1,2}\.(resourceId|unit|limit|used|remaining|overdrawn|chargeCount))$/.test(value)
           const httpStatus = value => Number.isInteger(value) && value >= 100 && value <= 599 ? value : null
           const member = (values, value) => values.includes(value) ? value : null
           const count = value => Number.isSafeInteger(value) && value >= 0 ? value : null
@@ -275,10 +278,9 @@ jobs:
               canonicalBaseline: baseline ? { http: httpStatus(baseline.http), idMatches: baseline.idMatches === true,
                 api: workStatus(baseline.api), sql: workStatus(baseline.sql) } : null,
               ownerBudgetDifferences: (observations?.ownerBudgetDifferences ?? []).filter(budgetField),
-              shownBudgetDifferences: observations?.shownBudgetDifferences ? {
-                before: observations.shownBudgetDifferences.before.filter(budgetField),
-                after: observations.shownBudgetDifferences.after.filter(budgetField),
-              } : null,
+              budgetCutChecks: observations?.budgetCutChecks ? Object.fromEntries(budgetCuts
+                .filter(key => key in observations.budgetCutChecks)
+                .map(key => [key, member(budgetCutResults, observations.budgetCutChecks[key])])) : null,
               browserOperation, browserProbeCause: browserProbeCauses.has(probeCause) ? probeCause : null,
               networkError, setupPredicate, setupCause,
               wallMs: Number.isSafeInteger(wallMs) && wallMs >= 0 ? wallMs : null,
