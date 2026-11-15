@@ -1985,8 +1985,8 @@
     },
     {
       "file": "packages/private-equity/src/closing/store.ts",
-      "bytes": 20159,
-      "sha256": "a99f03650ae6a18870347c10b0d97f24fb6d8af9068b71651e632b19bd87f62d"
+      "bytes": 21182,
+      "sha256": "4d8c6498f5334fa840890bfe98e18ebda9f7ca16b921bf0b205d5b295af42fe2"
     },
     {
       "file": "packages/private-equity/src/company-brain-relationships.ts",

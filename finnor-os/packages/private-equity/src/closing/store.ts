@@ -1,6 +1,6 @@
 import { verify } from "node:crypto";
 import type { PoolClient } from "pg";
-import type { Db } from "@finnor/db";
+import { withTenantTransaction, type Db } from "@finnor/db";
 import { appendEvidenceVersionTx, createEvidenceSourceTx } from "@finnor/memory";
 import { ClosingObservationSchema, type ClosingObservation, type ClosingProjection, type VerifiedClosedTransaction } from "@finnor/shared-types";
 import type { PeMutationContext } from "../types";
@@ -18,7 +18,7 @@ export async function closingProgramme(ctx: PeMutationContext, id: string, c?: P
     return q;
   };
   const q = c ? await read(c) : await tx(ctx, read, true);
-  await authorize(ctx, { entityType: "pe_deal", entityId: q.transaction_id }, [{ type: "work", id: q.work_id }]);
+  await authorize(ctx, { entityType: "pe_deal", entityId: q.transaction_id }, [{ type: "work", id: q.work_id }], [], c);
   return q;
 }
 export async function closingProfile(ctx: PeMutationContext, q: Pick<ClosingProgrammeRow, "profile_id" | "profile_digest" | "spec">, responsibilityOnly = false) {
@@ -144,8 +144,8 @@ export async function appendClosingObservation(ctx: PeMutationContext, programme
 }
 
 export async function readClosingProgramme(ctx: PeMutationContext, id: string): Promise<ClosingProjection> {
-  const q = await closingProgramme(ctx, id);
-  return tx(ctx, async c => {
+  const read = async (c: PoolClient, correctCurrentness: boolean) => {
+    const q = await closingProgramme(ctx, id, c, correctCurrentness);
     const check = (await c.query("SELECT id,programme_id,spec_digest,accepted,body,checker_digest,observation_cut_digest,valid_until FROM finnor_os.pe_closing_checks WHERE tenant_id=$1 AND id=$2", [q.tenant_id, q.last_check_id])).rows[0] ?? null;
     const certificate = (await c.query<{ id: string; body: VerifiedClosedTransaction; post_publication_cut_digest: string }>("SELECT * FROM finnor_os.pe_closed_transaction_certificates WHERE tenant_id=$1 AND programme_id=$2", [q.tenant_id, q.id])).rows[0] ?? null;
     const cut = (await c.query("WITH cut AS MATERIALIZED(SELECT finnor_os.pe_closing_cut($1,$2) body) SELECT body,encode(sha256(convert_to(body::text,'UTF8')),'hex') digest FROM cut", [q.tenant_id, q.id])).rows[0];
@@ -159,11 +159,14 @@ export async function readClosingProgramme(ctx: PeMutationContext, id: string): 
       && check?.accepted && check.programme_id === q.id && check.spec_digest === q.spec_digest
       && certificate.body.receiptAndCurrentness.checkId === check.id;
     if (status === "CLOSED" && !publicationProof) status = "BLOCKED";
-    if (certificate && status === "CLOSED" && (cut.digest !== certificate.post_publication_cut_digest
-        || !check || new Date(check.valid_until).getTime() <= Date.now())) {
+    const invalidatedCertificate = certificate && status === "CLOSED" && (cut.digest !== certificate.post_publication_cut_digest
+        || !check || new Date(check.valid_until).getTime() <= Date.now()) ? certificate : null;
+    if (invalidatedCertificate) {
       status = "REOPENED";
-      await c.query("UPDATE finnor_os.pe_closing_programmes SET status='REOPENED',reason='MATERIAL_CURRENTNESS_CORRECTION',generation=generation+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND id=$2 AND status='CLOSED'", [q.tenant_id, q.id]);
-      await closingEvent(ctx, q, "REOPENED", { historicalCertificateId: certificate.id, priorCut: certificate.post_publication_cut_digest, currentCut: cut.digest, effectsAndLiabilitiesRetained: true }, c);
+      if (correctCurrentness) {
+        await c.query("UPDATE finnor_os.pe_closing_programmes SET status='REOPENED',reason='MATERIAL_CURRENTNESS_CORRECTION',generation=generation+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND id=$2 AND status='CLOSED'", [q.tenant_id, q.id]);
+        await closingEvent(ctx, q, "REOPENED", { historicalCertificateId: invalidatedCertificate.id, priorCut: invalidatedCertificate.post_publication_cut_digest, currentCut: cut.digest, effectsAndLiabilitiesRetained: true }, c);
+      }
     }
     const checkCurrent = check && new Date(check.valid_until).getTime() > Date.now()
       && (check.observation_cut_digest === cut.digest
@@ -174,7 +177,7 @@ export async function readClosingProgramme(ctx: PeMutationContext, id: string): 
       !proven.has(r.operation.business_effect_id) && r.invocations.some(i => i.closing_provider_egress_at));
     const budget = (await c.query("SELECT step_count,max_steps,action_count,max_actions,query_count,max_queries,deadline_at,state FROM finnor_os.work_objective_loops WHERE tenant_id=$1 AND work_id=$2", [q.tenant_id, q.work_id])).rows[0];
     const actions = (await c.query("SELECT a.id,a.status FROM finnor_os.domain_actions a JOIN finnor_os.pe_closing_node_links l ON l.tenant_id=a.tenant_id AND l.domain_action_id=a.id WHERE l.tenant_id=$1 AND l.programme_id=$2", [q.tenant_id, q.id])).rows;
-    return {
+    const projection: ClosingProjection = {
       schema: "finnor.v3.closing-projection.v1", programmeId: q.id, transactionId: q.transaction_id,
       workId: q.work_id, workInputId: q.work_input_id, planRevisionId: q.plan_revision_id,
       specDigest: q.spec_digest, approvedTermsRevision: q.approved_terms_revision, status,
@@ -202,7 +205,18 @@ export async function readClosingProgramme(ctx: PeMutationContext, id: string): 
       qualification: { engineering: "REQUIRES_RUNTIME_PROOF", protectedAdmission: q.spec.environment === "DEVELOPMENT" ? "NOT_ADMITTED" : "INDEPENDENT_EXACT_RECEIPT_REQUIRED", liveCountsEligible: status === "CLOSED" && q.spec.environment === "LIVE", economicGain: "NOT_ESTABLISHED" },
       costs: { usd: null, status: "UNMETERED", financingPrincipalIsProfit: false },
     };
-  });
+    return { projection, requiresCorrection: invalidatedCertificate !== null };
+  };
+  // Ordinary reads must not queue behind the tenant's material-cut writer.
+  // Authorization, source cut and projection share one read-only snapshot.
+  const observed = await withTenantTransaction(ctx.auth.tenantId,
+    { userId: principal(ctx), readOnly: true, isolation: "repeatable read" },
+    (_db, c) => read(c, false));
+  if (!observed.requiresCorrection) return observed.projection;
+  // Preserve the existing canonical correction, but re-read both authority and
+  // currentness under its original writer fence. Another reader may have
+  // already corrected it; never act on the earlier read snapshot.
+  return (await tx(ctx, c => read(c, true))).projection;
 }
 
 export async function readVerifiedClosing(ctx: PeMutationContext, transactionId: string) {

@@ -377,6 +377,20 @@ messages/stacks. Complete W2 types, root Next typegen/types, changed-source lint
 inventory and all sixteen official generated-input checks pass. These finite
 checks do not establish an overall current-head CI PASS or zero P0/P1 defects.
 
+## Closing read/write lock and snapshot failure model
+
+readClosingProgramme uses closingTx's default writable path, which takes the
+tenant material-cut writer lock even for an ordinary read. The actual wrong-
+amount API log reports a statement timeout. Verify this suspected contention
+directly before attributing that hosted/native failure to it. A read must use
+one authorized repeatable-read snapshot without taking the writer lock. A real
+certificate invalidation must still recheck under the existing writer lock,
+persist REOPENED once, and retain all original effects and liabilities. Competing
+readers must not duplicate the correction event or publish stale completion.
+No source/rights/currentness predicate, timeout, budget or writer fence may be
+removed. Use a private copy of the controlled native PostgreSQL fixture for
+fault injection; never mutate its retained original or grant an effect.
+
 Before implementation, exercise finite error collection with an actual refused
 HTTP connection and an actual aborted local HTTP response, plus arbitrary nested
 private error strings and a real child exit. Then run the original W2 owner to
