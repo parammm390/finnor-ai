@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {spawn} from 'node:child_process';
 import {writeFile} from 'node:fs/promises';
-import {finiteFailureObservation, finiteRequestFailure} from './failure-observation';
+import {finiteFailureObservation, finiteRequestFailure, isRetryableReadAfterOwnedWorkerRestart} from './failure-observation';
 
 const evidence=process.argv[2];
 assert(evidence?.startsWith('/'));
@@ -27,6 +27,14 @@ assert.equal(finiteRequestFailure(refused,'/api/actions/'+secret+'/confirm','POS
 assert.equal(timeout.code,'OWNER_REQUEST_TIMEOUT');
 assert.equal(connection.code,'OWNER_REQUEST_TRANSPORT_FAILED');
 assert(connection.causeCodes.includes('ECONNREFUSED'));
+const reset=finiteRequestFailure(Object.assign(new TypeError('socket closed'),{cause:{code:'ECONNRESET'}}),
+  '/api/closing/read','GET',3);
+assert.equal(isRetryableReadAfterOwnedWorkerRestart(reset,1),true);
+assert.equal(isRetryableReadAfterOwnedWorkerRestart(reset,2),true);
+assert.equal(isRetryableReadAfterOwnedWorkerRestart(reset,3),false);
+assert.equal(isRetryableReadAfterOwnedWorkerRestart({...reset,method:'POST'},1),false);
+assert.equal(isRetryableReadAfterOwnedWorkerRestart(connection,1),false);
+assert.equal(isRetryableReadAfterOwnedWorkerRestart(timeout,1),false);
 const child=spawn(process.execPath,['-e','process.exit(23)']);
 const exit=await new Promise<{code:number|null;signal:NodeJS.Signals|null}>(resolve=>child.once('exit',(code,signal)=>resolve({code,signal})));
 const rows=[{name:'api',exit:{...exit,at:new Date().toISOString()}}];

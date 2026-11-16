@@ -2,7 +2,7 @@
  * ordinary roles, native S3/S4/S5, separate checker/broker and durable oracle.
  * No route-handler calls, test authority bypass, seeded receipts or live effects. */
 import assert from "node:assert/strict";
-import { finiteFailureObservation, finiteRequestFailure } from "./failure-observation";
+import { finiteFailureObservation, finiteRequestFailure, isRetryableReadAfterOwnedWorkerRestart } from "./failure-observation";
 import { createHash, generateKeyPairSync, randomBytes, randomUUID, sign, type KeyObject } from "node:crypto";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { appendFile, copyFile, mkdir, mkdtemp, readFile, readdir, statfs, writeFile } from "node:fs/promises";
@@ -149,6 +149,18 @@ async function request(f: any, path: string, body?: unknown, actorId?: string, t
   const row = { path, tenantId: f.tenant, actorId: actorId ?? f.principal, request: body, response: result };
   calls.push({ path, tenantId: f.tenant, actorId: row.actorId, status: result.status, elapsedMs: result.elapsedMs });
   await save(`calls/${String(calls.length).padStart(4, "0")}.json`, row); return result;
+}
+async function readAfterOwnedWorkerRestart<T>(read:()=>Promise<T>):Promise<T>{
+  for(let attempt=1;;attempt++){
+    try{return await read();}
+    catch(error){
+      const failure=error&&typeof error==='object'?requestFailures.get(error):undefined;
+      if(!isRetryableReadAfterOwnedWorkerRestart(failure,attempt))throw error;
+      console.log(JSON.stringify({event:'W2_READ_ONLY_RECOVERY_RETRY',attempt,
+        causeCodes:failure!.causeCodes,delayMs:250*attempt}));
+      await sleep(250*attempt);
+    }
+  }
 }
 const ok = (r: any) => { assert(r.status >= 200 && r.status < 300, JSON.stringify(r)); return r.body; };
 async function actors(f: any) {
@@ -1003,7 +1015,8 @@ try {
     process.kill(-killedPid!, "SIGKILL");
     await new Promise<void>(done => worker!.once("exit", () => done()));
     worker = (await launch("worker-compensation-recovery", ["--import=tsx", join(backend, "apps/worker/src/index.ts")], workerEnv)).cp;
-    const replay = await compensationReadback({ f, request }), replayFunding = await compensationFunding({ f });
+    const replay = await readAfterOwnedWorkerRestart(() => compensationReadback({ f, request })),
+      replayFunding = await compensationFunding({ f });
     assert.deepEqual(replay, compensation, "Read-only recovery changed the receipt join");
     assert.deepEqual(replayFunding, funding, "Receipt replay charged or freed cash twice");
     assert.equal((await providerRequest("/__fixture/state")).requests.length, completed.state.requests.length,

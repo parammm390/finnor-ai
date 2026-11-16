@@ -38,7 +38,7 @@ jobs:
           "$RUNNER_TEMP/w3-uv" pip sync --only-binary :all: --python "$RUNNER_TEMP/w3-s3/bin/python" finnor-os/scripts/postz/w3/requirements-s3.lock
           "$RUNNER_TEMP/w3-uv" pip sync --only-binary :all: --python "$RUNNER_TEMP/w3-s5/bin/python" finnor-os/packages/epistemic-runtime/src/requirements-s5.txt
       - name: Check the complete W3 owner and driver types
-        run: node --max-old-space-size=2048 finnor-os/node_modules/typescript/bin/tsc -p finnor-os/scripts/postz/w3/tsconfig.json
+        run: node --max-old-space-size=3072 finnor-os/node_modules/typescript/bin/tsc -p finnor-os/scripts/postz/w3/tsconfig.json
       - name: Exercise the actual original owner journey
         working-directory: finnor-os
         env:
@@ -55,6 +55,52 @@ jobs:
             *) echo 'Unsupported original owning episode'; exit 2 ;;
           esac
           timeout --signal=TERM --kill-after=30s "${limit}s" node --import=tsx scripts/postz/w3/native.mts --output "$RUNNER_TEMP/w3-owner" "${flags[@]}"
+      - name: Retain a finite W3 outcome
+        if: ${{ always() }}
+        env:
+          W3_RECEIPT_ROOT: ${{ runner.temp }}/w3-owner
+        run: |
+          node --input-type=module <<'JS'
+          import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+          import { join } from "node:path"
+          const root = process.env.W3_RECEIPT_ROOT
+          mkdirSync(root, { recursive: true })
+          const resultPath = join(root, "result.json")
+          const terminalPath = join(root, "terminal-failure.json")
+          const safeLabel = value => typeof value === "string" && /^[A-Za-z0-9_.-]{1,160}$/.test(value) ? value : null
+          const safeSource = /^[0-9a-f]{40}$/.test(process.env.GITHUB_SHA ?? "") ? process.env.GITHUB_SHA : null
+          let summary
+          if (!existsSync(resultPath)) {
+            summary = { schema: "finnor.w3.finite-outcome.v1", sourceSha: safeSource, status: "NOT_RUN",
+              stage: "OWNER_NOT_STARTED_OR_RESULT_MISSING", failingCases: [], cleanupFailures: [], terminalCode: null }
+          } else {
+            const result = JSON.parse(readFileSync(resultPath, "utf8"))
+            const terminal = existsSync(terminalPath) ? JSON.parse(readFileSync(terminalPath, "utf8")) : null
+            const terminalCode = typeof terminal?.message === "string"
+              ? terminal.message.match(/(?:^|\b)([A-Z][A-Z0-9_]{2,127})(?=[: .]|$)/)?.[1] ?? null : null
+            const failingCases = (Array.isArray(result.results) ? result.results : [])
+              .filter(row => row?.status !== "PASS")
+              .slice(0, 64)
+              .map(row => ({ id: safeLabel(row?.id), status: ["FAIL", "NOT_RUN"].includes(row?.status) ? row.status : "UNKNOWN" }))
+            const cleanupFailures = (Array.isArray(result.cleanup) ? result.cleanup : [])
+              .filter(row => row?.status !== "PASS")
+              .slice(0, 16)
+              .map(row => ({ name: safeLabel(row?.name), code: safeLabel(row?.code) }))
+            summary = { schema: "finnor.w3.finite-outcome.v1", sourceSha: safeSource,
+              status: result.exitCode === 0 && failingCases.length === 0 && cleanupFailures.length === 0 ? "PASS" : "FAIL",
+              stage: "OWNER_COMPLETED", failingCases, cleanupFailures, terminalCode }
+          }
+          writeFileSync(join(root, "terminal-summary.json"), JSON.stringify(summary, null, 2) + "\n", { mode: 0o600 })
+          console.log(JSON.stringify(summary))
+          if (process.env.GITHUB_STEP_SUMMARY) {
+            appendFileSync(process.env.GITHUB_STEP_SUMMARY,
+              "\n## W3 finite owner outcome\n\n- Status: " + summary.status
+              + "\n- Stage: " + summary.stage
+              + "\n- Failing cases: " + (summary.failingCases.map(row => row.id).filter(Boolean).join(", ") || "none recorded")
+              + "\n- Cleanup failures: " + (summary.cleanupFailures.map(row => row.name).filter(Boolean).join(", ") || "none recorded")
+              + "\n- Terminal code: " + (summary.terminalCode ?? "none recorded") + "\n")
+          }
+          JS
       - name: Check exact source preservation
         if: ${{ always() }}
         run: git diff --exit-code
@@ -68,6 +114,7 @@ jobs:
             ${{ runner.temp }}/w3-owner/cases/
             ${{ runner.temp }}/w3-owner/source-cut.json
             ${{ runner.temp }}/w3-owner/terminal-failure.json
+            ${{ runner.temp }}/w3-owner/terminal-summary.json
             ${{ runner.temp }}/w3-owner/publication/
           if-no-files-found: error
           retention-days: 7

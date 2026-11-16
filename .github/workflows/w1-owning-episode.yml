@@ -52,6 +52,37 @@ jobs:
           FINNOR_W1_EPISODE: ${{ inputs.mode }}
           FINNOR_TEST_PYTHON: ${{ runner.temp }}/w1-scientific/bin/python
         run: python3 finnor-os/scripts/postz-w1/run-linux-owning-episode.py --mode "$FINNOR_W1_EPISODE" --output "$RUNNER_TEMP/w1-owning"
+      - name: Retain a finite W1 outcome
+        if: ${{ always() }}
+        env:
+          W1_RECEIPT_ROOT: ${{ runner.temp }}/w1-owning/report
+          W1_MODE: ${{ inputs.mode }}
+        run: |
+          node --input-type=module <<'JS'
+          import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+          import { join } from "node:path"
+          const root = process.env.W1_RECEIPT_ROOT
+          mkdirSync(root, { recursive: true })
+          const safeLabel = value => typeof value === "string" && /^[A-Za-z0-9_.-]{1,160}$/.test(value) ? value : null
+          const read = name => existsSync(join(root, name)) ? JSON.parse(readFileSync(join(root, name), "utf8")) : null
+          const receipt = read("owning-suite-runner-receipt.json") ?? read("w1-runner-receipt.json")
+          const observations = read("owning-observations.json")
+          const failingCases = (Array.isArray(observations?.cases) ? observations.cases : [])
+            .filter(row => row?.status !== "PASS")
+            .slice(0, 64)
+            .map(row => ({ id: safeLabel(row?.id), status: ["FAIL", "NOT_RUN"].includes(row?.status) ? row.status : "UNKNOWN",
+              failureCodes: (Array.isArray(row?.failureCodes) ? row.failureCodes : []).map(safeLabel).filter(Boolean).slice(0, 16) }))
+          const summary = { schema: "finnor.w1.finite-outcome.v1",
+            sourceSha: /^[0-9a-f]{40}$/.test(process.env.GITHUB_SHA ?? "") ? process.env.GITHUB_SHA : null,
+            mode: safeLabel(process.env.W1_MODE), status: receipt === null ? "NOT_RUN"
+              : /^PASS_/.test(receipt.status ?? "") && failingCases.length === 0 ? "PASS" : "FAIL",
+            stage: receipt === null ? "OWNER_NOT_STARTED_OR_RECEIPT_MISSING" : "OWNER_COMPLETED",
+            failureType: safeLabel(receipt?.failureType),
+            failureCodes: (Array.isArray(receipt?.failureCodes) ? receipt.failureCodes : []).map(safeLabel).filter(Boolean).slice(0, 16),
+            failingCases }
+          writeFileSync(join(root, "terminal-summary.json"), JSON.stringify(summary, null, 2) + "\n", { mode: 0o600 })
+          console.log(JSON.stringify(summary))
+          JS
       - name: Check exact source preservation
         if: ${{ always() }}
         run: git diff --exit-code

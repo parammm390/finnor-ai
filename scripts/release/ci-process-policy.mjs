@@ -134,6 +134,24 @@ export function verifyCiProcess(root) {
         file + "/" + id + ": add a descriptive job display name")
     }
   }
+  const w1Episode = workflows["w1-owning-episode.yml"] ?? ""
+  require(w1Episode.includes("name: Retain a finite W1 outcome")
+    && w1Episode.includes('schema: "finnor.w1.finite-outcome.v1"')
+    && w1Episode.includes("OWNER_NOT_STARTED_OR_RECEIPT_MISSING")
+    && w1Episode.includes("terminal-summary.json")
+    && w1Episode.includes("console.log(JSON.stringify(summary))"),
+    "W1 failures require a privacy-safe finite outcome with exact mode and case identities")
+  const w3Episode = workflows["w3-owning-episode.yml"] ?? ""
+  require(w3Episode.includes("node --max-old-space-size=3072 finnor-os/node_modules/typescript/bin/tsc -p finnor-os/scripts/postz/w3/tsconfig.json"),
+    "W3 complete owner compilation requires the bounded 3 GiB heap qualified for this source graph")
+  require(w3Episode.includes("name: Retain a finite W3 outcome")
+    && w3Episode.includes('schema: "finnor.w3.finite-outcome.v1"')
+    && w3Episode.includes("OWNER_NOT_STARTED_OR_RESULT_MISSING")
+    && w3Episode.includes("terminal-summary.json")
+    && w3Episode.includes("console.log(JSON.stringify(summary))")
+    && !w3Episode.includes("console.log(JSON.stringify(terminal))"),
+    "W3 failures require a privacy-safe finite outcome without printing retained private diagnostics")
+
   for (const [file, label, required] of [
     ["w1-owning-verification.yml", "W1 result - economic orchestration and recovery",
       "needs: [source-checks, native-positive, owning-regressions]"],
