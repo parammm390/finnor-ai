@@ -57,6 +57,18 @@ jobs:
       - name: Check exact source restoration
         if: ${{ always() }}
         run: git diff --exit-code
+      - name: Verify operational heartbeat isolation and all business fences
+        if: ${{ always() && inputs.episode == 'after-exact' }}
+        working-directory: finnor-os
+        run: node --import=tsx scripts/v3/closing-read-contention.e2e.mts "$RUNNER_TEMP/w2-compensation/owner" "$RUNNER_TEMP/w2-controller-lease" lease
+      - name: Retain finite lease-boundary receipt
+        if: ${{ always() && inputs.episode == 'after-exact' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: w2-controller-lease-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/w2-controller-lease/result.json
+          if-no-files-found: error
+          retention-days: 7
       - name: Retain controlled owner comparison without private runtime files
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a

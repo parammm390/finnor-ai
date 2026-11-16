@@ -354,6 +354,13 @@
       "supportingPaths": [
         "scripts/release/pr-verdict-transport.e2e.test.mjs"
       ]
+    },
+    {
+      "id": "synthetic-canary-http-verification",
+      "path": "scripts/release/supplier-canary-http.e2e.mjs",
+      "classification": "READ_ONLY",
+      "state": "TEST_ONLY",
+      "reason": "Runs the canary handler on two ephemeral loopback listeners with generated synthetic credentials; no hosted requests, deployment, database or business-effect mutation."
     }
   ]
 }

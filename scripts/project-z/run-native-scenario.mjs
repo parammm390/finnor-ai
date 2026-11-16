@@ -6,6 +6,7 @@ import { chmodSync, createWriteStream, existsSync, mkdirSync, readFileSync, stat
 import { dirname, isAbsolute, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { setTimeout as delay } from "node:timers/promises"
+import { waitForNativeStage } from "./native-lifecycle.mjs"
 
 // Ordinary disposable native stack for phase scenarios: pinned real Auth and
 // embedded PostgreSQL, the migrated/seeded application on loopback with real
@@ -71,6 +72,7 @@ const receipt = { schema: "finnor.project-z.native-scenario-stack.v1", status: "
   toolchainSha256: createHash("sha256").update(readFileSync(join(root, "infra/deployment/project-z-verification-toolchain.json"))).digest("hex") }
 function save() { writeFileSync(join(evidence, "stack-result.json"), JSON.stringify(receipt, null, 2) + "\n", { mode: 0o600 }) }
 const children = []
+const requiredServices = []
 const alive = child => child.exitCode === null && child.signalCode === null
 function start(label, file, args, readyStatus, extraEnv = {}, cwd = root) {
   const row = { label, file, args: args.map(arg => arg.replace(/^(--(?:state|auth-binary|evidence)=).*/, "$1<path>")),
@@ -156,6 +158,7 @@ try {
   const auth = start("auth", process.execPath, [join(root, "scripts/project-z/start-isolated-auth.mjs"),
     "--state=" + state, "--auth-binary=" + join(target, "auth")], "READY_REAL_LOCAL_AUTH_AND_DATABASE")
   assert.ok(await bounded(auth.ready, 240000), "REAL_AUTH_READY_REQUIRED")
+  requiredServices.push(auth)
   // BEGIN --auth-tls front
   if (authTls) {
     receipt.stage = "AUTH_TLS_FRONT"
@@ -171,8 +174,9 @@ try {
     chmodSync(tlsCertificate, 0o644)
     const tls = start("auth-tls", process.execPath, [join(root, "scripts/project-z/start-isolated-auth-tls.mjs"),
       "--cert=" + tlsCertificate, "--key=" + tlsKey, "--state=" + tlsState, "--port=" + authTlsPort], "READY_LOOPBACK_TLS_AUTH_FRONT")
-    const tlsReady = await bounded(tls.ready, 60000)
+    const tlsReady = await waitForNativeStage(bounded(tls.ready, 60000), requiredServices)
     assert.ok(tlsReady, "AUTH_TLS_FRONT_READY_REQUIRED")
+    requiredServices.push(tls)
     receipt.authTls = { origin: tlsReady.origin, certificateSha256: tlsReady.certificateSha256, spkiSha256: tlsReady.spkiSha256,
       trust: "SINGLE_DECLARED_PEM_VIA_NODE_EXTRA_CA_CERTS_AT_PROCESS_START", tlsVerificationDisabled: false }
   }
@@ -187,20 +191,21 @@ try {
     ...(profiles?.split(",").includes("z5") ? ["--z5-s3-python=" + process.env.FINNOR_S3_PYTHON] : []), // z5-native
     ...(budgetMs ? ["--budget-ms=" + budgetMs] : [])],
     "READY_REAL_AUTHENTICATED_NATIVE_TARGET")
-  assert.ok(await bounded(app.ready, productionBuild ? 3000000 : 1200000), "REAL_APPLICATION_READY_REQUIRED")
+  assert.ok(await waitForNativeStage(bounded(app.ready, productionBuild ? 3000000 : 1200000), requiredServices), "REAL_APPLICATION_READY_REQUIRED")
+  requiredServices.push(app)
   receipt.stage = hold ? "HELD_READY" : "SCENARIOS"
   receipt.readyAt = new Date().toISOString()
   save()
   if (hold) {
     console.log(JSON.stringify({ status: "HELD_READY", state, evidence }))
-    await new Promise(() => {})
+    await waitForNativeStage(new Promise(() => {}), requiredServices)
   }
   for (const [index, scenario] of scenarios.entries()) {
     const output = join(evidence, `scenario-${String(index + 1).padStart(2, "0")}`)
     const run = start(`scenario-${index + 1}`, process.execPath, ["--import", createRequireTsx(), scenario], undefined,
       { FINNOR_NATIVE_STATE: state, FINNOR_NATIVE_EVIDENCE: output, FINNOR_NATIVE_ROOT: root, FINNOR_NATIVE_APP_ATTEMPT: "01",
         ...(authTls ? { FINNOR_NATIVE_AUTH_TLS_STATE: tlsState } : {}) }, backend)
-    const result = await run.ended
+    const result = await waitForNativeStage(run.ended, requiredServices)
     receipt.scenarios[index].code = result.code
     receipt.scenarios[index].signal = result.signal
     save()
@@ -210,6 +215,7 @@ try {
   receipt.stage = "COMPLETE"
 } catch (error) {
   receipt.status = "FAILED_RETAINED_NO_AUTOMATIC_RETRY"
+  if (error.nativeFailure) receipt.firstFailure = error.nativeFailure
   const label = error?.message?.split("\n")[0] ?? ""
   receipt.failureCode = /^[A-Z_]+$/.test(label) ? label : error?.code ?? "NATIVE_SCENARIO_FAILED"
   process.exitCode = 1

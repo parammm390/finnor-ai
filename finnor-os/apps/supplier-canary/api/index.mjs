@@ -1,16 +1,16 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/i;
-const CURRENT_MIGRATION_HEAD = "postz_zzz_native_reader_policy_acl.sql";
+const CURRENT_MIGRATION_HEAD = "postz_zzzz_closing_operational_lease_fences.sql";
 const CUTOVER_PROTOCOL = 5;
 
 const DILIGENCE_RECORD = Object.freeze({
   reference: "DD-48",
-  status: "Third-party diligence packet received",
-  asOf: "August 28, 2026 at 5:00 PM CDT",
-  externalReference: "VDR-9848",
-  finding: "Insurance evidence is current; the environmental reliance letter remains under counsel review.",
-  risk: "Reliance-letter completion is an open closing dependency. No other critical exception is recorded."
+  status: "Synthetic browser-verification record",
+  asOf: "Synthetic fixture; no evidence timestamp",
+  externalReference: "SYNTHETIC-REFERENCE-001",
+  finding: "Synthetic extraction fixture containing no third-party diligence evidence.",
+  risk: "This fixture provides no business or closing-risk conclusion."
 });
 
 function escapeHtml(value) {

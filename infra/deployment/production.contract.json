@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "postz_zzz_native_reader_policy_acl.sql",
+    "requiredMigrationHead": "postz_zzzz_closing_operational_lease_fences.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

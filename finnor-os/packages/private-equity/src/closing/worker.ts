@@ -7,7 +7,8 @@ import type { PeMutationContext } from "../types";
 import { consumeEnterpriseAllocation, validateEnterpriseAllocation } from "../enterprise-allocation";
 import { reconcileClosingAllocationObservation } from "../allocation-store";
 import { persistEconomicRecord } from "../economic-store";
-import { closingTx as tx } from "../owner-context";
+import { closingTx as tx, tx as operationalTx } from "../owner-context";
+import { renewClosingControllerLease } from "./controller-lease";
 import { closingCanonical, closingDigest } from "./compiler";
 import { ClosingError, type ClosingProgrammeRow } from "./contracts";
 import { appendClosingObservation, assertClosingCurrent, closingEvent, closingProfile, closingProgramme, enqueueClosing, readClosingProgramme } from "./store";
@@ -287,13 +288,13 @@ export async function runClosingProgrammeJob(payload: Record<string, unknown>, e
   if (!actor || actor.status !== "active" || actor.role !== "owner") throw Error("CLOSING_CURRENT_CANONICAL_PE_PRINCIPAL_UNAVAILABLE");
   const ctx: PeMutationContext = { auth: { tenantId: request.tenantId, userId: actor.id, employeeId: actor.id, role: actor.role,
     authorityRevision: Number(actor.authority_revision) } };
-  const q = await tx(ctx, async c => {
+  const q = await operationalTx(ctx, async c => {
     const job = (await c.query("SELECT id FROM finnor_os.jobs WHERE tenant_id=$1 AND id=$2 AND status='running' AND claim_token=$3 AND claim_fence=$4 AND lease_expires_at>clock_timestamp() FOR SHARE", [request.tenantId, execution.jobId, execution.claimToken, execution.claimFence])).rows[0];
     if (!job) throw new ClosingError("CLOSING_JOB_LEASE_LOST");
     return (await c.query<ClosingProgrammeRow>("UPDATE finnor_os.pe_closing_programmes SET controller_lease_token=$4,controller_lease_until=clock_timestamp()+interval '90 seconds' WHERE tenant_id=$1 AND id=$2 AND generation=$3 AND (controller_lease_until IS NULL OR controller_lease_until<clock_timestamp()) RETURNING *", [request.tenantId, request.programmeId, request.generation, token])).rows[0];
   });
   if (!q) return;
-  execution.registerHeartbeat(async () => tx(ctx, async c => Boolean((await c.query("UPDATE finnor_os.pe_closing_programmes SET controller_lease_until=clock_timestamp()+interval '90 seconds' WHERE tenant_id=$1 AND id=$2 AND controller_lease_token=$3 AND generation=$4 RETURNING id", [q.tenant_id, q.id, token, q.generation])).rowCount)), { leaseSeconds: 90 });
+  execution.registerHeartbeat(() => renewClosingControllerLease(ctx, q, token), { leaseSeconds: 90 });
   try {
     const projection = await readClosingProgramme(ctx, q.id);
     if (projection.status === "CLOSED") {
@@ -334,6 +335,6 @@ export async function runClosingProgrammeJob(payload: Record<string, unknown>, e
     if (budget?.remaining && (retained || !["CLOSED", "REOPENED", "FAILED", "STOPPED"].includes(current.status) && current.original_deadline_at.getTime() > Date.now())) {
       await enqueueClosing(ctx, current, `retained-responsibility:${Math.floor(Date.now()/60000)+1}`, undefined, 60000);
     }
-    await tx(ctx, async c => c.query("UPDATE finnor_os.pe_closing_programmes SET controller_lease_token=NULL,controller_lease_until=NULL WHERE tenant_id=$1 AND id=$2 AND controller_lease_token=$3", [q.tenant_id, q.id, token]));
+    await operationalTx(ctx, async c => c.query("UPDATE finnor_os.pe_closing_programmes SET controller_lease_token=NULL,controller_lease_until=NULL WHERE tenant_id=$1 AND id=$2 AND controller_lease_token=$3", [q.tenant_id, q.id, token]));
   }
 }

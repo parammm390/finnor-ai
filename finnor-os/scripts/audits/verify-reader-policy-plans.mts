@@ -13,6 +13,13 @@ assert.equal(replayed.length,0,'Migration replay must be empty');
 const results:Array<{role:string;table:string;status:'PASS'|'FAIL';code?:string;permission?:string}>=[];
 const tenant=randomUUID(),principal=randomUUID();
 try{
+ const missingMaterialFences=(await database.admin.query(`SELECT a.attname FROM pg_attribute a
+  WHERE a.attrelid='finnor_os.pe_closing_programmes'::regclass AND a.attnum>0 AND NOT a.attisdropped
+   AND a.attname NOT IN('controller_lease_token','controller_lease_until')
+   AND NOT EXISTS(SELECT 1 FROM pg_trigger t WHERE t.tgrelid=a.attrelid
+    AND t.tgname='aa_v3_material_statement_fence' AND (t.tgtype::int&2)=2 AND (t.tgtype::int&16)=16
+    AND a.attnum=ANY(t.tgattr::smallint[]))`)).rows;
+ assert.deepEqual(missingMaterialFences,[],'Every closing business column must retain its statement fence');
  const roles=(await database.admin.query<{rolname:string}>(`SELECT rolname FROM pg_roles
   WHERE rolname LIKE 'finnor\\_%' ESCAPE '\\' AND NOT rolsuper AND NOT rolbypassrls ORDER BY rolname`)).rows;
  for(const {rolname:role} of roles){
@@ -61,8 +68,8 @@ try{
  const root=resolve(import.meta.dirname,'../../..');
  const sourcePath='finnor-os/packages/db/migrations/postz_z1_shared_work.sql';
  await writeFile(join(output,'result.json'),JSON.stringify({schema:'finnor.native-reader-policy-plans.v1',status:failures.length||privacyFailures.length?'FAIL':'PASS',
-  source:Object.fromEntries(await Promise.all([sourcePath,'finnor-os/packages/db/migrations/postz_zzz_native_reader_policy_acl.sql','finnor-os/scripts/audits/verify-reader-policy-plans.mts'].map(async path=>[path,createHash('sha256').update(await readFile(join(root,path))).digest('hex')]))),
-  migrationsApplied:database.migrations.length,migrationReplay:replayed.length,roleCount:new Set(results.map(row=>row.role)).size,planCount:results.length,failures,results,privacy,privacyFailures,persistedProbeTenants:persisted,
+  source:Object.fromEntries(await Promise.all([sourcePath,'finnor-os/packages/db/migrations/postz_zzz_native_reader_policy_acl.sql','finnor-os/packages/db/migrations/postz_zzzz_closing_operational_lease_fences.sql','finnor-os/scripts/audits/verify-reader-policy-plans.mts'].map(async path=>[path,createHash('sha256').update(await readFile(join(root,path))).digest('hex')]))),
+  migrationsApplied:database.migrations.length,migrationReplay:replayed.length,missingMaterialFences,roleCount:new Set(results.map(row=>row.role)).size,planCount:results.length,failures,results,privacy,privacyFailures,persistedProbeTenants:persisted,
   qualification:'Actual PostgreSQL all-role query planning and four controlled confidential-recipient predicate probes. Test rows and temporary grants rolled back; no settlement or phase qualification.',
   rerun:'From finnor-os: node --import=tsx scripts/audits/verify-reader-policy-plans.mts <absolute external evidence directory>'},null,2));
  assert(results.length>0);assert.equal(failures.length,0,'Every existing reader entitlement must remain plannable');

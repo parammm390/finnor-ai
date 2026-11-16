@@ -73,7 +73,7 @@ const port = retained?.databasePort ?? await new Promise<number>((yes, no) => {
   });
 });
 const postgres = new EmbeddedPostgres({ databaseDir: directory, user: "finnor", password: "finnor",
-  port, persistent: true, onLog: () => undefined });
+  port, persistent: true, postgresFlags: ["-h", "127.0.0.1", "-k", ""], onLog: () => undefined });
 let admin: pg.Client | undefined, http: Awaited<ReturnType<typeof httpFixture>> | undefined, queue: any, workerChild: ChildProcess | undefined;
 const runtimeBase = "/Users/paramdave/.factory/worktrees/r4-identification-plan-compiler/runtime";
 process.env.NODE_ENV = "test"; process.env.LOG_LEVEL = "silent";
@@ -287,8 +287,13 @@ try {
     { input: JSON.stringify({ operation: "equivalent" }), encoding: "utf8", timeout: 20000 });
   assert.equal(rows.status, 0, rows.stderr);
   const day = 86400000;
+  // Freeze the initial fixture clock once. Midnight rounding gave a new
+  // one-day grant only seconds of usable life near the UTC day boundary.
+  const fixtureAnchor = Date.now();
+  await artifact("fixture-clock.json", { anchor: new Date(fixtureAnchor).toISOString(),
+    periodMs: day, periods: 1, issuedGrantsRenewed: false });
   support = createUpstreamFixtureSupport({ admin: () => admin, generatedRows: JSON.parse(rows.stdout).rows,
-    begin: new Date(Math.floor(Date.now() / day) * day - 128 * day).toISOString(), day, fixtures, api: ownerApi, artifact });
+    begin: new Date(fixtureAnchor - 128 * day).toISOString(), day, fixtures, api: ownerApi, artifact });
   if (!retained) await story("actual-owner-registration", "Authenticated S1/S3/S4/S5/S7 binds an explicit prospective menu, not a coefficient graph", async () => {
     f = await prepareOwnerFixture("r4-" + randomUUID().slice(0, 8));
     registration = f.registration; registered = f.registered;
