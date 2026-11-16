@@ -80,6 +80,8 @@ jobs:
         env:
           SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: python3 finnor-os/scripts/project-z/z4/ci-native.py install --repository "$GITHUB_WORKSPACE" --expected-sha "$SOURCE_SHA" --artifact "$RUNNER_TEMP/z4-assets"
+      - name: Verify private state boundaries
+        run: node scripts/project-z/native-state.e2e.mjs "$RUNNER_TEMP/native-state-controls.json"
       - name: Fresh real Auth, disposable DB, actual owner and mounted reload
         env:
           PROJECT_Z_NATIVE_NAME: project-z-ci-${{ github.run_id }}-${{ github.run_attempt }}
@@ -90,7 +92,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: project-z-owner-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/project-z-owner/result.json
+          path: |
+            ${{ runner.temp }}/project-z-owner/result.json
+            ${{ runner.temp }}/native-state-controls.json
           if-no-files-found: warn
           retention-days: 7
 

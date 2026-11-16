@@ -5,6 +5,7 @@ import { createWriteStream, existsSync, mkdirSync, readFileSync, statfsSync, wri
 import { dirname, isAbsolute, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { setTimeout as delay } from "node:timers/promises"
+import { prepareNativeStateParent } from "./native-state.mjs"
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..")
 const option = name => process.argv.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3)
@@ -27,7 +28,7 @@ const receipt = { schema: "finnor.project-z.native-ci.v1", status: "RUNNING", st
   scope: "REAL_AUTH_OWNER_LOGIN_RELOAD_TRANSPORT_ONLY", children: [], authBypass: false,
   inheritedCredentials: false, productionAccess: false, nativeMechanismAdmission: "NOT_RUN",
   protectedAdmission: "NOT_RUN", installedAcceptance: "NOT_RUN", phasesAccepted: [],
-  inputs: Object.fromEntries(["scripts/project-z/run-native-ci.mjs", "scripts/project-z/install-isolated-auth.py",
+  inputs: Object.fromEntries(["scripts/project-z/run-native-ci.mjs", "scripts/project-z/native-state.mjs", "scripts/project-z/install-isolated-auth.py",
     "scripts/project-z/start-isolated-auth.mjs", "scripts/project-z/start-isolated-app.mjs",
     "scripts/project-z/run-owner-smoke.mjs", "finnor-os/apps/api/next.config.mjs", "next.config.mjs",
     "package-lock.json", "finnor-os/package-lock.json", "e2e/centropy-owner-login.spec.ts"]
@@ -114,6 +115,7 @@ try {
   assert.equal(cpuAffinity, "0-1", "EXACT_TWO_CPU_AFFINITY_REQUIRED")
   assert.ok(memory >= 4 * 1024 ** 3 && disk.bavail * disk.bsize >= 4 * 1024 ** 3
     && outputDisk.bavail * outputDisk.bsize >= 4 * 1024 ** 3, "UNCHANGED_RESOURCE_GUARD")
+  assert.equal(prepareNativeStateParent(root, name), state)
   const target = join(evidence, "auth-toolchain")
   const install = start("install", "python3", ["-I", "-B", join(root, "scripts/project-z/install-isolated-auth.py"),
     "--target", target, ...(archive ? ["--archive", archive] : [])])
