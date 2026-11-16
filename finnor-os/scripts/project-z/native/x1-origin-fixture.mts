@@ -34,6 +34,7 @@ import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawn, type ChildProcess } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { stopNativeProcess } from "../../../../scripts/project-z/native-lifecycle.mjs";
 
 export type NativeEnvironment = Record<string, string>;
 export type Recorder = (name: string, value: unknown) => void | Promise<void>;
@@ -486,6 +487,8 @@ export async function submitInstitutionAcquisition(env: NativeEnvironment, paren
   const record = options.record ?? noRecord;
   const session = owner ?? await signInOwner(env);
   const sql = await admin(env);
+  let portal: ChildProcess | undefined;
+  let transferred = false;
   try {
     const portalModule = await import("../../x2/fixtures/admin.mjs");
     const portalStore = await import("../../x2/fixtures/store.mjs");
@@ -501,12 +504,15 @@ export async function submitInstitutionAcquisition(env: NativeEnvironment, paren
     }), { mode: 0o600, flag: "wx" });
     const portalArgs = workstream ? [join(here, "z0-workstream-portal.mjs"), dir]
       : [join(here, "../../x2/fixtures/server.mjs"), "--private-dir", dir, "--port", "0"];
-    const portal = spawn(process.execPath, portalArgs,
+    portal = spawn(process.execPath, portalArgs,
       { env: { PATH: process.env.PATH ?? "", LANG: "C", TZ: "UTC" }, stdio: ["ignore", "pipe", "pipe"] });
     const origin: string = await new Promise((yes, no) => {
       const timer = setTimeout(() => no(Error("Z0_FIXTURE_PORTAL_READINESS_TIMEOUT")), 15000);
-      portal.once("error", error => { clearTimeout(timer); no(error); });
-      portal.stdout!.once("data", bytes => { clearTimeout(timer); yes(JSON.parse(bytes.toString()).origin); });
+      portal!.once("error", error => { clearTimeout(timer); no(error); });
+      portal!.stdout!.once("data", bytes => {
+        clearTimeout(timer);
+        try { yes(JSON.parse(bytes.toString()).origin); } catch { no(Error("Z0_FIXTURE_PORTAL_INVALID_READINESS")); }
+      });
     });
     if (!origin.startsWith("http://127.0.0.1:")) throw Error("Z0_FIXTURE_PORTAL_NOT_LOOPBACK");
     const state = (await portalStore.snapshot(dir)).state;
@@ -548,11 +554,20 @@ export async function submitInstitutionAcquisition(env: NativeEnvironment, paren
       secretFilesMode: "0600", secretValuesRecorded: false });
     const response = await session.operation("application-acquire", request, options.anonymous ? null : undefined);
     await record("acquisition-02-request-and-response", { request, status: response.status, body: response.body });
-    return { response, request, handle: { portal: { origin, dir, expiresAt: state.expiresAt, applicationId: credentials.applicationId,
-      stop: async () => { if (portal.exitCode === null) { portal.kill("SIGTERM"); await new Promise(done => portal.once("exit", done)); } } },
+    const retainedPortal = portal;
+    const result = { response, request, handle: { portal: { origin, dir, expiresAt: state.expiresAt, applicationId: credentials.applicationId,
+      stop: async () => { await stopNativeProcess(retainedPortal); } },
       profileIds, targets: request.targets as unknown[], request, deadlineAt: String(request.deadlineAt ?? deadlineAt), originalReservationRef: parent.parentReservation, resourceDemand,
       credentials: { applicationId: credentials.applicationId, account: credentials.accounts.primary, entity: credentials.entities.usd, recordIds, principalIds: credentials.principalIds } } };
-  } finally { await sql.end(); }
+    await sql.end();
+    transferred = true;
+    return result;
+  } finally {
+    if (!transferred) {
+      if (portal) await stopNativeProcess(portal).catch(() => undefined);
+      await sql.end().catch(() => undefined);
+    }
+  }
 }
 
 /**
@@ -565,22 +580,26 @@ export async function driveAcquisitionToModelReady(env: NativeEnvironment, paren
   const owner = await signInOwner(env);
   const submitted = await submitInstitutionAcquisition(env, parent, options, owner);
   if (submitted.response.status !== 202) {
-    await submitted.handle.portal.stop();
-    throw Error(`Z0_FIXTURE_TERMINAL_ACQUIRE_${submitted.response.status}:${String(submitted.response.body?.code ?? JSON.stringify(submitted.response.body)).slice(0, 200)}`);
+    const firstFailure = Error(`Z0_FIXTURE_TERMINAL_ACQUIRE_${submitted.response.status}:${String(submitted.response.body?.code ?? JSON.stringify(submitted.response.body)).slice(0, 200)}`);
+    await submitted.handle.portal.stop().catch(() => undefined);
+    throw firstFailure;
   }
   const sessionId = submitted.response.body.sessionId as string;
-  const sql = await admin(env);
+  let sql: Awaited<ReturnType<typeof admin>> | undefined;
+  let transferred = false;
   try {
+    sql = await admin(env);
+    const observation = sql;
     const terminal = new Set(["FAILED", "STALE", "BLOCKED", "CANCELLED", "UNKNOWN"]);
     const row = await waitFor("MODEL_READY", options.timeoutMs ?? 1200000, async () => {
-      const current = (await sql.query("SELECT status,reason,generation,model_ref,check_ref FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parent.tenantId, sessionId])).rows[0];
+      const current = (await observation.query("SELECT status,reason,generation,model_ref,check_ref FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parent.tenantId, sessionId])).rows[0];
       if (!current) return null;
       if (terminal.has(current.status)) throw Error(`Z0_FIXTURE_TERMINAL_SESSION_${current.status}:${current.reason ?? ""}`);
       return current.status === "MODEL_READY" ? current : null;
     }, 1500);
     const projection = await owner.operation("application-projection", { root: submitted.request.root, workId: parent.workId });
     const projected = projection.body?.sessions?.find((item: any) => item.id === sessionId || item.sessionId === sessionId) ?? projection.body?.sessions?.[0] ?? null;
-    const accepted = await waitFor("S4_ACCEPTANCE", 120000, async () => (await sql.query(
+    const accepted = await waitFor("S4_ACCEPTANCE", 120000, async () => (await observation.query(
       "SELECT event_id,body FROM finnor_os.application_semantics_events WHERE tenant_id=$1 AND session_id=$2 AND kind='S4_INSTITUTION_APPLICATION_MODEL_ACCEPTED'",
       [parent.tenantId, sessionId])).rows[0], 1000);
     const result: ModelReadyAcquisition = { schema: "finnor.project-z.native.z0-acquisition.v1", parent, sessionId, status: row.status, ...submitted.handle,
@@ -589,8 +608,15 @@ export async function driveAcquisitionToModelReady(env: NativeEnvironment, paren
       acceptance: { eventId: accepted.event_id, acceptanceRef: accepted.body?.detail?.acceptanceRef ?? null } };
     await record("acquisition-03-model-ready-and-accepted", { sessionId, status: row.status, model: result.model, check: result.check, acceptance: result.acceptance,
       projectionStatus: projection.status, projectionSha256: projection.bodySha256 });
+    await sql.end();
+    transferred = true;
     return result;
-  } finally { await sql.end(); }
+  } finally {
+    if (!transferred) {
+      await submitted.handle.portal.stop().catch(() => undefined);
+      await sql?.end().catch(() => undefined);
+    }
+  }
 }
 
 export interface ForeignIdentity { tenantId: string; userId: string; email: string; password: string; sameTenantAsOwner: boolean }

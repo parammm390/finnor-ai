@@ -4,6 +4,7 @@ const causeCodes = new Set(['ECONNREFUSED','ECONNRESET','EPIPE','ETIMEDOUT','ENO
   'UND_ERR_SOCKET','ABORT_ERR']);
 const paths = new Set(['/api/closing/resume','/api/closing/submit','/api/closing/read',
   '/api/closing/stop','/api/closing/ports','/api/allocations/validate','/api/allocations/resources']);
+const confirmationPath=/^\/api\/actions\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/confirm$/i;
 const signals = new Set(['SIGTERM','SIGKILL','SIGINT','SIGABRT','SIGSEGV','SIGBUS','SIGQUIT']);
 const boundedMs=(value:number)=>Number.isFinite(value)&&value>=0?Math.min(1_200_000,Math.round(value)):null;
 function codes(error:unknown):string[]{
@@ -21,7 +22,8 @@ export function finiteRequestFailure(error:unknown,path:string,method:'GET'|'POS
   const observed=codes(error),name=error instanceof Error?error.name:null;
   return {code:name==='TimeoutError'?'OWNER_REQUEST_TIMEOUT':
     observed.length||error instanceof TypeError?'OWNER_REQUEST_TRANSPORT_FAILED':'OWNER_REQUEST_FAILED',
-    path:paths.has(path)?path:null,method,elapsedMs:boundedMs(elapsedMs),causeCodes:observed};
+    path:paths.has(path)?path:confirmationPath.test(path)?'/api/actions/:id/confirm':null,
+    method,elapsedMs:boundedMs(elapsedMs),causeCodes:observed};
 }
 export function finiteFailureObservation(error:unknown,processes:readonly {name:string;exit:unknown}[],
  request?:ReturnType<typeof finiteRequestFailure>){

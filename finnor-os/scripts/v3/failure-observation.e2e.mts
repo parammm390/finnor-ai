@@ -17,6 +17,13 @@ let refused:unknown;
 try{await fetch(`http://127.0.0.1:${address.port}`);}catch(error){refused=error;}
 const timeout=finiteRequestFailure(aborted,'/api/closing/resume','POST',31);
 const connection=finiteRequestFailure(refused,'/api/closing/resume','POST',2);
+const actionId='00000000-0000-4000-8000-000000000001';
+let actionFailure:unknown;
+try{await fetch(`http://127.0.0.1:${address.port}/api/actions/${actionId}/confirm`,{method:'POST'});}catch(error){actionFailure=error;}
+const confirmation=finiteRequestFailure(actionFailure,`/api/actions/${actionId}/confirm`,'POST',3);
+assert.equal(confirmation.path,'/api/actions/:id/confirm');
+assert(!JSON.stringify(confirmation).includes(actionId));
+assert.equal(finiteRequestFailure(refused,'/api/actions/'+secret+'/confirm','POST',3).path,null);
 assert.equal(timeout.code,'OWNER_REQUEST_TIMEOUT');
 assert.equal(connection.code,'OWNER_REQUEST_TRANSPORT_FAILED');
 assert(connection.causeCodes.includes('ECONNREFUSED'));
@@ -31,7 +38,7 @@ assert.equal(observed.code,'OWNER_REQUEST_TRANSPORT_FAILED');
 assert(!JSON.stringify(observed).includes(secret));
 assert.equal(finiteRequestFailure(original,'/private/'+secret,'POST',-1).path,null);
 assert.equal(finiteFailureObservation(original,[]).code,'OWNER_RUNTIME_FAILED');
-const receipt={schema:'finnor.v3.failure-observation-e2e.v1',status:'PASS',timeout,connection,observed,
+const receipt={schema:'finnor.v3.failure-observation-e2e.v1',status:'PASS',timeout,connection,confirmation,observed,
  qualification:'ACTUAL_LOCAL_HTTP_AND_CHILD_EXIT_FAILURE_DIAGNOSTICS_ONLY_NOT_W2_ACCEPTANCE'};
 await writeFile(evidence,JSON.stringify(receipt,null,2)+'\n',{flag:'wx',mode:0o600});
 console.log(JSON.stringify({status:receipt.status,timeout:timeout.code,connection:connection.causeCodes}));

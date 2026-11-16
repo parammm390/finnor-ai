@@ -2,13 +2,19 @@ import assert from 'node:assert/strict'
 import {spawn} from 'node:child_process'
 import {createHash} from 'node:crypto'
 import {readFileSync, writeFileSync} from 'node:fs'
-import {waitForNativeStage} from './native-lifecycle.mjs'
+import {mkdtemp, rm} from 'node:fs/promises'
+import {tmpdir} from 'node:os'
+import {join} from 'node:path'
+import {fileURLToPath} from 'node:url'
+import {initialize} from '../../finnor-os/scripts/x2/fixtures/admin.mjs'
+import {waitForNativeStage, stopNativeProcess} from './native-lifecycle.mjs'
 
 const children = []
 const rows = []
 const source = readFileSync(new URL('./native-lifecycle.mjs', import.meta.url))
-function start(label) {
-  const proc = spawn(process.execPath, ['-e', "process.stdout.write('READY\\n');process.stdin.once('data',x=>process.exit(Number(x.toString().trim())))"],
+function start(label, ignoreTerm = false) {
+  const proc = spawn(process.execPath, ['-e', (ignoreTerm ? "process.on('SIGTERM',()=>{});" : '') +
+    "process.stdout.write('READY\\n');process.stdin.once('data',x=>process.exit(Number(x.toString().trim())))"],
     {detached: true, stdio: ['pipe', 'pipe', 'pipe']})
   const row = {label, code: null, signal: null}
   const ready = new Promise((yes, no) => {
@@ -79,6 +85,59 @@ try {
     assert.equal(error.nativeFailure.dependency, 'auth')
     assert.equal(error.nativeFailure.code, 4)
     rows.push({case: 'bootstrap-dependency-exit', status: 'PASS'})
+  }
+  {
+    const portal = start('portal'); await finite(portal.ready)
+    const original = Error('ORIGINAL_ACQUISITION_FAILURE')
+    const observed = await (async () => {
+      try { throw original } finally { await stopNativeProcess(portal.proc) }
+    })().then(() => assert.fail('Original failure was lost'), error => error)
+    assert.equal(observed, original)
+    assert.equal((await finite(portal.ended)).signal, 'SIGTERM')
+    rows.push({case: 'failed-acquisition-stops-portal-preserves-first-error', status: 'PASS'})
+  }
+  {
+    const portal = start('portal', true); await finite(portal.ready)
+    await finite(stopNativeProcess(portal.proc))
+    assert.equal((await finite(portal.ended)).signal, 'SIGKILL')
+    rows.push({case: 'uncooperative-owned-child-has-bounded-cleanup', status: 'PASS'})
+  }
+  {
+    const portal = start('portal'); await finite(portal.ready)
+    portal.proc.stdin.end('3'); await finite(portal.ended)
+    await finite(stopNativeProcess(portal.proc))
+    assert.equal(portal.row.code, 3)
+    rows.push({case: 'cleanup-retains-already-exited-child-result', status: 'PASS'})
+  }
+  {
+    const directory = await mkdtemp(join(tmpdir(), 'native-portal-e2e-'))
+    try {
+      const privateDirectory = join(directory, 'portal')
+      await initialize(privateDirectory, 'api')
+      const proc = spawn(process.execPath, [fileURLToPath(new URL('../../finnor-os/scripts/x2/fixtures/server.mjs', import.meta.url)),
+        '--private-dir', privateDirectory, '--port', '0'],
+        {env: {PATH: process.env.PATH ?? '', LANG: 'C', TZ: 'UTC'}, detached: true, stdio: ['ignore', 'pipe', 'pipe']})
+      const row = {label: 'portal', code: null, signal: null}
+      const ended = new Promise(resolve => proc.once('close', (code, signal) => { Object.assign(row, {code, signal}); resolve(row) }))
+      children.push({proc, row, ended})
+      const ready = await finite(new Promise((resolve, reject) => {
+        proc.once('error', reject)
+        proc.stdout.once('data', bytes => { try { resolve(JSON.parse(bytes.toString())) } catch (error) { reject(error) } })
+      }))
+      assert.match(ready.origin, /^http:\/\/127\.0\.0\.1:[1-9]\d*$/)
+      const denied = await fetch(ready.origin + '/openapi.json', {signal: AbortSignal.timeout(2000)})
+      assert.equal(denied.status, 401); await denied.arrayBuffer()
+      const credentials = JSON.parse(readFileSync(join(privateDirectory, 'credentials.json'), 'utf8'))
+      const response = await fetch(ready.origin + '/openapi.json', {
+        headers: {authorization: 'Bearer ' + credentials.tokens.reader, 'x-portal-grant': credentials.grantIds.readOnly},
+        signal: AbortSignal.timeout(2000)})
+      assert.equal(response.status, 200); await response.arrayBuffer()
+      await finite(stopNativeProcess(proc)); await finite(ended)
+      assert(row.code === 0 || row.signal === 'SIGKILL', 'Portal must confirm exit within the bounded drain')
+      await assert.rejects(fetch(ready.origin + '/openapi.json', {signal: AbortSignal.timeout(2000)}))
+      rows.push({case: 'actual-acquisition-portal-http-listener-closes', status: 'PASS',
+        unauthenticatedHttp: 401, readOnlyHttp: 200, cleanup: row.code === 0 ? 'GRACEFUL' : 'FORCED'})
+    } finally { await rm(directory, {recursive: true, force: true}) }
   }
   const receipt = {schema:'finnor.native-lifecycle-process-e2e.v1', status:'PASS', rows,
     inputs:{helperSha256:createHash('sha256').update(source).digest('hex')},
