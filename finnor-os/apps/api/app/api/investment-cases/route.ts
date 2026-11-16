@@ -1,4 +1,4 @@
-import { listInvestmentCasesForUnderwriting } from "@finnor/private-equity";
+import { listInvestmentCasesForUnderwriting } from "../../../../../packages/private-equity/src/underwriting-repository";
 import { requireContext } from "../../../lib/auth";
 import { underwritingContext, underwritingErrorResponse, underwritingJson } from "../../../lib/underwriting";
 

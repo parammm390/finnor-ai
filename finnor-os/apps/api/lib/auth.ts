@@ -5,7 +5,8 @@
 import { randomUUID } from "node:crypto";
 import type { TenantContext, Role } from "@finnor/shared-types";
 import { ensureSecretsLoaded, resolveTenantFromBearerToken, AuthVerificationError, redactText } from "@finnor/security";
-import { initObservability, Sentry, logWithTrace } from "@finnor/tools";
+import { initObservability, Sentry } from "@finnor/tools/observability";
+import { logWithTrace } from "@finnor/tools/logger";
 import { checkRateLimit, secondsUntilWindowReset } from "./rate-limit";
 import { canExerciseAuthority, evaluateAuthority } from "@finnor/authority";
 import { ExactWorkIntakeConflict, readProductRuntimeAuthority } from "@finnor/db";

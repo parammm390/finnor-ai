@@ -5,11 +5,25 @@ import { capabilityError } from '../../../../lib/capabilities';
 const conditionalAssessment = PywhyAssessmentRequestSchema.extend({ interventionModelRef: ExperimentRefSchema }).strict();
 const conditionalRead = z.object({ runId: z.string().uuid() }).strict();
 import { z } from 'zod';
-import { PE_WORLD_ROOT_TYPES, PeDomainError, fitEnterpriseInterventionModel, queryEnterpriseInterventionModel, validateEnterpriseInterventionModel,
-  prepareEnterpriseExactControlModel, projectEnterpriseInterventionExperiment, designEnterpriseInterventionExperiment, recordEnterpriseInterventionAssessment } from '@finnor/private-equity';
-import { ExactControlError, ExperimentRefSchema, InterventionContractError, ExperimentContractError } from '@finnor/epistemic-runtime';
+import { PE_WORLD_ROOT_TYPES, PeDomainError } from '../../../../../../packages/private-equity/src/types';
+import {
+  fitEnterpriseInterventionModel,
+  queryEnterpriseInterventionModel,
+  validateEnterpriseInterventionModel,
+  projectEnterpriseInterventionExperiment,
+  designEnterpriseInterventionExperiment,
+  recordEnterpriseInterventionAssessment,
+} from '../../../../../../packages/private-equity/src/enterprise-interventions';
+import {
+  prepareExactControlSource as prepareEnterpriseExactControlModel,
+} from '../../../../../../packages/private-equity/src/r1/source';
+import { ExactControlError } from '../../../../../../packages/epistemic-runtime/src/certified-state-reduction/exact';
+import { ExperimentRefSchema, ExperimentContractError } from '../../../../../../packages/epistemic-runtime/src/experiments';
+import { InterventionContractError } from '../../../../../../packages/epistemic-runtime/src/interventions';
 import { errorResponse, requireContext } from '../../../../lib/auth';
-import {resolveEnterpriseInterventionModelForControl} from '@finnor/private-equity';
+import {
+  resolveEnterpriseInterventionModelForControl,
+} from '../../../../../../packages/private-equity/src/enterprise-interventions';
 import { R3OwnerOperationSchemas } from '../../../../../../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts';
 
 export const runtime = 'nodejs';

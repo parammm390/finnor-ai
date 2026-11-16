@@ -1,6 +1,21 @@
 import { z } from 'zod';
-import { ExactControlError, AllocationContractError, ControlContractError, ExperimentContractError, ExperimentRefSchema, InterventionContractError } from '@finnor/epistemic-runtime';
-import { PeDomainError, synthesizeEnterpriseExactControl, synthesizeEnterpriseControl, readEnterpriseContingentPolicy, replayEnterpriseContingentPolicy, validateEnterpriseContingentPolicy, recordEnterpriseControlAssessment, observeEnterpriseControl, chooseEnterpriseControlBranch, prepareEnterpriseContingentHandoff } from '@finnor/private-equity';
+import { ExactControlError } from '../../../../../../packages/epistemic-runtime/src/certified-state-reduction/exact';
+import { AllocationContractError } from '../../../../../../packages/epistemic-runtime/src/allocation-contracts';
+import { ControlContractError } from '../../../../../../packages/epistemic-runtime/src/control-contracts';
+import { ExperimentContractError, ExperimentRefSchema } from '../../../../../../packages/epistemic-runtime/src/experiments';
+import { InterventionContractError } from '../../../../../../packages/epistemic-runtime/src/interventions';
+import { PeDomainError } from '../../../../../../packages/private-equity/src/types';
+import {
+  synthesizeEnterpriseExactControl,
+  synthesizeEnterpriseControl,
+  readEnterpriseContingentPolicy,
+  replayEnterpriseContingentPolicy,
+  validateEnterpriseContingentPolicy,
+  recordEnterpriseControlAssessment,
+  observeEnterpriseControl,
+  chooseEnterpriseControlBranch,
+  prepareEnterpriseContingentHandoff,
+} from '../../../../../../packages/private-equity/src/enterprise-control';
 import { errorResponse, requireContext } from '../../../../lib/auth';
 import {R1_OPERATIONS,handleR1Operation} from '@finnor/private-equity/src/r1/api';
 import {readEnterpriseCoalitionSelection} from '@finnor/private-equity/src/enterprise-control';

@@ -15,7 +15,8 @@ import {
   executeAttentionQueueQuery,
 } from "@finnor/read-models";
 import { getProjection } from "@finnor/projections";
-import { PeDomainError, peTransaction, type PeMutationContext } from "@finnor/private-equity";
+import { PeDomainError, type PeMutationContext } from "../../../../../../packages/private-equity/src/types";
+import { peTransaction } from "../../../../../../packages/private-equity/src/repository";
 
 const CANONICAL_EMPLOYEE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 

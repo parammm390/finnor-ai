@@ -1,5 +1,5 @@
 import {z} from 'zod';
-import {ExperimentRefSchema} from '@finnor/epistemic-runtime';
+import { ExperimentRefSchema } from '../../../../epistemic-runtime/src/experiments';
 import {PE_WORLD_ROOT_TYPES} from '@finnor/shared-types';
 import {ApplicationDemandSchema} from '../../application-semantics/native-contracts';
 import {digestSchema,integerSchema,programSchema,sha,validateProgram,exactInteger} from '../../../../epistemic-runtime/src/project-z/z4-execution-proof/contracts';

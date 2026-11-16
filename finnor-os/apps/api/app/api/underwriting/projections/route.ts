@@ -1,4 +1,4 @@
-import { projectUnderwritingOutputs } from "@finnor/private-equity";
+import { projectUnderwritingOutputs } from "../../../../../../packages/private-equity/src/underwriting-artifacts";
 import { requireContext } from "../../../../lib/auth";
 import {
   UnderwritingProjectionSchema,

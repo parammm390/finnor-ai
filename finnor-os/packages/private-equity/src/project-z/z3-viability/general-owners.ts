@@ -2,7 +2,7 @@
  * caller-supplied adapter, optional dispatch callback, effect or grant writer. */
 import type { PoolClient } from "pg";
 import type { ApplicationSnapshot, ExperimentRef } from "@finnor/shared-types";
-import { parseControlDecision } from "@finnor/epistemic-runtime";
+import { parseControlDecision } from "../../../../epistemic-runtime/src/control-contracts";
 import * as s4 from "../../enterprise-control";
 import type { PeMutationContext } from "../../types";
 import { principal } from "../../evidence-execution/store";

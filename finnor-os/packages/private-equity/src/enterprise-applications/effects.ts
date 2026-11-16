@@ -1,7 +1,7 @@
 /** Exact application-intent adapter. S4, S5 and S6 remain preparation,
  * reservation and obligation owners. This module never dispatches. */
 import {z} from 'zod';
-import {ExperimentRefSchema} from '@finnor/epistemic-runtime';
+import { ExperimentRefSchema } from '../../../epistemic-runtime/src/experiments';
 import type {PeMutationContext} from '../types';
 import {readEnterpriseContingentHandoffPreparation} from '../enterprise-control';
 import {prepareEnterpriseDurableObligation,readEnterpriseDurableObligationPreparation} from '../enterprise-obligations';

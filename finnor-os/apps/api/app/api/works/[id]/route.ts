@@ -2,7 +2,7 @@ import { autonomyEvaluations, outcomePackRuns, reconcileWorkStatus, withTenant, 
 import { FinancialDocumentReviewReceiptSchema, type FinancialDocumentReview } from "@finnor/shared-types";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { assertPrivateAnswerReadAccess } from "@finnor/orchestration";
+import { assertPrivateAnswerReadAccess } from "../../../../../../packages/orchestration/src/conversation-answer-read";
 import { PeDomainError } from "@finnor/private-equity/src/types";
 import { errorResponse, requireContext } from "../../../../lib/auth";
 

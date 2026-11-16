@@ -69,6 +69,27 @@ const nextConfig = {
       // disposable disk cache alongside the immutable function artifacts.
       // Development retains Next's bounded cache across repeated compilations.
       if (!dev) config.cache = { type: "memory" };
+      if (dev && config.optimization.splitChunks && typeof config.optimization.splitChunks === "object") {
+        // Next splits installed vendors in development but leaves workspace
+        // owners copied into every route. These large repeated factory/source-map
+        // strings can exhaust the serving process independently of its launcher.
+        // Share those factories using their original module IDs and custody paths.
+        // Keep Next's vendor groups, cache, source maps and memory watcher intact.
+        const ownerPackage = module => {
+          const source = module.nameForCondition?.()?.replaceAll("\\", "/");
+          const base = repositoryRoot.replaceAll("\\", "/") + "finnor-os/packages/";
+          return source?.startsWith(base) ? source.slice(base.length).split("/")[0] : null;
+        };
+        config.optimization.splitChunks.cacheGroups = {
+          ...config.optimization.splitChunks.cacheGroups,
+          finnorOwners: {
+            test: module => ownerPackage(module) !== null,
+            name: module => "owner-chunks/" + ownerPackage(module),
+            chunks: "all", minSize: 0, minChunks: 1,
+            enforce: true, reuseExistingChunk: true,
+          },
+        };
+      }
       // These four imports deliberately load retained, hashed TS producer
       // files. A webpack expression-context module cannot represent file URLs.
       config.module.rules.push({

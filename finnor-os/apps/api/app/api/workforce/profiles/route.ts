@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { configureAgentProfile, createDefaultPluginRegistry } from "@finnor/orchestration";
+import { configureAgentProfile } from "@finnor/orchestration/workforce-runtime";
+import { createDefaultPluginRegistry } from "../../../../../../packages/orchestration/src/plugin-registry";
 import { workforceStatus } from "@finnor/read-models";
 import { AuthError, errorResponse, requireContext } from "../../../../lib/auth";
 

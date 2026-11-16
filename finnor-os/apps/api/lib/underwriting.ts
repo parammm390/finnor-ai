@@ -1,9 +1,6 @@
 import { ArtifactError } from "@finnor/artifacts";
-import {
-  PeDomainError,
-  UnderwritingError,
-  type PeMutationContext,
-} from "@finnor/private-equity";
+import { PeDomainError, type PeMutationContext } from "../../../packages/private-equity/src/types";
+import { UnderwritingError } from "../../../packages/private-equity/src/underwriting-repository";
 import type { TenantContext } from "@finnor/shared-types";
 import { z } from "zod";
 import { artifactErrorResponse, boundedJson } from "./artifacts";

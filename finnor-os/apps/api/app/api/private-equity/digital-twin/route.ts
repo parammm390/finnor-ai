@@ -1,5 +1,5 @@
+import { PeDomainError, type PeMutationContext } from "../../../../../../packages/private-equity/src/types";
 import {
-  PeDomainError,
   closedWorldClaimPermitted,
   createBenchmark,
   createDebtFacility,
@@ -27,8 +27,7 @@ import {
   reviseOwnershipInterest,
   transitionFund,
   transitionVehicle,
-  type PeMutationContext,
-} from "@finnor/private-equity";
+} from "../../../../../../packages/private-equity/src/digital-twin";
 import { z } from "zod";
 import { errorResponse, requireContext } from "../../../../lib/auth";
 import { PeDigitalTwinRequestSchema } from "../../../../lib/pe-digital-twin";

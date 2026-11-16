@@ -3,8 +3,17 @@ import { mkdir, open, link, unlink, lstat,readdir } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { join, resolve } from 'node:path';
 import type { BeliefView,ExperimentRef, InterventionFitBundle, InterventionModel, InterventionResponseBundle, S3ExperienceEvent } from '@finnor/shared-types';
-import { assertInterventionModel, epistemicHash, ExperimentRefSchema, fitInterventionModel, interventionInquiryNeeds, interventionModelEvent,
-  InterventionContractError, parseExperimentDesignRequest, parseInterventionFitRequest, queryInterventionModel } from '@finnor/epistemic-runtime';
+import {
+  assertInterventionModel,
+  fitInterventionModel,
+  interventionInquiryNeeds,
+  interventionModelEvent,
+  InterventionContractError,
+  parseInterventionFitRequest,
+  queryInterventionModel,
+} from '../../epistemic-runtime/src/interventions';
+import { epistemicHash } from '../../epistemic-runtime/src/source-precedence';
+import { ExperimentRefSchema, parseExperimentDesignRequest } from '../../epistemic-runtime/src/experiments';
 import { interventionBackendCurrent } from '../../epistemic-runtime/src/intervention-backend';
 import { loadEnterpriseBeliefView, validateBeliefViewPin } from './enterprise-beliefs';
 import { designEnterpriseExperiments } from './enterprise-experiments';

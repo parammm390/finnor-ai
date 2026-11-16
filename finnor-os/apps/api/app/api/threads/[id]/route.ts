@@ -1,5 +1,6 @@
 import { loadEmployeeConversationThread } from "@finnor/db";
-import { resolveCanonicalHumanPrincipal, hydrateEmployeeConversationAnswers } from "@finnor/orchestration";
+import { resolveCanonicalHumanPrincipal } from "../../../../../../packages/orchestration/src/conversation-kernel";
+import { hydrateEmployeeConversationAnswers } from "../../../../../../packages/orchestration/src/conversation-answer-read";
 import { errorResponse, requireContext } from "../../../../lib/auth";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {

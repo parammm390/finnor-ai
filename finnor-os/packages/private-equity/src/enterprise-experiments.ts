@@ -1,9 +1,25 @@
 import type { ControlObservationInstrument, ControlProblem, ExperimentDesignBundle, ExperimentProtocol, ExperimentRealization, InterventionModel } from "@finnor/shared-types";
-import { assertExperimentProtocol, assertInterventionModel, controlObservationToken, designExperiments, epistemicHash, immutableControl, parseExperimentDesignRequest, prepareExperimentCollectionHandoff, prepareS2ExperienceEvent, projectExperimentRealization, resumeExperimentRealization, validateControlObservationInstruments } from "@finnor/epistemic-runtime";
+import {
+  assertExperimentProtocol,
+  designExperiments,
+  parseExperimentDesignRequest,
+  prepareS2ExperienceEvent,
+} from "../../epistemic-runtime/src/experiments";
+import { assertInterventionModel } from "../../epistemic-runtime/src/interventions";
+import { controlObservationToken, validateControlObservationInstruments } from "../../epistemic-runtime/src/control-observations";
+import { epistemicHash } from "../../epistemic-runtime/src/source-precedence";
+import { immutableControl } from "../../epistemic-runtime/src/control-contracts";
+import {
+  prepareExperimentCollectionHandoff,
+  projectExperimentRealization,
+  resumeExperimentRealization,
+} from "../../epistemic-runtime/src/experiment-realization";
 import { loadEnterpriseBeliefView, validateBeliefViewPin } from "./enterprise-beliefs";
 import { PeDomainError, type PeMutationContext, type PeWorldRootRef } from "./types";
 import {enqueueNativeReferences,enqueueNativePreparedEvents,nativeReference} from './native-experience-transport';
-import {parseExactInformationModel,ControlFraction,allocationQuantity,controlBytesDigest} from '@finnor/epistemic-runtime';
+import { parseExactInformationModel } from '../../epistemic-runtime/src/certified-state-reduction/model';
+import { ControlFraction, controlBytesDigest } from '../../epistemic-runtime/src/certified-state-reduction/exact';
+import { allocationQuantity } from '../../epistemic-runtime/src/allocation-contracts';
 
 const protocolReference=(protocol:ExperimentProtocol)=>{const {id,contentDigest,experience,...content}=protocol;return {owner:'S2',id,version:protocol.version,contentDigest,content};};
 async function deliverPrepared(ctx:PeMutationContext,protocol:ExperimentProtocol,events:readonly any[]){await enqueueNativeReferences(ctx,[protocolReference(protocol)],[protocol.beliefBinding.rightsRef]);await enqueueNativePreparedEvents(ctx,'S2',events);}

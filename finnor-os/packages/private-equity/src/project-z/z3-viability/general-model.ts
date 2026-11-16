@@ -1,7 +1,7 @@
 /** Versioned original-Work mapping. Public edge indices and justice predicates
  * keep their original meanings; action strings are never executable selectors. */
 import { z } from "zod";
-import { ExperimentRefSchema } from "@finnor/epistemic-runtime";
+import { ExperimentRefSchema } from "../../../../epistemic-runtime/src/experiments";
 import type { ExperimentRef } from "@finnor/shared-types";
 import { PROFILE, type PublicArena } from "../../../../epistemic-runtime/src/project-z/z3-viability/contracts";
 import { hash, parseArena, z3Fault } from "./contracts";

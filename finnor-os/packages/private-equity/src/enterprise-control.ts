@@ -1,6 +1,7 @@
 import {resolveExactControlSource} from './r1/source';
 import {r1SourceCut} from './r1/runtime';
-import {buildExactControlPolicy,evaluateExactContingentControl,EXACT_S4_VERSION} from '@finnor/epistemic-runtime';
+import { buildExactControlPolicy, EXACT_S4_VERSION } from '../../epistemic-runtime/src/exact-control-policy';
+import { evaluateExactContingentControl } from '../../epistemic-runtime/src/exact-continuation';
 import type {ExactControlPolicyProfile,S4ComputeInvocation} from '@finnor/shared-types';
 import { constants } from 'node:fs';
 import { mkdir, open, link, unlink, lstat,readdir } from 'node:fs/promises';
@@ -9,8 +10,31 @@ import { join, resolve } from 'node:path';
 import { withTenantTransaction } from '@finnor/db';
 import type {PoolClient} from 'pg';
 import type { InterventionModel, ContingentPolicy, ContingentChoiceHandoff, ControlDecisionInput, ControlDecision, ControlProblem, EconomicMandate, ExperimentProtocol, ExperimentRef, S4ExperienceEvent } from '@finnor/shared-types';
-import { assertContingentPolicy, AllocationContractError, ControlContractError, createInterventionControlAdapter, controlInstrumentSupports, controlSourcesCurrent, decideContingentPolicy, epistemicHash,
- ExperimentRefSchema, immutableControl, interventionSpecificationRef, parseControlDecision, parseControlProblem, parseEconomicMandate, prepareS4Experience, restoreInterventionControlAdapter, synthesizeContingentControl, checkPolicyAllocation, type InterventionControlSnapshot } from '@finnor/epistemic-runtime';
+import {
+  assertContingentPolicy,
+  ControlContractError,
+  immutableControl,
+  parseControlDecision,
+  parseControlProblem,
+  parseEconomicMandate,
+} from '../../epistemic-runtime/src/control-contracts';
+import { AllocationContractError } from '../../epistemic-runtime/src/allocation-contracts';
+import {
+  createInterventionControlAdapter,
+  restoreInterventionControlAdapter,
+  type InterventionControlSnapshot,
+} from '../../epistemic-runtime/src/intervention-control';
+import { controlInstrumentSupports } from '../../epistemic-runtime/src/control-observations';
+import {
+  controlSourcesCurrent,
+  decideContingentPolicy,
+  prepareS4Experience,
+  synthesizeContingentControl,
+  checkPolicyAllocation,
+} from '../../epistemic-runtime/src/contingent-control';
+import { epistemicHash } from '../../epistemic-runtime/src/source-precedence';
+import { ExperimentRefSchema } from '../../epistemic-runtime/src/experiments';
+import { interventionSpecificationRef } from '../../epistemic-runtime/src/interventions';
 import { readEnterpriseInterventionMetadataForObservation, resolveEnterpriseInterventionModelForControl } from './enterprise-interventions';
 import { loadEnterpriseBeliefView, validateBeliefViewPin, assertEnterpriseBeliefViewPinSourceVisibility } from './enterprise-beliefs';
 import { validateEnterpriseExperiment, projectEnterpriseExperiment, projectEnterpriseControlObservation } from './enterprise-experiments';

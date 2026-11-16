@@ -2,7 +2,7 @@ import type { AllocationConsumption } from '../../../shared-types/src';
 import type { PeMutationContext } from '../types';
 import { principal } from '../decision-slice/adapters';
 import { projectEnterpriseExperiment } from '../enterprise-experiments';
-import { assertExperimentProtocol } from '@finnor/epistemic-runtime';
+import { assertExperimentProtocol } from '../../../epistemic-runtime/src/experiments';
 import { withCanonicalAllocationSnapshot, appendCanonicalAllocationExperience } from '../allocation-store';
 import { parseControlDecision } from '../../../epistemic-runtime/src/control-contracts';
 import { allocationRef, prepareS5Experience } from '../../../epistemic-runtime/src/allocation-contracts';

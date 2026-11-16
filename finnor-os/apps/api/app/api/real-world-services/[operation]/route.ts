@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { withDatabaseExecutionDeadline } from "@finnor/db";
-import { PeDomainError } from "@finnor/private-equity";
+import { PeDomainError } from "../../../../../../packages/private-equity/src/types";
 import { realWorldServiceOperation } from "@finnor/private-equity/src/real-world-service/api";
 import { requireContext, errorResponse } from "../../../../lib/auth";
 export const runtime = "nodejs";

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { attachValidatedWorkInputContext, domainActions, employeeConversationMessages, receiveWork, reconcileWorkStatus, recordWorkResponse, transitionWork, withTenant, works } from "@finnor/db";
-import { attachWorkToDealGraph } from "@finnor/private-equity";
+import { attachWorkToDealGraph } from "../../../../../../packages/private-equity/src/repository";
 import { linkEmployeeConversationTurnToWork, OperatingInteractionContextError, persistEmployeeAssistantTurn, prepareEmployeeConversationTurn, resolveCanonicalHumanPrincipal, resolveOperatingInteractionContext } from "@finnor/orchestration";
 import { errorResponse, requireContext, enforceRouteRateLimit } from "../../../../lib/auth";
 import { getOrchestrator } from "../../../../lib/orchestrator";

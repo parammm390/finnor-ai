@@ -24,6 +24,16 @@
     "zod": "^4.6.7"
   },
   "exports": {
+    "./observability": {
+      "types": "./src/observability.ts",
+      "import": "./src/observability.ts",
+      "default": "./src/observability.ts"
+    },
+    "./logger": {
+      "types": "./src/logger.ts",
+      "import": "./src/logger.ts",
+      "default": "./src/logger.ts"
+    },
     ".": {
       "types": "./src/index.ts",
       "import": "./src/index.ts",

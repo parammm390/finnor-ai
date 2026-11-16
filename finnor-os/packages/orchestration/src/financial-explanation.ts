@@ -1,6 +1,6 @@
 import type { EmployeeConversationContext, FinancialExplanation, TenantContext } from "@finnor/shared-types";
 import { createHash } from "node:crypto";
-import { checkFinancialExplanation, incompleteFinancialExplanation } from "@finnor/private-equity";
+import { checkFinancialExplanation, incompleteFinancialExplanation } from "../../private-equity/src/financial-explanation";
 import { buildConversationModelInput } from "./conversation-prompt";
 import { parseModelJson } from "./model-json";
 import type { AnswerEnvelope } from "./fast-read-lane";

@@ -83,7 +83,7 @@ import {
 } from "./objective-loop";
 import { classifyInstructionRoute, finalizeInstructionRouteFromPlan, type InstructionRouteDecision } from "./instruction-routing";
 import { answerCanonicalAnalysis, isCanonicalAnalysisRead } from "./canonical-analysis";
-import { interpretPrivateEquityQuestion } from "@finnor/private-equity";
+import { interpretPrivateEquityQuestion } from "../../private-equity/src/operational-queries";
 import { isOriginalWorkObservation } from "./project-z/z0-convergence/semantics";
 import { observeOriginalWork } from "./project-z/z0-convergence/original-work-observation";
 export { ConvergedInstitutionRuntime } from "./project-z/z0-convergence";

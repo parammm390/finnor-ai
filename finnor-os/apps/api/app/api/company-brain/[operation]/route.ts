@@ -3,12 +3,18 @@ import {
   COMPANY_BRAIN_NAMESPACES,
   CORE_BRAIN_OBJECT_TYPES,
   EPISTEMIC_BRAIN_OBJECT_TYPES,
-  PE_ENTITY_TYPES,
-  PE_WORLD_ROOT_TYPES,
   PLANNING_BRAIN_OBJECT_TYPES,
   UNDERWRITING_BRAIN_OBJECT_TYPES,
   WORKFORCE_BRAIN_OBJECT_TYPES,
+  type CompanyBrainObjectRef,
+} from "../../../../../../packages/private-equity/src/company-brain-types";
+import {
+  PE_ENTITY_TYPES,
+  PE_WORLD_ROOT_TYPES,
   PeDomainError,
+  type PeMutationContext,
+} from "../../../../../../packages/private-equity/src/types";
+import {
   companyBrainDecisionLineage,
   companyBrainEvidenceLineage,
   companyBrainHistory,
@@ -16,16 +22,25 @@ import {
   companyBrainProvenance,
   listCompanyBrainRoots,
   loadCompanyBrainProjection,
-  loadEnterpriseBeliefView,
-  validateBeliefViewPin,
-  handleDecisionSliceOperation,DecisionSliceError,M1_OPERATIONS,inM1Episode,m1TransportDeadline,readM1BodyChunk,
   parseCompanyBrainObjectRef,
   resolvePeOperatingContext,
   searchCompanyBrainProjection,
   traverseCompanyBrain,
-  type CompanyBrainObjectRef,
-  type PeMutationContext,
-} from "@finnor/private-equity";
+} from "../../../../../../packages/private-equity/src/company-brain";
+import {
+  loadEnterpriseBeliefView,
+  validateBeliefViewPin,
+} from "../../../../../../packages/private-equity/src/enterprise-beliefs";
+import {
+  handleDecisionSliceOperation,
+  M1_OPERATIONS,
+} from "../../../../../../packages/private-equity/src/decision-slice/handler";
+import { DecisionSliceError } from "../../../../../../packages/private-equity/src/decision-slice/contracts";
+import {
+  inM1Episode,
+  m1TransportDeadline,
+  readM1BodyChunk,
+} from "../../../../../../packages/private-equity/src/decision-slice/budget";
 import { z } from "zod";
 import { IdentityAccessError } from "@finnor/security";
 import { errorResponse, requireContext } from "../../../../lib/auth";

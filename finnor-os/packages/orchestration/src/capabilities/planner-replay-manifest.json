@@ -10,18 +10,18 @@
   "sources": [
     {
       "file": "apps/api/app/api/obligations/[operation]/route.ts",
-      "bytes": 6292,
-      "sha256": "778ed3e4cf74abccf4a8eee37f0f1d117b6aa9e85e1f70cd7f8dbacc30a54748"
+      "bytes": 6870,
+      "sha256": "905d284c122c5cd02c88ecb6335c7c7e0c5e6e4cc2999e4e310dc6a4d4aaf45d"
     },
     {
       "file": "apps/api/app/api/policies/[operation]/route.ts",
-      "bytes": 7641,
-      "sha256": "483812f822e748d4628a764c95d778be2a7fa4756245bf062dfb97835d665109"
+      "bytes": 8160,
+      "sha256": "d43a96161f166fa5bdee76c3dcca4238f55411d8fe9a05bd00071db3633ab630"
     },
     {
       "file": "apps/api/lib/auth.ts",
-      "bytes": 9937,
-      "sha256": "3aa3fee5db30b4a719836c6501b3c8f1837bf6a85a259bdc2a2b3f8576ff5dff"
+      "bytes": 9990,
+      "sha256": "1b52fe11ae0d6789c652db80fce28ca10069908d3e849d7cc2548411cb1fa5ac"
     },
     {
       "file": "apps/api/lib/rate-limit.ts",
@@ -30,8 +30,8 @@
     },
     {
       "file": "apps/api/next.config.mjs",
-      "bytes": 11223,
-      "sha256": "fe4b82043bc647ebfd7ddece5ca7c80b26fef132ed2b5b7060ed52aedd726954"
+      "bytes": 12451,
+      "sha256": "bff675a852ea0566a9d009d5f32b8c0f8ae2cc414c43c132b767753758ffe2fc"
     },
     {
       "file": "apps/api/package.json",
@@ -157,11 +157,6 @@
       "file": "packages/capability-evolution/src/canary.ts",
       "bytes": 14250,
       "sha256": "24c864b6f673b96da8f3f9e5239cdccf727eddbd619ae2d980fc332114f2e361"
-    },
-    {
-      "file": "packages/capability-evolution/src/closing-admission.ts",
-      "bytes": 2936,
-      "sha256": "6ef8478b4568a8d95e18607e3507b2d96689fae964c4259a8d03aea0e310b8a7"
     },
     {
       "file": "packages/capability-evolution/src/confidential-consumer.ts",
@@ -525,8 +520,8 @@
     },
     {
       "file": "packages/domain-plugins/private-equity/index.ts",
-      "bytes": 101522,
-      "sha256": "8d7cb7f4212ad2b82e0a5a6350f9cbbe215e34f2f7099252cbd6698c937cb8be"
+      "bytes": 101873,
+      "sha256": "c55e322b0092ad3a8c8619560ec57e8eba462a1b4a13a3901f7ce99a59872d5c"
     },
     {
       "file": "packages/domain-plugins/private-equity/package.json",
@@ -714,11 +709,6 @@
       "sha256": "08e55b6a5253e4fc65efaf9d933c63046470065001feb39a462c4e2c891eef71"
     },
     {
-      "file": "packages/epistemic-runtime/src/controller.ts",
-      "bytes": 6009,
-      "sha256": "2349e513e90a536bf1d2117a9ddec2044275f4566dabc4c10709ec815b6ac72a"
-    },
-    {
       "file": "packages/epistemic-runtime/src/durable.ts",
       "bytes": 92222,
       "sha256": "978428de5a7884c4fc827e1692f8731d7b13b2dc22a1d2a3641fb975b733577c"
@@ -784,16 +774,6 @@
       "sha256": "4dc752ef44e96a49d14532275068a7b8252eba70dbf608abe49fd5af4d15dc4d"
     },
     {
-      "file": "packages/epistemic-runtime/src/index.ts",
-      "bytes": 1288,
-      "sha256": "d4c6793ff7156c1dc6a9cac714abbe585c713fd7945316f592b0524ef083e01c"
-    },
-    {
-      "file": "packages/epistemic-runtime/src/information-actions.ts",
-      "bytes": 19685,
-      "sha256": "f7b788e624345fe0dcd8b654cd1294dcc4254ca79e761e445d9d8659aa8383ef"
-    },
-    {
       "file": "packages/epistemic-runtime/src/intervention-backend.ts",
       "bytes": 8088,
       "sha256": "019aa1da949ad646846a92fe4486243e049d495d3d04eb49c838c51e7db2b927"
@@ -857,11 +837,6 @@
       "file": "packages/epistemic-runtime/src/operating-programme.ts",
       "bytes": 11654,
       "sha256": "69f57d9f2e1733b687b68ead882ddae6ce11bfc3964d4fae8947340900a7fb80"
-    },
-    {
-      "file": "packages/epistemic-runtime/src/p2-handoff.ts",
-      "bytes": 7555,
-      "sha256": "824d97c4f3275425197e8c7e303681eacc03271961aa2dea33138e6986c52589"
     },
     {
       "file": "packages/epistemic-runtime/src/project-z/z1-shared-work/portfolio-population.ts",
@@ -959,21 +934,6 @@
       "sha256": "024b4fd94b1ed0743698eb92f4ca1a91e16fcae6135be3321a1d9ac291571116"
     },
     {
-      "file": "packages/epistemic-runtime/src/scoring.ts",
-      "bytes": 10360,
-      "sha256": "0de92423be2d606f9531fe3fc73f1e95bbb014cf5633ea2d7154e95ca128fd28"
-    },
-    {
-      "file": "packages/epistemic-runtime/src/semantic-diff.ts",
-      "bytes": 7091,
-      "sha256": "d7d06c30374fe85d9bf00d2af14ee2eed13f6b7c918f3d2cf2f577b9ac222fac"
-    },
-    {
-      "file": "packages/epistemic-runtime/src/shadow.ts",
-      "bytes": 6434,
-      "sha256": "9c1a64bbaa89743bdce190804e98fb66e12467d6237ba7c9b0aadf93b88c3e54"
-    },
-    {
       "file": "packages/epistemic-runtime/src/source-precedence.ts",
       "bytes": 5221,
       "sha256": "954a9d9924a48d0aa2044be8a52b3da42d9248aa6df5d1825bf7565c521f32a7"
@@ -1011,17 +971,12 @@
     {
       "file": "packages/epistemic-runtime/src/strategic-response/source-manifest.generated.ts",
       "bytes": 3485,
-      "sha256": "cb2ad91ab90a0d9bb846ff057e925bbb4492423e707e47f13d8fa170d27b6c27"
+      "sha256": "d8db6fb8f26b24515b07cb8334626487b37c303b6da94cb97dfd29c67618a995"
     },
     {
       "file": "packages/epistemic-runtime/src/strategic-response/source-paths.ts",
       "bytes": 1112,
       "sha256": "6f6217da28eb494fa21bbef1d105c5901470176e943ae67bc1260454e27a57ad"
-    },
-    {
-      "file": "packages/epistemic-runtime/src/trace.ts",
-      "bytes": 11809,
-      "sha256": "112f1d1fcbe0dd1c896344a9a6589cff54aa561c84d89f46cbeab73b2ccee53b"
     },
     {
       "file": "packages/epistemic-runtime/src/uncertainty.ts",
@@ -1087,36 +1042,6 @@
       "file": "packages/epistemic-runtime/src/uniform-algorithms/total/syntax.ts",
       "bytes": 15389,
       "sha256": "2fda1fed51be921a84d88ad0df9ba9ead779a26a0dc4a81b152690d61579386f"
-    },
-    {
-      "file": "packages/epistemic-runtime/src/verified-capital-compiler/checker.ts",
-      "bytes": 10188,
-      "sha256": "464a4d30be559417224daf86fbd2d652c125fb528b5030ce1e15980971b4896b"
-    },
-    {
-      "file": "packages/epistemic-runtime/src/verified-capital-compiler/compiler.ts",
-      "bytes": 13916,
-      "sha256": "4011301e2bd5719a505c4641f6b9b4f68791fa0ccc23bf27e68ae0f3d528a1e7"
-    },
-    {
-      "file": "packages/epistemic-runtime/src/verified-capital-compiler/contracts.ts",
-      "bytes": 3752,
-      "sha256": "3286a7898761e2f522f82be07599b2478e4fd4885c787394b9521209a7b987f7"
-    },
-    {
-      "file": "packages/epistemic-runtime/src/verified-capital-compiler/index.ts",
-      "bytes": 140,
-      "sha256": "ecaa9e441f632df7bf9af201a0d1bd751c8a069d76db65e94f13414023a95269"
-    },
-    {
-      "file": "packages/epistemic-runtime/src/verified-capital-compiler/membership.ts",
-      "bytes": 3747,
-      "sha256": "743ea3b4841948f5d18795075699338926d7381260d2a0beee27a5bce52821fd"
-    },
-    {
-      "file": "packages/epistemic-runtime/src/verified-capital-compiler/native.ts",
-      "bytes": 5551,
-      "sha256": "f3e96d7a694b19a1c4d8d4825c00f7d30471947a87e9b90bd38d931bdfe5bb88"
     },
     {
       "file": "packages/governed-execution/src/adapter-contract.ts",
@@ -1265,8 +1190,8 @@
     },
     {
       "file": "packages/orchestration/src/canonical-analysis.ts",
-      "bytes": 13693,
-      "sha256": "1b008015f7c79017cfcb4fb179569378bc08eed5eceab6bfc8bac14821ab2e71"
+      "bytes": 13714,
+      "sha256": "e54f02c47577c856141bd75bca158723fb27c9ade7d47977c6a7d83ac410b494"
     },
     {
       "file": "packages/orchestration/src/capabilities/contracts.ts",
@@ -1315,8 +1240,8 @@
     },
     {
       "file": "packages/orchestration/src/conversation-answer-read.ts",
-      "bytes": 9263,
-      "sha256": "69a7562360f45e1702db1c0e34d6a1e51e783aca100c95332f6a8a25a582686f"
+      "bytes": 9284,
+      "sha256": "544fe04a5a704efb7237642d1895d06186331d5e26dc6458c3c0bfceb521791a"
     },
     {
       "file": "packages/orchestration/src/conversation-intent.ts",
@@ -1340,8 +1265,8 @@
     },
     {
       "file": "packages/orchestration/src/conversation.ts",
-      "bytes": 12607,
-      "sha256": "02cf083ecc3345d3b7345e49425bb8daea1569ddd6e0332620aef8479266c934"
+      "bytes": 12615,
+      "sha256": "21ff2ac313729d93599f27eafdf63b31f175d51a26cc69a39c00d9e50d3857b7"
     },
     {
       "file": "packages/orchestration/src/critic.ts",
@@ -1390,8 +1315,8 @@
     },
     {
       "file": "packages/orchestration/src/financial-explanation.ts",
-      "bytes": 5703,
-      "sha256": "4f310091bb3de341700ddf9394bec865c63cb48157dc5697794c4186ad25de4d"
+      "bytes": 5727,
+      "sha256": "eed96ea69052f2f2224be398266b7cd541650e2fe640280caf18cdc39c1dd138"
     },
     {
       "file": "packages/orchestration/src/graph/allowlist-executor.ts",
@@ -1425,8 +1350,8 @@
     },
     {
       "file": "packages/orchestration/src/index.ts",
-      "bytes": 118725,
-      "sha256": "5342ced5e32ae2c9ac8b5df76856df7742762ab6197431edc22fd2ac8e8d0519"
+      "bytes": 118747,
+      "sha256": "bf4717803965080e872ee800eb7978a5fcd6b8419866e31b332379cdf0809a07"
     },
     {
       "file": "packages/orchestration/src/instruction-effects.ts",
@@ -1465,8 +1390,8 @@
     },
     {
       "file": "packages/orchestration/src/llm.ts",
-      "bytes": 1172,
-      "sha256": "bccf0253b011429daea7d50bf8b1b26aad16f655a6abf37d96fff3870f883b64"
+      "bytes": 1176,
+      "sha256": "aa388ef927d3cbd07a57037096e6fe0c7b59a7205410099b725b85ef95330128"
     },
     {
       "file": "packages/orchestration/src/model-json.ts",
@@ -1620,8 +1545,8 @@
     },
     {
       "file": "packages/orchestration/src/request-compiler.ts",
-      "bytes": 4190,
-      "sha256": "b77f7fa366747417e4dd80da4e8ab802ca8931e27f52d4a9f28c0b7222b4b82d"
+      "bytes": 4341,
+      "sha256": "5c9ae63b5c2e922674246a8555fd7a6b1fb56084954bcb6f5817f5fd5ac13016"
     },
     {
       "file": "packages/orchestration/src/research-context.ts",
@@ -1844,41 +1769,6 @@
       "sha256": "6054428f4d9e0e1950149b5934f5ce2aae1ec312b1c73c1be5f4debdd6306a49"
     },
     {
-      "file": "packages/private-equity/src/branch-fabric/budget.ts",
-      "bytes": 6626,
-      "sha256": "86551da4c7deb011d44792234379ecb921fc5df135e910cde5550d3dce7a5f42"
-    },
-    {
-      "file": "packages/private-equity/src/branch-fabric/contracts.ts",
-      "bytes": 8594,
-      "sha256": "368c1bbd8e1b9d0e8d457b2d7e79d582874024f90f300fbee0e16b65819c992a"
-    },
-    {
-      "file": "packages/private-equity/src/branch-fabric/interface.ts",
-      "bytes": 1057,
-      "sha256": "93c53837491b6d2c0c56db680e42bc90d24b24079e9f2a812b0676152ce7e318"
-    },
-    {
-      "file": "packages/private-equity/src/branch-fabric/linux.ts",
-      "bytes": 16816,
-      "sha256": "ab86d278b92f8e9b1c3ad764d4aec01465fe7305ec290bb279d97ee5b14cf8f1"
-    },
-    {
-      "file": "packages/private-equity/src/branch-fabric/resources.ts",
-      "bytes": 12091,
-      "sha256": "6dd3bb8bf13e78998f073479aa150e3d8628e2b42ed7ee78842c42f26d41bf43"
-    },
-    {
-      "file": "packages/private-equity/src/branch-fabric/runtime.ts",
-      "bytes": 7787,
-      "sha256": "c3b75e4739b40261d371abc562af5a2d7f170ac962eb25323e08069e9312febc"
-    },
-    {
-      "file": "packages/private-equity/src/branch-fabric/store.ts",
-      "bytes": 7672,
-      "sha256": "6452116c294e5cd8570a5088fd93adb58c19c62846007596b16fa08f1e93c111"
-    },
-    {
       "file": "packages/private-equity/src/capital-program/challenge-reader.ts",
       "bytes": 8330,
       "sha256": "038820f2caedd3126773fa23274163247f9a49544dfbc17cf9a52a41b74706ec"
@@ -1955,13 +1845,8 @@
     },
     {
       "file": "packages/private-equity/src/closing/action.ts",
-      "bytes": 5957,
-      "sha256": "9abd66a5a4bc9bb39f03e74bb9d06026375ce04df945c0e62abfb39e80658932"
-    },
-    {
-      "file": "packages/private-equity/src/closing/api.ts",
-      "bytes": 16938,
-      "sha256": "751351c3dbf2be142c30afbc77f9ee1362c2767afc5bdfbdadc0bea6fe49123f"
+      "bytes": 6687,
+      "sha256": "6283cdbec954368277497cb7f852b52b28e9e30ee5b4370e729d91ff35409403"
     },
     {
       "file": "packages/private-equity/src/closing/check-client.ts",
@@ -1977,11 +1862,6 @@
       "file": "packages/private-equity/src/closing/contracts.ts",
       "bytes": 4189,
       "sha256": "1ea5a6a92e9f7d321d88e07bbb80193c38a9a51d9a62b0a8e4a298b65e084141"
-    },
-    {
-      "file": "packages/private-equity/src/closing/plan.ts",
-      "bytes": 12656,
-      "sha256": "83de1a04a5562b8110c1d2dd7e9b68c1a973a5a4e379921fa39a04a900292802"
     },
     {
       "file": "packages/private-equity/src/closing/store.ts",
@@ -2184,11 +2064,6 @@
       "sha256": "bc0a0b5e66fc392fc479ad707bacff426beb946bf38079ff9608bda1b8d363ac"
     },
     {
-      "file": "packages/private-equity/src/decision-slice/handler.ts",
-      "bytes": 4030,
-      "sha256": "fa3e2d3aa8a98888c4671545f261f6798bc5eb9cadf1b213c6daa8bf5d83a251"
-    },
-    {
       "file": "packages/private-equity/src/decision-slice/model-evidence-reader.ts",
       "bytes": 1890,
       "sha256": "af1e3ba4b7d3282c0a493264c7bb7089aebaeef836fd40601e9db6cc925763a1"
@@ -2239,19 +2114,9 @@
       "sha256": "9a59ec2eaec4075d094549dcab01b8f5d41932f8770fa27d10c74e230852baf8"
     },
     {
-      "file": "packages/private-equity/src/digital-twin.ts",
-      "bytes": 38867,
-      "sha256": "14d0ec9b6a2fd72afb24d1824493134d40dbc9867f9d69d04a27872631014fc0"
-    },
-    {
       "file": "packages/private-equity/src/document-financial-review.ts",
       "bytes": 12792,
       "sha256": "51b99d01b9c27fb0df2c94ea03729163f834e1dd4eab414202258b34dcda6d48"
-    },
-    {
-      "file": "packages/private-equity/src/durable-epistemic.ts",
-      "bytes": 5203,
-      "sha256": "f7ea6267052c03e7921a7f4702e495455fe3d403fc41d90674ff5970f2ea8403"
     },
     {
       "file": "packages/private-equity/src/economic-action-theory/contracts.ts",
@@ -2426,7 +2291,7 @@
     {
       "file": "packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
       "bytes": 8809,
-      "sha256": "a70e50f7d1692d6504ffbc40c8a376e6aa8fee59e5c55beb8ed63030506c9c1c"
+      "sha256": "b083dd26969bb4ce08456418d75e8e28d8e930bd95f160bb02ae4e13f5a58be6"
     },
     {
       "file": "packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2440,13 +2305,13 @@
     },
     {
       "file": "packages/private-equity/src/enterprise-beliefs.ts",
-      "bytes": 17530,
-      "sha256": "72b69cc1eccde0c4a835697e1ef8896df6371160144a0ed9ab6a65a71792fcfb"
+      "bytes": 17617,
+      "sha256": "a5186dff6cfff6b82e0d25983c892e5a85d229d65fdbf619624768dfa639e42a"
     },
     {
       "file": "packages/private-equity/src/enterprise-control.ts",
-      "bytes": 84028,
-      "sha256": "6ba5eb81b2ca2d51b57654270972a009a2a7bbb547a444cd3f86e744f5cdcb41"
+      "bytes": 84618,
+      "sha256": "efa6c377fa32ffdfe7daeb105e0e2fbc028c31ce1e5898548d40cdfd0dd58719"
     },
     {
       "file": "packages/private-equity/src/enterprise-economic-assignments.ts",
@@ -2465,23 +2330,23 @@
     },
     {
       "file": "packages/private-equity/src/enterprise-experiments.ts",
-      "bytes": 19185,
-      "sha256": "d8cf9f62c9f89d517a51c2815bd97efd16884389f71c709f0d188da442372062"
+      "bytes": 19723,
+      "sha256": "59f1b98e7b4ecfd2df1d6997dece6e5fc397ffe38f2b5e2b36bc8fb2629daa7c"
     },
     {
       "file": "packages/private-equity/src/enterprise-interventions.ts",
-      "bytes": 21677,
-      "sha256": "b2bc29654047a06aa36a11d1e38d37af3871f26d19e6d05134b102ba0ce670e2"
+      "bytes": 21828,
+      "sha256": "d07b7f0f423cbfff366c6b8251a5e8c2165e20c351b1b55ebef111551f35bb05"
     },
     {
       "file": "packages/private-equity/src/enterprise-obligations.ts",
-      "bytes": 39078,
-      "sha256": "4ec4b62d56f526bb2cacb71706d7adcd7415ce88d32f9ddb913acd75e930ac60"
+      "bytes": 39224,
+      "sha256": "15d916abf8e1939a87ffdf9bb7eff938ec167e6913651acea73ce5b1b52bb0a1"
     },
     {
       "file": "packages/private-equity/src/epistemic.ts",
-      "bytes": 44820,
-      "sha256": "0dbfae1c4e52a55849c465ca058ca936cb7b1f17e642e4f9e302d66e3d49eb90"
+      "bytes": 45110,
+      "sha256": "f11e7176607dc4825ce1073432873114e69fb1aaf227dde52b20f25a6bbe8c36"
     },
     {
       "file": "packages/private-equity/src/evidence-execution/consumer.ts",
@@ -2510,8 +2375,8 @@
     },
     {
       "file": "packages/private-equity/src/financial-explanation.ts",
-      "bytes": 8410,
-      "sha256": "e969aa10cca2739f93203923fd161c3818a037e6d9f65e71458baa865e9bdcab"
+      "bytes": 8432,
+      "sha256": "3995b577431795b980ea70b17a9cbed6581b2ac4fedad1ec2b6b1367e9b1271c"
     },
     {
       "file": "packages/private-equity/src/ic-aggregation.ts",
@@ -2539,24 +2404,9 @@
       "sha256": "2e8e6bf0fef155d0e782b557d0b5987f5c2a62b75752b363540fc6c0ba915e6e"
     },
     {
-      "file": "packages/private-equity/src/index.ts",
-      "bytes": 5194,
-      "sha256": "001174d97e70c2589be7bf72299c557a568fd1142b055af662db7c35fddd3a0e"
-    },
-    {
       "file": "packages/private-equity/src/institution-program/canonical-json.ts",
       "bytes": 1617,
       "sha256": "f39a61cd7d934a65646e148072aaab047851251f3e0eb52882540cba942ee36d"
-    },
-    {
-      "file": "packages/private-equity/src/institution-program/canonical-owners.ts",
-      "bytes": 11516,
-      "sha256": "7073e4c706b4e750b58dab7a8c613aa204b6d94b20b5246e54f6b116b3b82059"
-    },
-    {
-      "file": "packages/private-equity/src/institution-program/checker-process.ts",
-      "bytes": 8370,
-      "sha256": "e34711e4542fb490f9057aa4664dbd802db7b008bd690c20789e3489c5615a5b"
     },
     {
       "file": "packages/private-equity/src/institution-program/checker-raw.ts",
@@ -2594,16 +2444,6 @@
       "sha256": "3f31a44e82acc620bf3d0f12d934724ea240e5eeb2c3d875b687fe6d4e5d4416"
     },
     {
-      "file": "packages/private-equity/src/institution-program/owner-admission.ts",
-      "bytes": 51387,
-      "sha256": "ba8f517f3bfe863028cc10a06a607ee1275279684ccd581e1ba41406cca5cec8"
-    },
-    {
-      "file": "packages/private-equity/src/institution-program/reconstruction.ts",
-      "bytes": 18849,
-      "sha256": "88fb5b183924a2c7066477289a4486c48ab1f7b5eeb15b5464bb3d3e0d01dd58"
-    },
-    {
       "file": "packages/private-equity/src/institution-program/resource-demand.ts",
       "bytes": 6744,
       "sha256": "fbb69f2e5218a00026abd5b61e540b2e2d236a6e94aac454ff3ac48db57939d7"
@@ -2617,11 +2457,6 @@
       "file": "packages/private-equity/src/institution-program/source-authority.ts",
       "bytes": 19667,
       "sha256": "0bbab179055e816d4a80f94329f093e39d2880827fa8df51bc6edb896595ec9f"
-    },
-    {
-      "file": "packages/private-equity/src/institution-program/source-decoder.ts",
-      "bytes": 16545,
-      "sha256": "ff848705be04a081c81750e5d2b05307c241f927fe2ecc0305589b22c7c688f5"
     },
     {
       "file": "packages/private-equity/src/institution-program/source-locks.ts",
@@ -2679,11 +2514,6 @@
       "sha256": "872f9249ff15500e99955afe3818f4c0d24538462d10a949e6e965305a26579f"
     },
     {
-      "file": "packages/private-equity/src/interface-synthesis/api.ts",
-      "bytes": 17655,
-      "sha256": "e90582bb03129b35de7528ea080a23b991c4d20f64435e95131cd6d7143589fc"
-    },
-    {
       "file": "packages/private-equity/src/interface-synthesis/browser.ts",
       "bytes": 3194,
       "sha256": "832aa2b8b303bfb60bea2a7c07f972a146a9bf4bb5cd1503259828cb0d3585a6"
@@ -2720,8 +2550,8 @@
     },
     {
       "file": "packages/private-equity/src/live-controls/contracts.ts",
-      "bytes": 9091,
-      "sha256": "9f0651f1fe68964d384545e0ed43fec85856f909660f1c5db273b28c666ca15e"
+      "bytes": 9117,
+      "sha256": "de4c48b8b47fd76ab593e002c9d7bc217c08f4c7460b927dfc981610e9049c2e"
     },
     {
       "file": "packages/private-equity/src/live-controls/fields.ts",
@@ -2745,8 +2575,8 @@
     },
     {
       "file": "packages/private-equity/src/live-controls/store.ts",
-      "bytes": 33828,
-      "sha256": "508cb7d2021f1156c91f6d825b4fe733e14ade3b3d1ab95af6dfc2da3e89e50b"
+      "bytes": 33851,
+      "sha256": "35c71c74cdea93b0b088bd6c3848dee2a09332f3ff0d6f895465e6646ee54fac"
     },
     {
       "file": "packages/private-equity/src/live-recompilation/api.ts",
@@ -2764,19 +2594,14 @@
       "sha256": "f2af61ac58d9008822aaeaf369ed50cb9f4224aebbe4ba4b3298f0650b065af3"
     },
     {
-      "file": "packages/private-equity/src/microsoft365-mapping.ts",
-      "bytes": 26846,
-      "sha256": "1c5ff1429ba1995ec07f5936cccf6f01700e188b6ab67cfd7f4dac6ff4658677"
-    },
-    {
       "file": "packages/private-equity/src/native-experience-transport.ts",
       "bytes": 10574,
       "sha256": "0b4b1e629eed531ea12c5571a26bca64d934c94685df1f41e87c26bfd11a1b67"
     },
     {
       "file": "packages/private-equity/src/obligation-contracts.ts",
-      "bytes": 3693,
-      "sha256": "0b212ca358d3695eec69a9864dc14477e3772b2d0b9c905a281a6c8701998bb0"
+      "bytes": 3709,
+      "sha256": "e67e53f24c0068d7b1362e64bfd08d573e1acdfa55984cad04fe5ac388739005"
     },
     {
       "file": "packages/private-equity/src/operational-queries.ts",
@@ -2816,7 +2641,7 @@
     {
       "file": "packages/private-equity/src/policy-learning/source-manifest.generated.ts",
       "bytes": 13772,
-      "sha256": "130d0c26bbaf7889309c4dd14fedda683dfd9bbc094a9c1efa65ab50a11db781"
+      "sha256": "65a79df42e41fcb520de032d4f52c62b2f35bfedcb0c2616c8e79f3e1946d0d3"
     },
     {
       "file": "packages/private-equity/src/policy-learning/source-paths.ts",
@@ -2849,11 +2674,6 @@
       "sha256": "fb5aa83ef96059cd32f9bb7d2cef759ecdd208ec22bfdae6d1d27411603c589f"
     },
     {
-      "file": "packages/private-equity/src/procedure-induction/api.ts",
-      "bytes": 9057,
-      "sha256": "4f4691e402992137574187f8ad22235dd236733cf41d36ffb7826701333cf4c9"
-    },
-    {
       "file": "packages/private-equity/src/procedure-induction/continuation.ts",
       "bytes": 1835,
       "sha256": "9187e801805cce029b39cd84c38dc3a36737f1e831654813b8b3ff72c5b477a9"
@@ -2864,11 +2684,6 @@
       "sha256": "73c431c65d3cce94ea1ea8d06c714d5d4d4d9633c51ce013e612b3addd1c077e"
     },
     {
-      "file": "packages/private-equity/src/procedure-induction/costs.ts",
-      "bytes": 3530,
-      "sha256": "ce1bca4ed0368025dffd514dd9d31d4cc0d6891c094da5a7847cb55d1e9ff070"
-    },
-    {
       "file": "packages/private-equity/src/procedure-induction/experience.ts",
       "bytes": 9200,
       "sha256": "d1af8878fccb7358a130abef93f55b390348754c1a019f6ba1d88bc211a7b791"
@@ -2877,11 +2692,6 @@
       "file": "packages/private-equity/src/procedure-induction/induction.ts",
       "bytes": 9252,
       "sha256": "ed3fe2016b9e941c3bacb672f95747ce080de8d7f94cac0f65b42b1a1d6a6917"
-    },
-    {
-      "file": "packages/private-equity/src/procedure-induction/interface.ts",
-      "bytes": 2393,
-      "sha256": "5445395270356b0c7ebfe934380b2b106cff110d0ea269e9428f8aae137944d0"
     },
     {
       "file": "packages/private-equity/src/procedure-induction/lifecycle.ts",
@@ -3050,8 +2860,8 @@
     },
     {
       "file": "packages/private-equity/src/project-z/z3-viability/contracts.ts",
-      "bytes": 7998,
-      "sha256": "55f72cb7ec32834ed3917ce7d2f43673fd4dc38a86b35499a938510144267919"
+      "bytes": 8018,
+      "sha256": "fcf085cbd29e3f1743860695149f465909ed5091e0d8b092ca4754b99d4a3987"
     },
     {
       "file": "packages/private-equity/src/project-z/z3-viability/delivery.ts",
@@ -3065,13 +2875,13 @@
     },
     {
       "file": "packages/private-equity/src/project-z/z3-viability/general-model.ts",
-      "bytes": 25894,
-      "sha256": "c407054ddf0d14ca9611a5526b38d39e3f37ddd4399e8cc5e6d2cf290986b0c0"
+      "bytes": 25914,
+      "sha256": "3f82a0e364f04c780d21007a8e09ce439882b80da9c7ed6c896d71aec26fe559"
     },
     {
       "file": "packages/private-equity/src/project-z/z3-viability/general-owners.ts",
-      "bytes": 38605,
-      "sha256": "0a0b57703eee614283b1939f321fec890299b9efdc8b706a9dc83f94d68a0066"
+      "bytes": 38631,
+      "sha256": "e2283dda4cf515d02d4f83fb1d2edeb92f40c4fe1b625bb288f2787bf36458d2"
     },
     {
       "file": "packages/private-equity/src/project-z/z3-viability/general-transition.ts",
@@ -3110,8 +2920,8 @@
     },
     {
       "file": "packages/private-equity/src/project-z/z4-execution-proof/contracts.ts",
-      "bytes": 6036,
-      "sha256": "96a2526869a8875f5d17f550511b9314bcfc210d1d1f66dddad2db828d5b3f00"
+      "bytes": 6058,
+      "sha256": "3aa7877023df9ba68c275247626aa90ac684be4dc35ab47fb3e3095e908382b0"
     },
     {
       "file": "packages/private-equity/src/project-z/z4-execution-proof/identity.ts",
@@ -3210,8 +3020,8 @@
     },
     {
       "file": "packages/private-equity/src/r1/api.ts",
-      "bytes": 26562,
-      "sha256": "c72e147ee4cb03867362bf4b3724d8eb14467de8a8f87298a8ba1d152c7b9118"
+      "bytes": 26731,
+      "sha256": "9b9ce3848040835e5739a9604b9c6544ff2102099fd74319411ee3e789db08eb"
     },
     {
       "file": "packages/private-equity/src/r1/dependencies.ts",
@@ -3230,13 +3040,13 @@
     },
     {
       "file": "packages/private-equity/src/r1/runtime.ts",
-      "bytes": 5164,
-      "sha256": "adf65157853d2fc6fc69d465ad086e46180b5c7d3727dca455ba99aba32177b4"
+      "bytes": 5203,
+      "sha256": "00614cddd3c80be8bc27c601a16d9646a5b4fa288c32675779c0a30bc597e1c1"
     },
     {
       "file": "packages/private-equity/src/r1/source.ts",
-      "bytes": 10413,
-      "sha256": "85b3749b5412be06501b453eb08931fbb20e9b1d68c2bc0f6cd7f1ef6d7eb502"
+      "bytes": 10750,
+      "sha256": "df3adcc5efaee7f1592daf5d17056aeb44d5976a2bdc03f9db83e77850bf9055"
     },
     {
       "file": "packages/private-equity/src/r3/allocation.ts",
@@ -3287,11 +3097,6 @@
       "file": "packages/private-equity/src/r4/owner-adapters.ts",
       "bytes": 6462,
       "sha256": "5d0fc0f6267dd9e53dcea2f32f143d4992ede06bc6428a07e1c9d9e0681beed5"
-    },
-    {
-      "file": "packages/private-equity/src/r6/verified-capital-compiler.ts",
-      "bytes": 2014,
-      "sha256": "354b98c34fcc8d36138ee937c807889cfc8e3b95a48cc6a984a58f771a88d711"
     },
     {
       "file": "packages/private-equity/src/real-world-service/boundaries.ts",
@@ -3386,7 +3191,7 @@
     {
       "file": "packages/private-equity/src/system-identification/source-manifest.generated.ts",
       "bytes": 19716,
-      "sha256": "0d16eb31547f4877204c1474627b18fb9c0c7ef16c66becba59df469fbbe8133"
+      "sha256": "93abc3b0a776b8f8d942f037ca35c9f8ae63ca100ca31c7ec7ed0eb8d42d026b"
     },
     {
       "file": "packages/private-equity/src/system-identification/source-paths.ts",
@@ -3412,11 +3217,6 @@
       "file": "packages/private-equity/src/underwriting-artifact-values.ts",
       "bytes": 6288,
       "sha256": "adf818220ee2ba8faa6be3d910815b988e2c7309d949f0882b1396fef41836f9"
-    },
-    {
-      "file": "packages/private-equity/src/underwriting-artifacts.ts",
-      "bytes": 21521,
-      "sha256": "0952e9dd5bc29263cba76e40e6841be94dbb95d7424b7581881ba5ad6e66678c"
     },
     {
       "file": "packages/private-equity/src/underwriting-repository.ts",
@@ -3950,8 +3750,8 @@
     },
     {
       "file": "packages/tools/package.json",
-      "bytes": 2479,
-      "sha256": "f07d866207163805ec22d67fa8905737a4e6af47bb76066477f7bd129afa12ba"
+      "bytes": 2765,
+      "sha256": "74cb4a052f7e897f6bd68a1e9ae986293dbeb0a5603bb8d5c3500b1796b97005"
     },
     {
       "file": "packages/tools/src/backup-storage-github.ts",

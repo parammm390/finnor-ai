@@ -3,7 +3,7 @@
  * exact preimage-bound coordinator patches. */
 import { z } from "zod";
 import { PE_WORLD_ROOT_TYPES } from "@finnor/shared-types";
-import { ExperimentRefSchema } from "@finnor/epistemic-runtime";
+import { ExperimentRefSchema } from "../../../../epistemic-runtime/src/experiments";
 import { hash, parseArena, parseBinding, Z3_VERSION, Z3_NONCONFLICTING_VERSION,
   type Candidate, type CheckReceipt, type IncompleteCandidate } from "../../../../epistemic-runtime/src/project-z/z3-viability/contracts";
 

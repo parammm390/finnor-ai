@@ -1,4 +1,4 @@
-import { createUnderwritingScenario } from "@finnor/private-equity";
+import { createUnderwritingScenario } from "../../../../../../packages/private-equity/src/underwriting-repository";
 import type { UnderwritingScenario } from "@finnor/underwriting";
 import { requireContext } from "../../../../lib/auth";
 import {

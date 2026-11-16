@@ -1,4 +1,4 @@
-import { createUnderwritingArtifactBinding } from "@finnor/private-equity";
+import { createUnderwritingArtifactBinding } from "../../../../../../packages/private-equity/src/underwriting-artifacts";
 import type { ComparisonPolicy } from "@finnor/underwriting";
 import { requireContext } from "../../../../lib/auth";
 import {

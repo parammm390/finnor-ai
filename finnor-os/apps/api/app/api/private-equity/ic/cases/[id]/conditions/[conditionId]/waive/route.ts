@@ -1,4 +1,4 @@
-import { waiveIcCondition } from "@finnor/private-equity";
+import { waiveIcCondition } from "../../../../../../../../../../../packages/private-equity/src/ic-repository";
 import { handleIcPost, IcUuidSchema, IcWaiveConditionSchema } from "../../../../../../../../../lib/ic";
 
 export const runtime = "nodejs";

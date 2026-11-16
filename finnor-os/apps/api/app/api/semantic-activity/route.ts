@@ -1,4 +1,5 @@
-import { PE_WORLD_ROOT_TYPES, PeDomainError, loadSemanticActivity, type PeMutationContext } from "@finnor/private-equity";
+import { PE_WORLD_ROOT_TYPES, PeDomainError, type PeMutationContext } from "../../../../../packages/private-equity/src/types";
+import { loadSemanticActivity } from "../../../../../packages/private-equity/src/semantic-activity";
 import { z } from "zod";
 import { errorResponse, requireContext } from "../../../lib/auth";
 

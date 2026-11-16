@@ -4,7 +4,7 @@ import type { PoolClient } from "pg";
 import { z } from "zod";
 import { withTenantTransaction, type LoadedEmployeeConversationThread } from "@finnor/db";
 import { FinancialExplanationSchema, type TenantContext } from "@finnor/shared-types";
-import { validateBeliefViewPin } from "@finnor/private-equity";
+import { validateBeliefViewPin } from "../../private-equity/src/enterprise-beliefs";
 import { PeDomainError } from "@finnor/private-equity/src/types";
 
 const Pin = z.object({

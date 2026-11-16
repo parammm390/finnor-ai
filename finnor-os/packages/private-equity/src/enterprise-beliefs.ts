@@ -2,7 +2,13 @@ import type { BeliefClaim, BeliefDecisionContext, BeliefView, BeliefViewPin, Bel
 import { canExerciseAuthorityBatch, canExerciseAuthorityTx, employeeAuthoritySnapshot, employeeAuthoritySnapshotTx } from "@finnor/authority";
 import type { PoolClient } from "pg";
 import { withTenantTransaction } from "@finnor/db";
-import { beliefOwnerRef, boundBeliefView, createBeliefView, epistemicHash, prepareS1ExperienceEvent } from "@finnor/epistemic-runtime";
+import {
+  beliefOwnerRef,
+  boundBeliefView,
+  createBeliefView,
+  prepareS1ExperienceEvent,
+} from "../../epistemic-runtime/src/belief-view";
+import { epistemicHash } from "../../epistemic-runtime/src/source-precedence";
 import { loadPrivateEquityWorldState } from "./world-state";
 import { PeDomainError, type PeMutationContext, type PeWorldRootRef, type PeWorldState } from "./types";
 import {enqueueNativeBelief,enqueueNativeReferences,enqueueNativePreparedEvents,nativeReference} from './native-experience-transport';
