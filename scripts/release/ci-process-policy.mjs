@@ -30,6 +30,20 @@ export function verifyCiProcess(root) {
   const failures = []
   const require = (condition, message) => { if (!condition) failures.push(message) }
   const ci = workflows["ci.yml"] ?? ""
+  const operatingProfit = workflowJob(ci, "operating-profit")
+  require(operatingProfit.length > 0 && !/^ {4}if:/m.test(operatingProfit)
+    && operatingProfit.includes("python3 scripts/s4/run-local.py"),
+    "S4 must execute the complete original owner and replay path unconditionally")
+  require(operatingProfit.includes("ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb02acbac4c69920fe9d278f82")
+    && operatingProfit.includes('python install 3.12.13')
+    && operatingProfit.includes('venv --python 3.12.13')
+    && operatingProfit.includes('pip sync --require-hashes --only-binary :all:')
+    && operatingProfit.includes('scripts/r4/numerical-requirements.lock'),
+    "S4 requires the pinned interpreter and complete hash-locked scientific runtime")
+  require(operatingProfit.includes("assert sys.version.split()[0] == '3.12.13'")
+    && operatingProfit.includes("('2.3.3', '1.16.2', '1.8.0')")
+    && operatingProfit.includes('FINNOR_S3_PYTHON=$RUNNER_TEMP/s4-python/bin/python'),
+    "S4 must verify the actual Python, NumPy, SciPy and HiGHS identity before owner execution")
   const pr = workflows["pr-verdict.yml"] ?? ""
   const production = workflows["production-release.yml"] ?? ""
   const projectZ = workflowJob(ci, "project-z-public")

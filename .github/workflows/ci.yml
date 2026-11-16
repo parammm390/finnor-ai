@@ -409,10 +409,24 @@ jobs:
           cache: npm
           cache-dependency-path: finnor-os/package-lock.json
       - run: npm ci --no-audit --no-fund
-      - name: Prepare the pinned conditional S3 numerical backend
+      - name: Prepare and verify the pinned S3 and S5 numerical backend
         run: |
-          python3 -m venv "$RUNNER_TEMP/s4-python"
-          "$RUNNER_TEMP/s4-python/bin/pip" install --disable-pip-version-check -r packages/epistemic-runtime/src/intervention-requirements.txt
+          set -euo pipefail
+          umask 077
+          s4_uv_container="$(docker create ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb02acbac4c69920fe9d278f82)"
+          trap 'docker rm "$s4_uv_container" >/dev/null' EXIT
+          docker cp "$s4_uv_container:/uv" "$RUNNER_TEMP/s4-uv"
+          "$RUNNER_TEMP/s4-uv" python install 3.12.13
+          "$RUNNER_TEMP/s4-uv" venv --python 3.12.13 "$RUNNER_TEMP/s4-python"
+          "$RUNNER_TEMP/s4-uv" pip sync --require-hashes --only-binary :all: --python "$RUNNER_TEMP/s4-python/bin/python" scripts/r4/numerical-requirements.lock
+          "$RUNNER_TEMP/s4-python/bin/python" -I - <<'PY'
+          import sys, numpy, scipy
+          from scipy.optimize._highspy._core import HIGHS_VERSION_MAJOR, HIGHS_VERSION_MINOR, HIGHS_VERSION_PATCH
+          highs = f'{HIGHS_VERSION_MAJOR}.{HIGHS_VERSION_MINOR}.{HIGHS_VERSION_PATCH}'
+          assert sys.version.split()[0] == '3.12.13'
+          assert (numpy.__version__, scipy.__version__, highs) == ('2.3.3', '1.16.2', '1.8.0')
+          print({'python': sys.version.split()[0], 'numpy': numpy.__version__, 'scipy': scipy.__version__, 'highs': highs})
+          PY
           echo "FINNOR_S3_PYTHON=$RUNNER_TEMP/s4-python/bin/python" >> "$GITHUB_ENV"
       - name: Exercise full S4 owner, operating-profit and retained-kernel replay paths
         run: python3 scripts/s4/run-local.py
