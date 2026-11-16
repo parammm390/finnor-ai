@@ -1,4 +1,4 @@
-name: W3 actual fulfillment owner episode
+name: "W3 - Run a fulfillment scenario"
 on:
   workflow_call:
     inputs:
@@ -9,6 +9,7 @@ permissions:
   contents: read
 jobs:
   run:
+    name: "Fulfillment - Verify original scenario"
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:

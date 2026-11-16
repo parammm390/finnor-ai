@@ -1,4 +1,4 @@
-name: tenant-isolation-nightly
+name: "Privacy - Nightly tenant isolation checks"
 on:
   schedule:
     - cron: "17 3 * * *"
@@ -10,6 +10,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   probe:
+    name: "Privacy - Verify tenant data isolation"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:

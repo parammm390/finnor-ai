@@ -1,7 +1,7 @@
 # CI (§29): lint/typecheck + vitest on every PR. Production deployment is owned by
 # production-release.yml and its commit-locked Phase 5 readiness/release job graph.
 # NOTE: this repo lives at finnor-os/ inside the FINNOR repository, so paths are scoped.
-name: finnor-os-ci
+name: "Backend - Build, tests and Z compiler checks"
 on:
   workflow_call:
     inputs:
@@ -16,7 +16,7 @@ defaults:
     working-directory: finnor-os
 jobs:
   project-z-native-assets:
-    name: Project Z locked native test assets (not phase admission)
+    name: "Z4 setup - Build locked proof binaries"
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -46,7 +46,7 @@ jobs:
           retention-days: 7
 
   project-z-owner-smoke:
-    name: Project Z real owner transport (not phase admission)
+    name: "Z foundation - API and worker transport"
     needs: project-z-native-assets
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -99,7 +99,7 @@ jobs:
           retention-days: 7
 
   project-z-public:
-    name: Project Z public original-semantics (${{ matrix.phase }})
+    name: "${{ matrix.phase == 'z1' && 'Z1 - Shared work compiler' || matrix.phase == 'z2' && 'Z2 - Coalition incentives' || 'Z3 - Long-term viability' }} - public semantics"
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -136,7 +136,7 @@ jobs:
           retention-days: 7
 
   project-z-public-z4:
-    name: Project Z public original-semantics (z4)
+    name: "Z4 - Execution proof public semantics"
     needs: project-z-native-assets
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -184,6 +184,7 @@ jobs:
           retention-days: 7
 
   production-artifacts:
+    name: "Build - Application and worker artifacts"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -215,6 +216,7 @@ jobs:
           retention-days: 7
 
   worker-image:
+    name: "Worker - Build and smoke-test Docker image"
     if: ${{ inputs.run_worker_image }}
     runs-on: ubuntu-latest
     # First pinned exact native compilation is preparation, not a 30-second
@@ -302,6 +304,7 @@ jobs:
           retention-days: 7
 
   test:
+    name: "Backend - Test shard ${{ matrix.shard }} of 3"
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
@@ -396,7 +399,7 @@ jobs:
           retention-days: 7
 
   operating-profit:
-    name: S4 operating-profit owner and replay
+    name: "Operating profit - Calculation and replay"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -442,6 +445,7 @@ jobs:
           retention-days: 7
 
   phase7:
+    name: "Workforce learning - End-to-end certification"
     runs-on: ubuntu-latest
     timeout-minutes: 25
     services:
@@ -521,6 +525,7 @@ jobs:
           retention-days: 7
 
   correctness-regressions:
+    name: "Correctness - Financial and authorization regressions"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:

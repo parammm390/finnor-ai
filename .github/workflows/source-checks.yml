@@ -1,4 +1,4 @@
-name: source-checks
+name: "Source - Workflow rules, generated inputs and types"
 on:
   workflow_call:
     inputs:
@@ -12,6 +12,7 @@ permissions:
   contents: read
 jobs:
   validate:
+    name: "CI definitions - Syntax and required checks"
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
@@ -35,6 +36,7 @@ jobs:
           retention-days: 7
 
   governance:
+    name: "CI and release rules - Regression tests"
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -64,6 +66,7 @@ jobs:
           retention-days: 7
 
   source:
+    name: "Source consistency - Types and generated inputs"
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 10

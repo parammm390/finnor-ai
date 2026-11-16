@@ -1,4 +1,4 @@
-name: W2 atomic settlement isolated owner verification
+name: "W2 - Payment settlement and rejection checks"
 on:
   push:
     branches:
@@ -21,6 +21,7 @@ jobs:
           CONTROLS: ${{ needs.controls.result }}
         run: test "$EXACT" = success && test "$CONTROLS" = success
   completion-receipt:
+    name: "Report completed W2 checks"
     needs: verdict
     if: ${{ always() && github.ref_name == 'codex/zw-integration-quality-20261115' }}
     permissions:
@@ -35,10 +36,12 @@ jobs:
       gate: w2-pair-verdict
       result: ${{ needs.verdict.result }}
   exact:
+    name: "W2 - Exact payment settles"
     uses: ./.github/workflows/w2-compensation-episode.yml
     with:
       episode: after-exact
   controls:
+    name: "W2 - ${{ matrix.episode == 'before-exact' && 'Original baseline without repair' || matrix.episode == 'after-wrong-amount' && 'Reject wrong payment amount' || matrix.episode == 'after-wrong-payee' && 'Reject wrong payee' || 'Reject wrong receipt' }}"
     needs: exact
     strategy:
       fail-fast: false

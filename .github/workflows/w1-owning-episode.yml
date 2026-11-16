@@ -1,4 +1,4 @@
-name: W1 actual economic owning episode
+name: "W1 - Run an economic orchestration scenario"
 on:
   workflow_call:
     inputs:
@@ -9,6 +9,7 @@ permissions:
   contents: read
 jobs:
   run:
+    name: "Economic orchestration - Verify original scenario"
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:

@@ -134,6 +134,16 @@ test("release Git reads succeed, refuse invalid repositories, and stop delayed s
 test("actual process graph passes and damaged workflow copies are rejected", () => {
   assert.deepEqual(verifyCiProcess(root).failures, [])
   const mutations = [
+    ["unreadable-workflow-title", "ci.yml", text => text.replace(/^name:.*$/m, "name: backend-ci")],
+    ["unnamed-workflow-job", "ci.yml", text => text.replace(/^    name:.*\n/m, "")],
+    ["w1-integration-branch-omitted", "w1-owning-verification.yml", text => text.replace(", codex/zw-integration-quality-20261115", "")],
+    ["w3-integration-branch-omitted", "w3-owning-verification.yml", text => text.replace(", codex/zw-integration-quality-20261115", "")],
+    ["w1-controls-omitted", "w1-owning-verification.yml", text => text.replace(", owning-regressions]", "]")],
+    ["w3-publication-omitted", "w3-owning-verification.yml", text => text.replace(", full-positive-and-publication]", "]")],
+    ["w1-result-conditional", "w1-owning-verification.yml", text => text.replace("if: ${{ always() }}", "if: ${{ success() }}")],
+    ["w3-result-conditional", "w3-owning-verification.yml", text => text.replace("if: ${{ always() }}", "if: ${{ success() }}")],
+    ["w1-receipt-omitted", "w1-owning-verification.yml", text => text.replace("uses: ./.github/workflows/ci-completion.yml", "uses: ./.github/workflows/source-checks.yml")],
+    ["w3-receipt-omitted", "w3-owning-verification.yml", text => text.replace("uses: ./.github/workflows/ci-completion.yml", "uses: ./.github/workflows/source-checks.yml")],
     ["duplicate-main-trigger", "ci.yml", text => text.replace("  workflow_call:", "  push:\n    branches: [main]\n  workflow_call:")],
     ["unguarded-image-work", "pr-verdict.yml", text => text.replace("needs: [classify, source]", "needs: classify")],
     ["production-misses-security", "production-release.yml", text => text.replace(", security-release-gate", "")],

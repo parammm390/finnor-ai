@@ -1,4 +1,4 @@
-name: Project Z0 native continuation
+name: "Z0 - Work display, reload, sign-in and privacy"
 
 on:
   push:
@@ -13,6 +13,7 @@ concurrency:
 
 jobs:
   completion-receipt:
+    name: "Report completed Z0 checks"
     needs: original-owner
     if: ${{ always() && github.ref_name == 'codex/zw-integration-quality-20261115' }}
     permissions:
@@ -28,6 +29,7 @@ jobs:
       result: ${{ needs.original-owner.result }}
 
   original-owner:
+    name: "original-owner (${{ matrix.mode }})"
     runs-on: ubuntu-latest
     timeout-minutes: 70
     strategy:
@@ -460,6 +462,29 @@ jobs:
             'codex/zw-integration-quality-20261115': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),
             'codex/project-z0-recovery': recoveryRequired,
           })[process.env.GITHUB_REF_NAME] ?? continuation
+          const mountedCaseTitles = {
+            "M-00": "Prepare authenticated native Work and worker",
+            "M-01": "Show original Work, terms and remaining resources",
+            "M-02": "Show accounting and independently observed completion",
+            "M-03": "Distinguish supported facts from predictions",
+            "M-04": "Keep blocked or needs-action state after reload",
+            "M-05": "Switch Works through Investigations",
+            "M-06": "Switch user and protect private Work",
+            "M-07": "Refresh the authentication token",
+            "M-08": "Sign out and sign back in",
+            "M-09": "Recover after losing the connection",
+            "M-10": "Reject a delayed response from the previous user"
+          }
+          if (process.env.GITHUB_STEP_SUMMARY) {
+            const lines = ['## Z0 - Work display and session journey', '', '| Product behavior | Result |', '| --- | --- |']
+            for (const id of required) {
+              const observed = results.find(entry => entry.id === id)?.outcome
+              const outcome = ['PASS', 'FAIL', 'NOT_RUN'].includes(observed) ? observed : 'MISSING'
+              lines.push('| ' + id + ' - ' + (mountedCaseTitles[id] ?? 'Registered native case') + ' | ' + outcome + ' |')
+            }
+            lines.push('', 'These results cover this native journey. Overall Z/W completion also requires the remaining phase acceptance evidence.')
+            writeFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n') + '\n', { flag: 'a' })
+          }
           for (const id of required) {
             const result = results.find(entry => entry.id === id)
             if (result?.outcome !== 'PASS') {

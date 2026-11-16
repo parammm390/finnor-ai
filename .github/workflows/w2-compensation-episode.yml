@@ -1,4 +1,4 @@
-name: W2 actual compensation owner episode
+name: "W2 - Run a payment settlement scenario"
 on:
   workflow_call:
     inputs:
@@ -9,6 +9,7 @@ permissions:
   contents: read
 jobs:
   run:
+    name: "Payment settlement - Verify original comparison"
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:

@@ -1,4 +1,4 @@
-name: universal-pr-verdict
+name: "PR - Code, build, tests and security"
 
 on:
   pull_request:
@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   classify:
-    name: classify-required-scope
+    name: "Select checks for this change"
     runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
@@ -59,7 +59,7 @@ jobs:
           retention-days: 7
 
   source:
-    name: early-source-gates
+    name: "Source and CI rules"
     needs: classify
     if: ${{ needs.classify.outputs.backend == 'true' || needs.classify.outputs.root == 'true' }}
     uses: ./.github/workflows/source-checks.yml
@@ -68,19 +68,19 @@ jobs:
       root: ${{ needs.classify.outputs.root == 'true' }}
 
   backend:
-    name: applicable-backend-gates
+    name: "Backend and Z compiler checks"
     needs: [classify, source]
     if: ${{ needs.classify.outputs.backend == 'true' }}
     uses: ./.github/workflows/ci.yml
 
   root:
-    name: applicable-root-gates
+    name: "Frontend checks"
     needs: [classify, source]
     if: ${{ needs.classify.outputs.root == 'true' }}
     uses: ./.github/workflows/marketing-ci.yml
 
   security:
-    name: universal-security-gates
+    name: "Secret and dependency security"
     needs: classify
     permissions:
       actions: read
@@ -91,7 +91,7 @@ jobs:
       run_dependency_scan: ${{ needs.classify.outputs.dependencies == 'true' }}
 
   replay:
-    name: applicable-dealer-zero
+    name: "Business receipt replay"
     needs: [classify, source]
     if: ${{ needs.classify.outputs.backend == 'true' }}
     uses: ./.github/workflows/dealer-zero-replay.yml
@@ -100,12 +100,13 @@ jobs:
       DEALER_ZERO_REPLAY_CANDIDATE: ${{ secrets.DEALER_ZERO_REPLAY_CANDIDATE }}
 
   readiness:
-    name: applicable-release-readiness
+    name: "Release readiness checks"
     needs: [classify, source]
     if: ${{ needs.classify.outputs.backend == 'true' }}
     uses: ./.github/workflows/release-readiness.yml
 
   completion-receipt:
+    name: "Report completed PR checks"
     needs: verdict
     if: ${{ always() && github.event.pull_request.number == 187 }}
     permissions:

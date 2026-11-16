@@ -2,7 +2,7 @@
 # job, not just a clean local run. Both the required PR verdict and canonical
 # production release call this workflow. Do not start an identical standalone
 # root job on the same main push.
-name: marketing-ci
+name: "Frontend - Lint, types and browser journeys"
 on:
   workflow_call:
     secrets:
@@ -17,6 +17,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   lint-typecheck-e2e:
+    name: "Frontend - Lint, types and browser tests"
     runs-on: ubuntu-latest
     # A release check must report a verdict. This bounds a wedged browser/tool
     # process instead of leaving the workflow perpetually "In progress".

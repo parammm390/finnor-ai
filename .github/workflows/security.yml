@@ -1,4 +1,4 @@
-name: security
+name: "Security - Secrets and vulnerable dependencies"
 on:
   workflow_call:
     inputs:
@@ -13,7 +13,7 @@ permissions:
   security-events: write
 jobs:
   gitleaks:
-    name: gitleaks
+    name: "Secrets - Scan complete Git history"
     runs-on: ubuntu-latest
     timeout-minutes: 8
     permissions:
@@ -102,7 +102,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
   osv:
-    name: osv-scanner
+    name: "Dependencies - Scan known vulnerabilities"
     if: ${{ github.event_name == 'push' || inputs.run_dependency_scan }}
     # v2 ships reusable workflows, not a root action.yml. Calling the root as an
     # action makes GitHub reject it before the dependency scan begins.

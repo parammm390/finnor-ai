@@ -118,5 +118,44 @@ export function verifyCiProcess(root) {
   for (const [file, text] of Object.entries(workflows)) {
     for (const [, ref] of text.matchAll(/^\s*(?:-\s*)?uses:\s*([^\s#]+)$/gm)) require(ref.startsWith("./.github/workflows/") || /@[0-9a-f]{40}$/i.test(ref), `${file}: mutable action ${ref}`)
   }
+
+  // Display names explain purpose; stable protection and receipt identities remain.
+  const stableNames = new Set(["required-pr-verdict", "w2-pair-verdict",
+    "notify-ci-completion", "post-merge-certification",
+    "original-owner (${{ matrix.mode }})"])
+  for (const [file, text] of Object.entries(workflows)) {
+    const title = text.match(/^name:\s*(.+)$/m)?.[1] ?? ""
+    require(/[A-Za-z].*\s+[A-Za-z]/.test(title),
+      file + ": workflow title must explain its purpose in plain language")
+    const jobs = text.slice(text.indexOf("\njobs:") + 1)
+    for (const [, id] of jobs.matchAll(/^  ([\w-]+):\n/gm)) {
+      const name = workflowJob(text, id).match(/^    name:\s*(.+)$/m)?.[1]?.replace(/^["']|["']$/g, "") ?? ""
+      require(stableNames.has(name) || /[A-Za-z].*\s+[A-Za-z]/.test(name),
+        file + "/" + id + ": add a descriptive job display name")
+    }
+  }
+  for (const [file, label, required] of [
+    ["w1-owning-verification.yml", "W1 result - economic orchestration and recovery",
+      "needs: [source-checks, native-positive, owning-regressions]"],
+    ["w3-owning-verification.yml", "W3 result - fulfillment and publication",
+      "needs: [fast-owner, full-positive-and-publication]"],
+  ]) {
+    const text = workflows[file] ?? ""
+    require(text.split("\njobs:")[0].includes("codex/zw-integration-quality-20261115"),
+      file + ": existing owner verification must run on the integration branch")
+    const terminal = workflowJob(text, "verdict")
+    require(terminal.includes(required) && terminal.includes("if: ${{ always() }}")
+      && terminal.includes('Object.values(results).every(result => result === "success")'),
+      file + ": all original owner and adverse checks require a fail-closed terminal result")
+    const report = workflowJob(text, "completion-receipt")
+    require(report.includes("needs: verdict")
+      && report.includes("uses: ./.github/workflows/ci-completion.yml")
+      && report.includes('gate: "' + label + '"')
+      && report.includes("result: ${{ needs.verdict.result }}"),
+      file + ": completed results must use the existing source-bound receipt")
+    require((workflows["ci-completion.yml"] ?? "").includes('"' + label + '"'),
+      file + ": reporter must accept the declared result identity")
+  }
+
   return { workflows: Object.keys(workflows).sort(), failures }
 }

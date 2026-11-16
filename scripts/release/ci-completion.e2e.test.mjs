@@ -15,7 +15,7 @@ test("the no-checkout relay and every caller can write PR comments without sourc
   const expected = { actions: "read", contents: "read", issues: "read", "pull-requests": "write" }
   assert.deepEqual(workflow.permissions, expected)
   assert(workflow.jobs.report.steps.every(step => !step.uses), "The reporting token must never execute checked-out source or actions")
-  for (const path of ["pr-verdict.yml", "project-z0-native.yml", "w2-atomic-settlement-verification.yml"]) {
+  for (const path of ["pr-verdict.yml", "project-z0-native.yml", "w2-atomic-settlement-verification.yml", "w1-owning-verification.yml", "w3-owning-verification.yml"]) {
     const caller = parse(readFileSync(new URL(`../../.github/workflows/${path}`, import.meta.url), "utf8"))
     assert.deepEqual(caller.jobs["completion-receipt"].permissions, expected, path)
   }
@@ -45,7 +45,7 @@ async function fixture(options = {}) {
 }
 
 test("terminal required gates emit a source-bound pass or fail through real HTTP", async () => {
-  for (const gate of ["required-pr-verdict", "original-owner (default)", "w2-pair-verdict"]) for (const result of ["success", "failure", "cancelled", "skipped"]) {
+  for (const gate of ["required-pr-verdict", "original-owner (default)", "w2-pair-verdict", "W1 result - economic orchestration and recovery", "W3 result - fulfillment and publication"]) for (const result of ["success", "failure", "cancelled", "skipped"]) {
     const value = await fixture({ result, gate }); assert.equal(value.code, 0, value.stderr); assert.equal(value.posted.length, 1)
     const body = value.posted[0].body; assert(body.startsWith("<!-- finnor-ci-completion:v1 -->")); assert(body.includes(head)); assert(body.includes('"runId":123')); assert(body.includes(`"result":"${result === "success" ? "PASS" : "FAIL"}"`))
     assert(value.requests.every(request => request.authorization === "Bearer disposable-test-token"))

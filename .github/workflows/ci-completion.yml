@@ -1,4 +1,4 @@
-name: CI completion receipt
+name: "CI results - Report completion to the PR"
 
 on:
   workflow_call:
@@ -39,7 +39,7 @@ jobs:
           node --input-type=module <<'NODE'
           const { GITHUB_API_URL: api = "https://api.github.com", GITHUB_REPOSITORY: repository, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT, GH_TOKEN, REVIEW_PR, REVIEW_HEAD: headSha, REVIEW_GATE: gate, REVIEW_RESULT: conclusion } = process.env
           const runId = Number(GITHUB_RUN_ID), attempt = Number(GITHUB_RUN_ATTEMPT), pr = Number(REVIEW_PR)
-          if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository ?? "") || !/^[a-f0-9]{40}$/.test(headSha ?? "") || ![runId, attempt, pr].every(value => Number.isSafeInteger(value) && value > 0) || !GH_TOKEN || !["required-pr-verdict", "original-owner (default)", "w2-pair-verdict"].includes(gate) || !["success", "failure", "cancelled", "skipped"].includes(conclusion)) throw Error("CI_COMPLETION_INVALID_TERMINAL_CONTEXT")
+          if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository ?? "") || !/^[a-f0-9]{40}$/.test(headSha ?? "") || ![runId, attempt, pr].every(value => Number.isSafeInteger(value) && value > 0) || !GH_TOKEN || !["required-pr-verdict", "original-owner (default)", "w2-pair-verdict", "W1 result - economic orchestration and recovery", "W3 result - fulfillment and publication"].includes(gate) || !["success", "failure", "cancelled", "skipped"].includes(conclusion)) throw Error("CI_COMPLETION_INVALID_TERMINAL_CONTEXT")
           const request = async (path, method = "GET", body) => {
             const response = await fetch(api + path, { method, headers: { authorization: `Bearer ${GH_TOKEN}`, accept: "application/vnd.github+json", "content-type": "application/json", "x-github-api-version": "2022-11-28" }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(20000) })
             if (!response.ok) throw Error(`CI_COMPLETION_API_HTTP_${response.status}`)

@@ -1,4 +1,4 @@
-name: W123 ordinary Linux kernel verification
+name: "W1 to W3 - Linux isolation, privacy and worker checks"
 on:
   push:
     branches: [cloud/postz-w1, cloud/postz-w2, cloud/postz-w3]
@@ -19,6 +19,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   kernel-comparison:
+    name: "Linux isolation - Original and repaired sandbox"
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     defaults:
@@ -60,8 +61,10 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   source-checks:
+    name: "Source and CI rules"
     uses: ./.github/workflows/source-checks.yml
   closing-reader-privacy:
+    name: "Closing privacy - Database reader permissions"
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     defaults:
@@ -90,16 +93,19 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   installed-worker:
+    name: "Worker - Build and installed smoke test"
     needs: source-checks
     uses: ./.github/workflows/ci.yml
     with:
       run_worker_image: true
   workforce-compensation-positive:
+    name: "W2 - Exact payment settlement"
     if: ${{ github.ref_name == 'cloud/postz-w2' || github.ref_name == 'cloud/postz-w3' }}
     uses: ./.github/workflows/w2-compensation-episode.yml
     with:
       episode: after-exact
   workforce-compensation:
+    name: "W2 - Payment rejection controls (${{ matrix.episode }})"
     needs: workforce-compensation-positive
     strategy:
       fail-fast: false

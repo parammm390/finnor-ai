@@ -1,4 +1,4 @@
-name: production-release
+name: "Release - Verify and deploy merged main"
 
 on:
   push:
@@ -13,9 +13,11 @@ permissions:
 
 jobs:
   source-release-gate:
+    name: "Release prerequisite - Source checks"
     uses: ./.github/workflows/source-checks.yml
 
   backend-release-gate:
+    name: "Release prerequisite - Backend tests"
     needs: source-release-gate
     uses: ./.github/workflows/ci.yml
     with:
@@ -24,6 +26,7 @@ jobs:
       run_worker_image: false
 
   security-release-gate:
+    name: "Release prerequisite - Security checks"
     needs: source-release-gate
     permissions:
       actions: read
@@ -32,12 +35,14 @@ jobs:
     uses: ./.github/workflows/security.yml
 
   readiness-release-gate:
+    name: "Release prerequisite - Readiness checks"
     needs: source-release-gate
     uses: ./.github/workflows/release-readiness.yml
     with:
       canonical_source: true
 
   root-release-gate:
+    name: "Release prerequisite - Frontend tests"
     needs: source-release-gate
     uses: ./.github/workflows/marketing-ci.yml
 
@@ -65,6 +70,7 @@ jobs:
             "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_STEP_SUMMARY"
 
   release:
+    name: "Deploy verified merged main"
     needs: [post-merge-certification]
     runs-on: ubuntu-latest
     timeout-minutes: 90
