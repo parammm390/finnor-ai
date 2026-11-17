@@ -29,6 +29,10 @@ export async function nativePressureStory(e: any) {
     SET capacity=1,per_tenant_capacity=1,interactive_reserve=0 WHERE resource_key='native:p2'`);
   let observer: Awaited<ReturnType<typeof committedEventObserver>> | undefined;
   let http: any, sourceQueue: any, executionQueue: any, contenderQueue: any, watch: any;
+  const pressureTiming: { deadline: number | null; driveStarted: number | null; heldObserved: number | null;
+    contenderFinished: number | null; leaseExpires: number | null } = {
+    deadline: null, driveStarted: null, heldObserved: null, contenderFinished: null, leaseExpires: null,
+  };
   let report: any = { schema: "finnor.w1.concurrent-native-pressure.v1", status: "FAIL",
     caseIds: ["W006", "W015"], originalPhysical };
   try {
@@ -194,21 +198,32 @@ export async function nativePressureStory(e: any) {
     if (sourceMissJobs.length) assert(Date.parse(sourceMissJobs[0].run_at) < Date.parse(aJob.run_at));
     const cParent = before.p1_requests.find((row: any) => row.id === c.program.programId);
     const cEpisode = before.p1_episodes.find((row: any) => row.id === cParent.episode_id);
-    const deadline = Date.parse(cEpisode.deadline_at), targetStart = deadline - 7000;
+    const deadline = Date.parse(cEpisode.deadline_at);
+    // Leave time for real worker deliveries and SQL observations on a shared
+    // runner. The original deadline and 30-second queue lease still apply.
+    const pressureLeadMs = 16_000;
+    const targetStart = deadline - pressureLeadMs;
+    pressureTiming.deadline = deadline;
     assert(Date.now() < targetStart, "Original C source setup must leave a real pressure interval");
     watch = await observer.arm(executionQueue, { tenantId: f.f.tenant, searchId: aSearch,
       kind: "W1_BOUNDARY_CURRENTNESS_CHECKED", boundary: "USE", unitKind: "EXECUTE_P1" });
     await new Promise<void>(resolve => setTimeout(resolve, Math.max(0, targetStart - Date.now())));
+    pressureTiming.driveStarted = Date.now();
     const paused = await watch.drive(), held = await internalOwnerCut(e, f.f.tenant);
+    pressureTiming.heldObserved = Date.now();
     assert(Date.now() < deadline, "Pause must actually precede C's original deadline");
     assert.equal(held.p2_attempts.length, 1, "Only A may have physical intent at the controlled cut");
     assert.equal(held.p2_attempts[0].search_id, aSearch);
     assert.equal(held.p2_attempts[0].status, "SUBMITTED");
-    assert.equal(held.leases.filter((row: any) => row.resource_key === "native:p2" &&
-      row.released_at === null && Date.parse(row.expires_at) > Date.now()).length, 1);
+    const leases = held.leases.filter((row: any) => row.resource_key === "native:p2" &&
+      row.released_at === null && Date.parse(row.expires_at) > Date.now());
+    assert.equal(leases.length, 1);
+    pressureTiming.leaseExpires = Date.parse(leases[0].expires_at);
+    assert(pressureTiming.leaseExpires > deadline + 50, "The original permit must outlive the deadline observation");
     assert(held.jobs.some((row: any) => row.status === "queued" && row.payload.searchId === bSearch));
     assert(held.jobs.some((row: any) => row.status === "queued" && row.payload.searchId === cSearch));
     assert(await contenderQueue.tick(), "A separate original worker must actually contest the held permit");
+    pressureTiming.contenderFinished = Date.now();
     const contended = await internalOwnerCut(e, f.f.tenant);
     await artifact("contended-claim-cut.json", { population, priorityInputs, paused, held, contended });
     assert.equal(contended.p2_attempts.length, 1, "Capacity refusal cannot create a physical intent or debit");
@@ -224,7 +239,7 @@ export async function nativePressureStory(e: any) {
     assert.equal(cancellationCut.p2_attempts[0].status, "SUBMITTED");
     assert.deepEqual(cancellationCut.p2_grant_usage, held.p2_grant_usage);
     const wait = deadline + 50 - Date.now();
-    assert(wait >= 0 && wait < 7500, "Retain the original configured physical/queue lease during pressure");
+    assert(wait >= 0 && wait <= pressureLeadMs + 50, "Retain the original configured physical/queue lease during pressure");
     await new Promise<void>(resolve => setTimeout(resolve, wait));
     const expiredWhileHeld = await internalOwnerCut(e, f.f.tenant);
     assert(Date.parse(expiredWhileHeld.observedAt) > deadline);
@@ -287,6 +302,9 @@ export async function nativePressureStory(e: any) {
       () => e.admin.query(`UPDATE finnor_os.compute_resource_policies
           SET capacity=$1,per_tenant_capacity=$2,interactive_reserve=$3 WHERE resource_key='native:p2'`,
           [originalPhysical.capacity, originalPhysical.per_tenant_capacity, originalPhysical.interactive_reserve]),
-    ]); } finally { await artifact("results.json", report); }
+    ]); } finally {
+      await artifact("pressure-timing.json", pressureTiming);
+      await artifact("results.json", report);
+    }
   }
 }

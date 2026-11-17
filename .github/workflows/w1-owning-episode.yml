@@ -25,16 +25,6 @@ jobs:
             finnor-os/package-lock.json
       - name: Install root and backend dependencies
         run: bash scripts/release/install-ci-dependencies.sh
-      - name: Prepare exact locked scientific runtime
-        run: |
-          set -euo pipefail
-          umask 077
-          w2_uv_container="$(docker create ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb02acbac4c69920fe9d278f82)"
-          trap 'docker rm "$w2_uv_container" >/dev/null' EXIT
-          docker cp "$w2_uv_container:/uv" "$RUNNER_TEMP/w1-uv"
-          "$RUNNER_TEMP/w1-uv" python install 3.12.13
-          "$RUNNER_TEMP/w1-uv" venv --python 3.12.13 "$RUNNER_TEMP/w1-scientific"
-          "$RUNNER_TEMP/w1-uv" pip sync --require-hashes --only-binary :all: --python "$RUNNER_TEMP/w1-scientific/bin/python" finnor-os/scripts/postz-w1/requirements-native.txt
       - name: Prepare the existing fixed-root callee on this disposable runner
         run: |
           set -euo pipefail
@@ -47,6 +37,16 @@ jobs:
         env:
           FINNOR_S6_EXECUTOR_EVIDENCE_DIR: ${{ runner.temp }}/w1-executor
         run: node --import=tsx scripts/s6/run-executor-e2e.mts
+      - name: Prepare exact locked scientific runtime
+        run: |
+          set -euo pipefail
+          umask 077
+          w2_uv_container="$(docker create ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb02acbac4c69920fe9d278f82)"
+          trap 'docker rm "$w2_uv_container" >/dev/null' EXIT
+          docker cp "$w2_uv_container:/uv" "$RUNNER_TEMP/w1-uv"
+          "$RUNNER_TEMP/w1-uv" python install 3.12.13
+          "$RUNNER_TEMP/w1-uv" venv --python 3.12.13 "$RUNNER_TEMP/w1-scientific"
+          "$RUNNER_TEMP/w1-uv" pip sync --require-hashes --only-binary :all: --python "$RUNNER_TEMP/w1-scientific/bin/python" finnor-os/scripts/postz-w1/requirements-native.txt
       - name: Run original owning driver under its original finite bounds
         env:
           FINNOR_W1_EPISODE: ${{ inputs.mode }}

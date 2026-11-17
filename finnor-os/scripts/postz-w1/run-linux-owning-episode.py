@@ -111,6 +111,9 @@ def main():
             pressure_preparation = owner / "internal-pressure/source-preparation.json"
             if args.mode == "internal-pressure" and pressure_preparation.exists():
                 shutil.copyfile(pressure_preparation, report / "pressure-source-preparation.json")
+            pressure_timing = owner / "internal-pressure/pressure-timing.json"
+            if args.mode == "internal-pressure" and pressure_timing.exists():
+                shutil.copyfile(pressure_timing, report / "pressure-timing.json")
             preparations = []
             for path in sorted(owner.glob("*/p1-queue-before-allocation-refusal.json")):
                 observed = json.loads(path.read_text())
