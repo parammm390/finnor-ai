@@ -46,6 +46,16 @@ export function verifyCiProcess(root) {
     "S4 must verify the actual Python, NumPy, SciPy and HiGHS identity before owner execution")
   const pr = workflows["pr-verdict.yml"] ?? ""
   const production = workflows["production-release.yml"] ?? ""
+  const workerImage = workflowJob(ci, "worker-image")
+  const workerCacheScope = "scope=finnor-worker-${{ runner.arch }}"
+  require(workerImage.includes("cache-from: type=gha," + workerCacheScope)
+    && !/^\s+cache-to:/m.test(workerImage)
+    && workflowJob(production, "release").includes("cache-to: type=gha,mode=max," + workerCacheScope),
+    "CI must restore the worker cache written by the protected release build")
+  require(workerImage.includes("load: true") && workerImage.includes("push: false")
+    && workerImage.includes("run: bash scripts/release/smoke-worker-image.sh")
+    && workerImage.includes("FINNOR_WORKER_PREBUILT_IMAGE_ID: ${{ steps.worker_image.outputs.imageid }}"),
+    "CI must load and smoke-test the exact worker image it just built")
   const projectZ = workflowJob(ci, "project-z-public")
   const projectZ4 = workflowJob(ci, "project-z-public-z4")
   const projectZAssets = workflowJob(ci, "project-z-native-assets")

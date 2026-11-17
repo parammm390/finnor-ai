@@ -154,6 +154,9 @@ test("actual process graph passes and damaged workflow copies are rejected", () 
     ["production-misses-security", "production-release.yml", text => text.replace(", security-release-gate", "")],
     ["production-cancelled", "production-release.yml", text => text.replace("cancel-in-progress: false", "cancel-in-progress: true")],
     ["missing-test-shard", "ci.yml", text => text.replace("shard: [1, 2, 3]", "shard: [1, 2]")],
+    ["feedback-worker-cache-export", "ci.yml", text => text.replace(
+      "cache-from: type=gha,scope=finnor-worker-${{ runner.arch }}",
+      "cache-from: type=gha,scope=finnor-worker-${{ runner.arch }}\n          cache-to: type=gha,scope=finnor-worker-${{ runner.arch }}")],
     ["s4-unpinned-interpreter", "ci.yml", text => text.replaceAll("3.12.13", "3.14.4")],
     ["s4-unhashed-dependencies", "ci.yml", text => text.replace("pip sync --require-hashes --only-binary :all:", "pip sync --only-binary :all:")],
     ["s4-backend-identity-omitted", "ci.yml", text => text.replace("assert sys.version.split()[0] == '3.12.13'", "pass")],

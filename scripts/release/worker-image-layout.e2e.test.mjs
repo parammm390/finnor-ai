@@ -173,9 +173,11 @@ test("the actual image layout imports every worker owner and rechecks source cus
     for (const workflow of [ci, production]) {
       assert.match(workflow, /run: bash scripts\/release\/smoke-worker-image\.sh/)
     }
-    const ownerAt = smoke.indexOf('"$image" node --max-old-space-size=2048 --import=tsx scripts/r3/run-owner-e2e.mts')
-    assert.ok(ownerAt > 0)
-    const ownerCommand = smoke.slice(smoke.lastIndexOf("if docker run", ownerAt), ownerAt)
+    const dockerCommands = smoke.replace(/\\\r?\n/g, " ").split("\n")
+      .filter(line => /^\s*if docker run\s/.test(line))
+    const ownerCommands = dockerCommands.filter(line => /"\$image"\s+node\b.*\bscripts\/r3\/run-owner-e2e\.mts(?:\s|$)/.test(line))
+    assert.equal(ownerCommands.length, 1, "smoke must run the installed R3 owner from the exact image")
+    const [ownerCommand] = ownerCommands
     assert.match(ownerCommand, /--env FINNOR_R3_INSTALLED_SOURCE_COMMIT="\$FINNOR_COMMIT_SHA"/,
       "installed R3 restart must receive the exact image commit instead of requiring Git")
     installedOwnerCommitWired = true
