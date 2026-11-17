@@ -844,7 +844,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migration-head.ts",
-      "sha256": "bdd62609f5e2718340b2b6be961f8896d0f144f01be354c99d2f05a093f2e524"
+      "sha256": "0a8fcdbc7aed0b3c4329eb0c371999392bfcd95305fab436f9ebd6d0d494a697"
     },
     {
       "path": "finnor-os/packages/db/operational-deltas.ts",
@@ -2304,7 +2304,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "cee7830178c0544e3df00d01fb14e9e850673a6286d7deb440759ed2edcf18d5"
+      "sha256": "dd188e68558cee8579630d0a1f1a1dbaa71e75d5f54e89838bb8e520e5a7dc66"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2748,7 +2748,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "sha256": "8a9143d562afc6dacadd835d8857cbe5c21aa070af1c96c956c2d6463958ee35"
+      "sha256": "b66b0c315d3d78e5e3c5a54d59e191a0ef0c6eed7cc00a71cf90211d82f2e137"
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-paths.ts",
@@ -3164,7 +3164,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts",
-      "sha256": "a2e666b3d04a5fcaed60e8911042881a3082d8579c243b8ff8c8c2308e242546"
+      "sha256": "e4191a51a6c524cb04ba2a7e882cdfe2e96baef11dbfdca5faa97702b707bb8e"
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-paths.ts",
@@ -4232,7 +4232,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/migrations-bundle.ts",
-      "sha256": "7ade477b05b60e7ddb4541a6086cbbeb2ceadb7f55753c14765e06409084dd35"
+      "sha256": "1e23b4bfd04d490dee1e59beb7b3b6e285bc4af3ef2c6b1c145ee15214be5247"
     },
     {
       "path": "finnor-os/packages/db/migrations/0150_portfolio_resource_clearing.sql",
@@ -4564,7 +4564,7 @@ export default {
     },
     {
       "path": "infra/deployment/production.contract.json",
-      "sha256": "431434e03dba09bdc63a637225d158678791a377ff38928d585e564b0871e999"
+      "sha256": "8d2c6c6efa602f171140f176d43be84013fb2cb7fa341806154e4e0f5a268367"
     },
     {
       "path": "next.config.mjs",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "5bade75c3eb5f9941981d69c9db28076f022b460a39c7e86381adaa19b900d9e"
+  "sourceDigest": "b7d96907534de098825717bba43e8b74c8decd725c4919f93c3ac6c0860f5f65"
 } as const;

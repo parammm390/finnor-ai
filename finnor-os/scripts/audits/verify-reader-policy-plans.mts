@@ -42,6 +42,7 @@ try{
   }finally{await database.admin.query('ROLLBACK');}
  }
  const privacy:Array<{role:string;visible:boolean;expected:boolean}>=[];
+ const sharedWorkPrivacy:Array<{role:string;subject:'own'|'foreign';visible:boolean;expected:boolean}>=[];
  await database.admin.query('BEGIN');
  try{
   await database.admin.query("SET app.test_vertical_mode='explicit'");
@@ -60,18 +61,36 @@ try{
    privacy.push({role,visible,expected:role==='finnor_app'});
    await database.admin.query('RESET ROLE');
   }
+  const foreignPrincipal=randomUUID();
+  await database.admin.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status) VALUES($1,$2,$3,'owner','active')",[foreignPrincipal,tenant,foreignPrincipal+'@test.invalid']);
+  const sharedWorkSubjects:Array<{subject:'own'|'foreign';contentDigest:string}>=[];
+  for(const [subject,owner] of [['own',principal],['foreign',foreignPrincipal]] as const){
+   const problem={schema:'finnor.s5.z1-original-work-problem.v1',probe:randomUUID()};
+   const contentDigest=createHash('sha256').update(JSON.stringify(problem)).digest('hex');
+   await database.admin.query("INSERT INTO finnor_os.s5_proposals(tenant_id,principal_id,content_digest,problem,certificate) VALUES($1,$2,$3,$4::jsonb,'{}'::jsonb)",[tenant,owner,contentDigest,JSON.stringify(problem)]);
+   sharedWorkSubjects.push({subject,contentDigest});
+  }
+  await database.admin.query('SET LOCAL ROLE finnor_specialist_owner');
+  await database.admin.query("SELECT set_config('app.tenant_id',$1,true),set_config('app.user_id',$2,true)",[tenant,principal]);
+  for(const {subject,contentDigest} of sharedWorkSubjects){
+   const visible=(await database.admin.query('SELECT count(*)::int count FROM finnor_os.s5_proposals WHERE tenant_id=$1 AND content_digest=$2',[tenant,contentDigest])).rows[0].count===1;
+   sharedWorkPrivacy.push({role:'finnor_specialist_owner',subject,visible,expected:subject==='own'});
+  }
+  await database.admin.query('RESET ROLE');
  }finally{await database.admin.query('ROLLBACK');}
  const persisted=(await database.admin.query('SELECT count(*)::int count FROM finnor_os.tenants WHERE id=$1',[tenant])).rows[0].count;
  assert.equal(persisted,0,'Controlled privacy rows must be rolled back');
  const failures=results.filter(row=>row.status==='FAIL');
  const privacyFailures=privacy.filter(row=>row.visible!==row.expected);
+ const sharedWorkPrivacyFailures=sharedWorkPrivacy.filter(row=>row.visible!==row.expected);
  const root=resolve(import.meta.dirname,'../../..');
  const sourcePath='finnor-os/packages/db/migrations/postz_z1_shared_work.sql';
- await writeFile(join(output,'result.json'),JSON.stringify({schema:'finnor.native-reader-policy-plans.v1',status:failures.length||privacyFailures.length?'FAIL':'PASS',
-  source:Object.fromEntries(await Promise.all([sourcePath,'finnor-os/packages/db/migrations/postz_zzz_native_reader_policy_acl.sql','finnor-os/packages/db/migrations/postz_zzzz_closing_operational_lease_fences.sql','finnor-os/scripts/audits/verify-reader-policy-plans.mts'].map(async path=>[path,createHash('sha256').update(await readFile(join(root,path))).digest('hex')]))),
-  migrationsApplied:database.migrations.length,migrationReplay:replayed.length,missingMaterialFences,roleCount:new Set(results.map(row=>row.role)).size,planCount:results.length,failures,results,privacy,privacyFailures,persistedProbeTenants:persisted,
-  qualification:'Actual PostgreSQL all-role query planning and four controlled confidential-recipient predicate probes. Test rows and temporary grants rolled back; no settlement or phase qualification.',
+ await writeFile(join(output,'result.json'),JSON.stringify({schema:'finnor.native-reader-policy-plans.v1',status:failures.length||privacyFailures.length||sharedWorkPrivacyFailures.length?'FAIL':'PASS',
+  source:Object.fromEntries(await Promise.all([sourcePath,'finnor-os/packages/db/migrations/postz_zzz_native_reader_policy_acl.sql','finnor-os/packages/db/migrations/postz_zzzz_closing_operational_lease_fences.sql','finnor-os/packages/db/migrations/postz_zzzzz_specialist_reader_policy_acl.sql','finnor-os/scripts/audits/verify-reader-policy-plans.mts'].map(async path=>[path,createHash('sha256').update(await readFile(join(root,path))).digest('hex')]))),
+  migrationsApplied:database.migrations.length,migrationReplay:replayed.length,missingMaterialFences,roleCount:new Set(results.map(row=>row.role)).size,planCount:results.length,failures,results,privacy,privacyFailures,sharedWorkPrivacy,sharedWorkPrivacyFailures,persistedProbeTenants:persisted,
+  qualification:'Actual PostgreSQL all-role query planning, four controlled confidential-recipient predicate probes, and own/foreign Z1 proposal reads by the specialist owner. Test rows and temporary grants rolled back; no settlement or phase qualification.',
   rerun:'From finnor-os: node --import=tsx scripts/audits/verify-reader-policy-plans.mts <absolute external evidence directory>'},null,2));
  assert(results.length>0);assert.equal(failures.length,0,'Every existing reader entitlement must remain plannable');
  assert.equal(privacyFailures.length,0,'Native readers cannot become confidential recipients by spoofing an owner');
+ assert.equal(sharedWorkPrivacyFailures.length,0,'Specialist readers must preserve per-principal Z1 source privacy');
 }finally{await database.stop();}

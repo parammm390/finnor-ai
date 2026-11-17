@@ -77,6 +77,11 @@
       "reason": "Database boundary reads the existing authority, records protocol heartbeats, and denies retired execution."
     },
     {
+      "path": "finnor-os/packages/db/migration-order.ts",
+      "category": "history",
+      "reason": "Orders immutable historical migration identities, including the completed vertical retirement, without registering runtime capabilities."
+    },
+    {
       "path": "finnor-os/packages/db/schema.ts",
       "category": "history",
       "reason": "Typed mappings retain historical canonical rows required for immutable reads and retirement blockers."

@@ -57,7 +57,7 @@ export async function bootstrapDisposableComputePlane(
   const stat = await lstat(owner.directory);
   assert(stat.isDirectory() && !stat.isSymbolicLink() && stat.uid === owner.uid &&
     stat.dev === owner.dev && stat.ino === owner.ino, "W1_POSTGRES_CUSTODY_CHANGED");
-  const server = (await admin.query(`SELECT inet_server_addr()::text host,inet_server_port() port,
+  const server = (await admin.query(`SELECT host(inet_server_addr()) host,inet_server_port() port,
     current_database() database,current_setting('data_directory') directory`)).rows[0];
   assert(server?.host === admin.host && server.port === admin.port && server.database === admin.database &&
     await realpath(server.directory) === owner.databaseDirectory, "W1_ACTUAL_OWNED_CLUSTER_REQUIRED");

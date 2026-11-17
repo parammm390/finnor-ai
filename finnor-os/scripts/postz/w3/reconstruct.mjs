@@ -154,10 +154,10 @@ try {
     "@embedded-postgres/" + process.platform + "-" + process.arch]);
   run("scientific-S3-environment", assets.uv, ["venv", "--offline", "--python", "3.11.15", ".w3-venv"]);
   run("scientific-S5-environment", assets.uv, ["venv", "--offline", "--python", "3.12.13", ".w3-s5-venv"]);
-  run("scientific-S3-fresh-dependencies", assets.uv, ["pip", "install", "--offline", "--link-mode", "copy",
-    "--python", ".w3-venv/bin/python", "--requirement", "scripts/postz/w3/requirements-s3.lock"]);
-  run("scientific-S5-fresh-dependencies", assets.uv, ["pip", "install", "--offline", "--link-mode", "copy",
-    "--python", ".w3-s5-venv/bin/python", "--requirement", "packages/epistemic-runtime/src/requirements-s5.txt"]);
+  run("scientific-S3-fresh-dependencies", assets.uv, ["pip", "sync", "--offline", "--link-mode", "copy", "--only-binary", ":all:",
+    "--python", ".w3-venv/bin/python", "scripts/postz/w3/requirements-s3.lock"]);
+  run("scientific-S5-fresh-dependencies", assets.uv, ["pip", "sync", "--offline", "--link-mode", "copy", "--only-binary", ":all:",
+    "--python", ".w3-s5-venv/bin/python", "packages/epistemic-runtime/src/requirements-s5.txt"]);
   for (const [name, directory, version, majorMinor] of [
     ["S3", ".w3-venv", "3.11.15", "3.11"], ["S5", ".w3-s5-venv", "3.12.13", "3.12"]]) {
     const python = join(backend, directory, "bin/python");
