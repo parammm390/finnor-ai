@@ -1,14 +1,14 @@
 import { withTenantTransaction } from '@finnor/db';
 import type {PoolClient} from 'pg';
-import type { AllocationClearingInput, AllocationClearingResult, AllocationCertificate, AllocationConsumption, AllocationResource, AllocationOutstandingCommitment, CanonicalAllocationProblem, ContingentPolicy, ControlDecisionInput, DurableObligation, ExperimentRef, ResolvedPolicyAllocation, S5ExperienceEvent } from '@finnor/shared-types';
+import type { AllocationClearingInput, AllocationClearingResult, AllocationCertificate, AllocationConsumption, AllocationResource, AllocationOutstandingCommitment, CanonicalAllocationProblem, ContingentPolicy, DurableObligation, ExperimentRef, ResolvedPolicyAllocation, S5ExperienceEvent } from '@finnor/shared-types';
 import { assertAllocationProblem, allocationRef, ALLOCATION_ADMISSION, AllocationContractError, parseAllocationResource, parseJointAllocationModel, prepareS5Experience, sameAllocationRef, S5_VERSION } from '../../epistemic-runtime/src/allocation-contracts';
 import { verifyCanonicalAllocation } from '../../epistemic-runtime/src/allocation-checker';
 import { certifyAllocationOptimizationAsync, verifyAllocationCertificateAsync } from '../../epistemic-runtime/src/allocation-verifier';
 import { allocationSourcesCurrent, produceAllocationCandidate } from '../../epistemic-runtime/src/allocation-producer';
-import { parseEconomicMandate, immutableControl, parseControlDecision } from '../../epistemic-runtime/src/control-contracts';
+import { parseEconomicMandate, immutableControl } from '../../epistemic-runtime/src/control-contracts';
 import { epistemicHash } from '../../epistemic-runtime/src/source-precedence';
 import { ExperimentRefSchema } from '../../epistemic-runtime/src/experiments';
-import { readEnterpriseContingentPolicy, readEnterpriseCurrentContingentPolicies, readEnterpriseContingentPolicySources, chooseEnterpriseControlBranch } from './enterprise-control';
+import { readEnterpriseCurrentContingentPolicies, readEnterpriseContingentPolicySources, chooseNumericEnterpriseControlBranch } from './enterprise-control';
 import { assertEnterpriseBeliefViewPinSourceVisibility, validateBeliefViewPin } from './enterprise-beliefs';
 import { readAllocationSnapshot, putAllocationResource, persistAllocationProposal, readStoredAllocation, readAllocationReplay, commitAllocationReservation, readAllocationConsumptions, recordAllocationConsumption, releaseUntouchedAllocation, retainAllocationReconciliation, persistAllocationExperience,applyProtectedAllocationSettlement,retainProtectedAllocationAttempt,allocationAuthorityRequest,authorizeAllocationResourceReads,withS5PortfolioTransaction } from './allocation-store';
 import {readOwnerTransportEvent} from '../../governed-execution/src/owner-transport';
@@ -167,7 +167,7 @@ export async function clearEnterprisePortfolio(ctx:PeMutationContext,input:R3All
 async function clearNumericEnterprisePortfolio(ctx:PeMutationContext,input:AllocationClearingInput,fence?:AllocationCommitFence):Promise<AllocationClearingResult>{
   const started=performance.now(),m=parseEconomicMandate(input.mandate,{operatingProfit:true}),joint=parseJointAllocationModel(input.jointModel);
   if(ctx.auth.role!=='owner'||m.tenantId!==ctx.auth.tenantId||m.principalId!==actor(ctx)||m.businessOwnerRef.id!==actor(ctx))throw denied();
-  const requestDigest=epistemicHash(input),previous=await readAllocationReplay(ctx,input.idempotencyKey,requestDigest);
+  const requestDigest=epistemicHash(input),previous=await readAllocationReplay(ctx,input,requestDigest);
   if(previous?.reservation)return immutableControl({schema:'finnor.s5.clearing-result.v1',status:'FEASIBLE',reasons:['DURABLE_SEMANTIC_REPLAY_CURRENT_CLEARANCE_REQUIRES_VALIDATE'],certificate:previous.certificate,reservation:previous.reservation,experience:[],compute:previous.certificate.compute,executionAuthorityGranted:false,protectedReceipt:null});
   const experience:S5ExperienceEvent[]=[prepareS5Experience(m,'REQUEST',`allocation-request:${requestDigest}`,{input,requestDigest})];await persistAllocationExperience(ctx,experience);
   let candidatePersisted=false;
@@ -316,7 +316,7 @@ export async function resolveEnterprisePolicyAllocation(ctx:PeMutationContext,va
   return immutableControl({owner:'S5',ref,policyRef:policy.ref,mandateRef:policy.mandateRef,demandDigest:policy.demand.contentDigest,rightsRef:policy.bindings.rightsRef,validUntil:issued.certificate.validUntil,revoked:false});
 }
 export interface R3AllocationConsumptionInput {schema:'finnor.s5.r3-consumption-request.v1';requestId:string;idempotencyKey:string}
-type NumericAllocationConsumption={allocationRef:ExperimentRef;policyRef:ExperimentRef;decision?:unknown;measurements?:Array<{protocol?:unknown;events:unknown[]}>;idempotencyKey:string};
+type NumericAllocationConsumption={allocationRef:ExperimentRef;policyRef:ExperimentRef;decision?:unknown;measurements?:Array<{protocol?:unknown;events:unknown[]}>;idempotencyKey:string;confidentialGuard?:unknown};
 export async function consumeEnterpriseAllocation(ctx:PeMutationContext,input:R3AllocationConsumptionInput):Promise<Awaited<ReturnType<typeof import('./r3/allocation').consumeR3Allocation>>>;
 export async function consumeEnterpriseAllocation(ctx:PeMutationContext,input:NumericAllocationConsumption):Promise<Awaited<ReturnType<typeof consumeNumericEnterpriseAllocation>>>;
 export async function consumeEnterpriseAllocation(ctx:PeMutationContext,input:R3AllocationConsumptionInput|NumericAllocationConsumption){
@@ -329,9 +329,9 @@ export async function consumeEnterpriseAllocation(ctx:PeMutationContext,input:R3
 async function consumeNumericEnterpriseAllocation(ctx:PeMutationContext,input:NumericAllocationConsumption){
   const issued=await readEnterpriseAllocation(ctx,input.allocationRef),requestDigest=epistemicHash(input),previous=issued.consumptions.find(c=>c.idempotencyKey===input.idempotencyKey);
   if(previous){if(previous.requestDigest!==requestDigest)throw new AllocationContractError('IDEMPOTENCY_CONFLICT','S5 consumption retry changed semantic payload');return immutableControl({consumption:previous,choice:null,semanticReplay:true,executionAuthorityGranted:false,protectedReceipt:null});}
-  const policy=await readEnterpriseContingentPolicy(ctx,input.policyRef),decision=parseControlDecision(input.decision,policy);
-  if(!issued.reservation||!await resolveEnterprisePolicyAllocation(ctx,input.allocationRef,policy,decision.knowledgeAt))throw new AllocationContractError('STALE_INPUT','Current owner-resolved allocation required before consumption');
-  const choice=await chooseEnterpriseControlBranch(ctx,{...input,allocationRef:input.allocationRef});if(choice.status!=='POLICY_AVAILABLE'||!choice.nodeId)throw new AllocationContractError('INVALID_CANDIDATE',`S4 lawful branch required:${choice.status}:${choice.reasons.join(',')}`);
+  if(!issued.reservation)throw new AllocationContractError('STALE_INPUT','Current owner-resolved allocation required before consumption');
+  const {policy,choice}=await chooseNumericEnterpriseControlBranch(ctx,input,{requireAllocation:true});
+  if(choice.status!=='POLICY_AVAILABLE'||!choice.nodeId)throw new AllocationContractError('INVALID_CANDIDATE',`S4 lawful branch required:${choice.status}:${choice.reasons.join(',')}`);
   const compatible=issued.problem.jointModel.scenarios.filter(s=>s.policyPaths.find(p=>sameAllocationRef(p.policyRef,policy.ref))?.nodeIds.includes(choice.nodeId!)).map(s=>s.id);
   const body:Omit<AllocationConsumption,'ref'>={schema:'finnor.allocation-consumption.v1',reservationRef:issued.reservation.ref,certificateRef:input.allocationRef,policyRef:policy.ref,demandDigest:policy.demand.contentDigest,nodeId:choice.nodeId,decisionRef:choice.ref,idempotencyKey:input.idempotencyKey,requestDigest,createdAt:new Date().toISOString(),status:'INTENDED_PENDING_S6',compatibleScenarioIds:compatible,effectRef:null,envelope:issued.certificate.check.envelopes,executionAuthorityGranted:false,protectedReceipt:null};
   const consumption=await recordAllocationConsumption(ctx,issued.reservation.ref,body,compatible,async(resources,outstanding)=>verifyCanonicalAllocation(rebuilt(issued.problem,resources,outstanding.filter(o=>!sameAllocationRef(o.reservationRef,issued.reservation!.ref)),new Date().toISOString()),issued.certificate.check.selectedPolicyIds));

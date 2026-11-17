@@ -74,7 +74,7 @@ try:
     assert record["childExitCode"] == 0, "FAILED_CHILD_CANNOT_BE_ACCEPTED_FROM_PARTIAL_ARTIFACTS"
     assert owning["status"] == "PASS_LOCAL"
     assert owning["migrationCount"] == len(registered_migrations)
-    assert owning["migrationNames"] == registered_migrations
+    assert sorted(owning["migrationNames"]) == registered_migrations
     assert owning["observedMigrationNames"] == registered_migrations
     assert owning["shutdown"]["complete"] is True
     assert owning["shutdown"]["postgres"]["status"] == "PASS"

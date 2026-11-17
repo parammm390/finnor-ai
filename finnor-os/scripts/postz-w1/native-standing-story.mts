@@ -40,7 +40,7 @@ export async function nativeStandingStory(e: any, sourceFixture: {
     wakes: (await e.admin.query("SELECT * FROM finnor_os.work_wake_claims WHERE tenant_id=$1 AND work_id=$2 ORDER BY claimed_at,id", [e.tenant, workId])).rows,
     queries: (await e.admin.query("SELECT * FROM finnor_os.work_query_executions WHERE tenant_id=$1 AND work_id=$2 ORDER BY started_at,id", [e.tenant, workId])).rows,
     steps: (await e.admin.query("SELECT * FROM finnor_os.work_objective_steps WHERE tenant_id=$1 AND work_id=$2 ORDER BY step_number,id", [e.tenant, workId])).rows,
-    jobs: (await e.admin.query("SELECT * FROM finnor_os.jobs WHERE tenant_id=$1 AND payload->>'workId'=$2 ORDER BY created_at,id", [e.tenant, workId])).rows,
+    jobs: (await e.admin.query("SELECT * FROM finnor_os.jobs WHERE tenant_id=$1 AND payload->>'workId'=$2 ORDER BY run_at,id", [e.tenant, workId])).rows,
     effects: (await e.admin.query("SELECT id,status FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2 ORDER BY id", [e.tenant, workId])).rows,
   });
   const read = async (work: any) => {
@@ -69,7 +69,7 @@ export async function nativeStandingStory(e: any, sourceFixture: {
         { kind: "query", capability: "query:pe_world_state" },
         { kind: "wait", capability: "wait:event" },
         { kind: "check", capability: "check:objective_success" },
-      ], autonomyLimits: { maxActions: 0, maxQueries: 1, maxReplans: 4,
+      ], autonomyLimits: { maxActions: 1, maxQueries: 1, maxReplans: 4,
         maxPlannerCalls: 4, maxWallClockMs: 60000 },
     });
     const originalContext = await resolveOperatingInteractionContext({

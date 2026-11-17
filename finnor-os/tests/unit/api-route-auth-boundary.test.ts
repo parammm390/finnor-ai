@@ -67,7 +67,7 @@ describe("A5 tenant/auth boundary inventory", () => {
       // P5 IC routes use the shared handleIcGet/handleIcPost boundary; those
       // wrappers resolve requireIcContext -> requireContext before invoking a
       // domain operation. Recognize that named audited boundary explicitly.
-      const expected = EXPLICIT_BOUNDARIES[route] ?? /requireContext|handleIc(?:Get|Post)/;
+      const expected = EXPLICIT_BOUNDARIES[route] ?? /requireContext|requireCapabilityOwner|handleIc(?:Get|Post)/;
       expect(source, `${route} has no explicit auth/tenant boundary; add requireContext or an audited exception`).toMatch(expected);
     }
   });

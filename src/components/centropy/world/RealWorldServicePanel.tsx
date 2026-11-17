@@ -48,6 +48,7 @@ const inboxSchema = z.object({
 const label = (s: string) => s.replaceAll("_", " ").toLowerCase()
 type Stored = { scope: string; view: z.infer<typeof viewSchema> | null; inbox: z.infer<typeof inboxSchema> }
 const formOperations = ["intake", "source", "prepare-native", "submit", "invite", "report"] as const
+const participantFormOperations = ["report"] as const
 type FormOperation = typeof formOperations[number]
 const serviceWrites = {
   intake: (body: unknown) => centropyPost("real-world-services/intake", body),
@@ -60,12 +61,13 @@ const serviceWrites = {
   advance: (body: unknown) => centropyPost("real-world-services/advance", body),
 }
 
-export function RealWorldServicePanel({ workId }: { workId?: string }) {
+export function RealWorldServicePanel({ workId, participant = false }: { workId?: string; participant?: boolean }) {
   const auth = useCentropyAuth()
   const { key: scopeKey, allowed: scopeAllowed, isCurrent, invalidate: invalidateScope } =
-    usePrivateRequestScope("real-world-service:" + (workId ?? "my-invitations"))
+    usePrivateRequestScope("real-world-service:" + (participant ? "participant:" : "") + (workId ?? "my-invitations"),
+      participant ? "WORKFORCE_PARTICIPANT" : "OWNER")
   const [stored, setStored] = useState<Stored | null>(null), [notice, setNotice] = useState("")
-  const [revision, setRevision] = useState(0), [operation, setOperation] = useState<FormOperation>("source")
+  const [revision, setRevision] = useState(0), [operation, setOperation] = useState<FormOperation>(participant ? "report" : "source")
   const [draft, setDraft] = useState({ scope: scopeKey, value: "" }), [busy, setBusy] = useState(false)
   const writing = useRef(false)
   const mutationRevision = useRef(0)
@@ -95,13 +97,13 @@ export function RealWorldServicePanel({ workId }: { workId?: string }) {
       const revisionAtRead = mutationRevision.current
       const readCurrent = () => valid() && !writing.current && revisionAtRead === mutationRevision.current
       try {
-        const [work, participant] = await Promise.allSettled([
-          workId ? centropyPost("real-world-services/read", { workId }) : Promise.resolve(null),
+        const [work, selfInbox] = await Promise.allSettled([
+          workId && !participant ? centropyPost("real-world-services/read", { workId }) : Promise.resolve(null),
           centropyPost("real-world-services/inbox", {}),
         ])
         if (!readCurrent()) return
-        if (participant.status !== "fulfilled") throw Error("Participant context unavailable")
-        const inbox = inboxSchema.parse(participant.value)
+        if (selfInbox.status !== "fulfilled") throw Error("Participant context unavailable")
+        const inbox = inboxSchema.parse(selfInbox.value)
         const view = work.status === "fulfilled" && work.value ? viewSchema.parse(work.value) : null
         if (inbox.scope.principalId !== auth.session?.user.id
           || view && (view.scope.workId !== workId || view.scope.principalId !== inbox.scope.principalId
@@ -110,7 +112,7 @@ export function RealWorldServicePanel({ workId }: { workId?: string }) {
           throw Error("Private scope changed")
         const scopedInbox = { ...inbox, protocols: inbox.protocols.filter(p => !workId || p.disclosure?.scope.workId === workId) }
         setStored({ scope: key, view, inbox: scopedInbox })
-        setNotice(workId && !view ? "Owner Work evidence is unavailable. Only your own purpose-bound invitations are shown." : "")
+        setNotice(workId && !view && !participant ? "Owner Work evidence is unavailable. Only your own purpose-bound invitations are shown." : "")
       } catch { if (readCurrent()) { setStored(null); setNotice("Current authorized service evidence is unavailable. Private output cleared.") } }
       finally { reading = false }
     }
@@ -129,10 +131,11 @@ export function RealWorldServicePanel({ workId }: { workId?: string }) {
       window.removeEventListener("offline", invalidate); window.removeEventListener("online", invalidate)
       window.removeEventListener("pagehide", invalidate); document.removeEventListener("visibilitychange", invalidate)
     }
-  }, [scopeKey, scopeAllowed, isCurrent, invalidateScope, workId, auth.session?.user.id, revision])
+  }, [scopeKey, scopeAllowed, isCurrent, invalidateScope, workId, participant, auth.session?.user.id, revision])
   const write = async (op: keyof typeof serviceWrites, body: unknown) => {
     if (writing.current || !scopeAllowed || !isCurrent(scopeKey) || !navigator.onLine
       || document.visibilityState !== "visible") return
+    if (participant && op !== "consent" && op !== "report") return
     const key = scopeKey; writing.current = true; mutationRevision.current++; setBusy(true); setStored(null)
     try {
       await serviceWrites[op](body)
@@ -143,11 +146,12 @@ export function RealWorldServicePanel({ workId }: { workId?: string }) {
     finally { if (isCurrent(key)) { writing.current = false; setBusy(false) } }
   }
   return <section aria-label="Real-world service fulfilment" data-testid="w3-service-panel"
-    data-w3-context={workId ?? "my-invitations"}>
+    data-w3-context={(participant ? "participant:" : "") + (workId ?? "my-invitations")}>
     <h4>Real-world service fulfilment</h4>
     <p>Controlled development only. Commitment, observed delivery, inspection, acceptance and payment are separate. No field qualification or admission.</p>
+    {participant ? <p>Your own purpose-bound invitations only. No owner Work, intake, sourcing, submission or invitation authority is available in this workspace.</p> : null}
     {notice ? <p role="status">{notice}</p> : null}
-    {current?.view?.requests.map(request => <article key={request.requestId}>
+    {participant ? null : current?.view?.requests.map(request => <article key={request.requestId}>
       <strong>{label(request.status)}</strong>
       <p>One original business assignment. Deadline {request.originalDeadlineAt}.</p>
       {request.projection ? <>
@@ -176,10 +180,11 @@ export function RealWorldServicePanel({ workId }: { workId?: string }) {
         onClick={() => void write("consent", { protocolId: protocol.id, revoke: true })}>Revoke my consent</button>
       <p>Protocol reference: {protocol.id}. Reports establish authorship, not sensory or professional truth.</p>
     </details>)}
-    <details><summary>Submit an explicit service original or participant report</summary>
-      <p>Reads never start procurement. Supply exact original references and terms. Do not include prohibited or unnecessary personal data.</p>
+    <details><summary>{participant ? "Submit your own participant report" : "Submit an explicit service original or participant report"}</summary>
+      <p>{participant ? "Reports establish authorship, not sensory or professional truth. Supply the exact purpose-bound observation JSON for your own current protocol."
+        : "Reads never start procurement. Supply exact original references and terms. Do not include prohibited or unnecessary personal data."}</p>
       <label>Operation <select value={operation} onChange={e => setOperation(z.enum(formOperations).parse(e.target.value))} disabled={busy}>
-        {formOperations.map(op => <option key={op} value={op}>{op}</option>)}</select></label>
+        {(participant ? participantFormOperations : formOperations).map(op => <option key={op} value={op}>{op}</option>)}</select></label>
       <label>Purpose-bound request JSON <textarea aria-label="Service request JSON" value={currentDraft}
         onChange={e => setDraft({ scope: scopeKey, value: e.target.value })}
         maxLength={262144} disabled={busy || !scopeAllowed} /></label>

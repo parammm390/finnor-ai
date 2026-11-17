@@ -173,7 +173,7 @@ test("the actual image layout imports every worker owner and rechecks source cus
     for (const workflow of [ci, production]) {
       assert.match(workflow, /run: bash scripts\/release\/smoke-worker-image\.sh/)
     }
-    const ownerAt = smoke.indexOf('"$image" node --import=tsx scripts/r3/run-owner-e2e.mts')
+    const ownerAt = smoke.indexOf('"$image" node --max-old-space-size=2048 --import=tsx scripts/r3/run-owner-e2e.mts')
     assert.ok(ownerAt > 0)
     const ownerCommand = smoke.slice(smoke.lastIndexOf("if docker run", ownerAt), ownerAt)
     assert.match(ownerCommand, /--env FINNOR_R3_INSTALLED_SOURCE_COMMIT="\$FINNOR_COMMIT_SHA"/,

@@ -87,6 +87,7 @@ import { interpretPrivateEquityQuestion } from "../../private-equity/src/operati
 import { isOriginalWorkObservation } from "./project-z/z0-convergence/semantics";
 import { observeOriginalWork } from "./project-z/z0-convergence/original-work-observation";
 export { ConvergedInstitutionRuntime } from "./project-z/z0-convergence";
+import { OrganizationTransformationError } from "../../private-equity/src/organization-transformation/contracts";
 
 export * from "./llm";
 export * from "./planner";
@@ -552,6 +553,21 @@ export class FinnorOrchestrator implements Orchestrator {
     ctx: TenantContext,
     opts: OperationalQueryOptions = {},
   ): Promise<OperationalQueryRun> {
+    if (request.intent === "organization_transformation_v1") {
+      if (opts.workId !== request.workId)
+        throw new OrganizationTransformationError("W5_AUTHENTICATED_EXACT_QUERY_BINDING_REQUIRED", 403);
+      const input = await latestWorkInput(ctx.tenantId, request.workId);
+      if (!input) throw new OrganizationTransformationError("W5_CONTEXT_UNAVAILABLE", 404);
+      if (!this.fastReadOnlyRouter.execute)
+        throw new OrganizationTransformationError("W5_CANONICAL_QUERY_EXECUTOR_UNAVAILABLE", 503);
+      const authority = await evaluateAuthority(ctx, queryAuthorityRequest(request, request.workId));
+      if (authority.outcome !== "allowed") throw new OrganizationTransformationError("W5_CONTEXT_UNAVAILABLE", 404);
+      const execution = await this.fastReadOnlyRouter.execute(request, ctx, {
+        workId: request.workId, workInputId: input.id,
+        executionKey: opts.executionKey ?? opts.idempotencyKey,
+      });
+      return { ...execution, workId: request.workId, workInputId: input.id, instructionId: input.instructionId };
+    }
     if (isOriginalWorkObservation(request)) {
       return observeOriginalWork(request, ctx, opts, this.fastReadOnlyRouter);
     }

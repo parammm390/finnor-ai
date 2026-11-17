@@ -52,7 +52,7 @@ try {
     }
     const worked = await queue.tick();
     console.log(JSON.stringify({ schema: "finnor.w3.worker-observation.v1", pid: process.pid,
-      registration: "ACTUAL_PRODUCTION_CREATE_WORKER", role, recovered, steps, worked, tick,
+      registration: "ACTUAL_PRODUCTION_CREATE_WORKER", workloadClass: queue.workloadClass, role, recovered, steps, worked, tick,
       custodyCheckMs, elapsedMs: performance.now() - began }));
     if (!worked || performance.now() - batchStarted >= NATIVE_WORKER_LIMITS.batchMilliseconds) break;
   }

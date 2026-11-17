@@ -34,7 +34,10 @@ const same=(a:unknown,b:unknown)=>epistemicHash(a)===epistemicHash(b);
 export const enterpriseObligationAuthoritySourcePaths=()=>['enterprise-obligations.ts','enterprise-allocation.ts','enterprise-control.ts','enterprise-beliefs.ts','allocation-store.ts','obligation-contracts.ts',
  'real-world-service/consumer.ts','real-world-service/store.ts','real-world-service/boundaries.ts',
  'real-world-service/contracts.ts','real-world-service/checker.ts','real-world-service/projection.ts',
- 'real-world-service/participants.ts','real-world-service/identity.ts'].map(name=>fileURLToPath(new URL(name,import.meta.url))).concat(fileURLToPath(new URL('../../../apps/api/app/api/obligations/[operation]/route.ts',import.meta.url)));
+ 'real-world-service/participants.ts','real-world-service/identity.ts',
+ 'demand-to-business/consumer.ts','demand-to-business/store.ts','demand-to-business/boundaries.ts',
+ 'demand-to-business/contracts.ts','demand-to-business/checker.ts','demand-to-business/projection.ts',
+ 'demand-to-business/participants.ts','demand-to-business/identity.ts'].map(name=>fileURLToPath(new URL(name,import.meta.url))).concat(fileURLToPath(new URL('../../../apps/api/app/api/obligations/[operation]/route.ts',import.meta.url)));
 const authoritySourcePaths=enterpriseObligationAuthoritySourcePaths;
 async function signOwnerAssessment(body:Record<string,unknown>){
  const signerPath=process.env.FINNOR_S6_CURRENT_OWNER_SIGNER;if(!signerPath)throw new LedgerFault(503,'CURRENT_OWNER_SIGNER_UNAVAILABLE');const key=createPrivateKey(await brokerPrivateFile(signerPath));if(key.asymmetricKeyType!=='ed25519')throw new LedgerFault(503,'CURRENT_OWNER_SIGNER_INVALID');
@@ -224,8 +227,14 @@ export async function assessEnterpriseDurableObligationDispatch(ctx:PeMutationCo
   catch{reasons.push('S5_RETAINED_MEMBER_CONTINUATION_NOT_CURRENT');}
  }
  let physicalClaimExpiresAt=Number.POSITIVE_INFINITY;
- try{reasons.push(...await (await import('./real-world-service/consumer')).serviceDispatchReasons(ctx,obligation,parsed.requestRef));}
- catch{reasons.push('W3_DEPENDENCY_CURRENTNESS_UNAVAILABLE');}
+ let growthOwned=false;
+ try{const growth=await (await import('./demand-to-business/consumer')).growthDispatchAssessment(ctx,obligation,parsed.requestRef);
+  growthOwned=growth.handled;reasons.push(...growth.reasons);}
+ catch{reasons.push('W4_DEPENDENCY_CURRENTNESS_UNAVAILABLE');}
+ if(!growthOwned){
+  try{reasons.push(...await (await import('./real-world-service/consumer')).serviceDispatchReasons(ctx,obligation,parsed.requestRef));}
+  catch{reasons.push('W3_DEPENDENCY_CURRENTNESS_UNAVAILABLE');}
+ }
  if(obligation.allocationRef.version==='s5-joint-finite-v1'){
   try{
    // One fresh canonical S5 validation already reads every original S4 policy.

@@ -1,4 +1,4 @@
-/** W006/W015: three actual Works compete for one original S5 grant and one
+/** W006/W015: four actual Works share one original S5 grant and one
  * native physical permit. No alternative scheduler or fabricated attempt. */
 import { strict as assert } from "node:assert";
 import { randomUUID } from "node:crypto";
@@ -9,6 +9,7 @@ import { prepareNativeOwnerFixture } from "./native-stories.mjs";
 import { nativeHttpFixture } from "../p7/native-http-fixture.mjs";
 import { physicalNativeQueue } from "../p5/native-worker-client.mjs";
 import { driveNativeProgram } from "./native-drive.mjs";
+import { bootstrapDisposableComputePlane } from "./native-disposable-compute-bootstrap.mjs";
 import { closeInternalResources, committedEventObserver, internalOwnerCut, registerInternalHandlers,
   siblingInternalProgramme, stageInternalSources, submitInternalSearch } from "./native-internal-support.mjs";
 
@@ -17,9 +18,13 @@ export async function nativePressureStory(e: any) {
   await mkdir(directory, { recursive: true });
   const artifact = (name: string, value: unknown) => writeFile(join(directory, name),
     JSON.stringify(value, null, 2) + "\n", { flag: "wx" });
-  const originalPhysical = (await e.admin.query(
-    "SELECT * FROM finnor_os.compute_resource_policies WHERE resource_key='native:p2'")).rows[0];
-  assert(originalPhysical);
+  const initialOwnerCut = (await e.admin.query(`SELECT p.*,
+    (SELECT to_jsonb(c) FROM finnor_os.compute_plane_cutover c WHERE c.singleton=true) fixture_compute_plane_cutover
+    FROM finnor_os.compute_resource_policies p WHERE resource_key='native:p2'`)).rows[0];
+  assert(initialOwnerCut);
+  const { fixture_compute_plane_cutover: initialComputePlaneCutover, ...originalPhysical } = initialOwnerCut;
+  await artifact("initial-compute-owner-cut.json", { physicalPolicy: originalPhysical,
+    computePlaneCutover: initialComputePlaneCutover });
   await e.admin.query(`UPDATE finnor_os.compute_resource_policies
     SET capacity=1,per_tenant_capacity=1,interactive_reserve=0 WHERE resource_key='native:p2'`);
   let observer: Awaited<ReturnType<typeof committedEventObserver>> | undefined;
@@ -45,24 +50,128 @@ export async function nativePressureStory(e: any) {
     await registerInternalHandlers(contenderQueue);
     assert.equal(executionQueue.identity.scheduler.priorityAgingSeconds, 2);
     assert.equal(executionQueue.identity.scheduler.workloadClass, "INTERACTIVE");
+    // Stage the original expired obligation first: the real class claim SQL
+    // orders aged same-tenant jobs by original run_at before priority.
+    // Its independently submitted 15s deadline is never rewritten.
+    const sourceMiss = await siblingInternalProgramme(http, f, { deadlineMs: 15000 });
+    const sourceMissSearch = await submitInternalSearch(http, f, sourceMiss.program.programId);
+    await stageInternalSources(e, sourceQueue, [sourceMissSearch]);
+    const sourceMissDeadline = (await e.admin.query(`SELECT e.deadline_at FROM finnor_os.p1_requests p
+      JOIN finnor_os.p1_episodes e ON e.id=p.episode_id WHERE p.id=$1`, [sourceMiss.program.programId])).rows[0].deadline_at;
+    await new Promise<void>(resolve => setTimeout(resolve, Math.max(0, sourceMissDeadline.getTime() - Date.now()) + 25));
     const aSearch = await submitInternalSearch(http, f);
     await stageInternalSources(e, sourceQueue, [aSearch]);
-    // The deadline belongs to C's original independent submission. It is never
-    // rewritten to create an apparent queue miss or reset on a continuation.
+    const priorityInputs: any[] = [];
+    const sourceMissJobs = (await e.admin.query(`UPDATE finnor_os.jobs SET priority=500
+      WHERE tenant_id=$1 AND status='queued' AND type='run_compute_search_unit_v1'
+        AND protocol_version=3 AND payload->>'searchId'=$2 RETURNING to_jsonb(jobs) body`,
+      [f.f.tenant, sourceMissSearch])).rows.map((row: any) => row.body);
+    assert(sourceMissJobs.length <= 1, "The original maxParallel=1 source miss cannot create several native claims");
+    priorityInputs.push({ searchId: sourceMissSearch, priority: 500, rows: sourceMissJobs });
+    await artifact("prepressure-claim-inputs.json", { sourceMissSearch, sourceMissDeadline, sourceMissJobs,
+      priorityInputs, workerIdentity: executionQueue.identity,
+      parentRegisteredTypes: executionQueue.registeredTypes() });
+    report.disposableComputeBootstrap = await bootstrapDisposableComputePlane(e, contenderQueue, f.f.tenant, artifact);
+    const expiredDeliveryObserved = sourceMissJobs.length ? await executionQueue.tick() : null;
+    const sourceMissCut = await internalOwnerCut(e, f.f.tenant);
+    await artifact("prepressure-claim-cut.json", { sourceMissSearch, sourceMissDeadline, priorityInputs,
+      expiredDeliveryObserved, workerIdentity: executionQueue.identity, cut: sourceMissCut });
+    if (sourceMissJobs.length) assert(expiredDeliveryObserved, "Observe the original expired delivery without physical admission");
+    assert(Date.now() > sourceMissDeadline.getTime());
+    assert.equal(sourceMissCut.p2_attempts.length, 0, "Preparation and expired delivery cannot debit a native invocation");
+    const sourceMissCancellation = await http.call("economic-orchestration-cancel", { searchId: sourceMissSearch });
+    assert.equal(sourceMissCancellation.status, 200, JSON.stringify(sourceMissCancellation));
+    report.prepressureMiss = { cut: sourceMissCut, cancellation: sourceMissCancellation,
+      originalDeadlineAt: sourceMissDeadline, originalDeadlineMs: 15000, originalResponsibilityRetained: true };
+    // The unchanged database fence rejects classless preparation after cutover.
+    // Retain the source lease/aging and exact source-only production handlers.
+    const previousSourceIdentity = sourceQueue.identity;
+    await sourceQueue.close(); sourceQueue = undefined;
+    sourceQueue = await physicalNativeQueue(process.env.FINNOR_P2_WORKER_DATABASE_URL!, directory, "P2", {
+      priorityAgingSeconds: previousSourceIdentity.scheduler.priorityAgingSeconds,
+      leaseSeconds: previousSourceIdentity.scheduler.leaseSeconds, workloadClass: "INTERACTIVE",
+    });
+    await registerInternalHandlers(sourceQueue, true);
+    assert.equal(sourceQueue.identity.scheduler.workloadClass, "INTERACTIVE");
+    assert.equal(sourceQueue.identity.scheduler.priorityAgingSeconds, previousSourceIdentity.scheduler.priorityAgingSeconds);
+    assert.equal(sourceQueue.identity.scheduler.leaseSeconds, previousSourceIdentity.scheduler.leaseSeconds);
+    assert(sourceQueue.identity.scheduler.tenantInflightLimit <= previousSourceIdentity.scheduler.tenantInflightLimit);
+    assert.deepEqual(sourceQueue.registeredTypes().sort(), ["run_evidence_derivation_v1", "run_harness_program_v1"]);
+    await artifact("post-bootstrap-source-worker.json", { previous: previousSourceIdentity, current: sourceQueue.identity,
+      registeredTypes: sourceQueue.registeredTypes(),
+      qualification: "LOCAL_QUEUE_CLASS_CONFIGURATION_NOT_DEPLOYMENT_OR_S8_ADMISSION" });
+    const c = await siblingInternalProgramme(http, f, { deadlineMs: 60000 });
+    const cSearch = await submitInternalSearch(http, f, c.program.programId);
+    const protectedSearches = [aSearch, sourceMissSearch];
+    const protectedProgrammes = [f.p.programId, sourceMiss.program.programId];
+    const pressureCohortState = (cut: any, searches = protectedSearches, programmeIds = protectedProgrammes) => {
+      const programmes = cut.p1_requests.filter((row: any) => programmeIds.includes(row.id));
+      const episodes = programmes.map((row: any) => row.episode_id);
+      const queries = programmes.map((row: any) => row.evidence_query_id).filter(Boolean);
+      const jobs = cut.jobs.filter((row: any) => searches.includes(row.payload.searchId) ||
+        programmeIds.includes(row.payload.programId) || queries.includes(row.payload.queryId));
+      const jobIds = jobs.map((row: any) => row.id);
+      return { programmes, episodes: cut.p1_episodes.filter((row: any) => episodes.includes(row.id)),
+        searches: cut.p2_requests.filter((row: any) => searches.includes(row.id)),
+        units: cut.p2_units.filter((row: any) => searches.includes(row.search_id)),
+        attempts: cut.p2_attempts.filter((row: any) => searches.includes(row.search_id)), jobs,
+        deliveries: cut.job_delivery_attempts.filter((row: any) => jobIds.includes(row.job_id)) };
+    };
+    const protectedBefore = pressureCohortState(await internalOwnerCut(e, f.f.tenant));
+    assert.equal(protectedBefore.programmes.length, protectedProgrammes.length);
+    assert.equal(protectedBefore.searches.length, protectedSearches.length);
+    try { await stageInternalSources(e, sourceQueue, [cSearch]); }
+    finally {
+      report.sourcePreparationIsolation = { protectedSearches, protectedProgrammes, before: protectedBefore,
+        after: pressureCohortState(await internalOwnerCut(e, f.f.tenant)), sourceWorker: sourceQueue.identity,
+        registeredTypes: sourceQueue.registeredTypes() };
+      await artifact("post-bootstrap-source-isolation.json", report.sourcePreparationIsolation);
+    }
+    assert.deepEqual(report.sourcePreparationIsolation.after, protectedBefore,
+      "Source preparation cannot siphon or change the original pressure cohort");
+    // Receive B only after D's original native job exists, so D is genuinely
+    // older despite its lower priority. No original run_at/age is edited.
     const b = await siblingInternalProgramme(http, f);
     const bSearch = await submitInternalSearch(http, f, b.program.programId);
-    await stageInternalSources(e, sourceQueue, [bSearch]);
-    const c = await siblingInternalProgramme(http, f, { deadlineMs: 15000 });
-    const cSearch = await submitInternalSearch(http, f, c.program.programId);
-    await stageInternalSources(e, sourceQueue, [cSearch]);
+    const bProtectedSearches = [aSearch, cSearch, sourceMissSearch];
+    const bProtectedProgrammes = [f.p.programId, c.program.programId, sourceMiss.program.programId];
+    const beforeBSource = pressureCohortState(await internalOwnerCut(e, f.f.tenant),
+      bProtectedSearches, bProtectedProgrammes);
+    assert.equal(beforeBSource.programmes.length, bProtectedProgrammes.length);
+    assert.equal(beforeBSource.searches.length, bProtectedSearches.length);
+    try { await stageInternalSources(e, sourceQueue, [bSearch]); }
+    finally {
+      report.unaffectedSourcePreparationIsolation = { protectedSearches: bProtectedSearches,
+        protectedProgrammes: bProtectedProgrammes, before: beforeBSource,
+        after: pressureCohortState(await internalOwnerCut(e, f.f.tenant), bProtectedSearches, bProtectedProgrammes),
+        sourceWorker: sourceQueue.identity, registeredTypes: sourceQueue.registeredTypes() };
+      await artifact("post-bootstrap-unaffected-source-isolation.json", report.unaffectedSourcePreparationIsolation);
+    }
+    assert.deepEqual(report.unaffectedSourcePreparationIsolation.after, beforeBSource,
+      "Unaffected B source preparation cannot siphon or change the original pressure cohort");
     const population = [
       { label: "A_CANCELLED_IN_FLIGHT", workId: f.p.workId, programId: f.p.programId, searchId: aSearch },
-      { label: "C_ORIGINAL_DEADLINE_MISSED", workId: c.work.workId, programId: c.program.programId, searchId: cSearch },
+      { label: "D_NATIVE_QUEUE_DEADLINE_MISSED", workId: c.work.workId, programId: c.program.programId, searchId: cSearch },
       { label: "B_UNAFFECTED_PROGRESS", workId: b.work.workId, programId: b.program.programId, searchId: bSearch },
+      { label: "C_ORIGINAL_PREPRESSURE_DEADLINE_MISSED", workId: sourceMiss.work.workId,
+        programId: sourceMiss.program.programId, searchId: sourceMissSearch },
     ];
+    report.sourcePreparation = {
+      observedAt: new Date().toISOString(),
+      searches: (await e.admin.query(`SELECT id,status,reason,program_id,generation
+        FROM finnor_os.p2_requests WHERE id=ANY($1::uuid[]) ORDER BY id`, [[aSearch, bSearch, cSearch]])).rows,
+      programmes: (await e.admin.query(`SELECT p.id,p.status,p.episode_id,e.deadline_at
+        FROM finnor_os.p1_requests p JOIN finnor_os.p1_episodes e ON e.id=p.episode_id
+        WHERE p.id=ANY($1::uuid[]) ORDER BY p.id`, [population.map(row => row.programId)])).rows,
+      units: (await e.admin.query(`SELECT id,search_id,kind,status,attempts
+        FROM finnor_os.p2_units WHERE search_id=ANY($1::uuid[]) ORDER BY search_id,id`, [[aSearch, bSearch, cSearch]])).rows,
+      jobs: (await e.admin.query(`SELECT id,type,status,priority,protocol_version,run_at,
+        payload->>'searchId' AS search_id FROM finnor_os.jobs
+        WHERE payload->>'searchId'=ANY($1::text[]) ORDER BY run_at,id`, [[aSearch, bSearch, cSearch]])).rows,
+    };
+    await artifact("source-preparation.json", report.sourcePreparation);
     // Disclosed operator-owned queue priorities, fixed before any native claim.
     // No due time, age, deadline, grant, attempt or application result is edited.
-    const priorityInputs = [];
     for (const [searchId, priority] of [[aSearch, 300], [cSearch, -100], [bSearch, 200]] as const) {
       const rows = (await e.admin.query(`UPDATE finnor_os.jobs SET priority=$2
         WHERE tenant_id=$3 AND status='queued' AND type='run_compute_search_unit_v1'
@@ -73,6 +182,16 @@ export async function nativePressureStory(e: any) {
     }
     const before = await internalOwnerCut(e, f.f.tenant);
     assert.equal(before.p2_attempts.length, 0);
+    const originalNativeJob = (searchId: string) => {
+      const jobs = priorityInputs.find(row => row.searchId === searchId)?.rows ?? [];
+      assert.equal(jobs.length, 1, "Exactly one original maxParallel=1 native claim must establish age");
+      return jobs[0];
+    };
+    const aJob = originalNativeJob(aSearch), cJob = originalNativeJob(cSearch), bJob = originalNativeJob(bSearch);
+    assert(Date.parse(aJob.run_at) < Date.parse(cJob.run_at) && Date.parse(cJob.run_at) < Date.parse(bJob.run_at),
+      "The real aging order must be original A then lower-priority D then unaffected B");
+    assert(cJob.priority < bJob.priority, "D's actual lower priority must be overcome by original queue age");
+    if (sourceMissJobs.length) assert(Date.parse(sourceMissJobs[0].run_at) < Date.parse(aJob.run_at));
     const cParent = before.p1_requests.find((row: any) => row.id === c.program.programId);
     const cEpisode = before.p1_episodes.find((row: any) => row.id === cParent.episode_id);
     const deadline = Date.parse(cEpisode.deadline_at), targetStart = deadline - 7000;
@@ -91,6 +210,7 @@ export async function nativePressureStory(e: any) {
     assert(held.jobs.some((row: any) => row.status === "queued" && row.payload.searchId === cSearch));
     assert(await contenderQueue.tick(), "A separate original worker must actually contest the held permit");
     const contended = await internalOwnerCut(e, f.f.tenant);
+    await artifact("contended-claim-cut.json", { population, priorityInputs, paused, held, contended });
     assert.equal(contended.p2_attempts.length, 1, "Capacity refusal cannot create a physical intent or debit");
     const deferred = contended.job_delivery_attempts.filter((row: any) => row.outcome === "capacity_deferred" &&
       contended.jobs.some((job: any) => job.id === row.job_id && job.payload.searchId === cSearch));
@@ -137,7 +257,9 @@ export async function nativePressureStory(e: any) {
     assert.equal(unaffected.body.program.result.values.netEquity.value, "43");
     assert.equal(unaffected.body.program.result.values.leverage.value, "3.5");
     const terminal = await internalOwnerCut(e, f.f.tenant);
-    const observations = { schema: report.schema, population, priorityInputs,
+    const observations = { schema: report.schema, population, priorityInputs, prepressureMiss: report.prepressureMiss,
+      sourcePreparationIsolation: report.sourcePreparationIsolation,
+      unaffectedSourcePreparationIsolation: report.unaffectedSourcePreparationIsolation,
       originalGrant: f.search.computeGrant, originalBinding: before.p2_requests[0].binding,
       scheduler: executionQueue.identity.scheduler, contenderIdentity: contenderQueue.identity,
       before, paused, held, contended, cancelled, cancellationCut,

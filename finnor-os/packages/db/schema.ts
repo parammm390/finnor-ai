@@ -1132,6 +1132,7 @@ export const workQueryExecutions = pgTable(
         "execution_proof_capsule_v1",
         "company_revenue",
         "stock_quote",
+        "organization_transformation_v1",
       ],
     }).notNull(),
     request: jsonb("request").notNull().default({}),

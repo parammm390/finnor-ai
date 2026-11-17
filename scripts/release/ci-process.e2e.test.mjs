@@ -139,7 +139,7 @@ test("actual process graph passes and damaged workflow copies are rejected", () 
     ["w1-integration-branch-omitted", "w1-owning-verification.yml", text => text.replace(", codex/zw-integration-quality-20261115", "")],
     ["w3-integration-branch-omitted", "w3-owning-verification.yml", text => text.replace(", codex/zw-integration-quality-20261115", "")],
     ["w1-controls-omitted", "w1-owning-verification.yml", text => text.replace(", owning-regressions]", "]")],
-    ["w3-publication-omitted", "w3-owning-verification.yml", text => text.replace(", full-positive-and-publication]", "]")],
+    ["w3-publication-omitted", "w3-owning-verification.yml", text => text.replace(", full-positive-and-publication,", ",")],
     ["w1-result-conditional", "w1-owning-verification.yml", text => text.replace("if: ${{ always() }}", "if: ${{ success() }}")],
     ["w3-result-conditional", "w3-owning-verification.yml", text => text.replace("if: ${{ always() }}", "if: ${{ success() }}")],
     ["w1-receipt-omitted", "w1-owning-verification.yml", text => text.replace("uses: ./.github/workflows/ci-completion.yml", "uses: ./.github/workflows/source-checks.yml")],

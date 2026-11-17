@@ -16,6 +16,8 @@ import {runHarnessProgramJob,runX1InstitutionContinuationJob} from '@finnor/priv
 import {runInstitutionCompilerJob} from '@finnor/private-equity/src/institution-program/worker';
 import {runInstitutionUpdateJob} from '@finnor/private-equity/src/live-recompilation/institution-worker';
 import {compileRealWorldServiceJob,advanceRealWorldServiceJob} from '@finnor/private-equity/src/real-world-service/worker';
+import {compileOrganizationTransformationJob,advanceOrganizationTransformationJob} from '@finnor/private-equity/src/organization-transformation/worker';
+import {compileMarketOperatingProgramJob,advanceMarketOperatingProgramJob} from '@finnor/private-equity/src/demand-to-business/worker';
 import {runInterfaceAcquisitionJob} from '@finnor/private-equity/src/interface-synthesis/worker';
 import {runApplicationSemanticsJob} from '@finnor/private-equity/src/application-semantics/worker';
 import {runProgrammeContinuationJob} from '@finnor/private-equity/src/live-recompilation/worker';
@@ -82,9 +84,13 @@ export function createWorker(): JobQueue {
   queue.register('run_shared_work_program_v1',createSharedWorkJobHandler(),PRODUCTION_JOB_CONTRACTS.run_shared_work_program_v1);
   queue.register('consume_shared_work_projection_v1',createSharedWorkProjectionJobHandler(),PRODUCTION_JOB_CONTRACTS.consume_shared_work_projection_v1);
   queue.register('link_institution_components_v1',linkInstitutionComponentsJob,PRODUCTION_JOB_CONTRACTS.link_institution_components_v1);
+  queue.register('compile_organization_transformation_v1',compileOrganizationTransformationJob,PRODUCTION_JOB_CONTRACTS.compile_organization_transformation_v1);
+  queue.register('advance_organization_transformation_v1',advanceOrganizationTransformationJob,PRODUCTION_JOB_CONTRACTS.advance_organization_transformation_v1);
   queue.register('run_workforce_execution_v1',runWorkforceExecutionJob,PRODUCTION_JOB_CONTRACTS.run_workforce_execution_v1);
   queue.register('compile_real_world_service_v1',compileRealWorldServiceJob,PRODUCTION_JOB_CONTRACTS.compile_real_world_service_v1);
   queue.register('advance_real_world_service_v1',advanceRealWorldServiceJob,PRODUCTION_JOB_CONTRACTS.advance_real_world_service_v1);
+  queue.register('compile_market_operating_program_v1',compileMarketOperatingProgramJob,PRODUCTION_JOB_CONTRACTS.compile_market_operating_program_v1);
+  queue.register('advance_market_operating_program_v1',advanceMarketOperatingProgramJob,PRODUCTION_JOB_CONTRACTS.advance_market_operating_program_v1);
   queue.register('learn_strategic_response_model_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.learn_strategic_response_model_v1);
   queue.register('evaluate_strategic_response_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.evaluate_strategic_response_v1);
   queue.register('construct_interaction_protocol_v1',dispatchInteractionProtocolJob,PRODUCTION_JOB_CONTRACTS.construct_interaction_protocol_v1);

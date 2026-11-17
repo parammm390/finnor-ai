@@ -1,7 +1,7 @@
 import type pg from 'pg';
 import {createHash} from 'node:crypto';
 import { withTenantTransaction } from '@finnor/db';
-import type { AuthorityRequest, AllocationResource, AllocationResourceInput, AllocationReservation, AllocationConsumption, AllocationOutstandingCommitment, AllocationCertificate, CanonicalAllocationProblem, ExperimentRef, AllocationCheck, S5ExperienceEvent,DurableObligation } from '@finnor/shared-types';
+import type { AuthorityRequest, AllocationResource, AllocationResourceInput, AllocationReservation, AllocationConsumption, AllocationOutstandingCommitment, AllocationCertificate, CanonicalAllocationProblem, ExperimentRef, AllocationCheck, AllocationClearingInput, S5ExperienceEvent,DurableObligation } from '@finnor/shared-types';
 import { AllocationContractError, allocationRef, sameAllocationRef, S5_VERSION, prepareS5Experience,allocationQuantity,allocationDerivedQuantity,allocationDecimal } from '../../epistemic-runtime/src/allocation-contracts';
 import {LedgerFault} from '../../governed-execution/src/protocol';
 import { epistemicHash } from '../../epistemic-runtime/src/source-precedence';
@@ -65,11 +65,38 @@ async function enqueueProposalOrigins(ctx:PeMutationContext,c:pg.PoolClient,prob
  await enqueueAllocationOrigin(ctx,c,problem,certificate.rightsRef);
  await enqueueAllocationOrigin(ctx,c,certificate,certificate.rightsRef);
  for(const resource of problem.resources)await enqueueAllocationOrigin(ctx,c,resource,resource.rightsRef);
+ await enqueueAllocationComputeOrigin(ctx,c,certificate.compute,certificate.compute.id,certificate.rightsRef);
 }
-async function appendExperience(ctx:PeMutationContext,c:pg.PoolClient,events:S5ExperienceEvent[]):Promise<void>{
+async function enqueueAllocationRequestOrigin(ctx:PeMutationContext,c:pg.PoolClient,request:unknown,
+ requestId:string,rightsRef:string){
+  if(!process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG)return;
+  const ref=allocationRef('S5','allocation-request',request);
+  if(ref.id!==requestId)throw denied();
+  await enqueueOwnerDeliveryInTransaction(c,{semanticOwner:'S5',tenantId:ctx.auth.tenantId,principalId:actor(ctx)},
+    {kind:'REFERENCE',identity:ref.id,payload:{reference:{...ref,content:request},rightsRefs:[rightsRef]}});
+}
+async function enqueueAllocationComputeOrigin(ctx:PeMutationContext,c:pg.PoolClient,
+ compute:AllocationCertificate['compute']|undefined,computeId:string,rightsRef:string){
+  if(!process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG)return;
+  if(compute?.schema!=='finnor.model-compute-invocation.v1'||compute.semanticOwner!=='S5'||
+    compute.tenantId!==ctx.auth.tenantId||compute.principalId!==actor(ctx)||compute.rightsRef!==rightsRef||
+    compute.id!==computeId||compute.id!==`model-compute:${epistemicHash({...compute,id:''})}`)throw denied();
+  await enqueueOwnerDeliveryInTransaction(c,{semanticOwner:'S5',tenantId:ctx.auth.tenantId,principalId:actor(ctx)},
+    {kind:'REFERENCE',identity:compute.id,payload:{reference:{owner:'S5',id:compute.id,version:'model-compute-v1',
+      contentDigest:epistemicHash(compute),content:compute},rightsRefs:[rightsRef]}});
+}
+async function appendExperience(ctx:PeMutationContext,c:pg.PoolClient,events:S5ExperienceEvent[],
+  preparedComputeId?:string):Promise<void>{
   for(const event of events){const {eventId,...body}=event;
     if(event.tenantId!==ctx.auth.tenantId||event.principalId!==actor(ctx)||eventId!==`s5-event:${epistemicHash(body)}`||event.protectedReceipt!==null||event.appendAuthorityGranted!==false)throw denied();bounded(event);
     await c.query('INSERT INTO finnor_os.s5_experience(tenant_id,principal_id,event_id,body) VALUES($1,$2,$3,$4::jsonb) ON CONFLICT(tenant_id,event_id) DO NOTHING',[ctx.auth.tenantId,actor(ctx),event.eventId,JSON.stringify(event)]);
+    if(event.type==='REQUEST'&&event.revisionRef.startsWith('allocation-request:')){
+      await enqueueAllocationRequestOrigin(ctx,c,event.detail.input,event.revisionRef,event.rightsRef);
+    }
+    if(event.type==='COST'&&event.revisionRef.startsWith('model-compute:')&&event.revisionRef!==preparedComputeId){
+      await enqueueAllocationComputeOrigin(ctx,c,event.detail.compute as AllocationCertificate['compute']|undefined,
+        event.revisionRef,event.rightsRef);
+    }
     // Commit the original prepared event and its authenticated delivery intent
     // together. Foreign mandate/utility references remain their owner's duty;
     // missing ledger dependencies retain pending responsibility without forging
@@ -511,17 +538,26 @@ async function stored(ctx:PeMutationContext,c:pg.PoolClient,value:ExperimentRef)
 }
 export async function persistAllocationProposal(ctx:PeMutationContext,problem:CanonicalAllocationProblem,certificate:AllocationCertificate):Promise<void>{
   validateStored(ctx,problem,certificate,certificate.ref);await locked(ctx,async c=>{const existing=(await c.query('SELECT problem,certificate FROM finnor_os.s5_proposals WHERE tenant_id=$1 AND content_digest=$2',[ctx.auth.tenantId,certificate.ref.contentDigest])).rows[0];
-    if(existing){if(!sameAllocationRef(existing,{problem,certificate}))throw new AllocationContractError('INVALID_CANDIDATE','Conflicting immutable allocation proposal');await enqueueProposalOrigins(ctx,c,problem,certificate);return;}
+    if(existing){
+      if(!sameAllocationRef(existing,{problem,certificate}))throw new AllocationContractError('INVALID_CANDIDATE','Conflicting immutable allocation proposal');
+      await enqueueProposalOrigins(ctx,c,problem,certificate);
+      return;
+    }
     await c.query('INSERT INTO finnor_os.s5_proposals(tenant_id,principal_id,content_digest,problem,certificate) VALUES($1,$2,$3,$4::jsonb,$5::jsonb)',[ctx.auth.tenantId,actor(ctx),certificate.ref.contentDigest,JSON.stringify(problem),JSON.stringify(certificate)]);
     await enqueueProposalOrigins(ctx,c,problem,certificate);
-    await appendExperience(ctx,c,[prepareS5Experience(problem.mandate,'CANDIDATE',certificate.ref.id,{certificateRef:certificate.ref,check:certificate.check,optimization:certificate.optimization},[problem.ref.id]),prepareS5Experience(problem.mandate,'COST',certificate.compute.id,{compute:certificate.compute})]);
+    await appendExperience(ctx,c,[prepareS5Experience(problem.mandate,'CANDIDATE',certificate.ref.id,{certificateRef:certificate.ref,check:certificate.check,optimization:certificate.optimization},[problem.ref.id]),prepareS5Experience(problem.mandate,'COST',certificate.compute.id,{compute:certificate.compute})],certificate.compute.id);
   });
 }
 export async function readStoredAllocation(ctx:PeMutationContext,ref:ExperimentRef,client?:pg.PoolClient){return locked(ctx,c=>stored(ctx,c,ref),client);}
-export async function readAllocationReplay(ctx:PeMutationContext,key:string,digest:string){
-  return locked(ctx,async c=>{const r=(await c.query('SELECT request_digest,allocation_digest FROM finnor_os.s5_requests WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3',[ctx.auth.tenantId,actor(ctx),key])).rows[0];
-    if(r&&r.request_digest!==digest)throw conflict();if(r?.allocation_digest)return finiteStored(ctx,c,{owner:'S5',version:S5_VERSION,id:`allocation-certificate:${r.allocation_digest}`,contentDigest:r.allocation_digest});
-    if(!r)await c.query('INSERT INTO finnor_os.s5_requests(tenant_id,principal_id,idempotency_key,request_digest) VALUES($1,$2,$3,$4)',[ctx.auth.tenantId,actor(ctx),key,digest]);return null;});
+export async function readAllocationReplay(ctx:PeMutationContext,request:AllocationClearingInput,digest:string){
+ return locked(ctx,async c=>{const r=(await c.query('SELECT request_digest,allocation_digest FROM finnor_os.s5_requests WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3',[ctx.auth.tenantId,actor(ctx),request.idempotencyKey])).rows[0];
+    if(r&&r.request_digest!==digest)throw conflict();
+    if(r?.allocation_digest){
+      const previous=await finiteStored(ctx,c,{owner:'S5',version:S5_VERSION,id:`allocation-certificate:${r.allocation_digest}`,contentDigest:r.allocation_digest});
+      await enqueueAllocationRequestOrigin(ctx,c,request,`allocation-request:${digest}`,previous.certificate.rightsRef);
+      return previous;
+    }
+    if(!r)await c.query('INSERT INTO finnor_os.s5_requests(tenant_id,principal_id,idempotency_key,request_digest) VALUES($1,$2,$3,$4)',[ctx.auth.tenantId,actor(ctx),request.idempotencyKey,digest]);return null;});
 }
 export type AllocationCommitFence=(client:pg.PoolClient,problem:CanonicalAllocationProblem,certificate:AllocationCertificate)=>Promise<{
  authorityRequest:AuthorityRequest;approvalDecisionIds:string[];
@@ -562,10 +598,11 @@ export async function commitAllocationReservation(ctx:PeMutationContext,problem:
     await appendExperience(ctx,c,[prepareS5Experience(problem.mandate,'RESERVATION',reservation.ref.id,{reservation,certificateRef:certificate.ref},[certificate.ref.id],'H0')]);return reservation;
   });
 }
-async function consumptions(ctx:PeMutationContext,c:pg.PoolClient,ref:ExperimentRef):Promise<AllocationConsumption[]>{
-  const issued=await finiteStored(ctx,c,ref);const rows=(await c.query('SELECT co.body,st.status,st.effect_ref FROM finnor_os.s5_consumptions co JOIN finnor_os.s5_consumption_states st USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservation_origins ro USING(tenant_id,reservation_id) WHERE co.tenant_id=$1 AND co.principal_id=$2 AND ro.allocation_digest=$3 ORDER BY co.consumption_id',[ctx.auth.tenantId,actor(ctx),ref.contentDigest])).rows;
+async function finiteConsumptions(ctx:PeMutationContext,c:pg.PoolClient,certificate:AllocationCertificate):Promise<AllocationConsumption[]>{
+  const rows=(await c.query('SELECT co.body,st.status,st.effect_ref FROM finnor_os.s5_consumptions co JOIN finnor_os.s5_consumption_states st USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservation_origins ro USING(tenant_id,reservation_id) WHERE co.tenant_id=$1 AND co.principal_id=$2 AND ro.allocation_digest=$3 ORDER BY co.consumption_id',
+    [ctx.auth.tenantId,actor(ctx),certificate.ref.contentDigest])).rows;
   const result:AllocationConsumption[]=[];
-  for(const row of rows){const {ref,...body}=row.body as AllocationConsumption;if(!sameAllocationRef(ref,allocationRef('S5','allocation-consumption',body)))throw denied();await enqueueAllocationOrigin(ctx,c,row.body,issued.certificate.rightsRef);result.push({...row.body,status:row.status,effectRef:row.effect_ref});}
+  for(const row of rows){const {ref,...body}=row.body as AllocationConsumption;if(!sameAllocationRef(ref,allocationRef('S5','allocation-consumption',body)))throw denied();await enqueueAllocationOrigin(ctx,c,row.body,certificate.rightsRef);result.push({...row.body,status:row.status,effectRef:row.effect_ref});}
   return result;
 }
 async function institutionConsumptions(ctx:PeMutationContext,c:pg.PoolClient,reservation:InstitutionReservation){
@@ -580,7 +617,7 @@ async function institutionConsumptions(ctx:PeMutationContext,c:pg.PoolClient,res
 export async function readAllocationConsumptions(ctx:PeMutationContext,ref:ExperimentRef,client?:pg.PoolClient){
  return locked(ctx,async c=>ref.id.startsWith('institution-reservation:')
    ? institutionConsumptions(ctx,c,await institutionState(ctx,c,ref))
-   : consumptions(ctx,c,ref),client);
+   : finiteConsumptions(ctx,c,(await finiteStored(ctx,c,ref)).certificate),client);
 }
 export function recordAllocationConsumption(ctx:PeMutationContext,reservationRef:ExperimentRef,
   request:InstitutionChargeRequest):ReturnType<typeof chargeInstitutionDemand>;
@@ -597,7 +634,7 @@ export async function recordAllocationConsumption(ctx:PeMutationContext,reservat
     if(body.status!=='INTENDED_PENDING_S6'||body.effectRef!==null)throw new AllocationContractError('INVALID_REQUEST','Consumption cannot invent S6 effect or settlement');
     const usedKey=(await c.query('SELECT request_digest,body FROM finnor_os.s5_consumptions WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3',[ctx.auth.tenantId,actor(ctx),body.idempotencyKey])).rows[0];
     if(usedKey&&(!sameAllocationRef(usedKey.body.certificateRef,body.certificateRef)||usedKey.request_digest!==body.requestDigest))throw conflict();
-    const prior=await consumptions(ctx,c,body.certificateRef),key=prior.find(p=>p.idempotencyKey===body.idempotencyKey),node=prior.find(p=>sameAllocationRef(p.policyRef,body.policyRef)&&p.nodeId===body.nodeId);
+    const prior=await finiteConsumptions(ctx,c,issued.certificate),key=prior.find(p=>p.idempotencyKey===body.idempotencyKey),node=prior.find(p=>sameAllocationRef(p.policyRef,body.policyRef)&&p.nodeId===body.nodeId);
     if(key){if(key.requestDigest!==body.requestDigest)throw conflict();return key;}if(node)throw new AllocationContractError('IDEMPOTENCY_CONFLICT','Policy node was already consumed under another key');
     let compatible=new Set(compatibleScenarioIds);for(const p of prior)compatible=new Set([...compatible].filter(id=>p.compatibleScenarioIds.includes(id)));
     if(!compatible.size)throw new AllocationContractError('INVALID_CANDIDATE','Consumption branches cannot coincide in a supported common path');
@@ -618,7 +655,7 @@ export async function recordAllocationConsumption(ctx:PeMutationContext,reservat
 export async function releaseUntouchedAllocation(ctx:PeMutationContext,ref:ExperimentRef,key:string):Promise<AllocationReservation>{
   return locked(ctx,async c=>{const issued=await finiteStored(ctx,c,ref),r=issued.reservation;if(!r)throw denied();
     const digest=epistemicHash({operation:'RELEASE_UNTOUCHED',ref}),prior=(await c.query('SELECT request_digest,allocation_digest FROM finnor_os.s5_requests WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3',[ctx.auth.tenantId,actor(ctx),key])).rows[0];if(prior&&prior.request_digest!==digest)throw conflict();
-    const uses=await consumptions(ctx,c,ref);
+    const uses=await finiteConsumptions(ctx,c,issued.certificate);
     const primary=(await c.query('SELECT 1 FROM finnor_os.s5_primary_charges WHERE tenant_id=$1 AND reservation_id=$2 LIMIT 1',[ctx.auth.tenantId,r.ref.id])).rowCount;
     if(uses.length||primary)throw new AllocationContractError('BLOCKED_AUTHORITY','Pending/unknown external handoff requires qualified S6 reconciliation before release');
     if(!prior)await c.query('INSERT INTO finnor_os.s5_requests(tenant_id,principal_id,idempotency_key,request_digest,allocation_digest) VALUES($1,$2,$3,$4,$5)',[ctx.auth.tenantId,actor(ctx),key,digest,ref.contentDigest]);
@@ -629,7 +666,7 @@ export async function releaseUntouchedAllocation(ctx:PeMutationContext,ref:Exper
 }
 export async function retainAllocationReconciliation(ctx:PeMutationContext,ref:ExperimentRef,expectedRevision:number,observations:Record<string,unknown>):Promise<AllocationReservation>{
   return locked(ctx,async c=>{const issued=await finiteStored(ctx,c,ref),r=issued.reservation;if(!r||r.revision!==expectedRevision)throw new AllocationContractError('STALE_INPUT','Reconciliation reservation revision changed');
-    const uses=await consumptions(ctx,c,ref);if(!uses.length||r.status==='RELEASED')return r;
+    const uses=await finiteConsumptions(ctx,c,issued.certificate);if(!uses.length||r.status==='RELEASED')return r;
     if(r.status!=='UNKNOWN_OUTCOME')await c.query('UPDATE finnor_os.s5_reservations SET status=\'UNKNOWN_OUTCOME\',revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND reservation_id=$2',[ctx.auth.tenantId,r.ref.id]);
     for(const use of uses.filter(u=>u.status==='INTENDED_PENDING_S6'))await c.query('UPDATE finnor_os.s5_consumption_states SET status=\'UNKNOWN_OUTCOME\',revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND consumption_id=$2',[ctx.auth.tenantId,use.ref.id]);
     bounded(observations);const retained={...r,status:'UNKNOWN_OUTCOME' as const,revision:r.status==='UNKNOWN_OUTCOME'?r.revision:r.revision+1};
@@ -650,7 +687,7 @@ export async function bindClosingAllocationAttempt(ctx:PeMutationContext,input:{
 }) {
   return locked(ctx,async c=>{
     const issued=await finiteStored(ctx,c,input.allocationRef),r=issued.reservation;
-    const use=(await consumptions(ctx,c,input.allocationRef)).find(u=>sameAllocationRef(u.ref,input.consumptionRef));
+    const use=(await finiteConsumptions(ctx,c,issued.certificate)).find(u=>sameAllocationRef(u.ref,input.consumptionRef));
     const native=(await c.query(
       "SELECT q.spec,q.spec_digest,e.semantic_hash,e.effect,e.domain_action_id FROM finnor_os.pe_closing_programmes q JOIN finnor_os.pe_closing_node_links l ON l.tenant_id=q.tenant_id AND l.programme_id=q.id JOIN finnor_os.business_effects e ON e.tenant_id=l.tenant_id AND e.id=l.business_effect_id WHERE q.tenant_id=$1 AND q.id=$2 AND l.node_key=$3 AND e.id=$4",
       [ctx.auth.tenantId,input.programmeId,input.nodeKey,input.effectId],
@@ -709,7 +746,7 @@ export async function reconcileClosingAllocationObservation(ctx:PeMutationContex
 }) {
   return locked(ctx,async c=>{
     const issued=await finiteStored(ctx,c,input.allocationRef),r=issued.reservation;
-    const use=(await consumptions(ctx,c,input.allocationRef)).find(u=>sameAllocationRef(u.ref,input.consumptionRef));
+    const use=(await finiteConsumptions(ctx,c,issued.certificate)).find(u=>sameAllocationRef(u.ref,input.consumptionRef));
     const observed=(await c.query(
       "SELECT e.semantic_hash,o.observation FROM finnor_os.business_effects e JOIN finnor_os.external_operations o ON o.tenant_id=e.tenant_id AND o.business_effect_id=e.id WHERE e.tenant_id=$1 AND e.id=$2 AND o.provider='finnor_closing_provider' AND o.verification_status='verified' AND o.observation->'closingEvidenceRef'->>'versionId'=$3",
       [ctx.auth.tenantId,input.effectId,input.evidenceVersionId],
@@ -719,7 +756,7 @@ export async function reconcileClosingAllocationObservation(ctx:PeMutationContex
     const state=(await c.query("UPDATE finnor_os.s5_consumption_states SET status='RECONCILED',revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND consumption_id=$2 RETURNING revision",[ctx.auth.tenantId,use.ref.id])).rows[0];
     const proof={effectRef:use.effectRef,evidenceVersionId:input.evidenceVersionId,observation:observed.observation,costs:{status:'UNMETERED',externalCost:null,recoveryCost:null,humanCost:null},resourceEnvelopeRetained:true,protectedReceipt:null,releaseGranted:false};
     await c.query("INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,$3,'S6_SIGNED_CLOSING_OBSERVATION',$4::jsonb)",[ctx.auth.tenantId,use.ref.id,state.revision,JSON.stringify(proof)]);
-    const uses=await consumptions(ctx,c,input.allocationRef);
+    const uses=await finiteConsumptions(ctx,c,issued.certificate);
     // A signed observation settles this original consumption, not unstarted
     // policies in the jointly reserved episode. Closing may still need its
     // original draw/payment/transfer/filing envelope after the signature settles.
@@ -737,7 +774,7 @@ export async function reconcileClosingAllocationObservation(ctx:PeMutationContex
  * released capacity are different claims: unmetered settlement retains occupation. */
 export async function applyProtectedAllocationSettlement(ctx:PeMutationContext,input:{allocationRef:ExperimentRef;consumptionRef:ExperimentRef;obligation:any;event:Record<string,any>;receipt:Record<string,any>}){
  return locked(ctx,async c=>{
-  const issued=await finiteStored(ctx,c,input.allocationRef),r=issued.reservation,uses=await consumptions(ctx,c,input.allocationRef),use=uses.find(u=>sameAllocationRef(u.ref,input.consumptionRef));
+  const issued=await finiteStored(ctx,c,input.allocationRef),r=issued.reservation,uses=await finiteConsumptions(ctx,c,issued.certificate),use=uses.find(u=>sameAllocationRef(u.ref,input.consumptionRef));
   if(!r||r.status==='RELEASED'||!use||!sameAllocationRef(input.obligation.allocationRef,input.allocationRef)||!sameAllocationRef(input.obligation.consumptionRef,use.ref)||!sameAllocationRef(input.obligation.reservationRef,r.ref)||use.effectRef?.id!==input.obligation.effectRef.id||use.effectRef?.contentDigest!==input.obligation.effectRef.semanticHash)throw denied();
   const prior=(await c.query("SELECT body FROM finnor_os.s5_history WHERE tenant_id=$1 AND subject_id=$2 AND operation='PROTECTED_S6_SETTLEMENT' ORDER BY revision DESC LIMIT 1",[ctx.auth.tenantId,use.ref.id])).rows[0];
   if(prior){if(prior.body.event.eventId!==input.event.eventId||!sameAllocationRef(prior.body.receipt,input.receipt))throw conflict();return {consumption:use,reservation:r,costs:prior.body.costs,releaseGranted:false as const,semanticReplay:true};}
@@ -755,7 +792,7 @@ export async function applyProtectedAllocationSettlement(ctx:PeMutationContext,i
 
 export async function retainProtectedAllocationAttempt(ctx:PeMutationContext,input:{allocationRef:ExperimentRef;consumptionRef:ExperimentRef;obligation:any;event:Record<string,any>;receipt:Record<string,any>}){
  return locked(ctx,async c=>{
-  const issued=await finiteStored(ctx,c,input.allocationRef),r=issued.reservation,use=(await consumptions(ctx,c,input.allocationRef)).find(u=>sameAllocationRef(u.ref,input.consumptionRef));
+  const issued=await finiteStored(ctx,c,input.allocationRef),r=issued.reservation,use=(await finiteConsumptions(ctx,c,issued.certificate)).find(u=>sameAllocationRef(u.ref,input.consumptionRef));
   if(!r||r.status==='RELEASED'||!use||!sameAllocationRef(input.obligation.reservationRef,r.ref)||!sameAllocationRef(input.obligation.allocationRef,input.allocationRef)||!sameAllocationRef(input.obligation.consumptionRef,use.ref)||use.effectRef?.id!==input.obligation.effectRef.id||use.effectRef?.contentDigest!==input.obligation.effectRef.semanticHash)throw denied();
   const prior=(await c.query("SELECT body FROM finnor_os.s5_history WHERE tenant_id=$1 AND subject_id=$2 AND operation='PROTECTED_S6_ATTEMPT' AND body->'event'->>'eventId'=$3 LIMIT 1",[ctx.auth.tenantId,use.ref.id,input.event.eventId])).rows[0];
   if(prior){if(!sameAllocationRef(prior.body.receipt,input.receipt))throw conflict();return {consumption:use,reservation:r,semanticReplay:true,releaseGranted:false as const};}
@@ -790,30 +827,34 @@ async function governedBudgetSnapshot(ctx:PeMutationContext,c:pg.PoolClient,obli
  for(const record of records){
   const charge=record.body,{ref,...preimage}=charge,native=origins.find(origin=>sameAllocationRef(origin.ref,charge.obligationRef)),resource=row.problem.resources.find((r:AllocationResource)=>r.resourceId===record.resource_id&&r.unit===record.unit),units=Number(record.units);
   const reject=()=>{throw new LedgerFault(409,'S5_EXECUTION_RESOURCE_HISTORY_INCONSISTENT');};
-  if(!native||!resource||record.principal_id!==actor(ctx)||!['finnor.s5.governed-resource-charge.v1','finnor.s5.service-compute-charge.v1'].includes(charge.schema)||charge.semanticOwner!=='S5'||charge.tenantId!==ctx.auth.tenantId||charge.principalId!==actor(ctx)||!sameAllocationRef(ref,allocationRef('S5','allocation-governed-charge',preimage))||!sameAllocationRef(charge.allocationRef,obligation.allocationRef)||!sameAllocationRef(charge.reservationRef,obligation.reservationRef)||!sameAllocationRef(charge.consumptionRef,native.consumptionRef)||record.consumption_id!==charge.consumptionRef.id||record.charge_key!==charge.chargeKey||record.request_digest!==charge.requestDigest||record.phase!==charge.phase||record.resource_id!==charge.resourceId||record.unit!==charge.unit||units!==charge.units||charge.costs?.money!==null||charge.costs?.status!=='UNMETERED'||charge.costs?.releaseSufficient!==false)reject();
+  if(!native||!resource||record.principal_id!==actor(ctx)||!['finnor.s5.governed-resource-charge.v1','finnor.s5.service-compute-charge.v1','finnor.s5.growth-compute-charge.v1'].includes(charge.schema)||charge.semanticOwner!=='S5'||charge.tenantId!==ctx.auth.tenantId||charge.principalId!==actor(ctx)||!sameAllocationRef(ref,allocationRef('S5','allocation-governed-charge',preimage))||!sameAllocationRef(charge.allocationRef,obligation.allocationRef)||!sameAllocationRef(charge.reservationRef,obligation.reservationRef)||!sameAllocationRef(charge.consumptionRef,native.consumptionRef)||record.consumption_id!==charge.consumptionRef.id||record.charge_key!==charge.chargeKey||record.request_digest!==charge.requestDigest||record.phase!==charge.phase||record.resource_id!==charge.resourceId||record.unit!==charge.unit||units!==charge.units||charge.costs?.money!==null||charge.costs?.status!=='UNMETERED'||charge.costs?.releaseSufficient!==false)reject();
   if(!native||!resource)throw new LedgerFault(409,'S5_EXECUTION_RESOURCE_HISTORY_INCONSISTENT');
   const request={requestRef:charge.requestRef,memberId:charge.memberId,phase:charge.phase,ordinal:charge.ordinal,units:charge.units};
-  if(charge.schema==='finnor.s5.service-compute-charge.v1'){
-   const use=charge.serviceInvocation;
+  if(charge.schema==='finnor.s5.service-compute-charge.v1'||charge.schema==='finnor.s5.growth-compute-charge.v1'){
+   const growth=charge.schema==='finnor.s5.growth-compute-charge.v1',prefix=growth?'w4':'w3';
+   const use=growth?charge.growthInvocation:charge.serviceInvocation;
    if(!use||typeof use!=='object'||Array.isArray(use)||Object.hasOwn(use,'claimToken')
      ||typeof use.claimTokenDigest!=='string'||!/^[a-f0-9]{64}$/.test(use.claimTokenDigest)
      ||charge.phase!=='EXECUTION'||charge.ordinal!==1||units!==1||resource.resourceClass!=='COMPUTE'||resource.unit!=='request'
-     ||charge.chargeKey!=='w3-unit:'+epistemicHash([native.ref,use])
-     ||charge.requestDigest!==epistemicHash({serviceInvocation:use,obligationRef:native.ref,allocationRef:native.allocationRef,consumptionRef:native.consumptionRef})
-     ||charge.requestRef?.owner!=='S4'||charge.requestRef?.version!=='w3-native-invocation-v1'
-     ||charge.requestRef?.contentDigest!==epistemicHash(use)||charge.requestRef?.id!=='w3-invocation:'+epistemicHash(use)
-     ||charge.memberId!=='w3-job:'+use.jobId)reject();
-   const actual=(await c.query(`SELECT q.work_id,a.claim_token FROM finnor_os.w3_service_requests q
+     ||charge.chargeKey!==prefix+'-unit:'+epistemicHash([native.ref,use])
+     ||charge.requestDigest!==epistemicHash({[growth?'growthInvocation':'serviceInvocation']:use,obligationRef:native.ref,allocationRef:native.allocationRef,consumptionRef:native.consumptionRef})
+     ||charge.requestRef?.owner!=='S4'||charge.requestRef?.version!==prefix+'-native-invocation-v1'
+     ||charge.requestRef?.contentDigest!==epistemicHash(use)||charge.requestRef?.id!==prefix+'-invocation:'+epistemicHash(use)
+     ||charge.memberId!==prefix+'-job:'+use.jobId
+     ||growth&&(!Number.isSafeInteger(use.wakeRevision)||use.wakeRevision<1))reject();
+   const actual=(await c.query(`SELECT q.work_id,a.claim_token FROM finnor_os.${growth?'w4_business_requests':'w3_service_requests'} q
     JOIN finnor_os.job_delivery_attempts a ON a.tenant_id=q.tenant_id AND a.id=$4 AND a.job_id=$5
     JOIN finnor_os.jobs j ON j.tenant_id=a.tenant_id AND j.id=a.job_id
     WHERE q.tenant_id=$1 AND q.principal_id=$2 AND q.id=$3
      AND a.claim_fence=$6 AND j.type=$7
      AND j.payload->>'requestId'=q.id::text AND j.payload->>'principalId'=q.principal_id::text
      AND (j.payload->>'generation')::integer=$8
-     AND q.budget_obligation_ref=$9::jsonb AND q.parent_allocation=$10::jsonb`,
+     AND q.budget_obligation_ref=$9::jsonb AND q.parent_allocation=$10::jsonb
+     ${growth?"AND (j.payload->>'wakeRevision')::bigint=$11":""}`,
     [ctx.auth.tenantId,actor(ctx),use.requestId,use.deliveryAttemptId,use.jobId,use.claimFence,
-     use.stage==='COMPILE_CHECK'?'compile_real_world_service_v1':'advance_real_world_service_v1',use.generation,
-     JSON.stringify(native.ref),JSON.stringify(native.allocationRef)])).rows[0];
+     growth?(use.stage==='COMPILE_CHECK'?'compile_market_operating_program_v1':'advance_market_operating_program_v1')
+      :(use.stage==='COMPILE_CHECK'?'compile_real_world_service_v1':'advance_real_world_service_v1'),use.generation,
+     JSON.stringify(native.ref),JSON.stringify(native.allocationRef),...(growth?[use.wakeRevision]:[])])).rows[0];
    if(!actual||native.workLineage?.workId!==actual.work_id||epistemicHash(actual.claim_token)!==use.claimTokenDigest)reject();
   }else if(!['EXECUTION','RECOVERY','HUMAN'].includes(charge.phase)||!Number.isSafeInteger(charge.ordinal)||charge.ordinal<1||charge.ordinal>64||!Number.isSafeInteger(units)||units<1||units>100000||charge.phase==='EXECUTION'&&charge.ordinal!==1||resource.resourceClass!==(charge.phase==='HUMAN'?'HUMAN_ATTENTION':'COMPUTE')||resource.unit!==(charge.phase==='HUMAN'?'seconds':'request')||!native.intervention.channels.some(channel=>charge.memberId===`request-member:${epistemicHash([native.ref,channel.exposureId])}`)||charge.requestRef?.owner!=='S6'||charge.requestRef?.version!=='s6-conditional-json-v1'||charge.requestRef?.id!==`request-ir:${charge.requestRef?.contentDigest}`||charge.chargeKey!=='s6-unit:'+epistemicHash([native.ref,charge.requestRef,charge.memberId,charge.phase,charge.ordinal])||charge.requestDigest!==epistemicHash({...request,obligationRef:native.ref,allocationRef:native.allocationRef,consumptionRef:native.consumptionRef}))reject();
   let accumulated=charges.find(v=>v.resource_id===record.resource_id&&v.unit===record.unit);if(!accumulated){accumulated={resource_id:record.resource_id,unit:record.unit,used:'0'};charges.push(accumulated);}
@@ -840,49 +881,67 @@ export interface ServiceComputeInvocation {
  requestId:string;generation:number;jobId:string;deliveryAttemptId:string;claimToken:string;claimFence:number;
  stage:'COMPILE_CHECK'|'OBSERVE_CONSUME';
 }
+export interface GrowthComputeInvocation extends ServiceComputeInvocation {wakeRevision:number}
 /** W3 consumes the original S5 request coordinate. The actual native delivery,
  * original Work and S6 origin are reconstructed before pre-work occupation.
  * All S6 members and W3 attempts share the same retained cumulative frontier. */
 export async function recordServiceComputeOccupation(ctx:PeMutationContext,obligation:DurableObligation,use:ServiceComputeInvocation){
+ return recordProgrammeComputeOccupation(ctx,obligation,use,'POSTZ.W3');
+}
+/** W4 uses its real original request and delivery claim, never fake S6 membership. */
+export async function recordGrowthComputeOccupation(ctx:PeMutationContext,obligation:DurableObligation,use:GrowthComputeInvocation){
+ return recordProgrammeComputeOccupation(ctx,obligation,use,'POSTZ.W4');
+}
+async function recordProgrammeComputeOccupation(ctx:PeMutationContext,obligation:DurableObligation,
+ use:ServiceComputeInvocation|GrowthComputeInvocation,owner:'POSTZ.W3'|'POSTZ.W4'){
+ const growth=owner==='POSTZ.W4',prefix=growth?'w4':'w3';
  if(!Number.isSafeInteger(use.generation)||use.generation<1||!Number.isSafeInteger(use.claimFence)||use.claimFence<1
-   ||!['COMPILE_CHECK','OBSERVE_CONSUME'].includes(use.stage))throw denied();
+   ||!['COMPILE_CHECK','OBSERVE_CONSUME'].includes(use.stage)
+   ||growth&&(!('wakeRevision' in use)||!Number.isSafeInteger(use.wakeRevision)||use.wakeRevision<1))throw denied();
  return withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx)},async(_db,c)=>{
   const {row,budgets,recordCount}=await governedBudgetSnapshot(ctx,c,obligation);
   const actual=(await c.query(`SELECT q.work_id,q.parent_policy,q.parent_allocation,q.budget_obligation_ref,a.claim_token
-   FROM finnor_os.w3_service_requests q
+   FROM finnor_os.${growth?'w4_business_requests':'w3_service_requests'} q
    JOIN finnor_os.jobs j ON j.tenant_id=q.tenant_id AND j.id=$4
    JOIN finnor_os.job_delivery_attempts a ON a.tenant_id=j.tenant_id AND a.id=$5 AND a.job_id=j.id
    WHERE q.tenant_id=$1 AND q.principal_id=$2 AND q.id=$3 AND q.generation=$6
-    AND q.status NOT IN('CANCELLED','INVALIDATED','FAILED') AND q.original_deadline>clock_timestamp()
+    AND q.status NOT IN('CANCELLED','INVALIDATED','FAILED')
+    ${growth?"AND ($10='OBSERVE_CONSUME' OR q.original_deadline>clock_timestamp())":"AND q.original_deadline>clock_timestamp()"}
     AND ($10<>'COMPILE_CHECK' OR q.compile_deadline>clock_timestamp())
     AND j.status='running' AND j.claim_token=$7 AND j.claim_fence=$8 AND j.lease_expires_at>clock_timestamp()
     AND a.claim_token=j.claim_token AND a.claim_fence=j.claim_fence AND a.finished_at IS NULL
     AND j.payload->>'requestId'=q.id::text AND j.payload->>'principalId'=q.principal_id::text
-    AND j.type=$9 FOR SHARE OF q,j,a`,
+    AND j.type=$9
+    ${growth?`AND q.claim_token=j.claim_token AND q.claim_fence=j.claim_fence
+     AND q.wake_revision=$11 AND (j.payload->>'generation')::integer=q.generation
+     AND (j.payload->>'wakeRevision')::bigint=q.wake_revision`:""} FOR SHARE OF q,j,a`,
    [ctx.auth.tenantId,actor(ctx),use.requestId,use.jobId,use.deliveryAttemptId,use.generation,use.claimToken,use.claimFence,
-    use.stage==='COMPILE_CHECK'?'compile_real_world_service_v1':'advance_real_world_service_v1',use.stage])).rows[0];
+    growth?(use.stage==='COMPILE_CHECK'?'compile_market_operating_program_v1':'advance_market_operating_program_v1')
+     :(use.stage==='COMPILE_CHECK'?'compile_real_world_service_v1':'advance_real_world_service_v1'),use.stage,
+    ...(growth?[(use as GrowthComputeInvocation).wakeRevision]:[])])).rows[0];
   if(!actual||obligation.workLineage?.workId!==actual.work_id
     ||!sameAllocationRef(actual.parent_policy,obligation.policyRef)
     ||!sameAllocationRef(actual.parent_allocation,obligation.allocationRef)
     ||!sameAllocationRef(actual.budget_obligation_ref,obligation.ref))throw denied();
   const retained={requestId:use.requestId,generation:use.generation,jobId:use.jobId,deliveryAttemptId:use.deliveryAttemptId,
-   claimFence:use.claimFence,stage:use.stage,claimTokenDigest:epistemicHash(actual.claim_token)};
-  const chargeKey='w3-unit:'+epistemicHash([obligation.ref,retained]);
-  const requestDigest=epistemicHash({serviceInvocation:retained,obligationRef:obligation.ref,allocationRef:obligation.allocationRef,consumptionRef:obligation.consumptionRef});
+   claimFence:use.claimFence,stage:use.stage,claimTokenDigest:epistemicHash(actual.claim_token),
+   ...(growth?{wakeRevision:(use as GrowthComputeInvocation).wakeRevision}:{})};
+  const chargeKey=prefix+'-unit:'+epistemicHash([obligation.ref,retained]);
+  const requestDigest=epistemicHash({[growth?'growthInvocation':'serviceInvocation']:retained,obligationRef:obligation.ref,allocationRef:obligation.allocationRef,consumptionRef:obligation.consumptionRef});
   const prior=(await c.query('SELECT request_digest,body FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 AND charge_key=$3',
    [ctx.auth.tenantId,obligation.reservationRef.id,chargeKey])).rows[0];
   if(prior){if(prior.request_digest!==requestDigest)throw conflict();return {charge:prior.body,semanticReplay:true};}
   if(recordCount>=512)throw new LedgerFault(409,'S5_EXECUTION_RESOURCE_RECORD_BOUND');
   const available=budgets.filter((b:{resourceClass:string;unit:string;remaining:string})=>b.resourceClass==='COMPUTE'
    &&b.unit==='request'&&allocationQuantity(b.remaining).compare(allocationQuantity('1'))>=0);
-  if(available.length!==1)throw new LedgerFault(409,'S5_SERVICE_COMPUTATION_UNFUNDED_OR_EXHAUSTED');
+  if(available.length!==1)throw new LedgerFault(409,growth?'S5_GROWTH_COMPUTATION_UNFUNDED_OR_EXHAUSTED':'S5_SERVICE_COMPUTATION_UNFUNDED_OR_EXHAUSTED');
   const budget=available[0],requestDigestPart=epistemicHash(retained);
-  const requestRef={owner:'S4',id:'w3-invocation:'+requestDigestPart,version:'w3-native-invocation-v1',contentDigest:requestDigestPart};
-  const body={schema:'finnor.s5.service-compute-charge.v1',semanticOwner:'S5',tenantId:ctx.auth.tenantId,
+  const requestRef={owner:'S4',id:prefix+'-invocation:'+requestDigestPart,version:prefix+'-native-invocation-v1',contentDigest:requestDigestPart};
+  const body={schema:growth?'finnor.s5.growth-compute-charge.v1':'finnor.s5.service-compute-charge.v1',semanticOwner:'S5',tenantId:ctx.auth.tenantId,
    principalId:actor(ctx),knowledgeAt:new Date().toISOString(),obligationRef:obligation.ref,
    allocationRef:obligation.allocationRef,reservationRef:obligation.reservationRef,consumptionRef:obligation.consumptionRef,
-   chargeKey,requestDigest,requestRef,memberId:'w3-job:'+use.jobId,phase:'EXECUTION',ordinal:1,units:1,
-   serviceInvocation:retained,resourceId:budget.resourceId,unit:'request',limit:budget.limit,
+   chargeKey,requestDigest,requestRef,memberId:prefix+'-job:'+use.jobId,phase:'EXECUTION',ordinal:1,units:1,
+   [growth?'growthInvocation':'serviceInvocation']:retained,resourceId:budget.resourceId,unit:'request',limit:budget.limit,
    usedAfter:allocationDecimal(allocationQuantity(budget.used).add(allocationQuantity('1'))),
    qualification:'ACTUAL_NATIVE_DELIVERY_PRE_WORK_OCCUPATION_NOT_PROVIDER_BILLING',
    costs:{money:null,status:'UNMETERED',releaseSufficient:false},protectedReceipt:null,executionAuthorityGranted:false};

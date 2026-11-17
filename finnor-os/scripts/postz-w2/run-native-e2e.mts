@@ -246,6 +246,25 @@ try {
     await save("participant-retired-role-result.json", { status: "PASS", denied, restoredRole: "participant" });
     const me = await api("me", undefined, recipient);
     assert.equal(me.status, 200, JSON.stringify(me.body)); assert.equal(me.body.role, "participant");
+    const ownerOnlyCalls = [
+      { path: "capabilities/runs", body: undefined }, { path: "capabilities/runs", body: {} },
+      { path: "capabilities/runs/" + randomUUID(), body: undefined },
+      { path: "capabilities/nango/connect", body: {} }, { path: "capabilities/nango/sources", body: undefined },
+      { path: "capabilities/planner/activation", body: undefined }, { path: "capabilities/planner/activation", body: {} },
+    ];
+    const capabilityCounts = async () => ({
+      runs: (await admin!.query("SELECT count(*)::int n FROM finnor_os.capability_runs WHERE tenant_id=$1", [tenant])).rows[0].n,
+      bindings: (await admin!.query("SELECT count(*)::int n FROM finnor_os.capability_nango_bindings WHERE tenant_id=$1", [tenant])).rows[0].n,
+    });
+    const capabilitiesBefore = await capabilityCounts(), capabilityDenials = [];
+    for (const input of ownerOnlyCalls) {
+      const response = await api(input.path, input.body, recipient);
+      assert.equal(response.status, 403, JSON.stringify(response.body));
+      capabilityDenials.push({ path: input.path, method: input.body === undefined ? "GET" : "POST", status: response.status });
+    }
+    const capabilitiesAfter = await capabilityCounts(); assert.deepEqual(capabilitiesAfter, capabilitiesBefore);
+    await save("participant-capability-owner-boundary.json", { participant: recipient, capabilityDenials,
+      before: capabilitiesBefore, after: capabilitiesAfter, authorityExpanded: false });
     const authority = await withTenantTransaction(tenant, { userId: recipient }, async (_db, c) => {
       const ctx = { ...auth, userId: recipient, employeeId: recipient };
       const request = { operation: "query" as const, capability: "query:work", resource: { type: "work", id: workIds[0]! }, risk: "low" as const };
@@ -873,12 +892,28 @@ try {
     const child = worker, exit = new Promise<void>(resolve => child.once("exit", () => resolve()));
     child.kill("SIGTERM"); const timer = setTimeout(() => child.kill("SIGKILL"), 5000); await exit; clearTimeout(timer);
   }
-  await mountedFrontend?.stop().catch(() => {});
-  await service?.close().catch(() => {});
-  await closePool().catch(() => {}); await admin?.end().catch(() => {}); await database?.stop().catch(() => {});
+  const cleanup: Array<{ name: string; status: "PASS" | "FAIL"; errorType?: string; code?: string }> = [];
+  for (const [name, close] of [
+    ["mounted-frontend", () => mountedFrontend?.stop()], ["authenticated-service", () => service?.close()],
+    ["application-pool", () => closePool()], ["database-admin", () => admin?.end()], ["owned-postgres", () => database?.stop()],
+  ] as const) {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await Promise.race([Promise.resolve().then(close), new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(Object.assign(Error("W2_OWNED_CLEANUP_BOUND"), { code: "W2_OWNED_CLEANUP_BOUND" })), 10000);
+      })]);
+      cleanup.push({ name, status: "PASS" });
+    } catch (error) {
+      const code = error && typeof error === "object" && "code" in error ? String(error.code) : "";
+      cleanup.push({ name, status: "FAIL", errorType: error instanceof Error ? error.name : "Unknown",
+        ...(/^[A-Z][A-Z0-9_]{0,127}$/.test(code) ? { code } : {}) });
+      failure ??= "W2_OWNED_CLEANUP_FAILED:" + name;
+    } finally { if (timer) clearTimeout(timer); }
+  }
+  await save("cleanup.json", { status: cleanup.some(row => row.status === "FAIL") ? "FAIL" : "PASS", steps: cleanup });
   await save("traffic-without-credentials.json", traffic);
   await save("report.json", { schema: "finnor.postz.w2.native-e2e-report.v1", finishedAt: new Date().toISOString(),
-    status: failure ? "FAIL" : "PASS", results, failure, sourceHashes: sources, actualOrdinaryAuthentication: true,
+    status: failure ? "FAIL" : "PASS", results, failure, cleanup, sourceHashes: sources, actualOrdinaryAuthentication: true,
     actualRestrictedRoles: true, protectedQualification: false, genuineHumanQualified: false, fieldActivation: false,
     mountedReadback: mountedResult ?? "NOT_RUN_IN_THIS_DRIVER", installedRuntime: Boolean(installation), retainedUnknownResourceUse: true });
   console.log(JSON.stringify({ evidence, status: failure ? "FAIL" : "PASS", passed: results.length }));

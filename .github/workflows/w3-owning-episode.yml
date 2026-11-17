@@ -110,9 +110,12 @@ jobs:
         with:
           name: w3-owner-${{ inputs.episode }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
+            ${{ runner.temp }}/w3-owner-types/report.json
             ${{ runner.temp }}/w3-owner/result.json
+            ${{ runner.temp }}/w3-owner/cleanup.json
             ${{ runner.temp }}/w3-owner/cases/
             ${{ runner.temp }}/w3-owner/source-cut.json
+            ${{ runner.temp }}/w3-owner/canonical-actor-roles.json
             ${{ runner.temp }}/w3-owner/terminal-failure.json
             ${{ runner.temp }}/w3-owner/terminal-summary.json
             ${{ runner.temp }}/w3-owner/publication/

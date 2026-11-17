@@ -75,6 +75,8 @@ export async function nativeDriftStory(e: any) {
           observed.revisedPolicy = (await e.admin.query(
             "UPDATE finnor_os.compute_resource_policies SET source=$1 WHERE resource_key='native:p2' RETURNING *",
             [source])).rows[0];
+          for (const key of ["resource_key", "capacity", "per_tenant_capacity", "interactive_reserve", "lease_seconds"])
+            assert.deepEqual(observed.revisedPolicy[key], originalPolicy[key], "Capability drift must preserve actual capacity: " + key);
           observed.invalidation = await http.call("economic-orchestration-invalidate", { searchId });
           assert.equal(observed.invalidation.status, 200, JSON.stringify(observed.invalidation));
           assert(observed.invalidation.body.affected.includes(observed.oldCapsuleDigest));
@@ -104,8 +106,10 @@ export async function nativeDriftStory(e: any) {
           assert(observed.reselected.p2_events.some((row: any) => row.search_id === searchId &&
             row.kind === "W1_PRE_ADMISSION_REPLANNED"));
           if (facet === "LATENCY") {
-            assert.equal(await driveNativeProgram(e.admin, queue, programId, performance.now()), "TESTED");
+            observed.nativeTerminalStatus = await driveNativeProgram(e.admin, queue, programId, performance.now());
             observed.result = await http.call("program-read", { programId });
+            observed.terminal = await internalOwnerCut(e, f.f.tenant);
+            assert.equal(observed.nativeTerminalStatus, "TESTED");
             assert.equal(observed.result.status, 200, JSON.stringify(observed.result));
             assert.equal(observed.result.body.program.result.values.netEquity.value, "43");
             observed.expectedNext = "FRESH_NATIVE_FALLBACK_UNDER_REVISED_LATENCY_CONFIGURATION";

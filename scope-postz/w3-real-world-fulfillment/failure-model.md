@@ -1,5 +1,33 @@
 # W3 failure model and independent observable predicates
 
+The canonical-participant rerun on 1 November 2026 fails before its first case.
+The migrated participant identity is permitted by `users_role_check`, but the
+legacy user trigger attempts an employee-role assignment with a null role.
+The tenant-scope guard correctly rejects that insert. Repair belongs to the
+canonical authority/migration owner, not a W3 fixture bypass. Participants must
+remain recipient-only, with no invented legacy employee role or general grant.
+After integration, repeat the same authenticated owning journey and retain
+the failed setup, then require provider/inspector/evaluator private-Work and
+owner-only intake refusals alongside their exact participant positives.
+
+The consolidated publication audit retains the original 30-second deadline,
+five-second claim, 20-second worker batch, and 60-second process supervisor.
+Local run 005 shows worker registration finishing only 1.56 seconds before the
+deadline when boot starts at the former 15-second lead. Start the physical
+worker at the existing batch-window boundary instead. Require readiness before
+the original three-second claim window; a late boot is an explicit failed setup,
+not evidence of a fenced publication. Only an actual blocked INSERT with a live
+claim before the deadline can qualify the challenge. No clock or lease resets.
+
+The integrated role audit found that the owning fixture registered providers,
+inspectors, evaluators and unrelated recipients as product owners. Register
+those controlled actors as canonical participants instead, keeping only the
+actual initiating and foreign-company owners as owners. Their source, consent,
+inbox and observation positives must pass through their existing exact protocols;
+generic owner controls and the owner's private Work must remain denied. Retain
+the actual canonical role rows with the input evidence. Controlled actors still
+do not establish genuine human or professional qualification.
+
 This preserves the original pre-code failure model and the current-main
 continuation's preregistered contracts. Historical verification is not Linux
 evidence. A contract below is not a claim that its proof has passed.
@@ -177,6 +205,15 @@ Attempt every owned closer in dependency order under a10-second observation boun
 record success or error type/code, and fail the terminal verdict on any close
 error or timeout. Await the owned worker's exit before stopping its database.
 Do not turn a partial teardown into a passed journey or skip later closers.
+
+The local prepared-source run004 independently observed the actual INSERT lock
+before deadline and a lease valid beyond release, then exposed an invalid test
+query against `work_events.reason`. The canonical column is `event_type`. Change
+both the SQL predicate and the final readback filter to that real column; an
+undefined JavaScript field must never make a zero-event predicate pass. Retain
+the failed run and repeat the unchanged actual deadline/lease challenge. Before
+that rerun, inspect every SQL column used by the W owning drivers against the
+actual migrated schema rather than patching the next failure after publication.
 This focused negative case retains its original Work/input/allocation after
 refusal. It does not claim the normal journey's successful-progress occupation;
 the full positive campaign keeps that separate original requirement.

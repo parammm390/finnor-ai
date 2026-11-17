@@ -170,7 +170,7 @@ try {
   await finite("admin_connect", () => admin!.connect());
   observedMigrationNames = (await finite("installed_migration_names", () =>
     admin!.query<{ name: string }>('SELECT name FROM finnor_os._migrations ORDER BY name COLLATE "C"'))).rows.map(row => row.name);
-  assert.deepEqual(migrationNames, registeredMigrations.map(row => row.name));
+  assert.deepEqual([...migrationNames].sort(), registeredMigrations.map(row => row.name));
   assert.deepEqual(observedMigrationNames, registeredMigrations.map(row => row.name));
   await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD 'finnor_app'");
   await admin.query("SET app.test_vertical_mode='explicit'");

@@ -68,7 +68,8 @@ export async function nativeRevocationStory(e: any) {
           const unitId = observed.pause.event.unitId;
           const laterBoundary = observed.preRevocation.p2_events.filter((event: any) =>
             event.search_id === searchId && event.kind === "W1_BOUNDARY_CURRENTNESS_CHECKED" &&
-            event.body.boundary === boundary && (!unitId || event.body.unitId === unitId));
+            event.body.boundary === boundary &&
+            (boundary === "DISPATCH" || !unitId || event.body.unitId === unitId));
           assert.equal(laterBoundary.length, 0, "A late pause cannot count as revocation before the intended boundary");
           if (boundary === "CLAIM") assert.equal(observed.preRevocation.p2_attempts.length, 0);
           if (boundary === "USE") assert.equal(observed.preRevocation.p2_attempts[0].status, "SUBMITTED");

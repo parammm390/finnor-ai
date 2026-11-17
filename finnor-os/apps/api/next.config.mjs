@@ -48,6 +48,7 @@ const nextConfig = {
   // The separately compiled S6 runtime uses Node ESM .js specifiers. Resolve
   // those same imports to original TS when bundling the ordinary API client.
   experimental: { cpus: 2, extensionAlias: { ".js": [".ts", ".tsx", ".js"] },
+    optimizePackageImports: ["@finnor/private-equity", "@finnor/epistemic-runtime"],
     ...(process.env.FINNOR_Z2_BUILD_GRAPH === "1" ? { cpus: 1, webpackMemoryOptimizations: true } : {}),
   },
   webpack: (config, { webpack, isServer, nextRuntime, dev }) => {

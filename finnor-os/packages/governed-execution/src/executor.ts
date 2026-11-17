@@ -52,3 +52,9 @@ export async function launchIsolatedNodeExecutor(request:IsolatedNodeRequest):Pr
     authority:'NONE_OUTPUT_UNTRUSTED',productionAdmission:'UNSUPPORTED_PENDING_RESOURCE_AND_RELEASE_QUALIFICATION'}};
  }finally{active--;if(linux)await linux.cleanup();if(scratch)await rm(scratch,{recursive:true,force:true});}
 }
+
+export async function launchWorkforceSpecialistExecutor(
+ request: import('./executor-specialist').WorkforceSpecialistRequest
+): Promise<import('./executor-specialist').WorkforceSpecialistResult> {
+ return (await import('./executor-specialist.js')).launchWorkforceSpecialistExecutor(request);
+}

@@ -479,7 +479,9 @@ export async function readWorkforceExecution(ctx: TenantContext, id: string) {
 export async function listWorkforceExecutions(ctx: TenantContext, workId: string) {
   return tx(ctx, async c => {
     await activePrincipal(ctx, c);
-    const rows = (await c.query(`SELECT id,work_id AS "workId",status,revision FROM finnor_os.w2_programs
+    const rows = (await c.query(`SELECT id,work_id AS "workId",
+      CASE WHEN finnor_specialist.native_pending(tenant_id,id) IS NULL THEN status ELSE 'FENCED' END status,
+      revision FROM finnor_os.w2_programs
       WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY created_at,id LIMIT 129`,
     [ctx.tenantId, principal(ctx), workId])).rows;
     const received = (await c.query(`SELECT id,work_id AS "workId" FROM finnor_os.w2_participant_programs($1)`, [workId])).rows;

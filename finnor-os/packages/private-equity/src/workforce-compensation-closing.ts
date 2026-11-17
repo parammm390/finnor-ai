@@ -91,7 +91,8 @@ type PaymentSourceRow = {
   observation: { closingEvidenceRef?: { versionId?: string } } | null;
   consumption: AllocationConsumption; consumption_principal_id: string;
   consumption_status: string; effect_ref: ExperimentRef | null; evidence_version_id: string;
-  financial_origin: AllocationReservation; reservation_status: string; financial_envelopes: unknown;
+  financial_origin: AllocationReservation; reservation_principal_id: string;
+  reservation_status: string; financial_envelopes: unknown;
   content: string; content_hash: string; snapshot: { closingObservation?: unknown } | null;
 };
 
@@ -101,7 +102,7 @@ async function paymentSource(c: PoolClient, tenantId: string, programmeId: strin
       p.body profile,p.status profile_status,p.digest profile_content_digest,p.valid_until profile_valid_until,
       l.node_key,l.consumption_ref,e.semantic_hash,o.verification_status,o.observation,
       co.body consumption,co.principal_id consumption_principal_id,st.status consumption_status,st.effect_ref,v.id evidence_version_id,
-      ro.body financial_origin,r.status reservation_status,r.envelopes financial_envelopes,
+      ro.body financial_origin,ro.principal_id reservation_principal_id,r.status reservation_status,r.envelopes financial_envelopes,
       v.content,v.content_hash,v.snapshot
     FROM finnor_os.pe_closing_programmes q
     JOIN finnor_os.pe_closing_profiles p ON p.tenant_id=q.tenant_id AND p.id=q.profile_id
@@ -147,6 +148,7 @@ async function paymentSource(c: PoolClient, tenantId: string, programmeId: strin
       !sameAllocationRef(row.consumption.reservationRef, reservationRef) ||
       !step.allocationRef || !sameAllocationRef(strip(step.allocationRef), row.consumption.certificateRef) ||
       row.consumption_principal_id !== flow.workforceCompensation.payerPrincipalId ||
+      row.reservation_principal_id !== flow.workforceCompensation.payerPrincipalId ||
       row.effect_ref?.id !== effectId || row.effect_ref.contentDigest !== row.semantic_hash ||
       !sameAllocationRef({ owner: row.consumption_ref.owner, id: row.consumption_ref.id,
         version: row.consumption_ref.version, contentDigest: row.consumption_ref.contentDigest }, row.consumption.ref) ||

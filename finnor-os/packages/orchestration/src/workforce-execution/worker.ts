@@ -190,6 +190,7 @@ async function executeAssignment(ctx: TenantContext, id: string, assignmentId: s
     const program = q.program!, assignment = program.assignments.find(a => a.id === assignmentId)!;
     const definitions = await resolveNativeDefinitions(ctx, q, c);
     const computation = workforceComputationSchema.parse(definitions.operations.find(op => op.taskId === assignment.taskId)?.computation);
+    if (computation.kind === "SPECIALIST_ANALYSIS") return { specialist: true as const };
     if (computation.kind === "HUMAN_JUDGMENT" || computation.kind === "PARTICIPANT_INPUT") return null;
     const previous = (await events(ctx, q, c)).find(e => e.event_id === "s6-intent:" + assignmentId);
     if (previous) {
@@ -255,6 +256,8 @@ async function executeAssignment(ctx: TenantContext, id: string, assignmentId: s
     throw error;
   });
   if (!prepared) return false;
+  if ("specialist" in prepared)
+    return (await import("./specialist")).executeWorkforceSpecialistAssignment(ctx, id, assignmentId, execution, recoveryOnly);
   console.log(JSON.stringify({ event: "W2_S6_INTENT_COMMITTED", programId: id, assignmentId, jobId: execution.jobId,
     claimFence: execution.claimFence, pid: process.pid }));
   const started = performance.now(), cpu = process.cpuUsage();
@@ -448,7 +451,7 @@ export async function runWorkforceExecutionJob(payload: Record<string, unknown>,
   execution.registerHeartbeat(() => tx(ctx, async c => {
     const q = await programRow(ctx, id, c);
     try { await liveClaim(ctx, q, execution, c); return true; } catch { return false; }
-  }));
+  }), { leaseSeconds: execution.leaseSeconds });
   if (payload.phase === "COMPILE") { await compile(ctx, id, execution); return; }
   if (payload.phase === "RECONCILE") {
     const original = await tx(ctx, async c => {
@@ -456,7 +459,7 @@ export async function runWorkforceExecutionJob(payload: Record<string, unknown>,
       await liveClaim(ctx, q, execution, c);
       const all = await events(ctx, q, c);
       return { q, uncertain: all.filter(e => e.kind === "S6_INTENDED" &&
-        !all.some(result => result.event_id === "s6-result:" + e.body.assignmentId)) };
+        (e.body.executionKind === "SPECIALIST_ANALYSIS" || !all.some(result => result.event_id === "s6-result:" + e.body.assignmentId))) };
     });
     for (const intent of original.uncertain)
       await executeAssignment(ctx, id, String(intent.body.assignmentId), execution, true);
@@ -487,7 +490,7 @@ export async function runWorkforceExecutionJob(payload: Record<string, unknown>,
     if (!q.program || q.status === "CLOSED") return;
     const ids = q.program.assignments.filter(a => ["ACCEPTED", "IN_PROGRESS"].includes(a.state.kind) &&
       loaded.definitions.operations.some(op => op.taskId === a.taskId &&
-        ["SUM_INTEGERS", "SORT_STRINGS"].includes(op.computation.kind))).map(a => a.id);
+        ["SUM_INTEGERS", "SORT_STRINGS", "SPECIALIST_ANALYSIS"].includes(op.computation.kind))).map(a => a.id);
     if (!ids.length) break;
     let progress = false;
     for (const assignmentId of ids) if (await executeAssignment(ctx, id, assignmentId, execution)) { worked++; progress = true; break; }
@@ -505,7 +508,7 @@ export async function runWorkforceExecutionJob(payload: Record<string, unknown>,
     }
     const definitions = await resolveNativeDefinitions(ctx, q, c);
     const future = q.program.assignments.filter(a => ["ACCEPTED", "IN_PROGRESS"].includes(a.state.kind) &&
-      definitions.operations.some(op => op.taskId === a.taskId && ["SUM_INTEGERS", "SORT_STRINGS"].includes(op.computation.kind)))
+      definitions.operations.some(op => op.taskId === a.taskId && ["SUM_INTEGERS", "SORT_STRINGS", "SPECIALIST_ANALYSIS"].includes(op.computation.kind)))
       .flatMap(a => {
         const task = definitions.tasks.find(task => task.id === a.taskId);
         return task && Date.parse(task.slot.startAt) > Date.now() ? [{ assignment: a, task }] : [];

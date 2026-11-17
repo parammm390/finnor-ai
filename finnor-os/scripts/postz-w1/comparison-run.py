@@ -44,7 +44,7 @@ try:
     assert record["childExitCode"] == 0
     migrations = sorted(path.name for path in (backend / "packages/db/migrations").glob("*.sql"))
     assert owning["status"] == "PASS_LOCAL" and owning["migrationCount"] == len(migrations)
-    assert owning["migrationNames"] == owning["observedMigrationNames"] == migrations
+    assert sorted(owning["migrationNames"]) == owning["observedMigrationNames"] == migrations
     assert owning["shutdown"]["complete"] is True
     assert owning["shutdown"]["postgres"]["status"] == "PASS"
     assert owning["shutdown"]["postgres"]["clusterStopped"] is True

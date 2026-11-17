@@ -264,6 +264,15 @@ export async function resolveCanonicalInput(ctx: TenantContext, q: WorkforceProg
   const fundingRefs = all.filter(e => e.kind === "FUNDING").flatMap(e => e.body.refs as ExperimentRef[]);
   const funding = await readWorkforceCarvesTx({ auth: ctx }, c, q.budget, fundingRefs);
   const dependencyInvalidations = await readWorkforceInvalidations(ctx, q, actors, c);
+  if (definitions.operations.some(operation => operation.computation.kind === "SPECIALIST_ANALYSIS")) {
+    const pending = (await c.query("SELECT finnor_specialist.native_pending($1,$2) value", [ctx.tenantId, q.id])).rows[0]?.value;
+    if (pending !== null && !Array.isArray(pending)) reject("WORKFORCE_SPECIALIST_CANONICAL_FENCE_UNAVAILABLE", 503);
+    for (const original of pending ?? []) dependencyInvalidations.push({
+      sourceKind: "S8_ORIGINAL_PUBLICATION_PENDING", sourceId: original.publicationId,
+      expectedDigest: original.originalDigest, actualDigest: null,
+      assignmentIds: q.program?.assignments.map(assignment => assignment.id) ?? [],
+    });
+  }
   const compensation = q.budget.resources.some(resource => resource.resourceClass === "CASH")
     ? await readWorkforceCompensationTx({ auth: ctx }, c, q.budget) : { observations: [] };
   const labor = new Map<string, WorkforceCompilerInput["obligations"][number]>();
@@ -345,15 +354,26 @@ export async function publish(ctx: TenantContext, q: WorkforceProgramRow, progra
         old.holds_capacity === holds && old.exact_slot === true &&
         exactQuantity(old.effort_seconds).compare(exactQuantity(task.effortSeconds)) === 0 &&
         workforceDigest(old.body) === workforceDigest(assignment) && workforceDigest(old.task) === workforceDigest(task)) continue;
+    const values = [ctx.tenantId, q.id, assignment.id, q.principal_id,
+      assignment.actorId, binding.principalId, q.work_id, task.slot.startAt, task.slot.endAt, task.effortSeconds,
+      holds, assignment.state.kind, program.revision, JSON.stringify(assignment), JSON.stringify(task), checker.principalId];
+    if (old) {
+      if (old.principal_id !== q.principal_id || old.work_id !== q.work_id)
+        reject("WORKFORCE_ORIGINAL_HEAD_OWNER_OR_WORK_CHANGED");
+      // A real, locked existing head uses UPDATE directly. PostgreSQL executes
+      // BEFORE INSERT before ON CONFLICT, which must still refuse new heads
+      // while an original publication is pending. Never manufacture OLD.
+      const changed = await c.query(`UPDATE finnor_os.w2_assignment_heads SET
+        body=$14::jsonb,task=$15::jsonb,actor_id=$5,recipient_principal_id=$6,holds_capacity=$11,
+        state=$12,revision=$13,slot_start=$8,slot_end=$9,effort_seconds=$10,checker_principal_id=$16
+        WHERE tenant_id=$1 AND program_id=$2 AND assignment_id=$3
+          AND principal_id=$4 AND work_id=$7 AND revision=$17`, [...values, old.revision]);
+      if (changed.rowCount !== 1) reject("WORKFORCE_ORIGINAL_HEAD_REVISION_CHANGED");
+      continue;
+    }
     await c.query(`INSERT INTO finnor_os.w2_assignment_heads(tenant_id,program_id,assignment_id,principal_id,actor_id,
       recipient_principal_id,work_id,slot_start,slot_end,effort_seconds,holds_capacity,state,revision,body,task,checker_principal_id)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb,$15::jsonb,$16)
-      ON CONFLICT(tenant_id,program_id,assignment_id) DO UPDATE SET body=excluded.body,task=excluded.task,
-      actor_id=excluded.actor_id,recipient_principal_id=excluded.recipient_principal_id,holds_capacity=excluded.holds_capacity,
-      state=excluded.state,revision=excluded.revision,slot_start=excluded.slot_start,slot_end=excluded.slot_end,
-      effort_seconds=excluded.effort_seconds,checker_principal_id=excluded.checker_principal_id`, [ctx.tenantId, q.id, assignment.id, q.principal_id,
-      assignment.actorId, binding.principalId, q.work_id, task.slot.startAt, task.slot.endAt, task.effortSeconds,
-      holds, assignment.state.kind, program.revision, JSON.stringify(assignment), JSON.stringify(task), checker.principalId]);
+      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb,$15::jsonb,$16)`, values);
   }
   const allOriginalTasksClosed = graph.tasks.length > 0 &&
     graph.tasks.every(task => program.assignments.some(a => a.taskId === task.id && a.state.kind === "CLOSED" &&
@@ -381,6 +401,10 @@ export async function recordWorkforceCurrentnessTx(ctx: TenantContext, q: Workfo
   const seeds = [...new Set(issues.flatMap(issue =>
     issue.assignmentId ? [issue.assignmentId] : q.program!.assignments.map(a => a.id)))].sort();
   const p7 = workforceP7Closure(q.program, seeds);
+  // Pending is already durable in the canonical bridge. A diagnostic GET must
+  // not manufacture a native revision/status conflict against the original CAS.
+  if (check.issues.every(issue => issue.code === "CANONICAL_DEPENDENCY_CHANGED"
+    && issue.detail.startsWith("S8_ORIGINAL_PUBLICATION_PENDING:"))) return p7;
   const body = { schema: "finnor.workforce-currentness-revalidation.v1", programmeId: q.id,
     basisRevision: q.program.revision, issues, p7,
     invalidations: (canonical.dependencyInvalidations ?? []).map(value => ({

@@ -20,16 +20,16 @@ export async function enqueueOwnerDeliveryInTransaction(c:pg.PoolClient,identity
  await activeOwner(c,identity);
  await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[JSON.stringify(['s6-owner-transport',identity])]);
  const args=identityArgs(identity,input.kind,input.identity),payloadDigest=ownerTransportHash(input.payload);
- let prior=(await c.query(`SELECT * FROM finnor_os.s6_owner_delivery_origins WHERE ${predicate}`,args)).rows[0];
- if(!prior){
+ const prior=(await c.query(`SELECT envelope,signature,payload_digest FROM finnor_os.s6_owner_delivery_origins WHERE ${predicate}`,args)).rows[0];
+ if(prior){
+  if(prior.payload_digest!==payloadDigest)fail('OWNER_TRANSPORT_IDENTITY_IMMUTABLE');
+  verifyOwnerDeliveryOrigin(route,prior.envelope,prior.signature);
+ }else{
   const count=await c.query("SELECT count(*)::int n FROM finnor_os.s6_owner_delivery_states WHERE tenant_id=$1 AND principal_id=$2 AND semantic_owner=$3 AND status<>'ACCEPTED'",args.slice(0,3));
   if(count.rows[0].n>=256)fail('OWNER_TRANSPORT_UNRESOLVED_BACKLOG_LIMIT');
   const signed=await signOwnerDeliveryOrigin(route,{...identity,...input});
   await c.query('INSERT INTO finnor_os.s6_owner_delivery_origins(tenant_id,principal_id,semantic_owner,kind,identity,payload_digest,envelope,signature) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,$8)',[...args,payloadDigest,JSON.stringify(signed.envelope),signed.signature]);
-  prior={...signed,payload_digest:payloadDigest};
  }
- if(prior.payload_digest!==payloadDigest)fail('OWNER_TRANSPORT_IDENTITY_IMMUTABLE');
- verifyOwnerDeliveryOrigin(route,prior.envelope,prior.signature);
  await c.query("INSERT INTO finnor_os.s6_owner_delivery_states(tenant_id,principal_id,semantic_owner,kind,identity,status,attempts) VALUES($1,$2,$3,$4,$5,'PENDING',0) ON CONFLICT DO NOTHING",args);
  return {status:'AUTHENTICATED_OWNER_INTENT_PENDING_LEDGER',identity:input.identity,protectedReceipt:null};
 }

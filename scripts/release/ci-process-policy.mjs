@@ -156,7 +156,7 @@ export function verifyCiProcess(root) {
     ["w1-owning-verification.yml", "W1 result - economic orchestration and recovery",
       "needs: [source-checks, native-positive, owning-regressions]"],
     ["w3-owning-verification.yml", "W3 result - fulfillment and publication",
-      "needs: [fast-owner, full-positive-and-publication]"],
+      "needs: [fast-owner, full-positive-and-publication, cold-installed-and-mounted]"],
   ]) {
     const text = workflows[file] ?? ""
     require(text.split("\njobs:")[0].includes("codex/zw-integration-quality-20261115"),

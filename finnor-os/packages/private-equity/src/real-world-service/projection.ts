@@ -29,7 +29,6 @@ function timeFits(r: ObservationOriginal, c: ServiceCriterion, start: number, en
   }
 }
 const uniqueRefs = (refs: NativeRef[]) => [...new Map(refs.map(r => [canonical(r), r])).values()];
-const uniqueCosts = (costs: ServiceCost[]) => [...new Map(costs.map(c => [c.id, c])).values()];
 
 /** Projection only. Native S6 owns effect state; S7 owns accounting. An inspected
  * controlled trace never becomes field validation or an admission receipt. */
@@ -64,6 +63,20 @@ export function projectServiceProgram(
   const unreconciledInvoices = [...new Map([...invoiceSources.values()].filter(r => !reconciledInvoiceBodies.has(hash(r.body)))
     .map(r => [hash(r.body), r])).values()];
   const unreconciledInstances = new Set(unreconciledInvoices.map(r => r.body.instanceId));
+  // Historical costs and liabilities survive changed terms and revoked evidence.
+  const costReports = historical.flatMap(r => (r.body.kind === "COST" ? [r.body.cost]
+    : r.body.kind === "CANCELLED" ? r.body.residualCosts : []).map(cost => ({
+      key: canonical([r.body.instanceId, r.body.providerId, r.body.termsDigest, cost.id]),
+      instanceId: r.body.instanceId, cost,
+    })));
+  const costStates = new Map<string, { instanceId: string; cost: ServiceCost }>(), costConflicts = new Set<string>();
+  const rank = { UNKNOWN: 0, QUOTE: 1, EXPOSURE: 2, ACCRUED: 3, CASH: 4 };
+  for (const { key, instanceId, cost } of costReports) {
+    const old = costStates.get(key)?.cost;
+    if (old && old.basis === cost.basis && canonical(old) !== canonical(cost)) costConflicts.add(key);
+    if (!old || rank[cost.basis] >= rank[old.basis]) costStates.set(key, { instanceId, cost });
+  }
+  const costEntries = [...costStates];
   const eligible = historical.filter(r => r.consentCurrent
     && program.options.some(o => o.instanceId === r.body.instanceId && o.providerId === r.body.providerId
       && o.termsDigest === r.body.termsDigest));
@@ -191,16 +204,15 @@ export function projectServiceProgram(
       }
     }
     const disputed = chosen.some(r => r.body.kind === "DISPUTED");
-    const costs = uniqueCosts([
-      ...chosen.flatMap(r => r.body.kind === "COST" ? [r.body.cost] : []),
-      ...commitments.flatMap(c => c.residualCosts),
-    ]);
+    const instanceCostStates = costEntries.filter(([, entry]) => entry.instanceId === instance.id);
+    const costs = instanceCostStates.map(([, entry]) => entry.cost);
+    if (instanceCostStates.some(([key]) => costConflicts.has(key))) contradictions.push("CONFLICTING_ORIGINAL_COSTS");
     // An older quote remains a distinct commitment even for the same provider.
     const liveOtherCommitments = commitments.some(c => (c.providerId !== chosenProvider || c.termsDigest !== chosenTerms)
       && ["ACCEPTED", "CANCELLATION_REQUESTED"].includes(c.state));
     const financiallyReconciled = operationallyComplete && !disputed && invoicesReconciled && unresolved.length === 0
       && !unreconciledInstances.has(instance.id)
-      && !liveOtherCommitments && costs.every(c => c.amount !== null && c.basis !== "EXPOSURE" && c.basis !== "UNKNOWN")
+      && !liveOtherCommitments && costs.every(c => c.amount !== null && ["CASH", "ACCRUED"].includes(c.basis))
       && contradictions.length === 0;
     let state: ServiceState = "PROPOSAL";
     if (rows.some(r => r.kind === "QUOTE")) state = "QUOTED";
@@ -221,19 +233,7 @@ export function projectServiceProgram(
       observations: reports.map(r => r.ref), outstandingEffects: uniqueRefs(unresolved), costs, commitments,
     };
   });
-  // Historical costs and liabilities survive changed terms and revoked evidence.
-  const costReports = historical.flatMap(r => (r.body.kind === "COST" ? [r.body.cost]
-    : r.body.kind === "CANCELLED" ? r.body.residualCosts : []).map(cost => ({
-      key: canonical([r.body.instanceId, r.body.providerId, r.body.termsDigest, cost.id]), cost,
-    })));
-  const costStates = new Map<string, ServiceCost>(), costConflicts = new Set<string>();
-  const rank = { UNKNOWN: 0, QUOTE: 1, EXPOSURE: 2, ACCRUED: 3, CASH: 4 };
-  for (const { key, cost } of costReports) {
-    const old = costStates.get(key);
-    if (old && old.basis === cost.basis && canonical(old) !== canonical(cost)) costConflicts.add(key);
-    if (!old || rank[cost.basis] >= rank[old.basis]) costStates.set(key, cost);
-  }
-  const allCosts = [...costStates.values()];
+  const allCosts = costEntries.map(([, entry]) => entry.cost);
   const known = new Map<string, bigint>();
   for (const cost of allCosts) if (cost.amount && ["CASH", "ACCRUED"].includes(cost.basis))
     known.set(cost.amount.currency, (known.get(cost.amount.currency) ?? 0n) + BigInt(cost.amount.minor));

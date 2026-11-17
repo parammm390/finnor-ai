@@ -3617,7 +3617,7 @@ export class ObjectiveLoopRuntime {
           workId: params.workId,
           userId: ctx.userId,
           employeeId: ctx.employeeId,
-          ...(["harness_program_v1","confidential_economic_computation_v1","execution_proof_capsule_v1"].includes(validated.request.intent) ? {workInputId:active?.workInputId??undefined} : {}),
+          ...(["harness_program_v1","confidential_economic_computation_v1","execution_proof_capsule_v1","organization_transformation_v1"].includes(validated.request.intent) ? {workInputId:active?.workInputId??undefined} : {}),
           executionKey: `objective:${loop.id}:revision:${loop.revision}:step:${step.stepNumber}:decision-query`,
         });
         const executionId = result.execution?.id ?? null;

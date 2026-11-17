@@ -53,7 +53,7 @@ try:
     owning = json.loads((destination / "results.json").read_text())
     assert owning["status"] == "PASS_LOCAL"
     assert owning["migrationCount"] == len(registered_migrations)
-    assert owning["migrationNames"] == registered_migrations
+    assert sorted(owning["migrationNames"]) == registered_migrations
     assert owning["observedMigrationNames"] == registered_migrations
     expected = "W1-native-mounted-owner-proof" if mounted else "W1-native-owner-proof"
     assert [row["id"] for row in owning["results"]] == [expected]

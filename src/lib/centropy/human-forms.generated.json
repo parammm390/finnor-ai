@@ -5378,6 +5378,198 @@
       "generatedFrom": "finnor-os/openapi.json#paths//api/corrections/post"
     },
     {
+      "id": "http.post.demand-to-business.intake",
+      "capabilityId": "http.post.demand-to-business.intake",
+      "group": "growth-intake",
+      "title": "Demand to business intake",
+      "method": "POST",
+      "routePattern": "demand-to-business/intake",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/private-equity",
+      "humanOnly": true,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "companyId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "instruction": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8000
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "companyId",
+          "instruction",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/demand-to-business/[operation]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/demand-to-business/intake/post"
+    },
+    {
+      "id": "http.post.demand-to-business.prepare-native",
+      "capabilityId": "http.post.demand-to-business.prepare-native",
+      "group": "growth-native-preparation",
+      "title": "Demand to business prepare native",
+      "method": "POST",
+      "routePattern": "demand-to-business/prepare-native",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/private-equity",
+      "humanOnly": true,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "workId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "mandateSource": {
+            "type": "object",
+            "properties": {
+              "sourceId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "versionId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "sourceId",
+              "versionId",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          },
+          "preparationRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          },
+          "allocationRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          },
+          "consumptionRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "workId",
+          "mandateSource",
+          "preparationRef",
+          "allocationRef",
+          "consumptionRef"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/demand-to-business/[operation]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/demand-to-business/prepare-native/post"
+    },
+    {
       "id": "http.post.documents.$id.artifact.bindings",
       "capabilityId": "http.post.documents.$id.artifact.bindings",
       "group": "artifact-records",

@@ -15,8 +15,16 @@ import EmbeddedPostgres from "embedded-postgres";
 import pg from "pg";
 import { mountedResponseBarrier, mountedServiceProof } from "./mounted.mts";
 import { NATIVE_WORKER_LIMITS } from "./worker-protocol.mts";
+import { createIntegratedEvidence } from "../integrated/evidence.mts";
+import { INTEGRATED_PROFILE } from "../integrated/profile.mts";
+import type { IntegratedOwnerPorts } from "../integrated/owner-journey.mts";
+import type { OrganizationLiveInput } from "../w5/live-consumer.mjs";
+import type { NativeProspectiveUnit } from "../w5/prospective-native.mjs";
 
 const args = process.argv.slice(2), value = (name: string) => args[args.indexOf(name) + 1];
+const integratedCompany = args.includes("--integrated-company");
+const organizationOriginal = args.includes("--organization-live-original");
+const organizationProfile = integratedCompany || organizationOriginal;
 const outputArg = (args.includes("--output") ? value("--output") : "") ?? "";
 assert(isAbsolute(outputArg), "A new absolute --output evidence directory is required");
 const workspace = resolve(import.meta.dirname, "../../.."), repo = dirname(workspace), output = resolve(outputArg);
@@ -38,17 +46,19 @@ if (installation) {
 }
 await mkdir(dirname(output), { recursive: true }); await mkdir(output);
 const start = performance.now(), startedAt = new Date().toISOString(), results: any[] = [], traffic: unknown[] = [];
-let written = 0, terminalExit = 0;
+let written = 0, terminalExit = 0, organizationNativePhaseClosed = false;
 const artifact = async (name: string, body: unknown) => {
   const path = resolve(output, name); assert(path.startsWith(output + "/"));
   const data = JSON.stringify(body, (key, v) =>
     /^(claim_token|claimToken)$/.test(key) && typeof v === "string"
       ? "sha256:" + createHash("sha256").update(v).digest("hex") : v, 2) + "\n";
   written += Buffer.byteLength(data);
-  assert(written <= 6 * 1024 ** 3, "W3 evidence disk bound");
+  assert(written <= (organizationOriginal ? 128 * 1024 ** 2 : 6 * 1024 ** 3), "Original evidence disk bound");
   await mkdir(dirname(path), { recursive: true }); await writeFile(path, data);
   return path;
 };
+const integratedEvidence = integratedCompany ? createIntegratedEvidence({ output, artifact, startedAt, started: start }) : null;
+if (integratedEvidence) await integratedEvidence.initialize();
 const fast = args.includes("--fast");
 const pauseChallenge = args.includes("--pause-challenge");
 assert(!pauseChallenge || fast && !installation, "The focused pause challenge requires the source fast path");
@@ -59,6 +69,8 @@ const currentnessChallenge = args.includes("--currentness-challenge");
 const publicationChallenge = args.includes("--publication-challenge");
 const dependencyChallenge = args.includes("--dependency-challenge");
 const cancellationChallenge = args.includes("--cancellation-challenge");
+const liabilityChallenge = args.includes("--liability-challenge");
+assert(!liabilityChallenge || cancellationChallenge, "The liability challenge requires the original cancellation journey");
 const cancellationSampleArg = args.includes("--cancellation-sample") ? value("--cancellation-sample") : "0";
 assert(/^[0-7]$/.test(cancellationSampleArg ?? "") && (!args.includes("--cancellation-sample") || cancellationChallenge),
   "Cancellation challenge requires an original sample from0through7");
@@ -115,6 +127,14 @@ assert(!publicationChallenge || !fast && !installation && !pauseChallenge && !ac
   && !observationsChallenge && !resourceChallenge && !dependencyChallenge && !cancellationChallenge
   && !commitmentChallenge && invoiceChallenge === null && !largeBasis && !currentnessChallenge,
   "The delayed-publication challenge requires its own full-bound source owner journey");
+assert(!integratedCompany || !fast && !installation && !pauseChallenge && !acceptanceChallenge
+  && !observationsChallenge && !resourceChallenge && !dependencyChallenge && !cancellationChallenge
+  && !commitmentChallenge && invoiceChallenge === null && !largeBasis && !currentnessChallenge && !publicationChallenge,
+  "The integrated company profile requires the complete source journey, not a focused challenge or W3-only installation");
+assert(!organizationOriginal || !integratedCompany && !fast && !installation && !pauseChallenge && !acceptanceChallenge
+  && !observationsChallenge && !resourceChallenge && !dependencyChallenge && !cancellationChallenge
+  && !commitmentChallenge && invoiceChallenge === null && !largeBasis && !currentnessChallenge && !publicationChallenge,
+  "The standalone W5 original uses one original fixture, not a combined-profile replacement or another focused challenge");
 const loopDelay = monitorEventLoopDelay({ resolution: 20 }); loopDelay.enable();
 const sqlStatistics = new Map<string, { count: number; elapsedMs: number; errors: number }>();
 const originalQuery = pg.Client.prototype.query;
@@ -132,8 +152,28 @@ pg.Client.prototype.query = function(this: pg.Client, ...parameters: any[]) {
   return result;
 } as typeof originalQuery;
 let httpOrdinal = 0;
-const maxSeconds = fast ? 120 : 1200;
-const checkBound = () => assert(performance.now() - start < maxSeconds * 1000, "W3 run wall bound");
+const maxSeconds = organizationOriginal ? 300 : fast ? 120 : 1200;
+let otherOwnerMilliseconds = 0;
+let activeIntegratedOwner: { engine: "W1" | "W2" | "W4" | "W5"; began: number } | null = null;
+const checkBound = () => {
+  const now = performance.now();
+  if (integratedCompany) {
+    assert(now - start < INTEGRATED_PROFILE.aggregateSeconds * 1000, "W049_AGGREGATE_OBSERVER_BOUND");
+    if (activeIntegratedOwner) {
+      assert(now - activeIntegratedOwner.began < (activeIntegratedOwner.engine === "W5" ? 300000 : 1200000),
+        "W049_OWNER_OBSERVER_BOUND:" + activeIntegratedOwner.engine);
+      return;
+    }
+  }
+  assert(now - start - otherOwnerMilliseconds < maxSeconds * 1000, "W3 run wall bound");
+};
+const observeIntegratedOwner = async <T,>(engine: "W1" | "W2" | "W4" | "W5", action: () => Promise<T>): Promise<T> => {
+  assert(integratedCompany && !activeIntegratedOwner);
+  checkBound();
+  const began = performance.now(); activeIntegratedOwner = { engine, began };
+  try { const answer = await action(); checkBound(); return answer }
+  finally { otherOwnerMilliseconds += performance.now() - began; activeIntegratedOwner = null }
+};
 const run = async (id: string, input: unknown, expected: unknown, action: () => Promise<unknown>) => {
   checkBound(); await artifact("cases/" + id + "-original.json", { input, expected, frozenAt: new Date().toISOString() });
   try { const observed = await action(); results.push({ id, status: "PASS", observed });
@@ -149,15 +189,17 @@ assert(BigInt(space.bavail) * BigInt(space.bsize) >= 4n * 1024n ** 3n, "W3 minim
 Object.assign(process.env, {
   NODE_ENV: "test", CI: "1", LOG_LEVEL: "error", AUTH_DEV_BYPASS: "0",
   FINNOR_ENVIRONMENT: "staging", FINNOR_W3_PROFILE: "ordinary_disposable", FINNOR_P4_PROFILE: "ordinary_disposable",
+  ...(integratedCompany ? { FINNOR_W4_PROFILE: "ordinary_disposable" } : {}),
   FINNOR_TEST_MANAGED_EXTENSIONS: "omit", RATE_LIMIT_PER_MINUTE: "100000", RATE_LIMIT_IP_PER_MINUTE: "100000",
   FINNOR_S3_PYTHON: installation ? join(installation, installedDescriptor.entrypoints.s3Python)
     : process.env.FINNOR_S3_PYTHON ?? resolve(workspace, ".w3-venv/bin/python"),
   FINNOR_S5_PYTHON: installation ? join(installation, installedDescriptor.entrypoints.s5Python)
     : process.env.FINNOR_S5_PYTHON ?? resolve(workspace, ".w3-s5-venv/bin/python"),
   FINNOR_S3_MODEL_STORE: join(output, "ordinary-models"), FINNOR_S4_POLICY_STORE: join(output, "ordinary-policies"),
-  WORKER_JOB_LEASE_SECONDS: "5", FINNOR_STEP_LEASE_SECONDS: "5",
+  WORKER_JOB_LEASE_SECONDS: publicationChallenge ? "15" : "5", FINNOR_STEP_LEASE_SECONDS: "5",
 });
 delete process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG; delete process.env.FINNOR_S6_OWNER_TRANSPORT_ROOT;
+if (integratedCompany) delete process.env.FINNOR_W4_CONTROLLED_NOW;
 const port = await new Promise<number>((accept, reject) => {
   const s = createServer(); s.once("error", reject); s.listen(0, "127.0.0.1", () => {
     const p = (s.address() as { port: number }).port; s.close(() => accept(p));
@@ -195,15 +237,68 @@ try {
   const { serviceRecipient } = await import("./recipient.mts");
   const tenant = randomUUID(), owner = randomUUID(), provider = randomUUID(), backup = randomUUID();
   const inspector = randomUUID(), evaluator = randomUUID(), unrelated = randomUUID(), foreign = randomUUID(), otherTenant = randomUUID();
-  const actors = [owner, provider, backup, inspector, evaluator, unrelated, foreign];
+  const organizationEvaluator = organizationProfile ? randomUUID() : null;
+  const integratedWorks = organizationProfile
+    ? { workforce: randomUUID(), organization: randomUUID(), organizationSource: randomUUID(),
+      organizationUnitWorks: Array.from({ length: 40 }, () => randomUUID()) } : null;
+  const organizationUnits: NativeProspectiveUnit[] = [];
+  let organizationReadRoleId: string | null = null;
+  let organizationDependency: OrganizationLiveInput["originalS6"] | null = null;
+  let organizationDeadline: string | null = null;
+  let organizationResources: OrganizationLiveInput["fixture"]["resources"] | null = null;
+  const actors = [owner, provider, backup, inspector, evaluator, unrelated, foreign,
+    ...(organizationEvaluator ? [organizationEvaluator] : [])];
   await admin.query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,'W3 controlled enterprise'),($3,$4,'W3 foreign enterprise')",
     [tenant, randomUUID(), otherTenant, randomUUID()]);
   for (const actor of actors) await admin.query(`INSERT INTO finnor_os.users(id,tenant_id,email,role,status)
-   VALUES($1,$2,$3,'owner','active')`, [actor, actor === foreign ? otherTenant : tenant, actor + "@test.invalid"]);
+   VALUES($1,$2,$3,$4,'active')`, [actor, actor === foreign ? otherTenant : tenant, actor + "@test.invalid",
+    organizationProfile && actor !== owner && actor !== foreign ? "participant" : "owner"]);
+  if (organizationProfile) for (const actor of actors.filter(actor => actor !== foreign)) {
+    const kind = actor === owner || actor === provider || actor === unrelated ? "SERVICE" : "HUMAN";
+    await admin.query(`INSERT INTO finnor_os.employee_actor_profiles(tenant_id,principal_id,actor_kind)
+      VALUES($1,$2,$3)`, [tenant, actor, kind]);
+  }
   await db.configureTenantVertical({ tenantId: tenant, verticalKey: "private_equity", expectedVersion: 0,
     createdBy: owner, sourceSystem: "w3:controlled-verification" });
   await db.configureTenantVertical({ tenantId: otherTenant, verticalKey: "private_equity", expectedVersion: 0,
     createdBy: foreign, sourceSystem: "w3:controlled-verification" });
+  if (integratedWorks) {
+    // Existing controlled workforce authority precedes all native owner pins.
+    // It is neither participant enrollment nor a human consent decision.
+    const standing = [
+      { key: "w-integrated-workforce-service", principals: [provider], scope: { kind: "tenant" },
+        capabilities: ["action:workforce_assign_contract", "action:workforce_respond_contract"] },
+      { key: "w-integrated-workforce-service-read", principals: [provider],
+        scope: { kind: "resources", resourceType: "work", resourceIds: [integratedWorks.workforce] },
+        capabilities: ["query:work"] },
+      { key: "w-integrated-participant-self-response", principals: [backup, inspector, unrelated, evaluator],
+        scope: { kind: "tenant" }, capabilities: ["action:workforce_respond_contract"] },
+      { key: "w-integrated-participant-read", principals: [backup, inspector, unrelated, evaluator,
+        ...(organizationEvaluator ? [organizationEvaluator] : [])],
+        scope: { kind: "resources", resourceType: "work",
+          resourceIds: [integratedWorks.organization, integratedWorks.organizationSource, ...integratedWorks.organizationUnitWorks] },
+        capabilities: ["query:work"] },
+    ];
+    for (const configured of standing) {
+      const roleId = randomUUID();
+      await admin.query(`INSERT INTO finnor_os.employee_roles(id,tenant_id,key,name)
+        VALUES($1,$2,$3,'Controlled existing workforce-only authority')`, [roleId, tenant, configured.key]);
+      if (configured.key === "w-integrated-participant-read") organizationReadRoleId = roleId;
+      for (const principal of configured.principals) await admin.query(`INSERT INTO finnor_os.employee_role_assignments
+        (tenant_id,employee_id,role_id,resource_scope) VALUES($1,$2,$3,$4::jsonb)`,
+      [tenant, principal, roleId, JSON.stringify(configured.scope)]);
+      for (const capability of configured.capabilities) await admin.query(`INSERT INTO finnor_os.role_authority_grants
+        (tenant_id,role_id,capability,resource_type,effect,max_risk) VALUES($1,$2,$3,'*','allow','low')`,
+      [tenant, roleId, capability]);
+    }
+    await artifact("integrated/controlled-standing-authority.json", {
+      standing, plannedWorkBindings: integratedWorks, plannedWorkBindingsOnly: true,
+      authorityRevision: String((await admin.query(
+        "SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1", [tenant])).rows[0].revision),
+      qualification: "DISPOSABLE_EXISTING_WORKFORCE_AUTHORITY_NOT_ENROLLMENT_OR_HUMAN_CONSENT",
+      genuineHumanConsentEstablished: false, ownerRolePromotion: false,
+    });
+  }
   process.env.FINNOR_W3_TENANT = tenant;
   const mountedBarrier = mountedResponseBarrier();
   auth = await authenticatedApiFixture(repo, owner, (row: unknown) => traffic.push(row),
@@ -225,15 +320,28 @@ try {
       headers: { "content-type": "application/json" }, body: JSON.stringify({ email: identity.email, password: identity.password }) });
     assert.equal(signedIn.status, 200); tokens.set(identity.actor, (await signedIn.json()).access_token);
   }
-  const http = async (group: string, operation: string, body: unknown, actor: string = owner) => {
+  const http = async (group: string, operation: string, body: unknown, actor: string | null = owner) => {
     checkBound();
     const ordinal = ++httpOrdinal, began = performance.now(), wall = Date.now(), cpu = process.cpuUsage();
     const baseline = new Map([...sqlStatistics].map(([key, value]) => [key, { ...value }]));
     loopDelay.reset(); let status: number | null = null;
     try {
-      const r = await fetch(`${auth.origin}/api/${group}/${operation}`, { method: "POST",
-        headers: { "content-type": "application/json", authorization: "Bearer " + tokens.get(actor) },
-        body: JSON.stringify(body), signal: AbortSignal.timeout(30000) });
+      if (integratedCompany && group === "interventions" && operation === "fit") {
+        if (recipient) await recipient.assertCurrentOwnerAuthority();
+        else assert(process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG === undefined
+          && process.env.FINNOR_S6_OWNER_TRANSPORT_ROOT === undefined,
+        "W049_INTEGRATED_FIT_BOOTSTRAP_REQUIRES_NO_OWNER_TRANSPORT");
+        checkBound();
+      }
+      const headers: Record<string, string> = { "content-type": "application/json" };
+      if (actor !== null) {
+        assert(tokens.has(actor), "ACTUAL_SIGNED_ACTOR_TOKEN_REQUIRED");
+        headers.authorization = "Bearer " + tokens.get(actor);
+      }
+      const r = await fetch(`${auth.origin}/api/${group}/${operation}`, { method: body === undefined ? "GET" : "POST",
+        headers, ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        signal: AbortSignal.timeout(organizationOriginal
+          ? Math.max(1, Math.min(30000, Math.floor(300000 - (performance.now() - start)))) : 30000) });
       status = r.status;
       return { status, body: await r.json() as any };
     } finally {
@@ -253,8 +361,16 @@ try {
     const result = await http(group, operation, body, actor);
     assert.equal(result.status, 200, JSON.stringify({ group, operation, ...result })); return result.body;
   };
+  // The established port already derives GET from undefined. Keep it intact;
+  // only the new W5 caller checks an explicit method against that convention.
+  const organizationRequest = async (method: "GET" | "POST", group: string, operation: string,
+    body: unknown, actor: string) => {
+    assert.equal(method, body === undefined ? "GET" : "POST", "W5_EXPLICIT_HTTP_METHOD_BODY_MISMATCH");
+    return http(group, operation, body, actor);
+  };
   const source = (workId: string, body: unknown, key: string, actor: string = owner, protocolId: string | null = null) =>
     ok("real-world-services", "source", { workId, body, idempotencyKey: key, purpose: "Controlled W3 service verification", protocolId }, actor);
+  let integratedPlaneObserved = false;
   const tick = async (expectKill = false, maximumTicks = 1,
     fault?: { mutate: () => Promise<void>; expectedRefusal?: string },
     schedule?: () => Promise<boolean>) => {
@@ -262,13 +378,35 @@ try {
     assert(Number.isSafeInteger(maximumTicks) && maximumTicks >= 1 && maximumTicks <= NATIVE_WORKER_LIMITS.maximumTicks);
     assert(!expectKill || maximumTicks === 1, "The physical payment kill remains a single tick");
     assert(!schedule || !expectKill && !fault && !installation, "W3_SCHEDULING_IS_SOURCE_VERIFICATION_ONLY");
+    if (integratedCompany && !integratedPlaneObserved) {
+      const plane = (await admin!.query(`SELECT state,accepted_job_epoch,minimum_claim_epoch,enforce_known_job_types,
+        legacy_tenant_writes_allowed,activated_release_sha,activated_at,updated_at
+        FROM finnor_os.compute_plane_cutover WHERE singleton=true`)).rows[0];
+      let workloadClass: ReturnType<typeof db.parseWorkloadClass> | "INVALID" | null = null;
+      if (process.env.FINNOR_WORKLOAD_CLASS) {
+        try { workloadClass = db.parseWorkloadClass(process.env.FINNOR_WORKLOAD_CLASS) }
+        catch { workloadClass = "INVALID" }
+      }
+      const pending = (await admin!.query(`SELECT type,workload_class,protocol_version,count(*)::int count
+        FROM finnor_os.jobs WHERE tenant_id=$1 AND status='queued'
+        GROUP BY type,workload_class,protocol_version ORDER BY type,workload_class,protocol_version`, [tenant])).rows;
+      await artifact("integrated/private-compute-plane-before-first-claim.json", {
+        plane: plane ?? null, workloadClass, pending,
+        qualification: "ORIGINAL_PREPARING_PLANE_UNCLASSED_MONOLITH_NOT_W1_CLASSED_PRESSURE_QUALIFICATION",
+        computePlaneMutationPerformed: false, policyMutationPerformed: false,
+      });
+      assert(plane?.state === "preparing" && workloadClass === null,
+        "W049_ORIGINAL_PREPARING_PLANE_AND_UNCLASSED_MONOLITH_REQUIRED");
+      integratedPlaneObserved = true;
+    }
     const workerArgs = installation ? [join(installation, installedDescriptor.entrypoints.w3Worker)]
       : ["--import=tsx", "scripts/postz/w3/worker.mts"];
     const p = spawn(process.execPath, [...workerArgs, "--maximum-ticks", String(maximumTicks),
       ...(schedule ? ["--parent-gated"] : [])], {
       cwd: workspace, env: { ...process.env, DATABASE_URL: workerDatabaseUrl,
         ...(installation ? { FINNOR_W3_INSTALLED: "1" } : {}),
-        NODE_OPTIONS: "--max-old-space-size=2048" },
+        NODE_OPTIONS: organizationOriginal || activeIntegratedOwner?.engine === "W5"
+          ? "--max-old-space-size=1024" : "--max-old-space-size=2048" },
       stdio: schedule ? ["ignore", "pipe", "pipe", "ipc"] : ["ignore", "pipe", "pipe"] });
     activeWorker = p; let log = "", pending = "";
     const observationLines: string[] = [];
@@ -384,6 +522,7 @@ try {
       observations.forEach((entry, ordinal) => {
         assert.equal(entry.pid, p.pid); assert.equal(entry.tick, ordinal); assert.equal(typeof entry.worked, "boolean");
         assert.equal(entry.registration, "ACTUAL_PRODUCTION_CREATE_WORKER");
+        if (integratedCompany) assert.equal(entry.workloadClass, null, "W049_ACTUAL_CHILD_QUEUE_MUST_REMAIN_UNCLASSED");
         assert.equal(entry.role.current_user, "finnor_worker");
         assert.equal(entry.role.rolsuper, false); assert.equal(entry.role.rolbypassrls, false);
       });
@@ -413,6 +552,29 @@ try {
     }
     throw Error("W3_FINITE_QUEUE_PUMP_BOUND");
   };
+  const createIntegratedPump = () => {
+    let used = 0;
+    const types = ["run_harness_program_v1", "run_evidence_derivation_v1", "run_compute_search_unit_v1",
+      "run_workforce_execution_v1", "compile_real_world_service_v1", "advance_real_world_service_v1",
+      "compile_market_operating_program_v1", "advance_market_operating_program_v1",
+      "compile_organization_transformation_v1", "advance_organization_transformation_v1", "run_workflow_step_v3"];
+    return async (maximum = 192) => {
+      assert(integratedCompany && Number.isSafeInteger(maximum) && maximum >= 1 && maximum <= 192);
+      let invocationTicks = 0;
+      for (;;) {
+        checkBound();
+        const pending = (await admin!.query(`SELECT count(*)::int n,min(run_at) due FROM finnor_os.jobs
+          WHERE tenant_id=$1 AND status='queued' AND type=ANY($2::text[])`, [tenant, types])).rows[0];
+        if (!pending.n) return;
+        assert(used < 192 && invocationTicks < maximum, "W049_FINITE_ORIGINAL_OWNER_PUMP_BOUND");
+        const delay = Math.max(0, (pending.due as Date).getTime() - Date.now());
+        assert(delay <= 30000, "W049_NATIVE_CONTINUATION_NOT_DUE_WITHIN_BOUND");
+        if (delay) await new Promise(done => setTimeout(done, delay + 25));
+        const physical = await tick(false, Math.min(16, 192 - used, maximum - invocationTicks));
+        used += physical.ticks; invocationTicks += physical.ticks;
+      }
+    };
+  };
   const generated = spawnSync(process.env.FINNOR_S3_PYTHON!, ["-I", "-B", "scripts/s3/reference.py"], {
     cwd: workspace, input: JSON.stringify({ operation: "equivalent" }), encoding: "utf8", timeout: 30000 });
   assert.equal(generated.status, 0, generated.stderr);
@@ -422,6 +584,7 @@ try {
     begin, day, fixtures, artifact, api: (f: any, op: string, body: unknown, handler = allocationPost) =>
       http(handler === policyPost ? "policies" : handler === obligationPost ? "obligations" : handler === allocationPost ? "allocations" : "interventions", op, body) });
   let intake: any = null;
+  let integratedPorts: IntegratedOwnerPorts | null = null;
   const alternateCompanyId = randomUUID();
   const f = await native.fixture("w3-controlled-" + randomUUID().slice(0, 8), 1, [
     { id: "cash", unit: "USD", capacity: 100, totalLimit: 100 },
@@ -435,10 +598,61 @@ try {
       intake = await ok("real-world-services", "intake", { companyId: original.root.entityId,
         idempotencyKey: "original-service-week",
         instruction: `Maintain one seven-day ${serviceOriginal.label} assignment, independently observe each ${serviceOriginal.unit}, retain failures and separately reconcile invoices and temporary access. This is a controlled software experiment, not real service.` });
+      if (integratedWorks) {
+        assert(organizationReadRoleId);
+        const resourceScope = { kind: "resources", resourceType: "work", resourceIds: [
+          intake.workId, integratedWorks.organization, integratedWorks.organizationSource, ...integratedWorks.organizationUnitWorks] };
+        await admin!.query(`UPDATE finnor_os.employee_role_assignments SET resource_scope=$3::jsonb
+          WHERE tenant_id=$1 AND role_id=$2`, [tenant, organizationReadRoleId, JSON.stringify(resourceScope)]);
+        const { prepareOrganizationSourceWork } = await import("../integrated/organization-owner.mts");
+        const originalSource = await prepareOrganizationSourceWork({ tenantId: tenant, ownerId: owner,
+          sourceWorkId: integratedWorks.organizationSource, companyId: original.root.entityId });
+        assert.equal(originalSource.workId, integratedWorks.organizationSource);
+        await artifact("integrated/w5/original-source-before-model.json", {
+          workId: originalSource.workId, workInputId: originalSource.workInputId,
+          beforeModelFit: true, beforeResourcePins: true, authorityGranted: false });
+        for (const [index, workId] of integratedWorks.organizationUnitWorks.entries()) {
+          const unit = await db.receiveWork({ tenantId: tenant, userId: owner, workId, channel: "text",
+            instruction: "Controlled original organization unit " + index +
+              ". Packet preparation latency only; human time, retained field service and monetary invoices remain unknown.",
+            idempotencyKey: "w5-original-unit:" + workId, requireExactIntake: true,
+            entityAttachments: [{ entityType: "external_organization", entityId: original.root.entityId,
+              relationship: "about", source: "W5_ORIGINAL_PROSPECTIVE_UNIT" }] });
+          const input = (await admin!.query(`SELECT id,instruction_text FROM finnor_os.work_inputs
+            WHERE tenant_id=$1 AND work_id=$2 AND id=$3`, [tenant, workId, unit.workInputId])).rows[0];
+          assert(input);
+          organizationUnits.push({ workId, workInputId: input.id,
+            workInputDigest: createHash("sha256").update(input.instruction_text).digest("hex") });
+        }
+        assert.equal((await admin!.query("SELECT count(*)::int n FROM finnor_os.s6_obligation_origins WHERE tenant_id=$1",
+          [tenant])).rows[0].n, 0);
+        await artifact("integrated/w5/original-unit-and-standing-scope.json", {
+          units: organizationUnits, actualExistingWorkReadScope: resourceScope,
+          beforeS6Preparation: true, beforeProgrammeAcceptance: true,
+          replacementUnitsOrAssignmentArmsSupplied: false, genuineHumanMeasurementsInferred: false });
+      }
+      if (integratedEvidence) {
+        assert(integratedWorks);
+        const workforceWorkId = integratedWorks.workforce;
+        integratedEvidence.bindScope({ tenantId: tenant, principalId: owner, companyId: original.root.entityId,
+          originalServiceWorkId: intake.workId, originalServiceWorkInputId: intake.workInputId });
+        integratedPorts = { admin: admin!, repo, output, tenant, owner, foreign, companyId: original.root.entityId,
+          serviceWorkId: intake.workId, serviceWorkInputId: intake.workInputId, http, artifact, checkBound,
+          tick: maximumTicks => tick(false, maximumTicks) };
+        const ports = integratedPorts;
+        const upstream = await observeIntegratedOwner("W1", async () => {
+          const { runOrchestrationOwner } = await import("../integrated/owner-journey.mts");
+          const actual = await runOrchestrationOwner(ports); await integratedEvidence.record(actual); return actual;
+        });
+        await observeIntegratedOwner("W2", async () => {
+          const { runWorkforceOwner } = await import("../integrated/workforce-owner.mts");
+          await integratedEvidence.record(await runWorkforceOwner(ports, upstream, provider, workforceWorkId));
+        });
+      }
     } });
   assert(intake?.workId && intake.workInputId, "W3_ORIGINAL_CANONICAL_WORK_BEFORE_MODEL_REQUIRED");
   const policyByOperation: Record<string, any> = {};
-  for (const op of fast || resourceChallenge ? ["OFFER"] : dependencyChallenge
+  for (const op of organizationOriginal || fast || resourceChallenge ? ["OFFER"] : dependencyChallenge
     ? ["OFFER", "BOOK_PREDECESSOR", "BOOK", "RETIRE_PREDECESSOR", "RETIRE_ACCESS", "PAY"]
     : cancellationChallenge ? ["OFFER", "BOOK", "CANCEL", "RETIRE_PRIMARY", "BACKUP_OFFER", "BACKUP_BOOK", "RETIRE_ACCESS", "PAY"]
     : ["OFFER", "BOOK", "RETIRE_ACCESS", "PAY", ...(commitmentChallenge ? ["OLD_OFFER"] : [])])
@@ -448,10 +662,19 @@ try {
         : cancellationChallenge ? { cash: op === "OFFER" ? 16 : 12, execution: 64, human: op === "OFFER" ? 116 : 112 } : commitmentChallenge
         ? { cash: 20, execution: 102, human: 180 } : { cash: 25, execution: 128, human: 225 });
   await native.resource(f, "cash", "USD", "STOCK", ["100", "100"]);
-  await native.resource(f, "execution", "request", "CUMULATIVE_EXPENDITURE", ["512", "512"]);
+  await native.resource(f, "execution", "request", "CUMULATIVE_EXPENDITURE", ["512", "512"], undefined, [],
+    organizationOriginal ? { permittedRoots: [f.root, { entityType: "work", entityId: integratedWorks!.organization }] } : {});
   await native.resource(f, "human", "seconds", "CUMULATIVE_EXPENDITURE", ["900", "900"]);
-  const clearing = await ok("allocations", "clear", native.clearing(f,
-    Object.fromEntries(Object.keys(policyByOperation).map(op => [op, ["100"]]))));
+  const originalClearingInput = native.clearing(f,
+    Object.fromEntries(Object.keys(policyByOperation).map(op => [op, ["100"]])));
+  if (organizationProfile) await artifact("integrated/w5/original-shared-backing-precondition.json", {
+    currentCompleteS5Frontier: await ok("allocations", "resources", {}), originalClearingInput,
+    originalDeclaredCeilings: { cash: 100, execution: 512, human: 900 },
+    declaredPolicyCount: Object.keys(policyByOperation).length, additionalW5ProgrammeRequestCeiling: 64,
+    combinedAllPositiveBackingEstablished: false, newResourceGrantOrRenewal: false,
+    standaloneOneOriginalNotCombinedProfile: organizationOriginal,
+    qualification: "DECLARED_ORIGINAL_DEMAND_AND_ACTUAL_S5_FRONTIER_NOT_A_FEASIBILITY_RESULT" });
+  const clearing = await ok("allocations", "clear", originalClearingInput);
   assert.equal(clearing.status, "FEASIBLE", JSON.stringify(clearing));
   const parentAllocation = clearing.certificate.ref;
   const scope = { tenantId: tenant, principalId: owner, companyId: f.root.entityId, workId: intake.workId,
@@ -481,6 +704,105 @@ try {
       preparationRef: handoff.preparationRef, allocationRef: parentAllocation, consumptionRef: handoff.consumptionRef });
     assert.equal(obligations[op].workLineage.workId, intake.workId);
   }
+  if (organizationProfile) {
+    assert(integratedWorks && organizationEvaluator);
+    const currentResources = await ok("allocations", "resources", {});
+    if (organizationOriginal) {
+      assert.equal(Object.keys(obligations).length, 1);
+      organizationDependency = obligations.OFFER;
+      const execution = f.resources.find((resource: any) => resource.resourceId === "execution");
+      assert(execution);
+      organizationResources = { resourceRefs: [execution.ref],
+        schedules: [{ resourceId: "execution",
+          quantities: Array.from({ length: execution.horizon.periods + 1 }, (_, period) => period === 0 ? "64" : "0") }] };
+    } else {
+      // Discover existing originals only. Do not create a fifth policy, Work,
+      // reservation or capacity declaration to rescue this combined profile.
+      const census = (await admin.query(`SELECT o.body,d.work_id,d.status action_status,e.status effect_status,
+        st.status consumption_status,
+        EXISTS(SELECT 1 FROM finnor_os.work_entity_links l WHERE l.tenant_id=o.tenant_id AND l.work_id=d.work_id
+          AND l.entity_type='external_organization' AND l.entity_id=$3) company_link,
+        (SELECT count(*)::int FROM finnor_os.s5_governed_resource_charges ch
+          WHERE ch.tenant_id=o.tenant_id AND ch.reservation_id=o.body#>>'{reservationRef,id}') charge_count
+        FROM finnor_os.s6_obligation_origins o LEFT JOIN finnor_os.domain_actions d
+          ON d.tenant_id=o.tenant_id AND d.id=o.domain_action_id
+        LEFT JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id
+        LEFT JOIN finnor_os.s5_consumption_states st ON st.tenant_id=o.tenant_id AND st.consumption_id=o.consumption_id
+        WHERE o.tenant_id=$1 AND o.principal_id=$2 ORDER BY o.obligation_id LIMIT 1025`,
+      [tenant, owner, f.root.entityId])).rows;
+      assert(census.length <= 1024, "W049_W5_COMPLETE_PREDECLARED_ORIGINAL_CENSUS_BOUND");
+      const serviceReservations = new Set(Object.values(obligations).map((body: any) => body.reservationRef.id));
+      const candidates = census.filter(row => row.company_link && row.work_id !== intake.workId &&
+        !serviceReservations.has(row.body.reservationRef.id) && row.body.workLineage?.workId === row.work_id &&
+        row.action_status === "draft" && row.effect_status === "compiled" &&
+        row.consumption_status === "INTENDED_PENDING_S6" && row.charge_count === 0 &&
+        census.filter(other => other.work_id === row.work_id ||
+          other.body.reservationRef.id === row.body.reservationRef.id).length === 1);
+      const resources = currentResources.resources.filter((resource: any) =>
+        resource.resourceClass === "COMPUTE" && resource.unit === "request" &&
+        resource.permittedRoots.some((root: any) => root.entityType === "work" && root.entityId === integratedWorks.organization));
+      await artifact("integrated/w5/original-dependency-precondition.json", {
+        census, currentResources, candidateRefs: candidates.map(row => row.body.ref), originalWorkRootResourceCount: resources.length,
+        originalDeclaredCeilings: { cash: 100, execution: 512, human: 900 },
+        originalFourPolicyDeclaredDemand: { cash: 100, execution: 512, human: 900 },
+        additionalW5ProgrammeRequestCeiling: 64, separateNeverDispatchedOriginalRequired: true,
+        newBackingOrReservationCreated: false, noPayOrPriorEffectReplay: true,
+        status: candidates.length === 1 && resources.length === 1 ? "REQUIRES_GENUINE_OWNER_READ_AND_S5_CHECK"
+          : "FAIL_CLOSED_ORIGINAL_DEPENDENCY_OR_BACKING_ABSENT",
+      });
+      assert(candidates.length === 1 && resources.length === 1,
+        "W049_W5_ORIGINAL_DEPENDENCY_AND_BACKING_ABSENT_NO_SHARED_ALL_POSITIVE_PASS");
+      organizationDependency = await ok("obligations", "read", { obligationRef: candidates[0].body.ref });
+      organizationResources = { resourceRefs: [resources[0].ref],
+        schedules: [{ resourceId: resources[0].resourceId,
+          quantities: Array.from({ length: resources[0].horizon.periods + 1 }, (_, period) => period === 0 ? "64" : "0") }] };
+    }
+    organizationDeadline = new Date(Math.min(
+      Date.parse(f.mandate.validUntil),
+      Date.parse(organizationDependency!.deadline.authorityExpiresAt),
+      Date.parse(organizationDependency!.deadline.businessPeriodEndAt),
+    )).toISOString();
+  }
+  if (organizationOriginal) {
+    assert(integratedWorks && organizationEvaluator && organizationDependency && organizationDeadline && organizationResources);
+    const { runOrganizationOwner } = await import("../integrated/organization-owner.mts");
+    await run("W5-signed-original-live-consumption-and-terminal-negative",
+      { originalS6: organizationDependency, originalResources: organizationResources, units: organizationUnits,
+        originalDeadline: organizationDeadline, originalCeilings: { cash: 100, execution: 512, human: 900 } },
+      { signedOriginalContinuation: true, fullCost: "UNKNOWN", evaluation: "UNIDENTIFIED",
+        originalTerminalNegativeRequired: true, allFiveCustodyClaimed: false }, async () => runOrganizationOwner({
+        admin: admin!, repo, output, tenant, owner, foreign, companyId: f.root.entityId,
+        serviceWorkId: intake.workId, serviceWorkInputId: intake.workInputId, http, request: organizationRequest,
+        artifact, checkBound, tick: maximumTicks => tick(false, maximumTicks),
+      }, {
+        sourceWorkId: integratedWorks.organizationSource, workId: integratedWorks.organization,
+        evaluatorId: organizationEvaluator, roles: { support: backup, approver: inspector, digital: unrelated, provider: evaluator },
+        originalDeadline: organizationDeadline, originalS6: organizationDependency, resources: organizationResources,
+        units: organizationUnits, onLivePhaseEnded: () => { organizationNativePhaseClosed = true },
+        beforeTerminal: async (actual, ready) => {
+          assert.equal(ready.status, "PENDING_S6_TERMINAL_NEGATIVE");
+          const expected = new Map<string, string>([[actual.workId, actual.workInputId], [intake.workId, intake.workInputId],
+            ...organizationUnits.map(unit => [unit.workId, unit.workInputId] as [string, string])]);
+          const custody = (await admin!.query(`SELECT w.id,w.created_by,i.id work_input_id,i.instruction_text
+            FROM finnor_os.works w JOIN finnor_os.work_inputs i ON i.tenant_id=w.tenant_id AND i.work_id=w.id
+            WHERE w.tenant_id=$1 AND w.id=ANY($2::uuid[]) AND i.id=ANY($3::uuid[])
+              AND EXISTS(SELECT 1 FROM finnor_os.work_entity_links l WHERE l.tenant_id=w.tenant_id AND l.work_id=w.id
+                AND l.entity_type='external_organization' AND l.entity_id=$4)`,
+          [tenant, [...expected.keys()], [...expected.values()], f.root.entityId])).rows;
+          assert.equal(custody.length, expected.size);
+          for (const row of custody) {
+            assert.equal(row.created_by, owner); assert.equal(row.work_input_id, expected.get(row.id));
+            const originalUnit = organizationUnits.find(unit => unit.workId === row.id);
+            if (originalUnit) assert.equal(createHash("sha256").update(row.instruction_text).digest("hex"), originalUnit.workInputDigest);
+          }
+          await artifact("organization-live-original-before-terminal.json", {
+            status: "PENDING_S6_TERMINAL_NEGATIVE", actualNativeOutput: actual,
+            actualOriginalCustody: custody.map(row => ({ workId: row.id, workInputId: row.work_input_id,
+              instructionSha256: createHash("sha256").update(row.instruction_text).digest("hex") })),
+            allFiveCustodyClaimed: false, fullW5Qualification: false });
+        },
+      }));
+  } else {
   const criteria = [
     { id: "readiness", phase: "READINESS", kind: "INSPECTION", qualificationIds: [] },
     { id: "trial-sensory", phase: "TRIAL", kind: "SENSORY", qualificationIds: [] },
@@ -583,17 +905,19 @@ try {
           await fault.query("BEGIN");
           const blocker = (await fault.query("SELECT pg_backend_pid() pid")).rows[0].pid;
           await fault.query("LOCK TABLE finnor_os.w3_service_artifacts IN SHARE MODE");
-          await new Promise(done => setTimeout(done, Math.max(0, Date.parse(outcome.originalDeadlineAt) - Date.now() - 15000)));
           let firstClaimReleased = false;
+          let firstReadyAt: string | null = null;
           worker = tick(false, 4, undefined, async () => {
             if (firstClaimReleased) return true;
-            const readyAt = new Date().toISOString();
-            await new Promise(done => setTimeout(done, Math.max(0, Date.parse(outcome.originalDeadlineAt) - Date.now() - 3000)));
+            firstReadyAt = new Date().toISOString();
+            // Give the worker time to reach the insert while its claim can still span the original deadline.
+            await new Promise(done => setTimeout(done, Math.max(0, Date.parse(outcome.originalDeadlineAt) - Date.now() - 8000)));
             assert(Date.now() < Date.parse(outcome.originalDeadlineAt), "W3_READY_WORKER_MUST_PRECEDE_ORIGINAL_DEADLINE");
             firstClaimReleased = true;
-            await artifact("publication/preclaim-ready.json", { readyAt, releasedAt: new Date().toISOString(),
+            await artifact("publication/preclaim-ready.json", { readyAt: firstReadyAt, releasedAt: new Date().toISOString(),
               originalDeadlineAt: outcome.originalDeadlineAt, workerPid: activeWorker?.pid,
-              registration: "ACTUAL_PRODUCTION_CREATE_WORKER", originalClaimNotYetMade: true });
+              registration: "ACTUAL_PRODUCTION_CREATE_WORKER", originalClaimNotYetMade: true,
+              jobLeaseSeconds: Number(process.env.WORKER_JOB_LEASE_SECONDS) });
             return true;
           }).then(result => ({ result }), error => ({ error }));
           let waiting: Record<string, unknown> | undefined;
@@ -606,6 +930,13 @@ try {
             if (waiting) break;
             await new Promise(done => setTimeout(done, 20));
           }
+          if (!waiting) {
+            const jobs = (await admin!.query(`SELECT id,type,status,attempts,run_at,started_at,completed_at,lease_expires_at
+              FROM finnor_os.jobs WHERE tenant_id=$1 AND payload->>'requestId'=$2 ORDER BY run_at,id`,
+            [tenant, requestId])).rows;
+            await artifact("publication/preinsert-missed.json", { firstReadyAt, firstClaimReleased,
+              observedAt: new Date().toISOString(), originalDeadlineAt: outcome.originalDeadlineAt, jobs });
+          }
           assert(waiting, "W3_ACTUAL_PUBLICATION_INSERT_WAIT_NOT_OBSERVED");
           assert(Date.now() < Date.parse(outcome.originalDeadlineAt), "W3_PUBLICATION_FAULT_MUST_REACH_INSERT_BEFORE_DEADLINE");
           const liveClaim = (await admin!.query(`SELECT id,claim_fence,lease_expires_at FROM finnor_os.jobs
@@ -617,16 +948,19 @@ try {
           await artifact("publication/waiting.json", { blocker, waiting, liveClaim, observedWaitingAt,
             workerPid: activeWorker?.pid, originalDeadlineAt: outcome.originalDeadlineAt });
           await new Promise(done => setTimeout(done, Math.max(0, Date.parse(outcome.originalDeadlineAt) - Date.now()) + 25));
+          const waitThroughDeadline = (await admin!.query<{ blocked: boolean }>(
+            "SELECT $2::int = ANY(pg_blocking_pids($1::int)) blocked", [waiting.pid, blocker])).rows[0];
+          assert(waitThroughDeadline?.blocked, "W3_ACTUAL_PUBLICATION_INSERT_MUST_REMAIN_BLOCKED_THROUGH_DEADLINE");
           const releasedAt = new Date().toISOString(); await fault.query("COMMIT");
           const settled = await worker;
           if ("error" in settled) throw settled.error;
           const artifacts = (await admin!.query(`SELECT id,body_digest FROM finnor_os.w3_service_artifacts
            WHERE tenant_id=$1 AND request_id=$2`, [tenant, requestId])).rows;
-          const checkedEvents = (await admin!.query(`SELECT seq,reason FROM finnor_os.work_events
-           WHERE tenant_id=$1 AND work_id=$2 AND reason='real_world_service_checked'`, [tenant, intake.workId])).rows;
+          const checkedEvents = (await admin!.query(`SELECT seq,event_type FROM finnor_os.work_events
+           WHERE tenant_id=$1 AND work_id=$2 AND event_type='real_world_service_checked'`, [tenant, intake.workId])).rows;
           const effects = (await admin!.query(`SELECT id,status FROM finnor_os.business_effects
            WHERE tenant_id=$1 AND status<>'compiled'`, [tenant])).rows;
-          const observed = { blocker, waiting, observedWaitingAt, releasedAt,
+          const observed = { blocker, waiting, observedWaitingAt, waitThroughDeadline, releasedAt,
             originalDeadlineAt: outcome.originalDeadlineAt, artifacts, checkedEvents, effects, worker: settled.result };
           await artifact("publication/after-release.json", observed);
           assert.deepEqual(artifacts, [], "W3_LATE_PUBLICATION_MUST_NOT_PERSIST_ARTIFACT");
@@ -655,7 +989,8 @@ try {
       return view;
     });
   await run("W005-authenticated-private-boundaries", { workId: intake.workId, requestId },
-    { unrelatedPrincipalDenied: true, foreignTenantDenied: true, ownerCannotConsentForProvider: true }, async () => {
+    { unrelatedPrincipalDenied: true, foreignTenantDenied: true, ownerCannotConsentForProvider: true,
+      ...(integratedCompany ? { unrelatedCanonicalWorkReadAllowed: false } : {}) }, async () => {
       const wrong = await http("real-world-services", "read", { workId: intake.workId }, unrelated);
       const foreignResult = await http("real-world-services", "read", { workId: intake.workId }, foreign);
       const forgedConsent = await http("real-world-services", "consent", { protocolId: discover.protocolId, revoke: false });
@@ -663,7 +998,20 @@ try {
       const hidden = await db.withTenantTransaction(tenant, { userId: unrelated, readOnly: true }, async (_d, c) =>
         (await c.query("SELECT content FROM finnor_os.evidence_source_versions WHERE id=$1", [outcomeRef.versionId])).rows);
       assert.equal(hidden.length, 0);
-      return { wrong, foreignResult, forgedConsent, privateOriginalRows: hidden.length };
+      let unrelatedCanonicalWorkReadAllowed: boolean | null = null;
+      if (integratedCompany) {
+        const { requireContext } = await import("../../../apps/api/lib/auth");
+        const { canExerciseWorkforceAuthorityTx } = await import("@finnor/authority");
+        const actualPrincipal = await requireContext(new Request(auth.origin + "/api/real-world-services/read",
+          { headers: { authorization: "Bearer " + tokens.get(unrelated) } }));
+        unrelatedCanonicalWorkReadAllowed = await db.withTenantTransaction(tenant,
+          { userId: unrelated, readOnly: true }, async (_db, c) => canExerciseWorkforceAuthorityTx(actualPrincipal,
+            { operation: "query", capability: "query:work", workId: intake.workId,
+              resource: { type: "work", id: intake.workId }, risk: "low" }, c));
+        assert.equal(unrelatedCanonicalWorkReadAllowed, false, "W049_W5_STANDING_READ_MUST_NOT_EXPOSE_W3_WORK");
+      }
+      return { wrong, foreignResult, forgedConsent, privateOriginalRows: hidden.length,
+        ...(integratedCompany ? { unrelatedCanonicalWorkReadAllowed } : {}) };
     });
   if (installation && !fast && invoiceChallenge === null) {
     const manifestBytes = await readFile(join(installation, installedDescriptor.compatibilityManifest.path));
@@ -964,9 +1312,36 @@ try {
         assert.deepEqual(bad, []);
         return { before, after, originalBudget: originalView.budgets, currentBudget: view.budgets, bad };
       });
-    recipient = await serviceRecipient({ directory: join(output, "controlled-recipient-private"), tenantId: tenant,
-      principalId: owner, providerIds: [provider, backup], rightsRef: obligations.OFFER.rightsRef, artifact,
-      ownerCall: (op, body) => http("obligations", op, body) });
+    if (integratedCompany) {
+      const { employeeAuthoritySnapshot } = await import("@finnor/authority");
+      assert.equal(f.ctx.auth.tenantId, tenant);
+      assert.equal(f.ctx.auth.userId, owner);
+      assert.equal(f.ctx.auth.employeeId ?? f.ctx.auth.userId, owner);
+      recipient = await (await import("../../w4/recipient.mts")).growthRecipient({
+        directory: join(output, "controlled-recipient-private"), tenantId: tenant, principalId: owner,
+        companyId: f.root.entityId, accountIds: [provider, backup], rightsRef: obligations.OFFER.rightsRef, artifact,
+        readCanonicalOwnerView: async () => {
+          checkBound();
+          assert(process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG === undefined
+            && process.env.FINNOR_S6_OWNER_TRANSPORT_ROOT === undefined,
+          "W049_INITIAL_RECIPIENT_CONFIGURATION_MUST_NOT_EXIST");
+          const current = await ok("company-brain", "belief-view", {
+            root: { entityType: "external_organization", entityId: f.root.entityId },
+          }, owner);
+          checkBound(); return current;
+        },
+        readCurrentOwnerAuthority: async () => {
+          checkBound();
+          const current = await employeeAuthoritySnapshot(f.ctx.auth);
+          checkBound(); return { employeeId: current.employeeId, revision: current.revision };
+        },
+        ownerCall: (op, body) => http("obligations", op, body),
+      });
+    } else {
+      recipient = await serviceRecipient({ directory: join(output, "controlled-recipient-private"), tenantId: tenant,
+        principalId: owner, providerIds: [provider, backup], rightsRef: obligations.OFFER.rightsRef, artifact,
+        ownerCall: (op, body) => http("obligations", op, body) });
+    }
     let terms = demands.map(d => {
       const option = view.program.options.find((o: any) => o.instanceId === d.id && o.providerId === provider);
       assert.equal(option.termsDigest, optionTerms(outcome, d, { ref: providerRef, body: providerBody,
@@ -1569,6 +1944,24 @@ try {
             await pump(); view = await read(); return assertHistoricalFinancialHold();
           });
       }
+      if (liabilityChallenge) {
+        const { runNativeLiabilityChallenge } = await import("./liability-challenge.mts");
+        await runNativeLiabilityChallenge({
+          requestId, parentAllocation, originalDeadlineAt: deadline,
+          currentTerms: terms, primaryProviderId: provider, read, run,
+          reportCost: (term, cost) => report(term, "ACCEPTANCE_OWNER", { kind: "COST", cost }, retireAt),
+          withdrawOriginal: async term => {
+            const withdrawals = [];
+            for (const role of ["PROVIDER", "ACCEPTANCE_OWNER"]) {
+              const protocol = protocols.get(reportKey(term) + ":" + role);
+              assert(protocol, "W3_ORIGINAL_PRIMARY_PROTOCOL_REQUIRED");
+              withdrawals.push(await ok("real-world-services", "consent", { protocolId: protocol.id, revoke: true }, protocol.participantId));
+            }
+            return withdrawals;
+          },
+          recipientPatchCount: () => recipient!.requests.filter((request: any) => request.method === "PATCH").length,
+        });
+      }
       await artifact("mounted-input.json", { workId: intake.workId, owner, requestId,
         expected: { instances: 7, qualification: "CONTROLLED_DEVELOPMENT_ONLY", fieldValidated: false } });
       if (installation) await mountedServiceProof({
@@ -1653,8 +2046,12 @@ try {
       assert.equal(original.work_id, intake.workId); assert.equal(original.work_input_id, intake.workInputId);
       assert.deepEqual(original.parent_allocation, parentAllocation);
       assert.equal(original.original_deadline.toISOString(), outcome.originalDeadlineAt);
-      if (publicationChallenge) return { works: finalState.works, original,
-        checkedWorkEvents: finalState.workEvents.filter(event => event.reason === "real_world_service_checked") };
+      if (publicationChallenge) {
+        const checkedWorkEvents = finalState.workEvents.filter(event =>
+          event.work_id === intake.workId && event.event_type === "real_world_service_checked");
+        assert.deepEqual(checkedWorkEvents, [], "W3_LATE_PUBLICATION_MUST_NOT_PUBLISH_CHECKED_WORK");
+        return { works: finalState.works, original, checkedWorkEvents };
+      }
       const unfinished = finalState.jobs.filter(j => !["completed", "cancelled"].includes(j.status));
       if (resourceChallenge) {
         assert(unfinished.length >= 1 && unfinished.length <= 2);
@@ -1666,10 +2063,66 @@ try {
       return { works: finalState.works, occupations: finalState.occupations,
         jobStatusCounts: finalState.jobs.reduce((counts, job) => ({ ...counts, [job.status]: (counts[job.status] ?? 0) + 1 }), {} as Record<string, number>) };
     });
+  if (integratedEvidence) {
+    checkBound();
+    const current = finalState.current;
+    assert.equal(current.check.disposition, "CHECKED_DEVELOPMENT");
+    assert.equal(current.projection.operationallyComplete, true);
+    assert.equal(current.projection.financiallyReconciled, false);
+    for (const operation of ["OFFER", "BOOK", "RETIRE_ACCESS", "PAY"])
+      assert(current.nativeEffects.some((effect: any) => effect.operation === operation
+        && effect.state === "VERIFIED" && hash(effect.ref) === hash(obligations[operation].ref)),
+      "W049_ACTUAL_W3_NATIVE_CONSUMPTION_REQUIRED:" + operation);
+    const economics = (await admin.query(`SELECT kind,body FROM finnor_os.s7_economic_records
+      WHERE tenant_id=$1 AND body->'payload'->>'workId'=$2 ORDER BY knowledge_at,record_id`, [tenant, intake.workId])).rows;
+    assert(economics.some(record => record.kind === "COMPUTE"));
+    assert(economics.some(record => record.kind === "MEASUREMENT"));
+    await integratedEvidence.record({
+      engine: "W3", schema: current.program.schema, tenantId: tenant, principalId: owner, companyId: f.root.entityId,
+      workId: intake.workId, workInputId: intake.workInputId, requestId,
+      ref: { owner: "W3", id: requestId, version: "finnor.real-world-service.v1", contentDigest: current.artifactDigest },
+      consumedBy: { owner: "NATIVE_REAL_WORLD_SERVICE_RUNTIME", nativeEffects: current.nativeEffects,
+        independentCheck: current.check, projection: current.projection },
+      evidence: { current, economics, original: outcome, parentAllocation, work: finalState.works,
+        originalDeadline: deadline, recipient: recipient.snapshot(), completeMonetaryCost: null,
+        independentProtectedCustody: false },
+    });
+    assert(integratedPorts && recipient && organizationEvaluator && integratedWorks);
+    const ports: IntegratedOwnerPorts = integratedPorts;
+    await observeIntegratedOwner("W4", async () => {
+      const { runMarketOwner } = await import("../integrated/market-owner.mts");
+      const market = await runMarketOwner(ports, {
+        actors: { operator: backup, buyer: provider, observer: inspector, accountant: evaluator, unrelated, foreign },
+        native, recipient, pump: createIntegratedPump(),
+      });
+      await integratedEvidence.record(market);
+    });
+    await observeIntegratedOwner("W5", async () => {
+      assert(organizationDependency && organizationDeadline, "W049_W5_NO_CURRENT_ORIGINAL_DEADLINE");
+      const { runOrganizationOwner } = await import("../integrated/organization-owner.mts");
+      await runOrganizationOwner({ ...ports, request: organizationRequest }, {
+        sourceWorkId: integratedWorks.organizationSource, workId: integratedWorks.organization,
+        evaluatorId: organizationEvaluator,
+        roles: { support: backup, approver: inspector, digital: unrelated, provider: evaluator },
+        originalDeadline: organizationDeadline, originalS6: organizationDependency, resources: organizationResources,
+        units: organizationUnits, onLivePhaseEnded: () => { organizationNativePhaseClosed = true },
+        beforeTerminal: async (organization, ready) => {
+          assert.equal(ready.status, "PENDING_S6_TERMINAL_NEGATIVE");
+          await integratedEvidence.record(organization);
+          await integratedEvidence.verifyOriginalCustody(admin!);
+          await artifact("integrated/w5/live-fifth-and-original-custody.json", {
+            status: "PENDING_S6_TERMINAL_NEGATIVE", requestId: ready.requestId,
+            fifthActualOutputRecorded: true, actualAllFiveOriginalCustodyVerified: true, fullW5Qualification: false });
+        },
+      });
+    });
+    checkBound();
+  }
+  }
 } catch (error) {
   await artifact("terminal-failure.json", { message: error instanceof Error ? error.message : String(error),
     stack: error instanceof Error ? error.stack : null }); terminalExit = 1;
-  if (admin) {
+  if (admin && !organizationNativePhaseClosed) {
     try {
       const sources = (await admin.query(`SELECT l.*,v.content_hash,v.content,v.snapshot,s.metadata
        FROM finnor_os.w3_original_source_links l JOIN finnor_os.evidence_source_versions v ON v.id=l.version_id
@@ -1719,10 +2172,14 @@ try {
   await artifact("cleanup.json", { status: cleanup.some(row => row.status === "FAIL") ? "FAIL" : "PASS", steps: cleanup });
   await artifact("authentication.json", { authDevBypass: process.env.AUTH_DEV_BYPASS,
     bearerHTTP: true, traffic, credentialsRecorded: false, genuineHumanEstablished: false });
+  if (integratedEvidence) terminalExit = (await integratedEvidence.finalize(terminalExit, {
+    status: cleanup.some(row => row.status === "FAIL") ? "FAIL" : "PASS", steps: cleanup,
+  })).exitCode;
   await artifact("result.json", { schema: "finnor.w3.native-e2e.v1", startedAt, finishedAt: new Date().toISOString(),
     elapsedMs: performance.now() - start, results, cleanup, exitCode: terminalExit, fast, invoiceChallenge, commitmentChallenge,
     pauseChallenge, acceptanceChallenge, observationsChallenge, resourceChallenge, resourceSample, dependencyChallenge,
-    cancellationChallenge, cancellationSample, currentnessChallenge, publicationChallenge, largeBasis, family,
+    cancellationChallenge, cancellationSample, liabilityChallenge, currentnessChallenge, publicationChallenge, largeBasis, family, integratedCompany,
+    organizationOriginal, organizationNativePhaseClosed,
     command: ["node", "--import=tsx", "scripts/postz/w3/native.mts", "--output", "<new-absolute-output>",
       ...(fast ? ["--fast"] : []), ...(invoiceChallenge === null ? [] : ["--invoice-challenge", String(invoiceChallenge)]),
       ...(pauseChallenge ? ["--pause-challenge"] : []), ...(acceptanceChallenge ? ["--acceptance-challenge"] : []),
@@ -1732,9 +2189,15 @@ try {
       ...(publicationChallenge ? ["--publication-challenge"] : []),
       ...(dependencyChallenge ? ["--dependency-challenge"] : []),
       ...(cancellationChallenge ? ["--cancellation-challenge", "--cancellation-sample", String(cancellationSample)] : []),
+      ...(liabilityChallenge ? ["--liability-challenge"] : []),
       ...(largeBasis ? ["--large-basis"] : []), ...(family === "COOK_CONTINUITY" ? [] : ["--family", family]),
-      ...(commitmentChallenge ? ["--commitment-challenge"] : [])],
-    limits: { wallSeconds: maxSeconds, minimumFreeDiskGiB: 4, maximumGeneratedDiskGiB: 6 },
+      ...(commitmentChallenge ? ["--commitment-challenge"] : []), ...(integratedCompany ? ["--integrated-company"] : []),
+      ...(organizationOriginal ? ["--organization-live-original"] : [])],
+    limits: { wallSeconds: maxSeconds, minimumFreeDiskGiB: 4,
+      ...(organizationOriginal ? { maximumEvidenceBytes: 128 * 1024 ** 2, workerHeapMiB: 1024, workerMilliseconds: 60000 }
+        : { maximumGeneratedDiskGiB: 6 }),
+      ...(integratedCompany ? { aggregateWallSeconds: INTEGRATED_PROFILE.aggregateSeconds,
+        nonW3OwnerObserverMilliseconds: otherOwnerMilliseconds } : {}) },
     qualification: "CONTROLLED_ENGINEERING_ONLY_NOT_FIELD_OR_PROTECTED_QUALIFICATION",
     physicalFieldCompletion: false, genuineHumanEvidence: false, productionActive: false });
 }

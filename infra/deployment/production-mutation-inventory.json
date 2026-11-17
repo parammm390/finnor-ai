@@ -300,6 +300,7 @@
         ".github/workflows/w1-owning-verification.yml",
         ".github/workflows/w3-owning-episode.yml",
         ".github/workflows/w3-owning-verification.yml",
+        ".github/workflows/w3-owning-qualification.yml",
         ".github/workflows/project-z0-native.yml",
         ".github/workflows/w2-atomic-settlement-verification.yml",
         ".github/workflows/ci-completion.yml"
@@ -307,6 +308,27 @@
       "classification": "READ_ONLY",
       "state": "ACTIVE",
       "reason": "Verification uses disposable fixtures and retained receipts. CI completion may write a source-bound PR comment only; it grants no production, product-authority, or business-effect mutation."
+    },
+    {
+      "id": "phase-w-controlled-ci-and-release-selection",
+      "paths": [
+        ".github/workflows/phase-w-native-episode.yml",
+        ".github/workflows/project-w4-owner.yml",
+        ".github/workflows/phase-w-verification.yml",
+        "finnor-os/scripts/postz/phase-w-ci/native-evidence.mjs",
+        "finnor-os/scripts/postz/phase-w-ci/stage-native-evidence.mjs",
+        "finnor-os/scripts/postz/phase-w-ci/verify-native-evidence.mjs",
+        "scope-postz/phase-w-ci/check-ci-boundaries.mjs",
+        "scope-postz/phase-w-ci/failure-model.md",
+        "scope-postz/phase-w-ci/release-candidate.json",
+        "scripts/release/phase-w-release-profile.mjs",
+        "scripts/release/select-phase-w-release-profile.mjs",
+        "infra/deployment/phase-w-candidate-world.activation-contract.md",
+        "infra/deployment/phase-w-candidate-world.design.json"
+      ],
+      "classification": "READ_ONLY",
+      "state": "ACTIVE",
+      "reason": "Controlled disposable CI, local receipt validation and sanitized metadata staging only. The committed marker selects a fail-closed release prerequisite; these paths hold no production credentials, deployment permission or independent production mutation authority."
     },
     {
       "id": "declarative-production-source",

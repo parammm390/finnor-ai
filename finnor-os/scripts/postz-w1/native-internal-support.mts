@@ -3,6 +3,8 @@
  * any subject so that its fixed schema is part of every actual schema cut. */
 import { strict as assert } from "node:assert";
 import { randomUUID } from "node:crypto";
+import { writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import pg from "pg";
 import { receiveWork } from "@finnor/db";
 import { PRODUCTION_JOB_CONTRACTS } from "../../packages/db/compute-contract";
@@ -75,9 +77,14 @@ export async function waitInternalBackoff(e: any, queue: any, expires: number) {
 export async function stageInternalSources(e: any, queue: any, searchIds: string[], expires = Date.now() + 120000) {
   for (let decision = 0; decision < 128; decision++) {
     assert(Date.now() < expires, "Original finite source-stage observation bound");
-    const rows = (await e.admin.query("SELECT id,status,context FROM finnor_os.p2_requests WHERE id=ANY($1::uuid[])", [searchIds])).rows;
+    const rows = (await e.admin.query("SELECT id,status,reason,context FROM finnor_os.p2_requests WHERE id=ANY($1::uuid[])", [searchIds])).rows;
     if (rows.length === searchIds.length && rows.every((row: any) => row.context)) return rows;
-    assert(rows.every((row: any) => !["FAILED", "INVALIDATED", "CANCELLED"].includes(row.status)),
+    const terminal = rows.some((row: any) => ["FAILED", "INVALIDATED", "CANCELLED"].includes(row.status));
+    if (terminal) await writeFile(join(e.evidence, "source-stage-terminal-" + randomUUID() + ".json"),
+      JSON.stringify({ schema: "finnor.w1.source-stage-terminal.v1", searchIds, rows, decision,
+        observedAt: new Date().toISOString(), registeredTypes: queue.registeredTypes(),
+        qualification: "ACTUAL_SOURCE_REFUSAL_NOT_PREPARED_OR_ACCEPTED" }, null, 2) + "\n", { flag: "wx" });
+    assert(!terminal,
       "A failed original source stage is not a prepared native subject");
     if (!await queue.tick()) await waitInternalBackoff(e, queue, expires);
   }
@@ -97,8 +104,11 @@ export async function internalOwnerCut(e: any, tenant: string) {
     " r WHERE tenant_id=$1 ORDER BY to_jsonb(r)::text", [tenant])).rows.map((row: any) => row.body);
   cut.leases = (await e.admin.query(`SELECT to_jsonb(r) body FROM finnor_os.compute_resource_leases r
     WHERE tenant_key=$1 ORDER BY acquired_at,id`, [tenant])).rows.map((row: any) => row.body);
-  cut.physicalPolicies = (await e.admin.query(`SELECT to_jsonb(r) body FROM finnor_os.compute_resource_policies r
-    WHERE resource_key='native:p2'`)).rows.map((row: any) => row.body);
+  const physicalPolicies = (await e.admin.query(`SELECT to_jsonb(r) body,
+    (SELECT to_jsonb(c) FROM finnor_os.compute_plane_cutover c WHERE c.singleton=true) compute_plane_cutover
+    FROM finnor_os.compute_resource_policies r WHERE resource_key='native:p2'`)).rows;
+  cut.physicalPolicies = physicalPolicies.map((row: any) => row.body);
+  cut.computePlaneCutover = physicalPolicies[0]?.compute_plane_cutover ?? null;
   return cut;
 }
 export async function committedEventObserver(e: any) {

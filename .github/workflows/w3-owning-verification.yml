@@ -10,6 +10,8 @@ on:
       - src/**
       - package.json
       - package-lock.json
+      - scope-postz/w3-real-world-fulfillment/**
+      - scope-frontier5/x1-institutional-programme-compiler/verification-plan.json
       - vendor/**
 permissions:
   contents: read
@@ -32,9 +34,13 @@ jobs:
     uses: ./.github/workflows/w3-owning-episode.yml
     with:
       episode: ${{ matrix.episode }}
+  cold-installed-and-mounted:
+    name: "Verify cold W3 installation and browser"
+    needs: full-positive-and-publication
+    uses: ./.github/workflows/w3-owning-qualification.yml
   verdict:
     name: "W3 result - fulfillment and publication"
-    needs: [fast-owner, full-positive-and-publication]
+    needs: [fast-owner, full-positive-and-publication, cold-installed-and-mounted]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 1
@@ -43,9 +49,10 @@ jobs:
         env:
           FAST: ${{ needs.fast-owner.result }}
           FULL: ${{ needs.full-positive-and-publication.result }}
+          INSTALLED: ${{ needs.cold-installed-and-mounted.result }}
         run: |
           node --input-type=module <<'NODE'
-          const results = { fast: process.env.FAST, full: process.env.FULL }
+          const results = { fast: process.env.FAST, full: process.env.FULL, installed: process.env.INSTALLED }
           console.log(JSON.stringify({ phase: "W3", checks: results }))
           if (!Object.values(results).every(result => result === "success")) throw Error("W3_REQUIRED_CHECKS_FAILED")
           NODE

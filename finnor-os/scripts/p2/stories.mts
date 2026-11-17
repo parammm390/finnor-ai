@@ -21,11 +21,15 @@ function child(e:any,extra:Record<string,string>={}){
  const closed=new Promise<any>((resolve,reject)=>{process.once('error',reject);process.once('close',(code,signal)=>resolve({pid:process.pid,code,signal,output,error}));});
  return {process,closed,output:()=>output,stop:()=>{if(process.connected)process.send('stop');},kill:()=>process.kill('SIGKILL')};
 }
-async function stage(e:any,fixtures:any[]){
+async function sourceQueue(e:any){
  const {JobQueue}=await import('../../apps/worker/src/queue'),contracts=(await import('../../packages/db/compute-contract')).PRODUCTION_JOB_CONTRACTS;
  const q=e.createQueue?await e.createQueue():new JobQueue('p2-stage-'+randomUUID(),3);
  q.register('run_harness_program_v1',(await import('../../packages/private-equity/src/program-synthesis/worker')).runHarnessProgramJob,contracts.run_harness_program_v1);
  q.register('run_evidence_derivation_v1',(await import('../../packages/private-equity/src/evidence-execution/worker')).runEvidenceDerivationJob,contracts.run_evidence_derivation_v1);
+ return q;
+}
+async function stage(e:any,fixtures:any[]){
+ const q=await sourceQueue(e);
  try{
   for(const f of fixtures)if(!f.submitted){f.submitted=await e.api('compute-search-submit',f.search,f.identity);ok(f.submitted,202);}
   for(let i=0;i<80;i++){const ran=await q.tick();const rows=(await e.admin.query('SELECT id,context FROM finnor_os.p2_requests WHERE id=ANY($1::uuid[])',[fixtures.map(f=>f.submitted.body.searchId)])).rows;if(rows.length===fixtures.length&&rows.every((r:any)=>r.context))return;await pause(ran?25:2050);}throw Error('REAL_P1_SOURCE_STAGE_TIMEOUT');
@@ -38,13 +42,15 @@ async function deferNative(e:any,fixtures:any[]){
 }
 async function releaseNative(e:any,rows:any[]){await e.admin.query("UPDATE finnor_os.jobs SET run_at=clock_timestamp() WHERE id=ANY($1::uuid[]) AND status='queued'",[rows.map(r=>r.id)]);}
 export async function prepared(e:any,topology='ADAPTIVE',extra:any={}) {
- const {deferSearch,beforeFit,beforePolicy,omittedInput,...searchExtra}=extra;
+ const {deferSearch,beforeFit,beforePolicy,omittedInput,existingOwner,...searchExtra}=extra;
  const dir=join(e.evidence,topology+'-'+randomUUID());await mkdir(dir,{recursive:true});
  const artifact=async(path:string,body:unknown)=>{const p=join(dir,path);await mkdir(join(p,'..'),{recursive:true});await writeFile(p,JSON.stringify(body,null,2));};
- const api=async(f:any,op:string,body:any,handler=allocationPost)=>{const response=await handler(new Request('http://localhost/api/allocations/'+op,{method:'POST',headers:{'content-type':'application/json','x-tenant-id':f.tenant,'x-user-id':f.principal},body:JSON.stringify(body)}),{params:Promise.resolve({operation:op})});return {status:response.status,body:await response.json()};};
+ const api=async(f:any,op:string,body:any,handler=allocationPost)=>{
+  if(e.ownerApi)return e.ownerApi(op,body,{tenant:f.tenant,actor:f.principal});
+  const response=await handler(new Request('http://localhost/api/allocations/'+op,{method:'POST',headers:{'content-type':'application/json','x-tenant-id':f.tenant,'x-user-id':f.principal},body:JSON.stringify(body)}),{params:Promise.resolve({operation:op})});return {status:response.status,body:await response.json()};};
  const rows=spawnSync(process.env.FINNOR_S3_PYTHON!,[join(e.repo,'finnor-os/scripts/s3/reference.py')],{input:JSON.stringify({operation:'equivalent'}),encoding:'utf8'});assert.equal(rows.status,0,rows.stderr);
  const day=86400000;
- const support=createUpstreamFixtureSupport({admin:()=>e.admin,generatedRows:JSON.parse(rows.stdout).rows,begin:new Date(Math.floor(Date.now()/day)*day-128*day).toISOString(),day,fixtures:{},artifact,api:async(f:any,op:string,body:any,handler=allocationPost)=>{
+ const support=createUpstreamFixtureSupport({admin:()=>e.admin,generatedRows:JSON.parse(rows.stdout).rows,begin:new Date(Date.now()-128*day).toISOString(),day,fixtures:{},artifact,api:async(f:any,op:string,body:any,handler=allocationPost)=>{
   if(op==='fit') {
    await artifact('s3-request-before-fit.json',body);
    if(beforeFit)await beforeFit(f);
@@ -56,15 +62,17 @@ export async function prepared(e:any,topology='ADAPTIVE',extra:any={}) {
   if(op==='fit'&&f.browser){const view=await (await import('../../packages/private-equity/src/enterprise-beliefs')).loadEnterpriseBeliefView(f.ctx,{root:f.root,validAt:body.request.time.endAt});await artifact('browser-before-fit-view.json',view);}
   return api(f,op,body,handler);
  }});
- const f=await support.fixture('p2-'+randomUUID(),1,[{id:'compute',unit:'native-attempt',capacity:8,totalLimit:8,resourceClass:'COMPUTE'}]);
+ const f=await support.fixture('p2-'+randomUUID(),1,[{id:'compute',unit:'native-attempt',capacity:8,totalLimit:8,resourceClass:'COMPUTE'}],
+  existingOwner?{existing:existingOwner,metricKeyPrefix:'p2-'+randomUUID()}:{});
  if(beforePolicy)await beforePolicy(f);
  const policy=await support.policy(f,'compute',{compute:8});await support.resource(f,'compute','native-attempt','CUMULATIVE_EXPENDITURE',['8','8']);
  const allocation=ok(await api(f,'clear',support.clearing(f,{compute:['1']})));assert.equal(allocation.status,'FEASIBLE');
  const identity={tenant:f.tenant,actor:f.principal},request=e.request();request.computeSearch='P2_REQUIRED';if(f.browser)request.threadId=f.browser.thread.id;request.root=f.root;request.workId=f.work.workId;request.workInputId=f.work.workInputId;request.ownerBindings={policyRef:policy.ref,allocationRef:allocation.certificate.ref};request.sources=request.sources.map((s:any)=>({...s,source:{...s.source,subject:f.root}}));request.limits={maxCandidates:8,maxAttempts:8,maxSteps:4096,deadlineMs:300000};
  const response=await e.api('program-submit',request,identity);await artifact('p1-submission.json',{request,response});if(response.status!==202){try{await (await import('../../packages/private-equity/src/program-synthesis/api')).submitHarnessProgram(f.ctx,request);}catch(error){await artifact('p1-replay-diagnostic.json',{message:String(error),stack:(error as Error).stack,cause:String((error as any).cause)});}}const p=ok(response,202);
- let held:any;const queueSteps:any[]=[],setupDeadline=Date.now()+20000;
+ let held:any;const queueSteps:any[]=[],preparationQueue=await sourceQueue(e),setupDeadline=Date.now()+20000;
+ try{
  for(let tick=0;tick<40&&Date.now()<setupDeadline;tick++){
-  const ran=await e.queue.tick();
+  const ran=await preparationQueue.tick();
   held=(await e.admin.query('SELECT p.status,e.attempts_used FROM finnor_os.p1_requests p JOIN finnor_os.p1_episodes e ON e.id=p.episode_id WHERE p.id=$1',[p.programId])).rows[0];
   queueSteps.push({tick,ran,held,at:new Date().toISOString()});
   if(held.status==='WAITING'||['FAILED','INVALIDATED','CANCELLED','TESTED'].includes(held.status))break;
@@ -75,13 +83,14 @@ export async function prepared(e:any,topology='ADAPTIVE',extra:any={}) {
  await artifact('p1-queue-steps.json',queueSteps);
  await artifact('p1-held-for-allocation.json',held);
  if(held.status!=='WAITING')await artifact('p1-queue-before-allocation-refusal.json',{
-  registeredTypes:e.queue.registeredTypes(),
+  registeredTypes:preparationQueue.registeredTypes(),
   program:(await e.admin.query('SELECT * FROM finnor_os.p1_requests WHERE id=$1',[p.programId])).rows,
   jobs:(await e.admin.query('SELECT * FROM finnor_os.jobs WHERE tenant_id=$1 ORDER BY id',[f.tenant])).rows,
   deliveries:(await e.admin.query('SELECT d.* FROM finnor_os.job_delivery_attempts d JOIN finnor_os.jobs j ON j.id=d.job_id WHERE j.tenant_id=$1 ORDER BY d.id',[f.tenant])).rows,
   events:(await e.admin.query('SELECT * FROM finnor_os.p1_events WHERE request_id=$1 ORDER BY created_at,id',[p.programId])).rows,
  });
  assert.equal(held.status,'WAITING');assert.equal(held.attempts_used,0);
+ }finally{if(e.createQueue)await preparationQueue.close();}
  const search={schema:'finnor.compute-search-request.v1',programId:p.programId,policyRequest:policy.ref,computeGrant:allocation.certificate.ref,idempotencyKey:randomUUID(),mode:'ordinary_disposable',strategy:topology,limits:{maxUnits:8,maxParallel:2},...searchExtra};
  const submitted=deferSearch?null:await e.api('compute-search-submit',search,identity);await artifact('before-implementation-boundary.json',{request,p,search,submitted,policyRef:policy.ref,certificateRef:allocation.certificate.ref});
  return {f,policy,allocation,p,request,search,identity,submitted,artifact,dir,api};

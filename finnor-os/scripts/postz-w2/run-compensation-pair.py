@@ -194,7 +194,8 @@ def main():
         result = json.loads((owner / "results.json").read_text())
         record["ownerFailure"] = finite_owner_failure(result)
         observed_path = owner / "workforce-compensation/settled-owner-before-projection-assertion.json"
-        if not observed_path.exists():
+        record["intendedOwnerObservationReached"] = observed_path.is_file()
+        if not record["intendedOwnerObservationReached"]:
             record["missingEvidence"] = ["settled-owner-before-projection-assertion.json"]
             # A baseline refusal is accepted only after the original comparison
             # reaches settlement. Setup/early owner failures never qualify it.
@@ -271,15 +272,8 @@ def main():
             record["expectedOriginalMissingJoinDemonstrated"] = True
         else:
             assert result["passed"] and child.returncode == 0, "REPAIRED_OWNER_EPISODE_FAILED"
-        for name in ("results.json", "closing-reader-privacy-original.json", "closing-reader-privacy-result.json",
-                "workforce-compensation/settled-owner-before-projection-assertion.json",
-                "workforce-compensation/receiving-join-" + selected + ".json"):
-            source = owner / name
-            if source.exists():
-                shutil.copyfile(source, report / Path(name).name)
         originals = list(owner.glob("*/w2-original-obligation.json"))
         assert len(originals) == 1, "ONE_ORIGINAL_CONTROLLED_OBLIGATION_REQUIRED"
-        shutil.copyfile(originals[0], report / "original-obligation.json")
         record["status"] = "PASS"
     except BaseException as error:
         record.update(status="FAIL", errorType=type(error).__name__, error=str(error))
@@ -312,6 +306,29 @@ def main():
             stop_owned()
         except BaseException as error:
             record.update(status="FAIL", cleanupError=str(error))
+        try:
+            for name in ("results.json", "closing-reader-privacy-original.json", "closing-reader-privacy-result.json",
+                    "http-transport-failure.json",
+                    "workforce-compensation/settled-owner-before-projection-assertion.json",
+                    "workforce-compensation/receiving-join-" + selected + ".json"):
+                source = owner / name
+                if source.exists():
+                    shutil.copyfile(source, report / Path(name).name)
+            originals = list(owner.glob("*/w2-original-obligation.json"))
+            if len(originals) == 1:
+                shutil.copyfile(originals[0], report / "original-obligation.json")
+            elif len(originals) > 1:
+                raise AssertionError("AMBIGUOUS_ORIGINAL_CONTROLLED_OBLIGATION")
+            api_log = owner / "api.log"
+            if api_log.exists():
+                api_text = api_log.read_text()
+                record["actualNextDiagnostics"] = {
+                    "memoryThresholdRestarts": api_text.count("Server is approaching the used memory threshold, restarting"),
+                    "heapOutOfMemory": "heap out of memory" in api_text,
+                    "fatalError": "FATAL ERROR" in api_text,
+                }
+        except BaseException as error:
+            record.update(status="FAIL", evidenceError=str(error))
         try:
             if source_reversed:
                 for path, data in fixed.items():

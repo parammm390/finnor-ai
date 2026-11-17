@@ -10,8 +10,12 @@ import { nativeHttpFixture } from "../p7/native-http-fixture.mjs";
 import { observeNativeRun } from "./native-observe.mjs";
 import { driveNativeProgram } from "./native-drive.mjs";
 
-export function prepareNativeOwnerFixture(e: any, setup: { beforeFit: (owner: any) => Promise<void> }) {
-  return prepared(e, "ADAPTIVE", { deferSearch: true, beforeFit: setup.beforeFit, beforePolicy: async (owner: any) => {
+export function prepareNativeOwnerFixture(e: any, setup: {
+  beforeFit: (owner: any) => Promise<void>;
+  existingOwner?: { tenant: string; principal: string; root: { entityType: "external_organization"; entityId: string } };
+}) {
+  return prepared(e, "ADAPTIVE", { deferSearch: true, beforeFit: setup.beforeFit,
+    existingOwner: setup.existingOwner, beforePolicy: async (owner: any) => {
     const { ref: ignored, ...mandate } = owner.mandate;
     mandate.utility = { ...mandate.utility, deliberation: {
       schema: "finnor.s4.finite-deliberation-terms.v1", scope: "PUBLIC_FINITE_ACCEPTED_OUTPUT_MECHANICS",

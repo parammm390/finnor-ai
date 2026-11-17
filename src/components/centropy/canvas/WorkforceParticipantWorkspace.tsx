@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { lazy, Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { z } from "zod"
@@ -8,7 +8,11 @@ import { useCentropyAuth } from "../lib/centropy-auth"
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
 import { centropyGet, centropyPost } from "../lib/api"
 import { WorkforceExecutionPanel } from "./WorkforceExecutionPanel"
+import { RealWorldServicePanel } from "../world/RealWorldServicePanel"
+import { GrowthBusinessInvitations } from "../world/GrowthOperatingProgramPanel"
 import "../centropy-theme.css"
+
+const OrganizationTransformationPanel = lazy(() => import("./OrganizationTransformationPanel").then(module => ({ default: module.OrganizationTransformationPanel })))
 
 const enrollment = z.object({ id: z.string().uuid(), contactId: z.string().uuid(),
   recipientPrincipalId: z.string().uuid(), purpose: z.string(), validUntil: z.string(),
@@ -54,8 +58,12 @@ export function WorkforceParticipantWorkspace() {
     <p>This participant workspace does not open the institutional owner shell or grant new authority.</p>
     {auth.session ? <button type="button" onClick={() => void auth.signOut()}>Sign out</button> : <Link href="/centropy/login">Sign in</Link>}
     {!scope.allowed ? <p role="status">{auth.roleError ?? auth.authError ?? "Verify your authenticated role to read your contracts."}</p> : <>
+      <GrowthBusinessInvitations key={scope.key} contextKey={scope.key} workId={workId ?? undefined} />
       {workId ? <WorkforceExecutionPanel key={scope.key + workId} workId={workId} participant /> :
         <p>Open the exact Work link supplied through your authorized channel. No other participant&apos;s Work is listed here.</p>}
+      {workId && !auth.loading && !auth.roleLoading && auth.role !== "owner" ? <Suspense fallback={<p role="status">Opening your organization process offers…</p>}>
+        <OrganizationTransformationPanel key={`organization:${scope.key}:${workId}`} workId={workId} />
+      </Suspense> : null}
       <section aria-label="Your external identity enrollments"><h2>Existing contact bindings</h2>
         <p>Confirm only your actual identity and stated purpose. Enrollment is not acceptance of any assignment, employment, payment or a new grant.</p>
         {read?.key === scope.key ? read.data.map(item => <article key={item.id}>
@@ -67,6 +75,7 @@ export function WorkforceParticipantWorkspace() {
         </article>) : <p>Reading current enrollments…</p>}
         {error?.key === scope.key ? <p role="alert">{error.message}</p> : null}
       </section>
+      <RealWorldServicePanel participant />
     </>}
   </main>
 }

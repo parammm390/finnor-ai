@@ -54,8 +54,19 @@ for(let index=0;index<queue.length;index++){
    if(!local.startsWith('../')&&!isAbsolute(local)&&!local.split(/[\\/]/).includes('node_modules')&&ts.sys.fileExists(candidate))add(candidate);
   }
  }
- for(const imported of ts.preProcessFile(source,true,true).importedFiles){
-  const spec=imported.fileName;
+ const importedSpecifiers:string[]=[];
+ const tree=ts.createSourceFile(file,source,ts.ScriptTarget.Latest,true);
+ const visit=(node:ts.Node)=>{
+  if((ts.isImportDeclaration(node)||ts.isExportDeclaration(node))&&node.moduleSpecifier&&ts.isStringLiteralLike(node.moduleSpecifier))
+   importedSpecifiers.push(node.moduleSpecifier.text);
+  else if(ts.isImportEqualsDeclaration(node)&&ts.isExternalModuleReference(node.moduleReference)&&node.moduleReference.expression&&ts.isStringLiteralLike(node.moduleReference.expression))
+   importedSpecifiers.push(node.moduleReference.expression.text);
+  else if(ts.isCallExpression(node)&&node.expression.kind===ts.SyntaxKind.ImportKeyword&&node.arguments.length===1&&ts.isStringLiteralLike(node.arguments[0]!))
+   importedSpecifiers.push(node.arguments[0]!.text);
+  ts.forEachChild(node,visit);
+ };
+ visit(tree);
+ for(const spec of importedSpecifiers){
   if(!spec.startsWith('.')&&!spec.startsWith('@/')&&!spec.startsWith('@finnor/'))continue;
   let direct=false;
   if(spec.startsWith('.')){

@@ -112,13 +112,12 @@ export async function resolveEnterpriseInterventionModelForControl(ctx: PeMutati
   }
   const model = await readModel(ctx, value); await readableHistory(ctx, model);
   if (await current(ctx, model)) throw unavailable();
-  await recoverModelExperience(ctx,model);
   return model;
 }
 /** Historical variable metadata is readable for an S2 observation/revision.
  * It is not a current dynamics resolver and cannot authorize a policy choice. */
 export async function readEnterpriseInterventionMetadataForObservation(ctx: PeMutationContext, value: unknown): Promise<InterventionModel> {
-  const model = await readModel(ctx, value); await readableHistory(ctx, model);await recoverModelExperience(ctx,model); return model;
+  const model = await readModel(ctx, value); await readableHistory(ctx, model); return model;
 }
 export async function fitEnterpriseInterventionModel(ctx: PeMutationContext, value: unknown, priorRef?: unknown): Promise<InterventionFitBundle> {
   await checkedStore(ctx);
@@ -146,7 +145,6 @@ export async function validateEnterpriseInterventionModel(ctx: PeMutationContext
   status: 'CURRENT' | 'INVALIDATED'; reason: string; executionAuthorityGranted: false; checkedScope: 'S1_AND_LOCAL_ARTIFACT_NOT_SCIENTIFIC_ADMISSION'; modelRef: ExperimentRef;
 }> {
   const model = await readModel(ctx, value); await readableHistory(ctx, model);
-  await recoverModelExperience(ctx,model);
   const reason = await current(ctx, model);
   if (reason) await saveEvents(ctx, [interventionModelEvent(model, 'VALIDITY_CHANGE', { reason, checkedScope: 'S1_AND_LOCAL_ARTIFACT_NOT_SCIENTIFIC_ADMISSION' })]);
   return { status: reason ? 'INVALIDATED' : 'CURRENT', reason: reason ?? 'CURRENT_SOURCE_AND_LOCAL_ARTIFACT_ONLY_NOT_CAUSAL_METHOD_OR_EXECUTION_ADMISSION', executionAuthorityGranted: false, checkedScope: 'S1_AND_LOCAL_ARTIFACT_NOT_SCIENTIFIC_ADMISSION', modelRef: model.ref };
@@ -193,7 +191,7 @@ export async function projectEnterpriseInterventionExperiment(ctx: PeMutationCon
   reason: string; likelihood: { status: 'UNKNOWN'; reasons: string[] }; executionAuthorityGranted: false;
 }> {
   const model = await readModel(ctx, modelRef); if (await current(ctx, model)) throw unavailable();
-  await readableHistory(ctx,model);await recoverModelExperience(ctx,model);
+  await readableHistory(ctx,model);
   await enqueueNativeReferences(ctx,model.request.mechanisms.map(mechanism=>nativeReference('S3',`mechanism:${epistemicHash({modelRef:model.ref,mechanism})}`,{modelRef:model.ref,mechanism},model.version)),model.beliefBindings.map(b=>b.rightsRef));
   return { schema: 'finnor.s3.experiment-projection.v1', status: 'UNSUPPORTED', modelRef: model.ref,
     hypotheses: model.request.mechanisms.map(m => { const digest = epistemicHash({ modelRef: model.ref, mechanism: m }); return { ref: { owner: 'S3', id: `mechanism:${digest}`, version: model.version, contentDigest: digest }, meaning: m.meaning, prior: null }; }),

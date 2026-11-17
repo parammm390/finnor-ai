@@ -50,3 +50,15 @@ node scripts/postz-w2/build-frontend.mjs --output /absolute/new/w2-frontend --or
 ```
 
 Builds require committed clean source, use distinct W2 manifests and never activate production. For the final installed/browser run, set `FINNOR_W2_INSTALLATION`, `FINNOR_W2_FRONTEND_INSTALLATION`, `FINNOR_W2_MOUNTED=1`, and the exact compiled `FINNOR_W2_FRONTEND_ORIGIN`. The native driver emits the path to a mode-0600 disposable fixture outside the workspace. `scripts/postz-w2/browser.mjs` uses that file without recording credentials. Actual DOM assertions, screenshots and native rows are retained separately. The browser client must use the assigned desktop CDP session, never a hidden substitute or fake acceptance callback.
+
+# Owned teardown verdict
+
+Independent review found five teardown errors swallowed before emitting PASS.
+Run every owned closer in dependency order under a finite10-second observation
+per closer; record its name and success or error type/code. Any close error or
+timeout fails the final report even if the business assertions passed. Do not
+stop attempting later closers, report partial cleanup as success, or change the
+original business budgets. The existing signed native E2E must finish with a
+retained cleanup receipt and zero failed closers; failure injection must make the
+same final report fail. Keep arbitrary exception messages and credentials out of
+portable cleanup diagnostics.

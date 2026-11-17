@@ -14,6 +14,8 @@ import {
   type ProductionMutationAuthorizationResult,
 } from "../../../scripts/release/production-mutation-guard.mjs";
 
+import { orderMigrationNames } from "./migration-order";
+
 const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), "migrations");
 
 export interface MigrationFile {
@@ -57,11 +59,10 @@ export async function migrate(
   // production preflight below is deliberately read-only, including when this
   // database still uses the legacy public tracker.
   const files: MigrationFile[] = bundled
-    ? [...bundled].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
+    ? orderMigrationNames(bundled.map(file => file.name)).map(name => bundled.find(file => file.name === name)!)
     : await Promise.all(
-        (await readdir(MIGRATIONS_DIR))
-          .filter((f) => f.endsWith(".sql"))
-          .sort()
+        orderMigrationNames((await readdir(MIGRATIONS_DIR))
+          .filter((f) => f.endsWith(".sql")))
           .map(async (name) => ({ name, sql: await readFile(join(MIGRATIONS_DIR, name), "utf8") })),
       );
   const client = new pg.Client(pgConnectionConfig(databaseUrl));

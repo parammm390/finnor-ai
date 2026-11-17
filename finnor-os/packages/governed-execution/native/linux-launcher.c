@@ -34,6 +34,7 @@ static void refuse(const char *reason) {
   fprintf(stderr,"ISOLATION_LAUNCHER_REFUSED:%s:%d\n",reason,errno);
   _exit(125);
 }
+#include "linux-specialist.h"
 static void caps(struct __user_cap_data_struct data[2]) {
   struct __user_cap_header_struct header={_LINUX_CAPABILITY_VERSION_3,0};
   if(syscall(SYS_capget,&header,data))refuse("CAPGET");
@@ -49,12 +50,27 @@ int main(int argc,char **argv) {
   uid_t uid=getuid();gid_t gid=getgid();pid_t parent=getppid();
   /* PID 1 is a valid supervisor when Node is the container entrypoint. Its
    * death tears down the namespace; ordinary parents retain PDEATHSIG below. */
-  if(argc!=4||uid==0||getegid()!=gid||geteuid()!=uid||parent<=0)refuse("CALLER");
+  int specialist=argc==7;
+  if((argc!=4&&!specialist)||uid==0||getegid()!=gid||geteuid()!=uid||parent<=0)refuse("CALLER");
   char *end=NULL;errno=0;long expected_parent=strtol(argv[3],&end,10);
   if(errno||!argv[3][0]||*end||expected_parent<1||expected_parent>INT_MAX||parent!=(pid_t)expected_parent)refuse("ORIGINAL_PARENT");
   if(strlen(argv[1])<5||strlen(argv[1])>80||strncmp(argv[1],"job-",4)||strspn(argv[1],"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")!=strlen(argv[1]))refuse("JOB");
   int writable=!strcmp(argv[2],"rw");
   if(!writable&&strcmp(argv[2],"ro"))refuse("ACCESS");
+  long wall_milliseconds=0;uint64_t deadline_nanoseconds=0;struct stat specialist_group={0};
+  if(specialist){
+    if(writable||strcmp(argv[4],"protected-specialist-v1"))refuse("SPECIALIST_PROFILE");
+    end=NULL;errno=0;wall_milliseconds=strtol(argv[5],&end,10);
+    if(errno||!argv[5][0]||*end||wall_milliseconds<100||wall_milliseconds>10000)
+      refuse("SPECIALIST_WALL_BOUND");
+    end=NULL;errno=0;
+    if(!argv[6][0]||strlen(argv[6])>20||strspn(argv[6],"0123456789")!=strlen(argv[6]))
+      refuse("SPECIALIST_MONOTONIC_DEADLINE_ARGUMENT");
+    deadline_nanoseconds=(uint64_t)strtoull(argv[6],&end,10);
+    if(errno||*end||!deadline_nanoseconds)refuse("SPECIALIST_MONOTONIC_DEADLINE_ARGUMENT");
+    finnor_specialist_wall(wall_milliseconds,deadline_nanoseconds);
+    finnor_specialist_join(5,uid,&specialist_group);
+  }
   struct __user_cap_data_struct before[2]={{0}};caps(before);
   if(before[0].effective!=(1U<<CAP_SYS_CHROOT)||before[0].permitted!=(1U<<CAP_SYS_CHROOT)||before[0].inheritable||before[1].effective||before[1].permitted||before[1].inheritable)refuse("BOOTSTRAP_CAPS");
   struct stat root,filter,receipt;
@@ -107,7 +123,14 @@ int main(int argc,char **argv) {
   struct sock_fprog program={.len=(unsigned short)(bytes/sizeof(struct sock_filter)),.filter=instructions};
   if(prctl(PR_SET_SECCOMP,SECCOMP_MODE_FILTER,&program))refuse("SECCOMP");
   if(prctl(PR_GET_NO_NEW_PRIVS,0,0,0,0)!=1)refuse("PRIVILEGE_RECHECK");
-  if(dprintf(4,"{\"schema\":\"finnor.s6.linux-bootstrap.v2\",\"pid\":%ld,\"parentPid\":%ld,\"guardianPid\":%ld,\"guestPid\":%ld,\"guestParentPid\":%ld,\"processGroupId\":%ld,\"lifetimeGuard\":\"TRUSTED_NONEXECUTING_PROCESS_GROUP_GUARD\",\"uid\":%lu,\"capabilities\":0,\"noNewPrivileges\":1,\"fixedJail\":true,\"landlockAbi\":%d,\"filterSha256\":\"%s\"}\n",(long)lifetime.guardian_pid,(long)lifetime.original_parent,(long)lifetime.guardian_pid,(long)getpid(),(long)getppid(),(long)getpgrp(),(unsigned long)uid,abi,filter_hash)<0||close(4))refuse("BOOTSTRAP_RECEIPT");
+  if(specialist){
+    if(dprintf(4,"{\"schema\":\"finnor.s6.linux-specialist-bootstrap.v1\",\"profile\":\"BOUNDED_SPECIALIST_ANALYSIS_CGROUP2_V1\",\"pid\":%ld,\"parentPid\":%ld,\"guardianPid\":%ld,\"guestPid\":%ld,\"guestParentPid\":%ld,\"processGroupId\":%ld,\"lifetimeGuard\":\"TRUSTED_NONEXECUTING_PROCESS_GROUP_GUARD\",\"uid\":%lu,\"capabilities\":0,\"noNewPrivileges\":1,\"fixedJail\":true,\"landlockAbi\":%d,\"filterSha256\":\"%s\",\"cgroupDevice\":\"%ju\",\"cgroupInode\":\"%ju\",\"memoryBytes\":268435456,\"swapBytes\":0,\"pidsMax\":24,\"cpuQuotaMicros\":100000,\"cpuPeriodMicros\":100000,\"cpuBurstMicros\":0,\"scratchWriteBytes\":0,\"wallTimeMs\":%ld,\"deadlineMonotonicNanoseconds\":\"%ju\",\"cgroupMembershipVerified\":true,\"guardianWallTimerArmed\":true,\"guardianWallTimer\":\"KERNEL_ABSOLUTE_CLOCK_MONOTONIC\"}\n",
+      (long)lifetime.guardian_pid,(long)lifetime.original_parent,(long)lifetime.guardian_pid,
+      (long)getpid(),(long)getppid(),(long)getpgrp(),(unsigned long)uid,abi,filter_hash,
+      (uintmax_t)specialist_group.st_dev,(uintmax_t)specialist_group.st_ino,wall_milliseconds,
+      (uintmax_t)deadline_nanoseconds)<0||close(4))
+      refuse("SPECIALIST_BOOTSTRAP_RECEIPT");
+  }else if(dprintf(4,"{\"schema\":\"finnor.s6.linux-bootstrap.v2\",\"pid\":%ld,\"parentPid\":%ld,\"guardianPid\":%ld,\"guestPid\":%ld,\"guestParentPid\":%ld,\"processGroupId\":%ld,\"lifetimeGuard\":\"TRUSTED_NONEXECUTING_PROCESS_GROUP_GUARD\",\"uid\":%lu,\"capabilities\":0,\"noNewPrivileges\":1,\"fixedJail\":true,\"landlockAbi\":%d,\"filterSha256\":\"%s\"}\n",(long)lifetime.guardian_pid,(long)lifetime.original_parent,(long)lifetime.guardian_pid,(long)getpid(),(long)getppid(),(long)getpgrp(),(unsigned long)uid,abi,filter_hash)<0||close(4))refuse("BOOTSTRAP_RECEIPT");
   if(snprintf(script,sizeof(script),"%s/worker.mjs",job)>=(int)sizeof(script)||snprintf(home,sizeof(home),"HOME=%s",job)>=(int)sizeof(home)||snprintf(temporary,sizeof(temporary),"TMPDIR=%s",job)>=(int)sizeof(temporary))refuse("PATH_LENGTH");
   char *const arguments[]={"/node","--max-old-space-size=128","--no-addons",script,NULL};
   char *const environment[]={home,temporary,"LANG=C","TZ=UTC","NODE_ENV=production",NULL};

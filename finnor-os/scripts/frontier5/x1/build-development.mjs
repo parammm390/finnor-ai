@@ -1,6 +1,6 @@
 /** One finite compilation of the real API/worker/checker. No downloads,
  * provisioned services, production authority or substituted runtime sources. */
-import { build } from 'esbuild';
+import { build, transform } from 'esbuild';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { readFile, writeFile, mkdir, realpath, readdir, stat, symlink } from 'node:fs/promises';
@@ -168,7 +168,14 @@ for (const asset of compiled.outputFiles) await save(relative(output, asset.path
 const { unlink } = await import('node:fs/promises'); await unlink(generated);
 const base = '517003a4396bc8101a90be4b425ee01de9446740';
 const prefix = 'finnor-os/packages/db/migrations/';
-const retainedMigrations = git('ls-tree', '-r', '--name-only', base, '--', prefix).split('\n').filter(p => p.endsWith('.sql')).sort();
+// Consume the same canonical ordering function as migrate/bundle/native runners.
+// Compile only this fixed source module with the already-required build tool.
+const migrationOrderSource = await readFile(join(backend,'packages/db/migration-order.ts'),'utf8');
+const migrationOrderModule = await transform(migrationOrderSource,{loader:'ts',format:'esm',target:'node22'});
+const {orderMigrationNames} = await import('data:text/javascript;base64,'+Buffer.from(migrationOrderModule.code).toString('base64'));
+const retainedMigrations = orderMigrationNames(git('ls-tree','-r','--name-only',base,'--',prefix)
+  .split('\n').filter(p=>p.endsWith('.sql')).map(p=>p.slice(prefix.length))).map(name=>prefix+name);
+const currentMigrationOrder = orderMigrationNames((await readdir(join(backend,'packages/db/migrations'))).filter(name=>name.endsWith('.sql')));
 const legacy = [];
 for (const path of retainedMigrations) {
   const bytes = execFileSync('git', ['show', base + ':' + path], { cwd: root, maxBuffer: 8 * 1024 * 1024 });
@@ -185,7 +192,7 @@ const manifest = { schema: w2 ? 'finnor.postz.w2.development-installation.v1' : 
     migrations: `finnor-os/${label}-runtime/migrations.mjs` },
   checkerPins, routes: routes.map(({ path, ...rest }) => rest), packages, externalImports: [...externals].sort(),
   runtime: { node: process.version, platform: process.platform, architecture: process.arch, nodeBinarySha256: digest(await readFile(process.execPath)) },
-  schemaState: { retainedBase: base, retainedMigrations: legacy, migrationCount: files.size ? [...files.keys()].filter(p => p.startsWith(prefix) && p.endsWith('.sql')).length : 0 },
+  schemaState: { retainedBase: base, retainedMigrations: legacy, migrationOrder: currentMigrationOrder, migrationCount: files.size ? [...files.keys()].filter(p => p.startsWith(prefix) && p.endsWith('.sql')).length : 0 },
   outputBytes, elapsedMs: Date.now() - started, limits, protectedQualification: false, productionActive: false, executionAuthorityGranted: false };
 if (git('rev-parse', 'HEAD') !== frozen.commit || git('status', '--porcelain=v1', '-uall') !== frozen.dirty) throw Error('X1_BUILD_SOURCE_CHANGED');
 const manifestBytes = JSON.stringify(manifest, null, 2) + '\n';

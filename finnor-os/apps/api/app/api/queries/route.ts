@@ -10,6 +10,7 @@ import { getOrchestrator } from "../../../lib/orchestrator";
 import { OperationalQueryReplayUnavailable, readObjectiveEconomicQueryReply, validateOperationalQueryRequest, type OperationalQueryRequest } from "@finnor/orchestration";
 import { WorkControlAuthorizationError } from "@finnor/db";
 import { EconomicFault } from "@finnor/private-equity/src/economic-action-theory/contracts";
+import { OrganizationTransformationError } from "@finnor/private-equity/src/organization-transformation/contracts";
 import { PeDomainError } from "@finnor/private-equity/src/types";
 import { WorkQueryInProgressError } from "@finnor/db";
 
@@ -65,9 +66,9 @@ function parseRequestBody(input: unknown): {
     return { success: false, error: "NATIVE_ORIGINAL_WORK_OWNER_REQUIRED" };
   }
   const directFields = Object.fromEntries(Object.entries(input).filter(([key]) => !ENVELOPE_KEYS.has(key)));
-  // This programme reader names its original Work as part of the semantic
-  // query, not as a request to append a new steering input.
-  const queryInput = input.intent === "economic_programme_v1" ? { ...directFields, workId: input.workId } : directFields;
+  // These readers name the original Work in the semantic query.
+  const queryInput = input.intent === "economic_programme_v1" || input.intent === "organization_transformation_v1"
+    ? { ...directFields, workId: input.workId } : directFields;
   if (input.workId !== undefined && !uuid(input.workId)) return { success: false, error: "workId must be a UUID" };
   if (input.idempotencyKey !== undefined && !boundedString(input.idempotencyKey, 200)) return { success: false, error: "idempotencyKey must be a non-empty string of at most 200 characters" };
   if (input.executionKey !== undefined && !boundedString(input.executionKey, 200)) return { success: false, error: "executionKey must be a non-empty string of at most 200 characters" };
@@ -126,6 +127,9 @@ export async function POST(req: Request): Promise<Response> {
     if ((intent === "company_revenue" || intent === "stock_quote") && err instanceof PeDomainError && err.code === "PE_ENTITY_NOT_FOUND")
       return Response.json({ code: "ECONOMIC_READ_UNAVAILABLE", error: "The economic read is unavailable under current source and permissions. Request a new read." },
         { status: 404, headers: { "Cache-Control": "no-store" } });
+    if (err instanceof OrganizationTransformationError) return Response.json({ error: err.code }, {
+      status: err.status, headers: { "Cache-Control": "no-store" },
+    });
     if (err instanceof EconomicFault) return Response.json({ code: err.code }, {
       status: err.status, headers: { "Cache-Control": "no-store" },
     });

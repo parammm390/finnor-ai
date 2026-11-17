@@ -12,6 +12,51 @@ permissions:
   contents: read
 
 jobs:
+  release-profile:
+    name: Select committed release profile without production authority
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    outputs:
+      release_profile: ${{ steps.select.outputs.release_profile }}
+      source_sha: ${{ steps.select.outputs.source_sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        timeout-minutes: 5
+        with:
+          node-version: 22.22.3
+      - name: Verify actual SHA and exact committed marker or verified absence
+        id: select
+        timeout-minutes: 1
+        run: |
+          set -euo pipefail
+          selection="$(node scripts/release/select-phase-w-release-profile.mjs --source "$GITHUB_WORKSPACE" --sha "$GITHUB_SHA")"
+          printf '%s\n' "$selection" >> "$GITHUB_OUTPUT"
+          printf 'Committed release profile selection:\n```\n%s\n```\n' "$selection" >> "$GITHUB_STEP_SUMMARY"
+
+  phase-w-release-gate:
+    name: Phase W full-PRD RELEASE, fail closed until genuinely qualified
+    needs: release-profile
+    if: ${{ needs.release-profile.outputs.release_profile == 'PHASE_W_FULL_PRD' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    steps:
+      - name: Refuse unqualified all-five installed and remaining full-PRD claims
+        id: hold
+        env:
+          CANDIDATE_SHA: ${{ needs.release-profile.outputs.source_sha }}
+        run: |
+          set -euo pipefail
+          test "$CANDIDATE_SHA" = "$GITHUB_SHA"
+          printf 'PHASE_W_RELEASE_BLOCKED for %s: genuine all-five installed qualification and remaining mandatory field, comparison and economic evidence are absent. NativeControlledDEV or W3-only cold cannot authorize this release.\n' "$CANDIDATE_SHA" >> "$GITHUB_STEP_SUMMARY"
+          printf '::error::PHASE_W_RELEASE_BLOCKED: missing genuine all-five installed and remaining full-PRD qualification.\n'
+          exit 1
+
   source-release-gate:
     name: "Release prerequisite - Source checks"
     uses: ./.github/workflows/source-checks.yml
@@ -48,7 +93,7 @@ jobs:
 
   post-merge-certification:
     name: post-merge-certification
-    needs: [source-release-gate, backend-release-gate, security-release-gate, readiness-release-gate, root-release-gate]
+    needs: [source-release-gate, backend-release-gate, security-release-gate, readiness-release-gate, root-release-gate, release-profile, phase-w-release-gate]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 3
@@ -60,12 +105,23 @@ jobs:
           SOURCE_RESULT: ${{ needs.source-release-gate.result }}
           BACKEND_RESULT: ${{ needs.backend-release-gate.result }}
           SECURITY_RESULT: ${{ needs.security-release-gate.result }}
+          PROFILE_SELECTION_RESULT: ${{ needs.release-profile.result }}
+          SELECTED_SOURCE_SHA: ${{ needs.release-profile.outputs.source_sha }}
+          RELEASE_PROFILE: ${{ needs.release-profile.outputs.release_profile }}
+          PHASE_W_RESULT: ${{ needs.phase-w-release-gate.result }}
         run: |
           test "$READINESS_RESULT" = success
           test "$ROOT_RESULT" = success
           test "$SOURCE_RESULT" = success
           test "$BACKEND_RESULT" = success
           test "$SECURITY_RESULT" = success
+          test "$PROFILE_SELECTION_RESULT" = success
+          test "$SELECTED_SOURCE_SHA" = "$GITHUB_SHA"
+          case "$RELEASE_PROFILE" in
+            LEGACY_VERIFIED_MARKER_ABSENT) test "$PHASE_W_RESULT" = skipped ;;
+            PHASE_W_FULL_PRD) test "$PHASE_W_RESULT" = success ;;
+            *) echo "::error::PHASE_W_RELEASE_PROFILE_UNVERIFIED"; exit 1 ;;
+          esac
           printf '{"schema":"finnor-post-merge-certification.v1","sha":"%s","runId":"%s","runAttempt":"%s","result":"PASS"}\n' \
             "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" >> "$GITHUB_STEP_SUMMARY"
 
@@ -181,7 +237,7 @@ jobs:
       - name: Prepare disposable worker smoke database
         run: |
           npm run db:bundle
-          git diff --exit-code -- packages/db/migrations-bundle.ts packages/db/migration-head.ts
+          git diff --exit-code -- packages/db/migrations-bundle.ts
           npm run db:migrate
           npm run setup:langgraph
         working-directory: finnor-os

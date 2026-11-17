@@ -1,9 +1,12 @@
 import { z } from "zod";
 import { workforceActorSchema, workforceOutcomeSchema, workforceTaskSchema, workforceTermsSchema, experimentRefSchema } from "../../../workforce/src/execution-program/schema";
 
+import { specialistComputationSchema } from "../../../governed-execution/src/specialist-contract";
+
 const id = z.string().min(1).max(200);
 const integer = z.string().regex(/^-?(0|[1-9]\d{0,95})$/);
 export const workforceComputationSchema = z.discriminatedUnion("kind", [
+  specialistComputationSchema,
   z.object({ kind: z.literal("SUM_INTEGERS"), values: z.array(integer).min(1).max(4096) }).strict(),
   z.object({ kind: z.literal("SORT_STRINGS"), values: z.array(z.string().max(256)).max(4096) }).strict(),
   z.object({ kind: z.literal("HUMAN_JUDGMENT"), prompt: z.string().min(1).max(16384) }).strict(),

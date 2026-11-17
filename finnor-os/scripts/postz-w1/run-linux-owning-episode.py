@@ -108,6 +108,22 @@ def main():
             receipt = json.loads((owner / name).read_text())
             (report / name).write_text(json.dumps(receipt, indent=2) + "\n")
             owning = json.loads((owner / "results.json").read_text())
+            pressure_preparation = owner / "internal-pressure/source-preparation.json"
+            if args.mode == "internal-pressure" and pressure_preparation.exists():
+                shutil.copyfile(pressure_preparation, report / "pressure-source-preparation.json")
+            preparations = []
+            for path in sorted(owner.glob("*/p1-queue-before-allocation-refusal.json")):
+                observed = json.loads(path.read_text())
+                preparations.append({"fixture": path.parent.name, "registeredTypes": observed.get("registeredTypes"),
+                    "programmes": [{key: row.get(key) for key in ("id", "status", "poll_count")}
+                                   for row in observed.get("program", [])],
+                    "jobs": [{key: row.get(key) for key in ("id", "type", "status", "attempts", "run_at",
+                              "started_at", "completed_at", "priority", "protocol_version", "workload_class")}
+                             for row in observed.get("jobs", [])],
+                    "deliveries": [{key: row.get(key) for key in ("job_id", "outcome", "failure_kind", "started_at", "finished_at")}
+                                   for row in observed.get("deliveries", [])]})
+            if preparations:
+                (report / "p1-preparation-diagnostics.json").write_text(json.dumps(preparations, indent=2) + "\n")
             cases = []
             for row in owning["results"]:
                 observed = row.get("observed", {})
@@ -122,6 +138,25 @@ def main():
                 "status": owning["status"], "migrationNames": owning["migrationNames"],
                 "observedMigrationNames": owning["observedMigrationNames"], "cases": cases,
                 "shutdown": owning["shutdown"], "rawRuntimeUploaded": False}, indent=2) + "\n")
+            internal_diagnostics = []
+            for group, key in (("internal-revocation", "boundary"), ("internal-drift", "facet")):
+                for path in sorted((owner / group).glob("*.json")):
+                    observed = json.loads(path.read_text())
+                    if not isinstance(observed, dict) or key not in observed:
+                        continue
+                    failure = str(observed.get("failure", ""))
+                    stack = str(observed.get("stack", ""))
+                    internal_diagnostics.append({key: observed[key], "status": observed.get("status"),
+                        "nativeTerminalStatus": observed.get("nativeTerminalStatus"),
+                        "programmes": [{field: row.get(field) for field in ("id", "status", "poll_count")}
+                            | {"failureCodes": sorted(set(re.findall(r"\b[A-Z][A-Z0-9_]{4,127}\b", str(row.get("failure", "")))))}
+                            for row in observed.get("terminal", {}).get("p1_requests", [])],
+                        "failureCodes": sorted(set(re.findall(r"\b[A-Z][A-Z0-9_]{4,127}\b", failure))),
+                        "frames": [line for line in stack.splitlines()[1:]
+                                   if re.match(r"^\s+at [A-Za-z0-9_.$<> /:@()\[\]-]+:\d+:\d+\)?$", line)]})
+            if internal_diagnostics:
+                (report / "internal-boundary-diagnostics.json").write_text(
+                    json.dumps(internal_diagnostics, indent=2) + "\n")
             assert child.returncode == 0, "ORIGINAL_DRIVER_FAILED"
             assert receipt["status"] == ("PASS_LOCAL_NATIVE_BOOTSTRAP" if native else
                 "PASS_LOCAL_OWNING_SOURCE_SUITE" if args.mode == "abc" else "PASS_LOCAL_INTERNAL_OWNING_GROUP")

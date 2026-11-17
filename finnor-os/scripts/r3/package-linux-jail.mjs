@@ -3,8 +3,10 @@ import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {chmod,chown,copyFile,lstat,mkdir,readFile,readdir,realpath,writeFile} from 'node:fs/promises';
 import {dirname,join} from 'node:path';
-const [node,launcher,base,mode]=process.argv.slice(2);
+const [node,launcher,base,mode,profile,specialistFilter]=process.argv.slice(2);
 if(process.getuid()!==0||!node||!launcher||base!==`/opt/finnor-s6-jail-${process.arch}`||!['x64','arm64'].includes(process.arch))throw Error('JAIL_BUILD_IDENTITY');
+if(profile&&(profile!=='specialist-dev'||mode!=='stage'||!specialistFilter))
+ throw Error('SPECIALIST_DEV_STAGE_AND_FILTER_REQUIRED');
 const root=base+'/root',hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 await mkdir(base,{recursive:true,mode:0o755});
 await mkdir(root,{mode:0o755});
@@ -38,6 +40,34 @@ await writeFile(base+'/manifest.json',JSON.stringify({schema:'finnor.s6.fixed-ja
  launcherSourceSha256:hash(await readFile(source)),launcherLifetimeSourceSha256:hash(await readFile(lifetimeSource)),bootstrapCapability:'CAP_SYS_CHROOT_ONLY_THEN_ZERO',landlockMinimumAbi:2,
  authority:'NONE_OUTPUT_UNTRUSTED',protectedExecution:'UNADMITTED'},null,2)+'\n',{mode:0o444,flag:'wx'});
 await chmod(root,0o555);
+if(profile==='specialist-dev'){
+ const filter=await readFile(specialistFilter),metadata=await lstat(specialistFilter),
+  launcherBytes=await readFile(base+'/launcher');
+ if(!metadata.isFile()||metadata.isSymbolicLink()||metadata.uid!==0||(metadata.mode&0o022)
+   ||filter.length===0||filter.length>32768||filter.length%8
+   ||!launcherBytes.includes(Buffer.from('finnor.s6.linux-specialist-bootstrap.v1'))
+   ||!launcherBytes.includes(Buffer.from('KERNEL_ABSOLUTE_CLOCK_MONOTONIC')))
+   throw Error('SPECIALIST_DEV_NATIVE_PROFILE_UNAVAILABLE');
+ const specialistSource=new URL('../../packages/governed-execution/native/linux-specialist.h',import.meta.url);
+ const manifest={schema:'finnor.s6.protected-specialist-jail.v1',
+  profile:'BOUNDED_SPECIALIST_ANALYSIS_CGROUP2_V1',qualificationDomain:'DEVELOPMENT_LINUX_DELEGATED_CGROUP',
+  productionActive:false,architecture:process.arch,nodeVersion:execFileSync(node,['--version'],{encoding:'utf8',timeout:10000}).trim(),
+  ordinaryManifestDigest:hash(await readFile(base+'/manifest.json')),nativeABI:'LINUX_SPECIALIST_CGROUP2_V1',
+  launcherSha256:hash(launcherBytes),nodeSha256:hash(await readFile(root+'/node')),filterSha256:hash(filter),
+  memoryBytes:268435456,swapBytes:0,pids:24,cpuQuotaMicros:100000,cpuPeriodMicros:100000,
+  cpuBurstMicros:0,scratchWriteBytes:0,network:'DENIED_IN_GUEST',
+  credentials:'BROKER_OWNED_NEVER_DISCLOSED_TO_GUEST',files:'FIXED_JAIL_READ_ONLY_JOB',
+  lifetimeGuard:'TRUSTED_NONEXECUTING_PROCESS_GROUP_GUARD',
+  guardianWallTimer:'KERNEL_ABSOLUTE_CLOCK_MONOTONIC'};
+ if(!/^v22\./.test(manifest.nodeVersion))throw Error('SPECIALIST_DEV_NODE_ABI');
+ await writeFile(base+'/specialist-manifest.json',JSON.stringify(manifest,null,2)+'\n',{mode:0o444,flag:'wx'});
+ await writeFile(base+'/specialist-source-pins.json',JSON.stringify({schema:'finnor.s6.specialist-build-sources.v1',
+  launcherSourceSha256:hash(await readFile(source)),launcherLifetimeSourceSha256:hash(await readFile(lifetimeSource)),
+  launcherSpecialistSourceSha256:hash(await readFile(specialistSource)),
+  requiredNativeLinkLibraries:['crypto','rt'],requiredGuardianTimer:'KERNEL_ABSOLUTE_CLOCK_MONOTONIC',
+  productionActive:false},null,2)+'\n',
+  {mode:0o444,flag:'wx'});
+}
 if(mode!=='stage'){
  for(const [name,minor] of [['null',3],['random',8],['urandom',9]])execFileSync('/usr/bin/mknod',['-m','666',root+'/dev/'+name,'c','1',String(minor)]);
  execFileSync('/usr/sbin/setcap',['cap_sys_chroot=ep',base+'/launcher']);

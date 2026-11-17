@@ -102,6 +102,8 @@ import { ECONOMIC_ORCHESTRATION_OPERATIONS, ECONOMIC_ORCHESTRATION_OPERATION_SCH
 import { ElicitationOperationSchemas } from "../packages/epistemic-runtime/src/incentive-rule-synthesis/contracts";
 import { R3OwnerOperationSchemas, R3WorkReviewSchema } from "../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts";
 import { ServiceOperationSchemas } from "../packages/private-equity/src/real-world-service/boundaries";
+import { OrganizationGetSchemas, OrganizationPostSchemas } from "../packages/private-equity/src/organization-transformation/native-contracts";
+import { growthOperationSchemas } from "../packages/private-equity/src/demand-to-business/boundaries";
 import { ObligationOperationSchemas } from "../packages/private-equity/src/obligation-contracts";
 import { ComputeSearchRequestSchema, SearchIdSchema, SearchProjectionSchema } from "../packages/private-equity/src/compute-search/contracts";
 import { R4_OPERATIONS, R4_OPERATION_SCHEMAS } from "../packages/private-equity/src/r4/contracts";
@@ -1121,12 +1123,50 @@ for (const [operation,{schema}] of Object.entries(M4Operations)) {
   }}});
 }
 
+const organizationPaths: Record<string, object> = {};
+for (const [operation, schema] of Object.entries(OrganizationGetSchemas)) {
+  const query = s(schema) as { properties?: Record<string, unknown>; required?: string[] };
+  const path = "/api/organization/transformation-programs/" + operation;
+  organizationPaths[path] = { ...organizationPaths[path], get: {
+    security: secured, description: "Current private native owner or self-recipient projection. Owner read requires requestId or workId; offers uses the authenticated self identity. Query selectors grant no authority.",
+    parameters: Object.entries(query.properties ?? {}).map(([name, property]) => ({
+      name, in: "query", required: query.required?.includes(name) ?? false, schema: property,
+    })),
+    responses: { "200": { description: "Current private native projection, not adoption, approval, financial efficacy or protected admission." },
+      "400": { description: "Invalid owner read selector rejected" }, "401": { description: "Current signed bearer required" },
+      "403": { description: "Current canonical authority denied" }, "404": { description: "Original owner context unavailable" },
+      "409": { description: "Complete current source, native preimage or declared population bound unavailable" } },
+  } };
+}
+for (const [operation, schema] of Object.entries(OrganizationPostSchemas)) {
+  const path = "/api/organization/transformation-programs/" + operation;
+  organizationPaths[path] = { ...organizationPaths[path], post: {
+    security: secured, requestBody: { required: true, ...json(schema) },
+    responses: { "200": { description: "Exact authenticated original request, self decision, prepared process use or existing-owner composition. Queue acceptance is not Core approval, an external effect or field benefit." },
+      "400": { description: "Strict original schema rejected" }, "401": { description: "Current signed bearer required" },
+      "403": { description: "Current original owner or exact self-recipient authority absent" },
+      "404": { description: "Original Work or private owner context unavailable" },
+      "409": { description: "Original terms, revision, source, resource, deadline, idempotency or complete obligation bridge changed" },
+      "413": { description: "Original finite request byte bound exceeded" } },
+  } };
+}
+Object.assign(paths, organizationPaths);
+
 for (const [operation, schema] of Object.entries(ServiceOperationSchemas)) {
  Object.assign(paths, {["/api/real-world-services/"+operation]: {post: {security: secured, requestBody: json(schema),
   responses: {"200": {description: "Current original Work service programme, purpose-bound participant original or native coordination. CONTROLLED development only; no admission or physical truth granted."},
    "400": {description: "Strict bounded input rejected"}, "401": {description: "Bearer identity required"},
    "404": {description: "Permitted original Work or participant protocol unavailable"},
    "409": {description: "Original terms, source, claim, resources or deadline fenced"},
+   "413": {description: "Byte or declared scope bound exceeded"},
+   "422": {description: "Profile unadmitted"}, "504": {description: "Initial response bound exhausted"}}}}});
+}
+for (const [operation, schema] of Object.entries(growthOperationSchemas)) {
+ Object.assign(paths, {["/api/demand-to-business/"+operation]: {post: {security: secured, requestBody: json(schema),
+  responses: {"200": {description: "Exact original Work operating programme, self-authored purpose-bound participant record or native continuation. Controlled development only; no market truth, field qualification, admission or realized profit."},
+   "400": {description: "Strict bounded input rejected"}, "401": {description: "Bearer identity required"},
+   "404": {description: "Permitted original Work or exact consenting participant protocol unavailable"},
+   "409": {description: "Original terms, source, claim, resources, consent or deadline fenced"},
    "413": {description: "Byte or declared scope bound exceeded"},
    "422": {description: "Profile unadmitted"}, "504": {description: "Initial response bound exhausted"}}}}});
 }

@@ -1,7 +1,7 @@
 /** Ordinary lifecycle outbox. S6 alone admits, orders and receipts the events. */
 import { digest, fault, makeRef, S8_VERSION } from './contracts';
-import type { JournalEntry } from './journal';
-import { ownerTransportRoute, signOwnerDeliveryOrigin, deliverOwnerTransportIntent, readOwnerTransportEvent } from '../../governed-execution/src/owner-transport';
+import type { JournalEntry, JournalMutationFence } from './journal';
+import { ownerTransportRoute, signOwnerDeliveryOrigin, deliverOwnerTransportIntent, readOwnerTransportEvent, readOwnerTransportReference } from '../../governed-execution/src/owner-transport';
 
 interface EventPolicy {
     tenantId: string;
@@ -14,15 +14,17 @@ interface EventPolicy {
 const kinds: Record<string, string> = { PROPOSE: 'PROPOSAL', ATTEMPT: 'SEARCH', RUN_SEARCH: 'SEARCH', REGISTER: 'REGISTRATION', EVALUATE: 'EVALUATION', ADMIT: 'ADMISSION', ACTIVATE: 'ACTIVATION', REVOKE: 'REVOCATION', USE: 'USE', RECONCILE: 'RECONCILIATION', JOURNAL_RECOVERY: 'RECOVERY', AUTHORITY_PROBE: 'RECOVERY',
     APPLICATION_SEMANTICS_PROPOSE: 'PROPOSAL', APPLICATION_SEMANTICS_REGISTER: 'REGISTRATION', APPLICATION_SEMANTICS_EVALUATE: 'EVALUATION',
     APPLICATION_SEMANTICS_ADMIT: 'ADMISSION', APPLICATION_SEMANTICS_ACTIVATE: 'ACTIVATION', APPLICATION_SEMANTICS_REVOKE: 'REVOCATION',
-    APPLICATION_SEMANTICS_USE: 'USE', APPLICATION_SEMANTICS_RECHECK: 'USE', APPLICATION_SEMANTICS_RECONCILE: 'RECONCILIATION' };
+    APPLICATION_SEMANTICS_USE: 'USE', APPLICATION_SEMANTICS_RECHECK: 'USE', APPLICATION_SEMANTICS_RECONCILE: 'RECONCILIATION',
+    SPECIALIST_PROPOSE:'PROPOSAL',SPECIALIST_REGISTER:'REGISTRATION',SPECIALIST_EVALUATE:'EVALUATION',
+    SPECIALIST_ADMIT:'ADMISSION',SPECIALIST_REVOKE:'REVOCATION',SPECIALIST_COMMIT_INTENT:'RECOVERY' };
 export class ProtectedCapabilityEvents {
     private rows: Array<{ event: any; checkpoint: any; checkpointRef: any; entry: JournalEntry | null }> = [];
     private confirmed = -1;
     private tail: any = null;
-    constructor(private policy: EventPolicy, readonly policyDigest: string) { }
+    constructor(private policy: EventPolicy, readonly policyDigest: string,private beforeMutation?:JournalMutationFence) { }
     private identity() { return { semanticOwner: 'S8', tenantId: this.policy.tenantId, principalId: this.policy.principalId }; }
-    private prepare(entry: JournalEntry | null) {
-        const sequence = entry?.sequence ?? 0, previous = this.rows.at(-1)?.event.eventId ?? null;
+    private prepare(entry: JournalEntry | null, previous: string | null = this.rows.at(-1)?.event.eventId ?? null) {
+        const sequence = entry?.sequence ?? 0;
         const genesis = { schema: 'finnor.s8.lifecycle-genesis.v1', policyDigest: this.policyDigest };
         const entryRef = entry ? makeRef('capability-lifecycle-entry', entry) : null;
         const checkpoint = { schema: 'finnor.s8.lifecycle-checkpoint.v1', policyDigest: this.policyDigest, sequence, entryDigest: entry?.digest ?? digest(genesis), previousDigest: entry?.previous ?? null };
@@ -34,9 +36,20 @@ export class ProtectedCapabilityEvents {
         return { event: { ...body, eventId: 's8-event:' + digest(body) }, checkpoint, checkpointRef, entry };
     }
     private async deliver(kind: 'REFERENCE' | 'EVENT', identity: string, payload: any) {
+        try{
+            const existing=kind==='REFERENCE'?await readOwnerTransportReference(this.identity(),identity)
+                :await readOwnerTransportEvent(this.identity(),identity);
+            if(!existing.receipt||digest(kind==='REFERENCE'?(existing as any).reference:(existing as any).event)
+                !==digest(kind==='REFERENCE'?payload.reference:payload.event))
+                fault('S8_PROTECTED_ORIGINAL_DELIVERY_CHANGED',503);
+            return existing;
+        }catch(error){
+            if(!['REFERENCE_NOT_FOUND','EVENT_NOT_FOUND'].includes((error as any)?.code))throw error;
+        }
         const scope = this.identity(), route = await ownerTransportRoute(scope);
         if (!route || route.protectionDomain !== this.policy.domain) fault('S8_PROTECTED_EVENT_ROUTE_UNAVAILABLE', 503);
         const signed = await signOwnerDeliveryOrigin(route, { ...scope, kind, identity, payload });
+        await this.beforeMutation?.('S6_'+kind,identity,payload);
         return deliverOwnerTransportIntent(scope, signed.envelope, signed.signature);
     }
     private async read(row: typeof this.rows[number]) {
@@ -87,4 +100,31 @@ export class ProtectedCapabilityEvents {
         return this.snapshot();
     }
     snapshot() { return { contract: this.policy.protectedEvents.contract, publishedSequence: this.confirmed, eventId: this.tail?.event.eventId ?? null, receipt: this.tail?.receipt ?? null, executionAuthorityGranted: false }; }
+    /** Read and authenticate every original reference/event. Never fills a gap. */
+    async authenticatedHistory(entries:JournalEntry[]){
+        const rows=[this.prepare(null, null)];
+        {
+            for(const entry of entries){
+                if(entry.sequence!==rows.length||entry.policyDigest!==this.policyDigest)
+                    fault('S8_CANONICAL_EVENT_JOURNAL_ORDER_CHANGED',503);
+                rows.push(this.prepare(entry, rows.at(-1)!.event.eventId));
+            }
+            const authenticated=[];
+            for(const row of rows){
+                const accepted=await this.read(row);
+                if(!accepted?.receipt)fault('S8_CANONICAL_ORIGINAL_EVENT_MISSING',503);
+                const references=[{...row.checkpointRef,content:row.checkpoint},
+                    ...(row.entry?[{...makeRef('capability-lifecycle-entry',row.entry),content:row.entry}]:[])];
+                for(const expected of references){
+                    const actual=await readOwnerTransportReference(this.identity(),expected.id);
+                    if(!actual.receipt||digest(actual.reference)!==digest(expected))
+                        fault('S8_CANONICAL_ORIGINAL_EVENT_REFERENCE_CHANGED',503);
+                }
+                authenticated.push({eventId:row.event.eventId,eventDigest:digest(row.event),
+                    receiptDigest:digest(accepted.receipt),references:references.map(({content:_content,...ref})=>ref)});
+            }
+            return {contract:this.policy.protectedEvents.contract,policyDigest:this.policyDigest,
+                entries:authenticated};
+        }
+    }
 }

@@ -1,5 +1,6 @@
 """Independent six-boundary lineage/currentness/counter oracle."""
 from fractions import Fraction
+from datetime import datetime
 import hashlib
 import json
 from pathlib import Path
@@ -14,6 +15,7 @@ def main():
     assert [row["boundary"] for row in cases] == ["SUBMIT", "CLAIM", "USE", "CHECK", "PUBLISH", "DISPATCH"]
     for case in cases:
         assert case["status"] == "PASS", (case["boundary"], case.get("failure"))
+        assert case["cleanup"]["status"] == "PASS_OWNED_RESOURCES_CLOSED"
         target = case["target"]
         assert case["revoked"]["workId"] == target["work"]["workId"]
         assert case["revoked"]["workInputId"] != target["work"]["workInputId"]
@@ -28,6 +30,43 @@ def main():
             assert case["pause"]["originalClocksContinue"] is True
             assert case["pause"]["event"]["searchId"] == case["searchId"]
             assert case["pause"]["resumedAt"]
+            expected_kind, expected_boundary, expected_unit = {
+                "CLAIM": ("W1_NATIVE_FALLBACK_APPLIED", None, "EXECUTE_P1"),
+                "USE": ("PHYSICAL_ATTEMPT_SUBMITTED", None, "EXECUTE_P1"),
+                "CHECK": ("W1_BOUNDARY_CURRENTNESS_CHECKED", "USE", "VERIFY_P1"),
+                "PUBLISH": ("W1_BOUNDARY_CURRENTNESS_CHECKED", "CHECK", "VERIFY_P1"),
+                "DISPATCH": ("UNIT_COMPLETED", None, "VERIFY_P1"),
+            }[case["boundary"]]
+            pause = case["pause"]["event"]
+            cut = case["preRevocation"]
+            committed = [row for row in cut["p2_events"] if row["id"] == pause["eventId"]]
+            assert len(committed) == 1, "W007_EXACT_COMMITTED_PAUSE_EVENT_REQUIRED"
+            event = committed[0]
+            assert event["search_id"] == case["searchId"]
+            assert event["kind"] == pause["kind"] == expected_kind
+            assert event["body"].get("boundary") == pause.get("boundary") == expected_boundary
+            assert event["body"]["unitId"] == pause["unitId"]
+            units = [row for row in cut["p2_units"] if row["id"] == pause["unitId"]]
+            assert len(units) == 1 and units[0]["search_id"] == case["searchId"]
+            assert units[0]["kind"] == expected_unit
+            searches = [row for row in cut["p2_requests"] if row["id"] == case["searchId"]]
+            assert len(searches) == 1 and searches[0]["program_id"] == target["program"]["programId"]
+            # DISPATCH is search-scoped and deliberately has no unitId.
+            assert not any(row["search_id"] == case["searchId"] and
+                           row["kind"] == "W1_BOUNDARY_CURRENTNESS_CHECKED" and
+                           row["body"].get("boundary") == case["boundary"] and
+                           (case["boundary"] == "DISPATCH" or row["body"].get("unitId") == pause["unitId"])
+                           for row in cut["p2_events"]), "W007_INTENDED_BOUNDARY_ALREADY_CROSSED"
+            instant = lambda value: datetime.fromisoformat(value.replace("Z", "+00:00"))
+            assert (instant(event["created_at"]) <= instant(case["pause"]["pausedAt"]) <=
+                    instant(cut["observedAt"]) <= instant(case["revocationCut"]["observedAt"]) <=
+                    instant(case["pause"]["resumedAt"])), "W007_ORIGINAL_PAUSE_REVOCATION_ORDER_REQUIRED"
+            if case["boundary"] == "CLAIM":
+                assert cut["p2_attempts"] == []
+            if case["boundary"] == "USE":
+                attempts = [row for row in cut["p2_attempts"] if row["unit_id"] == pause["unitId"]]
+                assert len(attempts) == 1 and attempts[0]["status"] == "SUBMITTED"
+                assert attempts[0]["id"] == event["body"]["attemptId"]
             assert case["fencedRead"]["body"]["capsule"] is None
             assert case["fencedRead"]["body"]["currentness"] == "STALE"
             assert case["programRead"]["body"]["program"] is None

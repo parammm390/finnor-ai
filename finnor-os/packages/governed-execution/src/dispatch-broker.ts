@@ -15,7 +15,10 @@ const signature=(v:ObjectValue,key:string)=>{const {signature,...body}=v;if(type
 const sourcePaths=['enterprise-obligations.ts','enterprise-allocation.ts','enterprise-control.ts','enterprise-beliefs.ts','allocation-store.ts','obligation-contracts.ts',
  'real-world-service/consumer.ts','real-world-service/store.ts','real-world-service/boundaries.ts',
  'real-world-service/contracts.ts','real-world-service/checker.ts','real-world-service/projection.ts',
- 'real-world-service/participants.ts','real-world-service/identity.ts'].map(name=>fileURLToPath(new URL('../../private-equity/src/'+name,import.meta.url))).concat(fileURLToPath(new URL('../../../apps/api/app/api/obligations/[operation]/route.ts',import.meta.url)));
+ 'real-world-service/participants.ts','real-world-service/identity.ts',
+ 'demand-to-business/consumer.ts','demand-to-business/store.ts','demand-to-business/boundaries.ts',
+ 'demand-to-business/contracts.ts','demand-to-business/checker.ts','demand-to-business/projection.ts',
+ 'demand-to-business/participants.ts','demand-to-business/identity.ts'].map(name=>fileURLToPath(new URL('../../private-equity/src/'+name,import.meta.url))).concat(fileURLToPath(new URL('../../../apps/api/app/api/obligations/[operation]/route.ts',import.meta.url)));
 
 export class GovernedDispatchBroker {
  private queue:Promise<unknown>=Promise.resolve();private queued=0;

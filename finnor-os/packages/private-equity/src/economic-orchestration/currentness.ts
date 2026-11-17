@@ -17,6 +17,7 @@ import { nativeOwnerReadFailure, invalidateNativeOwnerUnavailableTx } from "./de
 import { persistNativeGapTx } from "./gaps";
 import { readNativeFrameTx } from "./observations";
 import { recheckSearchOwners } from "../compute-search/owners";
+import { nativeCapacitySnapshot } from "../compute-search/endpoints";
 
 export type EconomicBoundary = "SUBMIT" | "CLAIM" | "CHECK" | "PUBLISH" | "USE" | "DISPATCH";
 export async function validateEconomicBinding(ctx: PeMutationContext, q: ProgramRow, request: unknown): Promise<void> {
@@ -63,6 +64,25 @@ export async function economicAttemptBindingTx(s: SearchRow, u: UnitRow, c: Pool
   return { w1SelectionGroupRef: selection.selectionGroupRef, w1ActionRef: selection.actionRef,
     w1BeforeFrameDigest: sha(selection.beforeFrame), w1OriginalSelection: true };
 }
+async function refreshCapacityAnnotationTx(ctx: PeMutationContext, s: SearchRow, q: ProgramRow, c: PoolClient) {
+  const original = s.context?.physicalCapacity;
+  if (!original) throw Error("P2_CURRENT_SOURCE_CONTEXT_REQUIRED");
+  await c.query(`SELECT resource_key FROM finnor_os.compute_resource_policies
+    WHERE resource_key=ANY($1::text[]) ORDER BY resource_key FOR SHARE`,
+    [original.rows.map((row: { resource_key: string }) => row.resource_key)]);
+  const current = await nativeCapacitySnapshot(ctx, s.request.requestedKinds.includes("MODEL_REFINE"), c);
+  if (original.digest === current.digest) return;
+  const capacityFields = (rows: Record<string, unknown>[]) => rows.map(({ source, ...capacity }) => capacity);
+  if (sha(original.rows) !== original.digest || sha(capacityFields(original.rows)) !== sha(capacityFields(current.rows)))
+    throw Error("P2_SHARED_PHYSICAL_CAPACITY_POLICY_CHANGED");
+  await currentEconomicCutTx(ctx, s, q, c);
+  s.context = { ...s.context, physicalCapacity: current };
+  await c.query("UPDATE finnor_os.p2_requests SET context=$4::jsonb WHERE tenant_id=$1 AND principal_id=$2 AND id=$3",
+    [s.tenant_id, s.principal_id, s.id, stable(s.context)]);
+  await append(ctx, s, "W1_NATIVE_CAPACITY_ANNOTATION_REBOUND", { previous: original, current,
+    originalEpisode: q.episode_id, originalGrant: s.request.computeGrant, capacityUnchanged: true,
+    originalCountersUnchanged: true, authorityGranted: false }, c);
+}
 /** Withdraw only deliveries with no original physical intent whatsoever.
  * The original P2 scheduler owns the replacement, using a distinct plan-bound
  * idempotency key while preserving unit/episode/grant/generation/effect IDs. */
@@ -85,6 +105,7 @@ async function deferOriginalDelivery(ctx: PeMutationContext, s: SearchRow, q: Pr
     await c.query("UPDATE finnor_os.p2_requests SET status=$4,reason=$5 WHERE tenant_id=$1 AND principal_id=$2 AND id=$3",
       [s.tenant_id, s.principal_id, s.id, s.status, reason]); await snapshot(ctx, s, q, c);
   } else {
+    await refreshCapacityAnnotationTx(ctx, s, q, c);
     const { replan } = await import("../compute-search/controller");
     await replan(ctx, s, q, c);
   }

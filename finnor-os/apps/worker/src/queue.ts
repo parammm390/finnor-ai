@@ -4,7 +4,8 @@
 import { COMPUTE_CUTOVER_EPOCH, ComputeCapacityUnavailableError, classifyTrustedJobInstance, getPool, isProductionJobType, parseWorkloadClass, readProductRuntimeAuthority, resolveTenantVertical, withTenantTransaction, type WorkloadClass } from "@finnor/db";
 import { Sentry } from "../../../packages/tools/src/observability";
 import { logWithTrace } from "../../../packages/tools/src/logger";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
+import { captureActualInitialJobClaim, captureActualJobOrigin } from "../../../packages/governed-execution/src/specialist-origin-context";
 import { hostname } from "node:os";
 import type { PoolClient } from "pg";
 import { RETIRED_WATER_JOB_TYPES, RetiredVerticalError, isRetiredWaterJob } from "@finnor/shared-types";
@@ -21,6 +22,9 @@ export interface JobExecutionContext {
   protocolVersion: number;
   workerId: string;
   retrySafety: JobRetrySafety;
+  leaseSeconds: number;
+  /** Aborts on observed job or registered-claim renewal loss, not normal completion. */
+  readonly leaseLossSignal?: AbortSignal;
   registerHeartbeat(callback: () => Promise<boolean>, lease?: HeartbeatLease): () => void;
 }
 
@@ -429,7 +433,9 @@ export class JobQueue {
           RETURNING id,tenant_id AS "tenantId",type,payload,attempts,
                     max_attempts AS "maxAttempts",protocol_version AS "protocolVersion",
                     retry_safety AS "retrySafety",claim_token AS "claimToken",
-                    claim_fence AS "claimFence",workload_class AS "workloadClass"`,
+                    claim_fence AS "claimFence",workload_class AS "workloadClass",
+                    (extract(epoch FROM started_at)*1000000)::bigint::text AS "originalClaimAcquiredUtcMicros",
+                    (extract(epoch FROM lease_expires_at)*1000000)::bigint::text AS "originalClaimExpiresUtcMicros"`,
           [candidate.id, this.instanceId, String(this.leaseSeconds), claimToken,
             registration.contract.retrySafety, candidate.tenantId, candidate.protocolVersion, this.workloadClass],
         );
@@ -447,7 +453,8 @@ export class JobQueue {
         }
         // PostgreSQL bigint values arrive as decimal strings. Normalize at the
         // queue boundary so every handler receives the declared numeric fence.
-        const rawClaim = claimed.rows[0] as Omit<ClaimedJob, "deliveryAttemptId" | "claimFence"> & { claimFence: number | string };
+        const rawClaim = claimed.rows[0] as Omit<ClaimedJob, "deliveryAttemptId" | "claimFence"> & { claimFence: number | string;
+          originalClaimAcquiredUtcMicros: string; originalClaimExpiresUtcMicros: string };
         const claimFence = Number(rawClaim.claimFence);
         if (!Number.isSafeInteger(claimFence) || claimFence < 1) {
           throw new Error("Durable job claim fence exceeds the supported integer range");
@@ -461,6 +468,13 @@ export class JobQueue {
             this.instanceId, claimedJob.protocolVersion, claimedJob.retrySafety],
         );
         job = { ...claimedJob, deliveryAttemptId: delivery.rows[0]!.id };
+        captureActualInitialJobClaim(job, {
+          schema: "finnor.specialist.actual-initial-job-claim.v1", jobId: job.id,
+          deliveryAttemptId: job.deliveryAttemptId, claimFence: job.claimFence, workerId: this.instanceId,
+          claimTokenDigest: createHash("sha256").update(job.claimToken).digest("hex"),
+          initialAcquiredUtcMicros: rawClaim.originalClaimAcquiredUtcMicros,
+          initialExpiresUtcMicros: rawClaim.originalClaimExpiresUtcMicros,
+        });
         // SIGTERM may arrive during a database round trip after the loop's
         // earlier check. A claim not yet committed must not become new work for
         // a draining process; the transaction rollback restores queue truth.
@@ -528,7 +542,7 @@ export class JobQueue {
         scope.setTag("job_type", job.type);
         if (!handler) throw new Error(`No handler registered for job type ${job.type}`);
         if (signal?.aborted) throw new WorkerDrainBeforeDispatchError();
-        await handler(payload, Object.freeze({
+        const originalExecution = Object.freeze({
           jobId: job!.id,
           tenantId: job!.tenantId,
           deliveryAttemptId: job!.deliveryAttemptId,
@@ -537,8 +551,12 @@ export class JobQueue {
           protocolVersion: job!.protocolVersion,
           workerId: this.instanceId,
           retrySafety: job!.retrySafety,
+          leaseSeconds: this.leaseSeconds,
+          leaseLossSignal: heartbeat.leaseLossSignal,
           registerHeartbeat: heartbeat.register,
-        }));
+        });
+        captureActualJobOrigin(originalExecution, heartbeat, job!);
+        await handler(payload, originalExecution);
       });
       await heartbeat.stop();
       const ms = Date.now() - start;

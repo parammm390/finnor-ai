@@ -30,6 +30,8 @@ if(existsSync(buildDir))throw Error('X1_FRONTEND_BUILD_DIRECTORY_ALREADY_EXISTS'
 await mkdir(output,{mode:0o700});
 const layout=frontendTracingLayout(repo);
 const started=Date.now(),cpuBefore=process.cpuUsage(),resources=[];
+const stageSdk=w2?await(await import('./frontend-sdk-custody.mjs')).captureFrontendSdkCustody(repo):null;
+if(w2&&Date.now()-started>=limits.finalBuildWallSeconds*1000)throw Error('X1_FINAL_BUILD_WALL_BOUND');
 const child=spawn(process.execPath,['--max-old-space-size=1536',join(repo,'node_modules/next/dist/bin/next'),'build','--webpack'],{
   cwd:repo,stdio:['ignore','pipe','pipe'],env:{PATH:'/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin',
     NODE_ENV:'production',NODE_OPTIONS:'--max-old-space-size=1536',CI:'1',NEXT_TELEMETRY_DISABLED:'1',
@@ -42,7 +44,8 @@ for(const stream of [child.stdout,child.stderr])stream.on('data',bytes=>{
   else process.stdout.write(bytes);
 });
 const stop=reason=>{guardFailure??=reason;child.kill('SIGTERM');};
-const timer=setTimeout(()=>stop('X1_FINAL_BUILD_WALL_BOUND'),limits.finalBuildWallSeconds*1000);
+const timer=setTimeout(()=>stop('X1_FINAL_BUILD_WALL_BOUND'),w2
+  ?Math.max(0,limits.finalBuildWallSeconds*1000-(Date.now()-started)):limits.finalBuildWallSeconds*1000);
 const guard=setInterval(()=>{
   try{
     const rows=execFileSync('ps',['-axo','pid=,ppid=,rss='],{encoding:'utf8',timeout:5000}).trim().split('\n').map(line=>line.trim().split(/\s+/).map(Number));
@@ -64,6 +67,10 @@ const {projectPath}=layout,runtime=join(output,'runtime');
 await rename(join(buildDir,'standalone'),runtime);
 await cp(join(buildDir,'static'),join(runtime,projectPath,distDir,'static'),{recursive:true,errorOnExist:true,force:false});
 await cp(join(repo,'public'),join(runtime,projectPath,'public'),{recursive:true,errorOnExist:true,force:false});
+if(stageSdk){
+  if(Date.now()-started>=limits.finalBuildWallSeconds*1000)throw Error('X1_FINAL_BUILD_WALL_BOUND');
+  await stageSdk(runtime,projectPath);
+}
 // Finalization verifies copied dependency bytes, normalizes only internal links,
 // checks the actual compiled public auth origin and accepts only Next's exact
 // generated type-input changes. The original successful compile is retained.

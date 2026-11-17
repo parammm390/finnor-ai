@@ -1,4 +1,5 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
+import { captureActualInitialP3Grant, captureActualP3Origin, finishActualP3Origin } from "../governed-execution/src/specialist-origin-context";
 import { getPool } from "./index";
 import { connectWithExecutionDeadline, releaseOwnedComputeLeases } from "./execution-deadline";
 import { parseWorkloadClass, type WorkloadClass } from "./compute-contract";
@@ -80,13 +81,24 @@ export async function acquireComputeResourceLeases(input: {
       const token = randomUUID();
       const fence = Number(policy.next_fence);
       await client.query("UPDATE compute_resource_policies SET next_fence=next_fence+1 WHERE resource_key=$1", [policy.resource_key]);
-      await client.query(`
+      const originalGrant = await client.query<{ initialAcquiredUtcMicros: string; initialExpiresUtcMicros: string }>(`
         INSERT INTO compute_resource_leases(
           resource_key,tenant_key,workload_class,owner_id,lease_token,fence,expires_at
-        ) VALUES($1,$2,$3,$4,$5,$6,clock_timestamp()+($7::int || ' seconds')::interval)`,
+        ) VALUES($1,$2,$3,$4,$5,$6,clock_timestamp()+($7::int || ' seconds')::interval)
+        RETURNING (extract(epoch FROM (expires_at-($7::int || ' seconds')::interval))*1000000)::bigint::text AS "initialAcquiredUtcMicros",
+          (extract(epoch FROM expires_at)*1000000)::bigint::text AS "initialExpiresUtcMicros"`,
       [policy.resource_key, tenantKey, input.workloadClass, input.ownerId, token, fence, policy.lease_seconds]);
-      leases.push({ resourceKey: policy.resource_key, token, fence, ownerId: input.ownerId,
-        leaseSeconds: policy.lease_seconds });
+      const originalLease = { resourceKey: policy.resource_key, token, fence, ownerId: input.ownerId,
+        leaseSeconds: policy.lease_seconds };
+      const initial = originalGrant.rows[0]!;
+      captureActualInitialP3Grant(originalLease, {
+        schema: "finnor.specialist.actual-initial-p3-grant.v1", resourceKey: originalLease.resourceKey,
+        tokenSha256: createHash("sha256").update(originalLease.token).digest("hex"),
+        fence: originalLease.fence, ownerId: originalLease.ownerId,
+        initialAcquiredUtcMicros: initial.initialAcquiredUtcMicros,
+        initialExpiresUtcMicros: initial.initialExpiresUtcMicros,
+      });
+      leases.push(originalLease);
     }
     await client.query("COMMIT");
     return leases;
@@ -163,10 +175,17 @@ async function executeWithRenewedLeases<T>(
   }, intervalMs);
   let result: T;
   try {
+    captureActualP3Origin({ leases, signal: controller.signal, async drain() {
+      const originalRenewal = renewal;
+      if (originalRenewal) await originalRenewal;
+      if (renewalFailure) throw renewalFailure;
+      controller.signal.throwIfAborted();
+    } });
     result = await invoke(controller.signal);
   } finally {
     clearInterval(timer);
     if (renewal) await renewal;
+    await finishActualP3Origin();
   }
   if (renewalFailure) throw renewalFailure;
   return result;
@@ -181,18 +200,31 @@ export async function withGovernedModelInvocation<T>(input: {
   tenantId?: string;
   channel?: string;
   ownerId?: string;
-}, invoke: () => Promise<T>): Promise<T> {
-  if (process.env.FINNOR_ENVIRONMENT !== "production" && process.env.P3_GOVERNORS !== "1") return invoke();
+  /** Protected callers cannot opt out of shared capacity in a test environment. */
+  requireGovernance?: boolean;
+  deadlineAt?: number;
+}, invoke: (capacitySignal: AbortSignal, leases: readonly ComputeResourceLease[]) => Promise<T>): Promise<T> {
+  if (!input.requireGovernance && process.env.FINNOR_ENVIRONMENT !== "production" && process.env.P3_GOVERNORS !== "1")
+    return invoke(new AbortController().signal, []);
+  if (input.requireGovernance && (!Number.isFinite(input.deadlineAt)
+    || Number(input.deadlineAt) <= Date.now() || Number(input.deadlineAt) - Date.now() > 60_000))
+    throw new Error("Protected model invocation requires a current bounded physical deadline");
   const ownerId = input.ownerId ?? `model:${randomUUID()}`;
   const leases = await acquireComputeResourceLeases({
     resourceKeys: ["model:global", `model-provider:${input.provider}`, `model:${input.provider}:${input.model}`],
-    requiredResourceKeys: ["model:global", `model-provider:${input.provider}`],
+    requiredResourceKeys: ["model:global", `model-provider:${input.provider}`,
+      ...(input.requireGovernance ? [`model:${input.provider}:${input.model}`] : [])],
     tenantId: input.tenantId ?? null,
     workloadClass: currentComputeClass(input.channel),
     ownerId,
   });
   try {
-    return await executeWithRenewedLeases(leases, invoke);
+    // A disappearing governor must not free capacity before the physical call's
+    // absolute deadline. Renewal loss also aborts the adapter's actual I/O.
+    if (input.requireGovernance && leases.some(lease =>
+      lease.leaseSeconds * 1000 <= Number(input.deadlineAt) - Date.now() + 2000))
+      throw new Error("Model capacity policy lease is shorter than the protected physical lifetime");
+    return await executeWithRenewedLeases(leases, signal => invoke(signal, leases));
   } finally {
     // Failure to release leaves a bounded 120s lease, never unbounded capacity.
     await releaseComputeResourceLeases(leases, "invocation_finished").catch((error) => {

@@ -1,6 +1,8 @@
 import type { BeliefClaim, BeliefDecisionContext, BeliefView, BeliefViewPin, BeliefViewPinValidation } from "@finnor/shared-types";
 import { canExerciseAuthorityBatch, canExerciseAuthorityTx, employeeAuthoritySnapshot, employeeAuthoritySnapshotTx } from "@finnor/authority";
-import type { PoolClient } from "pg";
+import pg, { type PoolClient } from "pg";
+import { channel } from "node:diagnostics_channel";
+import { LedgerFault } from "../../governed-execution/src/protocol";
 import { withTenantTransaction } from "@finnor/db";
 import {
   beliefOwnerRef,
@@ -145,8 +147,55 @@ export async function loadEnterpriseBeliefView(ctx: PeMutationContext, input: {
   const world = await loadPrivateEquityWorldState(ctx, input.root, { validAt: input.validAt, knowledgeAt: input.knowledgeAt,
     omitAuxiliaryTasks: options?.omitAuxiliaryTasks }, options?.client);
   if (!world.beliefView) throw new Error("S1 world integration did not emit BeliefView");
-  try { const view=boundBeliefView(world.beliefView, input.maxClaims ?? 1000, input.decisionContext);if(options?.recordExperience!==false)await enqueueNativeBelief(ctx,view,world);return view; }
-  catch { throw new PeDomainError("PE_INVALID_BELIEF_CONTEXT", "S1 decision context or permitted serialization envelope is unsupported"); }
+  let phase: "BOUND_VIEW" | "NATIVE_ENQUEUE" = "BOUND_VIEW";
+  try {
+    const view = boundBeliefView(world.beliefView, input.maxClaims ?? 1000, input.decisionContext);
+    phase = "NATIVE_ENQUEUE";
+    if (options?.recordExperience !== false) await enqueueNativeBelief(ctx, view, world);
+    return view;
+  } catch (cause) {
+    try {
+      // Closed diagnostic labels only, never exception text, stacks, scope or preimages.
+      const ledgerCodes = new Set([
+        "JSON_COMPLEXITY_LIMIT", "NON_CANONICAL_JSON", "REFERENCE_DIGEST_ENCODING_UNSUPPORTED",
+        "NATIVE_OWNER_EVENT_SCOPE_INVALID", "NATIVE_OWNER_PREIMAGE_MISMATCH", "NATIVE_OWNER_REFERENCE_CONFLICT",
+        "NATIVE_SNAPSHOT_PREIMAGE_UNAVAILABLE", "OWNER_ORIGIN_STORAGE_BINDING_INVALID",
+        "OWNER_ORIGIN_EVENT_IDENTITY_INVALID", "OWNER_ORIGIN_EVENT_SCOPE_INVALID", "OWNER_ORIGIN_KEY_REVOKED_OR_UNAVAILABLE",
+        "OWNER_ORIGIN_REFERENCE_BOUND", "OWNER_ORIGIN_REFERENCE_INVALID", "OWNER_ORIGIN_RIGHTS_INVALID",
+        "OWNER_ORIGIN_SCOPE_INVALID", "OWNER_ORIGIN_SEAL_INVALID", "OWNER_ORIGIN_SIGNATURE_INVALID",
+        "OWNER_ORIGIN_SIGNER_MISMATCH", "OWNER_ORIGIN_SIGNER_UNAVAILABLE",
+        "OWNER_TRANSPORT_AMBIGUOUS_IDENTITY", "OWNER_TRANSPORT_BUDGET_INVALID", "OWNER_TRANSPORT_BYTE_BOUND",
+        "OWNER_TRANSPORT_CONFIGURATION_EXPIRED", "OWNER_TRANSPORT_CONFIGURATION_SIGNATURE_INVALID",
+        "OWNER_TRANSPORT_CREDENTIAL_NOT_ATTENUATED", "OWNER_TRANSPORT_DIGEST_INVALID", "OWNER_TRANSPORT_ENDPOINT_UNSUPPORTED",
+        "OWNER_TRANSPORT_FIELD_SET_INVALID", "OWNER_TRANSPORT_IDENTITY_IMMUTABLE", "OWNER_TRANSPORT_KEY_TYPE_INVALID",
+        "OWNER_TRANSPORT_LIST_INVALID", "OWNER_TRANSPORT_OBJECT_INVALID", "OWNER_TRANSPORT_ORIGIN_KEY_INVALID",
+        "OWNER_TRANSPORT_POLICY_UNSUPPORTED", "OWNER_TRANSPORT_PRINCIPAL_UNAVAILABLE", "OWNER_TRANSPORT_PRIVATE_FILE_UNSAFE",
+        "OWNER_TRANSPORT_PURPOSE_INVALID", "OWNER_TRANSPORT_RIGHTS_AMBIGUOUS", "OWNER_TRANSPORT_ROOT_UNAVAILABLE",
+        "OWNER_TRANSPORT_SCOPE_INVALID", "OWNER_TRANSPORT_SIGNATURE_ENCODING_INVALID", "OWNER_TRANSPORT_SIGNER_UNBOUND",
+        "OWNER_TRANSPORT_TEXT_INVALID", "OWNER_TRANSPORT_TIME_INVALID", "OWNER_TRANSPORT_UNRESOLVED_BACKLOG_LIMIT",
+      ]);
+      const viewCodes = new Map([
+        ["Invalid S1 view cut", "S1_VIEW_CUT_INVALID"],
+        ["S1 permitted view exceeds the 8 MiB serialization envelope", "S1_VIEW_BYTE_ENVELOPE_EXCEEDED"],
+        ["S1 claim limit must be 1..1000", "S1_CLAIM_LIMIT_INVALID"],
+        ["Unsupported S1 decision context", "S1_DECISION_CONTEXT_UNSUPPORTED"],
+        ["Invalid S1 decision requirement", "S1_DECISION_REQUIREMENT_INVALID"],
+        ["Unsupported decimal representation", "S1_DECIMAL_REPRESENTATION_UNSUPPORTED"],
+      ]);
+      const sqlStates = new Set(["08006", "22P02", "23503", "23505", "23514", "40001", "40P01", "42501", "42601", "42703", "42P01", "53300", "57014", "57P01"]);
+      const causeClass = cause instanceof LedgerFault ? "LEDGER_FAULT" : cause instanceof pg.DatabaseError ? "DATABASE_ERROR"
+        : cause instanceof PeDomainError ? "PE_DOMAIN_ERROR" : cause instanceof TypeError ? "TYPE_ERROR"
+        : cause instanceof RangeError ? "RANGE_ERROR" : cause instanceof SyntaxError ? "SYNTAX_ERROR" : cause instanceof Error ? "ERROR" : "NON_ERROR";
+      const knownCode = cause instanceof LedgerFault ? ledgerCodes.has(cause.code) ? cause.code : null
+        : cause instanceof pg.DatabaseError ? cause.code && sqlStates.has(cause.code) ? cause.code : null
+        : cause instanceof Error ? viewCodes.get(cause.message) ?? null : null;
+      const diagnostic = { phase, causeClass, knownCode };
+      channel("finnor.s1.belief-load-failure.v1").publish({
+        schema: "finnor.s1.belief-load-failure.v1", ...diagnostic, causeHash: epistemicHash(diagnostic), publisherPid: process.pid,
+      });
+    } catch { /* Optional diagnostics cannot replace the original private refusal. */ }
+    throw new PeDomainError("PE_INVALID_BELIEF_CONTEXT", "S1 decision context or permitted serialization envelope is unsupported");
+  }
 }
 
 /** Reconstruct the original cut while the owner authorizes every source under

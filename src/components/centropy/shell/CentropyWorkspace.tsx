@@ -35,6 +35,7 @@ import "./centropy.css"
 const WorkRecovery = lazy(() => import("../thread/WorkRecovery").then((module) => ({ default: module.WorkRecovery })))
 const PendingEffects = lazy(() => import("../thread/PendingEffects").then((module) => ({ default: module.PendingEffects })))
 const WorkforceAssignments = lazy(() => import("../thread/WorkforceAssignments").then((module) => ({ default: module.WorkforceAssignments })))
+const OrganizationTransformationPanel = lazy(() => import("../canvas/OrganizationTransformationPanel").then((module) => ({ default: module.OrganizationTransformationPanel })))
 const OutcomePacks = lazy(() => import("../thread/OutcomePacks").then((module) => ({ default: module.OutcomePacks })))
 const SettingsDialog = lazy(() => import("../controls/SettingsDialog").then((module) => ({ default: module.SettingsDialog })))
 const StandaloneArtifactCanvas = lazy(() => import("../canvas/ArtifactCanvas").then((module) => ({ default: module.ArtifactCanvas })))
@@ -73,7 +74,7 @@ function CentropyWorkspaceContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const auth = useCentropyAuth()
-  const ready = Boolean(auth.session && auth.role === "owner" && !auth.loading && !auth.authError && !auth.roleError)
+  const ready = Boolean(auth.session && auth.role === "owner" && !auth.loading && !auth.roleLoading && !auth.authError && !auth.roleError)
   const fromRoute = routeThreadId(pathname)
   const worldMode = pathname === "/centropy/world"
   const worldThreadId = worldMode && UUID.test(searchParams.get("threadId") ?? "") ? searchParams.get("threadId") : null
@@ -587,6 +588,13 @@ function CentropyWorkspaceContent() {
           onInspectWork={() => setAnswerWorkDetails(activeWorkId)}
           onDownloadBrief={activeWorkId ? () => centropyDownload(`works/${activeWorkId}`, "finnor-valuation-diligence-brief.md", { export: "valuation-brief" }) : undefined} /> : <>
         {answerResult && answerWorkDetails === activeWorkId && !worldMode ? <button type="button" className="ct-answer__work-link" onClick={() => setAnswerWorkDetails(null)}>Back to answer</button> : null}
+        {ready && !auth.roleLoading && !replayWorkId && activeWorkId && canvasSources.work.status === "ready"
+          && !canvasSources.work.error && canvasSources.work.data?.work.id === activeWorkId
+          && canvasSources.work.data.read?.complete === true
+          ? <Suspense fallback={<p role="status">Opening organization transformation programme…</p>}>
+            <OrganizationTransformationPanel key={`organization:${mutationScopeKey}:${activeWorkId}`} workId={activeWorkId}
+              onChanged={() => { setRefreshToken(value => value + 1); setCanvasRefresh(value => value + 1) }} />
+          </Suspense> : null}
         {!worldMode && canvasRoot && focusedObject && canvasSources.projection.data && canvasSources.projection.status !== "error"
           ? <LiveInstitutionalControl root={canvasRoot} focus={focusedObject} workId={activeWorkId} onChanged={() => setCanvasRefresh(value => value + 1)} /> : null}
         {worldMode ? <WorldExplorer key={`${auth.session.user.id}:${auth.session.access_token}`} root={canvasRoot} projection={canvasSources.projection.data} projectionStatus={canvasSources.projection.status} projectionError={canvasSources.projection.error} initialObject={routeSelectedObject} workId={activeWorkId} onSelectRoot={selectWorldRoot} onSelectObject={selectWorldObject} onAsk={askAboutWorldNode} onRefresh={() => setCanvasRefresh((value) => value + 1)} />

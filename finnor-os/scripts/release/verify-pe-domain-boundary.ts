@@ -9,6 +9,7 @@ import {
   ECONOMIC_READ_QUERY_INTENTS,
   EXECUTABLE_VERTICALS,
   OPERATIONAL_QUERY_INTENTS,
+  ORGANIZATION_OPERATIONAL_QUERY_INTENTS,
   PARTY_TYPES,
   PHASE5_DISPOSITION_COUNTS,
   PHASE5_DISPOSITION_LEDGER,
@@ -195,7 +196,12 @@ function equalSets(left: readonly string[], right: readonly string[]): boolean {
 }
 
 const PUBLIC_QUERY_INTENTS = [...CORE_OPERATIONAL_QUERY_INTENTS, ...PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS, ...ECONOMIC_READ_QUERY_INTENTS];
-const NATIVE_QUERY_INTENTS = [...PROGRAM_OPERATIONAL_QUERY_INTENTS, ...CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS, ...EXECUTION_PROOF_OPERATIONAL_QUERY_INTENTS];
+const NATIVE_QUERY_INTENTS = [
+  ...PROGRAM_OPERATIONAL_QUERY_INTENTS,
+  ...CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS,
+  ...EXECUTION_PROOF_OPERATIONAL_QUERY_INTENTS,
+  ...ORGANIZATION_OPERATIONAL_QUERY_INTENTS,
+];
 
 export function verifyQuerySurfaceCoverage(openApi: unknown): string[] {
   const errors: string[] = [];
@@ -227,6 +233,9 @@ export function verifyQuerySurfaceCoverage(openApi: unknown): string[] {
   if (!equalSets(EXECUTION_PROOF_OPERATIONAL_QUERY_INTENTS, ["execution_proof_capsule_v1"])) {
     errors.push("native-only query catalogue must retain the exact Z4 reader");
   }
+  if (!equalSets(ORGANIZATION_OPERATIONAL_QUERY_INTENTS, ["organization_transformation_v1"])) {
+    errors.push("native-only query catalogue must retain the exact W5 reader");
+  }
   if (!equalSets(OPERATIONAL_QUERY_INTENTS, [...PUBLIC_QUERY_INTENTS, ...NATIVE_QUERY_INTENTS])) {
     errors.push("active query catalogue has an unclassified public/native intent");
   }
@@ -234,7 +243,7 @@ export function verifyQuerySurfaceCoverage(openApi: unknown): string[] {
     if (!exposed.has(intent)) errors.push(`OpenAPI is missing public query intent ${intent}`);
   }
   for (const intent of NATIVE_QUERY_INTENTS) {
-    // P1, Y1 and Y4 native reads require the original authenticated Work/Input.
+    // These native reads require the original authenticated Work/Input.
     // Public facades must not advertise lowered internal query invocations.
     if (exposed.has(intent)) errors.push(`OpenAPI exposes native-only query intent ${intent}`);
   }
@@ -356,7 +365,7 @@ export async function verifyPeDomainBoundary(): Promise<{ scannedFiles: number; 
 
   const expectedVerticals = ["none", "private_equity"];
   if (!equalSets(EXECUTABLE_VERTICALS, expectedVerticals)) errors.push(`executable verticals are ${EXECUTABLE_VERTICALS.join(", ")}`);
-  if (OPERATIONAL_QUERY_INTENTS.length !== 22) errors.push(`active query registry has ${OPERATIONAL_QUERY_INTENTS.length} intents; expected 22 including W1 revenue/stock-quote, P7 workforce_status, P1 harness_program_v1, Y1 economic_programme_v1, Y4 confidential_economic_computation_v1 and Z4 execution_proof_capsule_v1`);
+  if (OPERATIONAL_QUERY_INTENTS.length !== 23) errors.push(`Expected 23 active query intents, including the Z4 execution proof and W5 organization readers, found ${OPERATIONAL_QUERY_INTENTS.length}`);
   const retiredQueries = OPERATIONAL_QUERY_INTENTS.filter((intent) => (RETIRED_WATER_QUERY_INTENTS as readonly string[]).includes(intent));
   if (retiredQueries.length) errors.push(`retired queries registered: ${retiredQueries.join(", ")}`);
   const expectedParties = ["employee", "team", "location", "external_organization", "external_contact"];

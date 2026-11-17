@@ -1,4 +1,5 @@
 import { createRequire } from "node:module";
+import { orderMigrationNames } from "../../../db/migration-order";
 
 export type DevelopmentInstallation = {
   root: string; manifestPath: string; manifestDigest: string;
@@ -17,6 +18,6 @@ export const installedDevelopmentRuntime = (required = false) => custody.install
 export function assertInstalledDevelopmentSchema(names: string[], installation = installedDevelopmentRuntime(true)!) {
   const expected = installation.manifest.files.map(p => p.path)
     .filter(p => p.startsWith('finnor-os/packages/db/migrations/') && p.endsWith('.sql'))
-    .map(p => p.slice('finnor-os/packages/db/migrations/'.length)).sort();
-  if (JSON.stringify([...names].sort()) !== JSON.stringify(expected)) throw Error('X1_INSTALLED_SCHEMA_LINEAGE_MISMATCH');
+    .map(p => p.slice('finnor-os/packages/db/migrations/'.length));
+  if (JSON.stringify(orderMigrationNames(names)) !== JSON.stringify(orderMigrationNames(expected))) throw Error('X1_INSTALLED_SCHEMA_LINEAGE_MISMATCH');
 }

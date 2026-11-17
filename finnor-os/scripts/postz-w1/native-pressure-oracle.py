@@ -16,21 +16,23 @@ def main():
     raw = source.read_bytes()
     record = json.loads(raw)
     population = record["population"]
-    assert [row["label"] for row in population] == [
-        "A_CANCELLED_IN_FLIGHT", "C_ORIGINAL_DEADLINE_MISSED", "B_UNAFFECTED_PROGRESS"]
-    assert len({row["workId"] for row in population}) == 3
-    assert len({row["programId"] for row in population}) == 3
+    by_label = {row["label"]: row for row in population}
+    assert len(population) == len(by_label) == 4
+    assert set(by_label) == {"A_CANCELLED_IN_FLIGHT", "D_NATIVE_QUEUE_DEADLINE_MISSED",
+                             "B_UNAFFECTED_PROGRESS", "C_ORIGINAL_PREPRESSURE_DEADLINE_MISSED"}
+    assert len({row["workId"] for row in population}) == 4
+    assert len({row["programId"] for row in population}) == 4
     search_ids = {row["searchId"] for row in population}
     original = record["before"]
     parents = {row["id"]: row for row in original["p1_requests"]}
     episodes = {row["id"]: row for row in original["p1_episodes"]}
     searches = [row for row in original["p2_requests"] if row["id"] in search_ids]
-    assert len(searches) == 3
+    assert len(searches) == 4
     assert len({row["tenant_id"] for row in searches}) == 1
     assert len({row["principal_id"] for row in searches}) == 1
     assert {row["request"]["computeGrant"]["contentDigest"] for row in searches} == {
         record["originalGrant"]["contentDigest"]}
-    assert len({parents[row["program_id"]]["episode_id"] for row in searches}) == 3
+    assert len({parents[row["program_id"]]["episode_id"] for row in searches}) == 4
     assert len({row["binding"]["reservationRef"]["id"] for row in searches}) == 1
     capacity = searches[0]["binding"]["capacity"]
     assert capacity == 8
@@ -66,7 +68,19 @@ def main():
             assert episode["steps_used"] >= sum(row["body"]["steps"] for row in charged)
         reconstructed.append({"cut": name, "admittedUnits": len(attempts), "originalSpent": spent,
                               "remainingSharedEnvelope": capacity - spent})
-    a, c, b = population
+    a = by_label["A_CANCELLED_IN_FLIGHT"]
+    c = by_label["D_NATIVE_QUEUE_DEADLINE_MISSED"]
+    b = by_label["B_UNAFFECTED_PROGRESS"]
+    source_miss = by_label["C_ORIGINAL_PREPRESSURE_DEADLINE_MISSED"]
+    source_parent = parents[source_miss["programId"]]
+    assert source_parent["request"]["limits"]["deadlineMs"] == 15000
+    assert parents[c["programId"]]["request"]["limits"]["deadlineMs"] == 60000
+    source_deadline = instant(episodes[source_parent["episode_id"]]["deadline_at"])
+    prepressure = record["prepressureMiss"]["cut"]
+    assert instant(prepressure["observedAt"]) > source_deadline
+    assert not prepressure["p2_attempts"]
+    assert record["prepressureMiss"]["cancellation"]["status"] == 200
+    assert all(row["search_id"] != source_miss["searchId"] for row in record["terminal"]["p2_attempts"])
     held = record["held"]
     assert len(held["p2_attempts"]) == 1
     assert held["p2_attempts"][0]["search_id"] == a["searchId"]
@@ -89,7 +103,38 @@ def main():
     assert record["contenderIdentity"]["pid"] != record["paused"]["pid"]
     initial_jobs = {job["id"]: job for entry in record["priorityInputs"] for job in entry["rows"]}
     assert {entry["searchId"]: entry["priority"] for entry in record["priorityInputs"]} == {
-        a["searchId"]: 300, c["searchId"]: -100, b["searchId"]: 200}
+        a["searchId"]: 300, c["searchId"]: -100, b["searchId"]: 200, source_miss["searchId"]: 500}
+    for key, protected in (
+            ("sourcePreparationIsolation", {a["searchId"], source_miss["searchId"]}),
+            ("unaffectedSourcePreparationIsolation", {a["searchId"], c["searchId"], source_miss["searchId"]})):
+        isolation = record[key]
+        assert set(isolation["protectedSearches"]) == protected
+        assert isolation["before"] == isolation["after"]
+        assert {row["id"] for row in isolation["before"]["searches"]} == protected
+        assert set(isolation["registeredTypes"]) == {
+            "run_evidence_derivation_v1", "run_harness_program_v1"}
+    initial_by_search = {}
+    for identity in (a, c, b):
+        rows = [row for row in initial_jobs.values() if row["payload"]["searchId"] == identity["searchId"]]
+        assert len(rows) == 1
+        initial_by_search[identity["searchId"]] = rows[0]
+    a_job, c_job, b_job = (initial_by_search[row["searchId"]] for row in (a, c, b))
+    assert instant(a_job["run_at"]) < instant(c_job["run_at"]) < instant(b_job["run_at"])
+    assert c_job["priority"] < b_job["priority"]
+    assert all(instant(row["run_at"]).timestamp() + record["scheduler"]["priorityAgingSeconds"] <=
+               instant(held["observedAt"]).timestamp() for row in (a_job, c_job, b_job))
+    source_jobs = [row for row in initial_jobs.values()
+                   if row["payload"]["searchId"] == source_miss["searchId"]]
+    assert len(source_jobs) <= 1
+    if source_jobs:
+        assert instant(source_jobs[0]["run_at"]) < instant(a_job["run_at"])
+        prepressure_jobs = {row["id"]: row for row in prepressure["jobs"]}
+        expired = [row for row in prepressure["job_delivery_attempts"]
+                   if prepressure_jobs[row["job_id"]]["type"] == "run_compute_search_unit_v1"
+                   and prepressure_jobs[row["job_id"]]["payload"].get("searchId") in search_ids]
+        assert expired
+        first_expired = min(expired, key=lambda row: (instant(row["started_at"]), row["id"]))
+        assert prepressure_jobs[first_expired["job_id"]]["payload"]["searchId"] == source_miss["searchId"]
     terminal = record["terminal"]
     jobs = {row["id"]: row for row in terminal["jobs"]}
     deliveries = [row for row in terminal["job_delivery_attempts"]

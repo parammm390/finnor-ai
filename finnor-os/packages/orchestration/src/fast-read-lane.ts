@@ -3,6 +3,7 @@ import { performance } from "node:perf_hooks";
 import {
   OPERATIONAL_QUERY_INTENTS,
   EconomicReadRequestSchema,
+  OrganizationTransformationQueryRequestSchema,
   storedEconomicQuery,
   PE_WORLD_ROOT_TYPES,
   PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
@@ -282,6 +283,11 @@ export function validateOperationalQueryRequest(
     return parsed.success ? { success: true, request: parsed.data } : { success: false, error: "An exact economic read request is required; identity comes from authentication" };
   }
 
+  if (intent === "organization_transformation_v1") {
+    const parsed = OrganizationTransformationQueryRequestSchema.safeParse(value);
+    return parsed.success ? { success: true, request: parsed.data } : { success: false,
+      error: "Organization query requires exact request and Work IDs; identity comes from authentication" };
+  }
   if (intent === "economic_programme_v1") {
     if (Object.keys(value!).some(key=>!["intent","programmeId","workId"].includes(key)) || typeof value?.programmeId!=="string" || !UUID.test(value.programmeId) || typeof value?.workId!=="string" || !UUID.test(value.workId)) return {success:false,error:"Economic query requires exact programme and Work IDs"};
     return {success:true,request:value as unknown as OperationalQueryRequest};

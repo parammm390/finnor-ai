@@ -19,6 +19,8 @@ function dereference(value, seen = new Set()) {
 const words = (s) => s.replace(/([a-z])([A-Z])/g, "$1 $2").replaceAll(/[_-]/g, " ")
 function group(c) {
   if (c.routePattern?.startsWith("company-brain/execution-proof-") && c.classification !== "READ") return "execution-proofs"
+  if (c.routePattern === "demand-to-business/intake") return "growth-intake"
+  if (c.routePattern === "demand-to-business/prepare-native") return "growth-native-preparation"
   if (c.family === "closing" && c.classification !== "READ") return "closing-programmes"
   if (c.routePattern === "artifacts") return "artifact-creation"
   if (c.routePattern === "artifact-templates" || c.family === "artifact" && /\/(bindings|lineage|recalculate|publish)$/.test(c.routePattern)) return "artifact-records"

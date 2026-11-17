@@ -117,3 +117,25 @@ existing separate human as custodian, keep the existing independent checker
 and exact literal, and explicitly assert both are different from the producer.
 Rerun the same seven cases, actors, Works, resources and finite bounds to reach
 the real worker. Preserve the first failure unchanged.
+
+## Compiled frontend SDK custody
+
+The pending SDK packaging repair stages four public assets inside the actual
+standalone project and pins them in the installation manifest. The mounted
+reader must also reject a parent-directory swap, a file-mode/owner/link-count
+change and sub-millisecond timestamp changes during reading. Its current
+number-based metadata comparison and root-prefix-only recheck cannot establish
+those properties. Compare bigint device/inode/mode/uid/gid/link-count/size and
+nanosecond timestamps, recheck every physical ancestor, and require the same
+physical named file after the read. Preserve the original exact SDK, manifest,
+package/lock, role deadlines, privacy and restoration predicates. Source review
+alone is not a compiled or mounted PASS.
+
+## Compiled SDK manifest population in the driver
+
+The TypeScript check for the mounted driver found that indexed source pins
+and destructured SDK bytes remained optional. The compiled route requires
+exactly the four named assets and both original source pins before sending
+any SDK bytes. Resolve each by its declared name and check the same source
+and runtime digests. Retain the original role window and authenticated
+serving boundary.

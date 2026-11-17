@@ -4,7 +4,8 @@ import assert from "node:assert/strict";
 import { randomBytes, randomUUID, createHash } from "node:crypto";
 import { createServer } from "node:http";
 import { spawn, type ChildProcess } from "node:child_process";
-import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { constants } from "node:fs";
+import { appendFile, lstat, mkdir, open, readFile, realpath, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type pg from "pg";
 import { receiveWork, attachWorkEntity, createEmployeeConversationThread, updateEmployeeConversationThreadContext } from "@finnor/db";
@@ -205,6 +206,162 @@ export async function holdMountedWorkforce(params: {
     threadId: foreign.id, activeReferences: [{ entityType: "pe_deal", entityId: String(otherDeal.row.id) }] });
   let frontend: ChildProcess | undefined, positive: unknown = null, completed = false, failure: Error | null = null;
   let prepared: PreparedFrontend | undefined = p.preparedFrontend;
+  type RoleRestoration = { restored: true; mutationTerminal: true; noPendingMutation: true; ownerReadbackObserved: true;
+    canonicalRole: string; status: string; samePrincipalAndTenant: true };
+  let roleDeadlineNs: bigint | null = null, roleClosing = false, roleMutationTerminal = true, roleSqlPending = 0;
+  let roleMutation: Promise<void> | null = null, roleReconciliation: Promise<RoleRestoration> | null = null;
+  let observedRestoration: RoleRestoration | null = null, fixtureFailed = false;
+  let demotionObservation: { canonicalRole: string; status: string; samePrincipalAndTenant: true } | null = null;
+  const roleChanges: Array<{ from: string; to: string; status: string; samePrincipalAndTenant: boolean }> = [];
+  let roleSdk: { version: string; sha256: string; bytes: number; frontendPackageSha256: string; packageLockSha256: string;
+    compiledAssetInsideInstallation: boolean | null; installationManifest: {
+      sha256: string; entrypoint: string; tracingLayout: { projectPath: string };
+      sourcePreimages: Array<{ path: string; sha256: string }>;
+      files: Array<{ path: string; bytes: number; mode: number; sha256: string }> } } | null = null;
+  const bindRoleDeadline = (raw: string | string[] | undefined, mayStart: boolean) => {
+    assert(typeof raw === "string" && /^[1-9][0-9]{0,24}$/.test(raw), "ORIGINAL_ROLE_CASE_DEADLINE_REQUIRED");
+    const deadline = BigInt(raw), now = process.hrtime.bigint();
+    if (roleDeadlineNs === null) {
+      assert(mayStart && deadline > now && deadline - now <= 45000000000n, "ORIGINAL_ROLE_CASE_DEADLINE_INVALID");
+      roleDeadlineNs = deadline;
+    } else assert.equal(deadline, roleDeadlineNs, "ROLE_CASE_DEADLINE_MUST_NOT_CHANGE");
+  };
+  const remainingRoleMs = (until: bigint) => {
+    const ms = Math.floor(Number(until - process.hrtime.bigint()) / 1000000);
+    assert(ms > 0, "ROLE_RECONCILIATION_ORIGINAL_BUDGET_EXPIRED");
+    return ms;
+  };
+  async function observeRoleUntil<T>(work: Promise<T>, until: bigint): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    // Observation is bounded; timing out never cancels or declares SQL terminal.
+    const expiry = new Promise<never>((_resolve, reject) => {
+      timer = setTimeout(() => reject(Error("ROLE_RECONCILIATION_UNCONFIRMED")), remainingRoleMs(until));
+    });
+    try {
+      const result = await Promise.race([work, expiry]);
+      remainingRoleMs(until); return result;
+    } finally { if (timer) clearTimeout(timer); }
+  }
+  const roleSql = async (from: "owner" | "participant", to: "owner" | "participant", until: bigint) => {
+    const timeout = Math.min(5000, remainingRoleMs(until));
+    const uuid = /^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/i;
+    assert(uuid.test(p.tenant) && uuid.test(p.principal), "EXACT_CONTROLLED_ROLE_IDENTITIES_REQUIRED");
+    // One simple-protocol transaction: no interleaving between SET LOCAL and
+    // the write. Only these validated fixture UUIDs enter the SQL literal.
+    const sql = `BEGIN; SET LOCAL statement_timeout='${timeout}ms';
+      DO $w2_role$ BEGIN
+        UPDATE finnor_os.users SET role='${to}' WHERE tenant_id='${p.tenant}'::uuid AND id='${p.principal}'::uuid
+          AND role='${from}' AND status='active';
+        IF NOT FOUND THEN RAISE EXCEPTION 'EXACT_CONTROLLED_ROLE_CHANGE_REQUIRED'; END IF;
+      END; $w2_role$; COMMIT;`;
+    let terminal = false;
+    roleSqlPending++;
+    try {
+      await p.admin.query(sql);
+      terminal = true; return { ok: true, terminal: true, error: undefined };
+    } catch (error) {
+      try { await p.admin.query("ROLLBACK"); terminal = true; } catch {}
+      return { ok: false, terminal, error };
+    } finally { if (terminal) roleSqlPending--; }
+  };
+  const readCanonicalRole = async (until: bigint) => {
+    remainingRoleMs(until);
+    const rows = (await p.admin.query("SELECT id,tenant_id,role,status FROM finnor_os.users WHERE tenant_id=$1 AND id=$2",
+      [p.tenant, p.principal])).rows;
+    remainingRoleMs(until);
+    assert(rows.length === 1 && rows[0].id === p.principal && rows[0].tenant_id === p.tenant,
+      "EXACT_CANONICAL_ROLE_READBACK_REQUIRED");
+    return rows[0];
+  };
+  const restoreRole = () => {
+    roleClosing = true;
+    if (roleReconciliation) return roleReconciliation;
+    const originalDeadline = roleDeadlineNs;
+    assert(originalDeadline !== null, "ORIGINAL_ROLE_CASE_DEADLINE_REQUIRED");
+    const cleanupCap = process.hrtime.bigint() + 5000000000n;
+    const until = originalDeadline < cleanupCap ? originalDeadline : cleanupCap;
+    const work = Promise.resolve().then(async (): Promise<RoleRestoration> => {
+      remainingRoleMs(until);
+      if (roleMutation) await roleMutation.catch(() => {});
+      remainingRoleMs(until);
+      assert(roleMutationTerminal && roleSqlPending === 0, "ROLE_MUTATION_TERMINAL_NOT_OBSERVED");
+      let row = await readCanonicalRole(until);
+      assert.equal(row.status, "active", "CANONICAL_ROLE_STATUS_CHANGED");
+      if (row.role === "participant") {
+        assert(roleMutation, "NO_UNOWNED_ROLE_RESTORATION");
+        const outcome = await roleSql("participant", "owner", until);
+        if (!outcome.ok || !outcome.terminal) throw outcome.error ?? Error("ROLE_RESTORATION_SQL_UNCONFIRMED");
+        row = await readCanonicalRole(until);
+        roleChanges.push({ from: "participant", to: row.role, status: row.status, samePrincipalAndTenant: true });
+      }
+      assert(row.role === "owner" && row.status === "active" && roleMutationTerminal && roleSqlPending === 0,
+        "ACTUAL_TERMINAL_OWNER_RESTORATION_REQUIRED");
+      const receipt: RoleRestoration = { restored: true, mutationTerminal: true, noPendingMutation: true,
+        ownerReadbackObserved: true, canonicalRole: row.role, status: row.status, samePrincipalAndTenant: true };
+      await save("mounted-role-change-readback.json", { changes: roleChanges, suspended: false, restoration: receipt });
+      remainingRoleMs(until); return receipt;
+    });
+    // Cache the one bounded operation, including failure. Finally cannot retry
+    // it with a fresh deadline, and no subsequent demotion can pass the fence.
+    roleReconciliation = observeRoleUntil(work, until).then(receipt => {
+      remainingRoleMs(until); observedRestoration = receipt; return receipt;
+    });
+    return roleReconciliation;
+  };
+  const readSdkAsset = async (relative: string,
+    pin?: { path: string; bytes: number; mode: number; sha256: string }, limit = 1048576) => {
+    const installation = p.frontendInstallation;
+    assert(installation, "COMPILED_FRONTEND_OWN_SDK_INSTALLATION_REQUIRED");
+    assert(!relative.startsWith("/") && !relative.includes("\\") && !relative.includes("\0")
+      && relative.split("/").every(name => name && name !== "." && name !== ".."), "ROLE_SDK_RELATIVE_PATH_REQUIRED");
+    const path = join(installation, relative), physicalRoot = await realpath(installation);
+    const directoryIdentity = async () => {
+      let part = installation;
+      const identities = [];
+      assert.equal(await realpath(installation), physicalRoot, "COMPILED_SDK_INSTALLATION_MOVED");
+      for (const name of ["", ...relative.split("/").slice(0, -1)]) {
+        part = name ? join(part, name) : part;
+        const entry = await lstat(part, { bigint: true });
+        assert(entry.isDirectory() && !entry.isSymbolicLink(), "COMPILED_SDK_ANCESTOR_SYMLINK_REFUSED");
+        const actual = await realpath(part);
+        assert(actual === physicalRoot || actual.startsWith(physicalRoot + "/"), "COMPILED_SDK_BORROWED_DEPENDENCY_REFUSED");
+        identities.push([entry.dev, entry.ino, entry.mode, entry.uid, entry.gid].join(":"));
+      }
+      return identities.join("/");
+    };
+    const parents = await directoryIdentity(), physicalFile = await realpath(path);
+    assert(physicalFile.startsWith(physicalRoot + "/"),
+      "COMPILED_SDK_BORROWED_DEPENDENCY_REFUSED");
+    const handle = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+    try {
+      const before = await handle.stat({ bigint: true });
+      assert(before.isFile() && before.nlink === 1n && (before.mode & 0o7777n) === 0o444n
+        && before.size > 0n && before.size <= BigInt(limit), "ROLE_SDK_SEALED_ASSET_BOUND");
+      const buffer = Buffer.alloc(limit + 1);
+      let size = 0;
+      while (size < buffer.length) {
+        const read = await handle.read(buffer, size, buffer.length - size, null);
+        if (!read.bytesRead) break;
+        size += read.bytesRead;
+      }
+      const after = await handle.stat({ bigint: true }), named = await lstat(path, { bigint: true });
+      assert(BigInt(size) === before.size && size <= limit && !named.isSymbolicLink()
+        && [after, named].every(value => value.dev === before.dev && value.ino === before.ino
+          && value.mode === before.mode && value.uid === before.uid && value.gid === before.gid
+          && value.nlink === before.nlink && value.size === before.size
+          && value.mtimeNs === before.mtimeNs && value.ctimeNs === before.ctimeNs),
+      "ROLE_SDK_ASSET_CHANGED_OR_SYMLINKED");
+      assert.equal(await realpath(path), physicalFile, "COMPILED_SDK_FILE_MOVED");
+      assert.equal(await directoryIdentity(), parents, "COMPILED_SDK_ANCESTOR_CHANGED");
+      const bytes = buffer.subarray(0, size);
+      if (pin) {
+        assert.equal(pin.path, relative); assert.equal(pin.mode, 0o444);
+        assert.equal(pin.bytes, size); assert.equal(pin.sha256, createHash("sha256").update(bytes).digest("hex"),
+          "ROLE_SDK_EXISTING_MANIFEST_PIN_REQUIRED");
+      }
+      return bytes;
+    } finally { await handle.close(); }
+  };
   let finish!: () => void;
   const finished = new Promise<void>(resolve => { finish = resolve; }), key = randomBytes(32).toString("hex");
   const control = createServer(async (req, res) => {
@@ -217,6 +374,106 @@ export async function holdMountedWorkforce(params: {
           frontendExited: frontend?.exitCode !== null, completed })); return;
       }
       if (req.method !== "POST") { res.writeHead(405); res.end("{}"); return; }
+      if (["/role-sdk", "/role-demote", "/role-restore"].includes(req.url ?? "")) {
+        assert(positive && !p.participantOnly, "ORIGINAL_OWNER_ROLE_CASE_REQUIRED");
+        bindRoleDeadline(req.headers["x-finnor-w2-role-deadline-ns"], req.url === "/role-sdk");
+      }
+      if (req.url === "/role-sdk") {
+        assert(!roleClosing, "ROLE_MUTATION_ADMISSION_CLOSED");
+        const manifest = prepared?.manifest;
+        assert(p.frontendInstallation && manifest, "ACTUAL_PREPARED_COMPILED_FRONTEND_REQUIRED");
+        const expectedManifestBytes = Buffer.from(JSON.stringify(manifest, null, 2) + "\n");
+        const manifestBytes = await readSdkAsset("w2-frontend-installation.json", undefined, expectedManifestBytes.length);
+        assert(manifestBytes.equals(expectedManifestBytes), "ORIGINAL_PREPARED_FRONTEND_MANIFEST_REQUIRED");
+        assert.equal(manifest.schema, "finnor.postz.w2.frontend-installation.v1");
+        assert.equal(manifest.mode, "DEVELOPMENT_ONLY"); assert.equal(manifest.frontendOrigin, new URL(p.frontendOrigin).origin);
+        const projectPath = manifest.tracingLayout?.projectPath;
+        assert(typeof projectPath === "string" && !projectPath.includes("\\") && !projectPath.includes("\0")
+          && (!projectPath || projectPath.split("/").every(name => name && name !== "." && name !== "..")),
+        "ACTUAL_RUNTIME_PROJECT_PATH_REQUIRED");
+        const runtimeProject = ["runtime", projectPath].filter(Boolean).join("/");
+        assert.equal(manifest.entrypoint, runtimeProject + "/server.js", "ACTUAL_RUNTIME_PROJECT_ENTRY_REQUIRED");
+        const sourcePin = (path: string) => {
+          const rows = manifest.sourcePreimages.filter((row: any) => row.path === path);
+          assert(rows.length === 1 && /^[0-9a-f]{64}$/.test(rows[0].sha256)
+            && rows[0].generatedSha256 === undefined, "ACTUAL_BUILD_OWN_FRONTEND_SOURCE_PIN_REQUIRED");
+          return { path, sha256: rows[0].sha256 as string };
+        };
+        const packageSource = sourcePin("package.json");
+        const lockSource = sourcePin("package-lock.json");
+        const sourcePreimages = [packageSource, lockSource];
+        const sealedAsset = async (name: string) => {
+          const path = runtimeProject + "/.finnor-w2-sdk-custody/" + name;
+          const rows = manifest.files.filter((row: any) => row.path === path);
+          assert(rows.length === 1, "ACTUAL_SEALED_FRONTEND_SDK_ASSET_REQUIRED");
+          const pin = { path, bytes: rows[0].bytes as number, mode: rows[0].mode as number, sha256: rows[0].sha256 as string };
+          return { pin, bytes: await readSdkAsset(path, pin) };
+        };
+        const frontendPackageAsset = await sealedAsset("frontend-package.json");
+        const lockAsset = await sealedAsset("frontend-package-lock.json");
+        const packageAsset = await sealedAsset("sdk-package.json");
+        const bundleAsset = await sealedAsset("supabase.js");
+        const custodyAssets = [frontendPackageAsset, lockAsset, packageAsset];
+        const assets = [...custodyAssets, bundleAsset];
+        const { bytes: frontendPackageBytes } = frontendPackageAsset;
+        const { bytes: lockBytes } = lockAsset;
+        const { bytes: packageBytes } = packageAsset;
+        const { bytes: bundle } = bundleAsset;
+        const frontendPackage = JSON.parse(frontendPackageBytes.toString("utf8"));
+        const pkg = JSON.parse(packageBytes.toString("utf8")), lock = JSON.parse(lockBytes.toString("utf8"));
+        const frontendPackageSha256 = createHash("sha256").update(frontendPackageBytes).digest("hex");
+        const packageLockSha256 = createHash("sha256").update(lockBytes).digest("hex");
+        assert.equal(frontendPackageSha256, packageSource.sha256, "ACTUAL_BUILD_OWN_FRONTEND_PACKAGE_REQUIRED");
+        assert.equal(packageLockSha256, lockSource.sha256, "ACTUAL_BUILD_OWN_FRONTEND_LOCK_REQUIRED");
+        assert.equal(frontendPackage.name, "centropy");
+        assert.equal(lock.lockfileVersion, 3);
+        assert.equal(lock.name, frontendPackage.name);
+        assert.equal(lock.version, frontendPackage.version);
+        assert.equal(lock.packages?.[""]?.name, frontendPackage.name);
+        assert.equal(lock.packages?.[""]?.version, frontendPackage.version);
+        assert.equal(frontendPackage.dependencies?.["@supabase/supabase-js"], "^2.45.1");
+        assert.equal(frontendPackage.dependencies["@supabase/supabase-js"],
+          lock.packages?.[""]?.dependencies?.["@supabase/supabase-js"], "ACTUAL_FRONTEND_SDK_DECLARATION_REQUIRED");
+        assert.equal(pkg.name, "@supabase/supabase-js");
+        assert.equal(pkg.version, "2.99.3", "REVIEWED_REAL_SDK_VERSION_REQUIRED");
+        assert.equal(pkg.version, lock.packages?.["node_modules/@supabase/supabase-js"]?.version,
+          "ACTUAL_FRONTEND_SDK_LOCK_VERSION_REQUIRED");
+        const sha256 = createHash("sha256").update(bundle).digest("hex");
+        assert.equal(bundle.length, 166800, "REVIEWED_REAL_SDK_BYTE_COUNT_REQUIRED");
+        assert.equal(sha256, "588fb53d9380e3cb8688065c48144fa839205c328b416cc68c11331ba01955ee",
+          "REVIEWED_UNMODIFIED_SDK_BUNDLE_REQUIRED");
+        roleSdk = { version: pkg.version, sha256, bytes: bundle.length, frontendPackageSha256,
+          packageLockSha256, compiledAssetInsideInstallation: true, installationManifest: {
+            sha256: createHash("sha256").update(manifestBytes).digest("hex"), entrypoint: manifest.entrypoint,
+            tracingLayout: { projectPath }, sourcePreimages, files: assets.map(asset => asset.pin) } };
+        await save("mounted-role-sdk-identity.json", roleSdk);
+        res.end(JSON.stringify({ schema: "finnor.postz.w2.mounted-role-sdk.v1", ...roleSdk,
+          custodyAssets: custodyAssets.map(asset => ({ path: asset.pin.path, base64: asset.bytes.toString("base64") })),
+          base64: bundle.toString("base64") })); return;
+      }
+      if (req.url === "/role-demote") {
+        assert(roleSdk && !roleClosing && roleMutation === null, "CONTROLLED_OWNER_ROLE_CASE_REQUIRED");
+        const until = roleDeadlineNs; assert(until !== null); remainingRoleMs(until);
+        roleMutationTerminal = false;
+        // Publish the pending operation before the microtask can enqueue SQL.
+        roleMutation = Promise.resolve().then(async () => {
+          const outcome = await roleSql("owner", "participant", until);
+          roleMutationTerminal = outcome.terminal;
+          if (!outcome.ok || !outcome.terminal) throw outcome.error ?? Error("ROLE_DEMOTION_SQL_UNCONFIRMED");
+          const row = await readCanonicalRole(until);
+          assert(row.role === "participant" && row.status === "active", "ACTUAL_CONTROLLED_DEMOTION_READBACK_REQUIRED");
+          demotionObservation = { canonicalRole: row.role, status: row.status, samePrincipalAndTenant: true };
+          roleChanges.push({ from: "owner", to: row.role, status: row.status, samePrincipalAndTenant: true });
+          await save("mounted-role-change-readback.json", { changes: roleChanges, suspended: false });
+        });
+        await roleMutation;
+        assert(demotionObservation, "ACTUAL_CONTROLLED_DEMOTION_READBACK_REQUIRED");
+        res.end(JSON.stringify({ changed: true, ...demotionObservation })); return;
+      }
+      if (req.url === "/role-restore") {
+        assert(positive && roleSdk && !p.participantOnly, "CONTROLLED_OWNER_ROLE_CASE_REQUIRED");
+        res.end(JSON.stringify(await restoreRole())); return;
+      }
       if (req.url === "/participant-expiry") {
         const rows = (await p.admin.query(`SELECT id,status,proposal_digest,revision FROM finnor_os.w2_contact_bindings
           WHERE tenant_id=$1 AND contact_id=$2 ORDER BY created_at,id`, [p.tenant, expiryContact])).rows;
@@ -272,6 +529,31 @@ export async function holdMountedWorkforce(params: {
           assert.deepEqual(browser.assertions, ["mounted-original-compile-and-verified-completion", "work-switch-withdrawal",
             "same-tenant-principal-withdrawal", "foreign-tenant-withdrawal", "offline-private-withdrawal",
             "delayed-revoked-response-withdrawal"]);
+          const role = browser.roleRevalidation;
+          assert(roleSdk && roleClosing && roleMutationTerminal && roleSqlPending === 0
+            && observedRestoration?.ownerReadbackObserved && roleChanges.length === 2, "CONTROLLED_OWNER_ROLE_NOT_RESTORED");
+          assert.equal(role?.schema, "finnor.postz.w2.mounted-role-revalidation.v1");
+          assert.equal(role.status, "PASS");
+          assert.equal(role.sdk.sha256, roleSdk.sha256); assert.equal(role.sdk.version, roleSdk.version);
+          assert.equal(role.sdk.packageLockSha256, roleSdk.packageLockSha256);
+          assert.equal(role.sameOriginalDocument, true); assert.equal(role.sameUser, true);
+          assert.equal(role.tokenRotations, 2); assert.equal(role.pendingRouteConsumed, true);
+          assert.equal(role.transport.actualRequestHeld, true);
+          assert.equal(role.transport.actualParticipantResponseHeld, true);
+          assert.equal(role.transport.actualOwnerResponseObserved, true);
+          assert.equal(role.transport.actualResponseUnchanged, true);
+          assert.equal(role.transport.serverStatus, 200); assert.equal(role.transport.serverRole, "participant");
+          assert(/^[0-9a-f]{64}$/.test(role.transport.participantResponseSha256), "ACTUAL_ROLE_RESPONSE_DIGEST_REQUIRED");
+          assert.equal(role.pending.ownerRequestStarts, 0); assert.equal(role.pending.ownerResourceStarts, 0);
+          assert.equal(role.demoted.ownerRequestStarts, 0); assert.equal(role.demoted.ownerResourceStarts, 0);
+          assert(role.demoted.observedMs >= 6000 && role.elapsedMs < 45000, "ROLE_OBSERVATION_OR_DEADLINE_BOUND");
+          assert(role.positive.baselineRequests > 0 && role.positive.recoveryRequests > 0);
+          assert.equal(role.positive.originalClosedWorkRecovered, true);
+          assert.equal(role.cleanup.fetchRestored, true); assert.equal(role.cleanup.iframeRemoved, true);
+          assert.equal(role.cleanup.transportReleased, true); assert.equal(role.cleanup.dbRoleRestored, true);
+          assert.equal(role.cleanup.dbMutationTerminal, true); assert.equal(role.cleanup.dbOwnerReadbackObserved, true);
+          assert(browser.steps.some((step: { name: string }) =>
+            step.name === "same-user-role-revalidation-zero-owner-read-barrier"));
         }
         assert.equal(browser.browser?.headed, true);
         assert.equal(browser.browser?.separatelyLaunched, true);
@@ -306,6 +588,10 @@ export async function holdMountedWorkforce(params: {
     const participantIdentity = p.service.additionalIdentities.find(value => value.actor === p.participant)!;
     await writeFile(privateFile, JSON.stringify({ frontendOrigin: origin.origin, evidence: p.evidence, workId: p.workId,
       participantOnly: Boolean(p.participantOnly),
+      ...(!p.participantOnly ? { roleRevalidation: { userId: p.principal, tenantId: p.tenant,
+        authOrigin: p.service.authOrigin, anonKey: "disposable-local-auth",
+        pendingUrl: origin.origin + "/centropy/investigations/" + empty.id + "?root=" +
+          encodeURIComponent(JSON.stringify(root)) } } : {}),
       url: origin.origin + "/centropy/investigations/" + thread.id,
       otherUrl: origin.origin + "/centropy/investigations/" + empty.id,
       owner: { email: p.service.email, password: p.service.password },
@@ -326,8 +612,22 @@ export async function holdMountedWorkforce(params: {
     return { status: "PASS", actualMountedSubmitAndReadback: !p.participantOnly, compiled: Boolean(p.frontendInstallation),
       profile: p.participantOnly ? "FOCUSED_PARTICIPANT_EXPIRY_ORIGINAL_SIX_NOT_RUN" : "ORIGINAL_COMPLETE_MOUNTED",
       genuineHumanQualified: false, browserEvidence: "mounted-browser-report.json" };
+  } catch (error) {
+    fixtureFailed = true; throw error;
   } finally {
-    p.gate.release(); control.closeAllConnections(); await new Promise<void>(resolve => control.close(() => resolve()));
-    await prepared?.stop();
+    let cleanupFailure: unknown = null;
+    if (roleDeadlineNs !== null) {
+      try { await restoreRole(); } catch (error) { cleanupFailure = error; }
+    }
+    try {
+      p.gate.release(); control.closeAllConnections(); await new Promise<void>(resolve => control.close(() => resolve()));
+      await prepared?.stop();
+    } catch (error) { cleanupFailure ??= error; }
+    if (cleanupFailure) {
+      await save("mounted-role-cleanup-refusal.json", { restored: false, mutationTerminal: roleMutationTerminal,
+        noPendingMutation: roleSqlPending === 0, firstFailurePreserved: fixtureFailed,
+        code: "CANONICAL_ROLE_CLEANUP_UNCONFIRMED" }).catch(() => {});
+      if (!fixtureFailed) throw cleanupFailure;
+    }
   }
 }

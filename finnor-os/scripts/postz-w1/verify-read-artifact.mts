@@ -128,7 +128,7 @@ for (const row of freeze.registeredMigrations) {
     "Migration source changed after freeze: " + row.name);
 }
 assert.equal(report.migrationCount, migrationNames.length);
-assert.deepEqual(report.migrationNames, migrationNames, "Migration return omits or duplicates a frozen source");
+assert.deepEqual([...report.migrationNames].sort(), migrationNames, "Migration return omits or duplicates a frozen source");
 assert.deepEqual(report.observedMigrationNames, migrationNames, "Independent database inventory differs from frozen sources");
 verifyPriorObservations(report);
 if (!report.sourceOnly) await verifyNativeObservations(report, directory);

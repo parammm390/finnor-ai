@@ -32,8 +32,9 @@ for (const [index, stage] of stages.entries()) {
   assert.match(stage, /^tsx [^\s]+$/, "Review changed API source stamping command")
   plan.push(command(`api-stamp-${index}`, stage.slice(4), api, [], true))
 }
-plan.push(command("planner-replay", "scripts/release/generate-planner-replay-manifest.mts", backend, [], true))
 plan.push(command("frontend-coverage", "scripts/centropy/audit-capability-coverage.mjs"))
+plan.push(command("uniform-algorithm-source", "scripts/postx/y5/generate-source.mts", backend, [], true))
+plan.push(command("planner-replay", "scripts/release/generate-planner-replay-manifest.mts", backend, [], true))
 plan.push({ id: "product-boundary", cwd: backend,
   args: ["--import=tsx", "scripts/release/verify-pe-domain-boundary.ts"] })
 plan.push({ id: "release-provenance", cwd: root, args: ["scripts/release/validate-deployment-truth.mjs"] })

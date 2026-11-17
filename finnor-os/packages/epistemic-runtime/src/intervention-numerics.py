@@ -5,19 +5,46 @@ data lookup. Fitting, bootstrap and hull machinery come from mature libraries.
 import hashlib
 import importlib.metadata
 import json
+import os
 import re
 import resource
 import sys
 import time
 import warnings
 
+_phase_enabled = sys._xoptions.get('finnor_s3_diagnostics') == '1'
+_phase_started = time.perf_counter()
+if _phase_enabled:
+    try:
+        os.set_blocking(3, False)
+        os.set_inheritable(3, False)
+    except OSError:
+        _phase_enabled = False
+
+
+def _phase(name, **fields):
+    if _phase_enabled:
+        try:
+            # One small atomic nonblocking pipe write. A missing/slow observer
+            # can lose a diagnostic, never delay or fail the numerical result.
+            os.write(3, (json.dumps({'phase': name, 'elapsedMs': (time.perf_counter()-_phase_started)*1000,
+                                     **fields}, separators=(',', ':'))+'\n').encode('ascii'))
+        except OSError:
+            pass
+
+
+_phase('IMPORTS_BEGIN')
 import numpy as np
+_phase('NUMPY_READY')
 import scipy
 from scipy.spatial import ConvexHull, QhullError
 from scipy.stats import beta, levene
+_phase('SCIPY_READY')
 from statsmodels.regression.linear_model import OLS
 from statsmodels.stats.diagnostic import acorr_ljungbox
+_phase('STATSMODELS_READY')
 from arch.bootstrap import MovingBlockBootstrap
+_phase('IMPORTS_READY')
 
 PINNED = {'numpy': '2.3.3', 'scipy': '1.16.2', 'statsmodels': '0.14.5', 'arch': '8.0.0', 'pandas': '2.3.2'}
 
@@ -261,20 +288,28 @@ def control_kernel(payload):
 
 def main():
     start = time.perf_counter()
+    _phase('VERSIONS_BEGIN')
     versions = {p: importlib.metadata.version(p) for p in PINNED}
     if versions != PINNED: raise ValueError('BACKEND_VERSION_MISMATCH')
+    _phase('VERSIONS_READY')
+    _phase('STDIN_BEGIN')
     raw = sys.stdin.buffer.read(8*1024*1024+1)
+    _phase('STDIN_EOF', inputBytes=len(raw), inputSha256=hashlib.sha256(raw).hexdigest())
     if len(raw) > 8*1024*1024: raise ValueError('INPUT_LIMIT_EXCEEDED')
     payload = json.loads(raw)
+    _phase('COMPUTE_BEGIN')
     with warnings.catch_warnings():
         warnings.simplefilter('error', RuntimeWarning)
         result = fit(payload) if payload['operation'] == 'fit' else simulation(payload) if payload['operation'] == 'simulate' else control_kernel(payload) if payload['operation'] == 'control-kernel' else None
     if result is None: raise ValueError('UNSUPPORTED_OPERATION')
+    _phase('COMPUTE_READY')
     usage = resource.getrusage(resource.RUSAGE_SELF)
     result['backend'] = {'versions': versions, 'python': sys.version, 'sourceDigest': hashlib.sha256(open(__file__, 'rb').read()).hexdigest()}
     result['usage'] = {'elapsedMs': (time.perf_counter()-start)*1000, 'childMaxRssBytes': numerical_peak_rss_bytes(),
                        'childCpuUserSeconds': usage.ru_utime, 'childCpuSystemSeconds': usage.ru_stime}
+    _phase('REPORT_BEGIN')
     json.dump(result, sys.stdout, allow_nan=False, separators=(',', ':'))
+    _phase('REPORT_WRITTEN')
 
 
 if __name__ == '__main__':
