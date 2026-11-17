@@ -27,6 +27,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
+          # This job consumes commit history and two verifier modules.
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/release/pr-verdict-policy.mjs
+            /scripts/release/worktree-state.mjs
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:

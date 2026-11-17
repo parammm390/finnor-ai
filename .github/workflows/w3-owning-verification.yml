@@ -34,6 +34,7 @@ jobs:
     uses: ./.github/workflows/w3-owning-episode.yml
     with:
       episode: ${{ matrix.episode }}
+      checked_source_sha: ${{ needs.fast-owner.outputs.checked_source_sha }}
   cold-installed-and-mounted:
     name: "Verify cold W3 installation and browser"
     needs: full-positive-and-publication

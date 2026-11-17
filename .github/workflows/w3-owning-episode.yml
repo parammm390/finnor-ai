@@ -5,6 +5,13 @@ on:
       episode:
         type: string
         required: true
+      checked_source_sha:
+        type: string
+        default: ""
+    outputs:
+      checked_source_sha:
+        description: Checkout that passed the complete owner type check
+        value: ${{ jobs.run.outputs.checked_source_sha }}
 permissions:
   contents: read
 jobs:
@@ -12,10 +19,22 @@ jobs:
     name: "Fulfillment - Verify original scenario"
     runs-on: ubuntu-24.04
     timeout-minutes: 25
+    outputs:
+      checked_source_sha: ${{ steps.preflight.outputs.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      - name: Match the prior preflight to this checkout
+        id: source
+        env:
+          CHECKED_SOURCE_SHA: ${{ inputs.checked_source_sha }}
+        run: |
+          sha="$(git rev-parse HEAD)"
+          printf 'sha=%s\n' "$sha" >> "$GITHUB_OUTPUT"
+          if [[ "$sha" != "$CHECKED_SOURCE_SHA" ]]; then
+            echo 'preflight=true' >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 22.22.3
@@ -23,8 +42,8 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             finnor-os/package-lock.json
-      - run: npm ci --no-audit --no-fund
-      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Install root and backend dependencies
+        run: bash scripts/release/install-ci-dependencies.sh
       - name: Prepare both exact scientific populations
         run: |
           set -euo pipefail
@@ -38,7 +57,13 @@ jobs:
           "$RUNNER_TEMP/w3-uv" pip sync --only-binary :all: --python "$RUNNER_TEMP/w3-s3/bin/python" finnor-os/scripts/postz/w3/requirements-s3.lock
           "$RUNNER_TEMP/w3-uv" pip sync --only-binary :all: --python "$RUNNER_TEMP/w3-s5/bin/python" finnor-os/packages/epistemic-runtime/src/requirements-s5.txt
       - name: Check the complete W3 owner and driver types
-        run: node --max-old-space-size=3072 finnor-os/node_modules/typescript/bin/tsc -p finnor-os/scripts/postz/w3/tsconfig.json
+        id: preflight
+        if: steps.source.outputs.preflight == 'true'
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          node --max-old-space-size=3072 finnor-os/node_modules/typescript/bin/tsc -p finnor-os/scripts/postz/w3/tsconfig.json
+          printf 'sha=%s\n' "$SOURCE_SHA" >> "$GITHUB_OUTPUT"
       - name: Exercise the actual original owner journey
         working-directory: finnor-os
         env:

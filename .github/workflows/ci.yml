@@ -67,8 +67,8 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             finnor-os/package-lock.json
-      - run: npm ci --no-audit --no-fund
-      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Install root and backend dependencies
+        run: bash scripts/release/install-ci-dependencies.sh
       - run: npx --no-install playwright install --with-deps chromium
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/project-z-browsers
@@ -120,8 +120,8 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             finnor-os/package-lock.json
-      - run: npm ci --no-audit --no-fund
-      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Install root and backend dependencies
+        run: bash scripts/release/install-ci-dependencies.sh
       - name: Run actual public processes without hosted credentials
         env:
           PROJECT_Z_PHASE: ${{ matrix.phase }}
@@ -157,8 +157,8 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             finnor-os/package-lock.json
-      - run: npm ci --no-audit --no-fund
-      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Install root and backend dependencies
+        run: bash scripts/release/install-ci-dependencies.sh
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: ${{ needs.project-z-native-assets.outputs.artifact_name }}
@@ -546,8 +546,8 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             finnor-os/package-lock.json
-      - run: npm ci --no-audit --no-fund
-      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Install root and backend dependencies
+        run: bash scripts/release/install-ci-dependencies.sh
       - run: npm run centropy:manifest:check
       - name: Verify atomic principal-scoped memory
         env:

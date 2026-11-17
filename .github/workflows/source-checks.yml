@@ -83,8 +83,8 @@ jobs:
             finnor-os/package-lock.json
       # Root types import the workspace, so both locked graphs are required even
       # for a UI-only change. No dependency directories are shared between jobs.
-      - run: npm ci --no-audit --no-fund
-      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Install root and backend dependencies
+        run: bash scripts/release/install-ci-dependencies.sh
       - name: Verify the actual backend inventory is partitioned exactly once
         id: shards
         continue-on-error: true

@@ -23,8 +23,8 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             finnor-os/package-lock.json
-      - run: npm ci --no-audit --no-fund
-      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Install root and backend dependencies
+        run: bash scripts/release/install-ci-dependencies.sh
       - name: Prepare exact locked scientific runtime
         run: |
           set -euo pipefail
