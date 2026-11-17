@@ -21,7 +21,11 @@ function list() {
   return files
 }
 try {
-  for (const path of ["finnor-os/vitest.config.ts", "finnor-os/package-lock.json", ".github/workflows/ci.yml", "scripts/release/verify-test-shards.mjs", "scripts/release/ci-process-policy.mjs"]) receipt.inputs[path] = createHash("sha256").update(readFileSync(join(root, path))).digest("hex")
+  for (const path of [
+    "finnor-os/vitest.config.ts", "finnor-os/tests/shard-sequencer.ts", "finnor-os/tests/shard-timings.json",
+    "finnor-os/package-lock.json", ".github/workflows/ci.yml", "scripts/release/verify-test-shards.mjs",
+    "scripts/release/ci-process-policy.mjs",
+  ]) receipt.inputs[path] = createHash("sha256").update(readFileSync(join(root, path))).digest("hex")
   const all = list()
   const owners = ["computer", "memory", "orchestration", "workflow-runtime"]
   const exports = owners.flatMap(owner => {

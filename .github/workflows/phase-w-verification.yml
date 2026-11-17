@@ -104,6 +104,7 @@ jobs:
     uses: ./.github/workflows/w2-compensation-episode.yml
     with:
       episode: ${{ matrix.episode }}
+      checked_source_sha: ${{ needs.w2-compensation-positive.outputs.checked_source_sha }}
   w3-fast-owner:
     name: "Verify W3 fast owner journey"
     uses: ./.github/workflows/w3-owning-episode.yml
@@ -119,6 +120,7 @@ jobs:
     uses: ./.github/workflows/w3-owning-episode.yml
     with:
       episode: ${{ matrix.episode }}
+      checked_source_sha: ${{ needs.w3-fast-owner.outputs.checked_source_sha }}
   combined-native-owners:
     name: "Verify combined company owner journey"
     needs: [source-checks, ci-boundary-controls, w1-owning-regressions, w2-compensation-controls, w3-native-and-publication]

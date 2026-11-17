@@ -55,3 +55,4 @@ jobs:
     uses: ./.github/workflows/w2-compensation-episode.yml
     with:
       episode: ${{ matrix.episode }}
+      checked_source_sha: ${{ needs.exact.outputs.checked_source_sha }}

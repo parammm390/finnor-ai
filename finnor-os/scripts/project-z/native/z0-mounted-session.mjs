@@ -108,11 +108,17 @@ let witnessBefore = null, ownerCutBeforeMounted = null, workStatusBeforeMounted 
 
 await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_READY, blocked parent B, threads, foreign owner", async c => {
   if (!worker) notRun("SCENARIO_OWNED_WORKER_REQUIRES_NO_WORKER_LAUNCH");
-  const resourcePool = await prepareInstitutionFixtureResourcePool(env, [tagA, tagB]);
-  parentA = await createOriginalInstitutionParent(env, { record, tag: tagA, resourcePool });
+  const preconditionMs = c.observations.preconditionMs = {};
+  async function timePrecondition(stage, run) {
+    const start = performance.now();
+    try { return await run(); }
+    finally { preconditionMs[stage] = Math.round(performance.now() - start); }
+  }
+  const resourcePool = await timePrecondition("resourcePool", () => prepareInstitutionFixtureResourcePool(env, [tagA, tagB]));
+  parentA = await timePrecondition("parentA", () => createOriginalInstitutionParent(env, { record, tag: tagA, resourcePool }));
   check(c, "A.quiescent", "compiler WAITING|PARTIAL and zero live jobs", "O-SQL x1_compiler_requests/jobs via fixture", parentA.nativeStatus,
     ["WAITING", "PARTIAL"].includes(parentA.nativeStatus.compiler) && parentA.nativeStatus.liveJobs === 0);
-  acqA = await driveAcquisitionToModelReady(env, parentA, { privateRoot, record });
+  acqA = await timePrecondition("acquisitionA", () => driveAcquisitionToModelReady(env, parentA, { privateRoot, record }));
   await acqA.portal.stop().catch(() => undefined);
   const [row] = await q("SELECT status FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parentA.tenantId, acqA.sessionId]);
   check(c, "A.session.MODEL_READY", "MODEL_READY with S4 acceptance event", "O-SQL sessions + fixture acceptance", { status: row?.status, acceptance: acqA.acceptance?.eventId ?? null }, row?.status === "MODEL_READY" && Boolean(acqA.acceptance));
@@ -131,29 +137,40 @@ await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_REA
   await confirmRoot("A", parentA);
 
   try {
-    parentB = await createOriginalInstitutionParent(env, { record, tag: tagB, resourcePool });
+    parentB = await timePrecondition("parentB", () => createOriginalInstitutionParent(env, { record, tag: tagB, resourcePool }));
     await confirmRoot("B", parentB);
     if (parentA.parentReservation.id === parentB.parentReservation.id) throw Error("MOUNTED_FIXTURE_REUSED_A_RESERVATION");
-    const submitted = await submitInstitutionAcquisition(env, parentB, { privateRoot, record }, owner);
+    const submitted = await timePrecondition("submitB", () => submitInstitutionAcquisition(env, parentB, { privateRoot, record }, owner));
     acquisitionB = submitted.request;
-    if (submitted.response.status !== 202) { await submitted.handle.portal.stop(); throw Error("B_ACQUIRE_" + submitted.response.status); }
-    sessionB = submitted.response.body.sessionId;
-    const status = async () => (await q("SELECT status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parentB.tenantId, sessionB]))[0];
-    const requests = async () => (await q("SELECT count(*)::int n FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2", [parentB.tenantId, sessionB]))[0].n;
-    let reached = false;
-    for (let i = 0; i < 12000 && !reached; i++) {
-      if (TERMINAL.includes((await status())?.status)) break;
-      if (await requests() >= 2) { reached = true; break; }
-      await sleep(50);
+    try {
+      if (submitted.response.status !== 202) throw Error("B_ACQUIRE_" + submitted.response.status);
+      sessionB = submitted.response.body.sessionId;
+      setup.B = await timePrecondition("revokeB", async () => {
+        const params = [parentB.tenantId, sessionB];
+        let reached = false;
+        for (let i = 0; i < 12000; i++) {
+          const [observed] = await q(`SELECT s.status,
+            EXISTS (SELECT 1 FROM finnor_os.application_semantics_requests r
+                    WHERE r.tenant_id=s.tenant_id AND r.session_id=s.id OFFSET 1) AS second_request
+            FROM finnor_os.application_semantics_sessions s WHERE s.tenant_id=$1 AND s.id=$2`, params);
+          if (TERMINAL.includes(observed?.status)) break;
+          if (observed?.second_request) { reached = true; break; }
+          await sleep(50);
+        }
+        const revoked = reached ? await q("UPDATE finnor_os.application_accounts SET status='disabled' WHERE tenant_id=$1 AND application='x2_portal' AND status<>'disabled' AND account_key LIKE $2 RETURNING id", [parentB.tenantId, `x2-%-${tagB}-%`]) : [];
+        let final = null;
+        for (let i = 0; i < 120; i++) {
+          [final] = await q("SELECT status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", params);
+          if (TERMINAL.includes(final?.status)) break;
+          await sleep(2500);
+        }
+        return { sessionId: sessionB, raceReached: reached, revokedAccounts: revoked.length, final };
+      });
+    } finally {
+      await submitted.handle.portal.stop().catch(() => undefined);
     }
-    let revoked = [];
-    if (reached) revoked = await q("UPDATE finnor_os.application_accounts SET status='disabled' WHERE tenant_id=$1 AND application='x2_portal' AND status<>'disabled' AND account_key LIKE $2 RETURNING id", [parentB.tenantId, `x2-%-${tagB}-%`]);
-    let final = null;
-    for (let i = 0; i < 120; i++) { final = await status(); if (TERMINAL.includes(final?.status)) break; await sleep(2500); }
-    await submitted.handle.portal.stop().catch(() => undefined);
-    setup.B = { sessionId: sessionB, raceReached: reached, revokedAccounts: revoked.length, final };
     check(c, "B.revocation.race", "revocation reached while the acquisition was in flight and B settled in a non-ready terminal state", "O-SQL sessions/application_accounts",
-      setup.B, reached && revoked.length > 0 && TERMINAL.includes(final?.status) && final.status !== "MODEL_READY");
+      setup.B, setup.B.raceReached && setup.B.revokedAccounts > 0 && TERMINAL.includes(setup.B.final?.status) && setup.B.final.status !== "MODEL_READY");
     const titleB = `Z0 mounted blocked ${tagB} ${randomUUID().slice(0, 8)}`;
     const createdB = await owner.call("/api/threads", { title: titleB, workId: parentB.workId });
     threadB = { id: createdB.body?.thread?.id, title: createdB.body?.thread?.title ?? titleB };
@@ -166,14 +183,17 @@ await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_REA
   const [foreign] = await q("SELECT id,tenant_id,email FROM finnor_os.users WHERE role='owner' AND status='active' AND tenant_id<>$1 ORDER BY (email LIKE 'phase9.foreign%') DESC, email LIMIT 1", [parentA.tenantId]);
   if (foreign) {
     try {
-      foreignCreds = await ensureAuthCredential(env, foreign.email);
-      foreignRow = { userId: foreign.id, tenantId: foreign.tenant_id, emailSha256: sha(foreign.email).slice(0, 16) };
-      const probe = await signInOwner(env, foreignCreds); costs.nodeAuthGrants++;
+      const probe = await timePrecondition("foreignAuth", async () => {
+        foreignCreds = await ensureAuthCredential(env, foreign.email);
+        foreignRow = { userId: foreign.id, tenantId: foreign.tenant_id, emailSha256: sha(foreign.email).slice(0, 16) };
+        return signInOwner(env, foreignCreds);
+      });
+      costs.nodeAuthGrants++;
       check(c, "foreign.owner", "existing owner of another tenant signs in through real Auth and /api/me names a different tenant", "O-SQL users + O-API /api/me",
         { tenantDiffers: probe.tenantId !== parentA.tenantId, rowTenantMatches: probe.tenantId === foreign.tenant_id }, probe.tenantId !== parentA.tenantId && probe.tenantId === foreign.tenant_id);
     } catch (error) { check(c, "foreign.owner", "real credential for an existing foreign owner", "Auth admin + API", String(error?.message ?? error).slice(0, 200), false); }
   } else check(c, "foreign.owner", "a launcher-seeded owner of another tenant exists", "O-SQL users", "none", false);
-  const workBaseline = await owner.call(`/api/works/${parentA.workId}`);
+  const workBaseline = await timePrecondition("workBaseline", () => owner.call(`/api/works/${parentA.workId}`));
   const canonicalWork = workBaseline.body?.work?.work;
   witnessBefore = await witness(q, parentA);
   ownerCutBeforeMounted = await mountedOwnerCut(q, parentA, acqA.sessionId, null);

@@ -175,5 +175,21 @@ export function verifyCiProcess(root) {
       file + ": reporter must accept the declared result identity")
   }
 
+  for (const [file, control, positive, episode] of [
+    ["w2-atomic-settlement-verification.yml", "controls", "exact", "w2-compensation-episode.yml"],
+    ["w3-owning-verification.yml", "full-positive-and-publication", "fast-owner", "w3-owning-episode.yml"],
+    ["phase-w-verification.yml", "w2-compensation-controls", "w2-compensation-positive", "w2-compensation-episode.yml"],
+    ["phase-w-verification.yml", "w3-native-and-publication", "w3-fast-owner", "w3-owning-episode.yml"],
+  ]) {
+    const text = workflows[file] ?? ""
+    const original = workflowJob(text, positive)
+    const matrix = workflowJob(text, control)
+    const use = "uses: ./.github/workflows/" + episode
+    require(original.includes(use) && !original.includes("checked_source_sha:")
+      && matrix.includes(use) && matrix.includes("needs: " + positive + "\n")
+      && matrix.includes("checked_source_sha: ${{ needs." + positive + ".outputs.checked_source_sha }}"),
+      file + "/" + control + ": preflight reuse requires the successful same-source positive job")
+  }
+
   return { workflows: Object.keys(workflows).sort(), failures }
 }

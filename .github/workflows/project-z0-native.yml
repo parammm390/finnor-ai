@@ -9,7 +9,8 @@ permissions:
 
 concurrency:
   group: project-z0-native-${{ github.ref_name }}
-  cancel-in-progress: false
+  # Only the current integration SHA can publish a completion result.
+  cancel-in-progress: ${{ github.ref_name == 'codex/zw-integration-quality-20261115' }}
 
 jobs:
   completion-receipt:
@@ -47,8 +48,8 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             finnor-os/package-lock.json
-      - run: npm ci --no-audit --no-fund
-      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Install root and backend dependencies
+        run: bash scripts/release/install-ci-dependencies.sh
       - name: Verify required-service and scenario process exits
         run: node scripts/project-z/native-lifecycle.e2e.mjs "$RUNNER_TEMP/native-lifecycle.json"
       - name: Retain finite process lifecycle receipt
@@ -375,6 +376,10 @@ jobs:
               browserOperation, browserProbeCause: browserProbeCauses.has(probeCause) ? probeCause : null,
               networkError, setupPredicate, setupCause,
               wallMs: Number.isSafeInteger(wallMs) && wallMs >= 0 ? wallMs : null,
+              preconditionMs: id === 'M-00' && observations?.preconditionMs
+                ? Object.fromEntries(['resourcePool', 'parentA', 'acquisitionA', 'parentB', 'submitB',
+                  'revokeB', 'foreignAuth', 'workBaseline'].map(stage => [stage, count(observations.preconditionMs[stage])]))
+                : null,
               browserStage: browserStages.has(observations?.browserStage) ? observations.browserStage : null,
               ownerCuts: observations?.ownerCuts ? Object.fromEntries(ownerCutNames
                 .filter(name => observations.ownerCuts[name]).map(name => [name, ownerCut(observations.ownerCuts[name])])) : null,

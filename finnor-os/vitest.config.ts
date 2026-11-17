@@ -1,6 +1,7 @@
 import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
 import { readFileSync } from "node:fs";
+import { DurationBalancedSequencer } from "./tests/shard-sequencer";
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
@@ -79,6 +80,7 @@ export default defineConfig({
     include: ["tests/**/*.test.ts", "packages/**/*.test.ts", "apps/**/*.test.ts"],
     setupFiles: ["./tests/vertical-fixture-setup.ts"],
     testTimeout: 30_000,
+    sequence: { sequencer: DurationBalancedSequencer },
     pool: "forks",
     // Integration tests share ONE real database (migrations, jobs table, tenant rows).
     // Running test files in parallel races on shared mutable state (and on catalog-level
