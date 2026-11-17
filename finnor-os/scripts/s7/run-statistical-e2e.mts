@@ -6,6 +6,7 @@ import {mkdir,writeFile,readFile} from 'node:fs/promises';
 import {resolve,join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {ECONOMIC_COST_CATEGORIES} from '../../packages/shared-types/src/economic-attribution';
+import { evaluateTrials } from './statistical-trials.mjs';
 const args = process.argv.slice(2);
 const requestedPartition = /^--partition=([123])\/3$/.exec(args[0] ?? '');
 assert(args.length === 0 || (args.length === 1 && requestedPartition), 'Expected --partition=1/3, 2/3 or 3/3');
@@ -13,7 +14,7 @@ const partition = requestedPartition ? Number(requestedPartition[1]) : null;
 const partitionCount = 3;
 
 const output=resolve(process.env.FINNOR_S7_EVIDENCE_DIR??'../scope-7/scope-evidence/statistical-'+Date.now());await mkdir(output,{recursive:true});
-const sources=['packages/epistemic-runtime/src/economic-attribution.ts','packages/shared-types/src/economic-attribution.ts','scripts/s7/run-statistical-e2e.mts','scripts/s7/economic-fixtures.mts'];
+const sources=['packages/epistemic-runtime/src/economic-attribution.ts','packages/shared-types/src/economic-attribution.ts','scripts/s7/run-statistical-e2e.mts','scripts/s7/economic-fixtures.mts','scripts/s7/statistical-trials.mts'];
 const snapshots=()=>Promise.all(sources.map(async path=>({path,sha256:createHash('sha256').update(await readFile(path)).digest('hex')})));
 const before=await snapshots();const runtime=await import('../../packages/epistemic-runtime/src/economic-attribution');
 import {economicFixture as fixture} from './economic-fixtures.mjs';
@@ -45,25 +46,15 @@ register('self-value-missing-cost-and-duplicate-items-do-not-become-wealth',()=>
 register('registered-medium-population-compute-domain',()=>{const seed=2026100403,f=fixture(256,30,undefined,prng(seed)),start=performance.now(),a=runtime.assessEconomicAttribution(f.input),elapsedMs=performance.now()-start;assert.equal(a.population.retainedClusters,256);assert(covered(a,f.truth));assert(elapsedMs<=f.input.estimand.budgets.maximumElapsedMs);return {seed,clusters:256,elapsedMs,inputBytes:Buffer.byteLength(JSON.stringify(f.input)),rss:process.memoryUsage().rss,interval:a.contrasts[0]!.interval,qualification:'ONE_BOUNDED_GENERATED_LOAD_CASE_NOT_SYSTEM_REACH_GATE'};});
 for (const n of [24, 64]) {
   for (const [index, effect] of effects.entries()) {
-    register(`monte-carlo-${n}-${effect}`, () => {
+    register(`monte-carlo-${n}-${effect}`, async () => {
       const seed = n === 24 ? 2026100401 : 2026100402;
-      const random = prng(seed);
       let coverage = 0, positiveCredit = 0, width = 0, scoreTotal = 0;
       const trials = 2000;
-      for (let t = 0; t < trials; t++) {
-        const f = fixture(n, effect, undefined, random);
-        const a = runtime.assessEconomicAttribution(f.input);
-        const contrast = a.contrasts[0]!;
-        assert.equal(contrast.identification, 'DESIGN_BASED_CONDITIONAL');
-        const oracle = f.potential.reduce((total: number, row: any, i: number) =>
-          total + Number(f.input.estimand.clusters[i].weight) * (row.assigned === 'finnor' ? row.finnor / .5 : -row.bau / .5), 0);
-        const score = (Number(contrast.scoreInterval!.lower) + Number(contrast.scoreInterval!.upper)) / 2;
-        assert(Math.abs(score - oracle) < 1e-9, 'Independent assignment-score oracle disagreed');
-        scoreTotal += score;
-        coverage += covered(a, f.truth) ? 1 : 0;
-        const interval = contrast.interval!;
-        positiveCredit += Number(interval.lower) > 0 ? 1 : 0;
-        width += Number(interval.upper) - Number(interval.lower);
+      for (const row of await evaluateTrials(n, effect, trials, prng(seed))) {
+        scoreTotal += row.score;
+        coverage += row.covered ? 1 : 0;
+        positiveCredit += row.positiveCredit ? 1 : 0;
+        width += row.width;
       }
       const p = coverage / trials;
       const clopperPearson = coverage === trials ? {
