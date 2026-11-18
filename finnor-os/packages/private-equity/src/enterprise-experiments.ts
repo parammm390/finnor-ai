@@ -1,4 +1,5 @@
 import type { ControlObservationInstrument, ControlProblem, ExperimentDesignBundle, ExperimentProtocol, ExperimentRealization, InterventionModel } from "@finnor/shared-types";
+import type { PoolClient } from "pg";
 import {
   assertExperimentProtocol,
   designExperiments,
@@ -83,7 +84,7 @@ export async function designEnterpriseExperiments(ctx: PeMutationContext, input:
   await enqueueNativePreparedEvents(ctx,'S2',bundle.experience);
   return bundle;
 }
-export async function validateEnterpriseExperiment(ctx: PeMutationContext, value: unknown): Promise<{
+export async function validateEnterpriseExperiment(ctx: PeMutationContext, value: unknown, observationClient?: PoolClient): Promise<{
   status: "CURRENT" | "INVALIDATED" | "UNAVAILABLE"; reason: string; executionAuthorityGranted: false;
   checkedScope: "S1_DEPENDENCIES_AND_LOCAL_PROTOCOL_ONLY"; downstreamAdmission: "BLOCKED_EXTERNAL";
   unverifiedDependencies: ExperimentProtocol["dependencies"]; experience: ReturnType<typeof prepareS2ExperienceEvent> | null;
@@ -92,7 +93,9 @@ export async function validateEnterpriseExperiment(ctx: PeMutationContext, value
   const base = { executionAuthorityGranted: false as const, checkedScope: "S1_DEPENDENCIES_AND_LOCAL_PROTOCOL_ONLY" as const, downstreamAdmission: "BLOCKED_EXTERNAL" as const };
   if (protocol.tenantId !== ctx.auth.tenantId || protocol.principalId !== principal(ctx)) return { ...base, status: "UNAVAILABLE", reason: "PERMITTED_CONTEXT_UNAVAILABLE", unverifiedDependencies: [], experience: null };
   const now = new Date().toISOString();
-  const invalid = async(reason: string) => {const result={ ...base, status: "INVALIDATED" as const, reason, unverifiedDependencies: protocol.dependencies,
+  const invalid = async(reason: string) => {
+    if (observationClient) return { ...base, status: "INVALIDATED" as const, reason, unverifiedDependencies: protocol.dependencies, experience: null };
+    const result={ ...base, status: "INVALIDATED" as const, reason, unverifiedDependencies: protocol.dependencies,
     experience: prepareS2ExperienceEvent({ schema: "finnor.s2.experience.v1", episodeId: protocol.episodeId, semanticOwner: "S2", type: "INVALIDATION", tenantId: protocol.tenantId, principalId: protocol.principalId,
       rightsRef: protocol.beliefBinding.rightsRef, preparedParentRefs: [protocol.experience.event.eventId], causalParents: [], revisionRef: protocol.id, contentDigest: protocol.contentDigest, validAt: now, knowledgeAt: now,
       dependencyRefs: [protocol.beliefBinding.dependencyDigest, protocol.requestDigest], freshnessRef: protocol.beliefBinding.dependencyDigest, uncertainty: "MODEL_CONDITIONAL_NO_FIELD_CALIBRATION", horizon: "H1",
@@ -100,7 +103,8 @@ export async function validateEnterpriseExperiment(ctx: PeMutationContext, value
   if (Date.parse(protocol.validUntil) <= Date.parse(now) || Date.parse(protocol.candidate.timing.endAt) <= Date.parse(now)) return invalid("PROTOCOL_EXPIRED");
   if (Date.parse(protocol.knowledgeAt) > Date.parse(now) || Date.parse(protocol.beliefBinding.pin.knowledgeAt) > Date.parse(protocol.knowledgeAt)
     || Date.parse(now) - Date.parse(protocol.beliefBinding.pin.knowledgeAt) > protocol.beliefBinding.maxAgeMs) return invalid("BELIEF_FRESHNESS_OR_KNOWLEDGE_INVALID");
-  const pin = await validateBeliefViewPin(ctx, protocol.beliefBinding.pin);
+  const pin = await validateBeliefViewPin(ctx, protocol.beliefBinding.pin, observationClient,
+    observationClient ? { recordExperience: false } : undefined);
   if (pin.status !== "CURRENT") return invalid(pin.reason);
   return { ...base, status: "CURRENT", reason: "CURRENT_PERMITTED_S1_ONLY_NOT_MANDATE_MODEL_ALLOCATION_OR_EXECUTION_ADMISSION", unverifiedDependencies: protocol.dependencies, experience: null };
 }

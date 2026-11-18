@@ -50,8 +50,10 @@ async function save(path, bytes, kind, mode = 0o444) {
   assert(!files.has(path) && !isAbsolute(path) && !path.split("/").includes(".."), "W3_NEW_PINNED_FILE_REQUIRED");
   outputBytes += bytes.length;
   checkBound();
-  await mkdir(dirname(join(output, path)), { recursive: true });
-  await writeFile(join(output, path), bytes, { flag: "wx", mode });
+  const destination = join(output, path);
+  await mkdir(dirname(destination), { recursive: true });
+  await writeFile(destination, bytes, { flag: "wx", mode: 0o600 });
+  await chmod(destination, mode);
   files.set(path, { path, sha256: hash(bytes), bytes: bytes.length, kind, mode });
 }
 async function internalLink(path, destination) {
@@ -228,6 +230,10 @@ outputBytes += frontendBytes.length;
 for (const link of frontend.links) links.set("frontend/" + link.path, { ...link, path: "frontend/" + link.path });
 checkBound();
 manifest.files = [...files.values()].sort((a, b) => a.path.localeCompare(b.path));
+for (const file of manifest.files) {
+  const installed = await lstat(join(output, file.path));
+  assert(installed.isFile() && (installed.mode & 0o7777) === file.mode, "W3_INSTALLATION_FILE_MODE_MISMATCH:" + file.path);
+}
 manifest.links = [...links.values()].sort((a, b) => a.path.localeCompare(b.path));
 manifest.entrypoints.w3Worker = "finnor-os/w3-runtime/worker.mjs";
 manifest.entrypoints.w3Checker = "finnor-os/w3-runtime/checker.mjs";
@@ -258,6 +264,7 @@ const descriptor = {
 };
 assert.equal(git("rev-parse", "HEAD"), source.commit);
 assert.equal(git("status", "--porcelain=v1", "-uall"), "", "W3_BUILD_SOURCE_CHANGED");
-await writeFile(join(output, "finnor-os/w3-development-installation.json"), JSON.stringify(descriptor, null, 2) + "\n",
-  { flag: "wx", mode: 0o444 });
+const descriptorPath = join(output, "finnor-os/w3-development-installation.json");
+await writeFile(descriptorPath, JSON.stringify(descriptor, null, 2) + "\n", { flag: "wx", mode: 0o600 });
+await chmod(descriptorPath, 0o444);
 console.log(JSON.stringify(descriptor));

@@ -187,6 +187,29 @@ await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_REA
 
   const workBaseline = await owner.call(`/api/works/${parentA.workId}`);
   const canonicalWork = workBaseline.body?.work?.work;
+  // Exercise the real authenticated proxy after fixture setup, when the two
+  // institution routes have had time to go cold in the development server.
+  const observe = async (route, body) => {
+    const read = async () => fetch(`${FRONTEND}/api/centropy/company-brain/${route}`, {
+      method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${await owner.token()}` },
+      body: JSON.stringify({ ...body, purpose: "WORK_OBSERVATION" }), signal: AbortSignal.timeout(30000),
+    });
+    let response = await read();
+    if ([502, 503, 504].includes(response.status)) {
+      await response.body?.cancel();
+      response = await read();
+    }
+    return { status: response.status, data: await response.json().catch(() => null) };
+  };
+  const sources = await observe("institution-sources", { workId: parentA.workId });
+  const request = sources.data?.request;
+  const programme = request ? await observe("institution-read", { requestId: request.id }) : null;
+  check(c, "A.institution-proxy-ready", "the original owner's proxy reads resolve the exact Work, input and programme revision",
+    "authenticated frontend proxy", { sourcesStatus: sources.status, programmeStatus: programme?.status ?? null },
+    sources.status === 200 && sources.data?.workId === parentA.workId && programme?.status === 200
+      && programme.data?.workId === parentA.workId && programme.data?.workRevision === sources.data?.workInputId
+      && programme.data?.requestId === request?.id && programme.data?.revision === request?.revision);
+
   witnessBefore = await witness(q, parentA);
   ownerCutBeforeMounted = await mountedOwnerCut(q, parentA, acqA.sessionId, null);
   workStatusBeforeMounted = ownerCutBeforeMounted.work;

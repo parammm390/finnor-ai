@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "744983fa402fd6a1e5a06ebee9ca2b80137c36242dae33fb78078034d5421154"
+      "sha256": "2269a1b5e6d1dece59a52d78e76974dac68b5bb02862438905408e649be8cf54"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -2336,7 +2336,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-experiments.ts",
-      "sha256": "59f1b98e7b4ecfd2df1d6997dece6e5fc397ffe38f2b5e2b36bc8fb2629daa7c"
+      "sha256": "841c01fd3a8cab26d9d1ce443cee15aeadce97cbd2b92c5c0586a44e82a66be4"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-interventions.ts",
@@ -4000,7 +4000,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
-      "sha256": "d9b9f0d528aba5db5b75d9573be36da756dfd6a697ae6e200e1f1544134228d9"
+      "sha256": "e044351aca0e9ef7632a108ae355babebc4fe009464ab67d14dfb3961ef1c1c1"
     },
     {
       "path": "src/components/centropy/canvas/InterfaceSynthesisPanel.tsx",
@@ -5192,7 +5192,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/demand-to-business/store.ts",
-      "sha256": "46358c241b60ad6fd8bf316c1f81770fecb02241c65fbbce1bf97718577ad5e7"
+      "sha256": "77ba1bd5512017dfa9cdc6ed0332be36edb90ac5931641e0a3b12f27febb1b8f"
     },
     {
       "path": "finnor-os/packages/private-equity/src/demand-to-business/worker.ts",
@@ -5464,7 +5464,7 @@ export default {
     },
     {
       "path": "finnor-os/scripts/frontier5/x1/build-development.mjs",
-      "sha256": "e07644bc70bb2bb83be95de9720247afe4eb09a43ff2f25b6c1486c34ff564a9"
+      "sha256": "b68567d626a8e1c42cac202e553f352ae3037cc797f999d1cf82be493e181864"
     },
     {
       "path": "finnor-os/scripts/postz-w2/specialist-origin-producers.mts",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "a0148cb585cf545a7c3793fdff514bc122cadfd3b93641cb17bf1e54cf234bce"
+  "sourceDigest": "cbce7dfa7b9d83eb38052fe367dcaf738b4ed0d7b93703ccb089b1249bbec263"
 } as const;

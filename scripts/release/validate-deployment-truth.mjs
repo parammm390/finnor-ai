@@ -67,6 +67,19 @@ const dockerfile = read("finnor-os/Dockerfile.worker")
 const dockerignore = read("finnor-os/Dockerfile.worker.dockerignore")
 for (const invariant of ["FROM node:22", "WORKDIR /app/finnor-os", "COPY finnor-os/package.json finnor-os/package-lock.json", "COPY finnor-os/apps ./apps", "COPY finnor-os/packages ./packages", "COPY package-lock.json /app/package-lock.json", "COPY infra/deployment/production.contract.json /app/infra/deployment/production.contract.json", "npm ci", "EXPOSE 8090", "apps/worker/src/index.ts"]) required(dockerfile.includes(invariant), `worker Dockerfile lost ${invariant}`)
 for (const invariant of [".env", ".vercel", "node_modules", ".git"]) required(dockerignore.includes(invariant), `worker Docker context does not exclude ${invariant}`)
+const workerLock = JSON.parse(read("finnor-os/package-lock.json"))
+const workerVendorInputs = new Set(Object.values(workerLock.packages)
+  .map(entry => /^file:\.\.\/(vendor\/[a-zA-Z0-9._-]+\.tgz)$/.exec(entry.resolved)?.[1]).filter(Boolean))
+const contextRules = dockerignore.split(/\r?\n/)
+for (const path of workerVendorInputs) {
+  required(existsSync(join(repoRoot, path)), `worker lockfile archive is missing: ${path}`)
+  const vendorDirectory = contextRules.lastIndexOf("!vendor/")
+  const vendorExclusion = contextRules.lastIndexOf("vendor/**")
+  const archive = contextRules.lastIndexOf("!" + path)
+  required(vendorDirectory >= 0 && vendorDirectory < vendorExclusion && vendorExclusion < archive,
+    `worker Docker context must expose only its locked vendor archives: ${path}`)
+  required(dockerfile.split(/\r?\n/).includes(`COPY ${path} /app/${path}`), `worker Dockerfile does not copy locked archive: ${path}`)
+}
 
 const cfn = read("infra/aws/finnor-production.yaml")
 for (const invariant of ["AWSAgentToolkit: aws-cloudformation@2", "AWS::ECR::Repository", "ImageTagMutability: IMMUTABLE", "AWS::ECS::Cluster", "AWS::ECS::Service", "AWS::ElasticLoadBalancingV2::LoadBalancer", "AWS::ElasticLoadBalancingV2::Listener", "HealthCheckPath: /healthz", "AssignPublicIp: ENABLED", "MinimumHealthyPercent: 100", "MaximumPercent: 200", "RetentionInDays: 7"]) required(cfn.includes(invariant), `AWS CloudFormation template lost ${invariant}`)

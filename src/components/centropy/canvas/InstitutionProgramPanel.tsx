@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { centropyPost } from "../lib/api"
+import { CentropyApiError, centropyPost } from "../lib/api"
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
 import { InstitutionInputForm } from "./InstitutionInputForm"
 
@@ -72,10 +72,20 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
     if (!afterMutation && pending?.key === key && pending.generation === refreshGeneration.current) return pending.task
     const generation = ++refreshGeneration.current
     const current = () => isCurrent(key) && refreshGeneration.current === generation
+    async function observe<T>(read: () => Promise<T>): Promise<T> {
+      try {
+        return await read()
+      } catch (error) {
+        // Observations can be replayed after a gateway failure while the same
+        // Work, principal and refresh generation still own the request.
+        if (!current() || !(error instanceof CentropyApiError) || ![502, 503, 504].includes(error.status)) throw error
+        return read()
+      }
+    }
     setRefreshingScope(key)
     const task = (async () => {
       try {
-        const next = await centropyPost<Sources>("company-brain/institution-sources", { workId, purpose: "WORK_OBSERVATION" })
+        const next = await observe(() => centropyPost<Sources>("company-brain/institution-sources", { workId, purpose: "WORK_OBSERVATION" }))
         if (!current()) return
         if (next.workId !== workId) throw Error("Responsibility sources returned another Work")
         const prior = head.current
@@ -85,13 +95,14 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
         head.current = next.request ? { key, inputId: next.workInputId,
           revision: next.request.revision, requestId: next.request.id } : null
         setSources({ key, value: next })
-        if (next.request) {
-          const result = await centropyPost<Read>("company-brain/institution-read", {
-            requestId: next.request.id, purpose: "WORK_OBSERVATION",
-          })
+        const request = next.request
+        if (request) {
+          const result = await observe(() => centropyPost<Read>("company-brain/institution-read", {
+            requestId: request.id, purpose: "WORK_OBSERVATION",
+          }))
           if (!current()) return
           if (result.workId !== workId || result.workRevision !== next.workInputId
-            || result.requestId !== next.request.id || result.revision !== next.request.revision)
+            || result.requestId !== request.id || result.revision !== request.revision)
             throw Error("Responsibility returned a different Work input or programme revision")
           setReading({ key, value: result })
         } else setReading(null)

@@ -228,6 +228,7 @@
         "scripts/release/p8-water-retirement-policy.mjs",
         "scripts/release/p8-water-retirement-store.d.mts",
         "scripts/release/pr-verdict-policy.mjs",
+        "scripts/release/verify-dependency-scan.mjs",
         "scripts/release/ci-process-policy.mjs",
         "scripts/release/verify-ci-workflows.mjs",
         "scripts/release/verify-test-shards.mjs",

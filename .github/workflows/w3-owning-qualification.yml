@@ -60,12 +60,6 @@ jobs:
           "$FINNOR_W3_UV" venv --python 3.12.13 "$RUNNER_TEMP/w3-qualification-assets/s5"
           "$FINNOR_W3_UV" pip sync --link-mode copy --only-binary :all: --python "$RUNNER_TEMP/w3-qualification-assets/s3/bin/python" finnor-os/scripts/postz/w3/requirements-s3.lock
           "$FINNOR_W3_UV" pip sync --link-mode copy --only-binary :all: --python "$RUNNER_TEMP/w3-qualification-assets/s5/bin/python" finnor-os/packages/epistemic-runtime/src/requirements-s5.txt
-      - name: Acquire the locked headed Chromium and visible display dependencies
-        timeout-minutes: 5
-        run: |
-          set -euo pipefail
-          node finnor-os/node_modules/playwright/cli.js install --with-deps chromium
-          command -v xvfb-run
       - name: Declare existing donor roots without authentication material
         timeout-minutes: 1
         run: |
@@ -94,6 +88,23 @@ jobs:
           set -euo pipefail
           umask 077
           timeout --signal=TERM --kill-after=30s 180s node scripts/postz/w3/seal.mjs --output "$RUNNER_TEMP/w3-qualification-packet"
+      - name: Acquire the locked headed Chromium and verify visible launch
+        timeout-minutes: 10
+        working-directory: finnor-os
+        run: |
+          set -euo pipefail
+          node node_modules/playwright/cli.js install chromium
+          probe_headed() {
+            xvfb-run -a node --input-type=module -e '
+              import { chromium } from "playwright";
+              const browser = await chromium.launch({ headless: false, timeout: 20000 });
+              await browser.close();
+            '
+          }
+          if ! command -v xvfb-run || ! probe_headed; then
+            node node_modules/playwright/cli.js install-deps chromium
+            probe_headed
+          fi
       - name: Reconstruct offline and execute confined installed and headed mounted owners
         timeout-minutes: 91
         working-directory: finnor-os

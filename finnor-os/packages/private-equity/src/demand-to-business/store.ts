@@ -304,10 +304,12 @@ export async function loadGrowthInput(ctx: PeMutationContext, row: GrowthRequest
     throw Error("W4_INDEPENDENT_ACCOUNTING_POLICY_REQUIRED");
   const s2 = await growthNativeOriginal(ctx, input.test.s2ProtocolRef, c);
   if (input.test.s2ProtocolRef.owner !== "S2") throw Error("W4_ORIGINAL_S2_PROTOCOL_REQUIRED");
+  // Check the signed S2 original against the current S1 cut in this transaction.
+  // W4 observations must not enqueue new S1/S2 deliveries while reading it.
   const checked = await validateEnterpriseExperiment(ctx, { ...s2, id: input.test.s2ProtocolRef.id,
     version: input.test.s2ProtocolRef.version, contentDigest: input.test.s2ProtocolRef.contentDigest,
-    experience: await growthNativeProposal(ctx, input.test.s2ProtocolRef, c) });
-  if (checked.status !== "CURRENT") throw Error("W4_ORIGINAL_S2_PROTOCOL_NOT_CURRENT");
+    experience: await growthNativeProposal(ctx, input.test.s2ProtocolRef, c) }, c);
+  if (checked.status !== "CURRENT") throw Error("W4_ORIGINAL_S2_PROTOCOL_NOT_CURRENT_" + checked.reason);
   const candidate = (s2.candidate ?? {}) as Record<string, unknown>;
   const timing = (candidate.timing ?? {}) as Record<string, unknown>;
   const assignment = (candidate.assignment ?? {}) as Record<string, unknown>;

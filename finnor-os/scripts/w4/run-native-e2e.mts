@@ -112,8 +112,10 @@ delete process.env.FINNOR_W4_CONTROLLED_NOW;
 const port = await new Promise<number>((yes, no) => { const s = createServer(); s.once("error", no);
   s.listen(0, "127.0.0.1", () => { const value = (s.address() as { port: number }).port; s.close(() => yes(value)) }) });
 const pgDirectory = join(output, "disposable-postgres"), adminPassword = randomUUID(), appPassword = randomUUID(), workerPassword = randomUUID();
+let postgresStartLog = "";
 const postgres = new EmbeddedPostgres({ databaseDir: pgDirectory, user: "w4_admin", password: adminPassword,
-  port, persistent: false, onLog: () => undefined });
+  port, persistent: false, postgresFlags: ["-c", "listen_addresses=127.0.0.1", "-c", "unix_socket_directories="],
+  onLog: line => { postgresStartLog = (postgresStartLog + line).slice(-8192); } });
 let admin: pg.Client | null = null, auth: Awaited<ReturnType<typeof authenticatedApiFixture>> | null = null;
 let recipient: Awaited<ReturnType<typeof growthRecipient>> | null = null, activeWorker: ChildProcess | null = null;
 let closePool: (() => Promise<void>) | undefined, result: unknown, failure: unknown;
@@ -122,7 +124,12 @@ const numericalDiagnostics = captureNumericalProcesses(output);
 s1FailureChannel.subscribe(observeS1Failure);
 try {
   await postgres.initialise(); await appendFile(join(pgDirectory, "postgresql.conf"), "\ntrack_commit_timestamp=on\n");
-  await postgres.start(); await postgres.createDatabase("w4_growth");
+  try { await postgres.start(); }
+  catch (error) {
+    await privateDiagnostic("postgres-start.json", { tail: postgresStartLog });
+    throw Error("W4_DISPOSABLE_POSTGRES_START_FAILED", { cause: error });
+  }
+  await postgres.createDatabase("w4_growth");
   const { migrate } = await import("../../packages/db/migrate");
   const migrations = await migrate(`postgres://w4_admin:${adminPassword}@127.0.0.1:${port}/w4_growth`);
   assert(migrations.includes("0200_postz_w4_demand_to_business.sql"));

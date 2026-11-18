@@ -32,6 +32,13 @@ export function isRetryableReadAfterOwnedWorkerRestart(
     &&failure?.code==='OWNER_REQUEST_TRANSPORT_FAILED'&&failure.method==='GET'
     &&failure.causeCodes.length>0&&failure.causeCodes.every(code=>retryableRecoveryReadCodes.has(code));
 }
+export function isRetryableClosingProjection(
+  failure:ReturnType<typeof finiteRequestFailure>|undefined,attempt:number){
+  return Number.isInteger(attempt)&&attempt>=1&&attempt<3
+    &&failure?.code==='OWNER_REQUEST_TRANSPORT_FAILED'&&failure.method==='POST'&&failure.path==='/api/closing/read'
+    &&failure.causeCodes.length>0
+    &&failure.causeCodes.every(code=>code==='ECONNREFUSED'||retryableRecoveryReadCodes.has(code));
+}
 export function finiteFailureObservation(error:unknown,processes:readonly {name:string;exit:unknown}[],
  request?:ReturnType<typeof finiteRequestFailure>){
   return {schema:'finnor.v3.finite-first-failure.v1',at:new Date().toISOString(),

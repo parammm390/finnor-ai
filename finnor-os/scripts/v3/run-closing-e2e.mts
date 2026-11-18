@@ -2,7 +2,7 @@
  * ordinary roles, native S3/S4/S5, separate checker/broker and durable oracle.
  * No route-handler calls, test authority bypass, seeded receipts or live effects. */
 import assert from "node:assert/strict";
-import { finiteFailureObservation, finiteRequestFailure, isRetryableReadAfterOwnedWorkerRestart } from "./failure-observation";
+import { finiteFailureObservation, finiteRequestFailure, isRetryableClosingProjection, isRetryableReadAfterOwnedWorkerRestart } from "./failure-observation";
 import { createHash, generateKeyPairSync, randomBytes, randomUUID, sign, type KeyObject } from "node:crypto";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { appendFile, copyFile, mkdir, mkdtemp, readFile, readdir, statfs, writeFile } from "node:fs/promises";
@@ -131,14 +131,14 @@ async function ready(service: Awaited<ReturnType<typeof launch>>, label: string)
   }
   throw Error(label + " readiness deadline");
 }
-async function request(f: any, path: string, body?: unknown, actorId?: string, token?: string) {
+async function request(f: any, path: string, body?: unknown, actorId?: string, token?: string, signal = AbortSignal.timeout(90000)) {
   const began = performance.now();
   let response:Response,text:string;
   const method=body===undefined?'GET':'POST';
   try {
     response = await fetch(apiOrigin + path, { method, headers: {
       authorization: "Bearer " + (token ?? bearer(f, actorId)), "content-type": "application/json",
-    }, body: JSON.stringify(body), signal: AbortSignal.timeout(90000) });
+    }, body: JSON.stringify(body), signal });
     text = await response.text();
   } catch(error) {
     if(error&&typeof error==='object') requestFailures.set(error,finiteRequestFailure(error,path,method,performance.now()-began));
@@ -247,7 +247,24 @@ async function approve(f: any) {
   }
 }
 const equal = (a: unknown, b: unknown) => canonical(a) === canonical(b);
-async function projection(f: any) { return ok(await request(f, "/api/closing/read", { programmeId: f.programmeId })); }
+async function projection(f: any) {
+  const body = { programmeId: f.programmeId };
+  const token = bearer(f), signal = AbortSignal.timeout(90000);
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return ok(await request(f, "/api/closing/read", body, undefined, token, signal));
+    } catch (error) {
+      const failure = error && typeof error === "object" ? requestFailures.get(error) : undefined;
+      // Next dev can restart its listener after reaching the heap threshold.
+      // Replay only this same observation, within the original request budget.
+      if (signal.aborted || processes.find(entry => entry.name === "api")?.exit !== null
+        || !isRetryableClosingProjection(failure, attempt)) throw error;
+      const delayMs = attempt * 1000;
+      console.log(JSON.stringify({ event: "CLOSING_PROJECTION_TRANSPORT_RETRY", attempt, causeCodes: failure!.causeCodes, delayMs }));
+      await sleep(delayMs);
+    }
+  }
+}
 async function waitFor(f: any, predicate: (q: any, state: any) => boolean, limitMs = 240000) {
   const deadline = Date.now() + limitMs; let last: any;
   while (Date.now() < deadline) {

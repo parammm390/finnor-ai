@@ -3,7 +3,7 @@
 import { build, transform } from 'esbuild';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { readFile, writeFile, mkdir, realpath, readdir, stat, symlink } from 'node:fs/promises';
+import { chmod, readFile, writeFile, mkdir, realpath, readdir, stat, symlink } from 'node:fs/promises';
 import { existsSync, statfsSync } from 'node:fs';
 import { dirname, resolve, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -33,8 +33,10 @@ const files = new Map(), packages = [], sourcePreimages = [], links = new Map();
 async function save(path, bytes, kind, mode = 0o444) {
   outputBytes += bytes.length;
   if (outputBytes > limits.finalBuildOutputBytes) throw Error('X1_FINAL_BUILD_OUTPUT_BOUND');
-  await mkdir(dirname(join(output, path)), { recursive: true });
-  await writeFile(join(output, path), bytes, { flag: 'wx', mode });
+  const destination = join(output, path);
+  await mkdir(dirname(destination), { recursive: true });
+  await writeFile(destination, bytes, { flag: 'wx', mode: 0o600 });
+  await chmod(destination, mode);
   files.set(path, { path, sha256: digest(bytes), bytes: bytes.length, kind, mode });
 }
 const tracked = git('ls-files', '-z').split('\0').filter(Boolean);
@@ -197,7 +199,9 @@ const manifest = { schema: w2 ? 'finnor.postz.w2.development-installation.v1' : 
 if (git('rev-parse', 'HEAD') !== frozen.commit || git('status', '--porcelain=v1', '-uall') !== frozen.dirty) throw Error('X1_BUILD_SOURCE_CHANGED');
 const manifestBytes = JSON.stringify(manifest, null, 2) + '\n';
 if (outputBytes + Buffer.byteLength(manifestBytes) > limits.finalBuildOutputBytes) throw Error('X1_FINAL_BUILD_OUTPUT_BOUND');
-await writeFile(join(output, `finnor-os/${label}-development-installation.json`), manifestBytes, { flag: 'wx', mode: 0o444 });
+const manifestPath = join(output, `finnor-os/${label}-development-installation.json`);
+await writeFile(manifestPath, manifestBytes, { flag: 'wx', mode: 0o600 });
+await chmod(manifestPath, 0o444);
 clearTimeout(timer);
 console.log(JSON.stringify({ output, source: frozen, compiledAssets: [...files.values()].filter(p => p.kind === 'COMPILED').length,
   actualRoutes: routes.length, packages: packages.length, outputBytes, elapsedMs: manifest.elapsedMs,
