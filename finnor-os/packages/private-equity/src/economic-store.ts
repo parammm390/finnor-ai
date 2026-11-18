@@ -76,6 +76,7 @@ export async function readStoredEconomicRecord(ctx: PeMutationContext, id: strin
 }
 interface StoredWorkComputeInput {
     workId: string; episodeIds: string[]; schema: string;
+    excludeWorkObservations?: boolean;
 }
 function validateStoredWorkComputeInput(input: StoredWorkComputeInput) {
     if (!input.workId || !input.schema || input.episodeIds.length < 1 || input.episodeIds.length > 2
@@ -101,8 +102,9 @@ export async function listStoredWorkComputeTx(ctx: PeMutationContext, input: Sto
             WHERE tenant_id=$1 AND principal_id=$2 AND kind='COMPUTE'
               AND body->'payload'->>'schema'=$3 AND body->'payload'->>'workId'=$4
               AND body->'payload'->>'episodeId'=ANY($5::text[])
+              AND (NOT $6::boolean OR body->'payload'->>'purpose' IS DISTINCT FROM 'WORK_OBSERVATION')
             ORDER BY knowledge_at,record_id LIMIT 1025`,
-        [ctx.auth.tenantId, economicActor(ctx), input.schema, input.workId, input.episodeIds])).rows;
+        [ctx.auth.tenantId, economicActor(ctx), input.schema, input.workId, input.episodeIds, input.excludeWorkObservations ?? false])).rows;
     return { records: rows.slice(0, 1024).map(decode), complete: rows.length <= 1024,
         ...(rows.length > 1024 ? { reason: 'ECONOMIC_WORK_COMPUTE_HISTORY_BOUND' } : {}),
         executionAuthorityGranted: false as const };
@@ -110,7 +112,7 @@ export async function listStoredWorkComputeTx(ctx: PeMutationContext, input: Sto
 /** Work preparation precedes the first compiler episode. These immutable
  * measurements retain their observed null episode; the X1 consumer binds the
  * owned Work to its actual original parent without rewriting those records. */
-export async function listStoredWorkPreparationCompute(ctx:PeMutationContext,workId:string){
+export async function listStoredWorkPreparationCompute(ctx:PeMutationContext,workId:string,options?:{excludeWorkObservations?:boolean}){
     if(!/^[a-f0-9-]{36}$/i.test(workId))denied();
     return withTenantTransaction(ctx.auth.tenantId,{userId:economicActor(ctx),readOnly:true},async(_db,c)=>{
         await authorizeEconomicActor(ctx,c,false);
@@ -120,7 +122,8 @@ export async function listStoredWorkPreparationCompute(ctx:PeMutationContext,wor
             WHERE tenant_id=$1 AND principal_id=$2 AND kind='COMPUTE'
               AND body->'payload'->>'schema'='finnor.x1.api-preparation-compute.v1'
               AND body->'payload'->>'workId'=$3 AND body->'payload'->'episodeId'='null'::jsonb
-            ORDER BY knowledge_at,record_id LIMIT 1025`,[ctx.auth.tenantId,economicActor(ctx),workId])).rows;
+              AND (NOT $4::boolean OR body->'payload'->>'purpose' IS DISTINCT FROM 'WORK_OBSERVATION')
+            ORDER BY knowledge_at,record_id LIMIT 1025`,[ctx.auth.tenantId,economicActor(ctx),workId,options?.excludeWorkObservations ?? false])).rows;
         return {records:rows.slice(0,1024).map(decode),complete:rows.length<=1024,
             ...(rows.length>1024?{reason:'ECONOMIC_WORK_PREPARATION_HISTORY_BOUND'}:{}),executionAuthorityGranted:false as const};
     });

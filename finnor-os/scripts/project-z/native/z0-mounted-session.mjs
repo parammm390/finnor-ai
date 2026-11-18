@@ -549,6 +549,10 @@ await runCase("M-04", ["Z0-R45-C03", "Z0-R09-C01"], "Blocked/needs-action state 
   check(c, "budget.owner-agreement", "visible budget matches the original reservation in SQL and API before and after reload",
     "O-SQL charges + O-API + DOM", reloadBudget, reloadBudget.sqlAgreesBefore && reloadBudget.sqlAgreesAfter
       && reloadBudget.shownMatchesBefore && reloadBudget.shownMatchesAfter);
+  check(c, "budget.reload-no-new-charge", "reopening Work does not spend original execution allowance",
+    "O-SQL append-only charge ledger + O-API original budget",
+    { ownerBudgetUnchanged: reloadBudget.ownerBudgetUnchanged, differences: c.observations.ownerBudgetDifferences },
+    reloadBudget.ownerBudgetUnchanged && isDeepStrictEqual(beforeReloadBudget, afterReloadBudget));
   check(c, "reload-stable", "fact set after reload equals the set before it", "DOM facts", { differences }, differences.length === 0);
   mutationsOf(c, mark);
 });

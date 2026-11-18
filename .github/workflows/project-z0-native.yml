@@ -352,10 +352,10 @@ jobs:
             const probeCause = typeof error === 'string'
               ? error.match(/^Z0_BROWSER_CANVAS_PROJECTION_UNOBSERVABLE:([A-Z_]+)$/)?.[1] : undefined
             const networkError = typeof error === 'string' ? error.match(/net::(ERR_[A-Z_]{3,80})/)?.[1] ?? null : null
-            const setupFailure = checks.find(check => check.id === 'B.setup' && !check.pass)?.observed
+            const setupFailure = id === 'M-00' ? error : checks.find(check => check.id === 'B.setup' && !check.pass)?.observed
             const setupPredicate = typeof setupFailure === 'string' ? predicateFrom(setupFailure.replace(/^B:/, '')) : null
             const setupCause = typeof setupFailure === 'string'
-              ? setupFailure.match(/^B:Z0_FIXTURE_TERMINAL_(?:COMPILER|PROGRAMME|SESSION)_[A-Z_]+:([A-Z0-9_]{3,160})(?=[: ]|$)/)?.[1] ?? null : null
+              ? setupFailure.match(/^(?:B:)?Z0_FIXTURE_TERMINAL_(?:COMPILER|PROGRAMME|SESSION)_[A-Z_]+:([A-Z0-9_]{3,160})(?=[: ]|$)/)?.[1] ?? null : null
             const oracle = observations?.oracle
             const baseline = checks.find(check => check.id === 'A.canonical-work-baseline')?.observed
             const rootCarriedBy = ['THREAD_PERSISTED_ROOT', 'ROOT_URL_PARAMETER'].includes(observations?.rootCarriedBy)

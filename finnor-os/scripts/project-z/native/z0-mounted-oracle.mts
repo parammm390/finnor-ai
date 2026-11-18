@@ -79,8 +79,7 @@ export function compareObservedBudget(value: unknown, before: OriginalBudgetLedg
   return "MATCH";
 }
 
-/** A single SQL snapshot, scoped to the original owner records. Reading the
- * institutional HTTP oracle itself consumes an S5 control unit. */
+/** A single SQL snapshot, scoped to the original owner records. */
 export async function mountedOwnerCut(q: Q, parent: any, sessionId: string, after: string | null) {
   const [cut] = await q(`WITH original_jobs AS (
       SELECT type,status,run_at,j.payload->>'generation'=owner.generation::text current_generation
@@ -206,7 +205,9 @@ export async function readOwnerTruth(args: { q: Q; owner: any; parent: any; sess
   const afterProjection = await readOriginalBudgetLedger(q, parent);
   const projection = projectionCall.body;
   const api = projection?.sessions?.find((item: any) => item.id === sessionId) ?? null;
-  const readCall = await owner.operation("institution-read", { requestId: parent.compilerRequestId });
+  const readCall = await owner.operation("institution-read", {
+    requestId: parent.compilerRequestId, purpose: "WORK_OBSERVATION",
+  });
   const institution = readCall.body;
 
   const disagreements: string[] = [];

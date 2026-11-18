@@ -22,6 +22,7 @@ import {
   withTenant, domainActions, domainPolicies, domainPolicyRevisions, actionLog,
   decisionReceipts, planRepairs, enqueueJob, receiveWork, recordWorkResponse, readWorkInputResponse, transitionWork, WorkQueryInProgressError,
   beginWorkPlannerAttempt, finishWorkPlannerAttempt, latestWorkInput, reconcileWorkStatus,
+  transactionClient,
   canReadEmployeeWork,
   recordRejectedWorkPlan, activeWorkPlanRevision,
   authorityStates,
@@ -1845,6 +1846,12 @@ export class FinnorOrchestrator implements Orchestrator {
       // Work as a cancellation boundary.
       if (decision === "approve" && before?.status === "completed") {
         return { claimed: null, current: before };
+      }
+      const authorityContext = before?.authorityContext;
+      if (decision === "approve" && authorityContext && typeof authorityContext === "object" && "liveControl" in authorityContext) {
+        // V5 command authorization joins this transaction later. Take its S5
+        // portfolio lock before the cancellation check takes the material lock.
+        await transactionClient(db).query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [`s5-portfolio:${tenantId}`]);
       }
       if (decision !== "reject" && before) {
         try {

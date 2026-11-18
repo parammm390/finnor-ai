@@ -156,7 +156,13 @@ const frontendOrigin = await new Promise((accept, reject) => {
     server.close(() => accept("http://127.0.0.1:" + port)); });
 });
 const frontendPath = join(output, "frontend");
-const frontendInputs = await Promise.all(["next-env.d.ts", "tsconfig.json"].map(async path => {
+const trackedFrontendInputs = git("ls-tree", "--name-only", source.commit, "--", "next-env.d.ts", "tsconfig.json").split("\n");
+assert(trackedFrontendInputs.includes("tsconfig.json"), "W3_COMMITTED_FRONTEND_TSCONFIG_REQUIRED");
+if (!trackedFrontendInputs.includes("next-env.d.ts")) {
+  assert.equal(git("check-ignore", "--", "next-env.d.ts"), "next-env.d.ts",
+    "W3_NEXT_ENV_MUST_BE_COMMITTED_OR_IGNORED_GENERATED_OUTPUT");
+}
+const frontendInputs = await Promise.all(trackedFrontendInputs.map(async path => {
   const original = execFileSync("git", ["-C", root, "show", source.commit + ":" + path], { maxBuffer: 16777216 });
   assert.equal(hash(await readFile(join(root, path))), hash(original), "W3_FRONTEND_INPUT_CHANGED_BEFORE_BUILD");
   return { path, original };

@@ -8,6 +8,7 @@ export async function assertLiveControlBoundaryTx(db: Db, tenantId: string, acti
   try {
     await client.query("SELECT set_config('app.user_id',$1,true)", [principalId]);
     const { assertNativeControlActionTx } = await import('../../private-equity/src/live-controls/service');
-    return await assertNativeControlActionTx({ auth: { tenantId, userId: principalId, employeeId: principalId, role: 'owner' } }, actionId, client);
+    return await assertNativeControlActionTx({ auth: { tenantId, userId: principalId, employeeId: principalId, role: 'owner' } },
+      actionId, client, { acquireMaterialFence: true });
   } finally { await client.query("SELECT set_config('app.user_id',$1,true)", [previous ?? '']); }
 }

@@ -16,6 +16,9 @@ export const INSTITUTION_OPERATIONS = ["institution-submit", "institution-revise
   "institution-status", "institution-cancel", "institution-resume", "institution-witness", "institution-sources",
   'institution-inputs','institution-mandate','institution-register-source','institution-consent'] as const;
 const id = z.object({ requestId: z.string().uuid() }).strict();
+const workObservation = z.literal("WORK_OBSERVATION").optional();
+const sourceRead = z.object({ workId: z.string().uuid(), purpose: workObservation }).strict();
+const programmeRead = id.extend({ purpose: workObservation });
 const submit = z.object({ workId: z.string().uuid(), workInputId: z.string().uuid(),
   grantIds: z.array(z.string().uuid()).min(1).max(16), idempotencyKey: z.string().min(1).max(160) }).strict();
 
@@ -105,7 +108,7 @@ async function handleInstitutionOperationBody(ctx: PeMutationContext, operation:
       return { status: 202, body: await submitInstitutionCompiler(ctx, parsed) };
     }
     if (operation === "institution-sources") {
-      const { workId } = z.object({ workId: z.string().uuid() }).strict().parse(body);
+      const { workId } = sourceRead.parse(body);
       await authorizeInstitutionWork(ctx, workId);
       return { status: 200, body: await tx(ctx, async c => {
         const grants = (await c.query(`SELECT id::text,source_id,source_class,protocol,revision,expires_at
@@ -121,7 +124,8 @@ async function handleInstitutionOperationBody(ctx: PeMutationContext, operation:
           completionContracts:INSTITUTION_COMPLETION_CONTRACTS };
       }, true) };
     }
-    const { requestId } = id.parse(body);let q = await compilerRow(ctx, requestId);
+    const { requestId } = (operation === "institution-read" ? programmeRead : id).parse(body);
+    let q = await compilerRow(ctx, requestId);
     await authorizeInstitutionWork(ctx, q.work_id);
     if(operation==='institution-resume')q=await reconcileInstitutionCompilerDelivery(ctx,q);
     if (["institution-read", "institution-status", "institution-witness"].includes(operation))
@@ -189,6 +193,9 @@ async function handleInstitutionOperationBody(ctx: PeMutationContext, operation:
 
 export async function handleInstitutionOperation(ctx:PeMutationContext,operation:string,body:unknown){
   const started=performance.now(),startedAt=new Date().toISOString();
+  const observation = operation === "institution-sources" ? sourceRead.safeParse(body)
+    : operation === "institution-read" ? programmeRead.safeParse(body) : null;
+  const purpose = observation?.success ? observation.data.purpose : undefined;
   const response=await handleInstitutionOperationBody(ctx,operation,body);let elapsedMs=performance.now()-started;
   const handles=body&&typeof body==='object'&&!Array.isArray(body)?body as {workId?:unknown;requestId?:unknown}:{};
   const valid=(value:unknown):value is string=>typeof value==='string'&&z.string().uuid().safeParse(value).success;
@@ -212,13 +219,13 @@ export async function handleInstitutionOperation(ctx:PeMutationContext,operation
       elapsedMs=performance.now()-started;
       await persistInstitutionApiCompute(ctx,{workId:attribution.work_id,requestId:attribution.id,episodeId:episode.id,
         parentReservation:episode.parent_reservation,rightsRevision:rights?.revision??'UNKNOWN',operation,
-        statusCode:response.status,startedAt,elapsedMs});
+        statusCode:response.status,startedAt,elapsedMs,...(purpose ? { purpose } : {})});
     }else if(preparationWorkId){
       const rights=await tx(ctx,async c=>(await c.query<{revision:string}>(
         'SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=$1',[ctx.auth.tenantId])).rows[0],true);
       elapsedMs=performance.now()-started;
       await persistInstitutionWorkPreparationCompute(ctx,{workId:preparationWorkId,rightsRevision:rights?.revision??'UNKNOWN',
-        operation,statusCode:response.status,startedAt,elapsedMs});
+        operation,statusCode:response.status,startedAt,elapsedMs,...(purpose ? { purpose } : {})});
     }
   }catch(error){
     // A revoked/unavailable principal cannot write a private meter. Retain a

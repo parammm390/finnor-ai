@@ -75,7 +75,7 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
     setRefreshingScope(key)
     const task = (async () => {
       try {
-        const next = await centropyPost<Sources>("company-brain/institution-sources", { workId })
+        const next = await centropyPost<Sources>("company-brain/institution-sources", { workId, purpose: "WORK_OBSERVATION" })
         if (!current()) return
         if (next.workId !== workId) throw Error("Responsibility sources returned another Work")
         const prior = head.current
@@ -86,7 +86,9 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
           revision: next.request.revision, requestId: next.request.id } : null
         setSources({ key, value: next })
         if (next.request) {
-          const result = await centropyPost<Read>("company-brain/institution-read", { requestId: next.request.id })
+          const result = await centropyPost<Read>("company-brain/institution-read", {
+            requestId: next.request.id, purpose: "WORK_OBSERVATION",
+          })
           if (!current()) return
           if (result.workId !== workId || result.workRevision !== next.workInputId
             || result.requestId !== next.request.id || result.revision !== next.request.revision)

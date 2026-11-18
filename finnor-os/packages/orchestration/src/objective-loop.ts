@@ -1113,6 +1113,7 @@ export async function reserveClosingReadBudget(params: {
   tenantId: string; workId: string; programmeId: string; inputId: string; responsibilityOnly: boolean;
 }) {
   return withTenant(params.tenantId, async db => {
+    await lockTenantMaterialCutTx(db, params.tenantId);
     await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE tenant_id=${params.tenantId}::uuid AND work_id=${params.workId}::uuid FOR UPDATE`);
     const [loop] = await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.workId, params.workId))).limit(1);
     const predicates = { missingLoop: !loop, queriesExhausted: !!loop && loop.queryCount >= loop.maxQueries,
@@ -1177,6 +1178,7 @@ export async function reserveClosingChildBudget(params: {
   actionType: string; payload: Record<string, unknown>; planRevisionId: string; planNodeId: string;
 }) {
   return withTenant(params.tenantId, async db => {
+    await lockTenantMaterialCutTx(db, params.tenantId);
     const [loop] = await db.select().from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId, params.tenantId), eq(workObjectiveLoops.workId, params.workId))).limit(1);
     if (!loop) throw Error("CLOSING_ORIGINAL_WORK_CONTROLLER_REQUIRED");
     await db.execute(sql`SELECT id FROM ${workObjectiveLoops} WHERE id=${loop.id}::uuid FOR UPDATE`);

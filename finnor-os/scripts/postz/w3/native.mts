@@ -539,18 +539,23 @@ try {
   };
   const pump = async (maximum: number = NATIVE_WORKER_LIMITS.maximumTicks) => {
     assert(Number.isSafeInteger(maximum) && maximum >= 1 && maximum <= NATIVE_WORKER_LIMITS.maximumTicks);
-    for (let ticks = 0; ticks < maximum;) {
+    for (let ticks = 0;;) {
       const pending = (await admin!.query(`SELECT count(*)::int n,min(run_at) due FROM finnor_os.jobs
        WHERE tenant_id=$1 AND status='queued'
         AND type IN('compile_real_world_service_v1','advance_real_world_service_v1','run_workflow_step_v3')`, [tenant])).rows[0];
       if (!pending.n) return;
+      if (ticks >= maximum) {
+        await artifact("queue-pump-bound.json", {
+          ticks, maximum, pendingJobs: pending.n, nextDueAt: pending.due,
+        });
+        throw Error("W3_FINITE_QUEUE_PUMP_BOUND");
+      }
       const delay = Math.max(0, (pending.due as Date).getTime() - Date.now());
       assert(delay <= 30000, "W3_QUEUE_CONTINUATION_NOT_DUE_WITHIN_BOUND");
       if (delay) await new Promise(done => setTimeout(done, delay + 25));
       const result = await tick(false, maximum - ticks);
       ticks += result.ticks;
     }
-    throw Error("W3_FINITE_QUEUE_PUMP_BOUND");
   };
   const createIntegratedPump = () => {
     let used = 0;

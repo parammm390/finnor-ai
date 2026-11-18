@@ -609,16 +609,21 @@ export class JobQueue {
       // current durable unit and absence of its intent, rather than weakening
       // the retry contract for other reconcilable handlers.
       const p2Unsubmitted = capacityDeferred && job.type === "run_compute_search_unit_v1"
-        && job.retrySafety === "reconcilable" && job.protocolVersion === 1
+        && job.retrySafety === "reconcilable" && [1, 2, 3].includes(job.protocolVersion)
         && !!job.tenantId && typeof job.payload.principalId === "string"
         && await withTenantTransaction(job.tenantId!, { userId: job.payload.principalId as string, readOnly: true }, async (_db, c) => {
           const proof = await c.query(`SELECT u.id FROM finnor_os.p2_units u
             JOIN finnor_os.p2_requests s ON s.id=u.search_id AND s.tenant_id=u.tenant_id AND s.principal_id=u.principal_id
             WHERE u.tenant_id=$1 AND u.principal_id=$2 AND u.id=$3 AND s.id=$4
               AND s.generation=$5 AND u.generation=s.generation AND s.status='RUNNING' AND u.status='QUEUED'
+              AND $7::int = CASE
+                WHEN jsonb_typeof(s.request->'orchestration')='object' THEN 3
+                WHEN jsonb_typeof(s.request->'deliberation')='object' THEN 2
+                ELSE 1 END
               AND NOT EXISTS(SELECT 1 FROM finnor_os.p2_attempts a WHERE a.tenant_id=u.tenant_id
                 AND a.principal_id=u.principal_id AND a.delivery_id=$6)`,
-          [job!.tenantId,job!.payload.principalId,job!.payload.unitId,job!.payload.searchId,job!.payload.generation,job!.deliveryAttemptId]);
+          [job!.tenantId,job!.payload.principalId,job!.payload.unitId,job!.payload.searchId,
+            job!.payload.generation,job!.deliveryAttemptId,job!.protocolVersion]);
           return proof.rowCount === 1;
         }).catch(() => false);
       const x2Undispatched = capacityDeferred && job.type === "run_application_semantics_v1"

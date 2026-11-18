@@ -212,7 +212,7 @@ static int emit(const char *type,const char *event,const char *reason,uint64_t a
   if(!event)last_through=through;
   return 0;
 }
-static int revoke(const char *event,const char *reason) {
+static int revoke_child_origin(const char *event,const char *reason) {
   /* A delayed kernel notification is conservatively effective since the last
      completed census, never moved forward to the time it was learned. */
   (void)emit("REVOKED",event,reason,last_through?last_through:initial_from);
@@ -230,37 +230,37 @@ static int run_watch(int argc,char **argv,int snapshot) {
   memcpy(active_nonce,argv[2],65);
   original_deadline=(uint64_t)deadline;initial_from=monotonic_ns();last_through=initial_from;
   if(original_deadline<=initial_from || (unsigned long long)clock_namespace.st_dev!=nsdev
-    ||(unsigned long long)clock_namespace.st_ino!=nsino)return revoke("CLOCK_STEP","ORIGINAL_CLOCK_OR_DEADLINE");
+    ||(unsigned long long)clock_namespace.st_ino!=nsino)return revoke_child_origin("CLOCK_STEP","ORIGINAL_CLOCK_OR_DEADLINE");
   if(identity((pid_t)gp,&guardian)||identity((pid_t)cp,&guest)||identity((pid_t)wp,&worker))
-    return revoke("PROCESS_LOSS","ORIGINAL_PROCESS_UNAVAILABLE");
+    return revoke_child_origin("PROCESS_LOSS","ORIGINAL_PROCESS_UNAVAILABLE");
   pid_t ids[3]={guardian.pid,guest.pid,worker.pid};
-  for(size_t n=0;n<3;n++){pidfds[n]=(int)syscall(SYS_pidfd_open,ids[n],0);if(pidfds[n]<0)return revoke("PROCESS_LOSS","ORIGINAL_PIDFD_UNAVAILABLE");}
+  for(size_t n=0;n<3;n++){pidfds[n]=(int)syscall(SYS_pidfd_open,ids[n],0);if(pidfds[n]<0)return revoke_child_origin("PROCESS_LOSS","ORIGINAL_PIDFD_UNAVAILABLE");}
   cgroup_fd=open(argv[6],O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);
   cgroup_device=dev;cgroup_inode=ino;
   struct statfs filesystem;
   if(cgroup_fd<0||fstatfs(cgroup_fd,&filesystem)<0||filesystem.f_type!=CGROUP2_SUPER_MAGIC)
-    return revoke("CGROUP_LOSS","ORIGINAL_CGROUP_UNAVAILABLE");
+    return revoke_child_origin("CGROUP_LOSS","ORIGINAL_CGROUP_UNAVAILABLE");
   inotify_fd=inotify_init1(IN_NONBLOCK|IN_CLOEXEC);
-  if(inotify_fd<0)return revoke("SOURCE_CHANGE","SOURCE_WATCH_UNAVAILABLE");
+  if(inotify_fd<0)return revoke_child_origin("SOURCE_CHANGE","SOURCE_WATCH_UNAVAILABLE");
   const char *controls[]={"cgroup.procs","cgroup.threads","cgroup.freeze","memory.max","memory.swap.max",
     "pids.max","cpu.max","cpu.max.burst","cgroup.events","memory.events","pids.events"};
   for(size_t n=0;n<sizeof(controls)/sizeof(controls[0]);n++){
     char control[PATH_MAX];
     if(snprintf(control,sizeof(control),"/proc/self/fd/%d/%s",cgroup_fd,controls[n])>=(int)sizeof(control)
       ||inotify_add_watch(inotify_fd,control,IN_MODIFY|IN_ATTRIB|IN_CLOSE_WRITE|IN_DELETE_SELF|IN_MOVE_SELF|IN_UNMOUNT|IN_DONT_FOLLOW)<0)
-      return revoke("CGROUP_LOSS","ORIGINAL_CGROUP_CONTINUOUS_WATCH_UNAVAILABLE");
+      return revoke_child_origin("CGROUP_LOSS","ORIGINAL_CGROUP_CONTINUOUS_WATCH_UNAVAILABLE");
   }
   if(inotify_add_watch(inotify_fd,argv[6],IN_DELETE_SELF|IN_MOVE_SELF|IN_UNMOUNT|IN_ATTRIB|IN_ONLYDIR|IN_DONT_FOLLOW)<0
-    ||watch_ancestors(argv[6])<0)return revoke("CGROUP_LOSS","ORIGINAL_CGROUP_PATH_WATCH_UNAVAILABLE");
+    ||watch_ancestors(argv[6])<0)return revoke_child_origin("CGROUP_LOSS","ORIGINAL_CGROUP_PATH_WATCH_UNAVAILABLE");
   for(int at=12;at<argc;at++){
-    if(argv[at][0]!='/'||strstr(argv[at],"/../"))return revoke("SOURCE_CHANGE","SOURCE_PATH_INVALID");
+    if(argv[at][0]!='/'||strstr(argv[at],"/../"))return revoke_child_origin("SOURCE_CHANGE","SOURCE_PATH_INVALID");
     int fd=open(argv[at],O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK);struct stat value;
     if(fd<0||fstat(fd,&value)<0||!S_ISREG(value.st_mode)||value.st_uid!=0||(value.st_mode&0022)||value.st_nlink!=1)
-      return revoke("SOURCE_CHANGE","SOURCE_CUSTODY_UNAVAILABLE");
+      return revoke_child_origin("SOURCE_CHANGE","SOURCE_CUSTODY_UNAVAILABLE");
     sources[source_count].fd=fd;sources[source_count].original=value;source_count++;
     if(inotify_add_watch(inotify_fd,argv[at],IN_MODIFY|IN_ATTRIB|IN_CLOSE_WRITE|IN_DELETE_SELF
       |IN_MOVE_SELF|IN_UNMOUNT|IN_DONT_FOLLOW)<0||watch_ancestors(argv[at])<0)
-      return revoke("SOURCE_CHANGE","SOURCE_WATCH_UNAVAILABLE");
+      return revoke_child_origin("SOURCE_CHANGE","SOURCE_WATCH_UNAVAILABLE");
   }
   deadline_fd=timerfd_create(CLOCK_MONOTONIC,TFD_NONBLOCK|TFD_CLOEXEC);
   step_fd=timerfd_create(CLOCK_REALTIME,TFD_NONBLOCK|TFD_CLOEXEC);
@@ -269,8 +269,8 @@ static int run_watch(int argc,char **argv,int snapshot) {
   struct itimerspec step_timer={.it_value={.tv_sec=realtime.tv_sec+3600,.tv_nsec=realtime.tv_nsec}};
   if(deadline_fd<0||step_fd<0||timerfd_settime(deadline_fd,TFD_TIMER_ABSTIME,&deadline_timer,NULL)<0
     ||timerfd_settime(step_fd,TFD_TIMER_ABSTIME|TFD_TIMER_CANCEL_ON_SET,&step_timer,NULL)<0)
-    return revoke("CLOCK_STEP","ORIGINAL_TIMER_WATCH_UNAVAILABLE");
-  const char *bad=census();if(bad)return revoke("GUARDIAN_LOSS",bad);
+    return revoke_child_origin("CLOCK_STEP","ORIGINAL_TIMER_WATCH_UNAVAILABLE");
+  const char *bad=census();if(bad)return revoke_child_origin("GUARDIAN_LOSS",bad);
   if(emit("READY",NULL,"ACTUAL_ORIGINAL_KERNEL_CENSUS",0)<0)return 74;
   if(snapshot)return 0;
   char line[MAX_LINE];size_t used=0;
@@ -278,35 +278,35 @@ static int run_watch(int argc,char **argv,int snapshot) {
     struct pollfd waits[7]={{.fd=STDIN_FILENO,.events=POLLIN},{.fd=inotify_fd,.events=POLLIN},
       {.fd=deadline_fd,.events=POLLIN},{.fd=step_fd,.events=POLLIN},
       {.fd=pidfds[0],.events=POLLIN},{.fd=pidfds[1],.events=POLLIN},{.fd=pidfds[2],.events=POLLIN}};
-    int result=poll(waits,7,-1);if(result<0){if(errno==EINTR)continue;return revoke("PROCESS_LOSS","KERNEL_WATCH_LOST");}
-    for(size_t n=0;n<7;n++)if(waits[n].revents&(POLLERR|POLLNVAL))return revoke("PROCESS_LOSS","KERNEL_WATCH_LOST");
+    int result=poll(waits,7,-1);if(result<0){if(errno==EINTR)continue;return revoke_child_origin("PROCESS_LOSS","KERNEL_WATCH_LOST");}
+    for(size_t n=0;n<7;n++)if(waits[n].revents&(POLLERR|POLLNVAL))return revoke_child_origin("PROCESS_LOSS","KERNEL_WATCH_LOST");
     if(waits[1].revents&POLLIN){
       char events[16384];ssize_t n=read(inotify_fd,events,sizeof(events));
-      if(n<=0)return revoke("SOURCE_CHANGE","SOURCE_WATCH_LOST");
+      if(n<=0)return revoke_child_origin("SOURCE_CHANGE","SOURCE_WATCH_LOST");
       size_t offset=0;
       while(offset<(size_t)n){
         struct inotify_event *event=(struct inotify_event *)(void *)(events+offset);
-        if(event->mask&IN_Q_OVERFLOW)return revoke("SOURCE_CHANGE","SOURCE_WATCH_OVERFLOW");
+        if(event->mask&IN_Q_OVERFLOW)return revoke_child_origin("SOURCE_CHANGE","SOURCE_WATCH_OVERFLOW");
         offset+=sizeof(*event)+event->len;
       }
-      return revoke("SOURCE_CHANGE","SOURCE_MUTATION_OR_WATCH_LOSS");
+      return revoke_child_origin("SOURCE_CHANGE","SOURCE_MUTATION_OR_WATCH_LOSS");
     }
-    if(waits[2].revents&POLLIN)return revoke("ABORT","ORIGINAL_DEADLINE");
-    if(waits[3].revents&POLLIN)return revoke("CLOCK_STEP","ACTUAL_REALTIME_STEP");
-    if(waits[4].revents||waits[5].revents||waits[6].revents)return revoke("PROCESS_LOSS","ORIGINAL_PIDFD_LOSS");
-    if(waits[0].revents&POLLHUP)return revoke("PROCESS_LOSS","ORIGINAL_OBSERVER_OWNER_LOST");
+    if(waits[2].revents&POLLIN)return revoke_child_origin("ABORT","ORIGINAL_DEADLINE");
+    if(waits[3].revents&POLLIN)return revoke_child_origin("CLOCK_STEP","ACTUAL_REALTIME_STEP");
+    if(waits[4].revents||waits[5].revents||waits[6].revents)return revoke_child_origin("PROCESS_LOSS","ORIGINAL_PIDFD_LOSS");
+    if(waits[0].revents&POLLHUP)return revoke_child_origin("PROCESS_LOSS","ORIGINAL_OBSERVER_OWNER_LOST");
     if(waits[0].revents&POLLIN){
       char byte;ssize_t n=read(STDIN_FILENO,&byte,1);
-      if(n!=1)return revoke("PROCESS_LOSS","ORIGINAL_SOURCE_CHANNEL_LOST");
-      if(byte!='\n'){if(used>=sizeof(line)-1)return revoke("PROCESS_LOSS","BARRIER_FRAME_BOUND");line[used++]=byte;continue;}
+      if(n!=1)return revoke_child_origin("PROCESS_LOSS","ORIGINAL_SOURCE_CHANNEL_LOST");
+      if(byte!='\n'){if(used>=sizeof(line)-1)return revoke_child_origin("PROCESS_LOSS","BARRIER_FRAME_BOUND");line[used++]=byte;continue;}
       line[used]='\0';used=0;
       char command[16],nonce[65],target[32],extra;
       if(sscanf(line,"%15s %64s %31s %c",command,nonce,target,&extra)!=3 || strcmp(command,"BARRIER")
-        ||!nonce_ok(nonce))return revoke("PROCESS_LOSS","BARRIER_FRAME_INVALID");
-      unsigned long long through;if(number(target,&through))return revoke("CLOCK_STEP","BARRIER_TIME_INVALID");
+        ||!nonce_ok(nonce))return revoke_child_origin("PROCESS_LOSS","BARRIER_FRAME_INVALID");
+      unsigned long long through;if(number(target,&through))return revoke_child_origin("CLOCK_STEP","BARRIER_TIME_INVALID");
       memcpy(active_nonce,nonce,65);
-      bad=census();if(bad)return revoke("GUARDIAN_LOSS",bad);
-      if(census_floor<(uint64_t)through)return revoke("CLOCK_STEP","BARRIER_BEFORE_REQUIRED_UPPER");
+      bad=census();if(bad)return revoke_child_origin("GUARDIAN_LOSS",bad);
+      if(census_floor<(uint64_t)through)return revoke_child_origin("CLOCK_STEP","BARRIER_BEFORE_REQUIRED_UPPER");
       if(emit("CENSUS",NULL,"ACTUAL_ORIGINAL_KERNEL_CENSUS",0)<0)return 74;
     }
   }

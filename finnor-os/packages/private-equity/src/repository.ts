@@ -168,7 +168,7 @@ async function scopedPeTransaction<T>(
           // The actual canonical mutation transaction rechecks the original
           // V5 proof. A service-level preflight cannot authorize a later effect.
           const { assertNativeControlActionTx } = await import("./live-controls/service");
-          await assertNativeControlActionTx(ctx, ctx.provenance.externalId, client);
+          await assertNativeControlActionTx(ctx, ctx.provenance.externalId, client, { acquireMaterialFence: true });
         }
         // X1 ordinary continuation is revalidated at the actual canonical
         // mutation. The same transaction holds its source/Work/mandate locks;
