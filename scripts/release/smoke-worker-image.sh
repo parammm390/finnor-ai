@@ -214,6 +214,7 @@ mkdir -p "$evidence/linux-r1-runtime"
 chmod 2770 "$evidence/linux-r1-runtime"
 image_id="$(cat "$evidence/image-id.txt")"
 source_tree="$(git rev-parse 'HEAD^{tree}')"
+runtime_status=0
 if docker run --rm --network none --user 1000:1000 --group-add "$(id -g)" \
   --env HOME=/tmp --env NODE_ENV=test --env CI=1 --env LOG_LEVEL=silent \
   --env AUTH_DEV_BYPASS=0 --env FINNOR_P4_PROFILE=ordinary_disposable \
@@ -230,15 +231,19 @@ if docker run --rm --network none --user 1000:1000 --group-add "$(id -g)" \
 else
   runtime_status=$?
   cat "$evidence/linux-r1-runtime/runner.log"
-  exit "$runtime_status"
 fi
-node - "$evidence/linux-r1-runtime/results.json" <<'NODE'
+node - "$evidence/linux-r1-runtime/results.json" "$runtime_status" <<'NODE'
 const fs = require("node:fs");
+const exitCode = Number(process.argv[3]);
+if (!fs.existsSync(process.argv[2])) {
+  console.error("::error::R1 installed owner produced no result (container exit " + exitCode + ")");
+  process.exit(1);
+}
 const receipt = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
 const required = ["ready-worker-holds-until-dispatch", "positive-owner-reduction"];
-if (receipt.status !== "PASS_LOCAL" || receipt.results.length !== required.length ||
+if (exitCode !== 0 || receipt.status !== "PASS_LOCAL" || receipt.results.length !== required.length ||
     required.some(id => receipt.results.filter(r => r.id === id && r.status === "PASS").length !== 1)) {
-  console.error("::error::R1 installed owner proof failed: " + JSON.stringify({status:receipt.status,
+  console.error("::error::R1 installed owner proof failed: " + JSON.stringify({exitCode,status:receipt.status,
     cases:receipt.results.map(r=>({id:r.id,status:r.status,error:String(r.observed?.error??"").slice(0,1024)}))}));
   process.exit(1);
 }

@@ -9,6 +9,7 @@ import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {strict as assert} from 'node:assert';
 import {migrate} from '../../packages/db/migrate';
+import {orderMigrationNames} from '../../packages/db/migration-order';
 import {closePool} from '@finnor/db';
 import {startR1HttpFixture} from '../r1/http-fixture.mts';
 
@@ -64,7 +65,7 @@ export async function startEnvironment(evidence:string,options:{builtApi?:boolea
   const upgrade=await migrate(adminUrl,files),replay=await migrate(adminUrl,files);
   const retained=(await admin.query('SELECT id,type,payload,status,protocol_version,attempts,claim_fence FROM finnor_os.jobs WHERE id=$1',[old.id])).rows[0];
   assert.deepEqual(retained,old);assert.deepEqual(replay,[]);
-  assert.deepEqual(upgrade,files.filter(f=>!prefix.some(p=>p.name===f.name)).map(f=>f.name));
+  assert.deepEqual(upgrade,orderMigrationNames(files.map(f=>f.name)).filter(name=>name>baseHead));
   await artifact(evidence,'migration-upgrade-replay.json',{prior,upgrade,replay,old,retained,files:files.map(f=>({name:f.name,sha256:hash(f.sql)})),allPassed:true});
   const appPassword=randomBytes(24).toString('hex'),workerPassword=randomBytes(24).toString('hex');
   // Values are generated hexadecimal credentials, not user-controlled SQL.

@@ -106,6 +106,29 @@ export function verifyCiProcess(root) {
   }
   require(workflowJob(sourceWorkflow, "governance").includes("npm run test:release") && !workflowJob(sourceWorkflow, "source").includes("npm run test:release"), "governance fixtures must run once in parallel with source checks")
   const source = workflowJob(sourceWorkflow, "source")
+  const migrationGate = source.match(/^      - name: Rehearse the worker migration upgrade[^\n]*\n([\s\S]*?)(?=^      - |(?![\s\S]))/m)?.[1] ?? ""
+  require(workflowJob(sourceWorkflow, "validate").includes("FINNOR_CI_CHECK_LINUX_WORKER: ${{ inputs.backend }}")
+    && migrationGate.includes("if: ${{ inputs.backend }}") && !migrationGate.includes("continue-on-error:")
+    && migrationGate.includes("scripts/r1/run-owners.mts runtime-migrations")
+    && migrationGate.includes("scripts/r4/run-integrated.mts --migration-only")
+    && source.indexOf("runtime-migrations") < source.indexOf("id: backend"),
+    "Backend source preflight must compile native image inputs and exercise both installed owner migration upgrades before expensive work")
+  const phaseW = workflows["phase-w-verification.yml"] ?? ""
+  require(workflowJob(phaseW, "ci-boundary-controls").includes("needs: source-checks\n"),
+    "Phase W boundary controls must follow source preflight")
+  for (const name of ["w1-native-positive", "w2-compensation-positive", "w3-fast-owner"]) {
+    const job = workflowJob(phaseW, name)
+    require(job.includes("needs: ci-boundary-controls\n") && !/^ {4}(?:if|continue-on-error):/m.test(job),
+      name + ": Phase W owner campaigns must wait for successful boundary controls")
+  }
+  const pressure = workflowJob(phaseW, "w1-pressure")
+  const w1Controls = workflowJob(phaseW, "w1-owning-regressions")
+  require(pressure.includes("needs: w1-native-positive\n") && pressure.includes("mode: internal-pressure")
+    && !/^ {4}(?:if|continue-on-error):/m.test(pressure)
+    && w1Controls.includes("needs: w1-pressure\n") && !/^ {4}(?:if|continue-on-error):/m.test(w1Controls)
+    && w1Controls.includes("mode: [abc, internal-read-standing, internal-revocation, internal-sequential, internal-drift]")
+    && workflowJob(phaseW, "native-controlled-dev").includes("W1_PRESSURE: ${{ needs.w1-pressure.result }}"),
+    "The original W1 pressure scenario must pass before the other five adverse controls")
   require(source.includes('import { sourceCheckFailures } from "./scripts/release/ci-process-policy.mjs"') && source.includes("const failures = sourceCheckFailures(") && source.includes("id: aggregate") && source.includes("if: ${{ always() }}"), "independent source diagnostics must end in a fail-closed aggregate")
   require(source.includes("npm run build:inputs:check || status=1"), "source gate must verify generated build stamps and replay custody before image work")
   for (const name of ["shards", "workspace", "backend", "types", "inventory", "lint", "drift"]) {
@@ -152,6 +175,16 @@ export function verifyCiProcess(root) {
     && w1Episode.includes("console.log(JSON.stringify(summary))"),
     "W1 failures require a privacy-safe finite outcome with exact mode and case identities")
   const w3Episode = workflows["w3-owning-episode.yml"] ?? ""
+  for (const [file, preflight, runtime] of [
+    ["w1-owning-episode.yml", "Verify the actual isolation boundary", "Prepare exact locked scientific runtime"],
+    ["w2-compensation-episode.yml", "Verify all existing reader plans", "Prepare exact locked scientific runtime"],
+    ["w3-owning-episode.yml", "Check the complete W3 owner", "Prepare both exact scientific populations"],
+  ]) {
+    const job = workflowJob(workflows[file] ?? "", "run")
+    const before = job.indexOf("- name: " + preflight)
+    require(before >= 0 && before < job.indexOf("- name: " + runtime),
+      file + ": source and boundary preflight must precede scientific runtime installation")
+  }
   require(w3Episode.includes("node --max-old-space-size=3072 finnor-os/node_modules/typescript/bin/tsc -p finnor-os/scripts/postz/w3/tsconfig.json"),
     "W3 complete owner compilation requires the bounded 3 GiB heap qualified for this source graph")
   require(w3Episode.includes("name: Retain a finite W3 outcome")

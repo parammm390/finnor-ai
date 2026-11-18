@@ -165,7 +165,7 @@ await check("native-unused-workflow-and-job-output-plumbing-removed", () => {
   assert.equal(caller.jobs["native-controlled-dev"].outputs, undefined);
   assert(!caller.jobs["native-controlled-dev"].steps[0].run.includes("GITHUB_OUTPUT"));
 });
-const nativeInputs = { SOURCE_RESULT: "source-checks", CI_BOUNDARIES: "ci-boundary-controls", W1_POSITIVE: "w1-native-positive", W1_REGRESSIONS: "w1-owning-regressions",
+const nativeInputs = { SOURCE_RESULT: "source-checks", CI_BOUNDARIES: "ci-boundary-controls", W1_POSITIVE: "w1-native-positive", W1_PRESSURE: "w1-pressure", W1_REGRESSIONS: "w1-owning-regressions",
   W2_POSITIVE: "w2-compensation-positive", W2_CONTROLS: "w2-compensation-controls", W3_FAST: "w3-fast-owner",
   W3_NATIVE: "w3-native-and-publication", COMBINED_NATIVE: "combined-native-owners" };
 const nativeStep = caller.jobs["native-controlled-dev"].steps[0];

@@ -14,7 +14,7 @@ import { monitorEventLoopDelay } from "node:perf_hooks";
 import EmbeddedPostgres from "embedded-postgres";
 import pg from "pg";
 import { mountedResponseBarrier, mountedServiceProof } from "./mounted.mts";
-import { NATIVE_WORKER_LIMITS } from "./worker-protocol.mts";
+import { drainNativeQueue, NATIVE_WORKER_LIMITS } from "./worker-protocol.mts";
 import { createIntegratedEvidence } from "../integrated/evidence.mts";
 import { INTEGRATED_PROFILE } from "../integrated/profile.mts";
 import type { IntegratedOwnerPorts } from "../integrated/owner-journey.mts";
@@ -537,21 +537,16 @@ try {
     }
     return result;
   };
-  const pump = async (maximum: number = NATIVE_WORKER_LIMITS.maximumTicks) => {
-    assert(Number.isSafeInteger(maximum) && maximum >= 1 && maximum <= NATIVE_WORKER_LIMITS.maximumTicks);
-    for (let ticks = 0; ticks < maximum;) {
-      const pending = (await admin!.query(`SELECT count(*)::int n,min(run_at) due FROM finnor_os.jobs
+  const pump = (maximum: number = NATIVE_WORKER_LIMITS.maximumTicks) => drainNativeQueue(maximum,
+    async () => (await admin!.query(`SELECT count(*)::int n,min(run_at) due FROM finnor_os.jobs
        WHERE tenant_id=$1 AND status='queued'
-        AND type IN('compile_real_world_service_v1','advance_real_world_service_v1','run_workflow_step_v3')`, [tenant])).rows[0];
-      if (!pending.n) return;
-      const delay = Math.max(0, (pending.due as Date).getTime() - Date.now());
+        AND type IN('compile_real_world_service_v1','advance_real_world_service_v1','run_workflow_step_v3')`, [tenant])).rows[0],
+    async (remainingTicks, due) => {
+      const delay = Math.max(0, due.getTime() - Date.now());
       assert(delay <= 30000, "W3_QUEUE_CONTINUATION_NOT_DUE_WITHIN_BOUND");
       if (delay) await new Promise(done => setTimeout(done, delay + 25));
-      const result = await tick(false, maximum - ticks);
-      ticks += result.ticks;
-    }
-    throw Error("W3_FINITE_QUEUE_PUMP_BOUND");
-  };
+      return (await tick(false, remainingTicks)).ticks;
+    });
   const createIntegratedPump = () => {
     let used = 0;
     const types = ["run_harness_program_v1", "run_evidence_derivation_v1", "run_compute_search_unit_v1",
@@ -2120,8 +2115,12 @@ try {
   }
   }
 } catch (error) {
+  const cause = error instanceof Error && error.message === "W3_FINITE_QUEUE_PUMP_BOUND"
+    ? error.cause as Record<string, unknown> | undefined : undefined;
+  const queueBound = cause && ["maximumTicks", "usedTicks", "pendingCount"].every(key => Number.isSafeInteger(cause[key]))
+    ? { maximumTicks: cause.maximumTicks, usedTicks: cause.usedTicks, pendingCount: cause.pendingCount } : undefined;
   await artifact("terminal-failure.json", { message: error instanceof Error ? error.message : String(error),
-    stack: error instanceof Error ? error.stack : null }); terminalExit = 1;
+    stack: error instanceof Error ? error.stack : null, queueBound }); terminalExit = 1;
   if (admin && !organizationNativePhaseClosed) {
     try {
       const sources = (await admin.query(`SELECT l.*,v.content_hash,v.content,v.snapshot,s.metadata

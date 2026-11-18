@@ -1,4 +1,4 @@
-name: Worker cache A/B benchmark
+name: Worker image smoke after early preflight
 on:
   push:
     branches: [codex/ci-worker-cache-benchmark-20261118]
@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cache: [export, restore-only]
+        cache: [restore-only]
     runs-on: ubuntu-latest
     # First pinned exact native compilation is preparation, not a 30-second
     # decision. Later source-only changes restore its independent cached stage.
@@ -32,13 +32,25 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: 1fa0146abe5663b90b39f6969dc852fe6fb8c3e5
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 22.22.3
           cache: npm
           cache-dependency-path: finnor-os/package-lock.json
+      - name: Compile native worker inputs before dependency and image work
+        run: node scripts/release/verify-ci-workflows.mjs
+        env:
+          FINNOR_CI_CHECK_LINUX_WORKER: "true"
       - run: npm ci --prefix finnor-os
+      - name: Rehearse the actual installed-owner migration upgrades
+        working-directory: finnor-os
+        env:
+          FINNOR_R1_EVIDENCE_DIR: ${{ runner.temp }}/finnor-r1-migrations
+        run: |
+          timeout --signal=TERM --kill-after=10s 90s node --import=tsx scripts/r1/run-owners.mts runtime-migrations
+          timeout --signal=TERM --kill-after=10s 90s node --import=tsx scripts/r4/run-integrated.mts --migration-only --output "$RUNNER_TEMP/finnor-r4-migrations"
       - name: Derive exact worker smoke metadata
         run: |
           sha="$(git rev-parse HEAD)"
@@ -94,6 +106,8 @@ jobs:
         with:
           name: worker-image-${{ matrix.cache }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
+            ${{ runner.temp }}/finnor-r1-migrations/results.json
+            ${{ runner.temp }}/finnor-r4-migrations/results.json
             ${{ runner.temp }}/finnor-worker-image-smoke/*
             ${{ runner.temp }}/finnor-worker-image-smoke/linux-r3-runtime/**
             ${{ runner.temp }}/finnor-worker-layout/*.json
