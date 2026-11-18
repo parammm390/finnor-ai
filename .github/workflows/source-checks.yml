@@ -26,6 +26,7 @@ jobs:
         run: node scripts/release/verify-ci-workflows.mjs
         env:
           FINNOR_CI_PROCESS_EVIDENCE_DIR: ${{ runner.temp }}/finnor-ci-process
+          FINNOR_CI_CHECK_LINUX_WORKER: ${{ inputs.backend }}
       - name: Retain workflow evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -85,6 +86,24 @@ jobs:
       # for a UI-only change. No dependency directories are shared between jobs.
       - name: Install root and backend dependencies
         run: bash scripts/release/install-ci-dependencies.sh
+      - name: Rehearse the worker migration upgrade before image or owner work
+        if: ${{ inputs.backend }}
+        working-directory: finnor-os
+        env:
+          FINNOR_R1_EVIDENCE_DIR: ${{ runner.temp }}/finnor-r1-migrations
+        run: |
+          timeout --signal=TERM --kill-after=10s 90s node --import=tsx scripts/r1/run-owners.mts runtime-migrations
+          timeout --signal=TERM --kill-after=10s 90s node --import=tsx scripts/r4/run-integrated.mts --migration-only --output "$RUNNER_TEMP/finnor-r4-migrations"
+      - name: Retain the finite worker migration result
+        if: ${{ always() && inputs.backend }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ci-worker-migrations-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/finnor-r1-migrations/results.json
+            ${{ runner.temp }}/finnor-r4-migrations/results.json
+          if-no-files-found: warn
+          retention-days: 7
       - name: Verify the actual backend inventory is partitioned exactly once
         id: shards
         continue-on-error: true

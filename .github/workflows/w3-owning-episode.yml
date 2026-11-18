@@ -44,6 +44,14 @@ jobs:
             finnor-os/package-lock.json
       - name: Install root and backend dependencies
         run: bash scripts/release/install-ci-dependencies.sh
+      - name: Check the complete W3 owner and driver types
+        id: preflight
+        if: steps.source.outputs.preflight == 'true'
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          node --max-old-space-size=3072 finnor-os/node_modules/typescript/bin/tsc -p finnor-os/scripts/postz/w3/tsconfig.json
+          printf 'sha=%s\n' "$SOURCE_SHA" >> "$GITHUB_OUTPUT"
       - name: Prepare both exact scientific populations
         run: |
           set -euo pipefail
@@ -56,14 +64,6 @@ jobs:
           "$RUNNER_TEMP/w3-uv" venv --python 3.12.13 "$RUNNER_TEMP/w3-s5"
           "$RUNNER_TEMP/w3-uv" pip sync --only-binary :all: --python "$RUNNER_TEMP/w3-s3/bin/python" finnor-os/scripts/postz/w3/requirements-s3.lock
           "$RUNNER_TEMP/w3-uv" pip sync --only-binary :all: --python "$RUNNER_TEMP/w3-s5/bin/python" finnor-os/packages/epistemic-runtime/src/requirements-s5.txt
-      - name: Check the complete W3 owner and driver types
-        id: preflight
-        if: steps.source.outputs.preflight == 'true'
-        env:
-          SOURCE_SHA: ${{ steps.source.outputs.sha }}
-        run: |
-          node --max-old-space-size=3072 finnor-os/node_modules/typescript/bin/tsc -p finnor-os/scripts/postz/w3/tsconfig.json
-          printf 'sha=%s\n' "$SOURCE_SHA" >> "$GITHUB_OUTPUT"
       - name: Exercise the actual original owner journey
         working-directory: finnor-os
         env:

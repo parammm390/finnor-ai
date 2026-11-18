@@ -76,21 +76,29 @@ jobs:
           retention-days: 7
   w1-native-positive:
     name: "Verify W1 native orchestration"
+    needs: ci-boundary-controls
     uses: ./.github/workflows/w1-owning-episode.yml
     with:
       mode: native
+  w1-pressure:
+    name: "Verify W1 native queue pressure before the remaining controls"
+    needs: w1-native-positive
+    uses: ./.github/workflows/w1-owning-episode.yml
+    with:
+      mode: internal-pressure
   w1-owning-regressions:
     name: "Verify W1 adverse owner controls"
-    needs: w1-native-positive
+    needs: w1-pressure
     strategy:
       fail-fast: false
       matrix:
-        mode: [abc, internal-read-standing, internal-pressure, internal-revocation, internal-sequential, internal-drift]
+        mode: [abc, internal-read-standing, internal-revocation, internal-sequential, internal-drift]
     uses: ./.github/workflows/w1-owning-episode.yml
     with:
       mode: ${{ matrix.mode }}
   w2-compensation-positive:
     name: "Verify exact W2 settlement"
+    needs: ci-boundary-controls
     uses: ./.github/workflows/w2-compensation-episode.yml
     with:
       episode: after-exact
@@ -107,6 +115,7 @@ jobs:
       checked_source_sha: ${{ needs.w2-compensation-positive.outputs.checked_source_sha }}
   w3-fast-owner:
     name: "Verify W3 fast owner journey"
+    needs: ci-boundary-controls
     uses: ./.github/workflows/w3-owning-episode.yml
     with:
       episode: fast
@@ -131,7 +140,7 @@ jobs:
     uses: ./.github/workflows/w3-owning-qualification.yml
   native-controlled-dev:
     name: NativeControlledDEV, not Phase W release
-    needs: [source-checks, ci-boundary-controls, w1-native-positive, w1-owning-regressions, w2-compensation-positive, w2-compensation-controls, w3-fast-owner, w3-native-and-publication, combined-native-owners]
+    needs: [source-checks, ci-boundary-controls, w1-native-positive, w1-pressure, w1-owning-regressions, w2-compensation-positive, w2-compensation-controls, w3-fast-owner, w3-native-and-publication, combined-native-owners]
     if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 1
@@ -141,6 +150,7 @@ jobs:
           SOURCE_RESULT: ${{ needs.source-checks.result }}
           CI_BOUNDARIES: ${{ needs.ci-boundary-controls.result }}
           W1_POSITIVE: ${{ needs.w1-native-positive.result }}
+          W1_PRESSURE: ${{ needs.w1-pressure.result }}
           W1_REGRESSIONS: ${{ needs.w1-owning-regressions.result }}
           W2_POSITIVE: ${{ needs.w2-compensation-positive.result }}
           W2_CONTROLS: ${{ needs.w2-compensation-controls.result }}
@@ -149,7 +159,7 @@ jobs:
           COMBINED_NATIVE: ${{ needs.combined-native-owners.result }}
         run: |
           set -euo pipefail
-          for result in "$SOURCE_RESULT" "$CI_BOUNDARIES" "$W1_POSITIVE" "$W1_REGRESSIONS" "$W2_POSITIVE" "$W2_CONTROLS" "$W3_FAST" "$W3_NATIVE" "$COMBINED_NATIVE"; do
+          for result in "$SOURCE_RESULT" "$CI_BOUNDARIES" "$W1_POSITIVE" "$W1_PRESSURE" "$W1_REGRESSIONS" "$W2_POSITIVE" "$W2_CONTROLS" "$W3_FAST" "$W3_NATIVE" "$COMBINED_NATIVE"; do
             test "$result" = success
           done
           printf 'NativeControlledDEV passed for %s. PHASE_W_RELEASE_BLOCKED. W3-only installed qualification is separate and does not qualify W4/W5.\n' "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"

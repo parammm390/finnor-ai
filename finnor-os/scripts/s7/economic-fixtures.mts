@@ -1,6 +1,14 @@
 import {createHash} from 'node:crypto';
 import {ECONOMIC_COST_CATEGORIES} from '../../packages/shared-types/src/economic-attribution';
-const R=(id:string,owner='S2')=>({owner,id,version:'generated-source-v1',contentDigest:createHash('sha256').update(id).digest('hex')});
+const fixtureDigests = new Map<string, string>();
+const R = (id: string, owner = 'S2') => {
+  let contentDigest = fixtureDigests.get(id);
+  if (contentDigest === undefined) {
+    contentDigest = createHash('sha256').update(id).digest('hex');
+    if (fixtureDigests.size < 4096) fixtureDigests.set(id, contentDigest);
+  }
+  return { owner, id, version: 'generated-source-v1', contentDigest };
+};
 const era={registeredAt:'2020-01-01T00:00:00.000Z',assignmentAt:'2021-01-01T00:00:00.000Z',endpointAt:'2024-01-01T00:00:00.000Z',outcomeAccessNotBefore:'2024-01-01T00:00:00.000Z'};
 export function economicFixture(n:number,effect:number,mask?:number,random?:()=>number){
  const weights=Array.from({length:n},(_,i)=>i===n-1?(1000000000000n-BigInt(n-1)*(1000000000000n/BigInt(n))).toString():(1000000000000n/BigInt(n)).toString()).map(s=>(Number(s)/1e12).toFixed(12));

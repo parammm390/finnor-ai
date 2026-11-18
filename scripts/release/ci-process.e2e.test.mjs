@@ -9,6 +9,7 @@ import { createHash } from "node:crypto"
 import { changedPullRequestFiles, classifyPullRequestFiles, evaluateRequiredPrVerdict } from "./pr-verdict-policy.mjs"
 import { ownerExportPath, sourceCheckFailures, verifyCiProcess } from "./ci-process-policy.mjs"
 import { readGit } from "./worktree-state.mjs"
+import { drainNativeQueue } from "../../finnor-os/scripts/postz/w3/worker-protocol.mts"
 
 const root = fileURLToPath(new URL("../..", import.meta.url))
 const records = []
@@ -16,9 +17,9 @@ const startedAt = new Date().toISOString()
 test.after(() => {
   const evidence = process.env.FINNOR_CI_PROCESS_EVIDENCE_DIR
   if (!evidence) return
-  const files = ["scripts/release/ci-process.e2e.test.mjs", "scripts/release/pr-verdict-policy.mjs", "scripts/release/ci-process-policy.mjs", "scripts/release/worktree-state.mjs", ...readdirSync(join(root, ".github/workflows")).filter(name => /\.ya?ml$/.test(name)).sort().map(name => `.github/workflows/${name}`)]
+  const files = ["scripts/release/ci-process.e2e.test.mjs", "scripts/release/pr-verdict-policy.mjs", "scripts/release/ci-process-policy.mjs", "scripts/release/worktree-state.mjs", "finnor-os/scripts/postz/w3/worker-protocol.mts", ...readdirSync(join(root, ".github/workflows")).filter(name => /\.ya?ml$/.test(name)).sort().map(name => `.github/workflows/${name}`)]
   const inputs = Object.fromEntries(files.map(path => [path, createHash("sha256").update(readFileSync(join(root, path))).digest("hex")]))
-  const receipt = { schema: "finnor.ci-process-e2e.v1", status: records.length === 8 ? "PASS" : "FAIL", startedAt, finishedAt: new Date().toISOString(), inputs, records, rerun: "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs", applicationTestsExecuted: false }
+  const receipt = { schema: "finnor.ci-process-e2e.v1", status: records.length === 9 ? "PASS" : "FAIL", startedAt, finishedAt: new Date().toISOString(), inputs, records, rerun: "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs", applicationTestsExecuted: false }
   mkdirSync(evidence, { recursive: true })
   writeFileSync(join(evidence, "process-e2e.json"), `${JSON.stringify(receipt, null, 2)}\n`)
 })
@@ -154,6 +155,9 @@ test("actual process graph passes and damaged workflow copies are rejected", () 
     ["production-misses-security", "production-release.yml", text => text.replace(", security-release-gate", "")],
     ["production-cancelled", "production-release.yml", text => text.replace("cancel-in-progress: false", "cancel-in-progress: true")],
     ["missing-test-shard", "ci.yml", text => text.replace("shard: [1, 2, 3]", "shard: [1, 2]")],
+    ["feedback-worker-cache-export", "ci.yml", text => text.replace(
+      "cache-from: type=gha,scope=finnor-worker-${{ runner.arch }}",
+      "cache-from: type=gha,scope=finnor-worker-${{ runner.arch }}\n          cache-to: type=gha,scope=finnor-worker-${{ runner.arch }}")],
     ["s4-unpinned-interpreter", "ci.yml", text => text.replaceAll("3.12.13", "3.14.4")],
     ["s4-unhashed-dependencies", "ci.yml", text => text.replace("pip sync --require-hashes --only-binary :all:", "pip sync --only-binary :all:")],
     ["s4-backend-identity-omitted", "ci.yml", text => text.replace("assert sys.version.split()[0] == '3.12.13'", "pass")],
@@ -165,6 +169,13 @@ test("actual process graph passes and damaged workflow copies are rejected", () 
     ["missing-z4-install-validation", "ci.yml", text => text.replaceAll("ci-native.py install", "ci-native.py unchecked")],
     ["missing-public-z4", "ci.yml", text => text.replace("--phase=z4", "--phase=z3")],
     ["source-bypasses-workflow-validation", "source-checks.yml", text => text.replace("needs: validate", "needs: []")],
+    ["missing-worker-native-compile", "source-checks.yml", text => text.replace("FINNOR_CI_CHECK_LINUX_WORKER", "EXCLUDED_LINUX_WORKER")],
+    ["worker-migration-can-fail-open", "source-checks.yml", text => text.replace("if: ${{ inputs.backend }}\n        working-directory: finnor-os\n        env:\n          FINNOR_R1_EVIDENCE_DIR:", "if: ${{ inputs.backend }}\n        continue-on-error: true\n        working-directory: finnor-os\n        env:\n          FINNOR_R1_EVIDENCE_DIR:")],
+    ["phase-w-starts-before-boundaries", "phase-w-verification.yml", text => text.replace("needs: ci-boundary-controls", "needs: []")],
+    ["phase-w-pressure-is-optional", "phase-w-verification.yml", text => text.replace("needs: w1-pressure", "needs: w1-native-positive")],
+    ["w3-runtime-before-preflight", "w3-owning-episode.yml", text => text.replace(
+      /(- name: Check the complete W3 owner[\s\S]*?)(      - name: Prepare both exact scientific populations[\s\S]*?)(      - name: Exercise the actual original owner)/,
+      (_whole, preflight, runtime, owner) => runtime.trimStart() + "      " + preflight + owner)],
     ["missing-readiness-certification", "release-readiness.yml", text => text.replace("certification: [scope4, scope5]", "certification: [scope4]")],
     ["missing-source-aggregate", "source-checks.yml", text => text.replace("sourceCheckFailures", "ignoredSourceFailures")],
   ]
@@ -210,4 +221,24 @@ test("real owner-export paths reject traversal, absolute targets and escaping sy
     for (const target of rejected) assert.throws(() => ownerExportPath(owner, target))
     records.push({ case: "real-owner-export-containment", exactCandidateAccepted: true, invalidTargetsRejected: rejected.length, escapingSymlinkRejected: true })
   } finally { rmSync(directory, { recursive: true, force: true }) }
+})
+
+test("W3 queue driver distinguishes an empty queue on the last tick from a remaining obligation", async () => {
+  for (const remaining of [0, 1]) {
+    let pending = 2
+    const batches = []
+    const drain = drainNativeQueue(2, async () => ({ n: pending, due: pending ? new Date(0) : null }), async ticks => {
+      batches.push(ticks)
+      pending = batches.length === 1 ? 1 : remaining
+      return 1
+    })
+    if (remaining === 0) await drain
+    else await assert.rejects(drain, error => {
+      assert.equal(error.message, "W3_FINITE_QUEUE_PUMP_BOUND")
+      assert.deepEqual(error.cause, { maximumTicks: 2, usedTicks: 2, pendingCount: 1 })
+      return true
+    })
+    assert.deepEqual(batches, [2, 1])
+  }
+  records.push({ case: "w3-queue-pump-final-observation", acceptedWhenDrained: true, pendingRejected: true, maximumTicks: 2 })
 })

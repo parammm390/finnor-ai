@@ -3,7 +3,7 @@ import { createHash } from "node:crypto"
 import { spawnSync } from "node:child_process"
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { basename, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { verifyCiProcess } from "./ci-process-policy.mjs"
 
@@ -56,6 +56,36 @@ try {
     assert.equal(result.status, 0, receipt.commands.at(-1).output)
   }
   assert.deepEqual(graph.failures, [], graph.failures.join("\n"))
+  if (process.env.FINNOR_CI_CHECK_LINUX_WORKER === "true") {
+    assert.equal(process.platform, "linux")
+    const dockerfile = "finnor-os/Dockerfile.worker"
+    const native = "finnor-os/packages/governed-execution/native"
+    const recipe = readFileSync(join(root, dockerfile), "utf8")
+    const stage = recipe.split("\nFROM node-runtime AS s6-launcher-build\n")[1]?.split("\nFROM ")[0]
+    assert.ok(stage, "Worker Dockerfile must retain its native launcher build stage")
+    const sources = []
+    receipt.inputs[dockerfile] = hash(recipe)
+    for (const [, invocation] of stage.replace(/\\\r?\n\s*/g, " ").matchAll(/^RUN cc (.+)$/gm)) {
+      const args = invocation.split(/\s+/)
+      const output = args.indexOf("-o") + 1
+      const input = output + 1
+      assert.ok(output > 0 && /^\/opt\/linux-[\w-]+$/.test(args[output])
+        && /^\/opt\/linux-[\w-]+\.c$/.test(args[input]), "Unrecognized native worker compile recipe")
+      args[output] = join(temporary, basename(args[output]))
+      const source = join(native, basename(args[input]))
+      args[input] = source
+      sources.push(basename(source))
+      const result = spawnSync("cc", args, { cwd: root, encoding: "utf8", timeout: 15_000 })
+      receipt.commands.push({ command: "cc", args, exitCode: result.status, output: (result.stdout ?? "") + (result.stderr ?? "") })
+      assert.equal(result.status, 0, receipt.commands.at(-1).output || String(result.error))
+      receipt.inputs[source] = hash(readFileSync(join(root, source)))
+    }
+    assert.deepEqual(sources.sort(), ["linux-clock-sampler.c", "linux-launcher.c", "linux-specialist-origin-watch.c"])
+    for (const name of ["linux-lifetime.h", "linux-specialist.h"]) {
+      const path = join(native, name)
+      receipt.inputs[path] = hash(readFileSync(join(root, path)))
+    }
+  }
   receipt.status = "PASS"
 } finally {
   receipt.finishedAt = new Date().toISOString()

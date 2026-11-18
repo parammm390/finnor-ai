@@ -285,8 +285,9 @@ jobs:
           labels: |
             org.opencontainers.image.revision=${{ env.FINNOR_COMMIT_SHA }}
             ai.finnor.build-id=${{ env.FINNOR_BUILD_ID }}
+          # The protected release build on main publishes this cache.
+          # Candidate builds restore it before building and testing the exact image.
           cache-from: type=gha,scope=finnor-worker-${{ runner.arch }}
-          cache-to: type=gha,mode=max,scope=finnor-worker-${{ runner.arch }}
       - name: Build and smoke-test exact worker image without production credentials
         run: bash scripts/release/smoke-worker-image.sh
         env:
