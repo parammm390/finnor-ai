@@ -40,25 +40,7 @@ def finite_owner_failure(result):
     return observation
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--episode", required=True, choices=("before-exact", "after-exact",
-        "after-wrong-amount", "after-wrong-payee", "after-wrong-receipt"))
-    parser.add_argument("--output", required=True, type=Path)
-    parser.add_argument("--python", required=True, type=Path)
-    args = parser.parse_args()
-    assert args.output.is_absolute() and not args.output.exists(), "NEW_ABSOLUTE_OUTPUT_REQUIRED"
-    assert args.python.is_absolute() and args.python.is_file(), "EXPLICIT_SCIENTIFIC_PYTHON_REQUIRED"
-    node = shutil.which("node")
-    assert node and subprocess.check_output([node, "--version"], text=True).strip() == "v22.22.3"
-    args.output.mkdir(mode=0o700, parents=True)
-    report = args.output / "report"
-    report.mkdir(mode=0o700)
-    temporary = args.output / "tmp"
-    temporary.mkdir(mode=0o700)
-    owner = args.output / "owner"
-    command = [node, "--import=tsx", "scripts/v3/run-closing-e2e.mts", "--case", "workforce-compensation"]
-    selected = args.episode.removeprefix("after-") if args.episode.startswith("after-") else "exact"
+def compensation_preimages():
     manifest = json.loads((INPUTS / "manifest.json").read_text())
     assert manifest["schema"] == "finnor.w2.compensation-recovery-preimages.v2"
     atomic = manifest["atomicPublication"]
@@ -89,6 +71,39 @@ def main():
     assert fixed[atomic["target"]].count(atomic_hunk) == 1, "EXACT_ATOMIC_PUBLICATION_TREATMENT_REQUIRED"
     reversed_bytes[atomic["target"]] = fixed[atomic["target"]].replace(atomic_hunk, b"", 1)
     assert digest(reversed_bytes[atomic["target"]]) == atomic["beforeSha256"]
+    return fixed, reversed_bytes
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--check-preimages", action="store_true")
+    parser.add_argument("--episode", choices=("before-exact", "after-exact",
+        "after-wrong-amount", "after-wrong-payee", "after-wrong-receipt"))
+    parser.add_argument("--output", type=Path)
+    parser.add_argument("--python", type=Path)
+    args = parser.parse_args()
+    if args.check_preimages:
+        if any((args.episode, args.output, args.python)):
+            parser.error("--check-preimages takes no episode arguments")
+        fixed, baseline = compensation_preimages()
+        print(json.dumps({"status": "PASS", "verifiedSourceFiles": len(fixed),
+                          "baselineDeletions": sum(value is None for value in baseline.values())}))
+        return
+    if not all((args.episode, args.output, args.python)):
+        parser.error("--episode, --output and --python are required")
+    assert args.output.is_absolute() and not args.output.exists(), "NEW_ABSOLUTE_OUTPUT_REQUIRED"
+    assert args.python.is_absolute() and args.python.is_file(), "EXPLICIT_SCIENTIFIC_PYTHON_REQUIRED"
+    node = shutil.which("node")
+    assert node and subprocess.check_output([node, "--version"], text=True).strip() == "v22.22.3"
+    args.output.mkdir(mode=0o700, parents=True)
+    report = args.output / "report"
+    report.mkdir(mode=0o700)
+    temporary = args.output / "tmp"
+    temporary.mkdir(mode=0o700)
+    owner = args.output / "owner"
+    command = [node, "--import=tsx", "scripts/v3/run-closing-e2e.mts", "--case", "workforce-compensation"]
+    selected = args.episode.removeprefix("after-") if args.episode.startswith("after-") else "exact"
+    fixed, reversed_bytes = compensation_preimages()
     assert not subprocess.check_output(["git", "diff", "--name-only"], cwd=ROOT).strip(), "CLEAN_TRACKED_SOURCE_REQUIRED"
     record = {"schema": "finnor.w2.compensation-owner-comparison.v1", "status": "RUNNING",
         "episode": args.episode, "selected": selected, "startedAt": time.time(), "command": command,

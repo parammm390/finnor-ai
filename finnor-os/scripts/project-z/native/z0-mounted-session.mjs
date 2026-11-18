@@ -173,6 +173,18 @@ await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_REA
         { tenantDiffers: probe.tenantId !== parentA.tenantId, rowTenantMatches: probe.tenantId === foreign.tenant_id }, probe.tenantId !== parentA.tenantId && probe.tenantId === foreign.tenant_id);
     } catch (error) { check(c, "foreign.owner", "real credential for an existing foreign owner", "Auth admin + API", String(error?.message ?? error).slice(0, 200), false); }
   } else check(c, "foreign.owner", "a launcher-seeded owner of another tenant exists", "O-SQL users", "none", false);
+
+  // Resolve the investigation page and the original thread before timing the
+  // mounted read. Development route compilation must not consume the browser's
+  // budget for sequential authenticated scope and projection requests.
+  const investigationPage = await fetch(workUrl(threadA.id), { redirect: "error", signal: AbortSignal.timeout(120000) });
+  const investigationHtml = investigationPage.headers.get("content-type")?.startsWith("text/html");
+  await investigationPage.body?.cancel();
+  const threadBaseline = await owner.call(`/api/threads/${threadA.id}`);
+  check(c, "A.investigation-route-ready", "the native investigation page and original owner thread are reachable",
+    "frontend document and O-API thread", { pageStatus: investigationPage.status, threadStatus: threadBaseline.status },
+    investigationPage.status === 200 && investigationHtml && threadBaseline.status === 200);
+
   const workBaseline = await owner.call(`/api/works/${parentA.workId}`);
   const canonicalWork = workBaseline.body?.work?.work;
   witnessBefore = await witness(q, parentA);

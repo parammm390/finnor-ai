@@ -114,6 +114,8 @@ jobs:
               migration: message.match(/^Migration ([a-z0-9_]{1,140}\.sql) failed:/)?.[1] ?? null,
               ownerStatus: code(owner?.status),
               reasonCodes: Array.isArray(owner?.reasons) ? owner.reasons.map(code).filter(Boolean).slice(0, 12) : [],
+              gapCodes: Array.isArray(owner?.gaps) ? owner.gaps.map(value => typeof value === 'string'
+                ? code(value.split(':', 1)[0]) : null).filter(Boolean).slice(0, 12) : [],
               httpStatus: Number.isInteger(owner?.status) ? owner.status : null,
               responseCode: code(owner?.body?.code),
             } : null,

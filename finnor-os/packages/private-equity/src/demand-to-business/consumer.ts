@@ -200,11 +200,13 @@ async function assertGrowthNativeBasis(ctx: PeMutationContext, row: GrowthReques
 export async function readGrowthCut(ctx: PeMutationContext, requestId: string) {
   return growthTx(ctx, async c => {
     const row = await growthRequest(ctx, requestId, c);
-    const input = await loadGrowthInput(ctx, row, c, false), artifact = await growthArtifact(ctx, row, c);
+    const artifact = await growthArtifact(ctx, row, c);
     const observations = await growthEventOriginals(ctx, row, c), gaps = [...observations.gaps];
     let current = true;
-    try { await currentGrowthCut(ctx, row, c) } catch (error) {
+    let input: Awaited<ReturnType<typeof loadGrowthInput>>;
+    try { ({ input } = await currentGrowthCut(ctx, row, c)) } catch (error) {
       current = false; gaps.push(growthPredicate(error));
+      input = await loadGrowthInput(ctx, row, c, false);
     }
     if (artifact && checkOperatingProgram(input, artifact.body, row.identity, Date.parse(artifact.body.compiledAt))
       .disposition !== "CHECKED_DEVELOPMENT") throw Error("W4_ARTIFACT_ORIGINAL_CHECK_REJECTED");

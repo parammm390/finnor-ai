@@ -85,6 +85,14 @@ jobs:
       # for a UI-only change. No dependency directories are shared between jobs.
       - run: npm ci --no-audit --no-fund
       - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Verify installed-owner migrations before image work
+        if: ${{ inputs.backend }}
+        working-directory: finnor-os
+        env:
+          FINNOR_R1_EVIDENCE_DIR: ${{ runner.temp }}/finnor-r1-migration-preflight
+        run: |
+          timeout --signal=TERM --kill-after=10s 90s node --import=tsx scripts/r1/run-owners.mts runtime-migrations
+          timeout --signal=TERM --kill-after=10s 90s node --import=tsx scripts/r4/run-integrated.mts --migration-only --output "$RUNNER_TEMP/finnor-r4-migration-preflight"
       - name: Verify the actual backend inventory is partitioned exactly once
         id: shards
         continue-on-error: true

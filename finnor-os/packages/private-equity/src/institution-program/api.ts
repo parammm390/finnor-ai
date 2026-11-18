@@ -22,7 +22,7 @@ const programmeRead = id.extend({ purpose: workObservation });
 const submit = z.object({ workId: z.string().uuid(), workInputId: z.string().uuid(),
   grantIds: z.array(z.string().uuid()).min(1).max(16), idempotencyKey: z.string().min(1).max(160) }).strict();
 
-export async function readInstitutionCompiler(ctx: PeMutationContext, requestId: string) {
+export async function readInstitutionCompiler(ctx: PeMutationContext, requestId: string, purpose?: "WORK_OBSERVATION") {
   let q = await compilerRow(ctx, requestId);
   await authorizeInstitutionWork(ctx, q.work_id);
   q=await reconcileInstitutionCompilerDelivery(ctx,q);
@@ -31,7 +31,9 @@ export async function readInstitutionCompiler(ctx: PeMutationContext, requestId:
     wallDeadline: episode.wall_deadline.toISOString(), acquisitionCalls: episode.acquisition_calls,
     compilerAttempts: episode.attempts, monetaryCost: null, monetaryCostStatus: "UNKNOWN",
     coordinationCalls: episode.coordination_calls,
-    physicalCompute: await readInstitutionComputeCosts(ctx, q.work_id, episode.id),
+    physicalCompute: await readInstitutionComputeCosts(ctx, q.work_id, episode.id, {
+      excludeWorkObservations: purpose === "WORK_OBSERVATION",
+    }),
     aggregatePeakMemoryBytes: null, humanSeconds: null };
   if (["CANCELLED", "INVALIDATED"].includes(q.status)) return { requestId: q.id, workId: q.work_id,
     workRevision: q.work_input_id, revision: q.revision, status: q.status, artifact: null,
@@ -124,12 +126,13 @@ async function handleInstitutionOperationBody(ctx: PeMutationContext, operation:
           completionContracts:INSTITUTION_COMPLETION_CONTRACTS };
       }, true) };
     }
-    const { requestId } = (operation === "institution-read" ? programmeRead : id).parse(body);
+    const input: z.infer<typeof programmeRead> = (operation === "institution-read" ? programmeRead : id).parse(body);
+    const { requestId, purpose } = input;
     let q = await compilerRow(ctx, requestId);
     await authorizeInstitutionWork(ctx, q.work_id);
     if(operation==='institution-resume')q=await reconcileInstitutionCompilerDelivery(ctx,q);
     if (["institution-read", "institution-status", "institution-witness"].includes(operation))
-      return { status: 200, body: await readInstitutionCompiler(ctx, requestId) };
+      return { status: 200, body: await readInstitutionCompiler(ctx, requestId, purpose) };
     if (operation === "institution-cancel") {
       // Cancellation remains available after source-grant invalidation. This
       // historical status only decides whether to preserve an already completed

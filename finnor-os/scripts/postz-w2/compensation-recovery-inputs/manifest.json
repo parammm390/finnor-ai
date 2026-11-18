@@ -28,8 +28,8 @@
     "introducingCommit": "68f17825381eac740ee739f54c23cb38558c43ed",
     "hunkSource": "3.atomic-publication.source.txt",
     "hunkSha256": "e9def588415afd3ce2d61f997027b542ab54a9f2b92b8d4d0b3eaa0d9c6c5f42",
-    "fixedSha256": "6e4659131d4bb3718c334746b09d5cf492463a96185b01db34d546816079dd1f",
-    "beforeSha256": "3e630cdd80cda643096a98a93f9b7dc4576af564f6ef51cd07820b126bf91859",
+    "fixedSha256": "28621bbc7324a32ef839735e8320e2811753f8e46d229b211207b1bdb7254419",
+    "beforeSha256": "5685f1a86fa04ffd0fefdaaa7fd90057385b98aa82fcfa0b57022dc1367f0f0f",
     "receivingRevision": "installed-certificate-owner-guard-v1"
   }
 }

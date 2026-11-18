@@ -273,18 +273,18 @@ try {
   };
   const pump = async (maximum: number = NATIVE_GROWTH_LIMITS.maximumPumpTicks) => {
     assert(maximum >= 1 && maximum <= NATIVE_GROWTH_LIMITS.maximumPumpTicks);
-    for (let n = 0; n < maximum;) {
+    for (let n = 0;;) {
       checkBound();
       const pending = (await admin!.query(`SELECT count(*)::int n,min(run_at) due FROM finnor_os.jobs
        WHERE tenant_id=$1 AND status='queued' AND type IN
         ('compile_market_operating_program_v1','advance_market_operating_program_v1','run_workflow_step_v3')`, [tenant])).rows[0];
       if (!pending.n) return;
+      assert(n < maximum, "W4_ORIGINAL_QUEUE_PUMP_BOUND");
       const delay = Math.max(0, new Date(pending.due).getTime() - Date.now());
       assert(delay <= 30000, "W4_CONTINUATION_ORIGINAL_TIME_BOUND");
       if (delay) await new Promise(yes => setTimeout(yes, delay + 25));
       n += await tick(maximum - n);
     }
-    throw Error("W4_ORIGINAL_QUEUE_PUMP_BOUND");
   };
   // Only the S5 resource/clearing helpers are reused here. The W4 journey
   // produces its own logged, independently checked commercial measurements.

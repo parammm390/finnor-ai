@@ -2,13 +2,14 @@
  * No protected receipt, field law, payment or live acquisition is synthesized. */
 import assert from "node:assert/strict";
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, mkdtemp, readFile, writeFile, readdir, appendFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile, readdir, appendFile, rm } from "node:fs/promises";
 import { resolve, join, dirname } from "node:path";
 import { tmpdir } from "node:os";
 import { createServer } from "node:net";
 import { spawnSync, execFileSync, fork, type ChildProcess } from "node:child_process";
 import EmbeddedPostgres from "embedded-postgres";
 import pg from "pg";
+import { orderMigrationNames } from "../../packages/db/migration-order";
 import { httpFixture } from "./http-fixture.mts";
 import { createUpstreamFixtureSupport } from "../s5/owner-fixture.mts";
 import { economicFixture } from "../s7/economic-fixtures.mts";
@@ -17,6 +18,8 @@ const repo = resolve(import.meta.dirname, "../../..");
 const outputArg = process.argv.indexOf("--output"), out = process.argv[outputArg + 1];
 if (outputArg < 0 || !out?.startsWith("/")) throw Error("FRESH_ABSOLUTE_OUTPUT_REQUIRED");
 const resumeArg = process.argv.indexOf("--resume-mounted"), priorOutput = resumeArg < 0 ? null : process.argv[resumeArg + 1];
+const migrationOnly = process.argv.includes("--migration-only");
+assert(!migrationOnly || resumeArg < 0, "MIGRATION_PREFLIGHT_REQUIRES_FRESH_DATABASE");
 if (priorOutput && !priorOutput.startsWith("/")) throw Error("ABSOLUTE_RETAINED_MOUNTED_EVIDENCE_REQUIRED");
 const retained = priorOutput ? JSON.parse(await readFile(join(priorOutput, "retained-disposable-directory.json"), "utf8")) : null;
 if (retained && retained.stopped !== true) throw Error("ONLY_STOPPED_OWNED_DISPOSABLE_MAY_BE_RESUMED");
@@ -230,7 +233,7 @@ async function submitFixture(scope: any) {
   const accepted = ok(await http!.call(scope, "submit", request), 202);
   return { request, accepted };
 }
-try {
+campaign: try {
   const { migrate } = await import("../../packages/db/migrate");
   if (!retained) {
     await postgres.initialise(); await appendFile(join(directory, "postgresql.conf"), "\ntrack_commit_timestamp=on\n");
@@ -254,7 +257,7 @@ try {
     const candidateRestart = await migrate(adminUrl, [candidate]);
     assert.deepEqual(candidateRestart, []);
     const cumulativeUpgrade = await migrate(adminUrl), restart = await migrate(adminUrl);
-    assert.deepEqual(cumulativeUpgrade, names.filter(n => n >= "0184" && n !== candidate.name));
+    assert.deepEqual(cumulativeUpgrade, orderMigrationNames(names).filter(n => n >= "0184" && n !== candidate.name));
     assert.deepEqual(restart, []);
     const tracker = (await admin!.query("SELECT name FROM finnor_os._migrations ORDER BY name")).rows;
     assert.deepEqual(tracker.map(row => row.name), names);
@@ -268,6 +271,7 @@ try {
       priorResultsDigest: sha(await readFile(join(priorOutput!, "results.json"))),
       originalFailuresRetained: true, deadlinesRenewed: false });
   } else if (results.at(-1).status !== "PASS") throw Error("MIGRATION_SETUP_UNPASSED");
+  if (migrationOnly) break campaign;
   // Synthetic credentials only, scoped to this disposable cluster.
   await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD 'finnor_app'");
   await admin.query("ALTER ROLE finnor_worker LOGIN PASSWORD 'finnor_worker'");
@@ -415,7 +419,7 @@ try {
   results.push({ id: "campaign-setup-or-bound", status: "FAIL", message: String(e), stack: (e as Error).stack });
 } finally {
   process.exitCode = results.some(r => r.status === "FAIL") ? 1 : 0;
-  if (admin) await artifact("final-sql.json", {
+  if (admin && !migrationOnly) await artifact("final-sql.json", {
     runs: (await admin.query("SELECT * FROM finnor_os.r4_runs").catch(() => ({ rows: [] }))).rows,
     attempts: (await admin.query("SELECT * FROM finnor_os.r4_attempts").catch(() => ({ rows: [] }))).rows,
     episodes: (await admin.query("SELECT * FROM finnor_os.r4_episodes").catch(() => ({ rows: [] }))).rows,
@@ -426,7 +430,8 @@ try {
   });
   await save(); await queue?.stop?.().catch(() => undefined); await http?.close();
   await (await import("@finnor/db")).closePool(); await admin?.end(); await postgres.stop().catch(() => undefined);
-  await artifact("retained-disposable-directory.json", { directory, databasePort: port, stopped: true,
+  if (migrationOnly) await rm(directory, { recursive: true, force: true });
+  else await artifact("retained-disposable-directory.json", { directory, databasePort: port, stopped: true,
     qualification: "OWNED_DISPOSABLE_FILES_RETAINED_NOT_PRODUCTION" });
   process.exitCode = results.some(r => r.status === "FAIL") ? 1 : 0;
 }

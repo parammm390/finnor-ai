@@ -65,7 +65,8 @@ const value=(result:any,key:string)=>result.derivation?.result?.outputs?.[key]?.
 try{
  Object.assign(process.env,{FINNOR_TEST_MANAGED_EXTENSIONS:'omit',AUTH_DEV_BYPASS:'1',NODE_ENV:'test',FINNOR_P4_PROFILE:'ordinary_disposable'});
  const port=await new Promise<number>((yes,no)=>{const s=createServer();s.once('error',no);s.listen(0,'127.0.0.1',()=>{const a=s.address();if(!a||typeof a==='string')return no(Error('port'));s.close(()=>yes(a.port));});});
- postgres=disposable.attach(new EmbeddedPostgres({databaseDir:directory,user:'finnor',password:'finnor',port,persistent:true,onLog:()=>undefined}));
+ postgres=disposable.attach(new EmbeddedPostgres({databaseDir:directory,user:'finnor',password:'finnor',port,persistent:true,
+  postgresFlags:['-h','127.0.0.1','-k',''],onLog:()=>undefined}));
  await postgres.initialise();await appendFile(join(directory,'postgresql.conf'),'\ntrack_commit_timestamp='+(process.env.FINNOR_P4_TRACK_COMMITS==='off'?'off':'on')+'\n');await postgres.start();await postgres.createDatabase('p4_e2e');
  const adminUrl=`postgres://finnor:finnor@127.0.0.1:${port}/p4_e2e`;migrationNames=await migrate(adminUrl);migrationCount=migrationNames.length;
  admin=new pg.Client({connectionString:adminUrl});await admin.connect();
@@ -144,7 +145,7 @@ try{
  await test('B-atomic-endpoint-admission',{},'Independent local HTTP observer and two workers prove quota, retry, identity/schema/usage and parent liability limits; no failed pre-admission physical call',()=>story.endpointAdmission(environment));
  await test('C-recovery-currentness-outstanding',{},'Cold worker, cancellation/Work/fence races preserve every physical attempt and liability while late results cannot publish private/current incumbent',()=>story.recoveryCurrentness(environment));
  }
-} catch(e) { results.push({id:'setup',status:'FAIL',observed:{message:String(e),stack:(e as Error).stack}}); }
+} catch(e) { results.push({id:'setup',status:'FAIL',observed:{message:String(e),stack:e instanceof Error?e.stack:null}}); }
 finally {
  try{await closeDisposablePostgres(disposable,[
   ...physicalQueues.reverse().map(physical=>()=>physical.close()),closePool,async()=>admin?.end()

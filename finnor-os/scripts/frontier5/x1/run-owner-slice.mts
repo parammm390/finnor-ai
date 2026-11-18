@@ -1066,7 +1066,7 @@ try {
       const processes=execFileSync('ps',['-axo','pid=,ppid=,command='],{encoding:'utf8',timeout:5000,maxBuffer:8*1024*1024})
         .split('\n').map(line=>/^\s*(\d+)\s+(\d+)\s+(.*)$/.exec(line)).filter(Boolean)
         .map(match=>({pid:Number(match![1]),ppid:Number(match![2]),argv:match![3]!}));
-      const root=processes.find(p=>p.ppid===worker!.pid&&p.argv.includes('/tsx/dist/cli.mjs')
+      const root=processes.find(p=>p.ppid===worker!.pid&&p.argv.includes('/tsx/dist/loader.mjs')
         &&p.argv.includes('/scripts/frontier5/x1/checker-command.mts'));
       if(root){
         const owned=new Set([root.pid]);for(let cursor=0;cursor<3;cursor++)for(const p of processes)if(owned.has(p.ppid))owned.add(p.pid);

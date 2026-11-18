@@ -112,7 +112,9 @@ export function createNativeGrowthJourney(c: NativeGrowthJourneyContext) {
   const prepare = () => prepared ??= (async () => {
     validFrom = new Date(Date.now() - 1000).toISOString();
     deadline = new Date(Date.now() + 4 * 3600000).toISOString();
-    closesAt = new Date(Date.now() + 18 * 60000).toISOString();
+    // Declare the original test window once, before fitting. It must cover the
+    // registered native run, whose own wall bound still stops late execution.
+    closesAt = new Date(Date.now() + NATIVE_GROWTH_LIMITS.maximumMilliseconds).toISOString();
     // Exercise canonical participant consent and original S1 authorship before
     // paying the real S3 fitting cost. These remain the actual later originals.
     evidenceProtocols.operator = await invite("OPERATOR", operator, ["EVIDENCE"], ["CAPABILITY"], "operator-evidence");

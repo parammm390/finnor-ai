@@ -215,12 +215,15 @@ for (const pin of frontend.files) {
   const path = "frontend/" + pin.path;
   assert(!files.has(path));
   const actual = await readFile(join(output, path)), mode = (await lstat(join(output, path))).mode & 0o7777;
-  assert.equal(hash(actual), pin.sha256); assert.equal(mode, pin.mode);
+  assert.equal(hash(actual), pin.sha256, "W3_FRONTEND_FILE_DIGEST_CHANGED: " + path);
+  assert.equal(mode, pin.mode, "W3_FRONTEND_FILE_MODE_CHANGED: " + path);
   files.set(path, { ...pin, path, kind: "COMPILED_FRONTEND" }); outputBytes += actual.length;
   checkBound();
 }
 files.set(frontendManifestPath, { path: frontendManifestPath, bytes: frontendBytes.length,
   sha256: hash(frontendBytes), mode: 0o444, kind: "FRONTEND_CUSTODY_MANIFEST" });
+assert.equal((await lstat(join(output, frontendManifestPath))).mode & 0o7777, 0o444,
+  "W3_FRONTEND_MANIFEST_MODE_CHANGED");
 outputBytes += frontendBytes.length;
 for (const link of frontend.links) links.set("frontend/" + link.path, { ...link, path: "frontend/" + link.path });
 checkBound();

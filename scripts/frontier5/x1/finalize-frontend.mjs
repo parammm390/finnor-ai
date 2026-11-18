@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { createReadStream, existsSync } from 'node:fs';
-import { readFile, writeFile, readdir, lstat, realpath, readlink, unlink, symlink } from 'node:fs/promises';
+import { readFile, writeFile, readdir, lstat, realpath, readlink, unlink, symlink, chmod } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {frontendTracingLayout} from './frontend-tracing-root.mjs';
@@ -77,7 +77,9 @@ const entry=files.find(row=>row.path===join('runtime',projectPath,'server.js'));
 assert.ok(entry,'actual compiled standalone server');
 assert.equal((await readFile(join(dirname(join(output,entry.path)),distDir,'BUILD_ID'),'utf8')).trim(),buildId);
 const hostBytes=git('show',source.commit+':scripts/frontier5/x1/frontend-host.mjs');
-await writeFile(join(output,'frontend-host.mjs'),hostBytes,{flag:'wx',mode:0o444});
+const hostPath=join(output,'frontend-host.mjs');
+await writeFile(hostPath,hostBytes,{flag:'wx',mode:0o400});
+await chmod(hostPath,0o444);
 files.push({path:'frontend-host.mjs',bytes:hostBytes.length,mode:0o444,sha256:sha(hostBytes)});outputBytes+=hostBytes.length;
 const nextPath=files.find(row=>/\/node_modules\/next\/package.json$/.test(row.path));assert.ok(nextPath);
 const manifest={schema:w2?'finnor.postz.w2.frontend-installation.v1':'finnor.x1.frontend-installation.v1',mode:'DEVELOPMENT_ONLY',source,sourcePreimages,generatedInputDeltas,
@@ -95,7 +97,8 @@ const permittedDirty=new Set([...source.dirty.split('\n').filter(Boolean).map(li
   ...generatedInputDeltas.map(delta=>delta.path)]);
 assert.ok(git('status','--porcelain=v1','-uall').toString().trimEnd().split('\n').filter(Boolean)
   .every(line=>permittedDirty.has(line.slice(3))),'only observed original dirty paths and exact Next generated type inputs');
-await writeFile(manifestPath,JSON.stringify(manifest,null,2)+'\n',{flag:'wx',mode:0o444});
+await writeFile(manifestPath,JSON.stringify(manifest,null,2)+'\n',{flag:'wx',mode:0o400});
+await chmod(manifestPath,0o444);
 console.log(JSON.stringify({event:'X1_FRONTEND_FINALIZED',output,source,buildId,entrypoint:entry.path,
   actualFiles:files.length,links:links.length,linkRepairs:linkRepairs.length,outputBytes,generatedInputDeltas,
   originalCompileRetainedWithoutRebuild:true,productionActive:false}));

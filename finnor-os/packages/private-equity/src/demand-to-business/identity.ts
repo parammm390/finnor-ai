@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+import { createReadStream } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { bytesHash, hash } from "./contracts";
@@ -19,8 +21,10 @@ export async function growthIdentity() {
   const sources = await Promise.all(files.map(async path => ({ path,
     sha256: bytesHash(await readFile(resolve(process.cwd(), path))) })));
   const methodDigest = hash(sources), checkerDigest = sources.find(f => f.path.endsWith("/checker.ts"))!.sha256;
+  const nodeHash = createHash("sha256");
+  for await (const chunk of createReadStream(process.execPath)) nodeHash.update(chunk);
   const runtimeDigest = hash({ node: process.version, abi: process.versions.modules, platform: process.platform,
-    architecture: process.arch, nodeSha256: bytesHash(await readFile(process.execPath)),
+    architecture: process.arch, nodeSha256: nodeHash.digest("hex"),
     lockSha256: bytesHash(await readFile(resolve(process.cwd(), "package-lock.json"))),
     profile: process.env.FINNOR_W4_PROFILE ?? "UNCONFIGURED" });
   const combined = hash({ methodDigest, checkerDigest, runtimeDigest });

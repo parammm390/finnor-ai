@@ -40,6 +40,7 @@ COPY finnor-os/apps ./apps
 COPY finnor-os/packages ./packages
 COPY finnor-os/scripts ./scripts
 COPY package-lock.json /app/package-lock.json
+COPY vendor/finnor-picomatch-4.0.7-finnor.1.tgz /app/vendor/finnor-picomatch-4.0.7-finnor.1.tgz
 COPY infra/deployment/production.contract.json /app/infra/deployment/production.contract.json
 COPY scripts/release/production-mutation-guard.mjs scripts/release/release-policy.mjs scripts/release/worktree-state.mjs /app/scripts/release/
 COPY src/components/centropy/canvas/ElicitationProtocolReview.tsx /app/src/components/centropy/canvas/ElicitationProtocolReview.tsx

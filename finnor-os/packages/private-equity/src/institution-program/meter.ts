@@ -72,14 +72,18 @@ export async function persistInstitutionCompute(ctx: PeMutationContext, input: {
       businessWorkCredit: 0, qualification: "COMPUTE_ATTRIBUTION_NOT_FINANCIAL_VALUE_OR_CAPACITY_PROOF" } });
 }
 
-export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId: string, compilerEpisodeId: string) {
+export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId: string, compilerEpisodeId: string,
+  options?: { excludeWorkObservations: boolean }) {
   const native = await tx(ctx, async c => (await c.query<{ id: string }>(`SELECT id::text
     FROM finnor_os.p1_episodes WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3`,
   [ctx.auth.tenantId, principal(ctx), workId])).rows[0], true);
   const episodeIds = [...new Set([compilerEpisodeId, ...(native ? [native.id] : [])])];
   const history = await listStoredWorkCompute(ctx, { workId, episodeIds, schema: "finnor.x1.native-compute.v1" });
-  const apiHistory=await listStoredWorkCompute(ctx,{workId,episodeIds:[compilerEpisodeId],schema:'finnor.x1.api-compute.v1'});
-  const preparationHistory=await listStoredWorkPreparationCompute(ctx,workId);
+  // The mounted execution view must not change as a side effect of reading it.
+  // Platform observations remain in the economic ledger and the full cost read.
+  const apiHistory=await listStoredWorkCompute(ctx,{workId,episodeIds:[compilerEpisodeId],schema:'finnor.x1.api-compute.v1',
+    excludeWorkObservations: options?.excludeWorkObservations});
+  const preparationHistory=await listStoredWorkPreparationCompute(ctx,workId,options);
   const originalParent=await tx(ctx,async c=>(await c.query<{parent_reservation:unknown}>(`SELECT parent_reservation
     FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND id=$4`,
     [ctx.auth.tenantId,principal(ctx),workId,compilerEpisodeId])).rows[0]?.parent_reservation??null,true);

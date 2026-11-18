@@ -30,7 +30,8 @@ export async function prepareCommercialMeasurementFixtures(e: {
   await e.artifact(e.namespace + "/controlled-producer-observation.json", {
     schema: "finnor.w4.controlled-producer-observation.v1", startedAt, sourcePins,
     exitCode: generated.status, signal: generated.signal, rawStdoutUtf8: generated.stdout,
-    stderr: generated.stderr.slice(0, 2048), nativeCalls: 0, fieldValidated: false });
+    stderr: generated.stderr?.slice(0, 2048) ?? null, spawnError: (generated.error as NodeJS.ErrnoException | undefined)?.code ?? null,
+    nativeCalls: 0, fieldValidated: false });
   assert.equal(generated.status, 0, "W4_CONTROLLED_MEASUREMENT_PRODUCER_FAILED");
   assert.equal(generated.signal, null);
   const packet = JSON.parse(generated.stdout);
@@ -40,7 +41,8 @@ export async function prepareCommercialMeasurementFixtures(e: {
     input: generated.stdout, encoding: "utf8", timeout: 20000, maxBuffer: 1024 ** 2 });
   await e.artifact(e.namespace + "/controlled-independent-check.json", {
     sourcePins, exitCode: checked.status, signal: checked.signal, rawStdoutUtf8: checked.stdout,
-    stderr: checked.stderr.slice(0, 2048), qualificationCredit: false });
+    stderr: checked.stderr?.slice(0, 2048) ?? null, spawnError: (checked.error as NodeJS.ErrnoException | undefined)?.code ?? null,
+    qualificationCredit: false });
   assert.equal(checked.status, 0, "W4_CONTROLLED_MEASUREMENT_INDEPENDENT_CHECK_FAILED");
   assert.equal(checked.signal, null);
   const check = JSON.parse(checked.stdout);

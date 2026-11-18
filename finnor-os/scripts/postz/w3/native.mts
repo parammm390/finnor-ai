@@ -1767,8 +1767,13 @@ try {
           return { order, view, recipient: recipient.snapshot() };
         });
     }
-    for (let n = dependencyChallenge ? 1 : 0; n < terms.length; n++) await deliver(n);
-    await pump();
+    for (let n = dependencyChallenge ? 1 : 0; n < terms.length; n++) {
+      await deliver(n);
+      // Process this service day's original reports while its controlled
+      // clock is current. The next day cannot accumulate unprocessed
+      // continuations behind the same finite queue observation budget.
+      await pump();
+    }
     const retireAt = new Date(firstDay + 6 * day + 11 * 3600000 + 120000).toISOString();
     await setServiceClock(retireAt);
     for (const term of dependencyChallenge ? terms.slice(1) : terms) await report(term, "PROFESSIONAL", { kind: "OBSERVATION", criterionId: "retired-access",

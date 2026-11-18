@@ -67,18 +67,27 @@
     "eslint-config-next": "^16.4.5",
     "minimatch": "file:vendor/finnor-minimatch-compat-11.0.1-finnor.2.tgz",
     "openapi-typescript": "7.13.0",
+    "picomatch": "file:vendor/finnor-picomatch-4.0.7-finnor.1.tgz",
     "tailwindcss": "^3.4.1",
     "typescript": "^5",
     "vitest": "^4.1.12"
   },
   "overrides": {
+    "picomatch": "$picomatch",
+    "anymatch": {
+      "picomatch": "file:../../vendor/finnor-picomatch-2.3.2-finnor.1.tgz"
+    },
     "js-yaml": "4.3.2",
     "braces": "$braces",
     "chokidar": {
       "braces": "file:../../vendor/finnor-braces-3.0.4-finnor.1.tgz"
     },
     "micromatch": {
-      "braces": "file:../../vendor/finnor-braces-3.0.4-finnor.1.tgz"
+      "braces": "file:../../vendor/finnor-braces-3.0.4-finnor.1.tgz",
+      "picomatch": "file:../../vendor/finnor-picomatch-2.3.2-finnor.1.tgz"
+    },
+    "readdirp": {
+      "picomatch": "file:../../vendor/finnor-picomatch-2.3.2-finnor.1.tgz"
     },
     "brace-expansion@^1": "1.1.21",
     "brace-expansion@^5": "5.0.12",

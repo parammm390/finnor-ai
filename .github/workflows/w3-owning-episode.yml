@@ -117,6 +117,7 @@ jobs:
             ${{ runner.temp }}/w3-owner/source-cut.json
             ${{ runner.temp }}/w3-owner/canonical-actor-roles.json
             ${{ runner.temp }}/w3-owner/terminal-failure.json
+            ${{ runner.temp }}/w3-owner/queue-pump-bound.json
             ${{ runner.temp }}/w3-owner/terminal-summary.json
             ${{ runner.temp }}/w3-owner/publication/
           if-no-files-found: error

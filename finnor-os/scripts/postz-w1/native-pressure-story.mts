@@ -194,11 +194,18 @@ export async function nativePressureStory(e: any) {
     if (sourceMissJobs.length) assert(Date.parse(sourceMissJobs[0].run_at) < Date.parse(aJob.run_at));
     const cParent = before.p1_requests.find((row: any) => row.id === c.program.programId);
     const cEpisode = before.p1_episodes.find((row: any) => row.id === cParent.episode_id);
-    const deadline = Date.parse(cEpisode.deadline_at), targetStart = deadline - 20000;
-    assert(Date.now() < targetStart, "Original C source setup must leave a real pressure interval");
+    const deadline = Date.parse(cEpisode.deadline_at);
+    const youngestAged = Date.parse(bJob.run_at) + executionQueue.identity.scheduler.priorityAgingSeconds * 1000;
+    // The hold may start as soon as the real jobs have aged and the original
+    // queue lease can span D's deadline. Slow source setup may finish inside
+    // that window. The observations below still require a real pre-deadline
+    // claim, contention, cancellation and a subsequent expired delivery.
+    const targetStart = Math.max(deadline - 20_000, youngestAged);
+    assert(Math.max(targetStart, Date.now()) < deadline, "Original source setup exhausted the pressure window");
     watch = await observer.arm(executionQueue, { tenantId: f.f.tenant, searchId: aSearch,
       kind: "W1_BOUNDARY_CURRENTNESS_CHECKED", boundary: "USE", unitKind: "EXECUTE_P1" });
     await new Promise<void>(resolve => setTimeout(resolve, Math.max(0, targetStart - Date.now())));
+    assert(Date.now() < deadline, "The original pressure window closed before the worker claim");
     const paused = await watch.drive(), held = await internalOwnerCut(e, f.f.tenant);
     assert(Date.now() < deadline, "Pause must actually precede C's original deadline");
     assert.equal(held.p2_attempts.length, 1, "Only A may have physical intent at the controlled cut");
@@ -255,7 +262,14 @@ export async function nativePressureStory(e: any) {
     assert.equal(missed.p2_attempts.filter((row: any) => row.search_id === cSearch).length, 0);
     const cCancelledAfterMiss = await http.call("economic-orchestration-cancel", { searchId: cSearch });
     assert.equal(cCancelledAfterMiss.status, 200, JSON.stringify(cCancelledAfterMiss));
-    assert.equal(await driveNativeProgram(e.admin, executionQueue, b.program.programId, performance.now()), "TESTED");
+    try {
+      assert.equal(await driveNativeProgram(e.admin, executionQueue, b.program.programId, performance.now()), "TESTED");
+    } catch (error) {
+      await artifact("unaffected-programme-failure.json", {
+        programmeId: b.program.programId, searchId: bSearch, cut: await internalOwnerCut(e, f.f.tenant),
+      });
+      throw error;
+    }
     const unaffected = await http.call("program-read", { programId: b.program.programId });
     assert.equal(unaffected.status, 200, JSON.stringify(unaffected));
     assert.equal(unaffected.body.program.result.values.netEquity.value, "43");
