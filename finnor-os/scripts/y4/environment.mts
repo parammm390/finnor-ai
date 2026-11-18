@@ -8,6 +8,7 @@ import {tmpdir} from 'node:os';
 import {isAbsolute,join,relative,resolve} from 'node:path';
 import {strict as assert} from 'node:assert';
 import {migrate} from '../../packages/db/migrate';
+import {orderMigrationNames} from '../../packages/db/migration-order';
 import {closePool} from '@finnor/db';
 
 const repo=resolve(import.meta.dirname,'../../..');
@@ -101,7 +102,7 @@ export async function startEnvironment(evidence:string,options:{migrationsOnly?:
   const upgrade=await migrate(adminUrl,files),replay=await migrate(adminUrl,files);
   const retained=(await admin.query('SELECT id,type,payload,status,protocol_version,attempts,claim_fence FROM finnor_os.jobs WHERE id=$1',[old.id])).rows[0];
   assert.deepEqual(retained,old);assert.deepEqual(replay,[]);
-  assert.deepEqual(upgrade,files.filter(f=>!prefix.some(p=>p.name===f.name)).map(f=>f.name));
+  assert.deepEqual(upgrade,orderMigrationNames(files.map(f=>f.name)).filter(name=>name>baseHead));
   const historyAfter=(await admin.query('SELECT * FROM finnor_os.work_query_executions WHERE work_id=$1 ORDER BY intent',[historyWork])).rows;
   assert.deepEqual(historyAfter,historyBefore);
   assert.equal((await admin.query("SELECT convalidated FROM pg_constraint WHERE conrelid='finnor_os.work_query_executions'::regclass AND conname='work_query_executions_intent_check'")).rows[0].convalidated,true);

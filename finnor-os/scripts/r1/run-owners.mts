@@ -64,7 +64,8 @@ campaign: try{
  process.env.NODE_ENV='test';process.env.FINNOR_TEST_MANAGED_EXTENSIONS='omit';process.env.FINNOR_P4_PROFILE='ordinary_disposable';process.env.AUTH_DEV_BYPASS='0';
  process.env.FINNOR_S4_POLICY_STORE=join(evidence,'ordinary-policies');process.env.FINNOR_S3_MODEL_STORE=join(evidence,'ordinary-models');process.env.FINNOR_M1_STORE=join(evidence,'ordinary-producer');
  const port=await new Promise<number>((yes,no)=>{const s=createServer();s.once('error',no);s.listen(0,'127.0.0.1',()=>{const a=s.address();if(!a||typeof a==='string')return no(Error('Local database port'));s.close(()=>yes(a.port));});});
- postgres=new EmbeddedPostgres({databaseDir:directory,user:'finnor',password:'finnor',port,persistent:false,onLog:()=>undefined});
+ postgres=new EmbeddedPostgres({databaseDir:directory,user:'finnor',password:'finnor',port,persistent:false,
+  postgresFlags:['-h','127.0.0.1','-k',''],onLog:()=>undefined});
  await artifact('database-lifecycle.json',{directory,port,database:'r1_e2e',role:'finnor_app',status:'INITIALIZING',retention:'Disposable database; exact SQL/input/source receipts retained separately'});
  await postgres.initialise();await appendFile(join(directory,'postgresql.conf'),'\ntrack_commit_timestamp=on\n');await postgres.start();await postgres.createDatabase('r1_e2e');
  const postmasterPid=Number((await readFile(join(directory,'postmaster.pid'),'utf8')).split('\n')[0]);await artifact('database-lifecycle.json',{directory,port,database:'r1_e2e',role:'finnor_app',postmasterPid,status:'RUNNING'});

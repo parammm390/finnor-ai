@@ -19,6 +19,7 @@ import {
   receiveWork, updateEmployeeConversationThreadContext,
 } from "@finnor/db";
 import { migrate } from "../../packages/db/migrate";
+import { orderMigrationNames } from "../../packages/db/migration-order";
 import { MIGRATIONS } from "../../packages/db/migrations-bundle";
 import { CURRENT_MIGRATION_HEAD } from "../../packages/db/migration-head";
 import { putAllocationResource } from "../../packages/private-equity/src/allocation-store";
@@ -254,8 +255,9 @@ try {
       "\ntrack_commit_timestamp=on\nmax_wal_size='256MB'\nmin_wal_size='80MB'\ncheckpoint_timeout='30s'\n");
     await database.start(); databaseStarted = true; await database.createDatabase("x2_intake");
     const adminUrl = `postgres://x2_owner:${password}@127.0.0.1:${databasePort}/x2_intake`;
-    const migrations = await Promise.all((await readdir(join(runtime, "finnor-os/packages/db/migrations")))
-      .filter(name => name.endsWith(".sql")).sort().map(async name => ({ name,
+    const names = orderMigrationNames((await readdir(join(runtime, "finnor-os/packages/db/migrations")))
+      .filter(name => name.endsWith(".sql")));
+    const migrations = await Promise.all(names.map(async name => ({ name,
         sql: await readFile(join(runtime, "finnor-os/packages/db/migrations", name), "utf8") })));
     assert.deepEqual(MIGRATIONS, migrations); assert.equal(CURRENT_MIGRATION_HEAD, migrations.at(-1)?.name);
     const applied = await bounded(migrate(adminUrl, migrations), 120000, "CANONICAL_MIGRATION_DEADLINE");

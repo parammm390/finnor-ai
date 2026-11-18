@@ -106,11 +106,13 @@ export function verifyCiProcess(root) {
   }
   require(workflowJob(sourceWorkflow, "governance").includes("npm run test:release") && !workflowJob(sourceWorkflow, "source").includes("npm run test:release"), "governance fixtures must run once in parallel with source checks")
   const source = workflowJob(sourceWorkflow, "source")
+  const migrationGate = source.match(/^      - name: Rehearse the worker migration upgrade[^\n]*\n([\s\S]*?)(?=^      - |(?![\s\S]))/m)?.[1] ?? ""
   require(workflowJob(sourceWorkflow, "validate").includes("FINNOR_CI_CHECK_LINUX_WORKER: ${{ inputs.backend }}")
-    && source.includes("scripts/r1/run-owners.mts runtime-migrations")
-    && /- name: Rehearse the worker migration upgrade[^\n]*\n        if: \$\{\{ inputs\.backend \}\}\n        working-directory: finnor-os\n        env:\n          FINNOR_R1_EVIDENCE_DIR: [^\n]+\n        run: [^\n]+runtime-migrations/.test(source)
+    && migrationGate.includes("if: ${{ inputs.backend }}") && !migrationGate.includes("continue-on-error:")
+    && migrationGate.includes("scripts/r1/run-owners.mts runtime-migrations")
+    && migrationGate.includes("scripts/r4/run-integrated.mts --migration-only")
     && source.indexOf("runtime-migrations") < source.indexOf("id: backend"),
-    "Backend source preflight must compile native image inputs and exercise the actual R1 migration upgrade before expensive work")
+    "Backend source preflight must compile native image inputs and exercise both installed owner migration upgrades before expensive work")
   const phaseW = workflows["phase-w-verification.yml"] ?? ""
   require(workflowJob(phaseW, "ci-boundary-controls").includes("needs: source-checks\n"),
     "Phase W boundary controls must follow source preflight")
