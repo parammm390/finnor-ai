@@ -240,6 +240,33 @@ try {
     completeCosts: false, sourceClass: "CONTROLLED", assignmentVerified: false });
   assert.equal(patch.autonomous, false);
   steps.push({ case: "W046/W047-gating/W048", status: "PASS" });
+  for (const kind of ["HUMAN", "DIGITAL"] as const) {
+    const limited = fixture("CUSTOMER_RESOLUTION", 2);
+    const selectedRole = limited.organization.roles.find((r: any) => r.kind === kind && r.capabilities.includes("prepare_evidence"));
+    assert(selectedRole);
+    for (const role of limited.organization.roles) if (role !== selectedRole) role.availableSeconds = role.committedSeconds;
+    selectedRole.availableSeconds = selectedRole.committedSeconds + 1200;
+    limited.mandate.maxAddedOperationHumanSeconds = 2400;
+    const compiled = constructOrganizationTransformation(limited);
+    const changed = compiled.alternatives.filter(a => a.kind !== "RETAIN");
+    const assigned = changed.map(a => ({ alternativeId: a.id, seconds: a.processes.reduce((sum, process) =>
+      sum + process.nodes.filter(n => !limited.organization.processes.find((p: any) => p.id === process.id)
+        .nodes.some((old: any) => old.id === n.id)).reduce((total, n) =>
+          total + n.effortSeconds * 40, 0), 0) }));
+    const ample = structuredClone(limited);
+    ample.organization.roles.find((r: any) => r.id === selectedRole.id).availableSeconds += 1200;
+    const excessive = constructOrganizationTransformation(ample);
+    excessive.originalDigest = organizationDigest(limited);
+    for (const alternative of excessive.alternatives) alternative.roles = structuredClone(limited.organization.roles);
+    const rejected = checkOrganizationTransformation(limited, excessive);
+    steps.push({ case: "joint-role-capacity", kind, capacitySeconds: 1200, assigned,
+      independentlyCheckedExcess: rejected, status: changed.length > 0 && assigned.every(a => a.seconds <= 1200)
+        && rejected.status !== "CHECKED" ? "PASS" : "FAIL" });
+    assert(changed.length > 0, "Available capacity must still permit a bounded nontrivial alternative");
+    assert(assigned.every(a => a.seconds <= 1200), "Constructed gates must share the role's remaining capacity");
+    assert.notEqual(rejected.status, "CHECKED", "The independent checker must reject aggregate per-role overload");
+    assert.equal(checkOrganizationTransformation(limited, compiled).status, "CHECKED");
+  }
   await writeFile(resolve(output, "program.json"), JSON.stringify(program, null, 2) + "\n", { flag: "wx" });
   passed = true;
 } finally {

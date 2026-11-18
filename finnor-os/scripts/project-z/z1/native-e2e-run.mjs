@@ -11,6 +11,7 @@ import { getPool, withTenantTransaction } from "../../../packages/db/index.ts";
 import { appendEvidenceVersionTx } from "../../../packages/memory/src/evidence.ts";
 import { authorize } from "../../../packages/private-equity/src/owner-context.ts";
 import { originalObligationsTx, fenceTx, rowTx } from "../../../packages/private-equity/src/project-z/z1-shared-work/native-store.ts";
+import { nativeSharedWorkPorts } from "../../../packages/private-equity/src/project-z/z1-shared-work/native.ts";
 import { currentWorkInputTx } from "../../../packages/private-equity/src/project-z/z1-shared-work/resources.ts";
 import { UUID, PinSchema, RootSchema, BudgetSchema, ConsumerSchema, DeclarationSchema, SourceDeclarationSchema } from "../../../packages/private-equity/src/project-z/z1-shared-work/native-contracts.ts";
 import { WorkSchema, SourceSchema, ChangesSchema, RequestSchema, digest, stable, Z1_LOCK } from "../../../packages/epistemic-runtime/src/project-z/z1-shared-work/contracts.ts";
@@ -215,7 +216,7 @@ export async function runNativeEpisode(guarded, output, report) {
       for (const id of ids) obligations[id] = await originalObligationsTx(ctx, c, id);
       const uses = (await c.query("SELECT publication_id,work_id,semantic_owner,reference,body,receipt FROM finnor_os.z1_owner_uses WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3 ORDER BY publication_id,work_id",
         [fixture.tenantId, fixture.principalId, report.requestId])).rows;
-      const attempts = (await c.query("SELECT id,delivery_id,status,costs_unknown,body,reserved_wall_ms FROM finnor_os.z1_attempts WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3 ORDER BY created_at,id",
+      const attempts = (await c.query("SELECT id,reference,delivery_id,status,costs_unknown,body,reserved_wall_ms FROM finnor_os.z1_attempts WHERE tenant_id=$1 AND principal_id=$2 AND request_id=$3 ORDER BY created_at,id",
         [fixture.tenantId, fixture.principalId, report.requestId])).rows;
       const workStates = (await c.query("SELECT id,status,final_outcome FROM finnor_os.works WHERE tenant_id=$1 AND id=ANY($2::uuid[]) ORDER BY id",
         [fixture.tenantId, ids])).rows.map(item => ({ id: item.id, status: item.status, finalOutcomeDigest: digest(item.final_outcome) }));
@@ -358,6 +359,22 @@ export async function runNativeEpisode(guarded, output, report) {
     }
     return exit;
   }
+  async function retainLateFailure(label) {
+    const prior = staleClaims.find(claim => claim.message.boundary === "CHECKPOINT");
+    need(prior, "REAL_PRIOR_CHECKPOINT_DELIVERY_REQUIRED");
+    const before = await snapshot();
+    const attempt = before.attempts.find(value => value.delivery_id === prior.message.deliveryAttemptId);
+    need(attempt?.reference, "REAL_PRIOR_NATIVE_ATTEMPT_REQUIRED");
+    await nativeSharedWorkPorts.retainFailure(ctx, attempt.reference, "Z1_LATE_FAILED_DELIVERY_PROBE", true);
+    const after = await snapshot();
+    need(after.row.generation === before.row.generation && after.row.status === before.row.status
+      && isSame(after.row.publication, before.row.publication), "LATE_FAILURE_OVERWROTE_CURRENT_NATIVE_HEAD");
+    const retained = after.attempts.find(value => value.id === attempt.id);
+    need(retained?.status === "FAILED" && retained.costs_unknown === true, "LATE_FAILURE_EVIDENCE_NOT_RETAINED");
+    await privateJSON(resolve(output, "late-failure-" + label + ".json"), {
+      status: "PASS", priorAttempt: attempt.reference, generation: after.row.generation,
+      currentStatus: after.row.status, currentPublicationPreserved: true, originalFailureRetained: true });
+  }
   try {
     browser = await chromium.launch({ headless: true, chromiumSandbox: true,
       env: { PATH: process.env.PATH, HOME: process.env.HOME, LANG: "C.UTF-8" } });
@@ -434,6 +451,7 @@ export async function runNativeEpisode(guarded, output, report) {
       const submitted = await uiWrite(ids[0], "z1-submit-shared-work", intake);
       need(!report.requestId || report.requestId === submitted.requestId, "ORIGINAL_NATIVE_REQUEST_ID_CHANGED");
       report.requestId = submitted.requestId; generation = submitted.generation;
+      if (index > 0) await retainLateFailure("new-generation-" + generation);
       const canonical = (await post("z1-read-shared-work", { root: fixture.root, requestId: report.requestId, view: "ORIGINAL_REQUEST" })).body;
       need(isSame(canonical.request, request) && canonical.requestDigest === oracle.expected.requestDigest,
         "CANONICAL_NATIVE_INTAKE_DIFFERS_FROM_INDEPENDENT_ORIGINAL");
@@ -559,6 +577,7 @@ export async function runNativeEpisode(guarded, output, report) {
       }
       if (index === 0) for (const boundary of ["CLAIM", "CHECKPOINT", "DELIVERY"]) await worker(boundary);
       await worker();
+      if (index === 0) await retainLateFailure("superseded-physical-delivery");
       const replay = (await post("z1-submit-shared-work", intake)).body;
       need(replay.replayed === true && replay.requestId === report.requestId && replay.generation === generation,
         "DUPLICATE_NATIVE_INTAKE_NOT_IDEMPOTENT");

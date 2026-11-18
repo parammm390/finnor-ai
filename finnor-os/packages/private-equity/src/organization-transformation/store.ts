@@ -76,24 +76,33 @@ export async function orgEvent(ctx: TenantContext, q: OrganizationRequestRow, ki
   return { replay: false, body };
 }
 export async function orgCurrent(ctx: TenantContext, q: OrganizationRequestRow, c: PoolClient, write = true) {
+  return orgOriginal(ctx, q, c, write, "FORWARD");
+}
+export async function orgRetained(ctx: TenantContext, q: OrganizationRequestRow, c: PoolClient) {
+  return orgOriginal(ctx, q, c, true, "RECOVERY");
+}
+async function orgOriginal(ctx: TenantContext, q: OrganizationRequestRow, c: PoolClient, write: boolean,
+  clearance: "FORWARD" | "RECOVERY") {
   await orgAuthority(ctx, c, q.work_id, write);
   const work = (await c.query(`SELECT w.created_by,w.status,i.instruction_text FROM finnor_os.works w
     JOIN finnor_os.work_inputs i ON i.tenant_id=w.tenant_id AND i.work_id=w.id AND i.id=$3
     WHERE w.tenant_id=$1 AND w.id=$2 FOR SHARE OF w,i`, [ctx.tenantId, q.work_id, q.work_input_id])).rows[0];
   if (!work || work.created_by !== q.principal_id || rawDigest(work.instruction_text) !== q.original_input_digest ||
-      ["cancelled", "failed"].includes(work.status)) orgFail("W5_ORIGINAL_WORK_REVISION_CHANGED");
+      clearance === "FORWARD" && ["cancelled", "failed"].includes(work.status)) orgFail("W5_ORIGINAL_WORK_REVISION_CHANGED");
   const source = (await c.query(`SELECT v.content,v.content_hash,v.version_number,s.metadata,
     (SELECT max(n.version_number) FROM finnor_os.evidence_source_versions n WHERE n.tenant_id=v.tenant_id AND n.source_id=v.source_id) latest
     FROM finnor_os.evidence_source_versions v JOIN finnor_os.evidence_sources s ON s.tenant_id=v.tenant_id AND s.id=v.source_id
     WHERE v.tenant_id=$1 AND v.source_id=$2 AND v.id=$3 FOR SHARE OF v,s`,
     [ctx.tenantId, q.source_id, q.source_version_id])).rows[0];
   if (!source || source.content_hash !== q.source_digest || rawDigest(source.content) !== q.source_digest ||
-      source.version_number !== source.latest || source.metadata?.revoked === true)
+      clearance === "FORWARD" && (source.version_number !== source.latest || source.metadata?.revoked === true))
     orgFail("W5_ORIGINAL_ORGANIZATION_SOURCE_CHANGED");
   if (organizationDigest(q.original) !== q.original_digest ||
       q.program && organizationDigest(q.program) !== q.program_digest) orgFail("W5_IMMUTABLE_PREIMAGE_CHANGED");
-  if (write && Date.now() >= q.original_deadline.getTime()) orgFail("W5_ORIGINAL_DEADLINE_EXPIRED");
-  await assertWorkforceBudgetTx({ auth: ctx }, c, q.budget);
+  if (clearance === "FORWARD") {
+    if (write && Date.now() >= q.original_deadline.getTime()) orgFail("W5_ORIGINAL_DEADLINE_EXPIRED");
+    await assertWorkforceBudgetTx({ auth: ctx }, c, q.budget);
+  }
   const input = parseOrganizationTransformation(q.original);
   if (input.tenantId !== ctx.tenantId || input.principalId !== principal(ctx) ||
       input.workId !== q.work_id || input.workInputId !== q.work_input_id) orgFail("W5_ORIGINAL_SCOPE_CHANGED");
@@ -107,6 +116,19 @@ export async function canonicalLiveOrganizationObligations(ctx: TenantContext, q
 }
 export async function orgPublish(ctx: TenantContext, q: OrganizationRequestRow, program: OrganizationTransformationProgram, c: PoolClient) {
   const original = await orgCurrent(ctx, q, c);
+  return orgPublishChecked(ctx, q, program, original, c);
+}
+export async function orgPublishRecovery(ctx: TenantContext, q: OrganizationRequestRow,
+  program: OrganizationTransformationProgram, c: PoolClient) {
+  const original = await orgRetained(ctx, q, c);
+  if (!q.program || !["CANCELLED", "ROLLED_BACK"].includes(program.status)
+    || organizationCanonical(program.events.slice(0, q.program.events.length)) !== organizationCanonical(q.program.events)
+    || program.events.slice(q.program.events.length).some(event => !["CANCEL", "ROLLBACK"].includes(event.kind)))
+    orgFail("W5_RECOVERY_ONLY_HISTORY_REQUIRED");
+  return orgPublishChecked(ctx, q, program, original, c);
+}
+async function orgPublishChecked(ctx: TenantContext, q: OrganizationRequestRow, program: OrganizationTransformationProgram,
+  original: OrganizationTransformationInput, c: PoolClient) {
   const checked = checkOrganizationTransformation(original, program);
   if (checked.status !== "CHECKED") orgFail("W5_INDEPENDENT_INVARIANT_CHECK_REJECTED");
   if (program.revision <= q.revision) orgFail("W5_PUBLICATION_REVISION_FENCED");

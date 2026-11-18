@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
 import type { JobExecutionContext } from "../../../../apps/worker/src/queue";
 import type { AllocationEnvelope, ExperimentRef, TenantContext } from "@finnor/shared-types";
+import { lockTenantMaterialCutTx, transactionDb, transitionWorkTx, WorkTransitionConflictError } from "@finnor/db";
 import { compileWorkforceExecutionProgram, checkWorkforceExecutionProgram, checkWorkforceUse, workforceDigest,
   workforceProgramGraph, workforceCanonicalGraph,
   type WorkforceAssignment, type WorkforceExecutionProgram } from "../../../workforce/src/execution-program/index";
@@ -386,6 +387,7 @@ async function prepareCompensationBoundary(ctx: TenantContext, id: string, execu
 async function closeVerified(ctx: TenantContext, id: string, execution: Readonly<JobExecutionContext>) {
   await tx(ctx, async c => {
     await portfolioLock(ctx, c);
+    await lockTenantMaterialCutTx(transactionDb(c), ctx.tenantId);
     const q = await programRow(ctx, id, c, true); await liveClaim(ctx, q, execution, c);
     let program = q.program!;
     // A waiting participant programme has nothing to close. Republishing all
@@ -428,16 +430,28 @@ async function closeVerified(ctx: TenantContext, id: string, execution: Readonly
     const published = await publish(ctx, q, program, c);
     for (const assignment of program.assignments.filter(a => a.state.kind === "CLOSED" && !previouslyClosed.has(a.id)))
       await outcomeExperience(ctx, q, assignment.id, c);
-    if (published.status === "CLOSED") {
-      await c.query(`UPDATE finnor_os.works SET status='completed',final_outcome=$3::jsonb,updated_at=clock_timestamp()
-        WHERE tenant_id=$1 AND id=$2 AND created_by=$4 AND status NOT IN('cancelled','failed')`, [ctx.tenantId, q.work_id,
-        JSON.stringify({ schema: "finnor.workforce-verified-outcome.v1", programId: q.id, originalInput: q.work_input_id,
-          revision: program.revision, check: published.check, protectedReceipt: null, genuineHumanQualified: false }), q.principal_id]);
-      await event(ctx, q, "COMPLETION", "completed", { workId: q.work_id, originalInput: q.work_input_id,
-        originalBudget: q.budget.ref, check: published.check, sourceClass: q.original.sourceClass,
-        resourceEnvelopeRetained: true, protectedAdmission: false, genuineHumanQualified: false }, c);
-    }
+    await completeWorkforceProgramTx(ctx, q, published, c);
   });
+}
+
+export async function completeWorkforceProgramTx(ctx: TenantContext, q: WorkforceProgramRow,
+  published: Pick<Awaited<ReturnType<typeof publish>>, "status" | "program" | "check">, c: PoolClient) {
+  if (published.status !== "CLOSED") return;
+  try {
+    await transitionWorkTx(transactionDb(c), ctx.tenantId, q.work_id, "completed", "workforce_program_completed",
+      { programId: q.id, workInputId: q.work_input_id }, { expectedWorkInputId: q.work_input_id,
+        finalOutcome: { schema: "finnor.workforce-verified-outcome.v1", programId: q.id, originalInput: q.work_input_id,
+          revision: published.program.revision, check: published.check, protectedReceipt: null, genuineHumanQualified: false } });
+  } catch (error) {
+    if (!(error instanceof WorkTransitionConflictError)) throw error;
+    await event(ctx, q, "WORK_COMPLETION_FENCED", "work-completion-fenced:" + published.program.revision,
+      { workId: q.work_id, originalInput: q.work_input_id, historicalProgramClosed: true,
+        currentWorkCompleted: false, originalResponsibilityRetained: true }, c);
+    return;
+  }
+  await event(ctx, q, "COMPLETION", "completed", { workId: q.work_id, originalInput: q.work_input_id,
+    originalBudget: q.budget.ref, check: published.check, sourceClass: q.original.sourceClass,
+    resourceEnvelopeRetained: true, protectedAdmission: false, genuineHumanQualified: false }, c);
 }
 
 /** New physical job type. Legacy agent assignment and governed protocol-3

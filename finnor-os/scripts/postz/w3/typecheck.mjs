@@ -14,6 +14,8 @@ const save = (path, body) => writeFileSync(path, JSON.stringify(body, null, 2) +
   { flag: "wx", mode: 0o600 });
 const args = process.argv.slice(2);
 const partitions = 12;
+const childHeapMiB = 2048;
+const aggregateRssBytes = 3072 * 1024 ** 2;
 
 if (args[0] === "--worker") {
   assert.equal(args.length, 4);
@@ -69,7 +71,8 @@ if (args[0] === "--worker") {
       file: diagnostic.file?.fileName ?? null, line: at ? at.line + 1 : null, column: at ? at.character + 1 : null,
       message: ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n") };
   });
-  save(join(output, part + ".json"), { identity, checked, diagnostics: errors });
+  save(join(output, part + ".json"), { identity, checked, diagnostics: errors,
+    peakRssBytes: process.resourceUsage().maxRSS * 1024 });
   console.log(JSON.stringify({ part, checked: checked.length, diagnosticCount: errors.length, diagnostics: errors }));
   process.exitCode = errors.length ? 1 : 0;
 } else {
@@ -88,13 +91,15 @@ if (args[0] === "--worker") {
     const at = performance.now();
     let child;
     try {
-      child = spawnSync(process.execPath, ["--max-old-space-size=1408", import.meta.filename,
+      child = spawnSync(process.execPath, ["--max-old-space-size=" + childHeapMiB, import.meta.filename,
         "--worker", project, output, part], { stdio: ["ignore", fd, fd], timeout: remaining });
     } finally { closeSync(fd) }
     const step = { part, exitCode: child.status, signal: child.signal, elapsedMs: performance.now() - at,
-      log, sha256: sha(readFileSync(log)), heapMiB: 1408 };
+      log, sha256: sha(readFileSync(log)), heapMiB: childHeapMiB };
     steps.push(step); console.log(JSON.stringify(step));
     assert.equal(child.status, 0, "W3_FULL_CONTEXT_TYPECHECK_PART_FAILED:" + part);
+    assert(json(join(output, part + ".json")).peakRssBytes + process.resourceUsage().maxRSS * 1024 <= aggregateRssBytes,
+      "W3_TYPECHECK_ORIGINAL_AGGREGATE_RSS_BOUND");
   };
   try {
     run("discover"); graph = json(join(output, "graph.json"));
@@ -114,7 +119,7 @@ if (args[0] === "--worker") {
       identity: graph?.identity ?? null, completeGraphFiles: graph?.files.length ?? null,
       semanticFiles: graph?.files.filter(file => !file.declaration).length ?? null,
       everyPartitionUsesCompleteProgram: true, changedOnly: false, substituteDeclarations: false,
-      wallBoundMs: 300000, serialPartitions: partitions, childHeapMiB: 1408, parentHeapBoundMiB: 128,
+      wallBoundMs: 300000, serialPartitions: partitions, childHeapMiB, parentHeapBoundMiB: 128, aggregateRssBytes,
       elapsedMs: performance.now() - started, steps, originalProjectSkipLibCheckUnchanged: true,
     });
     console.log(JSON.stringify({ status: passed ? "PASS_COMPLETE_PROGRAM_DIAGNOSTICS" : "FAILED_RETAINED", failure }));

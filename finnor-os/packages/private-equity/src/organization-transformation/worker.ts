@@ -17,7 +17,8 @@ import { selectOrganizationPlanTx } from "./plan";
 import { deliverOrganizationPacketsTx } from "./packets";
 import { assignPendingOrganizationTrialsTx, assertOrganizationTrialProcessUseTx } from "./trials";
 import { inspectOrganizationObligationPopulationTx, organizationBusinessPopulationTx, resolveOrganizationObligation } from "./population";
-import { orgActor, orgAuthority, orgCurrent, orgEvent, orgEvidence, orgFail, orgLock, orgPublish, orgRow, orgTx,
+import { orgActor, orgAuthority, orgCurrent, orgRetained, orgEvent, orgEvidence, orgFail, orgLock, orgPublish,
+  orgPublishRecovery, orgRow, orgTx,
   rawDigest, canonicalLiveOrganizationObligations, type OrganizationRequestRow } from "./store";
 
 const wire = z.object({ tenantId: z.string().uuid(), principalId: z.string().uuid(), requestId: z.string().uuid(),
@@ -114,6 +115,7 @@ export async function reconcileOrganizationAcceptedClaimsTx(ctx: TenantContext, 
 async function accept(ctx: TenantContext, payload: Wire, execution: Readonly<JobExecutionContext>): Promise<Accepted | null> {
   return orgTx(ctx, async c => {
     await orgLock(ctx, c);
+    await lockTenantMaterialCutTx(transactionDb(c), ctx.tenantId);
     const q = await orgRow(ctx, payload.requestId, c, true);
     await assertOrganizationPhysicalClaimTx(ctx, q, payload, execution, c);
     await orgCurrent(ctx, q, c);
@@ -214,7 +216,8 @@ async function transition(ctx: TenantContext, q: OrganizationRequestRow, program
     WHERE tenant_id=$1 AND request_id=$2`, [ctx.tenantId, q.id]);
   return { program: next, blocked: [] as string[] };
 }
-async function applyCommands(ctx: TenantContext, q: OrganizationRequestRow, initial: OrganizationTransformationProgram, c: PoolClient) {
+async function applyCommands(ctx: TenantContext, q: OrganizationRequestRow, initial: OrganizationTransformationProgram,
+  c: PoolClient, recoveryOnly = false) {
   let program = initial;
   const commands = (await c.query(`SELECT e.event_key,e.body FROM finnor_os.w5_events e
     WHERE e.tenant_id=$1 AND e.request_id=$2 AND e.kind='OWNER_COMMAND'
@@ -225,6 +228,7 @@ async function applyCommands(ctx: TenantContext, q: OrganizationRequestRow, init
     const command = organizationAction.parse(row.body.command), action = command.action;
     if (row.body.authenticatedPrincipal !== q.principal_id || row.body.requestDigest !== organizationDigest(command))
       orgFail("W5_AUTHENTICATED_OWNER_COMMAND_PREIMAGE_REQUIRED");
+    if (recoveryOnly && !["CANCEL", "ROLLBACK", "RECONCILE"].includes(action.kind)) continue;
     let blocked: string[] = [];
     if (command.expectedRevision !== program.revision) blocked = ["W5_OWNER_COMMAND_REVISION_STALE"];
     else if (!["CANCEL", "ROLLBACK", "RECONCILE"].includes(action.kind) &&
@@ -263,6 +267,36 @@ async function applyCommands(ctx: TenantContext, q: OrganizationRequestRow, init
       originalWorkId: q.work_id, originalLiabilitiesRetained: true }, c);
   }
   return program;
+}
+async function recoverOrganization(ctx: TenantContext, payload: Wire, execution: Readonly<JobExecutionContext>) {
+  if (payload.phase !== "ADVANCE" || payload.processUse) return false;
+  const began = performance.now(), cpu = process.cpuUsage();
+  return orgTx(ctx, async c => {
+    await orgLock(ctx, c);
+    await lockTenantMaterialCutTx(transactionDb(c), ctx.tenantId);
+    const q = await orgRow(ctx, payload.requestId, c, true);
+    await assertOrganizationPhysicalClaimTx(ctx, q, payload, execution, c);
+    const commands = (await c.query(`SELECT e.body FROM finnor_os.w5_events e
+      WHERE e.tenant_id=$1 AND e.request_id=$2 AND e.kind='OWNER_COMMAND'
+        AND NOT EXISTS(SELECT 1 FROM finnor_os.w5_events f WHERE f.tenant_id=e.tenant_id AND f.request_id=e.request_id
+          AND f.event_key='applied:'||e.event_key) ORDER BY e.created_at,e.event_key LIMIT 65`, [ctx.tenantId, q.id])).rows;
+    if (commands.length > 64) orgFail("W5_PENDING_COMMAND_PROFILE_BOUND");
+    if (!commands.some(row => ["CANCEL", "ROLLBACK", "RECONCILE"].includes(organizationAction.parse(row.body.command).action.kind)))
+      return false;
+    await orgRetained(ctx, q, c);
+    if (!q.program) orgFail("W5_CHECKED_PROGRAM_REQUIRED");
+    await reconcileOrganizationAcceptedClaimsTx(ctx, q, c);
+    const program = await applyCommands(ctx, q, q.program, c, true);
+    await assertOrganizationPhysicalClaimTx(ctx, q, payload, execution, c);
+    if (program.revision > q.revision) await orgPublishRecovery(ctx, q, program, c);
+    const used = process.cpuUsage(cpu);
+    await phaseMeter(ctx, q, c, "recovery:" + execution.deliveryAttemptId, { phase: "RECOVERY_ONLY", status: "OBSERVED",
+      jobId: execution.jobId, deliveryAttemptId: execution.deliveryAttemptId, originalBudgetRetained: true,
+      newConsumptionReserved: false, originalEffectsRedispatched: false, elapsedMs: performance.now() - began,
+      supervisorCpuMicroseconds: used.user + used.system, supervisorPeakRssKiB: process.resourceUsage().maxRSS,
+      computeScope: "THIS_NODE_PROCESS_NOT_DATABASE_OR_OTHER_WORKERS", programDigest: organizationDigest(program) });
+    return true;
+  });
 }
 async function applyProcessUse(ctx: TenantContext, q: OrganizationRequestRow, initial: OrganizationTransformationProgram,
   request: NonNullable<Wire["processUse"]>, c: PoolClient, execution: Readonly<JobExecutionContext>) {
@@ -315,7 +349,27 @@ export async function runOrganizationTransformationJob(value: Record<string, unk
     employeeId: payload.principalId, role: "owner" };
   if (!execution) orgFail("W5_PHYSICAL_CLAIM_FENCED");
   const began = performance.now(), cpu = process.cpuUsage();
-  const accepted = await accept(ctx, payload, execution);
+  let accepted: Accepted | null;
+  try {
+    if (await recoverOrganization(ctx, payload, execution)) return;
+    accepted = await accept(ctx, payload, execution);
+  } catch (error) {
+    await orgTx(ctx, async c => {
+      await orgLock(ctx, c);
+      await lockTenantMaterialCutTx(transactionDb(c), ctx.tenantId);
+      const q = await orgRow(ctx, payload.requestId, c, true);
+      await assertOrganizationPhysicalClaimTx(ctx, q, payload, execution, c);
+      await orgActor(ctx, c);
+      const code = error instanceof OrganizationTransformationError ? error.code : "W5_NATIVE_PHASE_REFUSED";
+      await c.query("UPDATE finnor_os.w5_requests SET last_error=$3,updated_at=clock_timestamp() WHERE tenant_id=$1 AND id=$2",
+        [ctx.tenantId, q.id, code]);
+      await orgEvent(ctx, q, "NATIVE_PHASE_REFUSED", "refused:" + execution.deliveryAttemptId,
+        { code, jobId: execution.jobId, deliveryAttemptId: execution.deliveryAttemptId,
+          originalWorkId: q.work_id, originalWorkInputId: q.work_input_id, originalBudgetRef: q.budget.ref,
+          newConsumptionReserved: false, originalLiabilitiesRetained: true, executionAuthorityGranted: false }, c);
+    });
+    throw error;
+  }
   if (!accepted) return;
   // This is a genuine committed-boundary diagnostic, not a test-only hook.
   console.info(JSON.stringify({ event: "W5_NATIVE_COMPUTE_ACCEPTED", requestId: payload.requestId,

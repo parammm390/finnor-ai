@@ -184,9 +184,18 @@ export const nativeSharedWorkPorts: Z1NativePorts = {
         kind: 'NATIVE_OWNER_ATTEMPT_FAILED', code, costsUnknown, originalParentsAndUnknownRetained: true });
       await c.query("UPDATE finnor_os.z1_attempts SET status='FAILED',costs_unknown=costs_unknown OR $3 WHERE tenant_id=$1 AND id=$2",
         [ctx.auth.tenantId, attempt.id, costsUnknown]);
-      await c.query(`UPDATE finnor_os.z1_requests SET status='INCOMPLETE'
-        WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 AND status NOT IN('CANCELLED','INVALIDATED')`,
-      [ctx.auth.tenantId, principal(ctx), attempt.request_id]);
+      await c.query(`WITH owned AS MATERIALIZED (
+        SELECT j.id FROM finnor_os.job_delivery_attempts a
+        JOIN finnor_os.jobs j ON j.tenant_id=a.tenant_id AND j.id=a.job_id
+        WHERE a.tenant_id=$1 AND a.id=$4 AND a.outcome='running' AND a.finished_at IS NULL
+          AND j.status='running' AND j.protocol_version=1 AND j.type='run_shared_work_program_v1'
+          AND j.claim_token=a.claim_token AND j.claim_fence=a.claim_fence AND j.lease_owner=a.worker_id
+          AND j.lease_expires_at>clock_timestamp() AND j.payload->>'requestId'=$3::text
+          AND (j.payload->>'generation')::int=$5 FOR SHARE OF j,a)
+        UPDATE finnor_os.z1_requests SET status='INCOMPLETE'
+        WHERE tenant_id=$1 AND principal_id=$2 AND id=$3::uuid AND generation=$5
+          AND status NOT IN('CANCELLED','INVALIDATED') AND EXISTS(SELECT 1 FROM owned)`,
+      [ctx.auth.tenantId, principal(ctx), attempt.request_id, attempt.delivery_id, attempt.generation]);
     });
   },
   async withOriginalComputePermit(ctx, claim, snapshot, invoke) {

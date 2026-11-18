@@ -567,10 +567,39 @@ export async function runNativeOrganizationJourney(output: string, originalContr
         assert.equal(denied.status, 409); assert.equal(denied.body.error, "W5_CURRENT_SELF_CONTRACT_REQUIRED");
         return { before, nativeSource, after, denied, actualCanonicalSourceMetadataRevoked: true };
       });
+    await run("reconcile-revoked-original-without-new-compute-reservation", { requestId: id, originalBudget, originalInput },
+      { historicalReconciliationApplied: true, newConsumption: false, newTrial: false, newProcessUse: false }, async () => {
+        const count = async () => (await admin!.query(`SELECT
+          (SELECT count(*)::int FROM finnor_os.s5_consumptions WHERE tenant_id=$1) consumptions,
+          (SELECT count(*)::int FROM finnor_os.w5_trial_assignments WHERE tenant_id=$1 AND request_id=$2) trials,
+          (SELECT count(*)::int FROM finnor_os.w5_process_uses WHERE tenant_id=$1 AND request_id=$2) uses`, [tenant, id])).rows[0];
+        const before = await count(), current = await read(id);
+        await ok(group, "action", { requestId: id, expectedRevision: current.revision,
+          idempotencyKey: "reconcile-revoked-original", action: { kind: "RECONCILE" } });
+        await tick(false, 8);
+        const applied = (await admin!.query(`SELECT body FROM finnor_os.w5_events
+          WHERE tenant_id=$1 AND request_id=$2 AND event_key='applied:command:reconcile-revoked-original'`, [tenant, id])).rows[0];
+        assert(applied && applied.body.kind === "RECONCILE" && applied.body.blocked.length === 0,
+          "W5_ORIGINAL_RECOVERY_COMMAND_MUST_RUN_WITHOUT_FORWARD_SOURCE_CLEARANCE");
+        const after = await count(); assert.deepEqual(after, before);
+        const recovered = await read(id);
+        assert.deepEqual(recovered.nativeBudgetRef, originalBudget); assert.equal(recovered.workInputId, originalInput);
+        assert.equal(recovered.originalDeadline, deadline);
+        return { before, after, applied, originalBudget, originalInput, originalDeadline: deadline };
+      });
     await run("former-owner-with-work-read-has-no-parent-projection",
       { requestId: id, originalOwner: owner, newActualRole: "participant", workId },
       { canonicalWorkReadRetained: true, parentOwnerProjectionUnavailable: true }, async () => {
         await admin!.query("UPDATE finnor_os.users SET role='participant' WHERE tenant_id=$1 AND id=$2", [tenant, owner]);
+        const demotedAssignments = (await admin!.query(`SELECT role_id,active FROM finnor_os.employee_role_assignments
+          WHERE tenant_id=$1 AND employee_id=$2`, [tenant, owner])).rows;
+        assert(demotedAssignments.every(assignment => assignment.active === false),
+          "W5_CANONICAL_DEMOTION_MUST_REVOKE_PREVIOUS_STANDING");
+        const explicitReadGrant = (await admin!.query(`UPDATE finnor_os.employee_role_assignments
+          SET active=true,resource_scope=$4::jsonb WHERE tenant_id=$1 AND employee_id=$2 AND role_id=$3
+          RETURNING role_id,active,resource_scope`,
+        [tenant, owner, retainedReadRole, JSON.stringify({ kind: "resources", resourceType: "work", resourceIds: [workId] })])).rows;
+        assert.equal(explicitReadGrant.length, 1, "W5_SEPARATE_CONTROLLED_WORK_QUERY_GRANT_REQUIRED");
         const { requireContext } = await import("../../../apps/api/lib/auth");
         const ctx = await requireContext(new Request(auth.origin + "/api/organization/transformation-programs/read", {
           headers: { authorization: "Bearer " + tokens.get(owner) },
@@ -583,7 +612,8 @@ export async function runNativeOrganizationJourney(output: string, originalContr
         const result = await request("GET", group, "read?requestId=" + id, undefined, owner);
         assert.equal(result.status, 404); assert.notEqual(result.body.access, "OWNER");
         assert.equal(result.body.program, undefined); assert.equal(result.body.nativeBudgetRef, undefined);
-        return { actualRole: ctx.role, canonicalWorkReadRetained: permitted, result };
+        return { actualRole: ctx.role, demotedAssignments, explicitReadGrant, canonicalWorkReadRetained: permitted,
+          controlledFixtureReadOnlyReauthorization: true, inheritedAuthorityRestored: false, result };
       });
     await artifact("verified-basic-native-checkpoint.json", { requestId: id, workId, originalInput, originalBudget,
       originalDeadline: deadline, sourceClass: "CONTROLLED", qualification: "NATIVE_HTTP_WORKER_NOT_FIELD",

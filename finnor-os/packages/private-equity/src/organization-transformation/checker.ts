@@ -41,13 +41,18 @@ function alternativeErrors(input: OrganizationTransformationInput, alt: Organiza
         errors.push("UNSUPPORTED_CONSTRUCTED_OPERATION");
     }
   }
+  const addedByRole = new Map<string, number>();
   const addedHuman = alt.processes.flatMap(p => p.nodes.filter(n =>
     !original.processes.find(old => old.id === p.id)?.nodes.some(old => old.id === n.id))
     .map(n => ({ process: p.id, node: n }))).reduce((sum, { process, node }) => {
       const role = alt.roles.find(r => r.id === node.roleId);
       const samples = Math.max(1, ...original.observations.filter(o => o.processId === process).map(o => o.samples));
-      return sum + (role?.kind === "DIGITAL" ? 0 : node.effortSeconds * samples);
+      const seconds = node.effortSeconds * samples;
+      addedByRole.set(node.roleId, (addedByRole.get(node.roleId) ?? 0) + seconds);
+      return sum + (role?.kind === "DIGITAL" ? 0 : seconds);
     }, 0);
+  if (alt.roles.some(role => (addedByRole.get(role.id) ?? 0) > role.availableSeconds - role.committedSeconds))
+    errors.push("AGGREGATE_ROLE_OPERATING_CAPACITY_EXCEEDED");
   if (addedHuman !== alt.addedOperationHumanSeconds || addedHuman > input.mandate.maxAddedOperationHumanSeconds ||
       alt.migrationHumanSeconds < alt.constructedAssets.length * 60 ||
       alt.migrationHumanSeconds > input.mandate.maxMigrationHumanSeconds ||

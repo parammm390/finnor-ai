@@ -51,7 +51,7 @@ export function serviceExecutionRecordKey(body: Pick<NativeServiceExecution,
     coveredTerms: [...body.coveredTerms].sort((a, b) => canonical(a).localeCompare(canonical(b))),
     paymentPlan: [...body.paymentPlan].sort((a, b) => canonical(a).localeCompare(canonical(b))) });
 }
-export async function serviceExecutions(ctx: PeMutationContext, row: ServiceRequestRow, c: PoolClient) {
+export async function serviceExecutions(ctx: PeMutationContext, row: ServiceRequestRow, c: PoolClient, current = true) {
   const refs = (await c.query<{ source_id: string; version_id: string; content_digest: string }>(`SELECT l.*
    FROM finnor_os.w3_original_source_links l JOIN finnor_os.evidence_source_versions v
     ON v.tenant_id=l.tenant_id AND v.id=l.version_id AND v.source_id=l.source_id
@@ -64,7 +64,7 @@ export async function serviceExecutions(ctx: PeMutationContext, row: ServiceRequ
   const result: ServiceExecutionOriginal[] = [];
   for (const ref of refs) {
     const sourceRef = { sourceId: ref.source_id, versionId: ref.version_id, contentDigest: ref.content_digest };
-    const source = await sourceOriginal(ctx, row.work_id, sourceRef, c);
+    const source = await sourceOriginal(ctx, row.work_id, sourceRef, c, current);
     result.push({ ref: sourceRef, body: NativeExecutionSchema.parse(JSON.parse(source.content)) });
   }
   return result;
@@ -106,7 +106,8 @@ export async function assertNativeServiceBinding(
     throw Error("W3_ADMITTED_NATIVE_SERVICE_OPERATION_REQUIRED");
   return obligation;
 }
-export async function readServiceNativeEffects(ctx: PeMutationContext, executions: ServiceExecutionOriginal[]) {
+export async function readServiceNativeEffects(ctx: PeMutationContext, executions: ServiceExecutionOriginal[],
+  cut: { row: ServiceRequestRow; program: RealWorldServiceProgram }) {
   const effects: NativeEffectObservation[] = [], gaps: string[] = [];
   const identities = new Set<string>();
   for (const original of executions) {
@@ -115,11 +116,15 @@ export async function readServiceNativeEffects(ctx: PeMutationContext, execution
     identities.add(b.obligationRef.id);
     let state: NativeEffectObservation["state"] = "UNKNOWN", originalIdentityReadback = false;
     try {
+      await assertNativeServiceBinding(ctx, cut.row, cut.program, b);
       const answer = await readEnterpriseDurableObligationExecutionHandoff(ctx, { obligationRef: b.obligationRef });
       const handoff = answer.handoff;
       if (!equal(handoff.obligation.ref, b.obligationRef)) throw Error("W3_NATIVE_READBACK_IDENTITY_MISMATCH");
       const declared = NativeServiceIRSchema.parse(b.execution.request.ir);
-      if (declared.members.length !== 1 || declared.members[0]!.request.recordKey !== serviceExecutionRecordKey(b)
+      if (b.execution.request.ref.contentDigest !== hash(b.execution.request.ir)
+        || handoff.request && equal(handoff.request.ref, b.execution.request.ref)
+          && !equal(handoff.request.ir, b.execution.request.ir)
+        || declared.members.length !== 1 || declared.members[0]!.request.recordKey !== serviceExecutionRecordKey(b)
         || declared.members[0]!.semantic.operation !== "SERVICE_TRANSITION_V1"
         || declared.members[0]!.request.applicationAccountId !== b.providerId)
         throw Error("W3_NATIVE_READBACK_TERMS_MISMATCH");
@@ -232,7 +237,8 @@ export async function serviceDispatchReasons(ctx: PeMutationContext, obligation:
       if (!cut.artifact) throw Error("W3_CHECKED_ARTIFACT_REQUIRED_AT_DISPATCH");
       await assertNativeServiceBinding(ctx, row, cut.artifact.body, matching[0]!.body);
       // Do not recursively request the in-flight obligation's broker handoff.
-      const native = await readServiceNativeEffects(ctx, links.filter(link => !equal(link.body.obligationRef, obligation.ref)));
+      const native = await readServiceNativeEffects(ctx, links.filter(link => !equal(link.body.obligationRef, obligation.ref)),
+        { row: cut.row, program: cut.artifact.body });
       const gap = serviceOperationGap(cut.artifact.body, cut.originals, native.effects, matching[0]!.body, serviceNow());
       if (gap) return [gap];
     } catch (error) { return [safeCode(error)] }
@@ -249,7 +255,8 @@ export async function consumeServiceProgram(ctx: PeMutationContext, requestId: s
   requireServiceProfile();
   const cut = await readServiceCut(ctx, requestId);
   if (!cut.artifact) return { projection: null, scheduled: [], gaps: ["W3_CHECKED_ARTIFACT_PENDING"] };
-  const native = await readServiceNativeEffects(ctx, cut.executions), scheduled = [], gaps = [...native.gaps];
+  const native = await readServiceNativeEffects(ctx, cut.executions, { row: cut.row, program: cut.artifact.body }),
+    scheduled = [], gaps = [...native.gaps];
   for (const original of cut.executions) {
     const body = original.body;
     if (!native.effects.some(e => equal(e.ref, body.obligationRef) && e.state === "NOT_ATTEMPTED")) continue;
@@ -297,8 +304,21 @@ export async function readServiceWork(ctx: PeMutationContext, raw: unknown) {
   const requests = [];
   for (const row of rows) {
     try {
-      const cut = await readServiceCut(ctx, row.id);
-      const native = await readServiceNativeEffects(ctx, cut.executions);
+      let current = true;
+      const currentnessGaps: string[] = [];
+      const cut = await readServiceCut(ctx, row.id).catch(async error => {
+        current = false; currentnessGaps.push(safeCode(error));
+        return serviceTx(ctx, async c => {
+          const retained = await serviceRequest(ctx, row.id, c);
+          return { row: retained, artifact: await serviceArtifact(ctx, retained, c),
+            originals: await observationOriginals(ctx, retained, c),
+            executions: await serviceExecutions(ctx, retained, c, false) };
+        });
+      });
+      const native = cut.artifact
+        ? await readServiceNativeEffects(ctx, cut.executions, { row: cut.row, program: cut.artifact.body })
+        : { effects: [] as NativeEffectObservation[], gaps: ["W3_CHECKED_ARTIFACT_PENDING"] };
+      native.gaps.push(...currentnessGaps);
       if (cut.artifact) for (const { body } of cut.executions) {
         if (!native.effects.some(effect => equal(effect.ref, body.obligationRef) && effect.state === "NOT_ATTEMPTED")) continue;
         const gap = serviceOperationGap(cut.artifact.body, cut.originals, native.effects, body, serviceNow());
@@ -308,6 +328,7 @@ export async function readServiceWork(ctx: PeMutationContext, raw: unknown) {
       try { budgets = await readEnterpriseDurableObligationBudgets(ctx, { obligationRef: row.budget_obligation_ref }) }
       catch (error) { native.gaps.push(safeCode(error)) }
       requests.push({ requestId: row.id, status: row.status, generation: row.generation,
+        current, executionAuthorityGranted: false,
         artifactDigest: cut.artifact?.body_digest ?? null, program: cut.artifact?.body ?? null,
         check: cut.artifact?.check_result ?? null,
         projection: cut.artifact ? projectServiceProgram(cut.artifact.body, cut.originals, native.effects, serviceNow()) : null,

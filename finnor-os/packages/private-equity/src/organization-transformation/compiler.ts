@@ -61,6 +61,7 @@ function construct(input: OrganizationTransformationInput, kind: "PREPARED_HANDO
     r.availableSeconds > r.committedSeconds).sort((a, b) => (a.kind === "DIGITAL" ? -1 : 0) -
       (b.kind === "DIGITAL" ? -1 : 0) || a.id.localeCompare(b.id));
   if (!capable.length) return null;
+  const remainingSeconds = new Map(capable.map(role => [role.id, role.availableSeconds - role.committedSeconds]));
   for (const obs of input.organization.observations) {
     if (obs.externalWaitSeconds >= obs.queueSeconds + obs.repeatedInterpretationSeconds) {
       alt.diagnoses.push({ processId: obs.processId, nodeId: obs.nodeId, cause: "EXTERNAL_LIMIT",
@@ -73,8 +74,10 @@ function construct(input: OrganizationTransformationInput, kind: "PREPARED_HANDO
       ? obs.incompleteEvidenceCount > 0 && node.requiredEvidence.length > 0
       : obs.repeatedInterpretationSeconds > 0 && process.teamIds.length > 1;
     if (!relevant) continue;
-    const role = capable.find(r => (r.kind === "DIGITAL" ? 0 : 30 * obs.samples) <=
-      Math.min(input.mandate.maxAddedOperationHumanSeconds, r.availableSeconds - r.committedSeconds));
+    const samples = Math.max(1, ...input.organization.observations.filter(o => o.processId === process.id).map(o => o.samples));
+    const operatingSeconds = 30 * samples;
+    const role = capable.find(r => operatingSeconds <= remainingSeconds.get(r.id)!
+      && (r.kind === "DIGITAL" || alt.addedOperationHumanSeconds + operatingSeconds <= input.mandate.maxAddedOperationHumanSeconds));
     if (!role) { alt.unresolved.push("NO_LAWFUL_CAPACITY:" + process.id); continue; }
     const id = "w5_" + organizationDigest([kind, process.id, node.id]).slice(0, 24);
     if (process.nodes.some(n => n.id === id) || process.nodes.length >= 64) continue;
@@ -89,7 +92,8 @@ function construct(input: OrganizationTransformationInput, kind: "PREPARED_HANDO
       cause: kind === "PREPARED_HANDOFF" ? "INCOMPLETE_EVIDENCE" : "REPEATED_COORDINATION",
       evidenceRefs: obs.evidenceRefs, claim: "OBSERVED_ASSOCIATION_NOT_CAUSAL_IDENTIFICATION" });
     alt.migrationHumanSeconds += 60;
-    alt.addedOperationHumanSeconds += role.kind === "DIGITAL" ? 0 : gate.effortSeconds * obs.samples;
+    remainingSeconds.set(role.id, remainingSeconds.get(role.id)! - operatingSeconds);
+    alt.addedOperationHumanSeconds += role.kind === "DIGITAL" ? 0 : operatingSeconds;
   }
   if (!alt.constructedAssets.length) return null;
   alt.migrationCostMinor = null;

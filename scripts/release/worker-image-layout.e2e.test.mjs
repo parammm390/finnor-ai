@@ -132,14 +132,14 @@ test("the actual image layout imports every worker owner and rechecks source cus
       assert.match(stage, /^tsx [^ ]+$/)
       const observed = spawnSync(process.execPath, ["--import=tsx", resolve(deployed, "apps/api", stage.slice(4))], {
         cwd: join(deployed, "apps/api"), encoding: "utf8", timeout: 30_000,
-        env: { PATH: dirname(process.execPath), NODE_ENV: "test", TSX_TSCONFIG_PATH: join(deployed, "tsconfig.json") },
+        env: { PATH: dirname(process.execPath), TMPDIR: process.env.TMPDIR, NODE_ENV: "test", TSX_TSCONFIG_PATH: join(deployed, "tsconfig.json") },
       })
       prebuild.push({ command: stage, exitCode: observed.status, stdout: observed.stdout, stderr: observed.stderr })
       assert.equal(observed.status, 0, JSON.stringify(prebuild))
     }
     const check = spawnSync(process.execPath, ["--import=tsx", "scripts/release/generate-planner-replay-manifest.mts", "--check"], {
       cwd: deployed, encoding: "utf8", timeout: 30_000,
-      env: { PATH: dirname(process.execPath), NODE_ENV: "test", TSX_TSCONFIG_PATH: join(deployed, "tsconfig.json") },
+      env: { PATH: dirname(process.execPath), TMPDIR: process.env.TMPDIR, NODE_ENV: "test", TSX_TSCONFIG_PATH: join(deployed, "tsconfig.json") },
     })
     prebuild.push({ command: "planner manifest check after API source stamping", exitCode: check.status, stdout: check.stdout, stderr: check.stderr })
     const changedPinnedSources = [...before].flatMap(([file, digest]) => {
@@ -173,9 +173,11 @@ test("the actual image layout imports every worker owner and rechecks source cus
     for (const workflow of [ci, production]) {
       assert.match(workflow, /run: bash scripts\/release\/smoke-worker-image\.sh/)
     }
-    const ownerAt = smoke.indexOf('"$image" node --max-old-space-size=2048 --import=tsx scripts/r3/run-owner-e2e.mts')
+    const ownerAt = smoke.indexOf('"$image" node --import=tsx scripts/r3/run-owner-e2e.mts')
     assert.ok(ownerAt > 0)
     const ownerCommand = smoke.slice(smoke.lastIndexOf("if docker run", ownerAt), ownerAt)
+    assert.match(ownerCommand, /--memory 4g --memory-swap 4g/)
+    assert.match(ownerCommand, /--env NODE_OPTIONS=--max-old-space-size=1024/)
     assert.match(ownerCommand, /--env FINNOR_R3_INSTALLED_SOURCE_COMMIT="\$FINNOR_COMMIT_SHA"/,
       "installed R3 restart must receive the exact image commit instead of requiring Git")
     installedOwnerCommitWired = true
@@ -218,7 +220,7 @@ test("runtime manifest check executes with Node and no build tools on PATH", () 
   let result
   try {
     result = spawnSync("/bin/sh", ["-c", command], {
-      cwd: backend, env: { PATH: fixture, NODE_ENV: "test", TSX_TSCONFIG_PATH: join(backend, "tsconfig.json") },
+      cwd: backend, env: { PATH: fixture, TMPDIR: process.env.TMPDIR, NODE_ENV: "test", TSX_TSCONFIG_PATH: join(backend, "tsconfig.json") },
       encoding: "utf8", timeout: 30_000, maxBuffer: 1024 * 1024,
     })
     assert.equal(result.status, 0, JSON.stringify({ command, status: result.status, error: result.error?.message, stdout: result.stdout, stderr: result.stderr }))

@@ -194,7 +194,7 @@ export async function nativePressureStory(e: any) {
     if (sourceMissJobs.length) assert(Date.parse(sourceMissJobs[0].run_at) < Date.parse(aJob.run_at));
     const cParent = before.p1_requests.find((row: any) => row.id === c.program.programId);
     const cEpisode = before.p1_episodes.find((row: any) => row.id === cParent.episode_id);
-    const deadline = Date.parse(cEpisode.deadline_at), targetStart = deadline - 7000;
+    const deadline = Date.parse(cEpisode.deadline_at), targetStart = deadline - 20000;
     assert(Date.now() < targetStart, "Original C source setup must leave a real pressure interval");
     watch = await observer.arm(executionQueue, { tenantId: f.f.tenant, searchId: aSearch,
       kind: "W1_BOUNDARY_CURRENTNESS_CHECKED", boundary: "USE", unitKind: "EXECUTE_P1" });
@@ -224,7 +224,11 @@ export async function nativePressureStory(e: any) {
     assert.equal(cancellationCut.p2_attempts[0].status, "SUBMITTED");
     assert.deepEqual(cancellationCut.p2_grant_usage, held.p2_grant_usage);
     const wait = deadline + 50 - Date.now();
-    assert(wait >= 0 && wait < 7500, "Retain the original configured physical/queue lease during pressure");
+    const originalClaim = held.jobs.find((row: any) => row.id === aJob.id);
+    const originalPermit = held.leases.find((row: any) => row.resource_key === "native:p2" && row.released_at === null);
+    assert(wait >= 0 && Date.parse(originalClaim.lease_expires_at) > deadline + 50
+      && Date.parse(originalPermit.expires_at) > deadline + 50,
+      "Retain the original configured physical/queue lease during pressure");
     await new Promise<void>(resolve => setTimeout(resolve, wait));
     const expiredWhileHeld = await internalOwnerCut(e, f.f.tenant);
     assert(Date.parse(expiredWhileHeld.observedAt) > deadline);

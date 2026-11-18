@@ -42,6 +42,18 @@ jobs:
       - name: Verify all existing reader plans and confidentiality boundaries
         working-directory: finnor-os
         run: node --import=tsx scripts/audits/verify-reader-policy-plans.mts "$RUNNER_TEMP/w2-reader-policies"
+      - name: Verify canonical Work completion preserves later instructions
+        timeout-minutes: 3
+        working-directory: finnor-os
+        run: node --import=tsx scripts/audits/verify-workforce-completion.mjs "$RUNNER_TEMP/w2-work-completion.json"
+      - name: Retain canonical Work completion proof
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: w2-work-completion-${{ inputs.episode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/w2-work-completion.json
+          if-no-files-found: error
+          retention-days: 7
       - name: Retain rolled-back reader-policy proof
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
