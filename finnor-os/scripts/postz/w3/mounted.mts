@@ -104,6 +104,9 @@ export async function mountedServiceProof(input: MountedInput) {
     credentialsRecorded: false, domCredentialInjection: false, savedSessionImported: false,
   };
   const inputEvents = { pointerActions: 0, keyboardActions: 0 };
+  // These response summaries contain route classes and statuses only, never tokens,
+  // request bodies, private Work content or browser storage.
+  const mountedReadOutcomes: Array<{ route: string; status: number }> = [];
   const currentPage = () => { assert(page, "W3_OWNED_HEADED_PAGE_REQUIRED"); return page };
   const evaluate = <Arg, Result>(read: (arg: Arg) => Result, arg: Arg) => {
     input.checkBound();
@@ -159,7 +162,37 @@ export async function mountedServiceProof(input: MountedInput) {
   const draftPrefix = "CONTROLLED_UNSUBMITTED_W3_DRAFT:";
   const rowCount = () => evaluate(selector => document.querySelectorAll(selector + " tbody tr").length, panel);
   const rendered = async () => {
-    await wait(selector => document.querySelectorAll(selector + " tbody tr").length === 7, panel);
+    try {
+      await wait(selector => document.querySelectorAll(selector + " tbody tr").length === 7, panel);
+    } catch (error) {
+      // An absent row is not proof that fulfillment is absent. Retain the
+      // exact mounted/transport boundary before propagating the original failure.
+      const browserState = await currentPage().evaluate((selector: string) => {
+        const service = document.querySelector(selector);
+        const work = document.querySelector(".ct-world-work");
+        const contextPanels = Array.from(document.querySelectorAll('[data-testid="w3-service-panel"]'));
+        return {
+          loginScreen: Boolean(document.querySelector("#centropy-login-email")),
+          worldExplorer: Boolean(document.querySelector(".ct-world")),
+          workRecord: Boolean(work),
+          workRecordLoading: Boolean(work?.querySelector('[role="status"]')),
+          workRecordAlert: Boolean(work?.querySelector('[role="alert"]')),
+          serviceMounted: Boolean(service),
+          serviceRowCount: service?.querySelectorAll("tbody tr").length ?? null,
+          serviceStatus: Boolean(service?.querySelector('[role="status"]')),
+          servicePanelCount: contextPanels.length,
+          otherServicePanelCount: contextPanels.filter(p => p !== service).length,
+          worldRootSelected: Boolean(document.querySelector('select[aria-label="Choose WORLD root"]')?.getAttribute("value")),
+          workRecordTab: Boolean(document.querySelector('button[aria-current="page"]')),
+        };
+      }, panel).catch(() => ({ browserProbeUnavailable: true }));
+      await input.artifact("mounted/first-render-failure.json", {
+        schema: "finnor.w3.mounted-read-diagnostic.v1",
+        browserState, routeStatuses: mountedReadOutcomes.slice(-60),
+        noPrivateResponseBodiesOrTokens: true,
+      });
+      throw error;
+    }
     const view = await evaluate(({ selector, prefix }) => ({
       ids: Array.from(document.querySelectorAll<HTMLTableRowElement>(selector + " tbody tr")).map(x => x.cells[0]!.textContent),
       text: document.querySelector<HTMLElement>(selector)!.innerText,
@@ -317,6 +350,15 @@ export async function mountedServiceProof(input: MountedInput) {
     });
     context.setDefaultTimeout(30000);
     page = context.pages()[0] ?? await context.newPage();
+    page.on("response", response => {
+      let path = "";
+      try { path = new URL(response.url()).pathname } catch { return }
+      const route = /^\/api\/centropy\/works\/[^/]+$/.test(path) ? "work-record"
+        : path === "/api/centropy/real-world-services/read" ? "service-read"
+        : path === "/api/centropy/real-world-services/inbox" ? "service-inbox"
+        : path === "/api/centropy/company-brain/project" ? "world-projection" : null;
+      if (route) mountedReadOutcomes.push({ route, status: response.status() });
+    });
     await page.bringToFront();
     await wait(() => document.visibilityState === "visible", undefined);
     const cdp = await context.newCDPSession(page);
