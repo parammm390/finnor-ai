@@ -107,6 +107,8 @@ export async function mountedServiceProof(input: MountedInput) {
   // These response summaries contain route classes and statuses only, never tokens,
   // request bodies, private Work content or browser storage.
   const mountedReadOutcomes: Array<{ route: string; status: number }> = [];
+  const mountedNavigations: Array<{ path: string; queryKeys: string[] }> = [];
+  const mountedRuntimeErrors: Array<{ name: string; category: string; property?: string }> = [];
   const currentPage = () => { assert(page, "W3_OWNED_HEADED_PAGE_REQUIRED"); return page };
   const evaluate = <Arg, Result>(read: (arg: Arg) => Result, arg: Arg) => {
     input.checkBound();
@@ -171,7 +173,20 @@ export async function mountedServiceProof(input: MountedInput) {
         const service = document.querySelector(selector);
         const work = document.querySelector(".ct-world-work");
         const contextPanels = Array.from(document.querySelectorAll('[data-testid="w3-service-panel"]'));
+        const locationUrl = new URL(location.href);
+        const visibleRoot = document.querySelector(".ct-world");
         return {
+          pathname: locationUrl.pathname,
+          queryKeys: [...locationUrl.searchParams.keys()]
+            .filter(key => ["root", "object", "workId", "context", "threadId"].includes(key)).slice(0, 8),
+          documentReady: document.readyState,
+          visibility: document.visibilityState,
+          appMounted: Boolean(document.querySelector(".ct-app")),
+          workspaceError: Boolean(document.querySelector(".ct-auth-state")),
+          workspaceUnavailable: Boolean(document.querySelector('[data-private-workspace-state="unavailable"]')),
+          nextErrorOverlay: Boolean(document.querySelector("nextjs-portal")),
+          mainMounted: Boolean(document.querySelector('main[aria-label="WORLD explorer"]')),
+          visibleRoot: Boolean(visibleRoot),
           loginScreen: Boolean(document.querySelector("#centropy-login-email")),
           worldExplorer: Boolean(document.querySelector(".ct-world")),
           workRecord: Boolean(work),
@@ -189,6 +204,8 @@ export async function mountedServiceProof(input: MountedInput) {
       await input.artifact("mounted/first-render-failure.json", {
         schema: "finnor.w3.mounted-read-diagnostic.v1",
         browserState, routeStatuses: mountedReadOutcomes.slice(-60),
+        navigations: mountedNavigations.slice(-25),
+        runtimeErrors: mountedRuntimeErrors.slice(-20),
         noPrivateResponseBodiesOrTokens: true,
       });
       throw error;
@@ -350,6 +367,29 @@ export async function mountedServiceProof(input: MountedInput) {
     });
     context.setDefaultTimeout(30000);
     page = context.pages()[0] ?? await context.newPage();
+    page.on("framenavigated", frame => {
+      if (!page || frame !== page.mainFrame()) return;
+      try {
+        const target = new URL(frame.url());
+        if (target.origin !== origin) return;
+        mountedNavigations.push({ path: target.pathname,
+          queryKeys: [...target.searchParams.keys()].filter(key =>
+            ["root", "object", "workId", "context", "threadId"].includes(key)).slice(0, 8) });
+      } catch { /* Browser can navigate through opaque URLs. */ }
+    });
+    page.on("pageerror", error => {
+      const message = error.message ?? "";
+      const name = ["TypeError", "ReferenceError", "RangeError", "SyntaxError", "Error"].includes(error.name) ? error.name : "Other";
+      const category = /Cannot read properties of (undefined|null)/.test(message) ? "NULLISH_PROPERTY_ACCESS"
+        : /Maximum update depth/.test(message) ? "REACT_UPDATE_LOOP"
+        : /Minified React error/.test(message) ? "REACT_RUNTIME_ERROR"
+        : /hydration/i.test(message) ? "HYDRATION_ERROR"
+        : /is not defined/.test(message) ? "UNDEFINED_IDENTIFIER"
+        : /Invalid hook call/.test(message) ? "HOOK_ERROR" : "OTHER_RUNTIME_ERROR";
+      const readProperty = /reading ['"]([a-zA-Z][a-zA-Z0-9_]{0,60})['"]/.exec(message)?.[1];
+      mountedRuntimeErrors.push({ name, category,
+        ...(readProperty ? { property: readProperty } : {}) });
+    });
     page.on("response", response => {
       let path = "";
       try { path = new URL(response.url()).pathname } catch { return }
