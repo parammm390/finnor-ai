@@ -92,6 +92,61 @@ const { default: pg } = await import("pg");
 const sql = new pg.Client({ connectionString: env.CENTROPY_E2E_DB_ADMIN_URL });
 await sql.connect();
 const q = async (text, params = []) => { costs.sqlQueries++; return (await sql.query(text, params)).rows; };
+// Observe PostgreSQL capacity during the real mounted reads. This uses its own
+// admin read-only connection and exports ONLY aggregate counts, never SQL, tenant
+// identity, credentials or Work data. It cannot change a case's pass conditions.
+async function withDatabasePressure(c, read) {
+  const observer = new pg.Client({
+    connectionString: env.CENTROPY_E2E_DB_ADMIN_URL,
+    connectionTimeoutMillis: 2000,
+    query_timeout: 2500,
+  });
+  let connected = false, running = false, errors = 0;
+  const samples = [];
+  const poll = async () => {
+    if (!connected || running) return;
+    running = true;
+    try {
+      const { rows } = await observer.query(`SELECT
+        count(*)::int AS "backends",
+        count(*) FILTER (WHERE state='active')::int AS "active",
+        count(*) FILTER (WHERE state='idle in transaction')::int AS "idleInTransaction",
+        count(*) FILTER (WHERE wait_event_type='Lock')::int AS "lockWaiters",
+        count(*) FILTER (WHERE wait_event_type='Client')::int AS "clientWaiters",
+        count(*) FILTER (WHERE wait_event_type='IO')::int AS "ioWaiters",
+        coalesce(max(extract(epoch from (clock_timestamp() - xact_start))::int),0) AS "longestTransactionSeconds"
+        FROM pg_stat_activity WHERE datname=current_database()`);
+      if (rows[0] && samples.length < 160) samples.push(rows[0]);
+    } catch { errors++; }
+    finally { running = false; }
+  };
+  try { await observer.connect(); connected = true; }
+  catch { errors++; await observer.end().catch(() => undefined); }
+  let timer = null;
+  if (connected) {
+    await poll();
+    timer = setInterval(() => { void poll(); }, 1200);
+    timer.unref();
+  }
+  try { return await read(); }
+  finally {
+    if (timer) clearInterval(timer);
+    if (connected) {
+      await poll();
+      await observer.end().catch(() => undefined);
+    }
+    const peak = key => samples.length ? Math.max(...samples.map(value => Number(value[key]) || 0)) : null;
+    c.observations.databasePressure = {
+      samples: samples.length, errors,
+      peakBackends: peak('backends'), peakActive: peak('active'),
+      peakIdleInTransaction: peak('idleInTransaction'),
+      peakLockWaiters: peak('lockWaiters'),
+      peakClientWaiters: peak('clientWaiters'),
+      peakIoWaiters: peak('ioWaiters'),
+      peakLongestTransactionSeconds: peak('longestTransactionSeconds'),
+    };
+  }
+}
 const record = (name, value) => writePrivateJson(join(evidence, `fixture-${name}.json`), value);
 
 const worker = env.FINNOR_WORKER_DATABASE_URL ? await startOwnedWorker(env, { logPath: join(privateRoot, "worker.log"), leaseSeconds: 30 }) : null;
@@ -398,7 +453,7 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
     { meStatus: login.meStatus, role: login.identity?.role, tenantMatches: login.identity?.tenantId === parentA.tenantId, principalMatches: login.identity?.userId === parentA.ownerId, idpStatus: idp.status, idpIdEqualsNativePrincipal: idp.id === login.identity?.userId },
     login.meStatus === 200 && login.identity?.role === "owner" && login.identity?.tenantId === parentA.tenantId && login.identity?.userId === parentA.ownerId && idp.status === 200);
   c.observations.browserStage = "OPEN_ORIGINAL_WORK";
-  const opened = await openWork(page, threadA.id, parentA.workId);
+  const opened = await withDatabasePressure(c, () => openWork(page, threadA.id, parentA.workId));
   c.observations.rootCarriedBy = opened.rootCarriedBy;
   const ownerCuts = c.observations.ownerCuts = { beforeMount: ownerCutBeforeMounted };
   const cut = () => mountedOwnerCut(q, parentA, acqA.sessionId, ownerCutBeforeMounted.captured_at);
@@ -766,7 +821,7 @@ await runCase("M-08", ["Z0-R09-C04", "Z0-R45-C04"], "Real logout then new sign-i
   c.observations.browserStage = "SIGN_IN_AGAIN";
   const login = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
   c.observations.browserStage = "OPEN_WORK_AFTER_SIGN_IN";
-  await openWork(page, threadA.id, parentA.workId);
+  await withDatabasePressure(c, () => openWork(page, threadA.id, parentA.workId));
   const fresh = await readSettledPanels(page, parentA.workId);
   c.observations.reloadDifferences = referenceFieldDifferences(fresh);
   await watch.settle();

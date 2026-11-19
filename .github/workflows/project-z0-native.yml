@@ -164,7 +164,7 @@ jobs:
             esac
           fi
           install -d -m 700 "$GITHUB_WORKSPACE/.centropy-certification"
-          node scripts/project-z/run-native-scenario.mjs \
+          taskset -c 0,1 node scripts/project-z/run-native-scenario.mjs \
             --name="z0-ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
             --evidence="$RUNNER_TEMP/z0-native" --profiles="$profiles" --no-worker --forward-env=FINNOR_Z0_MODE \
             --forward-env=PLAYWRIGHT_BROWSERS_PATH --forward-env=FINNOR_Z0_DEPENDENCY \
@@ -384,6 +384,12 @@ jobs:
                 .map(key => [key, member(budgetCutResults, observations.budgetCutChecks[key])])) : null,
               browserOperation, browserProbeCause: browserProbeCauses.has(probeCause) ? probeCause : null,
               browserDiagnostics: browserDiagnostics(observations?.browserDiagnostics),
+              databasePressure: observations?.databasePressure ? Object.fromEntries(
+                ['samples', 'errors', 'peakBackends', 'peakActive', 'peakIdleInTransaction', 'peakLockWaiters',
+                  'peakClientWaiters', 'peakIoWaiters', 'peakLongestTransactionSeconds']
+                  .map(key => [key, Number.isSafeInteger(observations.databasePressure[key])
+                    && observations.databasePressure[key] >= 0 && observations.databasePressure[key] <= 100000
+                      ? observations.databasePressure[key] : null])) : null,
               networkError, setupPredicate, setupCause,
               wallMs: Number.isSafeInteger(wallMs) && wallMs >= 0 ? wallMs : null,
               browserStage: browserStages.has(observations?.browserStage) ? observations.browserStage : null,
@@ -471,6 +477,7 @@ jobs:
             'codex/project-z0-r12': ['R12-02', 'R12-03', 'R12-04'],
             'codex/project-z0-mounted': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),
             'codex/zw-integration-quality-20261115': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),
+            'codex/z0-native-diagnostic-20261120': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),
             'codex/project-z0-recovery': recoveryRequired,
           })[process.env.GITHUB_REF_NAME] ?? continuation
           const mountedCaseTitles = {
