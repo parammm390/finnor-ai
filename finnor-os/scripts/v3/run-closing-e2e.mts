@@ -1243,9 +1243,37 @@ try {
   if (resourceMonitor) clearInterval(resourceMonitor);
   if (resourceFailure && !failed) failed = { message: resourceFailure.message, stack: resourceFailure.stack,
     observation:finiteFailureObservation(resourceFailure,processes) };
-  for (const cp of children) { try { process.kill(-cp.pid!, "SIGCONT"); process.kill(-cp.pid!, "SIGTERM"); } catch { cp.kill("SIGTERM"); } }
+  // Capture the exit promises before signalling.  The baseline comparison
+  // requires observed exits for every owned child, including the closing
+  // worker; SIGKILL being sent is not evidence that Node reaped that child.
+  const ownedAtShutdown = [...children];
+  const ownedExitEvents = ownedAtShutdown.map(cp => new Promise<void>(resolve => {
+    if (cp.exitCode !== null || cp.signalCode !== null) resolve();
+    else cp.once("exit", () => resolve());
+  }));
+  for (const cp of ownedAtShutdown) {
+    try { process.kill(-cp.pid!, "SIGCONT"); process.kill(-cp.pid!, "SIGTERM"); }
+    catch { cp.kill("SIGTERM"); }
+  }
   await sleep(1200);
-  for (const cp of children) { try { process.kill(-cp.pid!, "SIGKILL"); } catch { cp.kill("SIGKILL"); } }
+  for (const cp of ownedAtShutdown) {
+    if (cp.exitCode !== null || cp.signalCode !== null) continue;
+    try { process.kill(-cp.pid!, "SIGKILL"); } catch { cp.kill("SIGKILL"); }
+  }
+  // Wait for genuine process exit notifications before freezing results.json.
+  // A child that cannot be reaped stays a failed owner, never a fabricated pass.
+  const allOwnedExited = await Promise.race([
+    Promise.all(ownedExitEvents).then(() => true),
+    sleep(10000).then(() => false),
+  ]);
+  if (!allOwnedExited) {
+    if (failed) failed.childCleanup = "OWNED_CHILD_EXIT_NOT_OBSERVED";
+    else {
+      const error = Error("OWNED_CHILD_EXIT_NOT_OBSERVED");
+      failed = { message: error.message, stack: error.stack,
+        observation: finiteFailureObservation(error, processes) };
+    }
+  }
   authServer?.closeAllConnections(); await new Promise<void>(done => authServer ? authServer.close(() => done()) : done());
   await closePool().catch(() => undefined); await admin?.end().catch(() => undefined);
   if (postgresRunning) await postgres.stop();
