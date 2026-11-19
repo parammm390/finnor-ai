@@ -336,7 +336,11 @@ const flat = text => (text ?? "").replace(/[\u202f\u00a0]/g, " ");
 const jsonOf = text => { try { return JSON.parse(text); } catch { return null; } };
 const hits = (haystack, markers) => markers.filter(marker => haystack.includes(marker.value)).map(marker => marker.label);
 const strongLabels = new Set(["sessionId", "programId", "compilerRequestId", "responsibilityIdentity", "reservationId", "computeResource", "humanResource", "institutionId"]);
-let referenceSignature = null, referenceCore = null, referenceTruthA = null;
+let referenceSignature = null, referenceCore = null, referenceTruthA = null, referenceFacts = null;
+// Diagnostics publish field names only; native Work data and original identities stay private.
+const referenceFieldDifferences = facts => referenceFacts
+  ? Object.keys(referenceFacts).filter(field => JSON.stringify(referenceFacts[field]) !== JSON.stringify(signatureFacts(facts)[field]))
+  : [];
 
 async function ensureOwnerOnWork(which = "A") {
   const target = which === "A" ? { thread: threadA, parent: parentA } : { thread: threadB, parent: parentB };
@@ -405,6 +409,7 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
   await shot(page, c, "after-second-reload");
   c.observations.signatures = { f0: signature(f0), f1: signature(f1), f2: signature(f2) };
   referenceSignature = signature(f2);
+  referenceFacts = signatureFacts(f2);
   referenceCore = coreSignature(f2);
 
   const app = f2.app?.text ?? "";
@@ -543,18 +548,22 @@ await runCase("M-04", ["Z0-R45-C03", "Z0-R09-C01"], "Blocked/needs-action state 
   const ownerCuts = c.observations.ownerCuts = { beforeOpen };
   const cut = () => mountedOwnerCut(q, parentB, sessionB, beforeOpen.captured_at);
   const beforeOpenBudget = await readOriginalBudgetLedger(q, parentB);
+  c.observations.browserStage = "OPEN_ORIGINAL_WORK";
   const opened = await ensureOwnerOnWork("B");
   c.observations.rootCarriedBy = opened.rootCarriedBy;
+  c.observations.browserStage = "READ_OWNER_ORACLE";
   const truth = await readOwnerTruth({ q, owner, parent: parentB, sessionId: sessionB, acquisitionInput: acquisitionB });
   const f0 = await readSettledPanels(page, parentB.workId);
   const beforeReloadBudget = await readOriginalBudgetLedger(q, parentB);
   ownerCuts.initialPanels = await cut();
+  c.observations.browserStage = "FIRST_RELOAD";
   await page.reload({ waitUntil: "domcontentloaded" });
   const f1 = await readSettledPanels(page, parentB.workId);
   const afterReloadBudget = await readOriginalBudgetLedger(q, parentB);
   ownerCuts.reloaded = await cut();
   const after = await readOwnerTruth({ q, owner, parent: parentB, sessionId: sessionB, acquisitionInput: acquisitionB });
   ownerCuts.afterOracle = await cut();
+  c.observations.browserStage = "CHECK_RELOADED_PANELS";
   await shot(page, c, "blocked");
   const app = f1.app?.text ?? "";
   const nextAction = Boolean(await page.locator(`${APP} [data-application-next-action]`).count()) || /(next action|owner must|you must|re-?authori[sz]e|re-?enable|restore the|grant again)/i.test(f1.app?.textNoPre ?? "");
@@ -630,6 +639,7 @@ await runCase("M-05", ["Z0-R09-C02", "Z0-R45-C04"], "Work/root switch through th
   let mountedA = true;
   try { await waitForPanel(page, parentA.workId, 45000); } catch { mountedA = false; }
   const fa = await readPanels(page);
+  c.observations.reloadDifferences = referenceFieldDifferences(fa);
   await watch.settle();
   const reread = watch.since(mark2).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId);
   await shot(page, c, "back-on-A");
@@ -673,6 +683,7 @@ await runCase("M-09", ["Z0-R09-C05"], "Offline then reconnect", async c => {
   await watch.settle();
   const fresh = watch.since(mark2).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId);
   const after = await readPanels(page);
+  c.observations.reloadDifferences = referenceFieldDifferences(after);
   const afterWitness = await witness(q, parentA);
   c.observations.ownerCuts.afterReconnect = await mountedOwnerCut(q, parentA, acqA.sessionId, beforeOffline.captured_at);
   await shot(page, c, "reconnected");
@@ -730,6 +741,7 @@ await runCase("M-08", ["Z0-R09-C04", "Z0-R45-C04"], "Real logout then new sign-i
   c.observations.browserStage = "OPEN_WORK_AFTER_SIGN_IN";
   await openWork(page, threadA.id, parentA.workId);
   const fresh = await readSettledPanels(page, parentA.workId);
+  c.observations.reloadDifferences = referenceFieldDifferences(fresh);
   await watch.settle();
   const loginTag = login.bearer ? sha(login.bearer).slice(0, 12) : null;
   const reads = watch.since(mark2).filter(row => row.path.endsWith("application-projection")
@@ -781,6 +793,8 @@ await runCase("M-06", ["Z0-R09-C02", "Z0-R09-C04", "Z0-R45-C04"], "Principal swi
   await watch.settle();
   const reads = watch.since(mark2).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId);
   const restored = await readPanels(page);
+  c.observations.reloadDifferences = referenceFieldDifferences(restored);
+  c.observations.browserStage = "CHECK_RESTORED_WORK";
   check(c, "restore.fresh-read", "after the original owner signs in again the facts equal the earlier ones from a fresh read", "browser request watch + M-01 reference signature",
     { freshReads: reads.length, signatureEqual: signature(restored) === referenceSignature, tokenDiffers: back.bearer !== oldBearer }, reads.length >= 1 && signature(restored) === referenceSignature && back.bearer !== oldBearer);
   mutationsOf(c, mark);
