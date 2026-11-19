@@ -291,6 +291,33 @@ async function renderBoundaryFacts() {
       status: Number.isInteger(row.status) ? row.status : null, failed: Boolean(row.failure),
       ageMs: Math.min(3600000, Math.max(0, Date.now() - row.at)) }] : []).slice(-30) };
 }
+// Failure-only observability: no tokens, response bodies or private Work facts.
+async function browserFailureDiagnostics(targetPage, requestWatch, expectedWorkId) {
+  await requestWatch.settle();
+  const pageState = await targetPage.evaluate(workId => {
+    const canvas = document.querySelector('main[aria-label="Investigation Canvas"]');
+    const instrument = document.getElementById('canvas-work-' + workId);
+    return {
+      loginForm: Boolean(document.querySelector('form')),
+      workspace: Boolean(document.querySelector('.ct-topbar')),
+      canvas: Boolean(canvas),
+      workInstrument: Boolean(canvas && instrument && canvas.contains(instrument)),
+      applicationPanel: Boolean(canvas?.querySelector('.ct-application-semantics')),
+      authBoundary: Boolean(document.querySelector('.ct-auth-state')),
+      invalidCanvas: Boolean(canvas?.querySelector('.ct-canvas__invalid')),
+    };
+  }, expectedWorkId).catch(() => null);
+  const statuses = predicate => requestWatch.records.filter(predicate).slice(-12)
+    .map(row => Number.isInteger(row.status) ? row.status : null);
+  return {
+    pageState,
+    authTokenStatuses: statuses(row => row.kind === 'auth-token'),
+    meStatuses: statuses(row => row.path === '/api/centropy/me'),
+    workStatuses: statuses(row => row.path === '/api/centropy/works/' + expectedWorkId),
+    applicationStatuses: statuses(row => row.path === '/api/centropy/company-brain/application-projection'),
+    companyStatuses: statuses(row => row.path === '/api/centropy/company-brain/projection'),
+  };
+}
 async function startBrowser() {
   const { chromium } = loadPlaywright(root);
   browser = await chromium.launch({ headless: true, env: { ...process.env, TMPDIR: browserTmp } });
@@ -849,6 +876,9 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
     const summary = clockWatch.summary(mark);
     c.observations.requests = summary;
     check(c, "no-mutating-requests", "0 mutating browser requests; every observed refresh is a real 200 grant", "browser request watch", { mutations: summary.mutations, otherNonGet: summary.otherNonGet, authToken: summary.authToken }, summary.mutations === 0 && summary.otherNonGet === 0);
+  } catch (error) {
+    c.observations.browserDiagnostics = await browserFailureDiagnostics(clockPage, clockWatch, parentA.workId);
+    throw error;
   } finally {
     await clockContext.close().catch(() => undefined);
     if (!page.isClosed()) await page.bringToFront().catch(() => undefined);
@@ -866,7 +896,13 @@ await runCase("M-10", ["Z0-R09-C06"], "Delayed old-principal response (owned dat
   page = await context.newPage();
   watch.attach(page, "delayed-original", authOrigin);
   c.observations.browserStage = "SIGN_IN_ORIGINAL_OWNER";
-  const original = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
+  let original;
+  try {
+    original = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
+  } catch (error) {
+    c.observations.browserDiagnostics = await browserFailureDiagnostics(page, watch, parentA.workId);
+    throw error;
+  }
   check(c, "original.identity", "real sign-in matches the original owner and tenant", "O-API /me",
     { status: original.meStatus }, original.meStatus === 200
       && original.identity?.tenantId === parentA.tenantId && original.identity?.userId === parentA.ownerId);
