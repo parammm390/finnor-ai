@@ -8,8 +8,8 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-18T23:15:49.173Z",
-  "sourceBaseCommit": "dcd6bd9ae8f46fa4e27cc8e1af8d8be77a2af053",
+  "generatedAt": "2026-11-19T05:01:56.372Z",
+  "sourceBaseCommit": "f8d5b2ed9531408f4fcdf610424cc69fb612bf60",
   "manifestSha256": "e68051fd74494792ebb66d7156bae1b6ac5ef64e369d60057bc4c596fb0aebe3",
   "formsSha256": "35b57673d9d86e461f2b6056aaf326cb789901dfdd4481734aefef91da8052fd",
   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -1069,7 +1069,7 @@
       },
       {
         "file": "src/components/centropy/lib/centropy-auth.tsx",
-        "sha256": "84ccaf9293f7b812ccc132ecf9f6b509fc474b626053dd147245c01c6699f0b1"
+        "sha256": "da2a8c6b9605f3a5c57847c79a254c9997d311e6201d60ebc9b4d6f3f1aac16a"
       },
       {
         "file": "src/lib/auth/browser-session.ts",
@@ -1337,11 +1337,11 @@
       },
       {
         "file": "src/components/centropy/canvas/ApplicationSemanticsPanel.tsx",
-        "sha256": "582175fb67e1261019e0505c12ddd393fc24b8e24c092cfc426d3ca9f223ea2c"
+        "sha256": "cd4f98802d613fec8b0be97523cf24d115ace5b274a17127fe9c36f575e9668d"
       },
       {
         "file": "src/components/centropy/canvas/application-semantics-client.ts",
-        "sha256": "db95a6db946c53d8b940f319a5f531e22c92c5839c006a3af83207561fd0a1dd"
+        "sha256": "4bbcdc6d22ed6308e3d23bdb655aa29ccf3d77f19a7b2a5e85047d5d816f8cbb"
       },
       {
         "file": "finnor-os/packages/shared-types/src/application-semantics.ts",
@@ -4925,7 +4925,7 @@
           "file": "src/components/centropy/lib/centropy-auth.tsx",
           "route": "me",
           "method": "GET",
-          "line": 228,
+          "line": 238,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
@@ -4960,7 +4960,7 @@
           "file": "src/components/centropy/canvas/application-semantics-client.ts",
           "route": "me",
           "method": "GET",
-          "line": 749,
+          "line": 754,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
@@ -11931,7 +11931,7 @@
           "file": "src/components/centropy/canvas/application-semantics-client.ts",
           "route": "company-brain/application-acquire",
           "method": "POST",
-          "line": 950,
+          "line": 975,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -12135,7 +12135,7 @@
           "file": "src/components/centropy/canvas/application-semantics-client.ts",
           "route": "company-brain/application-cancel",
           "method": "POST",
-          "line": 1023,
+          "line": 1048,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -12269,7 +12269,7 @@
           "file": "src/components/centropy/canvas/application-semantics-client.ts",
           "route": "company-brain/application-execute",
           "method": "POST",
-          "line": 1011,
+          "line": 1036,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -12663,7 +12663,7 @@
           "file": "src/components/centropy/canvas/application-semantics-client.ts",
           "route": "company-brain/application-projection",
           "method": "POST",
-          "line": 782,
+          "line": 809,
           "binding": "Native product proxy fetch with explicit HTTP method; source evidence only"
         }
       ],
@@ -36698,7 +36698,7 @@
           "file": "src/components/centropy/lib/centropy-auth.tsx",
           "route": "live-controls",
           "method": "POST",
-          "line": 279,
+          "line": 292,
           "binding": "Native product proxy fetch with explicit HTTP method; source evidence only"
         }
       ],
