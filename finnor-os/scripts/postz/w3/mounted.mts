@@ -109,6 +109,7 @@ export async function mountedServiceProof(input: MountedInput) {
   const mountedReadOutcomes: Array<{ route: string; status: number }> = [];
   const mountedNavigations: Array<{ path: string; queryKeys: string[] }> = [];
   const mountedRuntimeErrors: Array<{ name: string; category: string; property?: string }> = [];
+  const mountedAuthResponses: Array<{ route: string; method: string; status: number; identityDenied: boolean }> = [];
   const currentPage = () => { assert(page, "W3_OWNED_HEADED_PAGE_REQUIRED"); return page };
   const evaluate = <Arg, Result>(read: (arg: Arg) => Result, arg: Arg) => {
     input.checkBound();
@@ -175,7 +176,18 @@ export async function mountedServiceProof(input: MountedInput) {
         const contextPanels = Array.from(document.querySelectorAll('[data-testid="w3-service-panel"]'));
         const locationUrl = new URL(location.href);
         const visibleRoot = document.querySelector(".ct-world");
+        const auth = document.querySelector(".ct-auth-state");
+        const authTitle = auth?.querySelector("h1")?.textContent?.trim();
+        const authScreen = !auth ? "NONE"
+          : auth.getAttribute("data-private-workspace-state") === "unavailable" ? "VISIBILITY_CLOSED"
+          : auth.getAttribute("role") === "status" ? "AUTH_BOOTSTRAP"
+          : authTitle === "Workspace unavailable" ? "AUTH_OR_ROLE_ERROR"
+          : authTitle === "Participant workspace" ? "PARTICIPANT_SCOPE"
+          : authTitle === "Your investment context stays private." ? "SESSION_MISSING"
+          : "UNKNOWN_CLOSED_SCOPE";
+        const authRejection = !!auth?.textContent?.includes("Your workspace access is no longer available.");
         return {
+          authScreen, authRejection,
           pathname: locationUrl.pathname,
           queryKeys: [...locationUrl.searchParams.keys()]
             .filter(key => ["root", "object", "workId", "context", "threadId"].includes(key)).slice(0, 8),
@@ -206,6 +218,7 @@ export async function mountedServiceProof(input: MountedInput) {
         browserState, routeStatuses: mountedReadOutcomes.slice(-60),
         navigations: mountedNavigations.slice(-25),
         runtimeErrors: mountedRuntimeErrors.slice(-20),
+        authResponses: mountedAuthResponses.slice(-75),
         noPrivateResponseBodiesOrTokens: true,
       });
       throw error;
@@ -393,6 +406,16 @@ export async function mountedServiceProof(input: MountedInput) {
     page.on("response", response => {
       let path = "";
       try { path = new URL(response.url()).pathname } catch { return }
+      const status = response.status();
+      if (path.startsWith("/api/centropy/") && (status >= 400 || path === "/api/centropy/me")) {
+        const routeParts = path.slice("/api/centropy/".length).split("/").slice(0, 3);
+        const route = routeParts.map(part => /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(part) ? ":id"
+          : /^[a-z][a-z0-9-]{0,50}$/.test(part) ? part : ":part").join("/");
+        const identityDenied = response.headers()["x-finnor-identity-state"] === "denied";
+        mountedAuthResponses.push({ route, method: response.request().method(), status, identityDenied });
+      } else if (path.startsWith("/auth/v1/") && status >= 400) {
+        mountedAuthResponses.push({ route: "AUTH_SESSION", method: response.request().method(), status, identityDenied: false });
+      }
       const route = /^\/api\/centropy\/works\/[^/]+$/.test(path) ? "work-record"
         : path === "/api/centropy/real-world-services/read" ? "service-read"
         : path === "/api/centropy/real-world-services/inbox" ? "service-inbox"
