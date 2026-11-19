@@ -27,6 +27,16 @@ assert.equal(finiteRequestFailure(refused,'/api/actions/'+secret+'/confirm','POS
 assert.equal(timeout.code,'OWNER_REQUEST_TIMEOUT');
 assert.equal(connection.code,'OWNER_REQUEST_TRANSPORT_FAILED');
 assert(connection.causeCodes.includes('ECONNREFUSED'));
+const workforceRead=finiteRequestFailure(refused,`/api/workforce/execution-programs/${actionId}`,'GET',2);
+assert.equal(workforceRead.path,'/api/workforce/execution-programs/:id');
+assert(!JSON.stringify(workforceRead).includes(actionId));
+assert.equal(isRetryableReadAfterOwnedWorkerRestart(workforceRead,1),true);
+assert.equal(isRetryableReadAfterOwnedWorkerRestart(workforceRead,5),true);
+assert.equal(isRetryableReadAfterOwnedWorkerRestart(workforceRead,6),false);
+assert.equal(isRetryableReadAfterOwnedWorkerRestart({...workforceRead,method:'POST'},1),false);
+assert.equal(isRetryableReadAfterOwnedWorkerRestart({...workforceRead,path:'/api/closing/read'},1),false);
+assert.equal(isRetryableReadAfterOwnedWorkerRestart({...workforceRead,code:'OWNER_REQUEST_TIMEOUT'},1),false);
+assert.equal(isRetryableReadAfterOwnedWorkerRestart({...workforceRead,method:'GET',path:null},1),false);
 const reset=finiteRequestFailure(Object.assign(new TypeError('socket closed'),{cause:{code:'ECONNRESET'}}),
   '/api/closing/read','GET',3);
 assert.equal(isRetryableReadAfterOwnedWorkerRestart(reset,1),true);

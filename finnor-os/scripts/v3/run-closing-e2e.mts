@@ -157,9 +157,12 @@ async function readAfterOwnedWorkerRestart<T>(read:()=>Promise<T>):Promise<T>{
     catch(error){
       const failure=error&&typeof error==='object'?requestFailures.get(error):undefined;
       if(!isRetryableReadAfterOwnedWorkerRestart(failure,attempt))throw error;
+      const restartRefused=failure!.path==='/api/workforce/execution-programs/:id'
+        &&failure!.causeCodes.every(code=>code==='ECONNREFUSED');
+      const delayMs=restartRefused?Math.min(1000*attempt,3000):250*attempt;
       console.log(JSON.stringify({event:'W2_READ_ONLY_RECOVERY_RETRY',attempt,
-        causeCodes:failure!.causeCodes,delayMs:250*attempt}));
-      await sleep(250*attempt);
+        causeCodes:failure!.causeCodes,delayMs}));
+      await sleep(delayMs);
     }
   }
 }

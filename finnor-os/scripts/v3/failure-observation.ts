@@ -5,6 +5,7 @@ const causeCodes = new Set(['ECONNREFUSED','ECONNRESET','EPIPE','ETIMEDOUT','ENO
 const paths = new Set(['/api/closing/resume','/api/closing/submit','/api/closing/read',
   '/api/closing/stop','/api/closing/ports','/api/allocations/validate','/api/allocations/resources']);
 const confirmationPath=/^\/api\/actions\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/confirm$/i;
+const workforceReadPath=/^\/api\/workforce\/execution-programs\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const signals = new Set(['SIGTERM','SIGKILL','SIGINT','SIGABRT','SIGSEGV','SIGBUS','SIGQUIT']);
 const boundedMs=(value:number)=>Number.isFinite(value)&&value>=0?Math.min(1_200_000,Math.round(value)):null;
 function codes(error:unknown):string[]{
@@ -22,15 +23,20 @@ export function finiteRequestFailure(error:unknown,path:string,method:'GET'|'POS
   const observed=codes(error),name=error instanceof Error?error.name:null;
   return {code:name==='TimeoutError'?'OWNER_REQUEST_TIMEOUT':
     observed.length||error instanceof TypeError?'OWNER_REQUEST_TRANSPORT_FAILED':'OWNER_REQUEST_FAILED',
-    path:paths.has(path)?path:confirmationPath.test(path)?'/api/actions/:id/confirm':null,
+    path:paths.has(path)?path:confirmationPath.test(path)?'/api/actions/:id/confirm':workforceReadPath.test(path)?'/api/workforce/execution-programs/:id':null,
     method,elapsedMs:boundedMs(elapsedMs),causeCodes:observed};
 }
 const retryableRecoveryReadCodes=new Set(['ECONNRESET','EPIPE','UND_ERR_SOCKET']);
 export function isRetryableReadAfterOwnedWorkerRestart(
   failure:ReturnType<typeof finiteRequestFailure>|undefined,attempt:number){
-  return Number.isInteger(attempt)&&attempt>=1&&attempt<3
-    &&failure?.code==='OWNER_REQUEST_TRANSPORT_FAILED'&&failure.method==='GET'
-    &&failure.causeCodes.length>0&&failure.causeCodes.every(code=>retryableRecoveryReadCodes.has(code));
+  if(!Number.isInteger(attempt)||attempt<1||failure?.code!=='OWNER_REQUEST_TRANSPORT_FAILED'
+    ||failure.method!=='GET'||!failure.causeCodes.length)return false;
+  // The owned worker restart can overlap with a real Next dev memory-threshold
+  // restart. ECONNREFUSED is replayable only for this exact authenticated GET,
+  // never for a write, a different route, or a sustained missing API listener.
+  if(failure.path==='/api/workforce/execution-programs/:id'
+    &&failure.causeCodes.every(code=>code==='ECONNREFUSED'))return attempt<6;
+  return attempt<3&&failure.causeCodes.every(code=>retryableRecoveryReadCodes.has(code));
 }
 export function isRetryableClosingProjection(
   failure:ReturnType<typeof finiteRequestFailure>|undefined,attempt:number){
