@@ -14,7 +14,7 @@ import {
   cancelApplication,
   executeApplication,
   readApplicationProjection,
-  readApplicationScope,
+  readApplicationSnapshot,
   type ApplicationAcquisitionDraft,
   type ApplicationAcquisitionRequest,
   type ApplicationExecutionDraft,
@@ -657,12 +657,10 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
         sessionKey: marker.sessionKey,
         signal: request.controller.signal,
       }
-      const scope = await readApplicationScope(workSelection, transport)
-      if (!isCurrent(marker)) return null
+      const { scope, data } = await readApplicationSnapshot(workSelection, transport, allowRetry && !nativeScope.current)
+      if (!isCurrent(marker) || request.controller.signal.aborted) return null
       if (nativeScope.current && JSON.stringify(nativeScope.current) !== JSON.stringify(scope)) erasePrivate()
       nativeScope.current = scope
-      const data = await readApplicationProjection(scope, transport)
-      if (!isCurrent(marker) || request.controller.signal.aborted) return null
       const pending = unconfirmedRef.current
       if (pending && pending.sourceKey === scopeKey && pending.tenantId === scope.tenantId
         && pending.principalId === scope.principalId) {
@@ -716,6 +714,7 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
       })
       return null
     } finally {
+      request.controller.abort()
       if (activeRead.current === request) activeRead.current = null
     }
   }, [workSelection, scopeKey, isCurrent, erasePrivate])
@@ -723,6 +722,7 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
   const refresh = useCallback(async (clear: boolean) => {
     if (!ready || !sessionKey || fence.current?.stamp !== stamp || activeAction.current?.stamp === stamp
       || !navigator.onLine || document.visibilityState !== "visible") return
+    if (!clear && activeRead.current?.marker.stamp === stamp && !activeRead.current.controller.signal.aborted) return
     const marker = { stamp, sequence: ++generation.current, sessionKey }
     activeRead.current?.controller.abort()
     if (clear) {
@@ -769,12 +769,17 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
 
   useEffect(() => {
     const usable = () => navigator.onLine && document.visibilityState === "visible"
-    setAvailable(usable())
+    let lastUsable = usable()
+    setAvailable(lastUsable)
     const environment = () => {
       if (fence.current?.stamp !== stamp) return
-      setAvailable(usable())
-      invalidate("Connectivity or visibility changed. Private evidence and inputs are cleared until current identity and scope are revalidated.")
-      if (usable()) void refresh(false)
+      const nextUsable = usable()
+      if (lastUsable !== nextUsable) {
+        lastUsable = nextUsable
+        setAvailable(nextUsable)
+        invalidate("Connectivity or visibility changed. Private evidence and inputs are cleared until current identity and scope are revalidated.")
+      }
+      if (nextUsable) void refresh(false)
     }
     document.addEventListener("visibilitychange", environment)
     window.addEventListener("offline", environment)
@@ -793,7 +798,9 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
     // The maintained client publishes our own write acknowledgement too; it is
     // not a revocation event or completion. Its explicit post-write read owns it.
     if (signal.source === "mutation" && /company-brain\/application-(?:acquire|execute|cancel)$/.test(signal.path ?? "")) return
-    invalidate("Owner state or access changed. Private evidence and inputs are cleared pending current-use revalidation.")
+    if (signal.tags.some(tag => ["authority", "connections", "source", "workspace"].includes(tag))) {
+      invalidate("Owner state or access changed. Private evidence and inputs are cleared pending current-use revalidation.")
+    }
     void refresh(false)
   }), [invalidate, refresh])
 

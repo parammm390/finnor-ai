@@ -10,6 +10,7 @@ import {
 import {
   getCurrentAccessToken,
   getCurrentSessionKey,
+  getVerifiedWorkspaceIdentity,
 } from "@/components/centropy/lib/centropy-auth"
 import type {
   ApplicationActionModel,
@@ -744,9 +745,13 @@ const nativeIdentitySchema = z.object({
 export async function readApplicationScope(
   selection: ApplicationWorkSelection,
   currentUse: ApplicationCurrentUse,
+  reuseWorkspaceIdentity = false,
 ): Promise<ApplicationSemanticsScope> {
   assertCurrentSession(currentUse.sessionKey, currentUse.signal)
-  const parsed = nativeIdentitySchema.safeParse(await centropyGet<unknown>("me"))
+  const verified = reuseWorkspaceIdentity
+    ? nativeIdentitySchema.safeParse(getVerifiedWorkspaceIdentity(currentUse.sessionKey)) : null
+  const parsed = verified?.success ? verified
+    : nativeIdentitySchema.safeParse(await centropyGet<unknown>("me", undefined, currentUse.signal))
   assertCurrentSession(currentUse.sessionKey, currentUse.signal)
   if (!parsed.success) throw new ApplicationProjectionError()
   const identity = parsed.data
@@ -765,6 +770,30 @@ export async function readApplicationProjection(
   currentUse: ApplicationCurrentUse,
 ): Promise<ApplicationWorkProjection> {
   if (!expectedScopeSchema.safeParse(expected).success) throw new ApplicationProjectionError()
+  const value = await fetchApplicationProjection(expected, currentUse)
+  assertCurrentSession(currentUse.sessionKey, currentUse.signal)
+  return parseApplicationProjection(value, expected)
+}
+
+/** Start the independent authenticated reads together. Publish only after exact
+ * Work, root, principal and tenant validation under the same session fence. */
+export async function readApplicationSnapshot(
+  selection: ApplicationWorkSelection,
+  currentUse: ApplicationCurrentUse,
+  reuseWorkspaceIdentity = false,
+) {
+  const [scope, value] = await Promise.all([
+    readApplicationScope(selection, currentUse, reuseWorkspaceIdentity),
+    fetchApplicationProjection(selection, currentUse),
+  ])
+  assertCurrentSession(currentUse.sessionKey, currentUse.signal)
+  return { scope, data: parseApplicationProjection(value, scope) }
+}
+
+async function fetchApplicationProjection(
+  selection: ApplicationWorkSelection,
+  currentUse: ApplicationCurrentUse,
+): Promise<unknown> {
   assertCurrentSession(currentUse.sessionKey, currentUse.signal)
   const token = getCurrentAccessToken()
   const controller = new AbortController()
@@ -776,16 +805,14 @@ export async function readApplicationProjection(
     controller.abort()
   }, CENTROPY_GET_TIMEOUT_MS)
   try {
-    // api.ts currently cannot take a caller AbortSignal. This read-only transport
-    // uses its maintained proxy, token getter, no-store policy, error type and
-    // read timeout. Actual mutations stay on centropyPost below.
+    // The application read bounds and validates the complete response before use.
     const response = await fetch("/api/centropy/company-brain/application-projection", {
       method: "POST",
       cache: "no-store",
       credentials: "same-origin",
       redirect: "error",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-      body: JSON.stringify({ root: expected.root, workId: expected.workId, includeAcquisition: true }),
+      body: JSON.stringify({ root: selection.root, workId: selection.workId, includeAcquisition: true }),
       signal: controller.signal,
     })
     assertCurrentSession(currentUse.sessionKey, currentUse.signal)
@@ -795,13 +822,11 @@ export async function readApplicationProjection(
     const body = await response.text()
     assertCurrentSession(currentUse.sessionKey, currentUse.signal)
     if (body.length > 64 * 1024 * 1024) throw new ApplicationProjectionError()
-    let value: unknown
     try {
-      value = JSON.parse(body)
+      return JSON.parse(body)
     } catch {
       throw new ApplicationProjectionError()
     }
-    return parseApplicationProjection(value, expected)
   } catch (error) {
     if (currentUse.signal?.aborted || getCurrentSessionKey() !== currentUse.sessionKey) throw aborted()
     if (timedOut) throw new CentropyApiError("The current application projection timed out.", 504)

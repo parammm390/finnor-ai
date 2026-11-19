@@ -23,6 +23,7 @@ let currentSession: Session | null = null
 let locallySignedOut = false
 let rejectedCredential: string | null = null
 let accessGeneration = 0
+let verifiedIdentity: { sessionKey: string; value: unknown } | null = null
 let pendingSignOut: Promise<void> | null = null
 export function waitForCentropySignOut(): Promise<void> { return pendingSignOut ?? Promise.resolve() }
 const rejectionListeners = new Set<(reason: string) => void>()
@@ -30,6 +31,7 @@ function adoptSession(next: Session | null): void {
   if (next?.access_token !== currentSession?.access_token || next?.user.id !== currentSession?.user.id) {
     accessGeneration++
     rejectedCredential = null
+    verifiedIdentity = null
   }
   currentSession = next
 }
@@ -39,6 +41,7 @@ export function rejectCurrentWorkspaceAccess(credential: string, expectedGenerat
     || rejectedCredential === credential) return
   rejectedCredential = credential
   accessGeneration++
+  verifiedIdentity = null
   rejectionListeners.forEach(listener => listener("Your workspace access is no longer available. Retry verification or sign in again."))
 }
 export function getCurrentAccessToken(): string | null {
@@ -49,6 +52,12 @@ export function hasActiveSession(): boolean {
 }
 export function getCurrentSessionKey(): string | null {
   return currentSession && getCurrentAccessToken() ? `${currentSession.user.id}:${accessGeneration}:${currentSession.access_token}` : null
+}
+
+/** Reuse the already authenticated /me result only for its precise session. */
+export function getVerifiedWorkspaceIdentity(sessionKey: string): unknown {
+  return verifiedIdentity?.sessionKey === sessionKey && getCurrentSessionKey() === sessionKey
+    ? verifiedIdentity.value : undefined
 }
 
 export const CENTROPY_AUTH_BOOTSTRAP_TIMEOUT_MS = 10_000
@@ -225,6 +234,7 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
     if (!sameResolvedUser) setRole(null)
     setRoleLoading(true)
     setRoleError(null)
+    const roleSessionKey = getCurrentSessionKey()
     centropyGet<{ role: CentropyRole }>("me")
       .then((r) => {
         if (!cancelled) {
@@ -233,6 +243,9 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
             setRole(null)
             setRoleError("CENTROPY returned an unknown workspace role. Retry connection or contact an administrator.")
             return
+          }
+          if (roleSessionKey && roleSessionKey === getCurrentSessionKey()) {
+            verifiedIdentity = { sessionKey: roleSessionKey, value: r }
           }
           resolvedRoleUserIdRef.current = session.user.id
           setRole(r.role)

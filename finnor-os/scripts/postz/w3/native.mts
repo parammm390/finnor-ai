@@ -206,14 +206,23 @@ const port = await new Promise<number>((accept, reject) => {
   });
 });
 const pgDirectory = join(output, "disposable-postgres"), adminPassword = randomUUID(), appPassword = randomUUID(), workerPassword = randomUUID();
+let postgresStartLog = "";
 const postgres = new EmbeddedPostgres({ databaseDir: pgDirectory, user: "w3_admin", password: adminPassword,
-  port, persistent: false, onLog: () => undefined });
+  port, persistent: false, postgresFlags: ["-c", "listen_addresses=127.0.0.1", "-c", "unix_socket_directories="],
+  onLog: line => { postgresStartLog = (postgresStartLog + line).slice(-8192); } });
 let admin: pg.Client | null = null, auth: any = null, recipient: any = null, activeWorker: ChildProcess | null = null;
 let closePool: (() => Promise<void>) | null = null;
 const workers: any[] = [];
 try {
   await postgres.initialise(); await appendFile(join(pgDirectory, "postgresql.conf"), "\ntrack_commit_timestamp=on\n");
-  await postgres.start(); await postgres.createDatabase("w3_service");
+  try { await postgres.start(); }
+  catch (error) {
+    await artifact("postgres-start.private.json", { tail: postgresStartLog });
+    // embedded-postgres can reject without an error when its child exits.
+    if (integratedCompany) console.error("W3_DISPOSABLE_POSTGRES_START_FAILED");
+    throw Error("W3_DISPOSABLE_POSTGRES_START_FAILED", { cause: error });
+  }
+  await postgres.createDatabase("w3_service");
   const adminUrl = `postgres://w3_admin:${adminPassword}@127.0.0.1:${port}/w3_service`;
   const { migrate } = installation
     ? await import(pathToFileURL(join(installation, installedDescriptor.entrypoints.migrations)).href)

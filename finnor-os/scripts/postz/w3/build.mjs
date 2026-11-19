@@ -85,8 +85,14 @@ async function dependency(name, from, destination) {
       if (excluded.has(item.name)) continue;
       const original = join(directory, item.name), target = path + "/" + item.name, info = await lstat(original);
       if (info.isDirectory()) await copy(original, target);
-      else if (info.isFile()) await save(target, await readFile(original), "DEVELOPMENT_DEPENDENCY", 0o444 | (info.mode & 0o111));
-      else if (info.isSymbolicLink()) {
+      else if (info.isFile()) {
+        // The locked embedded-postgres loader adds these bits before startup.
+        // A sealed native executable must already have its final mode.
+        const postgresExecutable = pkg.name.startsWith("@embedded-postgres/")
+          && /^native\/bin\/(?:initdb|postgres)(?:\.exe)?$/.test(relative(location, original).split(sep).join("/"));
+        const mode = postgresExecutable ? 0o555 : 0o444 | (info.mode & 0o111);
+        await save(target, await readFile(original), "DEVELOPMENT_DEPENDENCY", mode);
+      } else if (info.isSymbolicLink()) {
         const resolved = await realpath(original);
         assert(resolved.startsWith(location + sep), "W3_DEPENDENCY_EXTERNAL_LINK_REFUSED");
         assert((await lstat(resolved)).isFile(), "W3_DEPENDENCY_NONFILE_LINK_REFUSED");
