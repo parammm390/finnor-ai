@@ -356,7 +356,7 @@ export default {
     },
     {
       "path": "src/components/centropy/lib/api.ts",
-      "sha256": "9b975f996bcad85f3afaae75fd4d02d1470eb4266d495752ed1efecd47de6f3c"
+      "sha256": "07ac58133dce27dc2ca80f442476e4e79454c1121e94f521c36d1001acb52a73"
     },
     {
       "path": "src/lib/centropy/supabase-browser.ts",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "16ce03ce0775e12650dfe534f48e9ecd5d942f8f7a30095182780440d09bc913"
+  "sourceDigest": "91fc326d2bdb5fc0de62b66aab7965b6b93a739c6bb213d1a190a7b83a3818b7"
 } as const;

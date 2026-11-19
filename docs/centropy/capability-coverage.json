@@ -8,8 +8,8 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-19T06:47:20.745Z",
-  "sourceBaseCommit": "43d467c81a28614fa7c8651c80fa1741d37c1050",
+  "generatedAt": "2026-11-19T21:08:25.224Z",
+  "sourceBaseCommit": "30bd9b87e0ab7e1d6644c3400cf141c353d70f5a",
   "manifestSha256": "e68051fd74494792ebb66d7156bae1b6ac5ef64e369d60057bc4c596fb0aebe3",
   "formsSha256": "35b57673d9d86e461f2b6056aaf326cb789901dfdd4481734aefef91da8052fd",
   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -1081,7 +1081,7 @@
       },
       {
         "file": "src/components/centropy/lib/api.ts",
-        "sha256": "9b975f996bcad85f3afaae75fd4d02d1470eb4266d495752ed1efecd47de6f3c"
+        "sha256": "07ac58133dce27dc2ca80f442476e4e79454c1121e94f521c36d1001acb52a73"
       },
       {
         "file": "src/components/centropy/lib/business-invalidation.ts",
