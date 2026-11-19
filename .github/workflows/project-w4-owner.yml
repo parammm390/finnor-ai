@@ -109,7 +109,7 @@ jobs:
           const { readdirSync } = await import('node:fs')
           const deliveryDir = file('native-deliveries')
           const deliveryFiles = existsSync(deliveryDir) ? readdirSync(deliveryDir)
-            .filter(name => /^[1-9][0-9]*\\.json$/.test(name))
+            .filter(name => /^[1-9][0-9]*\.json$/.test(name))
             .sort((a, b) => Number(a.slice(0, -5)) - Number(b.slice(0, -5))) : []
           const lastDelivery = deliveryFiles.length ? json(join(deliveryDir, deliveryFiles.at(-1))) : null
           const safeStatus = value => typeof value === 'string' && /^[A-Z][A-Z0-9_]{1,100}$/.test(value) ? value : 'UNCLASSIFIED'
