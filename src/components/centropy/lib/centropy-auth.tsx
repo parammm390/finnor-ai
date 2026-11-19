@@ -9,7 +9,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
 import { readWorkOSSession, type BrowserSession as Session } from "@/lib/auth/browser-session"
 import { getSupabaseBrowser } from "@/lib/centropy/supabase-browser"
-import { centropyGet } from "./api"
+import { CentropyApiError, centropyGet } from "./api"
 
 // The institutional shell remains owner-only. Existing non-owner canonical
 // roles may open the separate, recipient-scoped workforce workspace; this union
@@ -235,32 +235,43 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
     setRoleLoading(true)
     setRoleError(null)
     const roleSessionKey = getCurrentSessionKey()
-    centropyGet<{ role: CentropyRole }>("me")
-      .then((r) => {
-        if (!cancelled) {
-          if (!isCentropyRole(r.role)) {
+    // An overloaded proxy can return a bounded 5xx for a real authenticated /me.
+    // A transient response is not an authorization denial. Retry the canonical read
+    // at most twice, always while the CURRENT session/key is unchanged, and never
+    // reopen private Work until that exact key's /me returns an allowed role.
+    // Explicit 401/403, revoked credentials and unknown roles remain fail-closed.
+    const readCurrentRole = async () => {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (cancelled || !roleSessionKey || roleSessionKey !== getCurrentSessionKey()) return
+        try {
+          const current = await centropyGet<{ role: CentropyRole }>("me")
+          if (cancelled || roleSessionKey !== getCurrentSessionKey()) return
+          if (!isCentropyRole(current.role)) {
             resolvedRoleUserIdRef.current = null
             setRole(null)
             setRoleError("CENTROPY returned an unknown workspace role. Retry connection or contact an administrator.")
             return
           }
-          if (roleSessionKey && roleSessionKey === getCurrentSessionKey()) {
-            verifiedIdentity = { sessionKey: roleSessionKey, value: r }
-          }
+          verifiedIdentity = { sessionKey: roleSessionKey, value: current }
           resolvedRoleUserIdRef.current = session.user.id
-          setRole(r.role)
-        }
-      })
-      .catch((error) => {
-        if (!cancelled) {
+          setRole(current.role)
+          return
+        } catch (error) {
+          if (cancelled || roleSessionKey !== getCurrentSessionKey()) return
+          if (error instanceof CentropyApiError && error.retryable && attempt < 2) {
+            await new Promise<void>(resolve => globalThis.setTimeout(resolve, 1200 * (attempt + 1)))
+            continue
+          }
           resolvedRoleUserIdRef.current = null
           setRole(null)
           setRoleError(error instanceof Error ? error.message : "CENTROPY could not load your role.")
+          return
         }
-      })
-      .finally(() => {
-        if (!cancelled) setRoleLoading(false)
-      })
+      }
+    }
+    void readCurrentRole().finally(() => {
+      if (!cancelled && roleSessionKey === getCurrentSessionKey()) setRoleLoading(false)
+    })
     return () => {
       cancelled = true
     }
