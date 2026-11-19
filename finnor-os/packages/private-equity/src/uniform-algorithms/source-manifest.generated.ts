@@ -2000,7 +2000,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/compute-search/worker.ts",
-      "sha256": "4ab5cdb3715aec4e6a33257775e3f19d54d17e39370f6f7869ea5d06bd1a8168"
+      "sha256": "0fad4acc05b9af1b512b71f6077f70c366dcc59ac1955203e7d900c3aa4594ae"
     },
     {
       "path": "finnor-os/packages/private-equity/src/confidential-computation/admission.ts",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "d417d3ccda5a3b5a1c9f03905c6df717e24d0e4bf722d2dbcce8d4e6759514f0"
+  "sourceDigest": "16ce03ce0775e12650dfe534f48e9ecd5d942f8f7a30095182780440d09bc913"
 } as const;

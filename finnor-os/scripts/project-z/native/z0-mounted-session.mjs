@@ -341,6 +341,10 @@ let referenceSignature = null, referenceCore = null, referenceTruthA = null;
 async function ensureOwnerOnWork(which = "A") {
   const target = which === "A" ? { thread: threadA, parent: parentA } : { thread: threadB, parent: parentB };
   if (!(await page.locator(".ct-topbar").isVisible().catch(() => false))) await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
+  if (page.url() === workUrl(target.thread.id)) {
+    await waitForPanel(page, target.parent.workId);
+    return { rootCarriedBy: "THREAD_PERSISTED_ROOT" };
+  }
   return openWork(page, target.thread.id, target.parent.workId);
 }
 const mutationsOf = (c, mark, allowed = 0) => {
@@ -466,8 +470,7 @@ await runCase("M-02", ["Z0-R08-C02", "Z0-R45-C03"], "S5/S6/S7 accounting, produc
   if (!referenceTruthA) notRun("M-01_DID_NOT_READ_THE_ORIGINAL_WORK");
   const mark = watch.mark();
   await ensureOwnerOnWork("A");
-  await page.reload({ waitUntil: "domcontentloaded" }); await waitForPanel(page, parentA.workId);
-  const f = await readPanels(page);
+  const f = await readSettledPanels(page, parentA.workId);
   await shot(page, c, "accounting");
   const truth = await readOwnerTruth({ q, owner, parent: parentA, sessionId: acqA.sessionId, acquisitionInput: acqA.request });
   c.observations.ownerCuts = { afterRead: await mountedOwnerCut(q, parentA, acqA.sessionId, ownerCutBeforeMounted.captured_at) };
@@ -726,10 +729,11 @@ await runCase("M-08", ["Z0-R09-C04", "Z0-R45-C04"], "Real logout then new sign-i
   const login = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
   c.observations.browserStage = "OPEN_WORK_AFTER_SIGN_IN";
   await openWork(page, threadA.id, parentA.workId);
-  await waitForPanel(page, parentA.workId);
+  const fresh = await readSettledPanels(page, parentA.workId);
   await watch.settle();
-  const reads = watch.since(mark2).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId);
-  const fresh = await readPanels(page);
+  const loginTag = login.bearer ? sha(login.bearer).slice(0, 12) : null;
+  const reads = watch.since(mark2).filter(row => row.path.endsWith("application-projection")
+    && row.workId === parentA.workId && row.status === 200 && loginTag && row.bearerTag === loginTag);
   c.observations.browserStage = "CHECK_RESTORED_WORK";
   await shot(page, c, "signed-in-again");
   check(c, "again.new-token-and-fresh-read", "the new sign-in carries a different access token, a new projection read is observed and the facts equal the earlier ones", "browser request watch + M-01 reference signature",
@@ -823,7 +827,7 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
       return clockWatch.since(mark).find(row => row.path.endsWith("application-projection") && row.workId === parentA.workId && row.bearerTag && row.bearerTag !== lastReadTag && row.status === 200);
     }, 1000).catch(() => null);
     check(c, "refresh.panel-reread-under-new-token", "the panel re-reads under the new token without any click", "browser request watch", { lastReadTag, newReadTag: reread?.bearerTag ?? null }, Boolean(reread));
-    const f = await readPanels(clockPage);
+    const f = await readSettledPanels(clockPage, parentA.workId);
     await shot(clockPage, c, "after-refresh");
     check(c, "refresh.facts-equal", "Work, session, status, remaining resources, charges and cost cells equal the M-01 facts (the page clock is advanced, so clock-dependent phrases are not compared)", "M-01 reference core signature + O-SQL",
       { equal: coreSignature(f) === referenceCore, work: f.appAttributes?.work }, f.appAttributes?.work === parentA.workId && coreSignature(f) === referenceCore);
@@ -841,8 +845,19 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
 await runCase("M-10", ["Z0-R09-C06"], "Delayed old-principal response (owned database lock hold)", async c => {
   if (!referenceTruthA) notRun("M-01_DID_NOT_READ_THE_ORIGINAL_WORK");
   if (!foreignCreds) notRun("FOREIGN_OWNER_NOT_SEEDED");
-  await ensureOwnerOnWork("A");
-  await waitForPanel(page, parentA.workId);
+  // Start the delayed-response case with its own authenticated original scope.
+  // This case follows the separate fake-clock token refresh context.
+  await context.close();
+  context = await newMountedContext(browser);
+  page = await context.newPage();
+  watch.attach(page, "delayed-original", authOrigin);
+  c.observations.browserStage = "SIGN_IN_ORIGINAL_OWNER";
+  const original = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
+  check(c, "original.identity", "real sign-in matches the original owner and tenant", "O-API /me",
+    { status: original.meStatus }, original.meStatus === 200
+      && original.identity?.tenantId === parentA.tenantId && original.identity?.userId === parentA.ownerId);
+  c.observations.browserStage = "OPEN_ORIGINAL_WORK";
+  await openWork(page, threadA.id, parentA.workId);
   const markers = [...referenceTruthA.markers, { label: "threadTitle", value: threadA.title }];
   const prior = await storageScan(page, context, markers);
   const secrets = [{ label: "previousRefreshToken", value: prior.refreshToken }];

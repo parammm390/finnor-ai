@@ -1347,6 +1347,7 @@ try {
       assert.equal(f.ctx.auth.userId, owner);
       assert.equal(f.ctx.auth.employeeId ?? f.ctx.auth.userId, owner);
       recipient = await (await import("../../w4/recipient.mts")).growthRecipient({
+        checkBound,
         directory: join(output, "controlled-recipient-private"), tenantId: tenant, principalId: owner,
         companyId: f.root.entityId, accountIds: [provider, backup], rightsRef: obligations.OFFER.rightsRef, artifact,
         readCanonicalOwnerView: async () => {

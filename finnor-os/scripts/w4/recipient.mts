@@ -28,6 +28,7 @@ export async function growthRecipient(input: {
   directory: string; tenantId: string; principalId: string; companyId: string; accountIds: string[]; rightsRef: string;
   readCanonicalOwnerView: () => Promise<BeliefView>;
   readCurrentOwnerAuthority: () => Promise<{ employeeId: string; revision: number }>;
+  checkBound: () => void;
   ownerCall: (op: string, body: unknown) => Promise<{ status: number; body: any }>;
   artifact: (name: string, body: unknown) => Promise<unknown>;
 }) {
@@ -224,7 +225,8 @@ export async function growthRecipient(input: {
     const batches = [];
     const unresolved = () => withTenantTransaction(input.tenantId, { userId: input.principalId, readOnly: true }, async (_db, c) =>
       (await c.query<{ owner: string; identity: string; status: string; lastError: string | null; due: Date }>(
-        `SELECT semantic_owner owner,identity,status,last_error "lastError",next_attempt_at due
+        `SELECT semantic_owner owner,identity,status,last_error "lastError",
+          CASE WHEN status='CLAIMED' THEN lease_until ELSE next_attempt_at END due
          FROM finnor_os.s6_owner_delivery_states WHERE tenant_id=$1 AND principal_id=$2
          AND semantic_owner=ANY($3::text[]) AND status<>'ACCEPTED'
          ORDER BY semantic_owner,identity LIMIT 16385`, [input.tenantId, input.principalId, owners])).rows);
@@ -242,17 +244,21 @@ export async function growthRecipient(input: {
         "W4_NATIVE_DELIVERY_REQUIRES_OWNER_RECOVERY");
       for (const semanticOwner of owners) {
         for (let batch = 0; batch < 8; batch++) {
+          input.checkBound();
           const report = await deliverOwnerTransportBatch({ semanticOwner,
             tenantId: input.tenantId, principalId: input.principalId }, { limit: 32 });
           batches.push({ round, semanticOwner, report });
-          if (!report.inspected || report.failures.length) break;
+          if (!report.inspected) break;
         }
       }
       pending = await unresolved();
       if (pending.length && round < 7) {
-        const delay = Math.max(0, Math.min(...pending.map(row => row.due.getTime())) - Date.now());
-        assert(delay <= 30000, "W4_NATIVE_DELIVERY_ORIGINAL_BACKOFF_BOUND");
-        await new Promise(done => setTimeout(done, delay + 25));
+        const dueAt = Math.min(...pending.map(row => row.due.getTime()));
+        while (dueAt > Date.now()) {
+          input.checkBound();
+          await new Promise(done => setTimeout(done, Math.min(30000, dueAt - Date.now() + 25)));
+        }
+        input.checkBound();
       }
     }
     const unresolvedOrigins = pending.length ? await withTenantTransaction(input.tenantId,

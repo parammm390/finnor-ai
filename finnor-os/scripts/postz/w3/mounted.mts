@@ -105,7 +105,15 @@ export async function mountedServiceProof(input: MountedInput) {
   };
   const inputEvents = { pointerActions: 0, keyboardActions: 0 };
   const currentPage = () => { assert(page, "W3_OWNED_HEADED_PAGE_REQUIRED"); return page };
-  const evaluate = (source: string): Promise<any> => { input.checkBound(); return currentPage().evaluate(source) };
+  const evaluate = <Arg, Result>(read: (arg: Arg) => Result, arg: Arg) => {
+    input.checkBound();
+    // These arguments are plain values. Playwright also accepts handle arguments.
+    return currentPage().evaluate<Result, Arg>(read as (arg: any) => Result, arg);
+  };
+  const wait = <Arg,>(predicate: (arg: Arg) => boolean, arg: Arg) => {
+    input.checkBound();
+    return currentPage().waitForFunction<boolean, Arg>(predicate as (arg: any) => boolean, arg, { timeout: 30000 });
+  };
   const browser = async (args: string[]) => {
     input.checkBound();
     const active = currentPage();
@@ -119,9 +127,7 @@ export async function mountedServiceProof(input: MountedInput) {
         assert.equal(new URL(argument(1)).origin, origin, "W3_MOUNTED_LOOPBACK_ORIGIN_ONLY");
         return active.goto(argument(1), { waitUntil: "domcontentloaded", timeout: 30000 });
       case "wait":
-        return args[1] === "--fn"
-          ? active.waitForFunction(argument(2), undefined, { timeout: 30000 })
-          : active.locator(argument(1)).waitFor({ state: "visible", timeout: 30000 });
+        return active.locator(argument(1)).waitFor({ state: "visible", timeout: 30000 });
       case "fill":
         await active.locator(argument(1)).click(); inputEvents.pointerActions++;
         await active.keyboard.press(process.platform === "darwin" ? "Meta+A" : "Control+A");
@@ -151,17 +157,16 @@ export async function mountedServiceProof(input: MountedInput) {
   const panel = `[data-testid="w3-service-panel"][data-w3-context="${input.workId}"]`;
   const participantPanel = `[data-testid="w3-service-panel"][data-w3-context="my-invitations"]`;
   const draftPrefix = "CONTROLLED_UNSUBMITTED_W3_DRAFT:";
-  const rowCount = () => evaluate(`document.querySelectorAll('${panel} tbody tr').length`);
-  const wait = (predicate: string) => browser(["wait", "--fn", predicate]);
+  const rowCount = () => evaluate(selector => document.querySelectorAll(selector + " tbody tr").length, panel);
   const rendered = async () => {
-    await wait(`document.querySelectorAll('${panel} tbody tr').length === 7`);
-    const view: any = await evaluate(`({
-      ids: Array.from(document.querySelectorAll('${panel} tbody tr')).map(x => x.cells[0].textContent),
-      text: document.querySelector('${panel}').innerText,
-      retainedDrafts: Array.from(document.querySelectorAll('[data-testid="w3-service-panel"] textarea'))
-        .filter(element => element.value.startsWith(${JSON.stringify(draftPrefix)})).length,
+    await wait(selector => document.querySelectorAll(selector + " tbody tr").length === 7, panel);
+    const view = await evaluate(({ selector, prefix }) => ({
+      ids: Array.from(document.querySelectorAll<HTMLTableRowElement>(selector + " tbody tr")).map(x => x.cells[0]!.textContent),
+      text: document.querySelector<HTMLElement>(selector)!.innerText,
+      retainedDrafts: Array.from(document.querySelectorAll<HTMLTextAreaElement>('[data-testid="w3-service-panel"] textarea'))
+        .filter(element => element.value.startsWith(prefix)).length,
       online: navigator.onLine, url: location.href
-    })`);
+    }), { selector: panel, prefix: draftPrefix });
     assert.deepEqual([...view.ids].sort(), [...input.expectedInstanceIds].sort());
     assert.equal(view.retainedDrafts, 0, "W3_OLD_PRIVATE_DRAFT_REAPPEARED_AFTER_FRESH_READ");
     assert(view.text.includes("No field qualification or admission")
@@ -171,15 +176,17 @@ export async function mountedServiceProof(input: MountedInput) {
   const seedDraft = async (boundary: string) => {
     const marker = draftPrefix + boundary;
     const form = panel + " > details:last-of-type";
-    if (!await evaluate(`document.querySelector('${form}').open`)) await browser(["click", form + " > summary"]);
+    if (!await evaluate(selector => document.querySelector<HTMLDetailsElement>(selector)!.open, form)) {
+      await browser(["click", form + " > summary"]);
+    }
     await browser(["fill", panel + ' textarea[aria-label="Service request JSON"]', marker]);
-    assert.equal(await evaluate(`document.querySelector('${panel} textarea').value`), marker);
+    assert.equal(await evaluate(selector => document.querySelector<HTMLTextAreaElement>(selector + " textarea")!.value, panel), marker);
     return { marker, submitted: false };
   };
   const clear = async () => {
-    await wait(`document.querySelectorAll('${panel} tbody tr').length === 0`);
-    const retained = await evaluate(`Array.from(document.querySelectorAll('[data-testid="w3-service-panel"] textarea'))
-      .filter(element => element.value.startsWith(${JSON.stringify(draftPrefix)})).length`);
+    await wait(selector => document.querySelectorAll(selector + " tbody tr").length === 0, panel);
+    const retained = await evaluate(prefix => Array.from(document.querySelectorAll<HTMLTextAreaElement>('[data-testid="w3-service-panel"] textarea'))
+      .filter(element => element.value.startsWith(prefix)).length, draftPrefix);
     assert.equal(retained, 0, "W3_OLD_PRIVATE_DRAFT_REAPPEARED");
   };
   const root = (companyId: string) => ({ entityType: "external_organization", entityId: companyId });
@@ -199,7 +206,8 @@ export async function mountedServiceProof(input: MountedInput) {
   const chooseRoot = async (companyId: string, selectWork: boolean) => {
     const key = "external_organization:" + companyId;
     const selector = 'select[aria-label="Choose WORLD root"]';
-    await wait(`Array.from(document.querySelector('${selector}')?.options ?? []).some(option => option.value === ${JSON.stringify(key)})`);
+    await wait(({ selector, key }) => Array.from(document.querySelector<HTMLSelectElement>(selector)?.options ?? [])
+      .some(option => option.value === key), { selector, key });
     const control = currentPage().locator(selector);
     const selection = await control.evaluate((element, expected) => {
       const select = element as HTMLSelectElement;
@@ -216,20 +224,20 @@ export async function mountedServiceProof(input: MountedInput) {
       inputEvents.keyboardActions++;
     }
     await currentPage().keyboard.press("Enter"); inputEvents.keyboardActions++;
-    await wait(`(() => {
-      const value = new URL(location.href).searchParams.get('root');
-      return value && JSON.parse(value).entityId === ${JSON.stringify(companyId)};
-    })()`);
+    await wait(id => {
+      const value = new URL(location.href).searchParams.get("root");
+      return Boolean(value && JSON.parse(value).entityId === id);
+    }, companyId);
     if (selectWork) {
       const work = currentPage().locator(".ct-world__objects button")
         .filter({ hasText: "seven-day cook continuity assignment" });
       await work.waitFor({ state: "visible" });
       assert.equal(await work.count(), 1, "W3_ORIGINAL_WORK_CONTROL_MUST_BE_UNIQUE");
       await work.click(); inputEvents.pointerActions++;
-      await wait(`(() => {
-        const value = new URL(location.href).searchParams.get('object');
-        return value && JSON.parse(value).id === ${JSON.stringify(input.workId)};
-      })()`);
+      await wait(id => {
+        const value = new URL(location.href).searchParams.get("object");
+        return Boolean(value && JSON.parse(value).id === id);
+      }, input.workId);
     }
   };
   const host = spawn(process.execPath, [join(input.installation, input.descriptor.entrypoints.w3Frontend),
@@ -255,7 +263,7 @@ export async function mountedServiceProof(input: MountedInput) {
     // string is evaluated, passed on a command line, traced or put in evidence.
     await browser(["fill", "#centropy-login-password", identity.password]);
     await browser(["find", "role", "button", "click", "--name", "Sign in", "--exact"]);
-    await wait(`!location.pathname.endsWith('/login')`);
+    await wait(() => !location.pathname.endsWith("/login"), undefined);
   };
   const logout = async () => {
     await browser(["click", 'summary[aria-label="Account menu"]']);
@@ -310,7 +318,7 @@ export async function mountedServiceProof(input: MountedInput) {
     context.setDefaultTimeout(30000);
     page = context.pages()[0] ?? await context.newPage();
     await page.bringToFront();
-    await wait("document.visibilityState === 'visible'");
+    await wait(() => document.visibilityState === "visible", undefined);
     const cdp = await context.newCDPSession(page);
     const version = await cdp.send("Browser.getVersion");
     const commandLine = await cdp.send("Browser.getBrowserCommandLine");
@@ -324,7 +332,7 @@ export async function mountedServiceProof(input: MountedInput) {
       executablePath, executableSha256: createHash("sha256").update(await readFile(executablePath)).digest("hex"),
       playwrightVersion: require("playwright/package.json").version, profile,
       actualCommandLineHeadless: false, actualCommandLineOwnProfile: true,
-      visibilityState: await evaluate("document.visibilityState"),
+      visibilityState: await evaluate(() => document.visibilityState, undefined),
     });
     const allowedOrigins = new Set([origin, input.auth.origin, input.auth.authOrigin]);
     await context.route("**/*", route => allowedOrigins.has(new URL(route.request().url()).origin)
@@ -353,7 +361,7 @@ export async function mountedServiceProof(input: MountedInput) {
         await clear(); hold.release(); await hold.done;
         assert.equal(hold.original.automatic, false);
         assert.equal(await rowCount(), 0);
-        assert.equal(await evaluate("navigator.onLine"), false);
+        assert.equal(await evaluate(() => navigator.onLine, undefined), false);
         const view = await freshReturn("fresh-after-offline", async () => {
           await browser(["set", "offline", "off"]); offline = false;
         });
@@ -378,21 +386,21 @@ export async function mountedServiceProof(input: MountedInput) {
         await login(input.participant);
         await browser(["open", workUrl()]);
         await clear();
-        await wait(`Array.from(document.querySelectorAll('summary')).some(x => x.textContent.includes('My purpose-bound service invitations'))`);
-        await wait(`(() => {
-          const actual = Array.from(document.querySelectorAll('${participantPanel} [data-w3-protocol-id]'))
+        await wait(() => Array.from(document.querySelectorAll("summary"))
+          .some(x => x.textContent?.includes("My purpose-bound service invitations")), undefined);
+        await wait(({ selector, expected }) => {
+          const actual = Array.from(document.querySelectorAll(selector + " [data-w3-protocol-id]"))
             .map(element => element.getAttribute('data-w3-protocol-id'));
-          const expected = ${JSON.stringify(input.participantProtocolIds)};
           return actual.length === expected.length && expected.every(id => actual.includes(id));
-        })()`);
-        const participantView = await evaluate(`({
-          ownerProgrammeRows: document.querySelectorAll('${panel} tbody tr').length,
-          protocols: Array.from(document.querySelectorAll('${participantPanel} [data-w3-protocol-id]')).map(element => ({
+        }, { selector: participantPanel, expected: input.participantProtocolIds });
+        const participantView = await evaluate(({ ownerPanel, inboxPanel }) => ({
+          ownerProgrammeRows: document.querySelectorAll(ownerPanel + " tbody tr").length,
+          protocols: Array.from(document.querySelectorAll(inboxPanel + " [data-w3-protocol-id]")).map(element => ({
             id: element.getAttribute('data-w3-protocol-id'),
             state: element.getAttribute('data-w3-protocol-state'),
-            disclosure: element.querySelector('pre') ? JSON.parse(element.querySelector('pre').textContent) : null
+            disclosure: element.querySelector('pre') ? JSON.parse(element.querySelector('pre')!.textContent!) : null
           }))
-        })`);
+        }), { ownerPanel: panel, inboxPanel: participantPanel });
         assert.equal(participantView.ownerProgrammeRows, 0);
         assert.deepEqual(participantView.protocols.map((p: any) => p.id).sort(), [...input.participantProtocolIds].sort());
         for (const protocol of participantView.protocols) {
@@ -418,7 +426,7 @@ export async function mountedServiceProof(input: MountedInput) {
                   await entered(inbox);
                   await browser(["click", selector + " button:nth-of-type(2)"]);
                   await entered(consent);
-                  await wait(`!document.querySelector('${selector}')`);
+                  await wait(query => !document.querySelector(query), selector);
                   const received = currentPage().waitForResponse(response =>
                     new URL(response.url()).pathname === "/api/centropy/real-world-services/inbox" && response.status() === 200);
                   inbox.release(); await inbox.done;
@@ -430,11 +438,11 @@ export async function mountedServiceProof(input: MountedInput) {
                   // fetch/JSON and React commits, while the write stays held.
                   await currentPage().evaluate(() => new Promise<void>(done =>
                     requestAnimationFrame(() => requestAnimationFrame(() => done()))));
-                  const stale = await evaluate(`({
-                    disclosureCount: document.querySelector('${selector}')?.querySelectorAll('pre').length ?? 0,
-                    state: document.querySelector('${selector}')?.getAttribute('data-w3-protocol-state') ?? null,
-                    buttonCount: document.querySelector('${selector}')?.querySelectorAll('button').length ?? 0
-                  })`);
+                  const stale = await evaluate(query => ({
+                    disclosureCount: document.querySelector(query)?.querySelectorAll('pre').length ?? 0,
+                    state: document.querySelector(query)?.getAttribute('data-w3-protocol-state') ?? null,
+                    buttonCount: document.querySelector(query)?.querySelectorAll('button').length ?? 0
+                  }), selector);
                   await input.artifact("mounted/pre-write-inbox-after-revocation.json", {
                     stale, barriers: input.barrier.receipts(), writeResponseStillHeld: !consent.original.releasedAt });
                   assert.equal(stale.disclosureCount, 0, "W3_PRE_WRITE_INBOX_RESURRECTED_OPERATIONAL_DISCLOSURE");
@@ -444,12 +452,12 @@ export async function mountedServiceProof(input: MountedInput) {
                   return { stale, barriers: input.barrier.receipts() };
                 } finally { inbox.release(); consent.release(); await Promise.all([inbox.done, consent.done]) }
               });
-            await wait(`document.querySelector('${selector}')?.getAttribute('data-w3-protocol-state') === 'REVOKED'`);
-            const receipt = await evaluate(`({
-              text: document.querySelector('${selector}').innerText,
-              disclosureCount: document.querySelector('${selector}').querySelectorAll('pre').length,
-              disabled: Array.from(document.querySelector('${selector}').querySelectorAll('button')).every(x => x.disabled)
-            })`);
+            await wait(query => document.querySelector(query)?.getAttribute("data-w3-protocol-state") === "REVOKED", selector);
+            const receipt = await evaluate(query => {
+              const protocol = document.querySelector<HTMLElement>(query)!;
+              return { text: protocol.innerText, disclosureCount: protocol.querySelectorAll("pre").length,
+                disabled: Array.from(protocol.querySelectorAll("button")).every(x => x.disabled) };
+            }, selector);
             assert.equal(receipt.disclosureCount, 0); assert.equal(receipt.disabled, true);
             assert(receipt.text.includes("Historical protocol receipt only"));
             assert.equal(await rowCount(), 0); await input.pump();
@@ -460,17 +468,18 @@ export async function mountedServiceProof(input: MountedInput) {
             const protocol = await input.createExpiringProtocol();
             assert(Date.parse(protocol.expiresAt) > Date.parse(protocol.createdAt));
             const selector = `${participantPanel} [data-w3-protocol-id="${protocol.protocolId}"]`;
-            await wait(`document.querySelector('${selector}')?.getAttribute('data-w3-protocol-state') === 'INVITED'`);
+            await wait(query => document.querySelector(query)?.getAttribute("data-w3-protocol-state") === "INVITED", selector);
             await browser(["click", selector + " summary"]);
             await browser(["click", selector + " button:nth-of-type(1)"]);
-            await wait(`document.querySelector('${selector}')?.getAttribute('data-w3-protocol-state') === 'CONSENTED'`);
-            await wait(`Date.now() >= ${Date.parse(protocol.expiresAt)}
-              && document.querySelector('${selector}')?.getAttribute('data-w3-protocol-state') === 'EXPIRED'`);
-            const receipt = await evaluate(`({
-              observedAt: new Date().toISOString(),
-              disclosureCount: document.querySelector('${selector}').querySelectorAll('pre').length,
-              disabled: Array.from(document.querySelector('${selector}').querySelectorAll('button')).every(x => x.disabled)
-            })`);
+            await wait(query => document.querySelector(query)?.getAttribute("data-w3-protocol-state") === "CONSENTED", selector);
+            await wait(({ query, expiry }) => Date.now() >= expiry
+              && document.querySelector(query)?.getAttribute("data-w3-protocol-state") === "EXPIRED",
+            { query: selector, expiry: Date.parse(protocol.expiresAt) });
+            const receipt = await evaluate(query => {
+              const protocol = document.querySelector(query)!;
+              return { observedAt: new Date().toISOString(), disclosureCount: protocol.querySelectorAll("pre").length,
+                disabled: Array.from(protocol.querySelectorAll("button")).every(x => x.disabled) };
+            }, selector);
             assert(Date.parse(receipt.observedAt) >= Date.parse(protocol.expiresAt));
             assert.equal(receipt.disclosureCount, 0); assert.equal(receipt.disabled, true);
             const refusal = await input.refuseExpiredReport(protocol.protocolId);
@@ -500,7 +509,7 @@ export async function mountedServiceProof(input: MountedInput) {
         await browser(["open", workUrl()]);
         await clear(); hold.release(); await hold.done;
         assert.equal(hold.original.automatic, false);
-        await wait(`!document.body.innerText.includes(${JSON.stringify(input.expectedInstanceIds[0])})`);
+        await wait(id => !document.body.innerText.includes(id), input.expectedInstanceIds[0]!);
         return { draft, barrier: input.barrier.receipts(), durable: await input.snapshot(),
           screenshot: await screenshot("authority-refused") };
       });

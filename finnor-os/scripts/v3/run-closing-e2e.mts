@@ -138,6 +138,7 @@ async function request(f: any, path: string, body?: unknown, actorId?: string, t
   try {
     response = await fetch(apiOrigin + path, { method, headers: {
       authorization: "Bearer " + (token ?? bearer(f, actorId)), "content-type": "application/json",
+      connection: "close",
     }, body: JSON.stringify(body), signal });
     text = await response.text();
   } catch(error) {

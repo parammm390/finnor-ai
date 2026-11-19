@@ -45,6 +45,16 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
  let s=await searchRow(ctx,payload.searchId);if(x.protocolVersion!==(s.request.orchestration?3:s.request.deliberation?2:1))throw Error('P2_M2_EXACT_DELIVERY_PROTOCOL_REQUIRED');if(payload.generation!==s.generation||['CANCELLED','INVALIDATED','FAILED','STOPPED'].includes(s.status))return;
  let u=await tx(ctx,async c=>(await units(ctx,s,c)).find(u=>u.id===payload.unitId),true);if(!u||['COMPLETED','FAILED','CANCELLED','UNKNOWN'].includes(u.status))return;
  let attempt:{id:string;body:any}|null=null,leases:Awaited<ReturnType<typeof acquireComputeResourceLeases>>=[],released=false;
+ const reservePhysicalCapacity=async(keys:string[])=>{
+  leases=await acquireComputeResourceLeases({resourceKeys:keys,requiredResourceKeys:keys,tenantId:s.tenant_id,workloadClass:'INTERACTIVE',ownerId:'p2:'+x.deliveryAttemptId});
+  x.registerHeartbeat(async()=>{
+   if(released)return true;
+   // Queue heartbeats invoke this callback from their own async context.
+   // Re-enter this same captured deadline rather than creating a fresh window.
+   if(monotoneDeadline===null)return renewComputeResourceLeases(leases);
+   return withDatabaseExecutionDeadline(monotoneDeadline,async()=>{executionDeadlineMilliseconds();return renewComputeResourceLeases(leases);});
+  }, { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
+ };
  const started=performance.now(),finishW1Meter=s.request.orchestration?beginNativeMeter():null;let physicalCompleted=false,result:any=null,endpoint:any=null;
  try{
   if(s.request.mode!=='ordinary_disposable'||runtimeEnvironment.NODE_ENV==='production'||process.env.FINNOR_P4_PROFILE!=='ordinary_disposable')throw Error('P2_PROTECTED_FUNDING_AND_RUNTIME_UNAVAILABLE');
@@ -55,6 +65,9 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
     const live=(await units(ctx,locked,c)).find(row=>row.id===u!.id);if(!live)return 'RESCHEDULED';
     return assertEconomicUnitBoundaryTx(ctx,locked,parent,live,'CLAIM',c,x.jobId);
    });if(boundary!=='CURRENT')return;
+   // Capacity refusal can defer this authorized claim before another full
+   // source cut. Admission and every use/publication fence still follow.
+   if(u.kind!=='MODEL_REFINE')await reservePhysicalCapacity(['native:p2']);
   }
   const q=await currentSearch(ctx,s);if(!s.context)throw Error('P2_CURRENT_SOURCE_CONTEXT_REQUIRED');
   if(deliveryDeadline!==null&&deliveryDeadline>Date.parse(q.proposed.bounds.deadlineAt))throw Error('M2_ORIGINAL_DELIVERY_DEADLINE_CANNOT_EXTEND_PARENT');
@@ -65,14 +78,7 @@ async function runUnit(payload:UnitPayload,x:Readonly<JobExecutionContext>,deliv
   const module=s.context.program.modules.find((m:NativeModule)=>m.id===u!.body.moduleId);
   if(u.kind==='MODEL_REFINE'){const endpoints=await readEndpointConfig();const route=u.body.routeIds[Math.min(u.attempts,u.body.routeIds.length-1)];endpoint=endpoints.find(e=>e.id===route);if(!endpoint)throw Error('P2_ROUTE_UNAVAILABLE');}
   const keys=endpoint?['model:global','model-provider:'+endpoint.provider]:['native:p2'];
-  leases=await acquireComputeResourceLeases({resourceKeys:keys,requiredResourceKeys:keys,tenantId:s.tenant_id,workloadClass:'INTERACTIVE',ownerId:'p2:'+x.deliveryAttemptId});
-  x.registerHeartbeat(async()=>{
-   if(released)return true;
-   // Queue heartbeats invoke this callback from their own async context.
-   // Re-enter this same captured deadline rather than creating a fresh window.
-   if(monotoneDeadline===null)return renewComputeResourceLeases(leases);
-   return withDatabaseExecutionDeadline(monotoneDeadline,async()=>{executionDeadlineMilliseconds();return renewComputeResourceLeases(leases);});
-  }, { leaseSeconds: Math.min(...leases.map(lease => lease.leaseSeconds)) });
+  if(!leases.length)await reservePhysicalCapacity(keys);
   const steps=u.kind==='CONTROL_W1'?W1_NATIVE_LIMITS.controllerSteps:u.kind==='CONTROL_M2'?256:u.kind==='EXECUTE_P1'?(module?.bounds.steps??0)+1:1;
   // Conservative byte ceiling for this local diagnostic protocol; actual
   // returned token counts must fit it. No general provider tokenizer is assumed.

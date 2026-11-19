@@ -250,7 +250,7 @@ try {
     instruction: "Run one bounded adjacent software business test. Preserve original Work, actual controlled commitments, support duties, costs and failures. No genuine market or profit qualification." });
   assert(work.workId && work.workInputId);
   const { employeeAuthoritySnapshot } = await import("@finnor/authority");
-  recipient = await growthRecipient({ directory: join(output, "native-recipient"), tenantId: tenant, principalId: owner,
+  recipient = await growthRecipient({ checkBound, directory: join(output, "native-recipient"), tenantId: tenant, principalId: owner,
     companyId, accountIds: [operator], rightsRef: "s5-owner-rights",
     readCanonicalOwnerView: async () => {
       assert(process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG === undefined && process.env.FINNOR_S6_OWNER_TRANSPORT_ROOT === undefined,
