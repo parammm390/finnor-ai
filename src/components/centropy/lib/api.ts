@@ -140,7 +140,12 @@ async function centropyRequest<T>(method: CentropyMethod, path: string, body?: u
       signal: controller.signal,
     })
     status = res.status
-    if (credential && (res.status === 401 || res.status === 403 && res.headers.get("x-finnor-identity-state") === "denied"))
+    // A route-scoped 401 is not necessarily a rejected login. Only the
+    // authenticated backend's explicit identity-denied marker may close the
+    // entire private workspace. Unmarked 401/403 responses still fail closed
+    // at the requesting panel, without poisoning other authorized reads.
+    if (credential && (res.status === 401 || res.status === 403)
+      && res.headers.get("x-finnor-identity-state") === "denied")
       rejectCurrentWorkspaceAccess(credential, accessGeneration)
     const value = await readJson<T>(res, method, path)
     signal?.throwIfAborted()

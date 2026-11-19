@@ -1,16 +1,18 @@
 import { afterEach, expect, it, vi } from "vitest"
 
+const rejectAccess = vi.hoisted(() => vi.fn())
+
 vi.mock("./centropy-auth", () => ({
   getCurrentAccessToken: () => "caller-token",
   getCurrentSessionKey: () => "unchanged-signed-session",
   getCurrentAccessGeneration: () => 0,
-  rejectCurrentWorkspaceAccess: () => {},
+  rejectCurrentWorkspaceAccess: rejectAccess,
 }))
 
 import { centropyPost } from "./api"
 import { publishBusinessInvalidation } from "./business-invalidation"
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => { vi.unstubAllGlobals(); rejectAccess.mockClear() })
 
 it.each(["acknowledged mutation", "business event"] as const)("rereads current state after %s while retaining concurrent-read sharing", async trigger => {
   let finishOld!: (response: Response) => void
@@ -52,4 +54,25 @@ it.each(["acknowledged mutation", "business event"] as const)("rereads current s
     finishCurrent(reply("after-change"))
     await Promise.allSettled([before, concurrentBefore])
   }
+})
+
+it.each([
+  { status: 401, denied: false, closesWorkspace: false },
+  { status: 403, denied: false, closesWorkspace: false },
+  { status: 401, denied: true, closesWorkspace: true },
+  { status: 403, denied: true, closesWorkspace: true },
+])("only an explicit identity denial closes the workspace ($status, marker=$denied)", async ({ status, denied, closesWorkspace }) => {
+  const response = new Response(JSON.stringify({ error: "Current route not authorized" }), {
+    status,
+    headers: { "content-type": "application/json", ...(denied ? { "x-finnor-identity-state": "denied" } : {}) },
+  })
+  const transport = vi.fn<typeof fetch>().mockResolvedValue(response)
+  vi.stubGlobal("fetch", transport)
+  await expect(centropyPost("company-brain/institution-link-projection", {
+    workId: "11111111-1111-4111-8111-111111111111",
+  })).rejects.toMatchObject({ status })
+  expect(transport).toHaveBeenCalledTimes(1)
+  expect(new Headers(transport.mock.calls[0]?.[1]?.headers).get("authorization")).toBe("Bearer caller-token")
+  if (closesWorkspace) expect(rejectAccess).toHaveBeenCalledExactlyOnceWith("caller-token", 0)
+  else expect(rejectAccess).not.toHaveBeenCalled()
 })
