@@ -1,7 +1,7 @@
 name: W4 original commercial owner
 on:
   push:
-    branches: [codex/project-w4-owner-ci, codex/zw-integration-quality-20261115]
+    branches: [codex/project-w4-owner-ci, codex/zw-integration-quality-20261115, codex/w4-owner-isolation-20261120]
 permissions:
   contents: read
 concurrency:
@@ -115,7 +115,18 @@ jobs:
           const safeStatus = value => typeof value === 'string' && /^[A-Z][A-Z0-9_]{1,100}$/.test(value) ? value : 'UNCLASSIFIED'
           const outstanding = Array.isArray(lastDelivery?.unresolved) ? lastDelivery.unresolved : []
           const lastBatches = Array.isArray(lastDelivery?.batches) ? lastDelivery.batches : []
+          // Only structural owner/category labels are retained: no event ID, reference,
+          // payload, principal, private root, token or owner envelope can escape.
+          const originRows = Array.isArray(lastDelivery?.unresolvedOrigins) ? lastDelivery.unresolvedOrigins : []
+          const safeOwner = value => typeof value === 'string' && /^S[1-7]$/.test(value) ? value : 'OTHER_OWNER'
+          const pendingOriginClasses = originRows.map(row => {
+            const kind = row?.kind === 'EVENT' ? 'EVENT' : row?.kind === 'REFERENCE' ? 'REFERENCE' : 'OTHER_KIND'
+            const eventType = kind === 'EVENT' ? safeStatus(row?.envelope?.payload?.event?.type) : 'NA'
+            return [safeOwner(row?.semantic_owner), kind, eventType].join(':')
+          })
           const deliveryEvidence = lastDelivery ? {
+            pendingOriginClasses: Object.fromEntries([...new Set(pendingOriginClasses)]
+              .map(label => [label, pendingOriginClasses.filter(other => other === label).length])),
             rounds: [...new Set(lastBatches.map(row => row.round).filter(Number.isInteger))].length,
             pending: outstanding.length,
             statuses: Object.fromEntries([...new Set(outstanding.map(row => safeStatus(row.status)))]
