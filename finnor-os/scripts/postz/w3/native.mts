@@ -230,6 +230,12 @@ try {
   const migrationNames: string[] = await migrate(adminUrl);
   admin = new pg.Client({ connectionString: adminUrl }); await admin.connect();
   await admin.query("SET app.test_vertical_mode='explicit'");
+  if (integratedCompany) {
+    await admin.query(`INSERT INTO finnor_os.compute_resource_policies
+      (resource_key,capacity,per_tenant_capacity,interactive_reserve,lease_seconds,source)
+      VALUES ('native:p4',2,2,0,60,'explicit disposable P4 fixture; unmetered engineering capacity'),
+             ('native:p2',2,2,0,60,'predeclared local P2 fixture capacity')`);
+  }
   await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD '" + appPassword + "'");
   await admin.query("ALTER ROLE finnor_worker LOGIN PASSWORD '" + workerPassword + "'");
   const workerDatabaseUrl = `postgres://finnor_worker:${workerPassword}@127.0.0.1:${port}/w3_service`;

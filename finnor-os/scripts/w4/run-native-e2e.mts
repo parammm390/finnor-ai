@@ -171,6 +171,7 @@ try {
     requiredHostingProfile: "DIRECT_SOURCE_ROUTE_HANDLERS_NO_INSTALLATION",
     actualS1PublisherPid: "UNKNOWN_UNTIL_MATCHING_PUBLICATION", sameProcessEqualityEstablished: false });
   const tokens = new Map<string, string>([[owner, auth.token]]);
+  let dispatchAssessments = 0;
   for (const identity of auth.additionalIdentities) {
     const response: Response = await fetch(auth.authOrigin + "/auth/v1/token?grant_type=password", { method: "POST",
       headers: { "content-type": "application/json" }, body: JSON.stringify({ email: identity.email, password: identity.password }),
@@ -225,7 +226,14 @@ try {
       const response = await fetch(auth!.origin + "/api/" + group + "/" + operation, { method: "POST",
         headers: { "content-type": "application/json", authorization: "Bearer " + tokens.get(actor) },
         body: wireBody, signal: AbortSignal.timeout(30000) });
-      return { status: response.status, body: await response.json() as any };
+      const answer = await response.json() as any;
+      if (group === "obligations" && operation === "check-dispatch" && dispatchAssessments < 128) {
+        await privateDiagnostic(`dispatch-assessment-${++dispatchAssessments}.json`, {
+          httpStatus: response.status, status: answer.status, reasons: answer.reasons, errorCode: answer.code,
+          elapsedMs: performance.now() - requestStarted, checkedAt: answer.checkedAt, validUntil: answer.validUntil,
+        });
+      }
+      return { status: response.status, body: answer };
     } finally {
       if (handoffProbe) clearTimeout(handoffProbe);
       if (pendingProbe) await pendingProbe;

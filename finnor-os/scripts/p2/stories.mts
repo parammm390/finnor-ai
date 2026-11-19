@@ -54,7 +54,8 @@ export async function prepared(e:any,topology='ADAPTIVE',extra:any={}) {
   if(op==='fit') {
    await artifact('s3-request-before-fit.json',body);
    if(beforeFit)await beforeFit(f);
-   f.work=await receiveWork({tenantId:f.tenant,userId:f.principal,instruction:e.request().instruction,channel:'console',idempotencyKey:randomUUID()});
+   f.work=await receiveWork({tenantId:f.tenant,userId:f.principal,instruction:e.request().instruction,channel:'console',idempotencyKey:randomUUID(),
+    entityAttachments:existingOwner?[{...existingOwner.root,relationship:'about',source:'controlled-integrated-native-owner'}]:undefined});
    await (await import('../../packages/orchestration/src/workforce-runtime')).configureAgentProfile(f.tenant,(await import('../../packages/orchestration/src/plugin-registry')).createDefaultPluginRegistry(),{key:'p2-native',name:'Disposable real native query executor',actor:f.ctx.auth,capabilityGrants:[{kind:'query',capability:'query:harness_program_v1'},{kind:'check',capability:'check:objective_success'}],autonomyLimits:{maxActions:1,maxQueries:8,maxReplans:6,maxPlannerCalls:8,maxWallClockMs:3600000}});
    const source=await createEvidenceSource(f.tenant,{sourceKey:'p2-values',sourceType:'manual',title:'Original predeclared liability inputs'}),version=await appendEvidenceVersion(f.tenant,source.id,{content:'EV120 debt70 liability7 EBITDA20',snapshot:{values:{EV:'120',debt:'70',liability:'7',EBITDA:'20'}},asOf:new Date(e.periodStart)});
    f.p2Observations={};for(const [key,value] of Object.entries({EV:'120',debt:'70',liability:'7',EBITDA:'20'})) {if(key===omittedInput)continue;const series=await createMetricSeries(f.ctx,{subjectType:f.root.entityType,subjectId:f.root.entityId,metricKey:key,name:key,unit:'currency',currencyCode:'USD',frequency:'annual'});f.p2Observations[key]=await recordMetricObservation(f.ctx,{metricSeriesId:String(series.row.id),periodStart:new Date(e.periodStart),periodEnd:new Date(e.periodEnd),value:{type:'number',value},evidence:{evidenceSourceId:source.id,evidenceVersionId:version.versionId}});}
@@ -69,7 +70,8 @@ export async function prepared(e:any,topology='ADAPTIVE',extra:any={}) {
  const allocation=ok(await api(f,'clear',support.clearing(f,{compute:['1']})));assert.equal(allocation.status,'FEASIBLE');
  const identity={tenant:f.tenant,actor:f.principal},request=e.request();request.computeSearch='P2_REQUIRED';if(f.browser)request.threadId=f.browser.thread.id;request.root=f.root;request.workId=f.work.workId;request.workInputId=f.work.workInputId;request.ownerBindings={policyRef:policy.ref,allocationRef:allocation.certificate.ref};request.sources=request.sources.map((s:any)=>({...s,source:{...s.source,subject:f.root}}));request.limits={maxCandidates:8,maxAttempts:8,maxSteps:4096,deadlineMs:300000};
  const response=await e.api('program-submit',request,identity);await artifact('p1-submission.json',{request,response});if(response.status!==202){try{await (await import('../../packages/private-equity/src/program-synthesis/api')).submitHarnessProgram(f.ctx,request);}catch(error){await artifact('p1-replay-diagnostic.json',{message:String(error),stack:(error as Error).stack,cause:String((error as any).cause)});}}const p=ok(response,202);
- let held:any;const queueSteps:any[]=[],preparationQueue=await sourceQueue(e),setupDeadline=Date.now()+20000;
+ const preparationQueue=e.preparationQueue??await sourceQueue(e);
+ let held:any;const queueSteps:any[]=[],setupDeadline=Date.now()+20000;
  try{
  for(let tick=0;tick<40&&Date.now()<setupDeadline;tick++){
   const ran=await preparationQueue.tick();
@@ -90,7 +92,7 @@ export async function prepared(e:any,topology='ADAPTIVE',extra:any={}) {
   events:(await e.admin.query('SELECT * FROM finnor_os.p1_events WHERE request_id=$1 ORDER BY created_at,id',[p.programId])).rows,
  });
  assert.equal(held.status,'WAITING');assert.equal(held.attempts_used,0);
- }finally{if(e.createQueue)await preparationQueue.close();}
+ }finally{if(!e.preparationQueue&&e.createQueue)await preparationQueue.close();}
  const search={schema:'finnor.compute-search-request.v1',programId:p.programId,policyRequest:policy.ref,computeGrant:allocation.certificate.ref,idempotencyKey:randomUUID(),mode:'ordinary_disposable',strategy:topology,limits:{maxUnits:8,maxParallel:2},...searchExtra};
  const submitted=deferSearch?null:await e.api('compute-search-submit',search,identity);await artifact('before-implementation-boundary.json',{request,p,search,submitted,policyRef:policy.ref,certificateRef:allocation.certificate.ref});
  return {f,policy,allocation,p,request,search,identity,submitted,artifact,dir,api};

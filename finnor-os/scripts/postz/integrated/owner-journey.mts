@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import type pg from "pg";
-import { attachWorkEntity, receiveWork } from "@finnor/db";
+import { receiveWork } from "@finnor/db";
 import { prepareNativeOwnerFixture } from "../../postz-w1/native-stories.mjs";
 import { submitInternalSearch } from "../../postz-w1/native-internal-support.mjs";
 import { driveNativeProgram } from "../../postz-w1/native-drive.mjs";
@@ -81,7 +81,9 @@ export async function runOrchestrationOwner(ports: IntegratedOwnerPorts): Promis
     assert.equal(identity.tenant, ports.tenant); assert.equal(identity.actor, ports.owner);
     return ports.http("company-brain", operation, body, ports.owner);
   };
-  const e = { admin: ports.admin, repo: ports.repo, evidence: destination, request, periodStart, periodEnd, queue, api,
+  // Preparation also needs a physical worker claim. The parent owns the app database role.
+  const e = { admin: ports.admin, repo: ports.repo, evidence: destination, request, periodStart, periodEnd,
+    queue, preparationQueue: queue, api,
     ownerApi: (operation: string, body: unknown, identity: { tenant: string; actor: string }) => {
       assert.equal(identity.tenant, ports.tenant); assert.equal(identity.actor, ports.owner);
       const group = operation === "fit" ? "interventions" : operation === "synthesize" ? "policies" : "allocations";
@@ -91,16 +93,29 @@ export async function runOrchestrationOwner(ports: IntegratedOwnerPorts): Promis
     assert.equal(owner.tenant, ports.tenant); assert.equal(owner.principal, ports.owner);
     assert.deepEqual(owner.root, root, "W049_ACTUAL_COMPANY_NOT_FIXTURE_LABEL_REQUIRED");
   } });
-  await attachWorkEntity(ports.tenant, fixture.p.workId, {
-    entityType: "external_organization", entityId: ports.companyId, relationship: "about",
-    source: "controlled-integrated-native-owner",
-  });
   const http = { call: (operation: string, body: unknown) => api(operation, body) };
+  const verifyProgram = async (programId: string, searchId: string) => {
+    const status = await driveNativeProgram(ports.admin, queue, programId, performance.now());
+    if (status !== "TESTED") {
+      const failure = (await ports.admin.query(`SELECT p.status,p.failure,s.status search_status,s.reason search_reason,
+          q.status derivation_status, d.body->'failure' AS derivation_failure
+        FROM finnor_os.p1_requests p LEFT JOIN finnor_os.p2_requests s
+          ON s.tenant_id=p.tenant_id AND s.principal_id=p.principal_id AND s.program_id=p.id AND s.id=$4
+        LEFT JOIN finnor_os.p4_queries q
+          ON q.tenant_id=p.tenant_id AND q.principal_id=p.principal_id AND q.id=p.evidence_query_id
+        LEFT JOIN finnor_os.p4_derivations d
+          ON d.tenant_id=q.tenant_id AND d.principal_id=q.principal_id AND d.id=q.derivation_id
+        WHERE p.tenant_id=$1 AND p.principal_id=$2 AND p.id=$3`,
+      [ports.tenant, ports.owner, programId, searchId])).rows[0];
+      await ports.artifact(`integrated/w1/program-failure-${programId}.json`, failure ?? { status });
+      assert.equal(status, "TESTED", JSON.stringify(failure));
+    }
+  };
   const anonymous = await ports.http("company-brain", "economic-orchestration-projection",
     { root, workId: fixture.p.workId }, null);
   assert.equal(anonymous.status, 401);
   const warmSearchId = await submitInternalSearch(http, fixture);
-  assert.equal(await driveNativeProgram(ports.admin, queue, fixture.p.programId, performance.now()), "TESTED");
+  await verifyProgram(fixture.p.programId, warmSearchId);
   const episode = async (id: string) => (await ports.admin.query(`SELECT e.* FROM finnor_os.p1_episodes e
     JOIN finnor_os.p1_requests p ON p.tenant_id=e.tenant_id AND p.principal_id=e.principal_id AND p.episode_id=e.id
     WHERE p.id=$1 AND p.tenant_id=$2 AND p.principal_id=$3`, [id, ports.tenant, ports.owner])).rows[0];
@@ -116,7 +131,7 @@ export async function runOrchestrationOwner(ports: IntegratedOwnerPorts): Promis
     idempotencyKey: randomUUID() });
   assert.equal(accepted.status, 202, JSON.stringify(accepted));
   const programId = accepted.body.programId as string, searchId = await submitInternalSearch(http, fixture, programId);
-  assert.equal(await driveNativeProgram(ports.admin, queue, programId, performance.now()), "TESTED");
+  await verifyProgram(programId, searchId);
   const after = await episode(programId);
   assert.equal(after.id, before.id); assert.equal(String(after.deadline_at), String(before.deadline_at));
   for (const key of ["max_attempts", "max_steps", "max_candidates"]) assert.equal(after[key], before[key]);

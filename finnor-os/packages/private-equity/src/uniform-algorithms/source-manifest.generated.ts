@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "2269a1b5e6d1dece59a52d78e76974dac68b5bb02862438905408e649be8cf54"
+      "sha256": "7a1ab42bd876a0657aec81f814eea8a47b8a54a704bb3cf6512b974494984ed7"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -344,7 +344,7 @@ export default {
     },
     {
       "path": "src/components/centropy/lib/centropy-auth.tsx",
-      "sha256": "84ccaf9293f7b812ccc132ecf9f6b509fc474b626053dd147245c01c6699f0b1"
+      "sha256": "da2a8c6b9605f3a5c57847c79a254c9997d311e6201d60ebc9b4d6f3f1aac16a"
     },
     {
       "path": "src/components/centropy/lib/use-private-request-scope.ts",
@@ -3868,7 +3868,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/ApplicationSemanticsPanel.tsx",
-      "sha256": "582175fb67e1261019e0505c12ddd393fc24b8e24c092cfc426d3ca9f223ea2c"
+      "sha256": "cd4f98802d613fec8b0be97523cf24d115ace5b274a17127fe9c36f575e9668d"
     },
     {
       "path": "src/components/centropy/canvas/ArtifactCanvas.tsx",
@@ -4056,7 +4056,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/application-semantics-client.ts",
-      "sha256": "db95a6db946c53d8b940f319a5f531e22c92c5839c006a3af83207561fd0a1dd"
+      "sha256": "4bbcdc6d22ed6308e3d23bdb655aa29ccf3d77f19a7b2a5e85047d5d816f8cbb"
     },
     {
       "path": "src/components/centropy/canvas/canvas-contract.ts",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "cbce7dfa7b9d83eb38052fe367dcaf738b4ed0d7b93703ccb089b1249bbec263"
+  "sourceDigest": "59c19408808716d17c3b9baa071db4e4d283c34a14666f18eb9a3653727f8080"
 } as const;
