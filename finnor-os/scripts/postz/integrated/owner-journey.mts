@@ -95,10 +95,27 @@ export async function runOrchestrationOwner(ports: IntegratedOwnerPorts): Promis
   } });
   const http = { call: (operation: string, body: unknown) => api(operation, body) };
   const verifyProgram = async (programId: string, searchId: string) => {
-    const status = await driveNativeProgram(ports.admin, queue, programId, performance.now());
-    if (status !== "TESTED") {
+    try {
+      const status = await driveNativeProgram(ports.admin, queue, programId, performance.now());
+      assert.equal(status, "TESTED");
+    } catch (error) {
       const failure = (await ports.admin.query(`SELECT p.status,p.failure,s.status search_status,s.reason search_reason,
-          q.status derivation_status, d.body->'failure' AS derivation_failure
+          q.status derivation_status, d.body->'failure' AS derivation_failure,
+          (SELECT jsonb_agg(job) FROM (
+            SELECT j.type,j.status,j.attempts,j.run_at,j.last_error,a.outcome,a.failure_kind,a.failure_detail
+            FROM finnor_os.jobs j LEFT JOIN finnor_os.job_delivery_attempts a
+              ON a.job_id=j.id AND a.claim_fence=j.claim_fence
+            WHERE j.tenant_id=p.tenant_id AND (j.payload->>'programId'=p.id::text
+              OR j.payload->>'searchId'=s.id::text OR j.payload->>'queryId'=q.id::text)
+            ORDER BY j.run_at,j.id LIMIT 32
+          ) job) AS jobs,
+          (SELECT jsonb_agg(attempt) FROM (
+            SELECT u.kind,a.status,a.body->>'predicate' AS predicate,a.body->>'physicalOutcome' AS physical_outcome
+            FROM finnor_os.p2_attempts a JOIN finnor_os.p2_units u ON u.id=a.unit_id
+              AND u.tenant_id=a.tenant_id AND u.principal_id=a.principal_id AND u.search_id=a.search_id
+            WHERE a.tenant_id=p.tenant_id AND a.principal_id=p.principal_id AND a.search_id=s.id
+            ORDER BY a.created_at,a.id LIMIT 32
+          ) attempt) AS attempts
         FROM finnor_os.p1_requests p LEFT JOIN finnor_os.p2_requests s
           ON s.tenant_id=p.tenant_id AND s.principal_id=p.principal_id AND s.program_id=p.id AND s.id=$4
         LEFT JOIN finnor_os.p4_queries q
@@ -107,8 +124,9 @@ export async function runOrchestrationOwner(ports: IntegratedOwnerPorts): Promis
           ON d.tenant_id=q.tenant_id AND d.principal_id=q.principal_id AND d.id=q.derivation_id
         WHERE p.tenant_id=$1 AND p.principal_id=$2 AND p.id=$3`,
       [ports.tenant, ports.owner, programId, searchId])).rows[0];
-      await ports.artifact(`integrated/w1/program-failure-${programId}.json`, failure ?? { status });
-      assert.equal(status, "TESTED", JSON.stringify(failure));
+      await ports.artifact(`integrated/w1/program-failure-${programId}.json`, { ...failure,
+        driverError: error instanceof Error ? error.message : String(error) });
+      throw error;
     }
   };
   const anonymous = await ports.http("company-brain", "economic-orchestration-projection",

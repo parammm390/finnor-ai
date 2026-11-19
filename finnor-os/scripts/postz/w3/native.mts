@@ -171,7 +171,16 @@ const observeIntegratedOwner = async <T,>(engine: "W1" | "W2" | "W4" | "W5", act
   assert(integratedCompany && !activeIntegratedOwner);
   checkBound();
   const began = performance.now(); activeIntegratedOwner = { engine, began };
-  try { const answer = await action(); checkBound(); return answer }
+  console.log(JSON.stringify({ event: "PHASE_W_NATIVE_OWNER", engine, status: "STARTED" }));
+  try {
+    const answer = await action();
+    checkBound();
+    console.log(JSON.stringify({ event: "PHASE_W_NATIVE_OWNER", engine, status: "PASS", elapsedMs: Math.round(performance.now() - began) }));
+    return answer;
+  } catch (error) {
+    console.log(JSON.stringify({ event: "PHASE_W_NATIVE_OWNER", engine, status: "FAIL", elapsedMs: Math.round(performance.now() - began) }));
+    throw error;
+  }
   finally { otherOwnerMilliseconds += performance.now() - began; activeIntegratedOwner = null }
 };
 const run = async (id: string, input: unknown, expected: unknown, action: () => Promise<unknown>) => {

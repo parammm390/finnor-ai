@@ -207,7 +207,8 @@ try {
     }
     let pendingProbe: Promise<void> | null = null;
     const requestCpu = process.cpuUsage(), requestStarted = performance.now();
-    const handoffProbe = group === "policies" && operation === "handoff" ? setTimeout(() => {
+    const isPolicyHandoff = group === "policies" && operation === "handoff";
+    const handoffProbe = isPolicyHandoff ? setTimeout(() => {
       pendingProbe = (async () => {
         const activity = await admin!.query(`SELECT pid,application_name,state,wait_event_type,wait_event,
           pg_blocking_pids(pid) blockers,left(query,1400) query,
@@ -225,7 +226,8 @@ try {
     try {
       const response = await fetch(auth!.origin + "/api/" + group + "/" + operation, { method: "POST",
         headers: { "content-type": "application/json", authorization: "Bearer " + tokens.get(actor) },
-        body: wireBody, signal: AbortSignal.timeout(30000) });
+        // A handoff includes S4 preparation and the original S5 consumption.
+        body: wireBody, signal: AbortSignal.timeout(isPolicyHandoff ? 60000 : 30000) });
       const answer = await response.json() as any;
       if (group === "obligations" && operation === "check-dispatch" && dispatchAssessments < 128) {
         await privateDiagnostic(`dispatch-assessment-${++dispatchAssessments}.json`, {

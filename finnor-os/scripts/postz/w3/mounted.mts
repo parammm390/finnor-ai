@@ -294,6 +294,9 @@ export async function mountedServiceProof(input: MountedInput) {
       await new Promise(yes => setTimeout(yes, 100));
     }
     assert(hostReady?.compiled && hostReady.authBypass === false, "W3_EMITTED_FRONTEND_STARTUP_BOUND:" + hostLog);
+    // xvfb-run owns this display and cookie for the confined verification process.
+    const { DISPLAY, XAUTHORITY } = process.env;
+    assert(DISPLAY && XAUTHORITY, "W3_HEADED_DISPLAY_AND_AUTHORITY_REQUIRED");
     profile = await mkdtemp("/tmp/finnor-w3-headed-");
     const executablePath = chromium.executablePath();
     context = await chromium.launchPersistentContext(profile, {
@@ -302,7 +305,7 @@ export async function mountedServiceProof(input: MountedInput) {
       // --enable-automation (attempt 013 retained the refusal); the unchanged
       // custody assertions below require the browser's own command line.
       args: ["--window-size=1440,1000", "--enable-automation"], timeout: 30000,
-      env: { PATH: process.env.PATH ?? "/usr/bin:/bin", HOME: profile, TMPDIR: "/tmp", LANG: "en_US.UTF-8" },
+      env: { PATH: process.env.PATH ?? "/usr/bin:/bin", HOME: profile, TMPDIR: "/tmp", LANG: "en_US.UTF-8", DISPLAY, XAUTHORITY },
     });
     context.setDefaultTimeout(30000);
     page = context.pages()[0] ?? await context.newPage();

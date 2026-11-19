@@ -58,7 +58,7 @@ async function runCase(id, rows, title, body) {
   }
   if (c.outcome === "PASS" && c.checks.some(item => !item.pass)) c.outcome = "FAIL";
   if (c.outcome === "PASS" && c.checks.length === 0) { c.outcome = "FAIL"; c.error = "NO_CHECKS_EVALUATED"; }
-  if (id === "M-01" && c.outcome === "FAIL" && page) {
+  if ((id === "M-01" || id === "M-08") && c.outcome === "FAIL" && page) {
     c.observations.renderBoundary = await renderBoundaryFacts().catch(() => ({ diagnosticUnavailable: true }));
   }
   if (caseMark !== null && (c.error === "Z0_BROWSER_INSTITUTION_UNAVAILABLE" || c.error === "Z0_BROWSER_INSTITUTION_BUSY")) {
@@ -785,20 +785,25 @@ await runCase("M-06", ["Z0-R09-C02", "Z0-R09-C04", "Z0-R45-C04"], "Principal swi
 /* ---- M-07 */
 await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth refresh triggered by the browser clock)", async c => {
   if (!referenceTruthA) notRun("M-01_DID_NOT_READ_THE_ORIGINAL_WORK");
+  c.observations.browserStage = "START_REFRESH_BROWSER";
   const clockContext = await newMountedContext(browser);
   const clockPage = await clockContext.newPage();
   const clockWatch = new RequestWatch();
   clockWatch.attach(clockPage, "clock", authOrigin);
   try {
+    await clockPage.bringToFront();
     await clockPage.clock.install({ time: new Date() });
+    c.observations.browserStage = "SIGN_IN_FOR_REFRESH";
     await uiSignIn(clockPage, ownerCreds.email, ownerCreds.password, clockWatch);
+    c.observations.browserStage = "OPEN_WORK_FOR_REFRESH";
     await openWork(clockPage, threadA.id, parentA.workId);
-    await waitForPanel(clockPage, parentA.workId);
     await clockWatch.settle();
     const before = await storageScan(clockPage, clockContext, referenceTruthA.markers);
     const beforeTag = before.accessToken ? sha(before.accessToken).slice(0, 12) : null;
     const lastReadTag = clockWatch.records.filter(r => r.path.endsWith("application-projection")).at(-1)?.bearerTag ?? null;
     const mark = clockWatch.mark();
+    c.observations.browserStage = "ADVANCE_REFRESH_CLOCK";
+    if (await clockPage.evaluate(() => document.visibilityState) !== "visible") throw Error("Z0_BROWSER_REFRESH_PAGE_NOT_VISIBLE");
     await clockPage.clock.fastForward(3520 * 1000);
     const refresh = await waitUntil("REFRESH_NOT_OBSERVED", 60000, async () => {
       const rows = clockWatch.since(mark).filter(row => row.kind === "auth-token" && /grant_type=refresh_token/.test(row.query) && row.status !== undefined);
@@ -812,6 +817,7 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
     const afterTag = after.accessToken ? sha(after.accessToken).slice(0, 12) : null;
     const idp = after.accessToken ? await idpUserId(env, after.accessToken) : { status: 0 };
     check(c, "refresh.new-token", "the stored access token changed to a new one that the real Auth accepts", "storage scan (hash tags only) + O-IDP /auth/v1/user", { beforeTag, afterTag, idpStatus: idp.status }, Boolean(afterTag) && afterTag !== beforeTag && idp.status === 200);
+    c.observations.browserStage = "READ_WORK_AFTER_REFRESH";
     const reread = await waitUntil("REREAD_AFTER_REFRESH", 45000, async () => {
       await clockWatch.settle();
       return clockWatch.since(mark).find(row => row.path.endsWith("application-projection") && row.workId === parentA.workId && row.bearerTag && row.bearerTag !== lastReadTag && row.status === 200);
@@ -825,7 +831,10 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
     const summary = clockWatch.summary(mark);
     c.observations.requests = summary;
     check(c, "no-mutating-requests", "0 mutating browser requests; every observed refresh is a real 200 grant", "browser request watch", { mutations: summary.mutations, otherNonGet: summary.otherNonGet, authToken: summary.authToken }, summary.mutations === 0 && summary.otherNonGet === 0);
-  } finally { await clockContext.close().catch(() => undefined); }
+  } finally {
+    await clockContext.close().catch(() => undefined);
+    if (!page.isClosed()) await page.bringToFront().catch(() => undefined);
+  }
 });
 
 /* ---- M-10 */

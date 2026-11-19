@@ -276,6 +276,7 @@ jobs:
             'original deadline', 'wall deadline', 'compiler status', 'compiler revision', 'compiler attempts', 'acquisition units'])
           const browserStages = new Set(['START_BROWSER', 'SIGN_IN', 'CONFIRM_IDENTITY', 'OPEN_ORIGINAL_WORK',
             'READ_OWNER_ORACLE', 'READ_INITIAL_PANELS', 'FIRST_RELOAD', 'SECOND_RELOAD', 'CHECK_RELOADED_PANELS',
+            'START_REFRESH_BROWSER', 'SIGN_IN_FOR_REFRESH', 'OPEN_WORK_FOR_REFRESH', 'ADVANCE_REFRESH_CLOCK', 'READ_WORK_AFTER_REFRESH',
             'BEFORE_LOGOUT_WORK', 'AUTH_LOGOUT', 'SIGN_IN_AGAIN', 'OPEN_WORK_AFTER_SIGN_IN', 'CHECK_RESTORED_WORK'])
           const browserProbeCauses = new Set(['NAVIGATION_CONTEXT_DESTROYED', 'PAGE_OR_BROWSER_CLOSED',
             'EVALUATOR_HELPER_MISSING', 'PAGE_EVALUATOR_REFERENCE_ERROR', 'PAGE_EVALUATOR_SYNTAX_ERROR',

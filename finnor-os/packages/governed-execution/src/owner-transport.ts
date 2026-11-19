@@ -3,6 +3,7 @@ import { createHash, createPrivateKey, createPublicKey, randomBytes, sign, verif
 import { constants } from 'node:fs';
 import { open } from 'node:fs/promises';
 import { canonical, LedgerFault,referencePreimageDigest } from './protocol.js';
+import { GOVERNED_DISPATCH_RESPONSE_MS } from './broker-io.js';
 
 export interface OwnerTransportScope { semanticOwner:string; tenantId:string; principalId:string }
 export interface OwnerOriginKey { id:string; publicKey:string; validAfter:string; validUntil:string; revoked:boolean }
@@ -113,11 +114,11 @@ function operationDeadline(route:OwnerTransportRoute,options:{deadlineAt?:number
  if(!Number.isFinite(requested)||requested<=now)fail('OWNER_TRANSPORT_LEASE_DEADLINE_EXCEEDED');
  return Math.min(requested-500,now+30000);
 }
-async function request(route:OwnerTransportRoute,path:string,body?:unknown,deadlineAt=Date.now()+route.requestTimeoutMs):Promise<Record<string,any>>{
+async function request(route:OwnerTransportRoute,path:string,body?:unknown,deadlineAt=Date.now()+route.requestTimeoutMs,timeoutMs=route.requestTimeoutMs):Promise<Record<string,any>>{
  if(Date.now()>=deadlineAt)fail('OWNER_TRANSPORT_LEASE_DEADLINE_EXCEEDED');
  const secret=await privateFile(route.tokenPath);if(bytesHash(secret)!==route.tokenSha256)fail('OWNER_TRANSPORT_TOKEN_CHANGED');
  const token=secret.toString();if(!/^[\x21-\x7e]{16,4096}$/.test(token))fail('OWNER_TRANSPORT_TOKEN_INVALID');
- const remaining=Math.min(route.requestTimeoutMs,deadlineAt-Date.now());
+ const remaining=Math.min(timeoutMs,deadlineAt-Date.now());
  if(remaining<=0)fail('OWNER_TRANSPORT_LEASE_DEADLINE_EXCEEDED');
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),remaining);
  try{
@@ -296,7 +297,7 @@ export async function readOwnerTransportEvent(identity:OwnerTransportScope,id:st
 export async function dispatchOwnerTransportRequest(identity:OwnerTransportScope,input:{request:Record<string,any>;authorization:Record<string,any>;delivery?:Record<string,any>},reconcile=false){
  if(identity.semanticOwner!=='S6')fail('DISPATCH_SEMANTIC_OWNER_REQUIRED');
  const transport=await ownerTransportRoute(identity)??fail('OWNER_TRANSPORT_ROUTE_UNAVAILABLE');
- const answer=await request(transport,reconcile?'/reconcile':'/dispatch',input,Date.now()+30000);
+ const answer=await request(transport,reconcile?'/reconcile':'/dispatch',input,Date.now()+GOVERNED_DISPATCH_RESPONSE_MS,GOVERNED_DISPATCH_RESPONSE_MS);
  if(!['VERIFIED','UNRESOLVED'].includes(answer.status)||!answer.receipt?.identity)fail('DISPATCH_RESPONSE_INVALID');
  const accepted=await readOwnerTransportEvent(identity,answer.receipt.identity),detail=accepted.event.detail;
  if(!same(accepted.receipt,answer.receipt)||accepted.receipt.protectedExecution!==true||accepted.receipt.semanticOwner!=='S6'||detail?.schema!=='finnor.s6.protected-execution.v1'||!same(detail.obligationRef,input.request.ir?.obligationRef)||!same(detail.requestRef,input.request.ref)||!same(detail.effectRef,input.request.ir?.effectRef))fail('DISPATCH_PROTECTED_EVENT_BINDING_INVALID');

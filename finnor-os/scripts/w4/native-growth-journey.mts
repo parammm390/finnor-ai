@@ -27,7 +27,7 @@ export interface NativeGrowthJourneyContext {
   admin: { query: (sql: string, params?: any[]) => Promise<{ rows: any[] }> };
   recipient: { bind: (obligation: any, account: string, key: string,
     declaration: { field: string; value: number; unit: string }) => Promise<any>;
-    drainNativeReferences: () => Promise<void> };
+    drainNativeReferences: (minimumPendingPerOwner?: number) => Promise<void> };
   pump: (maximumTicks?: number) => Promise<unknown>;
   artifact: (name: string, body: unknown) => Promise<unknown>;
   observeNativeFitOriginals?: (originals: Readonly<Record<string, unknown>>) => Promise<void>;
@@ -56,7 +56,18 @@ export function createNativeGrowthJourney(c: NativeGrowthJourneyContext) {
   const ok = async (group: string, operation: string, body: unknown, actor = c.owner) => {
     bound(); return c.ok(group, operation, body, actor);
   };
-  const pump = async () => { bound(); return c.pump(NATIVE_GROWTH_LIMITS.maximumPumpTicks) };
+  const pump = async () => {
+    // Authority reads can enqueue fresh signed owner records. Service that
+    // outbox between native rounds before it reaches the per-owner limit.
+    bound();
+    await c.recipient.drainNativeReferences(64);
+    bound();
+    const result = await c.pump(NATIVE_GROWTH_LIMITS.maximumPumpTicks);
+    bound();
+    await c.recipient.drainNativeReferences(64);
+    bound();
+    return result;
+  };
   const source = async (body: unknown, key: string, actor = c.owner, protocolId: string | null = null): Promise<SourceRef> =>
     (await ok("demand-to-business", "source", { workId: scope.workId, idempotencyKey: namespace + ":" + key,
       purpose, protocolId, body }, actor)).source;
@@ -348,6 +359,13 @@ export function createNativeGrowthJourney(c: NativeGrowthJourneyContext) {
     executions[operation] = original; await source(original, "native-" + operation);
     await pump();
     const state = (await read()).request, observed = state.nativeEffects.find((f: any) => f.kind === operation);
+    if (observed?.state !== "VERIFIED") {
+      const validation = await c.http("allocations", "validate", { allocationRef: parentAllocation })
+        .catch((error: unknown) => ({ observed: false, errorType: error instanceof Error ? error.name : "Unknown" }));
+      await c.artifact(namespace + "/native-" + operation + "-allocation-failure.json", {
+        operation, effectState: observed?.state ?? null, validation,
+      });
+    }
     assert.equal(observed?.state, "VERIFIED", JSON.stringify(state));
     assert.equal(observed.originalIdentityReadback, true);
     return { source: original, state, observed };

@@ -348,12 +348,16 @@ export async function elementWith(page: any, scope: string, needles: string[], l
 
 export async function uiSignIn(page: any, email: string, password: string, watch: RequestWatch) {
   await page.goto(FRONTEND + "/centropy/login", { waitUntil: "domcontentloaded", timeout: 120000 });
+  const signIn = page.getByRole("button", { name: "Sign in", exact: true }).and(page.locator(":enabled"));
+  await signIn.waitFor({ state: "visible", timeout: 45000 })
+    .catch((cause: unknown) => { throw new Error("Z0_BROWSER_SIGN_IN_FORM_NOT_READY", { cause }); });
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password", { exact: true }).fill(password);
+  const passwordInput = page.getByLabel("Password", { exact: true });
+  await passwordInput.fill(password);
   const mark = watch.mark();
   const me = page.waitForResponse((response: any) => response.request().method() === "GET" && new URL(response.url()).origin === FRONTEND
     && new URL(response.url()).pathname === "/api/centropy/me" && response.status() === 200, { timeout: 90000 });
-  const settled = await Promise.allSettled([me, page.getByRole("button", { name: "Sign in", exact: true }).click()]);
+  const settled = await Promise.allSettled([me, passwordInput.press("Enter")]);
   if (settled.some(row => row.status !== "fulfilled")) throw Error("UI_SIGN_IN_ME_RESPONSE_NOT_OBSERVED");
   const response = (settled[0] as PromiseFulfilledResult<any>).value;
   const identity = await response.json();
@@ -386,12 +390,6 @@ export async function waitForPanel(page: any, workId: string, timeoutMs = 60000)
   const instrument = shell.locator(`section[data-type="work_execution"][id="canvas-work-${workId}"]`);
   await instrument.waitFor({ state: "attached", timeout: Math.max(1, deadline - performance.now()) })
     .catch((cause: unknown) => { throw new Error("Z0_BROWSER_WORK_INSTRUMENT_UNAVAILABLE", { cause }); });
-  if (await instrument.locator(APP).count() === 0) {
-    const instruments = shell.getByRole("navigation", { name: "Canvas instruments", exact: true });
-    await instruments.getByRole("button", { name: /Work and verification$/ })
-      .click({ timeout: Math.max(1, deadline - performance.now()) })
-      .catch((cause: unknown) => { throw new Error("Z0_BROWSER_WORK_INSTRUMENT_NAVIGATION_UNAVAILABLE", { cause }); });
-  }
   const panel = panelFor(page, workId);
   let lastState = "PROJECTION_PROBE_TIMEOUT";
   for (;;) {
@@ -408,7 +406,9 @@ export async function waitForPanel(page: any, workId: string, timeoutMs = 60000)
         if (!workInstrument || !canvas.contains(workInstrument)) {
           return canvas.querySelector(".ct-canvas__invalid") ? "CANVAS_INVALID" : "WORK_INSTRUMENT_UNAVAILABLE";
         }
-        return workInstrument.querySelector('[aria-busy="true"]') ? "WORK_INSTRUMENT_OUT_OF_VIEW" : "PANEL_UNMOUNTED";
+        if (workInstrument.querySelector('[aria-busy="true"]')) return "WORK_INSTRUMENT_NOT_READY";
+        const status = [...workInstrument.querySelectorAll('[role="status"]')].map(node => node.textContent);
+        return status.includes("Opening current Work application operations…") ? "PANEL_MODULE_LOADING" : "PANEL_UNMOUNTED";
       }
       if (mounted.querySelector('[role="alert"]')) return "PROJECTION_UNAVAILABLE";
       if (mounted.getAttribute("data-application-work") !== expectedWork) return "WORK_NOT_PROJECTED";

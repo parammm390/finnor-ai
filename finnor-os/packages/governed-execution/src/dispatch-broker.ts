@@ -4,7 +4,7 @@ import {verify,randomUUID} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {canonical,LedgerFault} from './protocol.js';
 import type {ExperienceLedger} from './ledger.js';
-import {brokerHash as hash,brokerPrivateFile,brokerSourceDigests,brokerOrigin,brokerToken,brokerRequest} from './broker-io.js';
+import {brokerHash as hash,brokerPrivateFile,brokerSourceDigests,brokerOrigin,brokerToken,brokerRequest,GOVERNED_DISPATCH_WORK_MS} from './broker-io.js';
 import {s6AdapterContract,S6_EXECUTOR_CONTRACT_VERSION} from './adapter-contract.js';
 type ObjectValue=Record<string,any>;
 const fail=(status:number,code:string):never=>{throw new LedgerFault(status,code);};
@@ -87,8 +87,10 @@ export class GovernedDispatchBroker {
  }
  execute(caller:any,input:unknown,reconcile=false){
   if(caller.owner!=='S6'||caller.dispatch!==true||caller.tenantId!==this.owner.tenantId||caller.principalId!==this.owner.principalId||caller.rightsRefs.some((r:string)=>!this.owner.rightsRefs.includes(r)))return Promise.reject(new LedgerFault(403,'PROTECTED_DISPATCH_NOT_AUTHORIZED'));
+  const deadlineAt=Date.now()+GOVERNED_DISPATCH_WORK_MS;
   return this.serialized(async()=>{
-   const deadlineAt=Date.now()+30000;await this.currentPolicy();const value=object(input);exact(value,['request','authorization',...(Object.hasOwn(value,'delivery')?['delivery']:[])]);const delivery=value.delivery===undefined?undefined:object(value.delivery);
+   if(Date.now()>=deadlineAt)fail(503,'BROKER_OPERATION_DEADLINE_EXCEEDED');
+   await this.currentPolicy();const value=object(input);exact(value,['request','authorization',...(Object.hasOwn(value,'delivery')?['delivery']:[])]);const delivery=value.delivery===undefined?undefined:object(value.delivery);
    if(delivery){
     const recovery=delivery.kind==='RECOVERY';exact(delivery,['workflowStepId','claimFence','dispatchGeneration','runVersion',...(recovery?['kind','jobId','jobDeliveryAttemptId','jobClaimToken','jobClaimFence']:['claimToken'])]);
     const identities=recovery?[delivery.workflowStepId,delivery.jobId,delivery.jobDeliveryAttemptId,delivery.jobClaimToken]:[delivery.workflowStepId,delivery.claimToken];

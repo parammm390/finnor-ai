@@ -140,7 +140,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "d55b17b05d059ef62ecbd37bebc328f9b1293e5f7c0491aee7e238fe89642246"
+      "sha256": "ef4f15f443d70c2e5cd97574205ca7e2d0d60c5bf6aa2585b15b745bee314984"
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
@@ -196,7 +196,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/CanvasDocument.tsx",
-      "sha256": "d2067b63e662a3d027eace7d0ad33f7b8023d533033dccc057942f47f1e873fa"
+      "sha256": "0c72ab330e25bf8b1b8f134c51641704637cd102eddee357e125620e27b026d0"
     },
     {
       "path": "finnor-os/scripts/x5/stamp-source.mts",

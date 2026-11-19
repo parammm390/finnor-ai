@@ -220,8 +220,7 @@ export async function growthRecipient(input: {
   try { await start() }
   catch (error) { await stop(); await close(provider); await close(authority); throw error }
   let drainNumber = 0;
-  const drainNativeReferences = async () => {
-    await assertCurrentOwnerAuthority();
+  const drainNativeReferences = async (minimumPendingPerOwner = 0) => {
     const batches = [];
     const unresolved = () => withTenantTransaction(input.tenantId, { userId: input.principalId, readOnly: true }, async (_db, c) =>
       (await c.query<{ owner: string; identity: string; status: string; lastError: string | null; due: Date }>(
@@ -230,6 +229,13 @@ export async function growthRecipient(input: {
          AND semantic_owner=ANY($3::text[]) AND status<>'ACCEPTED'
          ORDER BY semantic_owner,identity LIMIT 16385`, [input.tenantId, input.principalId, owners])).rows);
     let pending = await unresolved();
+    if (minimumPendingPerOwner > 0) {
+      const counts = new Map<string, number>();
+      for (const row of pending) counts.set(row.owner, (counts.get(row.owner) ?? 0) + 1);
+      const requiresRecovery = pending.some(row => row.status === "REFUSED_ORIGIN" || row.status === "REQUIRES_OPERATOR");
+      if (!requiresRecovery && [...counts.values()].every(count => count < minimumPendingPerOwner)) return;
+    }
+    await assertCurrentOwnerAuthority();
     for (let round = 0; pending.length && round < 8; round++) {
       assert(pending.length <= 16384, "W4_NATIVE_DELIVERY_POPULATION_BOUND");
       assert(pending.every(row => !["REFUSED_ORIGIN", "REQUIRES_OPERATOR"].includes(row.status)),
