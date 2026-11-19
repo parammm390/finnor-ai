@@ -214,16 +214,32 @@ export async function storageScan(page: any, context: any, markers: Marker[], se
 export const APP = ".ct-application-semantics";
 export const INST = 'section[aria-label="Institution responsibility"]';
 
-/** Opens parent sections before their nested summaries become actionable. */
+/** Opens each visible disclosure with a real browser click. An authenticated
+ * native panel can replace its entire <details> tree while a click is waiting
+ * for actionability (notably after the real token refresh in M-07). Re-acquire
+ * the locator within ONE original wall-clock deadline; never use DOM injection,
+ * force-click, or accept an unopened disclosure as evidence. */
 export async function openAllDetails(page: any, scope: string, deadline = Date.now() + 25000) {
   const closed = page.locator(`${scope} details:not([open]) > summary:visible`);
-  let opened = 0;
+  let opened = 0, transientFailures = 0;
   while (await closed.count()) {
     const remaining = deadline - Date.now();
-    if (remaining <= 0) throw Error("MOUNTED_EVIDENCE_DETAILS_DID_NOT_OPEN");
-    await closed.first().click({ timeout: Math.min(1500, remaining) });
-    opened++;
+    if (remaining <= 0) throw Error("Z0_DISCLOSURE_CLICK_DEADLINE_EXCEEDED");
+    try {
+      await closed.first().click({ timeout: Math.min(1500, remaining) });
+      opened++;
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : String(cause);
+      const replaceOrActionability = /Timeout .*exceeded|element is not attached|element is not stable|Element is not visible|intercepts pointer events|Element is outside of the viewport/i.test(message);
+      if (!replaceOrActionability || page.isClosed()) throw cause;
+      transientFailures++;
+      // A single changing panel cannot make this test pass by looping forever.
+      // Every retry still requires the real summary to be opened by a click.
+      if (Date.now() >= deadline) throw Error("Z0_DISCLOSURE_CLICK_DEADLINE_EXCEEDED", { cause });
+      await sleep(Math.min(100, Math.max(0, deadline - Date.now())));
+    }
   }
+  if (transientFailures && opened === 0) throw Error("Z0_DISCLOSURE_CLICK_NO_OBSERVED_OPEN");
   return opened;
 }
 
