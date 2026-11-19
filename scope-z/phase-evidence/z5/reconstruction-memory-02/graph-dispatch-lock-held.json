@@ -1,0 +1,20 @@
+{
+  "actualExit": 0,
+  "command": [
+    "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+    "--input-type=module",
+    "-e",
+    "\nimport { spawnSync } from \"node:child_process\";\nconst [driver, profile, executable, ...args] = process.argv.slice(1);\nconst guard = spawnSync(process.execPath, [driver, \"--memory-headroom\", profile], { stdio: \"inherit\" });\nif (guard.error || guard.status !== 0) {\n  console.error(JSON.stringify({ stage: \"MEMORY_HEADROOM\", exitCode: guard.status, signal: guard.signal,\n    spawnError: guard.error?.code ?? null }));\n  // Exit 2 belongs to the real native authority guard, never this preflight.\n  process.exit(1);\n}\nconst child = spawnSync(executable, args, { stdio: \"inherit\" });\nif (child.error || child.signal) console.error(JSON.stringify({ stage: \"GUARDED_CHILD\", exitCode: child.status,\n  signal: child.signal, spawnError: child.error?.code ?? null }));\nprocess.exit(child.error ? 1 : child.status ?? 1);\n",
+    "/home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/reconstruct.mjs",
+    "graph",
+    "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+    "--input-type=module",
+    "-e",
+    "import {spawnSync} from \"node:child_process\";const r=spawnSync(\"/usr/bin/flock\",[\"--nonblock\",\"/home/factory-user/repos/finnor-z-shared-heavy.lock\",\"/usr/bin/true\"]);if(r.status!==1)throw Error(\"ORIGINAL_HEAVY_LOCK_NOT_HELD\");console.log(JSON.stringify({state:\"READ_ONLY_GRAPH_DISPATCH_LOCK_HELD\",nonblockingLockExit:r.status,graphTypecheckExecuted:false}));"
+  ],
+  "expected": "EXIT_0_AND_REAL_HELD_LOCK",
+  "id": "graph-dispatch-lock-held",
+  "stderr": "",
+  "stdout": "{\"state\":\"PASSED_MEMORY_HEADROOM_ONLY\",\"profile\":\"graph\",\"exit\":0,\"requiredAvailableBytes\":6442450944,\"actualAvailableBytes\":7070490624,\"installedZ5Proof\":false,\"databaseActions\":0,\"listenersStarted\":0,\"installsStarted\":0,\"sourceSha256\":\"88796fa666e99150af354d52105938e7e1361c5ab461f23b7013a8d86d7cb79b\"}\n{\"state\":\"READ_ONLY_GRAPH_DISPATCH_LOCK_HELD\",\"nonblockingLockExit\":1,\"graphTypecheckExecuted\":false}\n",
+  "wallMs": 148.42446100374218
+}

@@ -1,0 +1,116 @@
+name: "W1 to W3 - Linux isolation, privacy and worker checks"
+on:
+  push:
+    branches: [cloud/postz-w1, cloud/postz-w2, cloud/postz-w3]
+    paths:
+      - .github/workflows/**
+      - finnor-os/**
+      - scripts/**
+      - packages/**
+      - app/**
+      - package.json
+      - package-lock.json
+      - next.config.*
+      - vendor/**
+permissions:
+  contents: read
+concurrency:
+  group: w123-kernel-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  kernel-comparison:
+    name: "Linux isolation - Original and repaired sandbox"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: finnor-os
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Reproduce original kernel escape and verify the repaired policy
+        run: node scripts/s6/compare-linux-policy-e2e.mjs "$RUNNER_TEMP/w123-kernel-comparison"
+      - name: Check source restoration after both actual kernel runs
+        if: ${{ always() }}
+        run: git diff --exit-code
+      - name: Retain readable controlled kernel results in the job log
+        if: ${{ always() }}
+        run: |
+          for phase in before after; do
+            result="$RUNNER_TEMP/w123-kernel-comparison/$phase/results.json"
+            if [ -f "$result" ]; then
+              echo "W123_KERNEL_RESULT_BEGIN_$phase"
+              cat "$result"
+              echo "W123_KERNEL_RESULT_END_$phase"
+            fi
+          done
+      - name: Retain controlled kernel evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: w123-kernel-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/w123-kernel-comparison/
+          if-no-files-found: error
+          retention-days: 7
+  source-checks:
+    name: "Source and CI rules"
+    uses: ./.github/workflows/source-checks.yml
+  closing-reader-privacy:
+    name: "Closing privacy - Database reader permissions"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: finnor-os
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Exercise isolated reader roles through the actual PostgreSQL policies
+        run: node --max-old-space-size=2048 node_modules/typescript/bin/tsc -p scripts/v3/tsconfig.reader-privacy.json
+      - name: Verify reader visibility and confidentiality through PostgreSQL
+        run: node --import=tsx scripts/v3/run-closing-reader-privacy-e2e.mts "$RUNNER_TEMP/closing-reader-privacy"
+      - name: Retain controlled role and privacy evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: closing-reader-privacy-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/closing-reader-privacy/report/
+          if-no-files-found: error
+          retention-days: 7
+  installed-worker:
+    name: "Worker - Build and installed smoke test"
+    needs: source-checks
+    uses: ./.github/workflows/ci.yml
+    with:
+      run_worker_image: true
+  workforce-compensation-positive:
+    name: "W2 - Exact payment settlement"
+    if: ${{ github.ref_name == 'cloud/postz-w2' || github.ref_name == 'cloud/postz-w3' }}
+    uses: ./.github/workflows/w2-compensation-episode.yml
+    with:
+      episode: after-exact
+  workforce-compensation:
+    name: "W2 - Payment rejection controls (${{ matrix.episode }})"
+    needs: workforce-compensation-positive
+    strategy:
+      fail-fast: false
+      matrix:
+        episode: [before-exact, after-wrong-amount, after-wrong-payee, after-wrong-receipt]
+    uses: ./.github/workflows/w2-compensation-episode.yml
+    with:
+      episode: ${{ matrix.episode }}

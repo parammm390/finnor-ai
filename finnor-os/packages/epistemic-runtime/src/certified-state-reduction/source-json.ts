@@ -6,12 +6,23 @@ export function readOriginalExactJson(bytes:string,budget:ExactControlBudget):un
  let value:unknown;try{value=JSON.parse(bytes);}catch{throw new ExactControlError('UNSUPPORTED','ORIGINAL_MODEL_JSON');}
  const meter=controlMeter(budget);let at=0;
  const fail=(p:string):never=>{throw new ExactControlError('UNSUPPORTED',p);};
+ function integerToken(source:string){
+  const parts=/^(-?)(\d+)(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/.exec(source);
+  if(!parts)return fail('FLOAT64_SOURCE_NOT_EXACT');
+  const digits=(parts[2]!+(parts[3]??'')).replace(/^0+/,'');
+  if(!digits)return;
+  const shift=Number(parts[4]??'0')-(parts[3]?.length??0);
+  if(!Number.isSafeInteger(shift)||(shift<0&&(-shift>=digits.length||/[1-9]/.test(digits.slice(shift))))||
+    (shift>=0&&digits.length+shift>16))fail('FLOAT64_SOURCE_NOT_EXACT');
+  const exact=BigInt(parts[1]!+(shift<0?digits.slice(0,shift):digits+'0'.repeat(shift)));
+  if(exact< -9007199254740991n||exact>9007199254740991n)fail('FLOAT64_SOURCE_NOT_EXACT');
+ }
  const space=()=>{while(/\s/.test(bytes[at]??'')&&at<bytes.length)at++;};
  function string(){const start=at++;while(at<bytes.length){const c=bytes[at++]!;if(c==='"')return JSON.parse(bytes.slice(start,at)) as string;if(c==='\\')at++;}return fail('ORIGINAL_MODEL_JSON');}
  function token(depth:number){meter.step();if(depth>128)fail('ORIGINAL_SOURCE_STRUCTURE_BOUND');space();const c=bytes[at];
   if(c==='{'){at++;space();const keys=new Set<string>();if(bytes[at]==='}'){at++;return;}for(;;){space();const key=string();if(keys.has(key))fail('DUPLICATE_JSON_MEMBER');keys.add(key);space();at++;token(depth+1);space();if(bytes[at++]==='}')return;}}
   else if(c==='['){at++;space();if(bytes[at]===']'){at++;return;}for(;;){token(depth+1);space();if(bytes[at++]===']')return;}}
-  else if(c==='"')string();else {while(at<bytes.length&&!/[,\]}\s]/.test(bytes[at]!))at++;}
+  else if(c==='"')string();else {const start=at;while(at<bytes.length&&!/[,\]}\s]/.test(bytes[at]!))at++;if(c==='-'||(c!==undefined&&c>='0'&&c<='9'))integerToken(bytes.slice(start,at));}
  }
  token(0);
  function original(v:unknown,depth:number){meter.step();if(depth>128)fail('ORIGINAL_SOURCE_STRUCTURE_BOUND');

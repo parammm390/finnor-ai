@@ -8,6 +8,7 @@ import {spawn,spawnSync,type ChildProcess} from 'node:child_process';
 import {tmpdir} from 'node:os';
 import {join,resolve,dirname} from 'node:path';
 import {createRequire} from 'node:module';
+import {z} from 'zod';
 
 const canonical=(v:any):string=>v===null||typeof v!=='object'?JSON.stringify(v):Array.isArray(v)?'['+v.map(canonical).join(',')+']':'{'+Object.keys(v).sort((a,b)=>a.localeCompare(b)).map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}';
 const hash=(v:any)=>createHash('sha256').update(canonical(v)).digest('hex');
@@ -44,9 +45,20 @@ async function observePhysicalProcess(pid:number|undefined,mustExist:boolean){
 export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:any,artifact:any,revokeBeforeDispatch=false,workflowProof?:'delivery'|'cancel'|'crash'|'stale',recoveryBudgetProof=false,
  authenticatedFixture?:{ownerCall?:(operation:string,input:any)=>Promise<{status:number;body:any}>;workerDatabaseUrl?:string;
   mapping?:{field:string;recordPrefix:string;dose:number;operation:string;unit:string};
-  onUnresolved?:(context:any)=>Promise<void>;onTransportConfigured?:()=>Promise<void>}){
+  onUnresolved?:(context:any)=>Promise<void>;onTransportConfigured?:()=>Promise<void>;
+  sharedCompany?:{companyId:string;originalWorkId:string};
+  beforeFinalStorageNegative?:(receipts:Readonly<Record<string,unknown>>)=>Promise<void>}){
  const mapping=authenticatedFixture?.mapping??{field:'priceAdjustmentFraction',recordPrefix:'price',dose:0.15,operation:'PRICE_CHANGE',unit:'fraction'};
  const signedHttp=typeof authenticatedFixture?.ownerCall==='function';
+ const sharedCompany=authenticatedFixture?.sharedCompany;
+ assert(!authenticatedFixture?.beforeFinalStorageNegative||!workflowProof&&!revokeBeforeDispatch&&!recoveryBudgetProof,'S6_STORAGE_HOOK_REQUIRES_ORIGINAL_DIRECT_PROOF');
+ if(sharedCompany){assert(signedHttp,'S6_SHARED_COMPANY_REQUIRES_SIGNED_OWNER_HTTP');assert.equal(f.root.entityType,'external_organization');assert.equal(sharedCompany.companyId,f.root.entityId);assert.equal(obligation.tenantId,f.tenant);assert.equal(obligation.principalId,f.principal);assert.equal(obligation.workLineage?.workId,sharedCompany.originalWorkId);const {ref,...body}=obligation;assert.equal(ref.contentDigest,hash(body));assert(obligation.intervention.targets.length);for(const target of obligation.intervention.targets)assert.deepEqual(target,f.root);}
+ let firstFailure:unknown,hasFailure=false;
+ let storageProbeRequired=false,storageProbeStarted=false;
+ const failures:{stage:string;name:string;message:string}[]=[];
+ const remember=(stage:string,error:unknown)=>{if(!hasFailure){firstFailure=error;hasFailure=true;}const failure={stage,name:error instanceof Error?error.name:typeof error,message:error instanceof Error?error.message:String(error)};failures.push(failure);console.error(JSON.stringify({event:'S6_PROOF_FAILURE',...failure}));};
+ const immutable=(value:any):any=>{if(value&&typeof value==='object'){for(const item of Object.values(value))immutable(item);Object.freeze(value);}return value;};
+ const invokeHook=async(stage:string,hook:((receipts:any)=>Promise<void>)|undefined,receipts:any)=>{if(hook)try{await hook(immutable(structuredClone(receipts)));}catch(error){remember(stage,error);}};
  const root=await realpath(await mkdtemp(join(tmpdir(),'finnor-s6-dispatch-'))),requests:any[]=[],authorityCalls:any[]=[],steps:any[]=[];
  const ownerKey=generateKeyPairSync('ed25519'),methodKey=generateKeyPairSync('ed25519'),businessKey=generateKeyPairSync('ed25519'),ledgerKey=generateKeyPairSync('ed25519'),reviewer=generateKeyPairSync('ed25519');
  const controlToken=randomUUID()+randomUUID(),protectedToken=randomUUID()+randomUUID(),s5Token=randomUUID()+randomUUID(),consumerToken=randomUUID()+randomUUID(),providerToken=randomUUID()+randomUUID(),authorityToken=randomUUID()+randomUUID();
@@ -87,12 +99,12 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
   if(workflowProof==='stale'&&operation==='check-dispatch'&&authorityCalls.filter(c=>c.operation==='check-dispatch').length===1){assert.equal(call.assessment.status,'CURRENT');assert(scheduledRunId);call.cancellation=await api(f,'cancel-delivery',{obligationRef:obligation.ref,workflowRunId:scheduledRunId,expectedVersion:input.delivery.runVersion},POST);assert.equal(call.cancellation.status,200);assert.equal(call.cancellation.body.ok,true);}
   res.writeHead(answer.status,{'content-type':'application/json'});res.end(bytes);});
  const authorityPort=await listen(authority);
- const ownerSources=['packages/private-equity/src/enterprise-obligations.ts','packages/private-equity/src/enterprise-allocation.ts','packages/private-equity/src/enterprise-control.ts','packages/private-equity/src/enterprise-beliefs.ts','packages/private-equity/src/allocation-store.ts','packages/private-equity/src/obligation-contracts.ts','apps/api/app/api/obligations/[operation]/route.ts'];
+ const ownerSources=(await import('../../packages/private-equity/src/enterprise-obligations.js')).enterpriseObligationAuthoritySourcePaths();
  const digests=async(paths:string[])=>Promise.all(paths.map(async path=>({path:resolve(path),sha256:bytesHash(await readFile(path))})));
  const fsExt=dirname(createRequire(import.meta.url).resolve('fs-ext/package.json'));
  const sourcePaths=['packages/governed-execution/src/ledger.ts','packages/governed-execution/src/ledger-server.mts','packages/governed-execution/src/protocol.ts','packages/governed-execution/src/request-verifier.ts','packages/governed-execution/src/adapter-contract.ts','packages/governed-execution/src/dispatch-broker.ts','packages/governed-execution/src/broker-io.ts',join(fsExt,'fs-ext.js'),join(fsExt,'build/Release/fs_ext.node'),join(fsExt,'package.json')];
  let processHandle:ChildProcess|undefined,base='',logs='';
- const start=async()=>{logs='';processHandle=spawn(process.execPath,['--import=tsx','packages/governed-execution/src/ledger-server.mts'],{cwd:process.cwd(),env:{PATH:process.env.PATH!,HOME:root,FINNOR_S6_LEDGER_CONFIG:pathOf('ledger.json'),FINNOR_S6_LEDGER_RELEASE_ROOT:publicPem(reviewer),FINNOR_S6_DISPATCH_RELEASE_ROOT:publicPem(reviewer)},stdio:['ignore','pipe','pipe']});await new Promise<void>((done,no)=>{const timer=setTimeout(()=>{processHandle?.kill('SIGKILL');no(Error('BROKER_BOOT_TIMEOUT'));},15000);processHandle!.stdout!.on('data',bytes=>{logs+=bytes.toString();for(const line of logs.split('\n'))try{const parsed=JSON.parse(line);if(parsed.status==='READY'){base=`http://127.0.0.1:${parsed.port}`;clearTimeout(timer);done();}}catch{}});processHandle!.stderr!.on('data',bytes=>logs+=bytes.toString());processHandle!.once('exit',(code,signal)=>{clearTimeout(timer);no(Error(`BROKER_EXIT:${code}:${signal}:${logs}`));});});};
+ const start=async()=>{logs='';processHandle=spawn(process.execPath,['--import=tsx','packages/governed-execution/src/ledger-server.mts'],{cwd:process.cwd(),env:{NODE_ENV:'production',PATH:process.env.PATH!,HOME:root,FINNOR_S6_LEDGER_CONFIG:pathOf('ledger.json'),FINNOR_S6_LEDGER_RELEASE_ROOT:publicPem(reviewer),FINNOR_S6_DISPATCH_RELEASE_ROOT:publicPem(reviewer)},stdio:['ignore','pipe','pipe']});await new Promise<void>((done,no)=>{const timer=setTimeout(()=>{processHandle?.kill('SIGKILL');no(Error('BROKER_BOOT_TIMEOUT'));},15000);processHandle!.stdout!.on('data',bytes=>{logs+=bytes.toString();for(const line of logs.split('\n'))try{const parsed=JSON.parse(line);if(parsed.status==='READY'){base=`http://127.0.0.1:${parsed.port}`;clearTimeout(timer);done();}}catch{}});processHandle!.stderr!.on('data',bytes=>logs+=bytes.toString());processHandle!.once('exit',(code,signal)=>{clearTimeout(timer);no(Error(`BROKER_EXIT:${code}:${signal}:${logs}`));});});};
  const stop=async(signal:NodeJS.Signals='SIGTERM')=>{const p=processHandle;if(!p||p.exitCode!==null||p.signalCode!==null)return;await new Promise<void>(done=>{p.once('exit',()=>done());p.kill(signal);});};
   const call=async(path:string,body?:any,token=controlToken)=>{const response=await fetch(base+path,{method:body===undefined?'GET':'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})});return {status:response.status,body:await response.json() as any};};
  const protectedHistory=async()=>{
@@ -103,7 +115,71 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
   }
   return events;
  };
+ // A root-derived census, not an expected-output-ID whitelist. LEFT joins keep
+ // missing owner rows visible; extra/wrong descendants fail before projection.
+ const originalPopulation=async()=>{
+  assert(sharedCompany);
+  const p=(await admin.query(`WITH
+   root AS(SELECT w.id,w.created_by,u.role,u.status,c.active FROM finnor_os.works w
+    JOIN finnor_os.users u ON u.tenant_id=w.tenant_id AND u.id=$6::uuid
+    JOIN finnor_os.external_organizations c ON c.tenant_id=w.tenant_id AND c.id=$5::uuid
+    WHERE w.tenant_id=$1 AND w.id=$2::uuid AND EXISTS(SELECT 1 FROM finnor_os.work_entity_links l
+     WHERE l.tenant_id=w.tenant_id AND l.work_id=w.id AND l.entity_type='external_organization' AND l.entity_id=c.id)),
+   origins AS(SELECT o.* FROM finnor_os.s6_obligation_origins o WHERE o.tenant_id=$1 AND(
+    o.body#>>'{workLineage,workId}'=$2::text OR o.domain_action_id IN(SELECT id FROM finnor_os.domain_actions WHERE tenant_id=$1 AND work_id=$2::uuid)
+    OR o.consumption_id IN(SELECT consumption_id FROM finnor_os.s5_consumptions WHERE tenant_id=$1 AND reservation_id=$3)
+    OR o.body#>>'{reservationRef,id}'=$3) LIMIT 1025),
+   actions AS(SELECT d.* FROM finnor_os.domain_actions d WHERE d.tenant_id=$1 AND(d.work_id=$2::uuid OR d.id IN(SELECT domain_action_id FROM origins)) LIMIT 1025),
+   effects AS(SELECT e.* FROM finnor_os.business_effects e WHERE e.tenant_id=$1 AND(e.domain_action_id IN(SELECT id FROM actions)
+    OR e.id IN(SELECT effect_id FROM origins) OR e.effect#>>'{source,workId}'=$2::text
+    OR e.effect#>>'{delta,values,workLineage,workId}'=$2::text
+    OR e.effect#>>'{delta,values,consumptionRef,id}' IN(SELECT consumption_id FROM finnor_os.s5_consumptions WHERE tenant_id=$1 AND reservation_id=$3)) LIMIT 1025),
+   consumptions AS(SELECT st.*,co.principal_id,co.reservation_id,co.body AS consumption_body,r.status AS reservation_status,r.envelopes
+    FROM finnor_os.s5_consumptions co LEFT JOIN finnor_os.s5_consumption_states st USING(tenant_id,consumption_id)
+    LEFT JOIN finnor_os.s5_reservations r USING(tenant_id,reservation_id) WHERE co.tenant_id=$1 AND(co.reservation_id=$3
+    OR co.consumption_id IN(SELECT consumption_id FROM origins) OR st.effect_ref->>'id' IN(SELECT id::text FROM effects)) LIMIT 1025),
+   commands AS(SELECT c.* FROM finnor_os.commands c WHERE c.tenant_id=$1 AND(c.business_effect_id IN(SELECT id FROM effects)
+    OR c.id IN(SELECT command_id FROM finnor_os.workflow_runs WHERE tenant_id=$1 AND work_id=$2::uuid)
+    OR c.payload->'obligationRef'=$4::jsonb OR c.payload#>>'{execution,request,ir,obligationRef,id}'=($4::jsonb->>'id')) LIMIT 1025),
+   runs AS(SELECT r.* FROM finnor_os.workflow_runs r WHERE r.tenant_id=$1 AND(r.work_id=$2::uuid OR r.command_id IN(SELECT id FROM commands)) LIMIT 1025),
+   steps AS(SELECT s.* FROM finnor_os.workflow_steps s WHERE s.tenant_id=$1 AND(s.workflow_run_id IN(SELECT id FROM runs)
+    OR s.domain_action_id IN(SELECT id FROM actions) OR s.business_effect_id IN(SELECT id FROM effects) OR s.payload->'obligationRef'=$4::jsonb) LIMIT 1025),
+   jobs AS(SELECT j.* FROM finnor_os.jobs j WHERE j.tenant_id=$1 AND(j.payload->>'workflowStepId' IN(SELECT id::text FROM steps)
+    OR j.payload->>'workflowRunId' IN(SELECT id::text FROM runs) OR j.payload->>'commandId' IN(SELECT id::text FROM commands)) LIMIT 1025),
+   deliveries AS(SELECT a.* FROM finnor_os.job_delivery_attempts a WHERE a.tenant_id=$1 AND a.job_id IN(SELECT id FROM jobs) LIMIT 1025),
+   claims AS(SELECT sc.* FROM finnor_os.workflow_step_claims sc WHERE sc.tenant_id=$1 AND(sc.workflow_step_id IN(SELECT id FROM steps)
+    OR sc.job_delivery_attempt_id IN(SELECT id FROM deliveries)) LIMIT 1025),
+   charges AS(SELECT ch.* FROM finnor_os.s5_governed_resource_charges ch WHERE ch.tenant_id=$1 AND(ch.reservation_id=$3 OR ch.consumption_id IN(SELECT consumption_id FROM consumptions)) LIMIT 1025)
+   SELECT ${['root','origins','actions','effects','consumptions','commands','runs','steps','jobs','deliveries','claims','charges'].map(table=>`COALESCE((SELECT jsonb_agg(to_jsonb(x)) FROM ${table} x),'[]'::jsonb) AS ${table}`).join(',')}`,
+   [f.tenant,sharedCompany.originalWorkId,obligation.reservationRef.id,JSON.stringify(obligation.ref),sharedCompany.companyId,f.principal])).rows[0];
+  assert(p);for(const name of ['root','origins','actions','effects','consumptions'])assert.equal(p[name].length,1,'S6_COMPLETE_ORIGINAL_'+name.toUpperCase()+'_POPULATION');
+  assert.equal(p.root[0].created_by,f.principal);assert.equal(p.root[0].role,'owner');assert.equal(p.root[0].status,'active');assert.equal(p.root[0].active,true);
+  assert.deepEqual(p.origins[0].body,obligation);assert.equal(p.origins[0].principal_id,f.principal);assert.equal(p.origins[0].input_digest,hash({preparationRef:obligation.preparationRef,allocationRef:obligation.allocationRef,consumptionRef:obligation.consumptionRef,workLineage:obligation.workLineage}));
+  assert.equal(p.actions[0].id,obligation.domainActionId);assert.equal(p.actions[0].work_id,sharedCompany.originalWorkId);assert.equal(p.actions[0].initiated_by,f.principal);assert.equal(p.actions[0].business_effect_id,obligation.effectRef.id);
+  assert.equal(p.effects[0].id,obligation.effectRef.id);assert.equal(p.effects[0].domain_action_id,obligation.domainActionId);assert.equal(p.effects[0].semantic_hash,obligation.effectRef.semanticHash);assert.equal(p.effects[0].effect.source.workId,sharedCompany.originalWorkId);assert.deepEqual(p.effects[0].effect.delta.values.workLineage,obligation.workLineage);
+  assert.equal(p.consumptions[0].consumption_id,obligation.consumptionRef.id);assert.equal(p.consumptions[0].reservation_id,obligation.reservationRef.id);assert.equal(p.consumptions[0].principal_id,f.principal);assert.deepEqual(p.consumptions[0].consumption_body.ref,obligation.consumptionRef);assert.equal(p.consumptions[0].effect_ref.id,obligation.effectRef.id);assert.equal(p.consumptions[0].effect_ref.contentDigest,obligation.effectRef.semanticHash);
+  for(const charge of p.charges){assert.equal(charge.principal_id,f.principal);assert.equal(charge.reservation_id,obligation.reservationRef.id);assert.equal(charge.consumption_id,obligation.consumptionRef.id);}
+  for(const name of ['commands','runs','steps','jobs'])assert.equal(p[name].length,scheduledRunId?1:0,'S6_COMPLETE_ORIGINAL_'+name.toUpperCase()+'_POPULATION');
+  if(scheduledRunId){
+   const command=p.commands[0],run=p.runs[0],step=p.steps[0],job=p.jobs[0];
+   assert.equal(command.requested_by,f.principal);assert.equal(command.protocol_version,3);assert.equal(command.business_effect_id,obligation.effectRef.id);assert.equal(command.authorized_effect_hash,obligation.effectRef.semanticHash);assert.deepEqual(command.payload.obligationRef,obligation.ref);
+   assert.equal(run.id,scheduledRunId);assert.equal(run.work_id,sharedCompany.originalWorkId);assert.equal(run.command_id,command.id);assert.equal(step.workflow_run_id,run.id);assert.equal(step.domain_action_id,obligation.domainActionId);assert.equal(step.business_effect_id,obligation.effectRef.id);assert.deepEqual(step.payload.obligationRef,obligation.ref);
+   assert.equal(job.type,'run_workflow_step_v3');assert.equal(job.protocol_version,3);assert.equal(job.payload.workflowStepId,step.id);
+   assert(p.claims.length<=1);for(const claim of p.claims){assert.equal(claim.workflow_step_id,step.id);assert(p.deliveries.some((a:any)=>a.id===claim.job_delivery_attempt_id));}
+   for(const delivery of p.deliveries)assert.equal(delivery.job_id,job.id);
+  }else{assert.equal(p.claims.length,0);assert.equal(p.deliveries.length,0);}
+  return p;
+ };
+ const originalNative=async()=>{const p=await originalPopulation();return p.consumptions.map((co:any)=>({...co,effect_status:p.effects[0].status,action_status:p.actions[0].status}));};
+ const finalStorageNegative=async(charged:any[])=>{
+  assert(!storageProbeStarted);storageProbeStarted=true;
+  const malformedCharge=charged[0],badStorageKey='storage-substitution:'+randomUUID();
+  assert(malformedCharge,'S6_ORIGINAL_STORAGE_PROBE_REQUIRES_ACTUAL_CHARGE');
+  const {withTenantTransaction}=await import('@finnor/db');await withTenantTransaction(f.tenant,{userId:f.principal},async(_db,c)=>{await c.query('INSERT INTO finnor_os.s5_governed_resource_charges(tenant_id,principal_id,reservation_id,consumption_id,charge_key,phase,resource_id,unit,units,request_digest,body) VALUES($1,$2,$3,$4,$5,$6,$7,$8,1,$9,$10::jsonb)',[f.tenant,f.principal,obligation.reservationRef.id,obligation.consumptionRef.id,badStorageKey,malformedCharge.phase,'unregistered-budget-resource',malformedCharge.body.unit,malformedCharge.body.requestDigest,JSON.stringify(malformedCharge.body)]);});
+  const storageRefusal=await api(f,'budget-status',{obligationRef:obligation.ref},POST);await artifact('s5-resource-storage-consistency.json',{badStorageKey,storageRefusal,requests,qualification:'ACTUAL_ORDINARY_APP_ROLE_INSERT; EXISTING_SCHEMA_ALLOWED_COLUMN_PREIMAGE_SUBSTITUTION'});assert.equal(storageRefusal.status,409,JSON.stringify(storageRefusal));assert.equal(storageRefusal.body.code,'S5_EXECUTION_RESOURCE_HISTORY_INCONSISTENT');assert.equal(requests.filter(r=>r.method==='PATCH').length,1);
+ };
  try{
+  if(sharedCompany)await artifact('shared-company-original-population.json',await originalPopulation());
   const sourceDigests=await digests(sourcePaths);
   const ledgerPolicy={schema:'finnor.s6.ledger-policy.v1',domain:'DISPOSABLE_TEST_AUTHORITY',signerPublicKey:publicPem(ledgerKey),methodAdmissionPublicKey:publicPem(methodKey),maxEntries:100000,owners:[
    {owner:'S6',tenantId:f.tenant,principalId:f.principal,rightsRefs:[obligation.rightsRef],tokenHash:bytesHash(controlToken),append:true,read:true,sealedAppend:false,sealedRead:false,dispatch:true},
@@ -164,11 +240,12 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
     const cancelled=await api(f,'cancel-delivery',{obligationRef:ref,workflowRunId:scheduled.body.workflowRunId,expectedVersion:queued[0].run_version},POST);assert.equal(cancelled.status,200,JSON.stringify(cancelled));assert.equal(cancelled.body.ok,true);
     await worker();const after=await graph();assert.equal(after[0].run_status,'cancelled');assert.equal(after[0].execution_state,'cancelled_before_effect');assert.equal(requests.length,0);
     const bypass=await api(f,'execute-request',input,POST);assert(bypass.status>=400);assert.equal(requests.length,0);
-    const liabilities=(await admin.query('SELECT st.status,r.status AS reservation_status,r.envelopes FROM finnor_os.s5_consumption_states st JOIN finnor_os.s5_consumptions co USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservations r USING(tenant_id,reservation_id) WHERE st.tenant_id=$1',[f.tenant])).rows;assert.deepEqual(liabilities[0].envelopes,obligation.resourceEnvelope);assert.notEqual(liabilities[0].reservation_status,'RELEASED');
+    const liabilities=sharedCompany?await originalNative():(await admin.query('SELECT st.status,r.status AS reservation_status,r.envelopes FROM finnor_os.s5_consumption_states st JOIN finnor_os.s5_consumptions co USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservations r USING(tenant_id,reservation_id) WHERE st.tenant_id=$1',[f.tenant])).rows;assert.deepEqual(liabilities[0].envelopes,obligation.resourceEnvelope);assert.notEqual(liabilities[0].reservation_status,'RELEASED');
+    if(sharedCompany)assert.equal((await originalPopulation()).deliveries.length,1);
     const proof={scheduled,replay,queued,conflict,cancelled,after,bypass,workers,liabilities,requests,authorityCalls,sourceDigests,qualification:'ACTUAL_QUEUE_AND_NATIVE_CANCELLATION; DISPOSABLE_LOCAL_TLS_AUTHORITY'};await artifact('workflow-cancel.json',proof);return proof;
    }
    await worker(workflowProof==='crash');const waiting=await graph();
-   if(workflowProof==='stale'){assert.equal(authorityCalls.filter(c=>c.operation==='check-dispatch')[0].assessment.status,'CURRENT');assert.equal(authorityCalls.filter(c=>c.operation==='check-dispatch')[1].assessment.status,'STALE_INPUT');assert(authorityCalls.filter(c=>c.operation==='check-dispatch')[1].assessment.reasons.includes('WORKFLOW_DELIVERY_FENCE_NOT_CURRENT'));assert.equal(waiting[0].run_status,'cancelled');assert.equal(waiting[0].status,'waiting_observation');assert.equal(requests.length,0);const proof={scheduled,replay,queued,conflict,waiting,workers,requests,authorityCalls,sourceDigests};await artifact('workflow-stale.json',proof);return proof;}
+   if(workflowProof==='stale'){assert.equal(authorityCalls.filter(c=>c.operation==='check-dispatch')[0].assessment.status,'CURRENT');assert.equal(authorityCalls.filter(c=>c.operation==='check-dispatch')[1].assessment.status,'STALE_INPUT');assert(authorityCalls.filter(c=>c.operation==='check-dispatch')[1].assessment.reasons.includes('WORKFLOW_DELIVERY_FENCE_NOT_CURRENT'));assert.equal(waiting[0].run_status,'cancelled');assert.equal(waiting[0].status,'waiting_observation');assert.equal(requests.length,0);if(sharedCompany)assert.equal((await originalPopulation()).deliveries.length,1);const proof={scheduled,replay,queued,conflict,waiting,workers,requests,authorityCalls,sourceDigests};await artifact('workflow-stale.json',proof);return proof;}
    if(workflowProof==='crash'){
     await artifact('workflow-crash-before-recovery.json',{scheduled,waiting,workers,requests,authorityCalls,current});assert.equal(waiting[0].status,'leased');assert.equal(waiting[0].job_status,'running');assert(waiting[0].effect_commit_at);
     for(const a of authorityCalls.filter(a=>a.assessment.status==='CURRENT')){assert(a.leases);assert(Date.parse(a.assessment.validUntil)<=a.leases.step_lease.getTime(),'OWNER_ASSESSMENT_EXCEEDS_STEP_LEASE');assert(Date.parse(a.assessment.validUntil)<=a.leases.job_lease.getTime(),'OWNER_ASSESSMENT_EXCEEDS_JOB_LEASE');}
@@ -180,7 +257,7 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
    if(workflowProof==='crash'){
     assert.equal(request.ir.members.length,2);const before=await protectedHistory();assert.equal(before.filter((r:any)=>r.event.type==='ATTEMPT').length,1);
     partialRead=await api(f,'reconcile-request',input,POST);assert.equal(partialRead.status,200,JSON.stringify(partialRead));assert.equal(partialRead.body.status,'UNRESOLVED');assert.equal(requests.filter(r=>r.method==='PATCH').length,1,'Read-only reconciliation dispatched an unattempted member');
-    const row=(await graph())[0],old=(await admin.query('SELECT * FROM finnor_os.job_delivery_attempts WHERE tenant_id=$1 ORDER BY started_at LIMIT 1',[f.tenant])).rows[0];assert(old);
+    const row=(await graph())[0],old=sharedCompany?(await originalPopulation()).deliveries.sort((a:any,b:any)=>Date.parse(a.started_at)-Date.parse(b.started_at)||a.id.localeCompare(b.id))[0]:(await admin.query('SELECT * FROM finnor_os.job_delivery_attempts WHERE tenant_id=$1 ORDER BY started_at LIMIT 1',[f.tenant])).rows[0];assert(old);
     const staleDelivery={kind:'RECOVERY',workflowStepId:scheduled.body.workflowStepId,claimFence:Number(row.claim_fence),dispatchGeneration:row.dispatch_generation,runVersion:row.run_version,jobId:old.job_id,jobDeliveryAttemptId:old.id,jobClaimToken:old.claim_token,jobClaimFence:Number(old.claim_fence)};
     const stale=await api(f,'execute-request',{...input,delivery:staleDelivery},POST);assert.equal(stale.status,200,JSON.stringify(stale));assert.equal(stale.body.status,'UNRESOLVED');assert(authorityCalls.filter(c=>c.operation==='check-dispatch').at(-1).assessment.reasons.includes('PHYSICAL_JOB_DELIVERY_NOT_CURRENT'));assert.equal(requests.filter(r=>r.method==='PATCH').length,1);
     const replaced=await api(f,'execute-request',{...input,delivery:{...staleDelivery,runVersion:staleDelivery.runVersion+1}},POST);assert.equal(replaced.status,200,JSON.stringify(replaced));assert(authorityCalls.filter(c=>c.operation==='check-dispatch').at(-1).assessment.reasons.includes('WORKFLOW_DELIVERY_FENCE_NOT_CURRENT'));assert.equal(requests.filter(r=>r.method==='PATCH').length,1);
@@ -195,8 +272,8 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
     const assessment=continuation.event.detail.assessment,{signature,...body}=assessment;assert(verify(null,Buffer.from(canonical(body)),publicPem(ownerKey),Buffer.from(signature,'base64')));assert.equal(assessment.delivery.kind,'RECOVERY');assert.equal(assessment.reservationRevision,obligation.preconditions.reservationRevision+1);assert.equal(assessment.reservationAttemptEventId,finalHistory.find((r:any)=>r.event.type==='ATTEMPT').event.eventId);
     const call=authorityCalls.find(c=>c.assessment.nonce===assessment.nonce),wire=requests.find(r=>r.method==='PATCH'&&r.url.endsWith(encodeURIComponent(request.ir.members[1].request.recordKey)));assert(call?.leases?.job_lease);assert(Date.parse(assessment.validUntil)<=call.leases.job_lease.getTime());assert(Date.parse(continuation.receipt.appendAt)<=Date.parse(wire.at));assert(Date.parse(assessment.validUntil)>Date.parse(wire.at));
    }
-   const claims=(await admin.query('SELECT * FROM finnor_os.workflow_step_claims WHERE tenant_id=$1 AND workflow_step_id=$2',[f.tenant,scheduled.body.workflowStepId])).rows;assert.equal(claims.length,1);assert(claims[0].job_delivery_attempt_id);const deliveries=(await admin.query('SELECT * FROM finnor_os.job_delivery_attempts WHERE tenant_id=$1 ORDER BY started_at',[f.tenant])).rows;assert.equal(deliveries.length,4);assert.equal(new Set(workers.map(w=>w.pid)).size,workflowProof==='crash'?5:4);
-   const native=(await admin.query('SELECT st.status,r.status AS reservation_status,r.envelopes,e.status AS effect_status,d.status AS action_status FROM finnor_os.s5_consumption_states st JOIN finnor_os.s5_consumptions co USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservations r USING(tenant_id,reservation_id) JOIN finnor_os.s6_obligation_origins o ON o.tenant_id=st.tenant_id AND o.consumption_id=st.consumption_id JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id JOIN finnor_os.domain_actions d ON d.tenant_id=o.tenant_id AND d.id=o.domain_action_id WHERE st.tenant_id=$1',[f.tenant])).rows;assert.equal(native[0].status,'RECONCILED');assert.equal(native[0].effect_status,'verified');assert.equal(native[0].action_status,'completed');assert.notEqual(native[0].reservation_status,'RELEASED');assert.deepEqual(native[0].envelopes,obligation.resourceEnvelope);
+   const claims=sharedCompany?(await originalPopulation()).claims:(await admin.query('SELECT * FROM finnor_os.workflow_step_claims WHERE tenant_id=$1 AND workflow_step_id=$2',[f.tenant,scheduled.body.workflowStepId])).rows;assert.equal(claims.length,1);assert(claims[0].job_delivery_attempt_id);const deliveries=sharedCompany?(await originalPopulation()).deliveries:(await admin.query('SELECT * FROM finnor_os.job_delivery_attempts WHERE tenant_id=$1 ORDER BY started_at',[f.tenant])).rows;assert.equal(deliveries.length,4);assert.equal(new Set(workers.map(w=>w.pid)).size,workflowProof==='crash'?5:4);
+   const native=sharedCompany?await originalNative():(await admin.query('SELECT st.status,r.status AS reservation_status,r.envelopes,e.status AS effect_status,d.status AS action_status FROM finnor_os.s5_consumption_states st JOIN finnor_os.s5_consumptions co USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservations r USING(tenant_id,reservation_id) JOIN finnor_os.s6_obligation_origins o ON o.tenant_id=st.tenant_id AND o.consumption_id=st.consumption_id JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id JOIN finnor_os.domain_actions d ON d.tenant_id=o.tenant_id AND d.id=o.domain_action_id WHERE st.tenant_id=$1',[f.tenant])).rows;assert.equal(native[0].status,'RECONCILED');assert.equal(native[0].effect_status,'verified');assert.equal(native[0].action_status,'completed');assert.notEqual(native[0].reservation_status,'RELEASED');assert.deepEqual(native[0].envelopes,obligation.resourceEnvelope);
    const proof={scheduled,replay,queued,conflict,waiting,killedPid,reaped,restartedPid:processHandle!.pid,workers,claims,deliveries,after:await graph(),requests,authorityCalls,current,providerRecords:[...providerRecords.values()],partialRead,finalHistory,native,sourceDigests,qualification:'ACTUAL_NATIVE_QUEUE_WORKER_PROCESSES_AND_PROTECTED_READBACK; DISPOSABLE_LOCAL_TLS_PROVIDER_AND_AUTHORITY'};await artifact(`workflow-${workflowProof}.json`,proof);return proof;
   }
   if(revokeBeforeDispatch){
@@ -216,14 +293,16 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
   const producerAppend=await call('/append',{event:{schema:'finnor.s6.experience.v1',semanticOwner:'S6',tenantId:f.tenant,principalId:f.principal,rightsRef:obligation.rightsRef,detail:{schema:'finnor.s6.protected-execution.v1'}},parents:[],references:[]});assert.equal(producerAppend.status,403);
   const accepted=await api(f,'execute-request',input,POST);await artifact('dispatch-before-crash.json',{input,originReceipt,substituted,foreign,producerAppend,accepted,requests,authorityCalls,current,pid:processHandle!.pid});
   assert.equal(accepted.status,200,JSON.stringify(accepted));assert.equal(accepted.body.status,'UNRESOLVED');assert.equal(requests.filter(r=>r.method==='PATCH').length,1);assert.equal(current.fields[mapping.field],mapping.dose);assert(current.lastOperationId);
-  const uncertain=(await admin.query('SELECT st.status,r.status AS reservation_status,r.envelopes FROM finnor_os.s5_consumption_states st JOIN finnor_os.s5_consumptions co USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservations r USING(tenant_id,reservation_id) WHERE st.tenant_id=$1',[f.tenant])).rows;assert.equal(uncertain.length,1);assert.equal(uncertain[0].status,'UNKNOWN_OUTCOME');assert.equal(uncertain[0].reservation_status,'UNKNOWN_OUTCOME');assert.deepEqual(uncertain[0].envelopes,obligation.resourceEnvelope);
-  await authenticatedFixture?.onUnresolved?.({accepted,uncertain,requests:structuredClone(requests),authorityCalls:structuredClone(authorityCalls),current:structuredClone(current),obligation});
+  const uncertain=sharedCompany?await originalNative():(await admin.query('SELECT st.status,r.status AS reservation_status,r.envelopes FROM finnor_os.s5_consumption_states st JOIN finnor_os.s5_consumptions co USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservations r USING(tenant_id,reservation_id) WHERE st.tenant_id=$1',[f.tenant])).rows;assert.equal(uncertain.length,1);assert.equal(uncertain[0].status,'UNKNOWN_OUTCOME');assert.equal(uncertain[0].reservation_status,'UNKNOWN_OUTCOME');assert.deepEqual(uncertain[0].envelopes,obligation.resourceEnvelope);
+  const unresolvedContext={accepted,uncertain,requests:structuredClone(requests),authorityCalls:structuredClone(authorityCalls),current:structuredClone(current),obligation};
+  if(authenticatedFixture?.onUnresolved&&!recoveryBudgetProof)storageProbeRequired=true;
+  await invokeHook('ON_UNRESOLVED',authenticatedFixture?.onUnresolved,unresolvedContext);
   if(recoveryBudgetProof){
    readFault='WRONG_RECORD';const responses=[];
    for(let n=0;n<64;n++){const response=await call('/reconcile',input);assert.equal(response.status,200,JSON.stringify(response));assert.equal(response.body.status,'UNRESOLVED');responses.push(response);}
    const exhaustedBeforeRestart=await protectedHistory();const before=processHandle!,killedPid=before.pid;await stop('SIGKILL');assert.equal(before.signalCode,'SIGKILL');const census=await observePhysicalProcess(killedPid,false);await start();await configureTransport();
    for(let n=0;n<3;n++){const response=n===0?await api(f,'reconcile-request',input,POST):await call('/reconcile',input);assert.equal(response.status,200,JSON.stringify(response));assert.equal(response.body.status,'UNRESOLVED');responses.push(response);}
-   const after=await protectedHistory(),native=(await admin.query('SELECT st.status,r.status AS reservation_status,r.envelopes FROM finnor_os.s5_consumption_states st JOIN finnor_os.s5_consumptions co USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservations r USING(tenant_id,reservation_id) WHERE st.tenant_id=$1',[f.tenant])).rows;
+   const after=await protectedHistory(),native=sharedCompany?await originalNative():(await admin.query('SELECT st.status,r.status AS reservation_status,r.envelopes FROM finnor_os.s5_consumption_states st JOIN finnor_os.s5_consumptions co USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservations r USING(tenant_id,reservation_id) WHERE st.tenant_id=$1',[f.tenant])).rows;
    const proof={input,accepted,uncertain,responses,requests,authorityCalls,exhaustedBeforeRestart,after,killedPid,restartedPid:processHandle!.pid,census,native,sourceDigests,qualification:'64_ACTUAL_LOCAL_TLS_READS_AND_COLD_PROTECTED_RECOVERY; NO_S5_MONETARY_METERING_OR_PRODUCTION_ADMISSION'};await artifact('protected-recovery-budget.json',proof);
    assert.equal(requests.filter(r=>r.method==='GET').length,64,'Protected recovery exceeded 64 actual provider observations');assert.equal(requests.filter(r=>r.method==='PATCH').length,1);
    const claims=after.filter((r:any)=>r.event.type==='RECONCILIATION'&&r.event.detail.kind==='OBSERVATION_ATTEMPT');assert.equal(claims.length,64);assert.equal(new Set(claims.map((r:any)=>r.event.detail.observationOrdinal)).size,64);
@@ -242,7 +321,20 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
   const takeover=await call('/takeover',takeoverInput);await artifact('operator-takeover.json',{beforeTakeover,takeoverInput,forbiddenTakeover,takeover,requests});assert.equal(takeover.status,200,JSON.stringify(takeover));assert.equal(takeover.body.responsibilityRetained,true);assert.equal(takeover.body.automaticMutationRetry,false);
   const takeoverReplay=await call('/takeover',takeoverInput);assert.equal(takeoverReplay.status,200);assert.equal(takeoverReplay.body.semanticReplay,true);assert.deepEqual(takeoverReplay.body.receipt,takeover.body.receipt);
   const alteredTakeover=await call('/takeover',{...takeoverInput,reason:'Changed original claim'});assert.equal(alteredTakeover.status,409);
-  const beforeHumanOverdraw=await protectedHistory(),overdrawHuman=await call('/takeover',{...takeoverInput,idempotencyKey:randomUUID(),expectedCheckpoint:beforeHumanOverdraw.at(-1).receipt.checkpointDigest,humanSeconds:5});assert.equal(overdrawHuman.status,409);assert.deepEqual(await protectedHistory(),beforeHumanOverdraw);
+  const beforeHumanOverdraw=await protectedHistory(),humanBudgetBefore=await api(f,'budget-status',{obligationRef:obligation.ref},POST);
+  assert.equal(humanBudgetBefore.status,200,JSON.stringify(humanBudgetBefore));
+  const budgetRows=z.object({budgets:z.array(z.object({resourceClass:z.string(),unit:z.string(),limit:z.string(),remaining:z.string()}))}).parse(humanBudgetBefore.body).budgets;
+  const humanBudgets=budgetRows.filter(row=>row.resourceClass==='HUMAN_ATTENTION'&&row.unit==='seconds'&&row.limit!=='0');
+  assert.equal(humanBudgets.length,1,'S6_ONE_ORIGINAL_HUMAN_BUDGET_REQUIRED');
+  assert.match(humanBudgets[0]!.remaining,/^[0-9]{1,3}$/,'S6_BOUNDED_INTEGER_HUMAN_NEGATIVE_REQUIRED');
+  const overdrawSeconds=Number(humanBudgets[0]!.remaining)+1;
+  assert(overdrawSeconds>=1&&overdrawSeconds<=900,'S6_OVERDRAW_MUST_REACH_NATIVE_BUDGET_WITHIN_REQUEST_BOUND');
+  const overdrawInput={...takeoverInput,idempotencyKey:randomUUID(),expectedCheckpoint:beforeHumanOverdraw.at(-1).receipt.checkpointDigest,humanSeconds:overdrawSeconds};
+  const overdrawHuman=await call('/takeover',overdrawInput),humanBudgetAfter=await api(f,'budget-status',{obligationRef:obligation.ref},POST);
+  const afterHumanOverdraw=await protectedHistory();
+  await artifact('operator-human-budget-overdraw.json',{humanBudgetBefore,overdrawInput,overdrawHuman,humanBudgetAfter,beforeHumanOverdraw,afterHumanOverdraw});
+  assert.equal(overdrawHuman.status,409,JSON.stringify(overdrawHuman));assert.deepEqual(afterHumanOverdraw,beforeHumanOverdraw);
+  assert.deepEqual(humanBudgetAfter,humanBudgetBefore,'S6_REJECTED_HUMAN_OVERDRAW_MUST_NOT_CHANGE_NATIVE_BUDGET');
   const afterTakeover=await protectedHistory();assert.equal(afterTakeover.filter((r:any)=>r.event.type==='ATTEMPT').length,beforeTakeover.filter((r:any)=>r.event.type==='ATTEMPT').length);assert.equal(requests.filter(r=>r.method==='PATCH').length,1);
   readFault='WRONG_RECORD';const wrong=await api(f,'reconcile-request',input,POST);assert.equal(wrong.status,200,JSON.stringify(wrong));assert.equal(wrong.body.status,'UNRESOLVED');
   readFault='NULL';const cleared=await api(f,'reconcile-request',input,POST);assert.equal(cleared.status,200,JSON.stringify(cleared));assert.equal(cleared.body.status,'UNRESOLVED');
@@ -253,7 +345,7 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
   const allocationHandler=(await import('../../apps/api/app/api/allocations/[operation]/route.js')).POST;
   const reconciled=await api(f,'settle',{allocationRef:obligation.allocationRef,consumptionRef:obligation.consumptionRef,settlementEventId:receipt.identity},allocationHandler);assert.equal(reconciled.status,200,JSON.stringify(reconciled));assert.equal(reconciled.body.consumption.status,'RECONCILED');assert.equal(reconciled.body.reservation.status,'UNKNOWN_OUTCOME');assert.equal(reconciled.body.releaseGranted,false);assert.equal(reconciled.body.costs.status,'UNMETERED');
   const replay=await api(f,'settle',{allocationRef:obligation.allocationRef,consumptionRef:obligation.consumptionRef,settlementEventId:receipt.identity},allocationHandler);assert.equal(replay.status,200);assert.equal(replay.body.semanticReplay,true);
-  const native=(await admin.query('SELECT st.*,r.status AS reservation_status,r.envelopes FROM finnor_os.s5_consumption_states st JOIN finnor_os.s5_consumptions co USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservations r USING(tenant_id,reservation_id) WHERE st.tenant_id=$1',[f.tenant])).rows;
+  const native=sharedCompany?await originalNative():(await admin.query('SELECT st.*,r.status AS reservation_status,r.envelopes FROM finnor_os.s5_consumption_states st JOIN finnor_os.s5_consumptions co USING(tenant_id,consumption_id) JOIN finnor_os.s5_reservations r USING(tenant_id,reservation_id) WHERE st.tenant_id=$1',[f.tenant])).rows;
   const history=await protectedHistory(),wire= requests.find(r=>r.method==='PATCH'),authorityWitnesses=history.filter((r:any)=>r.event.type==='RECONCILIATION'&&r.event.detail.kind==='CURRENT_AUTHORITY');
   await artifact('protected-final-authority.json',{history,wire,authorityCalls});assert.equal(authorityWitnesses.length,1,'Final signed native authority assessment was not durably protected before provider egress');
   const witness=authorityWitnesses[0],assessment=witness.event.detail.assessment,{signature:ownerSignature,...ownerBody}=assessment;assert(verify(null,Buffer.from(canonical(ownerBody)),publicPem(ownerKey),Buffer.from(ownerSignature,'base64')),'Protected assessment signature does not authenticate the native owner');
@@ -264,19 +356,29 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
   const downstream=await call('/execution-handoff/'+encodeURIComponent(obligation.ref.id),undefined,consumerToken);assert.equal(downstream.status,200,JSON.stringify(downstream));
   assert(verify(null,Buffer.from(canonical(downstream.body.handoff)),publicPem(ledgerKey),Buffer.from(downstream.body.signature,'base64')));assert.deepEqual(downstream.body.handoff.history,history);assert.deepEqual(downstream.body.handoff.request,request);assert.equal(downstream.body.handoff.consumer.semanticOwner,'S7');assert.equal(downstream.body.handoff.attributionGranted,false);
   const deniedConsumerDispatch=await call('/dispatch',input,consumerToken);assert.equal(deniedConsumerDispatch.status,403);
-  const finalBudgets=await api(f,'budget-status',{obligationRef:obligation.ref},POST);assert.equal(finalBudgets.status,200);const charged=(await admin.query('SELECT phase,resource_id,unit,units::text,body FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 ORDER BY created_at',[f.tenant])).rows;
+  const finalBudgets=await api(f,'budget-status',{obligationRef:obligation.ref},POST);assert.equal(finalBudgets.status,200);const charged=sharedCompany?(await originalPopulation()).charges.sort((a:any,b:any)=>Date.parse(a.created_at)-Date.parse(b.created_at)||a.charge_key.localeCompare(b.charge_key)).map((c:any)=>({phase:c.phase,resource_id:c.resource_id,unit:c.unit,units:String(c.units),body:c.body})):(await admin.query('SELECT phase,resource_id,unit,units::text,body FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 ORDER BY created_at',[f.tenant])).rows;
   await artifact('s5-governed-budgets-before-storage-probe.json',{finalBudgets,charged});
   assert.equal(charged.filter((c:any)=>c.phase==='EXECUTION').length,1);assert.equal(charged.filter((c:any)=>c.phase==='RECOVERY').length,3);assert.equal(charged.filter((c:any)=>c.phase==='HUMAN').length,1);assert.equal(charged.find((c:any)=>c.phase==='HUMAN').units,'2');
   const executionCharge=charged.find((c:any)=>c.phase==='EXECUTION');
   assert.equal(finalBudgets.body.budgets.find((b:any)=>b.resourceId===executionCharge.resource_id&&b.unit===executionCharge.unit&&b.resourceClass==='COMPUTE').used,'4');
-  const malformedCharge=charged[0],badStorageKey='storage-substitution:'+randomUUID();
-  const {withTenantTransaction}=await import('@finnor/db');await withTenantTransaction(f.tenant,{userId:f.principal},async(_db,c)=>{await c.query('INSERT INTO finnor_os.s5_governed_resource_charges(tenant_id,principal_id,reservation_id,consumption_id,charge_key,phase,resource_id,unit,units,request_digest,body) VALUES($1,$2,$3,$4,$5,$6,$7,$8,1,$9,$10::jsonb)',[f.tenant,f.principal,obligation.reservationRef.id,obligation.consumptionRef.id,badStorageKey,malformedCharge.phase,'unregistered-budget-resource',malformedCharge.body.unit,malformedCharge.body.requestDigest,JSON.stringify(malformedCharge.body)]);});
-  const storageRefusal=await api(f,'budget-status',{obligationRef:obligation.ref},POST);await artifact('s5-resource-storage-consistency.json',{badStorageKey,storageRefusal,requests,qualification:'ACTUAL_ORDINARY_APP_ROLE_INSERT; EXISTING_SCHEMA_ALLOWED_COLUMN_PREIMAGE_SUBSTITUTION'});assert.equal(storageRefusal.status,409,JSON.stringify(storageRefusal));assert.equal(storageRefusal.body.code,'S5_EXECUTION_RESOURCE_HISTORY_INCONSISTENT');assert.equal(requests.filter(r=>r.method==='PATCH').length,1);
+  if(authenticatedFixture?.beforeFinalStorageNegative)storageProbeRequired=true;
+  await invokeHook('BEFORE_FINAL_STORAGE_NEGATIVE',authenticatedFixture?.beforeFinalStorageNegative,{obligation,nativeHandoff,downstream,history,finalBudgets,charged,
+   publicAuthorities:{owner:publicPem(ownerKey),ledger:publicPem(ledgerKey)},providerRequests:requests});
+  if(sharedCompany)try{await artifact('shared-company-before-storage-population.json',await originalPopulation());}catch(error){remember('POST_HOOK_ORIGINAL_POPULATION',error);}
+  await finalStorageNegative(charged);
+  if(hasFailure)throw firstFailure;
   await artifact('contract-lifecycle-final.json',{downstream,deniedConsumerDispatch,takeover,takeoverReplay,alteredTakeover,finalBudgets,charged,history,requests});
   const proof={steps,requests,authorityCalls,current,history,authorityWitnesses,nativeHandoff,downstream,finalBudgets,charged,mapping,root,publicAuthorities:{owner:publicPem(ownerKey),method:publicPem(methodKey),business:publicPem(businessKey),ledger:publicPem(ledgerKey),reviewer:publicPem(reviewer)},sourceDigests,qualification:'ACTUAL_NATIVE_OWNERS; SEPARATE_PROTECTED_CANDIDATE_PROCESS; DISPOSABLE_AUTHORITY_AND_LOCAL_TLS_PROVIDER_CONTRACT; NO_PRODUCTION_ADMISSION_LIVE_PROVIDER_OR_RELEASE'};
   await artifact('governed-dispatch.json',proof);return proof;
- }finally{
-  await stop();await close(provider);await close(authority);await artifact(workflowProof?`workflow-${workflowProof}-process.json`:revokeBeforeDispatch?'dispatch-revocation-process.json':'dispatch-process.json',{root,logs,requests,authorityCalls,steps,pid:processHandle?.pid,exitCode:processHandle?.exitCode,signal:processHandle?.signalCode});
+ }catch(error){if(!hasFailure||error!==firstFailure)remember('PROOF',error);throw firstFailure;}finally{
+  if(storageProbeRequired&&!storageProbeStarted)try{
+   const charged=(await admin.query('SELECT phase,resource_id,unit,units::text,body FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND reservation_id=$2 ORDER BY created_at',[f.tenant,obligation.reservationRef.id])).rows;
+   await finalStorageNegative(charged);
+  }catch(error){remember('ORIGINAL_FINAL_STORAGE_NEGATIVE',error);}
+  const cleanup=await Promise.allSettled([stop(),close(provider),close(authority)]);
+  cleanup.forEach((result,index)=>{if(result.status==='rejected')remember(['STOP_LEDGER','CLOSE_PROVIDER','CLOSE_AUTHORITY'][index]!,result.reason);});
+  try{await artifact(workflowProof?`workflow-${workflowProof}-process.json`:revokeBeforeDispatch?'dispatch-revocation-process.json':'dispatch-process.json',{root,logs,requests,authorityCalls,steps,pid:processHandle?.pid,exitCode:processHandle?.exitCode,signal:processHandle?.signalCode,failures,proofStatus:hasFailure?'FAILED':'COMPLETED'});}catch(error){remember('CLEANUP_ARTIFACT',error);}
   for(const [key,value] of Object.entries(originalEnvironment))if(value===undefined)delete process.env[key];else process.env[key]=value;
+  if(hasFailure)throw firstFailure;
  }
 }

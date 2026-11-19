@@ -1,0 +1,8 @@
+file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/offline-e2e.mjs:20
+  throw Error("EXPLICIT_OWNED_EVIDENCE_DIRECTORY_REQUIRED");
+        ^
+
+Error: EXPLICIT_OWNED_EVIDENCE_DIRECTORY_REQUIRED
+    at file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/offline-e2e.mjs:20:9
+
+Node.js v22.23.4

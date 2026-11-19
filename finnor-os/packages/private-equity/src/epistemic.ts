@@ -1,17 +1,5 @@
 import {
   EPISTEMIC_HEURISTIC_VERSION,
-  analyzeUncertainty,
-  appendEvidenceIncrementally,
-  canonicalOperationalQueryEvidence,
-  createEpistemicState,
-  durableDeterministicValueHash,
-  evidenceFromExistingSource,
-  explicitUserInputEvidence,
-  providerObservationEvidence,
-  propositionById,
-  pinCurrentEpistemicRequirements,
-  requirementResolved,
-  webResearchEvidence,
   type AcquisitionOption,
   type DecisionRequirement,
   type EpistemicState,
@@ -19,10 +7,24 @@ import {
   type JsonValue,
   type PropositionDefinition,
   type PropositionDerivation,
+} from "../../epistemic-runtime/src/contracts";
+import { analyzeUncertainty } from "../../epistemic-runtime/src/uncertainty";
+import { appendEvidenceIncrementally } from "../../epistemic-runtime/src/belief-update";
+import {
+  canonicalOperationalQueryEvidence,
+  evidenceFromExistingSource,
+  explicitUserInputEvidence,
+  providerObservationEvidence,
+  webResearchEvidence,
+} from "../../epistemic-runtime/src/context-adapter";
+import { createEpistemicState, propositionById, requirementResolved } from "../../epistemic-runtime/src/state";
+import {
+  durableDeterministicValueHash,
+  pinCurrentEpistemicRequirements,
   type DurableGraphDefinition,
   type DurableSourceBinding,
   type DurablePinResult,
-} from "@finnor/epistemic-runtime";
+} from "../../epistemic-runtime/src/durable";
 import type {
   PrivateEquityDecisionReadiness,
   PrivateEquityEpistemicWarning,

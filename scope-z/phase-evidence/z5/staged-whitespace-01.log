@@ -1,0 +1,84 @@
+Actual exit: 2
+Tool call: call_50dRYSu9LySrc9EhEhLMBVq5
+Command: git -C /home/factory-user/repos/finnor-z5 diff --cached --check -- finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/ finnor-os/packages/orchestration/src/project-z/z5-institution-linker/ finnor-os/packages/private-equity/src/project-z/z5-institution-linker/ finnor-os/scripts/project-z/z5/ scope-z/phase-evidence/z5/
+Original stdout:
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:7: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:11: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:14: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:40: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:71: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:120: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:149: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:198: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:230: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-01/shared.patch:412: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:7: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:11: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:14: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:40: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:71: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:120: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:149: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:198: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:230: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-02/shared.patch:431: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:7: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:11: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:14: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:40: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:71: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:120: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:149: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:198: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:230: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-03/shared.patch:440: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:7: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:11: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:14: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:40: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:71: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:120: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:149: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:199: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:231: trailing whitespace.
++ 
+scope-z/phase-evidence/z5/integration/request-04/shared.patch:441: trailing whitespace.
++ 

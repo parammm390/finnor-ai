@@ -1,0 +1,59 @@
+name: "CI results - Report completion to the PR"
+
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        required: true
+        type: number
+      head_sha:
+        required: true
+        type: string
+      gate:
+        required: true
+        type: string
+      result:
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+  issues: read
+  pull-requests: write
+
+jobs:
+  report:
+    name: notify-ci-completion
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Publish the completed gate receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REVIEW_PR: ${{ inputs.pr_number }}
+          REVIEW_HEAD: ${{ inputs.head_sha }}
+          REVIEW_GATE: ${{ inputs.gate }}
+          REVIEW_RESULT: ${{ inputs.result }}
+        run: |
+          node --input-type=module <<'NODE'
+          const { GITHUB_API_URL: api = "https://api.github.com", GITHUB_REPOSITORY: repository, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT, GH_TOKEN, REVIEW_PR, REVIEW_HEAD: headSha, REVIEW_GATE: gate, REVIEW_RESULT: conclusion } = process.env
+          const runId = Number(GITHUB_RUN_ID), attempt = Number(GITHUB_RUN_ATTEMPT), pr = Number(REVIEW_PR)
+          if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository ?? "") || !/^[a-f0-9]{40}$/.test(headSha ?? "") || ![runId, attempt, pr].every(value => Number.isSafeInteger(value) && value > 0) || !GH_TOKEN || !["required-pr-verdict", "original-owner (default)", "w2-pair-verdict", "W1 result - economic orchestration and recovery", "W3 result - fulfillment and publication"].includes(gate) || !["success", "failure", "cancelled", "skipped"].includes(conclusion)) throw Error("CI_COMPLETION_INVALID_TERMINAL_CONTEXT")
+          const request = async (path, method = "GET", body) => {
+            const response = await fetch(api + path, { method, headers: { authorization: `Bearer ${GH_TOKEN}`, accept: "application/vnd.github+json", "content-type": "application/json", "x-github-api-version": "2022-11-28" }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(20000) })
+            if (!response.ok) throw Error(`CI_COMPLETION_API_HTTP_${response.status}`)
+            return response.json()
+          }
+          const prefix = `/repos/${repository}`, pull = await request(`${prefix}/pulls/${pr}`)
+          if (pull.state !== "open" || pull.head?.sha !== headSha || pull.head?.repo?.full_name !== repository) { console.log("CI_COMPLETION_STALE_OR_FOREIGN_SOURCE_SKIPPED"); process.exit(0) }
+          const run = await request(`${prefix}/actions/runs/${runId}`)
+          if (run.id !== runId || run.head_sha !== headSha) throw Error("CI_COMPLETION_RUN_SOURCE_MISMATCH")
+          const marker = "<!-- finnor-ci-completion:v1 -->", receiptKey = `${gate}:${runId}:${attempt}`
+          const comments = await request(`${prefix}/issues/${pr}/comments?per_page=100&since=${encodeURIComponent(run.run_started_at)}`)
+          if (!Array.isArray(comments)) throw Error("CI_COMPLETION_INVALID_COMMENT_RESPONSE")
+          if (comments.some(comment => comment.user?.type === "Bot" && comment.body?.startsWith(marker) && comment.body.includes(`"receiptKey":"${receiptKey}"`))) { console.log("CI_COMPLETION_ALREADY_REPORTED"); process.exit(0) }
+          const receipt = { schema: "finnor.ci-completion.v1", receiptKey, repository, pr, headSha, runId, attempt, gate, conclusion, result: conclusion === "success" ? "PASS" : "FAIL", runUrl: run.html_url, qualification: "TERMINAL_REQUIRED_GATE_ONLY_NOT_PRODUCT_PHASE_ACCEPTANCE" }
+          await request(`${prefix}/issues/${pr}/comments`, "POST", { body: `${marker}\nCompleted FINNOR CI gate.\n\n\`\`\`json\n${JSON.stringify(receipt)}\n\`\`\`` })
+          console.log(JSON.stringify({ receiptKey, result: receipt.result, headSha }))
+          NODE

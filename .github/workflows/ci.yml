@@ -1,7 +1,7 @@
 # CI (§29): lint/typecheck + vitest on every PR. Production deployment is owned by
 # production-release.yml and its commit-locked Phase 5 readiness/release job graph.
 # NOTE: this repo lives at finnor-os/ inside the FINNOR repository, so paths are scoped.
-name: finnor-os-ci
+name: "Backend - Build, tests and Z compiler checks"
 on:
   workflow_call:
     inputs:
@@ -15,7 +15,176 @@ defaults:
   run:
     working-directory: finnor-os
 jobs:
+  project-z-native-assets:
+    name: "Z4 setup - Build locked proof binaries"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    defaults:
+      run:
+        working-directory: .
+    outputs:
+      artifact_name: ${{ steps.identity.outputs.artifact_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Prepare existing locked native backend
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: python3 finnor-os/scripts/project-z/z4/ci-native.py prepare --repository "$GITHUB_WORKSPACE" --expected-sha "$SOURCE_SHA" --output "$RUNNER_TEMP/z4-assets" --work "$RUNNER_TEMP/z4-build"
+      - name: Name the successful producer artifact for failed-job reruns
+        id: identity
+        run: echo "artifact_name=project-z-native-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ${{ steps.identity.outputs.artifact_name }}
+          path: ${{ runner.temp }}/z4-assets/
+          if-no-files-found: error
+          retention-days: 7
+
+  project-z-owner-smoke:
+    name: "Z foundation - API and worker transport"
+    needs: project-z-native-assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - run: npx --no-install playwright install --with-deps chromium
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/project-z-browsers
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ${{ needs.project-z-native-assets.outputs.artifact_name }}
+          path: ${{ runner.temp }}/z4-assets
+      - name: Verify exact source, recipe and compiled assets before installation
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: python3 finnor-os/scripts/project-z/z4/ci-native.py install --repository "$GITHUB_WORKSPACE" --expected-sha "$SOURCE_SHA" --artifact "$RUNNER_TEMP/z4-assets"
+      - name: Verify private state boundaries
+        run: node scripts/project-z/native-state.e2e.mjs "$RUNNER_TEMP/native-state-controls.json"
+      - name: Fresh real Auth, disposable DB, actual owner and mounted reload
+        env:
+          PROJECT_Z_NATIVE_NAME: project-z-ci-${{ github.run_id }}-${{ github.run_attempt }}
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/project-z-browsers
+        run: taskset -c 0,1 node scripts/project-z/run-native-ci.mjs --name="$PROJECT_Z_NATIVE_NAME" --evidence="$RUNNER_TEMP/project-z-owner" --browsers="$PLAYWRIGHT_BROWSERS_PATH"
+      - name: Retain sanitized transport result only
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: project-z-owner-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/project-z-owner/result.json
+            ${{ runner.temp }}/native-state-controls.json
+          if-no-files-found: warn
+          retention-days: 7
+
+  project-z-public:
+    name: "${{ matrix.phase == 'z1' && 'Z1 - Shared work compiler' || matrix.phase == 'z2' && 'Z2 - Coalition incentives' || 'Z3 - Long-term viability' }} - public semantics"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        phase: [z1, z2, z3]
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Run actual public processes without hosted credentials
+        env:
+          PROJECT_Z_PHASE: ${{ matrix.phase }}
+        run: taskset -c 0,1 node scripts/project-z/run-ci.mjs --phase="$PROJECT_Z_PHASE" --evidence="$RUNNER_TEMP/project-z-$PROJECT_Z_PHASE"
+      - name: Retain original inputs, actual outputs and process failures
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: project-z-public-${{ matrix.phase }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/project-z-${{ matrix.phase }}/**
+          if-no-files-found: warn
+          retention-days: 7
+
+  project-z-public-z4:
+    name: "Z4 - Execution proof public semantics"
+    needs: project-z-native-assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ${{ needs.project-z-native-assets.outputs.artifact_name }}
+          path: ${{ runner.temp }}/z4-assets
+      - name: Reject corrupt and mismatched artifacts without changing installed assets
+        run: node finnor-os/scripts/project-z/z4/ci-assets-e2e.mjs "$RUNNER_TEMP/z4-assets" "$RUNNER_TEMP/z4-install-controls.json"
+      - name: Verify exact source, recipe and compiled assets before installation
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: python3 finnor-os/scripts/project-z/z4/ci-native.py install --repository "$GITHUB_WORKSPACE" --expected-sha "$SOURCE_SHA" --artifact "$RUNNER_TEMP/z4-assets"
+      - name: Run unchanged original and native-critical rejection processes
+        run: taskset -c 0,1 node scripts/project-z/run-ci.mjs --phase=z4 --evidence="$RUNNER_TEMP/project-z-z4"
+      - name: Retain original inputs, native identity and observed process results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: project-z-public-z4-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/project-z-z4/**
+            ${{ runner.temp }}/z4-install-controls.json
+            ${{ runner.temp }}/z4-assets/receipt.json
+          if-no-files-found: warn
+          retention-days: 7
+
   production-artifacts:
+    name: "Build - Application and worker artifacts"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -47,6 +216,7 @@ jobs:
           retention-days: 7
 
   worker-image:
+    name: "Worker - Build and smoke-test Docker image"
     if: ${{ inputs.run_worker_image }}
     runs-on: ubuntu-latest
     # First pinned exact native compilation is preparation, not a 30-second
@@ -83,7 +253,7 @@ jobs:
       - name: Prepare disposable worker smoke database
         run: |
           npm run db:bundle
-          git diff --exit-code -- packages/db/migrations-bundle.ts
+          git diff --exit-code -- packages/db/migrations-bundle.ts packages/db/migration-head.ts
           npm run db:migrate
           npm run setup:langgraph
         working-directory: finnor-os
@@ -134,6 +304,7 @@ jobs:
           retention-days: 7
 
   test:
+    name: "Backend - Test shard ${{ matrix.shard }} of 3"
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
@@ -169,6 +340,9 @@ jobs:
           cache: npm
           cache-dependency-path: finnor-os/package-lock.json
       - run: npm ci
+      - name: Verify ordinary Linux kernel policy against controlled native attacks
+        if: ${{ matrix.shard == 1 }}
+        run: node --import=tsx scripts/s6/run-linux-policy-e2e.mts "$RUNNER_TEMP/finnor-s6-kernel-policy"
       # Historical S1 proofs require actual database commit visibility. Configure
       # only this disposable CI service before any migration/source fixture exists.
       - name: Enable commit timestamps on disposable PostgreSQL
@@ -220,11 +394,12 @@ jobs:
             ${{ runner.temp }}/finnor-s7-evidence/**/runner.log
             ${{ runner.temp }}/finnor-production-query-evidence/*.json
             ${{ runner.temp }}/finnor-pe-objective-evidence/**
+            ${{ runner.temp }}/finnor-s6-kernel-policy/**
           if-no-files-found: warn
           retention-days: 7
 
   operating-profit:
-    name: S4 operating-profit owner and replay
+    name: "Operating profit - Calculation and replay"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -237,10 +412,24 @@ jobs:
           cache: npm
           cache-dependency-path: finnor-os/package-lock.json
       - run: npm ci --no-audit --no-fund
-      - name: Prepare the pinned conditional S3 numerical backend
+      - name: Prepare and verify the pinned S3 and S5 numerical backend
         run: |
-          python3 -m venv "$RUNNER_TEMP/s4-python"
-          "$RUNNER_TEMP/s4-python/bin/pip" install --disable-pip-version-check -r packages/epistemic-runtime/src/intervention-requirements.txt
+          set -euo pipefail
+          umask 077
+          s4_uv_container="$(docker create ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb02acbac4c69920fe9d278f82)"
+          trap 'docker rm "$s4_uv_container" >/dev/null' EXIT
+          docker cp "$s4_uv_container:/uv" "$RUNNER_TEMP/s4-uv"
+          "$RUNNER_TEMP/s4-uv" python install 3.12.13
+          "$RUNNER_TEMP/s4-uv" venv --python 3.12.13 "$RUNNER_TEMP/s4-python"
+          "$RUNNER_TEMP/s4-uv" pip sync --require-hashes --only-binary :all: --python "$RUNNER_TEMP/s4-python/bin/python" scripts/r4/numerical-requirements.lock
+          "$RUNNER_TEMP/s4-python/bin/python" -I - <<'PY'
+          import sys, numpy, scipy
+          from scipy.optimize._highspy._core import HIGHS_VERSION_MAJOR, HIGHS_VERSION_MINOR, HIGHS_VERSION_PATCH
+          highs = f'{HIGHS_VERSION_MAJOR}.{HIGHS_VERSION_MINOR}.{HIGHS_VERSION_PATCH}'
+          assert sys.version.split()[0] == '3.12.13'
+          assert (numpy.__version__, scipy.__version__, highs) == ('2.3.3', '1.16.2', '1.8.0')
+          print({'python': sys.version.split()[0], 'numpy': numpy.__version__, 'scipy': scipy.__version__, 'highs': highs})
+          PY
           echo "FINNOR_S3_PYTHON=$RUNNER_TEMP/s4-python/bin/python" >> "$GITHUB_ENV"
       - name: Exercise full S4 owner, operating-profit and retained-kernel replay paths
         run: python3 scripts/s4/run-local.py
@@ -256,6 +445,7 @@ jobs:
           retention-days: 7
 
   phase7:
+    name: "Workforce learning - End-to-end certification"
     runs-on: ubuntu-latest
     timeout-minutes: 25
     services:
@@ -335,6 +525,7 @@ jobs:
           retention-days: 7
 
   correctness-regressions:
+    name: "Correctness - Financial and authorization regressions"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:

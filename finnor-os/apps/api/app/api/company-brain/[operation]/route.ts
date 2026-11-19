@@ -1,13 +1,20 @@
+import { SharedWorkOperations, readSharedWorkBody, handleSharedWorkOperation, sharedWorkResponseError } from '@finnor/private-equity/src/project-z/z1-shared-work/api';
 import {
   COMPANY_BRAIN_NAMESPACES,
   CORE_BRAIN_OBJECT_TYPES,
   EPISTEMIC_BRAIN_OBJECT_TYPES,
-  PE_ENTITY_TYPES,
-  PE_WORLD_ROOT_TYPES,
   PLANNING_BRAIN_OBJECT_TYPES,
   UNDERWRITING_BRAIN_OBJECT_TYPES,
   WORKFORCE_BRAIN_OBJECT_TYPES,
+  type CompanyBrainObjectRef,
+} from "../../../../../../packages/private-equity/src/company-brain-types";
+import {
+  PE_ENTITY_TYPES,
+  PE_WORLD_ROOT_TYPES,
   PeDomainError,
+  type PeMutationContext,
+} from "../../../../../../packages/private-equity/src/types";
+import {
   companyBrainDecisionLineage,
   companyBrainEvidenceLineage,
   companyBrainHistory,
@@ -15,16 +22,25 @@ import {
   companyBrainProvenance,
   listCompanyBrainRoots,
   loadCompanyBrainProjection,
-  loadEnterpriseBeliefView,
-  validateBeliefViewPin,
-  handleDecisionSliceOperation,DecisionSliceError,M1_OPERATIONS,inM1Episode,m1TransportDeadline,readM1BodyChunk,
   parseCompanyBrainObjectRef,
   resolvePeOperatingContext,
   searchCompanyBrainProjection,
   traverseCompanyBrain,
-  type CompanyBrainObjectRef,
-  type PeMutationContext,
-} from "@finnor/private-equity";
+} from "../../../../../../packages/private-equity/src/company-brain";
+import {
+  loadEnterpriseBeliefView,
+  validateBeliefViewPin,
+} from "../../../../../../packages/private-equity/src/enterprise-beliefs";
+import {
+  handleDecisionSliceOperation,
+  M1_OPERATIONS,
+} from "../../../../../../packages/private-equity/src/decision-slice/handler";
+import { DecisionSliceError } from "../../../../../../packages/private-equity/src/decision-slice/contracts";
+import {
+  inM1Episode,
+  m1TransportDeadline,
+  readM1BodyChunk,
+} from "../../../../../../packages/private-equity/src/decision-slice/budget";
 import { z } from "zod";
 import { IdentityAccessError } from "@finnor/security";
 import { errorResponse, requireContext } from "../../../../lib/auth";
@@ -32,6 +48,8 @@ import {handleEvidenceOperation,EVIDENCE_OPERATIONS} from '@finnor/private-equit
 import {handlePrimaryOperation,PRIMARY_OPERATIONS} from '@finnor/private-equity/src/primary-diligence/api';
 import {handleBilateralOperation,BILATERAL_OPERATIONS} from '@finnor/private-equity/src/bilateral-opportunities/api';
 import {handleComputeSearchOperation,COMPUTE_SEARCH_OPERATIONS} from '@finnor/private-equity/src/compute-search/api';
+import {handleEconomicOrchestrationOperation,ECONOMIC_ORCHESTRATION_OPERATIONS} from '@finnor/private-equity/src/economic-orchestration/api';
+import {reconcileEconomicPolicyDependenciesTx} from '@finnor/private-equity/src/live-recompilation/economic-orchestration-port';
 import {handleDeliberationOperation,DELIBERATION_OPERATIONS} from '@finnor/private-equity/src/deliberation/api';
 import {DeliberationDeadlineError,deliberationTransportDeadline,inDeliberationDeadline} from '@finnor/private-equity/src/deliberation/deadline';
 import {handleProgramOperation,PROGRAM_OPERATIONS} from '@finnor/private-equity/src/program-synthesis/api';
@@ -41,6 +59,7 @@ import {LedgerFault} from '../../../../../../packages/governed-execution/src/pro
 import {ApplicationProviderFault} from '@finnor/computer';
 import {handleInterfaceOperation,INTERFACE_OPERATIONS} from '@finnor/private-equity/src/interface-synthesis/api';
 import {handleContinuationOperation,CONTINUATION_OPERATIONS} from '@finnor/private-equity/src/live-recompilation/api';
+import {handleViabilityOperation,VIABILITY_OPERATIONS} from '@finnor/private-equity/src/project-z/z3-viability/api';
 import {handleProcedureOperation,PROCEDURE_OPERATIONS} from '@finnor/private-equity/src/procedure-induction/api';
 import {handleCapitalProgramOperation,CAPITAL_PROGRAM_V2_OPERATIONS,capitalProgramResponseError} from '@finnor/private-equity/src/capital-program/v2-api';
 import {inM3Episode,m3TransportDeadline,readM3Body} from '@finnor/private-equity/src/capital-program/v2-budget';
@@ -58,9 +77,14 @@ import {EconomicFault} from '@finnor/private-equity/src/economic-action-theory/c
 import {StrategicOperations,handleStrategicOperation,readStrategicBody} from '@finnor/private-equity/src/strategic-response/api';
 import {StrategicFault} from '@finnor/private-equity/src/strategic-response/contracts';
 import {CONFIDENTIAL_OPERATIONS,handleConfidentialOperation} from '@finnor/private-equity/src/confidential-computation/api';
+import {EXECUTION_PROOF_OPERATIONS} from '@finnor/private-equity/src/project-z/z4-execution-proof/contracts';
+import {handleProofOperation} from '@finnor/private-equity/src/project-z/z4-execution-proof/api';
 import {InteractionOperations,handleInteractionOperation,readInteractionBody} from '@finnor/private-equity/src/interaction-synthesis/api';
+import {CoalitionOperations,handleCoalitionOperation} from '@finnor/private-equity/src/project-z/z2-coalitions/api';
 import {InteractionFault} from '@finnor/private-equity/src/interaction-synthesis/contracts';
 
+import {Z5_OPERATIONS,handleInstitutionLinkOperation,readInstitutionBody} from '@finnor/private-equity/src/project-z/z5-institution-linker/api';
+import {intakeInstitutionComposition} from '../../../../../../packages/orchestration/src/project-z/z5-institution-linker/intake';
 export const runtime = "nodejs";
 
 const UuidSchema = z.string().uuid();
@@ -214,9 +238,35 @@ function checkedRef(value: unknown): CompanyBrainObjectRef {
 
 export async function POST(req: Request, { params }: { params: Promise<{ operation: string }> }): Promise<Response> {
   try {const route=await params;
+    if(SharedWorkOperations.some(operation=>operation===route.operation)){
+      try{
+        const auth=await requireContext(req),body=await readSharedWorkBody(req);
+        const result=await handleSharedWorkOperation({auth},route.operation,body);
+        return response(result.body,result.status);
+      }catch(error){const mapped=sharedWorkResponseError(error);return mapped?response(mapped.body,mapped.status):requestError(error);}
+    }
+    if((Z5_OPERATIONS as readonly string[]).includes(route.operation)){
+      const auth=await requireContext(req);
+      if(!auth.deliverySession||Date.parse(auth.deliverySession.expiresAt)<=Date.now())
+        return response({code:'Z5_REAL_AUTHENTICATED_OWNER_SESSION_REQUIRED'},401);
+      try{
+        const body=await readInstitutionBody(req);
+        const result=route.operation==='institution-link-submit'
+          ?await intakeInstitutionComposition(auth,body):await handleInstitutionLinkOperation({auth},route.operation,body);
+        return response(result.body,result.status);
+      }catch(error){
+        const code=error instanceof Error&&/^Z5_[A-Z0-9_]+$/.test(error.message)?error.message:'Z5_INVALID_BOUNDED_JSON';
+        return response({code,error:'The bounded original-owner request was refused'},/DEADLINE/.test(code)?408:/BOUND/.test(code)?413:400);
+      }
+    }
     if(StrategicOperations.some(operation=>operation===route.operation)){
       const auth=await requireContext(req),body=await readStrategicBody(req);
       const result=await handleStrategicOperation({auth},route.operation,body);
+      return response(result.body,result.status);
+    }
+    if(CoalitionOperations.some(operation=>operation===route.operation)){
+      const auth=await requireContext(req),body=await readInteractionBody(req);
+      const result=await handleCoalitionOperation({auth},route.operation,body);
       return response(result.body,result.status);
     }
     if(InteractionOperations.some(operation=>operation===route.operation)){
@@ -233,6 +283,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ operati
       try{
         const auth=await requireContext(req),body=await readApplicationBody(req);
         const result=await handleConfidentialOperation({auth},route.operation,body);
+        return response(result.body,result.status);
+      }catch(error){const mapped=applicationResponseError(error);return mapped?response(mapped.body,mapped.status):requestError(error);}
+    }
+    if(EXECUTION_PROOF_OPERATIONS.some(operation=>operation===route.operation)){
+      try{
+        const auth=await requireContext(req),body=await readApplicationBody(req);
+        const result=await handleProofOperation({auth},route.operation,body);
         return response(result.body,result.status);
       }catch(error){const mapped=applicationResponseError(error);return mapped?response(mapped.body,mapped.status):requestError(error);}
     }
@@ -286,6 +343,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ operati
       });}catch(error){const mapped=capitalProgramResponseError(error);return mapped?response(mapped.body,mapped.status):requestError(error);}
     }
     if(M1_OPERATIONS.has(route.operation))return await inM1Episode(m1TransportDeadline(req),()=>dispatchPost(req,route));
+    if((ECONOMIC_ORCHESTRATION_OPERATIONS as readonly string[]).includes(route.operation))return await inDeliberationDeadline(deliberationTransportDeadline(req),()=>dispatchPost(req,route));
     if((DELIBERATION_OPERATIONS as readonly string[]).includes(route.operation))return await inDeliberationDeadline(deliberationTransportDeadline(req),()=>dispatchPost(req,route));
     return await dispatchPost(req,route);
   }catch(error){return requestError(error);}
@@ -298,10 +356,12 @@ async function dispatchPost(req:Request,route:{operation:string}):Promise<Respon
     if((APPLICATION_SEMANTICS_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleApplicationSemanticsOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if(CAPITAL_FORMATION_OPERATION_NAMES.has(route.operation)){const result=await handleCapitalFormationOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if((CONTINUATION_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleContinuationOperation(ctx,route.operation,body);return response(result.body,result.status);}
+    if((VIABILITY_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleViabilityOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if ((PROCEDURE_OPERATIONS as readonly string[]).includes(route.operation)) { const result=await handleProcedureOperation(ctx,route.operation,body);return response(result.body,result.status); }
     if(M1_OPERATIONS.has(route.operation))return response(await handleDecisionSliceOperation(ctx,route.operation,body));
     if((INTERFACE_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleInterfaceOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if((DELIBERATION_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleDeliberationOperation(ctx,route.operation,body);return response(result.body,result.status);}
+    if((ECONOMIC_ORCHESTRATION_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleEconomicOrchestrationOperation(ctx,route.operation,body,{reconcileDependenciesTx:reconcileEconomicPolicyDependenciesTx});return response(result.body,result.status);}
     if((COMPUTE_SEARCH_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleComputeSearchOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if((INSTITUTION_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleInstitutionOperation(ctx,route.operation,body);return response(result.body,result.status);}
     if((PROGRAM_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleProgramOperation(ctx,route.operation,body);return response(result.body,result.status);}

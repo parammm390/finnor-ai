@@ -109,18 +109,22 @@ async function readJson<T>(res: Response, method: CentropyMethod, path: string):
   return json as T
 }
 
-async function centropyRequest<T>(method: CentropyMethod, path: string, body?: unknown, params?: Record<string, string>, invalidate = true): Promise<T> {
+async function centropyRequest<T>(method: CentropyMethod, path: string, body?: unknown, params?: Record<string, string>, invalidate = true, signal?: AbortSignal): Promise<T> {
   const qs = params ? `?${new URLSearchParams(params).toString()}` : ""
   const started = performance.now()
   let status = 0
   const controller = new AbortController()
   const timeoutMs = method === "GET" ? CENTROPY_GET_TIMEOUT_MS : CENTROPY_MUTATION_TIMEOUT_MS
   const timeoutId = globalThis.setTimeout(() => controller.abort(), timeoutMs)
+  const cancel = () => controller.abort(signal?.reason)
+  signal?.addEventListener("abort", cancel, { once: true })
+  if (signal?.aborted) cancel()
   const auth = authHeaders()
   const sessionKey = getCurrentSessionKey()
   const accessGeneration = getCurrentAccessGeneration()
   const credential = auth?.authorization?.replace(/^Bearer /, "")
   try {
+    signal?.throwIfAborted()
     if (method !== "GET" && !auth) {
       status = 401
       throw new CentropyApiError(auth ? "Sign in required" : "Test key or sign in required", 401, false)
@@ -136,9 +140,15 @@ async function centropyRequest<T>(method: CentropyMethod, path: string, body?: u
       signal: controller.signal,
     })
     status = res.status
-    if (credential && (res.status === 401 || res.status === 403 && res.headers.get("x-finnor-identity-state") === "denied"))
+    // A route-scoped 401 is not necessarily a rejected login. Only the
+    // authenticated backend's explicit identity-denied marker may close the
+    // entire private workspace. Unmarked 401/403 responses still fail closed
+    // at the requesting panel, without poisoning other authorized reads.
+    if (credential && (res.status === 401 || res.status === 403)
+      && res.headers.get("x-finnor-identity-state") === "denied")
       rejectCurrentWorkspaceAccess(credential, accessGeneration)
     const value = await readJson<T>(res, method, path)
+    signal?.throwIfAborted()
     if (sessionKey !== getCurrentSessionKey()) {
       status = 401
       throw new CentropyApiError("The authenticated session changed. Reload the current authorized state.", 401, false, { code: "AUTHENTICATED_SCOPE_CHANGED" })
@@ -152,6 +162,7 @@ async function centropyRequest<T>(method: CentropyMethod, path: string, body?: u
     }
     return value
   } catch (error) {
+    if (signal?.aborted) throw new CentropyApiError("Request cancelled. Read the original native record before another action.", 0, false, { code: "REQUEST_ABORTED" })
     if (isAbortError(error)) {
       status = 504
       throw new CentropyApiError(`${method} ${path} timed out after ${timeoutMs / 1000} seconds`, 504)
@@ -160,6 +171,7 @@ async function centropyRequest<T>(method: CentropyMethod, path: string, body?: u
     status = 503
     throw new CentropyApiError(`${method} ${path} unavailable: ${errorMessage(error)}`, 503)
   } finally {
+    signal?.removeEventListener("abort", cancel)
     globalThis.clearTimeout(timeoutId)
     publish({ method, path: `/${path}`, status, ms: Math.round(performance.now() - started), at: Date.now() })
   }
@@ -184,12 +196,14 @@ function sharedRead<T>(method: "GET" | "POST", path: string, body?: unknown, par
   return request
 }
 
-export async function centropyGet<T>(path: string, params?: Record<string, string>): Promise<T> {
+export async function centropyGet<T>(path: string, params?: Record<string, string>, signal?: AbortSignal): Promise<T> {
+  if (signal) return centropyRequest<T>("GET", path, undefined, params, true, signal)
   return sharedRead<T>("GET", path, undefined, params)
 }
 
-export async function centropyPost<T>(path: string, body: unknown): Promise<T> {
+export async function centropyPost<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
   const capability = resolveProductRoute("POST", path.replace(/^\/+/, "").split("/"))
+  if (signal) return centropyRequest<T>("POST", path, body, undefined, capability?.classification !== "READ", signal)
   if (capability?.classification === "READ") return sharedRead<T>("POST", path, body)
   return centropyRequest<T>("POST", path, body)
 }

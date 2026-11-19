@@ -1,0 +1,6 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": { "allowImportingTsExtensions": true, "incremental": false },
+  "include": ["./closing-reader-privacy.mts", "./run-closing-reader-privacy-e2e.mts"],
+  "exclude": ["../../node_modules"]
+}

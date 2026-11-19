@@ -13,6 +13,7 @@ export const CLOSING_PROVIDER_CONTRACT = Object.freeze({
   mutation: "EXACT_ORIGINAL_SPEC_ACTOR_REQUIREMENT_AND_NATIVE_EFFECT",
   acknowledgement: "NOT_SETTLEMENT",
   observation: "INDEPENDENT_SIGNED_ORIGINAL_OPERATION_REQUIREMENT_AND_RECEIVING_STATE",
+  compensationBinding: "EXACT_OPTIONAL_ORIGINAL_WORKFORCE_OBLIGATION_PAYER_AND_PAYEE",
   absence: "NO_QUERY_MISS_OR_POLL_EXHAUSTION_AUTHORITY",
   repetition: "NO_SECOND_PHYSICAL_MUTATION_AFTER_POSSIBLE_EGRESS",
   cancellation: "STOP_FUTURE_WORK_RETAIN_ORIGINAL_S5_EFFECT_AND_DUTIES",
@@ -44,7 +45,8 @@ export function closingOperationRequest(specValue: unknown, step: ClosingStep, e
     const f = spec.fundsFlows.find(f => f.key === step.requirementKey);
     if (!f) throw Error("S6_CLOSING_PAYMENT_BINDING");
     operation = { kind: step.kind, operationKey: f.operationKey, money: f.money, payerEntityId: f.payerEntityId,
-      receivingEntityId: f.receivingEntityId, receivingAccountDigest: f.receivingAccountDigest, purpose: f.purpose };
+      receivingEntityId: f.receivingEntityId, receivingAccountDigest: f.receivingAccountDigest, purpose: f.purpose,
+      ...(f.workforceCompensation ? { workforceCompensation: f.workforceCompensation } : {}) };
   } else if (step.kind === "TRANSFER_RIGHTS") {
     const t = spec.rightsTransfers.find(t => t.key === step.requirementKey);
     if (!t) throw Error("S6_CLOSING_RIGHTS_BINDING");

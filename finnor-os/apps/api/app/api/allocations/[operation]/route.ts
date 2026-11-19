@@ -1,12 +1,30 @@
 import {readEnterpriseExactAllocation,validateEnterpriseExactAllocation,reconcileEnterpriseExactAllocation,releaseEnterpriseExactAllocation} from '../../../../../../packages/private-equity/src/r7/accounting';
 import {R7Error} from '../../../../../../packages/private-equity/src/r7/contracts';
 import { z } from 'zod';
-import { AllocationContractError, ControlContractError, ExperimentContractError, AllocationOperationSchemas, InterventionContractError } from '@finnor/epistemic-runtime';
-import { PeDomainError, clearEnterprisePortfolio, consumeEnterpriseAllocation, listEnterpriseAllocationResources, readEnterpriseAllocation, reconcileEnterpriseAllocation, recordEnterpriseAllocationAssessment, registerEnterpriseAllocationResource, releaseEnterpriseAllocation, validateEnterpriseAllocation,settleEnterpriseAllocation } from '@finnor/private-equity';
+import {
+  AllocationContractError,
+  AllocationOperationSchemas,
+} from '../../../../../../packages/epistemic-runtime/src/allocation-contracts';
+import { ControlContractError } from '../../../../../../packages/epistemic-runtime/src/control-contracts';
+import { ExperimentContractError } from '../../../../../../packages/epistemic-runtime/src/experiments';
+import { InterventionContractError } from '../../../../../../packages/epistemic-runtime/src/interventions';
+import { PeDomainError } from '../../../../../../packages/private-equity/src/types';
+import {
+  clearEnterprisePortfolio,
+  consumeEnterpriseAllocation,
+  listEnterpriseAllocationResources,
+  readEnterpriseAllocation,
+  reconcileEnterpriseAllocation,
+  recordEnterpriseAllocationAssessment,
+  registerEnterpriseAllocationResource,
+  releaseEnterpriseAllocation,
+  validateEnterpriseAllocation,
+  settleEnterpriseAllocation,
+} from '../../../../../../packages/private-equity/src/enterprise-allocation';
 import { errorResponse, requireContext } from '../../../../lib/auth';
-import {LedgerFault} from '@finnor/private-equity';
+import { LedgerFault } from '../../../../../../packages/governed-execution/src/protocol';
 import {clearEnterpriseCoalitionAllocation,readEnterpriseCoalitionAllocation,consumeEnterpriseCoalitionAllocation,releaseEnterpriseCoalitionAllocation} from '../../../../../../packages/private-equity/src/capital-program/r5-allocation-owner';
-import {ExperimentRefSchema} from '@finnor/epistemic-runtime';
+import { ExperimentRefSchema } from '../../../../../../packages/epistemic-runtime/src/experiments';
 import { R3OwnerOperationSchemas } from '../../../../../../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts';
 const coalitionClear=z.object({selectionRef:ExperimentRefSchema,idempotencyKey:z.string().min(1).max(256)}).strict();
 const coalitionRead=z.object({allocationRef:ExperimentRefSchema}).strict();

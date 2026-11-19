@@ -11,7 +11,7 @@ import { installedDevelopmentRuntime } from "./installed-runtime";
 const sha = (data: Buffer | string) => createHash("sha256").update(data).digest("hex");
 const root = dirname(fileURLToPath(new URL("../../../../package.json", import.meta.url)));
 const command = fileURLToPath(new URL("../../../../scripts/frontier5/x1/checker-command.mts", import.meta.url));
-const tsx = join(root, "node_modules/tsx/dist/cli.mjs");
+const tsx = join(root, "node_modules/tsx/dist/loader.mjs");
 const files = [command, fileURLToPath(new URL("./checker.ts", import.meta.url)),
   fileURLToPath(new URL("./checker-raw.ts", import.meta.url)),
   fileURLToPath(new URL("./canonical-json.ts", import.meta.url)), tsx, join(root, "package-lock.json")];
@@ -20,7 +20,7 @@ function invocation() {
   if (installed && (process.env.NODE_ENV === 'production' || process.env.FINNOR_ENVIRONMENT === 'production'
       || process.env.FINNOR_P4_PROFILE !== 'ordinary_disposable')) throw Error('X1_COMPILED_DEVELOPMENT_PROFILE_REQUIRED');
   return installed ? { pins: installed.checkerPins(), args: [installed.entrypoint("checker")], cwd: join(installed.root, "finnor-os") }
-    : { pins: Object.fromEntries(files.map(file => [file, sha(readFileSync(file))])), args: [tsx, command], cwd: root };
+    : { pins: Object.fromEntries(files.map(file => [file, sha(readFileSync(file))])), args: ["--import", tsx, command], cwd: root };
 }
 // 32 MiB raw can expand through base64 and JSON escaping in the same request
 // as an 8 MiB canonical snapshot. This is a transport limit, not a profile cut.

@@ -1,0 +1,15 @@
+/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-6r9b7P/oracle.cjs:30
+if (attempts.length || actionCalls) throw new Error("Oracle observed forbidden effect attempts: " + JSON.stringify({attempts, actionCalls}));
+                                    ^
+
+Error: Oracle observed forbidden effect attempts: {"attempts":[{"name":"net.createConnection","stack":"Error: ORACLE_NETWORK_DENIED:net.createConnection\n    at Object.createConnection (/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-6r9b7P/oracle.cjs:6:44)\n    at /home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/client-D3mGB526.cjs:1:240\n    at new Promise (<anonymous>)\n    at connectToServer (/home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/client-D3mGB526.cjs:1:184)\n    at Object.<anonymous> (/home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/client-D3mGB526.cjs:1:497)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Object..js (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Function._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)"}],"actionCalls":0}
+    at Object.<anonymous> (/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-6r9b7P/oracle.cjs:30:43)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1913:10)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49
+
+Node.js v22.23.4

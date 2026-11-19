@@ -32,6 +32,13 @@ const EXPLICIT_BOUNDARIES: Record<string, RegExp> = {
   "ready/route.ts": /MIGRATION_HEAD/,
   // Public deployment metadata only; contains no tenant or user data.
   "release/route.ts": /getReleaseMetadata/,
+  // These owner-only routes use the audited requireContext-based capability
+  // boundary; authenticated route verification also exercises participant refusal.
+  "capabilities/nango/connect/route.ts": /requireCapabilityActor\(request\)/,
+  "capabilities/nango/sources/route.ts": /requireCapabilityActor\(request\)/,
+  "capabilities/planner/activation/route.ts": /requireCapabilityActor\(request\)/,
+  "capabilities/runs/route.ts": /requireCapabilityActor\(request\)/,
+  "capabilities/runs/[id]/route.ts": /requireCapabilityActor\(request\)/,
   "webhooks/esign/route.ts": /verifyDocusignSignature/,
   "webhooks/ghl/route.ts": /verifyGhlSignature/,
   "webhooks/marketing/route.ts": /verifySharedSecret/,
@@ -60,7 +67,7 @@ describe("A5 tenant/auth boundary inventory", () => {
       // P5 IC routes use the shared handleIcGet/handleIcPost boundary; those
       // wrappers resolve requireIcContext -> requireContext before invoking a
       // domain operation. Recognize that named audited boundary explicitly.
-      const expected = EXPLICIT_BOUNDARIES[route] ?? /requireContext|handleIc(?:Get|Post)/;
+      const expected = EXPLICIT_BOUNDARIES[route] ?? /requireContext|requireCapabilityOwner|handleIc(?:Get|Post)/;
       expect(source, `${route} has no explicit auth/tenant boundary; add requireContext or an audited exception`).toMatch(expected);
     }
   });

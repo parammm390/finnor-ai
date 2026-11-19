@@ -1,5 +1,10 @@
 /** Additive S5 application domain on the existing portfolio tables and lock. */
 import type { PoolClient } from "pg";
+import { assertStandaloneApplicationWork, type InstitutionalAcquireRequest,
+  type PreparedInstitutionOrigin } from "../../../orchestration/src/project-z/z0-convergence/institution-origin";
+import { chargeInheritedApplicationParent, inheritedApplicationConsumption, isInheritedApplicationAllocation,
+  readInheritedApplicationAllocation, reserveInheritedApplicationParent,
+  type OriginalInstitutionReservation } from "../../../orchestration/src/project-z/z0-convergence/institution-allocation";
 import type {
   AllocationResource, ApplicationAllocationCertificate, ApplicationAllocationConsumption,
   ApplicationResourceEnvelope, ExperimentRef,
@@ -21,7 +26,7 @@ interface ApplicationReservation {
   executionAuthorityGranted: false; protectedReceipt: null;
 }
 export interface ApplicationAllocation {
-  certificate: ApplicationAllocationCertificate; reservation: ApplicationReservation;
+  certificate: ApplicationAllocationCertificate; reservation: ApplicationReservation | OriginalInstitutionReservation;
   resources: AllocationResource[]; rootConsumption: ApplicationAllocationConsumption;
 }
 function units(value: string): bigint {
@@ -42,8 +47,19 @@ export async function reserveApplicationParent(ctx: PeMutationContext, input: {
   originalParentRef: ExperimentRef; preparationRef: ExperimentRef; workId: string; rightsRef: string;
   deadlineAt: string; idempotencyKey: string; requestDigest: string; demand: ApplicationResourceDemand[];
   root: { entityType: string; entityId: string };
+  institutionalOrigin?: PreparedInstitutionOrigin | null;
+  institutionalRequest?: InstitutionalAcquireRequest;
   onReserved?: (client: PoolClient, allocation: ApplicationAllocation) => Promise<void>;
 }): Promise<ApplicationAllocation> {
+  if (input.institutionalOrigin) {
+    if (!input.institutionalRequest || !input.onReserved) x2Fault("Z0_ATOMIC_ORIGINAL_INSTITUTION_SESSION_REQUIRED");
+    return reserveInheritedApplicationParent(ctx, {
+      originalParentRef: input.originalParentRef, preparationRef: input.preparationRef,
+      rightsRef: input.rightsRef, requestDigest: input.requestDigest, demand: input.demand,
+      request: input.institutionalRequest, origin: input.institutionalOrigin, onReserved: input.onReserved,
+    });
+  }
+  if (input.institutionalRequest?.institutionalOrigin) x2Fault("Z0_ORIGINAL_INSTITUTION_PREPARATION_REQUIRED");
   const snapshot = await readAllocationSnapshot(ctx);
   const demandIds = new Set(input.demand.map((item) => item.resourceId));
   if (demandIds.size !== input.demand.length || !input.demand.some((item) => item.unit === "request")
@@ -71,6 +87,7 @@ export async function reserveApplicationParent(ctx: PeMutationContext, input: {
       if (prior.request_digest !== input.requestDigest || !prior.allocation_digest) x2Fault("X2_S5_PARENT_IDEMPOTENCY_CONFLICT");
       return readApplicationAllocationInTransaction(ctx, c, x2RefFromDigest("application-allocation", prior.allocation_digest));
     }
+    await assertStandaloneApplicationWork(ctx, input.workId, c);
     if (Date.parse(input.deadlineAt) <= Date.now() || Date.parse(input.deadlineAt) > Date.now() + 3600000) x2Fault("X2_S5_ORIGINAL_DEADLINE");
     const currentSnapshot = await allocationSnapshotInTransaction(c, ctx.auth.tenantId);
     const envelopes: ApplicationResourceEnvelope[] = [];
@@ -143,7 +160,8 @@ export async function reserveApplicationParent(ctx: PeMutationContext, input: {
 const x2RefFromDigest = (kind: string, digest: string): ExperimentRef =>
   ({ owner: "S5", id: `${kind}:${digest}`, version: "application-operation-v1", contentDigest: digest });
 
-async function readApplicationAllocationInTransaction(ctx: PeMutationContext, c: PoolClient, ref: ExperimentRef): Promise<ApplicationAllocation> {
+async function readApplicationAllocationInTransaction(ctx: PeMutationContext, c: PoolClient, ref: ExperimentRef, recovery = false): Promise<ApplicationAllocation> {
+  if (isInheritedApplicationAllocation(ref)) return readInheritedApplicationAllocation(ctx, ref, c, recovery);
   if (ref.owner !== "S5" || ref.version !== "application-operation-v1" || ref.id !== `application-allocation:${ref.contentDigest}`) x2Fault("X2_S5_ALLOCATION_DOMAIN");
   const row = (await c.query<{ problem: { resources: AllocationResource[] }; certificate: ApplicationAllocationCertificate;
     origin: ApplicationReservation; revision: number; status: string; envelopes: ApplicationResourceEnvelope[]; revocation_reason: string | null }>(
@@ -164,10 +182,10 @@ export const readApplicationAllocation = (ctx: PeMutationContext, ref: Experimen
   withS5PortfolioTransaction(ctx, (c) => readApplicationAllocationInTransaction(ctx, c, ref));
 export async function assertApplicationAllocationCurrent(ctx: PeMutationContext, ref: ExperimentRef, c?: PoolClient, recovery = false) {
   const inspect = async (client: PoolClient) => {
-    const current = await readApplicationAllocationInTransaction(ctx, client, ref);
+    const current = await readApplicationAllocationInTransaction(ctx, client, ref, recovery);
     if (current.reservation.status === "RELEASED" || !recovery && (current.reservation.revocationReason
       || Date.parse(current.certificate.deadlineAt) <= Date.now())) x2Fault("X2_S5_ORIGINAL_RESERVATION_NOT_CURRENT");
-    if (x2Digest(current.reservation.envelopes) !== x2Digest(current.certificate.check.envelopes)) x2Fault("X2_S5_ORIGINAL_ENVELOPE_CHANGED");
+    if (!isInheritedApplicationAllocation(ref) && x2Digest(current.reservation.envelopes) !== x2Digest(current.certificate.check.envelopes)) x2Fault("X2_S5_ORIGINAL_ENVELOPE_CHANGED");
     if (!recovery) for (const resource of current.resources) {
       const latest = (await client.query<{ body: AllocationResource }>(
         "SELECT r.body FROM finnor_os.s5_resources r JOIN finnor_os.s5_resource_heads h USING(tenant_id,resource_id,revision) WHERE r.tenant_id=$1 AND r.resource_id=$2",
@@ -185,6 +203,7 @@ export async function assertApplicationAllocationCurrent(ctx: PeMutationContext,
 }
 type ConsumptionInput = Omit<ApplicationAllocationConsumption, "schema" | "ref" | "createdAt" | "status" | "effectRef" | "executionAuthorityGranted">;
 export async function applicationConsumptionInTransaction(ctx: PeMutationContext, c: PoolClient, input: ConsumptionInput) {
+  if (isInheritedApplicationAllocation(input.certificateRef)) return inheritedApplicationConsumption(ctx, c, input);
   const prior = (await c.query<{ body: ApplicationAllocationConsumption; request_digest: string }>(
     "SELECT body,request_digest FROM finnor_os.s5_consumptions WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3",
     [ctx.auth.tenantId, principal(ctx), input.idempotencyKey])).rows[0];
@@ -208,6 +227,7 @@ export async function chargeApplicationParent(ctx: PeMutationContext, input: {
   allocationRef: ExperimentRef; consumptionRef: ExperimentRef; requestRef: ExperimentRef;
   phase: ApplicationPhase; key: string; units: number; recovery?: boolean;
 }, client?: PoolClient): Promise<ExperimentRef> {
+  if (isInheritedApplicationAllocation(input.allocationRef)) return chargeInheritedApplicationParent(ctx, input, client);
   if (!Number.isSafeInteger(input.units) || input.units < 1 || input.units > 2048 || !input.key || input.key.length > 256) x2Fault("X2_S5_CHARGE_DOMAIN");
   const write = async (c: PoolClient) => {
     await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [`s5-portfolio:${ctx.auth.tenantId}`]);

@@ -1,0 +1,125 @@
+{
+  "schemaVersion": "finnor.project-z.product-lock.v1",
+  "prdVersion": "FINNOR-Z-PRD-1.0.0",
+  "createdAt": "2026-10-24T06:29:50.583340+00:00",
+  "lockedBy": "PRD/coordinator under the current autonomous Project Z request",
+  "lockMeaning": "immutable requirements and falsification programme, not delivered breakthroughs or qualification",
+  "sourceBase": {
+    "commit": "7bfdd2d3ab611c90f1355637858824ff1ba67f98",
+    "tree": "82caf48007bc826794650505ae76aba92d4f981b"
+  },
+  "members": [
+    {
+      "path": "scope-z/FINNOR-Z-PRD.md",
+      "bytes": 76830,
+      "sha256": "cb00aa9293a2d9199c35816b97984333078586b335be653bfb11dbe3f76d22ef"
+    },
+    {
+      "path": "scope-z/contracts/common-contracts.json",
+      "bytes": 13508,
+      "sha256": "ddce6a97857c25cec8e2c05a96a11bcd4f129b7feceb01ef805db614874c275e"
+    },
+    {
+      "path": "scope-z/orchestration/gpt61-max-settings.json",
+      "bytes": 637,
+      "sha256": "3930ce37431de3bf59a03aaa158ef2164b19c639e22b309d8bc67bf797687bef"
+    },
+    {
+      "path": "scope-z/research/baseline-owner-map.json",
+      "bytes": 222617,
+      "sha256": "479037a7ce0240fe9932b6b73a3d88265aec3c6163c506cb50c333a92a8a57f0"
+    },
+    {
+      "path": "scope-z/research/baseline-owner-report.md",
+      "bytes": 76868,
+      "sha256": "121486a4b5197ea4ed10c2032aa87208f2b77f027656a3487cf65fc7d0dc1653"
+    },
+    {
+      "path": "scope-z/research/blueprint-source-report.md",
+      "bytes": 60832,
+      "sha256": "4e3b9f8838ee5b5408009f994b587c34f327a3260829a73038728ae37388c552"
+    },
+    {
+      "path": "scope-z/research/frontier-adversarial-report.md",
+      "bytes": 90514,
+      "sha256": "aaf72b6c5bc5829c249c7690af5ce30e82da7c339e6791b6a4ee61935b89a2c5"
+    },
+    {
+      "path": "scope-z/research/frontier-followup-report.md",
+      "bytes": 20425,
+      "sha256": "0036ebf7645de4ccde6e56ce962e050d17d82efc87e339dffc87bfef50aa39e9"
+    },
+    {
+      "path": "scope-z/research/qualification-design.md",
+      "bytes": 7376,
+      "sha256": "97a27ee4cbd5766852747f530d1f184c0206e82db6db4a35882e04cacca926dc"
+    },
+    {
+      "path": "scope-z/research/scope-selection-decision.md",
+      "bytes": 11580,
+      "sha256": "6a8cdfea092bf6b189833c0e66b3168e32ea45bbb6d9090a25209295b713e29f"
+    },
+    {
+      "path": "scope-z/research/source-and-coordination-followup.md",
+      "bytes": 3518,
+      "sha256": "21fb3c550f27700f5747d92b41c206b159419425c68c83dcb890407ceba5fa76"
+    },
+    {
+      "path": "scope-z/research/supplied-source-reading-audit.md",
+      "bytes": 4339,
+      "sha256": "dc675dd4162b7eb0607605edbf4233649436853c47192b427aded2a1c384454f"
+    },
+    {
+      "path": "scope-z/sources/00-exact-user-request.txt",
+      "bytes": 270924,
+      "sha256": "83930d088bd096495206a5e463488af824118f52a3e5f27c5c057ddf33633c3d"
+    },
+    {
+      "path": "scope-z/sources/01-x-prd-opening.exact-fragment.txt",
+      "bytes": 19015,
+      "sha256": "957039b59e830160806e671679ba2f23f4964f34816a871fcaf940a7dae5147b"
+    },
+    {
+      "path": "scope-z/sources/02-x-prd-remainder.exact-fragment.txt",
+      "bytes": 69625,
+      "sha256": "dfd3debf87382e948ab6193918bd5875e997f85a09b453d07f43084eca27869f"
+    },
+    {
+      "path": "scope-z/sources/03-y-prd.exact-fragment.txt",
+      "bytes": 87277,
+      "sha256": "5d20f7e89931df3793c49bebac16a571d7ceb09c23b2899134ee44ca4c03ba66"
+    },
+    {
+      "path": "scope-z/sources/04-y3-implementation-blueprint.exact-fragment.txt",
+      "bytes": 38309,
+      "sha256": "f1dc4d8f82f3ac7c49d2e15a5536ab3848525aa9bb49f2693b6b968058e7526f"
+    },
+    {
+      "path": "scope-z/sources/05-y2-implementation-blueprint.exact-fragment.txt",
+      "bytes": 49902,
+      "sha256": "c54cf87199b39a7abc925e3292b4923638905c30ce6ecd37f9e41bd7c7d306c8"
+    },
+    {
+      "path": "scope-z/sources/06-x-prd.reconstructed.md",
+      "bytes": 88633,
+      "sha256": "678abc5212ad2fce46358f254b9c684916e0f649de30eb98b6d0bef4774a27a3"
+    },
+    {
+      "path": "scope-z/sources/source-index.json",
+      "bytes": 2472,
+      "sha256": "e58d791d1fade8d82ed6b711ca3b2b9f7a79ebc7cad051f4859b7fac332cb11b"
+    }
+  ],
+  "sourceExceptions": [
+    "original full R1/reviewed future blueprint unavailable",
+    "original final approved S specification and approval bytes unavailable",
+    "full older P/M source collection unavailable"
+  ],
+  "qualification": {
+    "software": "NOT_RUN",
+    "protected": "NOT_RUN",
+    "equippedIncrement": "NOT_RUN",
+    "operational100x": "NOT_RUN",
+    "financial100x": "NOT_RUN"
+  }
+}

@@ -1,0 +1,324 @@
+{
+  "binding": {
+    "catalogueRef": "729d4070-377e-5fb0-bc2d-0d388a20a67f",
+    "checkerRef": "7f9ed12f-fd1d-55d8-b502-a52ff965d991",
+    "deadline": "2099-01-01T00:00:00.000Z",
+    "mandateRef": "3205274b-e14e-585f-b46b-62ed58fe4457",
+    "modelRef": "f21947e0-71f8-5056-a743-14d18397bdd1",
+    "outcomeRef": "5e8261ba-58f9-55b3-9839-750ce571f98a",
+    "parentGrantRef": "56eba633-89cf-50f9-aa4a-f962d2057b43",
+    "priceRef": "cd5f6049-ec8d-5496-8003-383c0eea6b45",
+    "principalId": "f5202cee-2989-5e42-a780-8c7de0395128",
+    "responseRef": "f3ba71f1-d6bb-55ce-a4d3-05d588ec19f3",
+    "rightsRef": "5df7092f-1078-5c84-a2ca-c146f0952ea7",
+    "runtimeRef": "44431851-866f-5491-a0b5-7e9ce04f7e24",
+    "sourceRef": "814a884a-8318-536c-b51a-2b4688fe437f",
+    "tenantId": "1f078366-d39e-5f31-a9ef-b0d93a4bac0e",
+    "workId": "c381769b-e5d8-5ba9-9ac3-669877444fe5"
+  },
+  "id": "unresolved-obligation-retention-06:public-development-W1-20261029-structural-v1-c73e957c",
+  "maxDecisions": 2,
+  "rootStateId": "root",
+  "schema": "finnor.metalevel-model.v1",
+  "states": [
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "UNKNOWN",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "50"
+        },
+        {
+          "computationRef": "admitted-development-method:first",
+          "contextRefs": [
+            "lawful-original-context"
+          ],
+          "dependsOn": [],
+          "id": "first",
+          "kind": "COMPUTE",
+          "outcomes": [
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "first-result",
+              "observation": "READY",
+              "probability": "1",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "INVALID",
+              "nextStateId": "invalid-first",
+              "observation": "INVALID",
+              "probability": "0",
+              "utilityDelta": "0"
+            }
+          ],
+          "reservation": {
+            "computeUnits": "1"
+          },
+          "utilityCost": "1",
+          "verifierRefs": [
+            "original-check"
+          ]
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 0,
+      "history": [],
+      "id": "root",
+      "obligations": [
+        {
+          "id": "original-physical-attempt",
+          "resolutionRef": null,
+          "status": "UNKNOWN"
+        }
+      ],
+      "remaining": {
+        "computeUnits": "2"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "UNKNOWN",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "50"
+        },
+        {
+          "computationRef": "admitted-development-method:second",
+          "contextRefs": [
+            "lawful-original-context"
+          ],
+          "dependsOn": [],
+          "id": "second",
+          "kind": "COMPUTE",
+          "outcomes": [
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "left",
+              "observation": "LEFT",
+              "probability": "1/2",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "right",
+              "observation": "RIGHT",
+              "probability": "1/2",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "INVALID",
+              "nextStateId": "invalid-second",
+              "observation": "INVALID",
+              "probability": "0",
+              "utilityDelta": "0"
+            }
+          ],
+          "reservation": {
+            "computeUnits": "1"
+          },
+          "utilityCost": "1",
+          "verifierRefs": [
+            "original-check"
+          ]
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 1,
+      "history": [
+        {
+          "choiceId": "first",
+          "observation": "READY"
+        }
+      ],
+      "id": "first-result",
+      "obligations": [
+        {
+          "id": "original-physical-attempt",
+          "resolutionRef": null,
+          "status": "UNKNOWN"
+        }
+      ],
+      "remaining": {
+        "computeUnits": "1"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "UNKNOWN",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "50"
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 1,
+      "history": [
+        {
+          "choiceId": "first",
+          "observation": "INVALID"
+        }
+      ],
+      "id": "invalid-first",
+      "obligations": [
+        {
+          "id": "original-physical-attempt",
+          "resolutionRef": null,
+          "status": "UNKNOWN"
+        }
+      ],
+      "remaining": {
+        "computeUnits": "1"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "UNKNOWN",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "105"
+        }
+      ],
+      "completedChecks": [
+        "original-check"
+      ],
+      "decisionIndex": 2,
+      "history": [
+        {
+          "choiceId": "first",
+          "observation": "READY"
+        },
+        {
+          "choiceId": "second",
+          "observation": "LEFT"
+        }
+      ],
+      "id": "left",
+      "obligations": [
+        {
+          "id": "original-physical-attempt",
+          "resolutionRef": null,
+          "status": "UNKNOWN"
+        }
+      ],
+      "remaining": {
+        "computeUnits": "0"
+      },
+      "requiredChecks": [
+        "original-check"
+      ]
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "UNKNOWN",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "105"
+        }
+      ],
+      "completedChecks": [
+        "original-check"
+      ],
+      "decisionIndex": 2,
+      "history": [
+        {
+          "choiceId": "first",
+          "observation": "READY"
+        },
+        {
+          "choiceId": "second",
+          "observation": "RIGHT"
+        }
+      ],
+      "id": "right",
+      "obligations": [
+        {
+          "id": "original-physical-attempt",
+          "resolutionRef": null,
+          "status": "UNKNOWN"
+        }
+      ],
+      "remaining": {
+        "computeUnits": "0"
+      },
+      "requiredChecks": [
+        "original-check"
+      ]
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "UNKNOWN",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "50"
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 2,
+      "history": [
+        {
+          "choiceId": "first",
+          "observation": "READY"
+        },
+        {
+          "choiceId": "second",
+          "observation": "INVALID"
+        }
+      ],
+      "id": "invalid-second",
+      "obligations": [
+        {
+          "id": "original-physical-attempt",
+          "resolutionRef": null,
+          "status": "UNKNOWN"
+        }
+      ],
+      "remaining": {
+        "computeUnits": "0"
+      },
+      "requiredChecks": []
+    }
+  ],
+  "tieOrder": [
+    "stop",
+    "first",
+    "second"
+  ],
+  "utilityUnit": "synthetic-utility"
+}

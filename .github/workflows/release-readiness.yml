@@ -1,4 +1,4 @@
-name: release-readiness
+name: "Release checks - Canonical graph and certifications"
 on:
   workflow_call:
     inputs:
@@ -12,6 +12,7 @@ permissions:
   contents: read
 jobs:
   canonical-graph-gate:
+    name: "Canonical product graph - Validate release"
     if: ${{ inputs.gate == 'all' || inputs.gate == 'canonical' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -70,7 +71,7 @@ jobs:
         working-directory: finnor-os
 
   phase5-readiness:
-    name: phase5-readiness (${{ matrix.certification }})
+    name: "Release certification - ${{ matrix.certification }}"
     if: ${{ inputs.gate == 'all' || inputs.gate == 'phase5' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60

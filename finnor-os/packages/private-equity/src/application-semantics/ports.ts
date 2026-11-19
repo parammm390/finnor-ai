@@ -30,6 +30,7 @@ export interface OriginalApplicationParent {
   tenantRef: ExperimentRef;
   workRef: ExperimentRef;
   institutionalProgramRef: ExperimentRef | null;
+  institutionalOriginRef?: ExperimentRef;
   authorityGrantRef: ExperimentRef;
   resourceGrantRef: ExperimentRef;
   baselineManifestRef: ExperimentRef;

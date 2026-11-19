@@ -5,6 +5,7 @@ import { parseEconomicMandate, assertContingentPolicy, immutableControl } from '
 import { epistemicHash } from './source-precedence';
 import { ExperimentRational, ER_ZERO } from './experiment-numerics';
 import { assertOperatingCashCorrespondence } from './operating-profit-allocation';
+import { originalPortfolioPopulation } from './project-z/z1-shared-work/portfolio-population';
 
 export class AllocationContractError extends Error {
   constructor(readonly code: 'INVALID_REQUEST' | 'PERMITTED_CONTEXT_UNAVAILABLE' | 'STALE_INPUT' | 'LIMIT_EXCEEDED' | 'IDEMPOTENCY_CONFLICT' | 'BLOCKED_AUTHORITY' | 'INVALID_CANDIDATE', message: string) {
@@ -120,7 +121,7 @@ export function assertAllocationProblem(p:CanonicalAllocationProblem):void {
   if(needsExact&&p.quantityEncoding!=='DECIMAL_OR_RATIONAL_V2'||p.quantityEncoding!==undefined&&p.quantityEncoding!=='DECIMAL_OR_RATIONAL_V2')throw new AllocationContractError('INVALID_REQUEST','Canonical exact quantities require the versioned rational encoding binding');
   if(p.snapshotDigest!==epistemicHash({resources:p.resources,outstanding:p.outstanding})||!Number.isFinite(Date.parse(p.knowledgeAt))||!Number.isFinite(Date.parse(p.validUntil))||Date.parse(p.knowledgeAt)<Date.parse(m.knowledgeAt)||Date.parse(p.validUntil)>Date.parse(m.validUntil))throw new AllocationContractError('INVALID_REQUEST','Original resource snapshot or mandate knowledge cut differs');
   if(p.tenantId!==m.tenantId||p.principalId!==m.principalId||p.episodeId!==m.episodeId||!sameAllocationRef(joint.mandateRef,m.ref)||joint.tenantId!==p.tenantId||joint.principalId!==p.principalId||joint.rightsRef!==m.rightsRef||m.ambiguity.kind!=='ROBUST_FIXED_JOINT_SCENARIOS')throw new AllocationContractError('INVALID_REQUEST','Joint mandate, identity or uncertainty semantics differ');
-  if(!p.policies.length||p.policies.length>32||!p.resources.length||p.resources.length>16||p.outstanding.length>256)throw new AllocationContractError('LIMIT_EXCEEDED','Canonical clearing cardinality exceeded');
+  if(!p.policies.length||p.policies.length>32||!p.resources.length||p.resources.length>16||!originalPortfolioPopulation(p.outstanding).valid)throw new AllocationContractError('LIMIT_EXCEEDED','Canonical clearing cardinality exceeded');
   unique(p.policies.map(x=>x.ref.id),'Duplicate policy');unique(p.resources.map(x=>x.resourceId),'Duplicate resource');
   const policies=new Map(p.policies.map(x=>[x.ref.id,x])),resources=new Map(p.resources.map(x=>[x.resourceId,x]));
   for(const r of p.resources){const {ref:rr,revision,priorRef,...input}=r;parseAllocationResource(input);

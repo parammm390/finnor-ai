@@ -1,0 +1,17 @@
+node:internal/fs/promises:639
+  return new FileHandle(await PromisePrototypeThen(
+                        ^
+
+Error: ENOENT: no such file or directory, open '/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-nyn65Y/checkout/package-lock.json'
+    at async open (node:internal/fs/promises:639:25)
+    at async readFile (node:internal/fs/promises:1252:14)
+    at async <anonymous> (/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-nyn65Y/checkout/finnor-os/packages/private-equity/src/evidence-execution/store.ts:19:146)
+    at async Promise.all (index 13)
+    at async currentCodeIdentity (/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-nyn65Y/checkout/finnor-os/packages/private-equity/src/evidence-execution/store.ts:19:64) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-nyn65Y/checkout/package-lock.json'
+}
+
+Node.js v22.23.4

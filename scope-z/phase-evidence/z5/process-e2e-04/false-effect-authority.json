@@ -1,0 +1,14 @@
+{
+  "id": "false-effect-authority",
+  "passed": true,
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "{\"checked\":false,\"checker\":\"z5-original-semantics-checker-v1\",\"executionAuthorityGranted\":false,\"reason\":\"CERTIFICATE_ENVELOPE_BINDING\",\"schema\":\"finnor.z5.independent-check.v1\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 33.28396799999996
+  },
+  "corruptionDigest": "fe3698ae9b7e0af8abd5799c77330911dd1f1545ad3667f6c9c62b23caf6eb07",
+  "expected": "INDEPENDENT_REJECTION"
+}

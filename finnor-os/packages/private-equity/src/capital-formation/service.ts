@@ -1,7 +1,7 @@
 import { createPublicKey, randomUUID, verify } from "node:crypto";
 import type { PoolClient } from "pg";
 import type { CapitalFormationView } from "@finnor/shared-types";
-import { ExperimentRational } from "@finnor/epistemic-runtime";
+import { ExperimentRational } from "../../../epistemic-runtime/src/experiment-numerics";
 import { parseExact } from "../evidence-execution/exact";
 import type { PeMutationContext } from "../types";
 import { principal, resolveDecisionWork } from "../decision-slice/adapters";

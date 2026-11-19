@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { execFileSync, spawnSync } from "node:child_process"
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -16,7 +16,7 @@ const startedAt = new Date().toISOString()
 test.after(() => {
   const evidence = process.env.FINNOR_CI_PROCESS_EVIDENCE_DIR
   if (!evidence) return
-  const files = ["scripts/release/ci-process.e2e.test.mjs", "scripts/release/pr-verdict-policy.mjs", "scripts/release/ci-process-policy.mjs", "scripts/release/worktree-state.mjs", ".github/workflows/production-release.yml"]
+  const files = ["scripts/release/ci-process.e2e.test.mjs", "scripts/release/pr-verdict-policy.mjs", "scripts/release/ci-process-policy.mjs", "scripts/release/worktree-state.mjs", ...readdirSync(join(root, ".github/workflows")).filter(name => /\.ya?ml$/.test(name)).sort().map(name => `.github/workflows/${name}`)]
   const inputs = Object.fromEntries(files.map(path => [path, createHash("sha256").update(readFileSync(join(root, path))).digest("hex")]))
   const receipt = { schema: "finnor.ci-process-e2e.v1", status: records.length === 8 ? "PASS" : "FAIL", startedAt, finishedAt: new Date().toISOString(), inputs, records, rerun: "FINNOR_CI_PROCESS_EVIDENCE_DIR=/absolute/new/evidence node --test scripts/release/ci-process.e2e.test.mjs", applicationTestsExecuted: false }
   mkdirSync(evidence, { recursive: true })
@@ -134,11 +134,34 @@ test("release Git reads succeed, refuse invalid repositories, and stop delayed s
 test("actual process graph passes and damaged workflow copies are rejected", () => {
   assert.deepEqual(verifyCiProcess(root).failures, [])
   const mutations = [
+    ["unreadable-workflow-title", "ci.yml", text => text.replace(/^name:.*$/m, "name: backend-ci")],
+    ["unnamed-workflow-job", "ci.yml", text => text.replace(/^    name:.*\n/m, "")],
+    ["w1-integration-branch-omitted", "w1-owning-verification.yml", text => text.replace(", codex/zw-integration-quality-20261115", "")],
+    ["w3-integration-branch-omitted", "w3-owning-verification.yml", text => text.replace(", codex/zw-integration-quality-20261115", "")],
+    ["w1-controls-omitted", "w1-owning-verification.yml", text => text.replace(", owning-regressions]", "]")],
+    ["w3-publication-omitted", "w3-owning-verification.yml", text => text.replace(", full-positive-and-publication,", ",")],
+    ["w1-result-conditional", "w1-owning-verification.yml", text => text.replace("if: ${{ always() }}", "if: ${{ success() }}")],
+    ["w3-result-conditional", "w3-owning-verification.yml", text => text.replace("if: ${{ always() }}", "if: ${{ success() }}")],
+    ["w1-receipt-omitted", "w1-owning-verification.yml", text => text.replace("uses: ./.github/workflows/ci-completion.yml", "uses: ./.github/workflows/source-checks.yml")],
+    ["w3-receipt-omitted", "w3-owning-verification.yml", text => text.replace("uses: ./.github/workflows/ci-completion.yml", "uses: ./.github/workflows/source-checks.yml")],
+    ["w1-finite-outcome-omitted", "w1-owning-episode.yml", text => text.replace("name: Retain a finite W1 outcome", "name: Hide the W1 outcome")],
+    ["w3-compiler-heap-regressed", "w3-owning-episode.yml", text => text.replace("--max-old-space-size=3072", "--max-old-space-size=2048")],
+    ["w3-finite-outcome-omitted", "w3-owning-episode.yml", text => text.replace("name: Retain a finite W3 outcome", "name: Hide the W3 outcome")],
     ["duplicate-main-trigger", "ci.yml", text => text.replace("  workflow_call:", "  push:\n    branches: [main]\n  workflow_call:")],
     ["unguarded-image-work", "pr-verdict.yml", text => text.replace("needs: [classify, source]", "needs: classify")],
     ["production-misses-security", "production-release.yml", text => text.replace(", security-release-gate", "")],
     ["production-cancelled", "production-release.yml", text => text.replace("cancel-in-progress: false", "cancel-in-progress: true")],
     ["missing-test-shard", "ci.yml", text => text.replace("shard: [1, 2, 3]", "shard: [1, 2]")],
+    ["s4-unpinned-interpreter", "ci.yml", text => text.replaceAll("3.12.13", "3.14.4")],
+    ["s4-unhashed-dependencies", "ci.yml", text => text.replace("pip sync --require-hashes --only-binary :all:", "pip sync --only-binary :all:")],
+    ["s4-backend-identity-omitted", "ci.yml", text => text.replace("assert sys.version.split()[0] == '3.12.13'", "pass")],
+    ["s4-original-owner-omitted", "ci.yml", text => text.replace("python3 scripts/s4/run-local.py", "true # original owner omitted")],
+    ["s4-owner-conditional", "ci.yml", text => text.replace("  operating-profit:\n", "  operating-profit:\n    if: false\n")],
+    ["missing-z4-native-build", "ci.yml", text => text.replace("ci-native.py prepare", "ci-native.py omitted")],
+    ["wrong-z4-producer-output", "ci.yml", text => text.replaceAll("needs.project-z-native-assets.outputs.artifact_name", "github.run_attempt")],
+    ["wrong-z4-source", "ci.yml", text => text.replaceAll("ref: ${{ github.event.pull_request.head.sha || github.sha }}", "ref: main")],
+    ["missing-z4-install-validation", "ci.yml", text => text.replaceAll("ci-native.py install", "ci-native.py unchecked")],
+    ["missing-public-z4", "ci.yml", text => text.replace("--phase=z4", "--phase=z3")],
     ["source-bypasses-workflow-validation", "source-checks.yml", text => text.replace("needs: validate", "needs: []")],
     ["missing-readiness-certification", "release-readiness.yml", text => text.replace("certification: [scope4, scope5]", "certification: [scope4]")],
     ["missing-source-aggregate", "source-checks.yml", text => text.replace("sourceCheckFailures", "ignoredSourceFailures")],

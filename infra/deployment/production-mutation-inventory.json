@@ -228,6 +228,7 @@
         "scripts/release/p8-water-retirement-policy.mjs",
         "scripts/release/p8-water-retirement-store.d.mts",
         "scripts/release/pr-verdict-policy.mjs",
+        "scripts/release/verify-dependency-scan.mjs",
         "scripts/release/ci-process-policy.mjs",
         "scripts/release/verify-ci-workflows.mjs",
         "scripts/release/verify-test-shards.mjs",
@@ -261,6 +262,7 @@
         "scripts/release/vercel-auth.e2e.test.mjs",
         "scripts/release/worker-image-layout.e2e.test.mjs",
         "scripts/release/production-artifact.e2e.mjs",
+        "scripts/release/project-z-ci.e2e.mjs",
         "scripts/release/api-build-context.e2e.test.mjs",
         "scripts/release/api-artifact.e2e.test.mjs",
         "scripts/release/run-capability-ui-e2e.mjs",
@@ -292,10 +294,42 @@
         ".github/workflows/source-checks.yml",
         ".github/workflows/release-readiness.yml",
         ".github/workflows/dealer-zero-replay.yml",
-        ".github/workflows/tenant-isolation-nightly.yml"
+        ".github/workflows/tenant-isolation-nightly.yml",
+        ".github/workflows/w123-native-verification.yml",
+        ".github/workflows/w2-compensation-episode.yml",
+        ".github/workflows/w1-owning-episode.yml",
+        ".github/workflows/w1-owning-verification.yml",
+        ".github/workflows/w3-owning-episode.yml",
+        ".github/workflows/w3-owning-verification.yml",
+        ".github/workflows/w3-owning-qualification.yml",
+        ".github/workflows/project-z0-native.yml",
+        ".github/workflows/w2-atomic-settlement-verification.yml",
+        ".github/workflows/ci-completion.yml"
       ],
       "classification": "READ_ONLY",
-      "state": "ACTIVE"
+      "state": "ACTIVE",
+      "reason": "Verification uses disposable fixtures and retained receipts. CI completion may write a source-bound PR comment only; it grants no production, product-authority, or business-effect mutation."
+    },
+    {
+      "id": "phase-w-controlled-ci-and-release-selection",
+      "paths": [
+        ".github/workflows/phase-w-native-episode.yml",
+        ".github/workflows/project-w4-owner.yml",
+        ".github/workflows/phase-w-verification.yml",
+        "finnor-os/scripts/postz/phase-w-ci/native-evidence.mjs",
+        "finnor-os/scripts/postz/phase-w-ci/stage-native-evidence.mjs",
+        "finnor-os/scripts/postz/phase-w-ci/verify-native-evidence.mjs",
+        "scope-postz/phase-w-ci/check-ci-boundaries.mjs",
+        "scope-postz/phase-w-ci/failure-model.md",
+        "scope-postz/phase-w-ci/release-candidate.json",
+        "scripts/release/phase-w-release-profile.mjs",
+        "scripts/release/select-phase-w-release-profile.mjs",
+        "infra/deployment/phase-w-candidate-world.activation-contract.md",
+        "infra/deployment/phase-w-candidate-world.design.json"
+      ],
+      "classification": "READ_ONLY",
+      "state": "ACTIVE",
+      "reason": "Controlled disposable CI, local receipt validation and sanitized metadata staging only. The committed marker selects a fail-closed release prerequisite; these paths hold no production credentials, deployment permission or independent production mutation authority."
     },
     {
       "id": "declarative-production-source",
@@ -304,7 +338,8 @@
         "infra/aws/finnor-model-runtime.yaml",
         "infra/deployment/production.contract.json",
         "infra/deployment/production-database-admission-policy.json",
-        "infra/deployment/vercel-build-settings.json"
+        "infra/deployment/vercel-build-settings.json",
+        "infra/deployment/project-z-verification-toolchain.json"
       ],
       "classification": "READ_ONLY",
       "state": "DECLARATIVE_SOURCE_ONLY",
@@ -323,6 +358,32 @@
       "classification": "READ_ONLY",
       "state": "PRODUCTION_BLOCKED",
       "reason": "Dedicated staging fixture writes only; the driver refuses canonical production origins and requires staging release metadata before any mutation. This classification grants no production mutation authority."
+    },
+    {
+      "id": "repository-release-input-generation",
+      "paths": [
+        "scripts/release/generate-release-inputs.mjs"
+      ],
+      "classification": "READ_ONLY",
+      "state": "DECLARATIVE_SOURCE_ONLY",
+      "reason": "Generates and checks repository build inputs and intended release metadata; no external target, deployment, production database or independent production mutation entry point."
+    },
+    {
+      "id": "ci-completion-protocol-verification",
+      "path": "scripts/release/ci-completion.e2e.test.mjs",
+      "classification": "READ_ONLY",
+      "state": "ACTIVE",
+      "reason": "Exercises the actual completion reporting program against a disposable local HTTP protocol fixture; no hosted writes.",
+      "supportingPaths": [
+        "scripts/release/pr-verdict-transport.e2e.test.mjs"
+      ]
+    },
+    {
+      "id": "synthetic-canary-http-verification",
+      "path": "scripts/release/supplier-canary-http.e2e.mjs",
+      "classification": "READ_ONLY",
+      "state": "TEST_ONLY",
+      "reason": "Runs the canary handler on two ephemeral loopback listeners with generated synthetic credentials; no hosted requests, deployment, database or business-effect mutation."
     }
   ]
 }

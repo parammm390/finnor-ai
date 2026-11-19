@@ -1,0 +1,149 @@
+{
+  "schema": "finnor.coordinator-capability-discovery-validation/v1",
+  "capturedAt": "2026-10-24T08:09:36.697532+00:00",
+  "sourceBaseCommit": "0293c866a6e500cd0ad82f00b52db60ddb1c3a28",
+  "source": [
+    {
+      "file": "scripts/centropy/generate-capability-manifest.mjs",
+      "bytes": 26425,
+      "sha256": "68b98dcc2ca6f4c48a355741e986a7bdb658ed2b8fe14db31aca12ebf6228e49"
+    },
+    {
+      "file": "scripts/centropy/audit-capability-coverage.mjs",
+      "bytes": 25800,
+      "sha256": "1629972d93adae2db2588deb9f6f9712099fddb2203e28707d069ff5cbdb196c"
+    },
+    {
+      "file": "scripts/centropy/canonical-planner.mjs",
+      "bytes": 1447,
+      "sha256": "6d1f9a6cfb944067da63b6d9819bd4de38ff9a3ad0a3c27ef9c5757592f58f89"
+    },
+    {
+      "file": "scripts/centropy/read-canonical-planner.mjs",
+      "bytes": 2954,
+      "sha256": "edf9742accd26320685076dca09666caaf812c48d8506b1b7aad21a1ffc04b95"
+    },
+    {
+      "file": "scripts/centropy/verify-capability-discovery.mjs",
+      "bytes": 17075,
+      "sha256": "df268e9eb410571a04a4d6d75b999058265f4d525fbac5924cd5aea64162edc9"
+    },
+    {
+      "file": "src/lib/centropy/capability-manifest.ts",
+      "bytes": 2542,
+      "sha256": "a3cdbdd49de9208ad7f9842d24b5175424bc3c76593fa47104f30b7ac80fcaa1"
+    },
+    {
+      "file": "src/lib/centropy/capability-manifest.generated.json",
+      "bytes": 642306,
+      "sha256": "9958c308e2a4266c259123d8ae6773e847b8f86cfcf73c3e6cea09df0146758a"
+    },
+    {
+      "file": "docs/centropy/capability-coverage.json",
+      "bytes": 1619995,
+      "sha256": "af96f20602d8ae4bf8af35dd0002364b3bb457960d5a35a9c5227fbd787a2c63"
+    }
+  ],
+  "authoredSourceExactlyMatchesPassingE2EInventory": true,
+  "unchangedProductBaseline": {
+    "report": "run-oQYNki/report.json",
+    "passed": 4,
+    "failed": 14,
+    "result": "EXPECTED_FAIL"
+  },
+  "separateHarnessSetupFailures": [
+    "run-KAFYLh",
+    "run-aODQI2",
+    "run-6r9b7P",
+    "run-nyn65Y"
+  ],
+  "repairedCliContract": {
+    "report": "run-UfA8os/report.json",
+    "passed": 18,
+    "failed": 0,
+    "result": "PASS",
+    "reportSha256": "fdd9eec8439d508c4662f120ad11cbb1ba665b6f182dfd1eaec641a58d9ad4fa"
+  },
+  "checks": [
+    {
+      "name": "baseline-root-typecheck",
+      "exitCode": 0,
+      "log": "baseline-root-typecheck.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "repair-root-typecheck",
+      "exitCode": 0,
+      "log": "repair-root-typecheck.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "manifest-check",
+      "exitCode": 0,
+      "log": "final-manifest-check.log",
+      "logSha256": "5f2ce9550ff926e1c691bf8d625838e8288fddfe9504497eceae54d918287856"
+    },
+    {
+      "name": "human-forms-check",
+      "exitCode": 0,
+      "log": "final-forms-check.log",
+      "logSha256": "cb655827e027a2a24764b6297abe19f2ec84df5f010808e6f8033ba33e32e64f"
+    },
+    {
+      "name": "coverage-generation-and-check",
+      "exitCode": 0,
+      "log": "final-coverage-check.log",
+      "logSha256": "2932861b06fcec425ebf85165d04c3e62299e72aeae66e29711637f2a46056de"
+    },
+    {
+      "name": "targeted-eslint",
+      "exitCode": 0,
+      "log": "final-lint.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "non-fixture-sealed-content-verification",
+      "exitCode": 0,
+      "log": "final-lock-verification.log",
+      "logSha256": "63aba14aee4afa73918b05429345a2425f3bc35cbf68099ca65d81c6798c32df"
+    }
+  ],
+  "diffCheck": {
+    "exitCode": 0
+  },
+  "httpCatalogueRows": 580,
+  "httpCatalogueExactlyMatchesPreRepairBase": true,
+  "canonicalPlannerEntries": 77,
+  "canonicalMetadataSha256": "f1cad9ed2bdd17205550f32521c780debf087b79f4b8862b9e3ec0b463fb014e",
+  "evidenceArchive": "b5c4e632885b2abc86bc2c68322725a1124ad4d4b7a0936ee4e8f215e0a7b5f0",
+  "archiveSourceReconstruction": {
+    "schema": "finnor.capability-discovery-archive-reconstruction/v1",
+    "archiveSha256": "b5c4e632885b2abc86bc2c68322725a1124ad4d4b7a0936ee4e8f215e0a7b5f0",
+    "result": "PASS",
+    "archiveMembersVerified": 143,
+    "initialSourcePreimagesVerified": 18598,
+    "uniqueGitBlobsVerified": 3082,
+    "allSixSourceInventoriesMatchTheirReports": true,
+    "httpCatalogueMatchesPreRepairBaseExactly": true,
+    "httpOperations": 580,
+    "knownEnvironmentCredentialPresenceCheck": "PASS",
+    "scope": "Independent archive, exact Git-base/source-overlay and HTTP-catalogue data reconstruction. No application execution or qualification claim."
+  },
+  "sealedContent": {
+    "action": "verified-content-custody-only",
+    "executionPackDigest": "4419731d2544d1c07fe275ec8071d5d783273942ca9947eda2ff6b4e2dffb9db",
+    "fixtureOnly": false,
+    "ok": true,
+    "productLockDigest": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf",
+    "productQualificationConferred": false,
+    "remoteActionsPerformed": false
+  },
+  "liveControllerStateExists": false,
+  "dedicatedExecution": "NOT_LAUNCHED; missing actual ready Computer and source/model/read receipts",
+  "z0Completion": "INCOMPLETE",
+  "z1ToZ5": "NOT_IMPLEMENTED",
+  "installedProductAuthenticationRecoveryAndOwnerProof": "NOT_RUN_BY_THIS_REPAIR",
+  "fullyQualifiedCompletedXYComparator": "BLOCKED",
+  "scientificThroughputFinancialQualification": "NOT_ESTABLISHED",
+  "outwardActionsPerformed": false
+}

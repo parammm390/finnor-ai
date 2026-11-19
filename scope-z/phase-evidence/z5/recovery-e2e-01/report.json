@@ -1,0 +1,141 @@
+{
+  "schema": "finnor.z5.LOCAL_FILE.physical-recovery.v1",
+  "state": "PASSED",
+  "workerSha256": "1c27cce1aa9e85de522494ba553e3a1b71c0128fa8cd5eb46aaa623f31b856a7",
+  "rows": [
+    {
+      "point": "AFTER_CLAIM",
+      "passed": true,
+      "result": {
+        "stopAt": "AFTER_CLAIM",
+        "mode": "",
+        "pid": 232816,
+        "exitCode": null,
+        "signal": "SIGKILL",
+        "stdout": "{\"stage\":\"AFTER_CLAIM\",\"pid\":232816,\"fence\":1,\"token\":\"e07ef2a1-82bf-4582-be3f-54a6661b397a\"}\n",
+        "stderr": "",
+        "physicallyKilled": true,
+        "reachedBoundary": true,
+        "timedOut": false
+      },
+      "durableJournalDigest": "50b081650dba45dbdc357e1fe8d1c8745ffef0eafafbcb9a1ba4c7096a7c9545",
+      "attempts": 1,
+      "spent": 1,
+      "fence": 1
+    },
+    {
+      "point": "AFTER_CERTIFICATE",
+      "passed": true,
+      "result": {
+        "stopAt": "AFTER_CERTIFICATE",
+        "mode": "",
+        "pid": 232828,
+        "exitCode": null,
+        "signal": "SIGKILL",
+        "stdout": "{\"stage\":\"AFTER_CERTIFICATE\",\"pid\":232828,\"fence\":2,\"token\":\"75bc5f7a-a776-4453-9ca8-a1429afe90b4\"}\n",
+        "stderr": "",
+        "physicallyKilled": true,
+        "reachedBoundary": true,
+        "timedOut": false
+      },
+      "durableJournalDigest": "1ba254b1540a1eafb91ceda6f65b3466793aa2f783f58bb7a267bca378f445dd",
+      "attempts": 2,
+      "spent": 2,
+      "fence": 2
+    },
+    {
+      "point": "AFTER_REPLACEMENT",
+      "passed": true,
+      "result": {
+        "stopAt": "AFTER_REPLACEMENT",
+        "mode": "",
+        "pid": 232848,
+        "exitCode": null,
+        "signal": "SIGKILL",
+        "stdout": "{\"stage\":\"AFTER_REPLACEMENT\",\"pid\":232848,\"fence\":3,\"token\":\"a6097a90-dda3-431b-8191-e5f7fa8ec22d\"}\n",
+        "stderr": "",
+        "physicallyKilled": true,
+        "reachedBoundary": true,
+        "timedOut": false
+      },
+      "durableJournalDigest": "24d4f0fd75f534a2d931d2f51f7af9eb581e17187597fc3a121e15c43846393e",
+      "attempts": 3,
+      "spent": 3,
+      "fence": 3
+    },
+    {
+      "point": "SAME_ID_RESTART_AND_ACK",
+      "passed": true,
+      "result": {
+        "stopAt": "",
+        "mode": "",
+        "pid": 232860,
+        "exitCode": 0,
+        "signal": null,
+        "stdout": "{\"disposition\":\"COMPLETE\",\"fence\":4,\"attempts\":4,\"oldLiabilityRetained\":true,\"callbackUnknown\":true,\"nativeProof\":false}\n",
+        "stderr": "",
+        "physicallyKilled": false,
+        "reachedBoundary": false,
+        "timedOut": false
+      }
+    },
+    {
+      "point": "OLD_FENCE_PERSISTENCE_REFUSED",
+      "passed": true,
+      "result": {
+        "stopAt": "",
+        "mode": "stale",
+        "pid": 232872,
+        "exitCode": 3,
+        "signal": null,
+        "stdout": "{\"disposition\":\"REFUSED\",\"reason\":\"Z5_STALE_OR_CANCELLED_PHYSICAL_FENCE\",\"nativeProof\":false}\n",
+        "stderr": "",
+        "physicallyKilled": false,
+        "reachedBoundary": false,
+        "timedOut": false
+      }
+    },
+    {
+      "point": "DURABLE_ORIGINAL_EXHAUSTION",
+      "passed": true,
+      "result": {
+        "stopAt": "",
+        "mode": "exhausted",
+        "pid": 232883,
+        "exitCode": 3,
+        "signal": null,
+        "stdout": "{\"disposition\":\"INCOMPLETE\",\"newAllowance\":false}\n",
+        "stderr": "",
+        "physicallyKilled": false,
+        "reachedBoundary": false,
+        "timedOut": false
+      }
+    },
+    {
+      "point": "DELAYED_CALLBACK_AFTER_REPLACEMENT",
+      "passed": true,
+      "result": {
+        "stopAt": "",
+        "mode": "callback",
+        "pid": 232895,
+        "exitCode": 0,
+        "signal": null,
+        "stdout": "{\"disposition\":\"STALE_CALLBACK_REQUIRES_CURRENT_RECHECK\",\"originalOldObligationsRetained\":true}\n",
+        "stderr": "",
+        "physicallyKilled": false,
+        "reachedBoundary": false,
+        "timedOut": false
+      }
+    }
+  ],
+  "originalRunId": "544e05a3-94cf-49aa-8fe0-2900950916d7",
+  "originalDeadline": "2026-10-25T02:07:44.748Z",
+  "nativeQueueRecovery": "NOT_RUN",
+  "physicalKills": 3,
+  "databaseActions": 0,
+  "listeners": 0,
+  "financialCosts": null,
+  "humanCost": null,
+  "materialGap": "LOCAL_FILE_JOURNAL_AND_SHARED_FENCE_PREDICATES_NOT_NATIVE_OWNER_AUTH_OR_S5_RECOVERY",
+  "protectedAdmission": false
+}

@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.qualified-publication.json",
+  "files": [
+    "./qualified-fixture-custody.mts",
+    "./qualified-ordinary-queue-fixture.mts",
+    "./qualified-publication-role-protocol.mts",
+    "./qualified-publication-role-e2e.mts",
+    "./qualified-publication-fixture.mts",
+    "./qualified-publication-e2e.mts",
+    "./specialist-origin-producers.mts",
+    "./specialist-origin-fault-driver.mts",
+    "./specialist-origin-owning-e2e.mts"
+  ]
+}

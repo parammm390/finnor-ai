@@ -1,5 +1,5 @@
 import {z} from 'zod';
-import {ExperimentRefSchema} from '@finnor/epistemic-runtime';
+import { ExperimentRefSchema } from '../../epistemic-runtime/src/experiments';
 const reference=z.object({obligationRef:ExperimentRefSchema}).strict();
 const origin=z.string().max(2048).refine(value=>{try{const url=new URL(value);return url.protocol==='https:'&&!url.username&&!url.password&&url.origin===value;}catch{return false;}},'Exact HTTPS origin without credentials required');
 const deliveryPosition={workflowStepId:z.string().uuid(),claimFence:z.number().int().positive().max(Number.MAX_SAFE_INTEGER),dispatchGeneration:z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),runVersion:z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER)};

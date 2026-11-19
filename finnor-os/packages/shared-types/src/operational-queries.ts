@@ -2,8 +2,10 @@
  * Deterministic active query plane. Retired Water intents live only in the
  * Phase-5 deny ledger and are never part of this executable union.
  */
+import { z } from "zod";
 import type { CanonicalEntityRef, CompanyContext, CompanyContextAnchor, PartyRef } from "./company-graph";
 import type { PeWorldRootRef } from "./private-equity";
+import { ECONOMIC_READ_QUERY_INTENTS, type EconomicReadRequest, type RevenueReadRequest, type QuoteReadRequest, type EconomicOperationalQueryResult } from "./economic-reads";
 
 export const OPERATIONAL_QUERY_VERSION = 1 as const;
 
@@ -33,15 +35,27 @@ export const PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS = [
 export const PROGRAM_OPERATIONAL_QUERY_INTENTS = ["harness_program_v1","economic_programme_v1"] as const;
 export interface HarnessProgramQueryRequest { intent: "harness_program_v1"; programId: string; workId: string }
 export interface EconomicProgrammeQueryRequest { intent: "economic_programme_v1"; programmeId: string; workId: string }
+export const ORGANIZATION_OPERATIONAL_QUERY_INTENTS = ["organization_transformation_v1"] as const;
+export const OrganizationTransformationQueryRequestSchema = z.object({
+  intent: z.literal("organization_transformation_v1"), requestId: z.string().uuid(),
+  workId: z.string().uuid(), alternativeId: z.string().min(1).max(160).optional(),
+}).strict();
+export type OrganizationTransformationQueryRequest = z.infer<typeof OrganizationTransformationQueryRequestSchema>;
 /** Y4 exposes only current completion metadata, never recipient outputs. */
 export const CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS = ["confidential_economic_computation_v1"] as const;
 export interface ConfidentialComputationQueryRequest { intent:"confidential_economic_computation_v1"; workId:string }
+/** Z4 current completion metadata only, never raw owner/private outputs. */
+export const EXECUTION_PROOF_OPERATIONAL_QUERY_INTENTS = ["execution_proof_capsule_v1"] as const;
+export interface ExecutionProofQueryRequest { intent:"execution_proof_capsule_v1"; workId:string }
 
 export const OPERATIONAL_QUERY_INTENTS = [
   ...CORE_OPERATIONAL_QUERY_INTENTS,
   ...PRIVATE_EQUITY_OPERATIONAL_QUERY_INTENTS,
+  ...ECONOMIC_READ_QUERY_INTENTS,
   ...PROGRAM_OPERATIONAL_QUERY_INTENTS,
   ...CONFIDENTIAL_OPERATIONAL_QUERY_INTENTS,
+  ...EXECUTION_PROOF_OPERATIONAL_QUERY_INTENTS,
+  ...ORGANIZATION_OPERATIONAL_QUERY_INTENTS,
 ] as const;
 
 export type CoreOperationalQueryIntent = (typeof CORE_OPERATIONAL_QUERY_INTENTS)[number];
@@ -174,9 +188,12 @@ export type CoreOperationalQueryRequest =
   | TeamRosterRequest;
 
 export type CanonicalOperationalQueryRequest =
+  | EconomicReadRequest
   | HarnessProgramQueryRequest
   | EconomicProgrammeQueryRequest
   | ConfidentialComputationQueryRequest
+  | ExecutionProofQueryRequest
+  | OrganizationTransformationQueryRequest
   | CoreOperationalQueryRequest
   | PeWorldStateRequest
   | DealContextRequest
@@ -760,11 +777,16 @@ export interface PeWorldStateResult extends OperationalQueryResultBase<"pe_world
 export interface HarnessProgramQueryResult extends OperationalQueryResultBase<"harness_program_v1"> {}
 export interface EconomicProgrammeQueryResult extends OperationalQueryResultBase<"economic_programme_v1"> {}
 export interface ConfidentialComputationQueryResult extends OperationalQueryResultBase<"confidential_economic_computation_v1"> {}
+export interface ExecutionProofQueryResult extends OperationalQueryResultBase<"execution_proof_capsule_v1"> {}
+export interface OrganizationTransformationQueryResult extends OperationalQueryResultBase<"organization_transformation_v1"> {}
 
 export type OperationalQueryResult =
+  | EconomicOperationalQueryResult
   | HarnessProgramQueryResult
   | EconomicProgrammeQueryResult
   | ConfidentialComputationQueryResult
+  | ExecutionProofQueryResult
+  | OrganizationTransformationQueryResult
   | WorkListResult
   | AttentionQueueResult
   | AgentActivityResult
@@ -785,9 +807,13 @@ export type OperationalQueryResult =
 export type OperationalQueryResultEnvelope = OperationalQueryResult;
 
 export type OperationalQueryResultFor<R extends OperationalQueryRequest> =
-  R extends EconomicProgrammeQueryRequest ? EconomicProgrammeQueryResult
+  R extends RevenueReadRequest ? Extract<EconomicOperationalQueryResult, { intent: "company_revenue" }>
+    : R extends QuoteReadRequest ? Extract<EconomicOperationalQueryResult, { intent: "stock_quote" }>
+    : R extends EconomicProgrammeQueryRequest ? EconomicProgrammeQueryResult
     : R extends HarnessProgramQueryRequest ? HarnessProgramQueryResult
     : R extends ConfidentialComputationQueryRequest ? ConfidentialComputationQueryResult
+    : R extends ExecutionProofQueryRequest ? ExecutionProofQueryResult
+    : R extends OrganizationTransformationQueryRequest ? OrganizationTransformationQueryResult
     : R extends WorkListRequest ? WorkListResult
     : R extends AttentionQueueRequest ? AttentionQueueResult
       : R extends AgentActivityRequest ? AgentActivityResult

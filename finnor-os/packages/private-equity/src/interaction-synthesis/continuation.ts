@@ -6,11 +6,14 @@ import {readEconomicReservationTx} from '../economic-allocation';
 import {createEconomicProgrammeTx,readEconomicProgrammeTx} from '../economic-control';
 import {currentInteractionAdmissionTx} from '../../../capability-evolution/src/interaction-port';
 import {compileGame,protocolControlKeys,type CompiledNode,type ObservationToken} from './game';
-import {InteractionFault,digest,fail} from './contracts';
+import {InteractionFault,digest,fail,participantIndex,type Party} from './contracts';
 import {q,ZERO} from './exact';
 import {reference,same,TermsSchema,ConsentSchema,StartSchema,ObserveSchema,ActionSchema,MaterializeSchema,
  type ProtocolRow,type InteractionTerms,type InteractionRun,type InteractionHistory,type InteractionIntent,type Outcome,type ProgrammeBinding} from './product-contracts';
 import {withS5PortfolioTransaction as transaction} from '../allocation-store';
+import {coalitionTermsBinding,assertCoalitionTerms} from '../project-z/z2-coalitions/guard';
+import {ensureParticipantWork} from '../project-z/z2-coalitions/participant-work';
+import {participantWorkViewTx} from '../project-z/z2-coalitions/participant-work-guard';
 import {developmentOnly,protocolTx,eventTx,currentChangesTx,sourceClaimTx} from './store';
 import {responsibleContext,participantId,participantAuthorityTx,termsTx,requireConsentsTx,historyTx,assertHistoryCurrentTx,
  observationTimesCurrent} from './execution-guard';
@@ -29,7 +32,7 @@ function frontier(row:ProtocolRow,history:InteractionHistory[]):Frontier[]{
     const edge=node.edges.find(e=>e.actionId===event.body.actionId);if(edge)walk(edge.next,index+1);return;
    }
    if(index!==actions.length)return;
-   if(facts.every(e=>node.observations[e.body.participant==='P0'?0:1].some(o=>
+   if(facts.every(e=>node.observations[participantIndex(e.body.participant)]!.some(o=>
     o.date===e.body.date&&o.key===e.body.key&&o.value===e.body.value)))found.push({modelId:model.id,node});
   }
   walk(game.root,0);
@@ -38,12 +41,12 @@ function frontier(row:ProtocolRow,history:InteractionHistory[]):Frontier[]{
 }
 const effectMeaning=(o:Outcome)=>o.kind==='NO_EFFECT'?{kind:o.kind,before:o.before,after:o.after}:
  {kind:o.kind,operatorId:o.operatorId,before:o.before,after:o.after,parameters:o.parameters};
-function commonObservations(front:Frontier[],party:'P0'|'P1'){
+function commonObservations(front:Frontier[],party:Party){
  if(!front.length)return [];
- const index=party==='P0'?0:1;
- return front[0]!.node.observations[index].filter(o=>front.every(f=>f.node.observations[index].some(v=>same(v,o))));
+ const index=participantIndex(party);
+ return front[0]!.node.observations[index]!.filter(o=>front.every(f=>f.node.observations[index]!.some(v=>same(v,o))));
 }
-function modelObservation(row:ProtocolRow,o:ObservationToken,history:InteractionHistory[],party:'P0'|'P1'){
+function modelObservation(row:ProtocolRow,o:ObservationToken,history:InteractionHistory[],party:Party){
  const classification=row.request.problem.observationRules.find(r=>r.key===o.key)!.classification;
  const verifiedFact=classification==='SOURCED_FACT'&&history.some(e=>e.kind==='OBSERVATION'&&e.body.effective&&
   e.body.date===o.date&&e.body.key===o.key&&e.body.value===o.value&&(e.body.participant===party||o.visibility==='PUBLIC'));
@@ -59,7 +62,7 @@ function localView(ctx:PeMutationContext,row:ProtocolRow,terms:InteractionTerms,
   actions=available?node.edges.map(edge=>({id:edge.actionId,prescribedProbability:row.candidate!.strategy[node.informationKey!]![edge.actionId],
    permittedDeviation:true})):[],
   body={runId:run.id,revision:run.revision,protocolId:row.id,termsRef:terms.ref,participant:party,principalId:principal(ctx),
-   informationKey:node?.informationKey??null,observations,recall:node?.recall[party==='P0'?0:1]??[],notBefore,
+   informationKey:node?.informationKey??null,observations,recall:node?.recall[participantIndex(party)]??[],notBefore,
    actions,status:!front.length?'UNKNOWN':front.every(f=>f.node.kind==='TERMINAL')?'TERMINAL':
     !isTurn?'NOT_YOUR_TURN':!exact?'NEEDS_LAWFUL_OBSERVATION':missingFacts.length?'NEEDS_CANONICAL_OBSERVATION':
      !available?'WAITING_ORIGINAL_DATE':'AWAITING_LOCAL_ACTION',missingCanonicalObservationKeys:missingFacts.map(o=>o.key)};
@@ -72,8 +75,9 @@ function visibleIntent(intent:InteractionIntent|null){
   validUntil:intent.validUntil,externalEffects:false,financialSettlement:false,executionAuthorityGranted:false};
 }
 export function visibleTerms(row:ProtocolRow,terms:InteractionTerms){
+ assertCoalitionTerms(row,terms);
  const effects=[...new Map(terms.lowering.outcomes.map(o=>[digest(effectMeaning(o)),effectMeaning(o)])).values()];
- return {schema:terms.schema,ref:terms.ref,id:terms.id,protocolId:terms.protocolId,protocolRef:terms.protocolRef,revision:terms.revision,
+ return {...coalitionTermsBinding(row),schema:terms.schema,ref:terms.ref,id:terms.id,protocolId:terms.protocolId,protocolRef:terms.protocolRef,revision:terms.revision,
   workId:terms.workId,participants:terms.participants.map(p=>({id:p.id,principalId:p.principalId})),reservationRef:terms.reservationRef,
   reservationRevision:terms.reservationRevision,initialState:terms.initialState,contingentInternalEffects:effects,
   publicPolicy:protocolControlKeys(row.request.problem).map(k=>({controlId:k.controlId,date:k.date,
@@ -140,7 +144,7 @@ async function refreshIntentTx(c:PoolClient,row:ProtocolRow,terms:InteractionTer
  await c.query("UPDATE finnor_os.s4_interaction_runs SET intent=$3::jsonb,status='READY' WHERE tenant_id=$1 AND id=$2",
   [row.tenant_id,run.id,JSON.stringify(intent)]);
  await eventTx(c,row,'S4_EXACT_EFFECT_INTENT','intent:'+run.id,{runId:run.id,intentRef:intent.ref,historyDigest:intent.historyDigest,
-  bothNewExactEffectConsentsRequired:true,hiddenModelSelection:false,executionAuthorityGranted:false});
+  allParticipantExactEffectConsentsRequired:true,hiddenModelSelection:false,executionAuthorityGranted:false});
 }
 export async function createInteractionTerms(ctx:PeMutationContext,raw:unknown){
  developmentOnly();const input=TermsSchema.parse(raw);
@@ -159,7 +163,7 @@ export async function createInteractionTerms(ctx:PeMutationContext,raw:unknown){
   const revision=Number((await c.query<{revision:number}>('SELECT coalesce(max(revision),0)+1 revision FROM finnor_os.s4_interaction_terms WHERE tenant_id=$1 AND protocol_id=$2',
    [row.tenant_id,row.id])).rows[0]!.revision);
   if(revision>32)fail('Y3_ORIGINAL_TERMS_REVISION_BOUND');
-  const body:Omit<InteractionTerms,'ref'>={schema:'finnor.s4.interaction-terms.v1',id:randomUUID(),protocolId:row.id,
+  const body:Omit<InteractionTerms,'ref'>={...coalitionTermsBinding(row),schema:'finnor.s4.interaction-terms.v1',id:randomUUID(),protocolId:row.id,
    protocolRef:row.artifact!.envelope.contentRef,candidateDigest:digest(row.candidate),admissionRef:admission.ref,tenantId:row.tenant_id,
    principalId:row.principal_id,workId:row.work_id,episodeId:row.episode_id,revision,participants:row.request.problem.participants,
    reservationRef:input.reservationRef,reservationRevision:held.revision,initialState:held.economicState.state,lowering:row.request.lowering,
@@ -186,13 +190,15 @@ export async function localInteraction(ctx:PeMutationContext,id:string){
    [row.tenant_id,row.id])).rows;
   return {protocolId:row.id,tenantId:row.tenant_id,principalId:principal(ctx),participant:participantId(ctx,row),workId:row.work_id,root:row.root,
    current,currentnessReasons:changes,status:row.cancelled?'CANCELLED_RESPONSIBILITY_RETAINED':changes.length?'INVALIDATED':row.status,
-   terms:terms?visibleTerms(row,terms):null,consents,runs:runs.slice(0,32),truncated:runs.length>32,
+   terms:terms?visibleTerms(row,terms):null,
+   ...(terms?await participantWorkViewTx(c,row,terms,principal(ctx)):{}),
+   consents,runs:runs.slice(0,32),truncated:runs.length>32,
    privateModelDataIncluded:false,protectedQualification:false,productionActivated:false,financialEfficacyEstablished:false};
  });
 }
 export async function recordInteractionConsent(ctx:PeMutationContext,raw:unknown){
  developmentOnly();const input=ConsentSchema.parse(raw);
- return transaction(ctx,async c=>{
+ const result=await transaction(ctx,async c=>{
   const requestDigest=digest(input),prior=(await c.query<{body:unknown;request_digest:string}>(`SELECT body,request_digest FROM finnor_os.s4_interaction_consents
    WHERE tenant_id=$1 AND principal_id=$2 AND idempotency_key=$3`,[ctx.auth.tenantId,principal(ctx),input.idempotencyKey])).rows[0];
   if(prior){if(prior.request_digest!==requestDigest)fail('Y3_CONSENT_IDEMPOTENCY_CONFLICT',409);return {consent:prior.body,replayed:true};}
@@ -226,6 +232,9 @@ export async function recordInteractionConsent(ctx:PeMutationContext,raw:unknown
    termsRef:terms.ref,subjectDigest:input.subjectDigest,decision:input.decision,oldConsentsNotRebound:true});
   return {consent:body,replayed:false};
  });
+ if(input.scope==='TERMS'&&input.decision==='ACCEPT')
+  return {...result,participantWork:await ensureParticipantWork(ctx,input.protocolId,input.termsRef)};
+ return result;
 }
 export async function startInteraction(ctx:PeMutationContext,raw:unknown){
  developmentOnly();const input=StartSchema.parse(raw);
@@ -264,7 +273,7 @@ export async function recordInteractionObservation(ctx:PeMutationContext,raw:unk
   if(run.revision!==input.expectedRevision||run.status!=='ACTIVE')fail('Y3_CURRENT_HISTORY_REVISION_REQUIRED',409);
   if(!rule||rule.classification!==input.classification||!rule.allowedRecipients.some(r=>r===party||r==='PUBLIC')||
    Date.parse(row.request.problem.dates[input.date]!)>Date.now()||
-   !front.some(f=>f.node.observations[party==='P0'?0:1].some(o=>o.date===input.date&&o.key===input.key&&o.value===input.value)))
+   !front.some(f=>f.node.observations[participantIndex(party)]!.some(o=>o.date===input.date&&o.key===input.key&&o.value===input.value)))
    fail('Y3_LAWFULLY_AVAILABLE_OBSERVATION_REQUIRED');
   const effective=input.classification==='SOURCED_FACT';
   if(effective){

@@ -1,5 +1,7 @@
+import { createSharedWorkJobHandler, createSharedWorkProjectionJobHandler } from '../../../packages/orchestration/src/project-z/z1-shared-work/worker';
 import {runDecisionAtlasJob} from '../../../packages/private-equity/src/r7/worker';
 import {discoverUniformAlgorithmJob} from '../../../packages/private-equity/src/uniform-algorithms/worker';
+import {runWorkforceExecutionJob} from '../../../packages/orchestration/src/workforce-execution/worker';
 import {buildEnterpriseApplicationJob} from '../../../packages/private-equity/src/enterprise-applications/worker';
 import {compileLearnedPolicyJob} from '../../../packages/private-equity/src/policy-learning/worker';
 import {runConfidentialEconomicJob} from '../../../packages/private-equity/src/confidential-computation/worker';
@@ -7,15 +9,19 @@ import {identifyDigitalSystemJob} from '../../../packages/private-equity/src/sys
 import {constructEconomicActionTheoryJob} from '../../../packages/private-equity/src/economic-action-theory/worker';
 import {strategicResponseJob} from '../../../packages/private-equity/src/strategic-response/worker';
 import {runEconomicProgrammeJob} from '../../../packages/private-equity/src/economic-action-theory/programme-worker';
-import {constructInteractionProtocolJob} from '../../../packages/private-equity/src/interaction-synthesis/worker';
+import {dispatchInteractionProtocolJob,configureZ2ReplayWorker,z2ReplayWorkerMode} from '../../../packages/private-equity/src/project-z/z2-coalitions/worker';
 import {handleBranch} from '@finnor/private-equity/src/branch-fabric/worker';
 import {runComputeSearchUnitJob} from '@finnor/private-equity/src/compute-search/worker';
 import {runHarnessProgramJob,runX1InstitutionContinuationJob} from '@finnor/private-equity/src/program-synthesis/worker';
 import {runInstitutionCompilerJob} from '@finnor/private-equity/src/institution-program/worker';
 import {runInstitutionUpdateJob} from '@finnor/private-equity/src/live-recompilation/institution-worker';
+import {compileRealWorldServiceJob,advanceRealWorldServiceJob} from '@finnor/private-equity/src/real-world-service/worker';
+import {compileOrganizationTransformationJob,advanceOrganizationTransformationJob} from '@finnor/private-equity/src/organization-transformation/worker';
+import {compileMarketOperatingProgramJob,advanceMarketOperatingProgramJob} from '@finnor/private-equity/src/demand-to-business/worker';
 import {runInterfaceAcquisitionJob} from '@finnor/private-equity/src/interface-synthesis/worker';
 import {runApplicationSemanticsJob} from '@finnor/private-equity/src/application-semantics/worker';
 import {runProgrammeContinuationJob} from '@finnor/private-equity/src/live-recompilation/worker';
+import {runZ3ViabilityRecoveryJob,runZ3ViabilitySynthesisJob} from '@finnor/private-equity/src/project-z/z3-viability/worker';
 import {runProcedureInductionJob} from '@finnor/private-equity/src/procedure-induction/worker';
 import {runCapitalProgramJob,runRobustCapitalProgramJob,runCoalitionProgrammeJob} from '@finnor/private-equity/src/capital-program/worker';
 import {runCounterexampleSearchJob} from '@finnor/private-equity/src/counterexample-search/worker';
@@ -61,6 +67,7 @@ import { materializeArtifactVersion } from "./handlers/materialize-artifact-vers
 import { processEpistemicChange, recoverEpistemicChanges, refreshEpistemicGraph, scanEpistemicFreshness } from "./handlers/epistemic-impact";
 import { PRODUCTION_JOB_CONTRACTS } from "./job-contracts";
 import {runEvidenceDerivationJob} from '@finnor/private-equity/src/evidence-execution/worker';
+import {runExecutionProofJob} from '@finnor/private-equity/src/project-z/z4-execution-proof/worker';
 import {runCertifiedStateReductionJob} from '@finnor/private-equity/src/r1/worker';
 import {runIncentiveRuleSynthesisJob} from '@finnor/private-equity/src/r3/worker';
 import {advancePrimaryDiligenceJob} from '@finnor/private-equity/src/primary-diligence/worker';
@@ -70,11 +77,23 @@ import { startClassHealthServer } from "./class-health";
 import { startComputeTelemetry } from "./telemetry";
 import { installWorkerDrainSignals } from "./drain-signals";
 
+import {linkInstitutionComponentsJob} from '../../../packages/private-equity/src/project-z/z5-institution-linker/worker';
 export function createWorker(): JobQueue {
   const queue = new JobQueue();
+  if (configureZ2ReplayWorker(queue,PRODUCTION_JOB_CONTRACTS.construct_interaction_protocol_v1)) return queue;
+  queue.register('run_shared_work_program_v1',createSharedWorkJobHandler(),PRODUCTION_JOB_CONTRACTS.run_shared_work_program_v1);
+  queue.register('consume_shared_work_projection_v1',createSharedWorkProjectionJobHandler(),PRODUCTION_JOB_CONTRACTS.consume_shared_work_projection_v1);
+  queue.register('link_institution_components_v1',linkInstitutionComponentsJob,PRODUCTION_JOB_CONTRACTS.link_institution_components_v1);
+  queue.register('compile_organization_transformation_v1',compileOrganizationTransformationJob,PRODUCTION_JOB_CONTRACTS.compile_organization_transformation_v1);
+  queue.register('advance_organization_transformation_v1',advanceOrganizationTransformationJob,PRODUCTION_JOB_CONTRACTS.advance_organization_transformation_v1);
+  queue.register('run_workforce_execution_v1',runWorkforceExecutionJob,PRODUCTION_JOB_CONTRACTS.run_workforce_execution_v1);
+  queue.register('compile_real_world_service_v1',compileRealWorldServiceJob,PRODUCTION_JOB_CONTRACTS.compile_real_world_service_v1);
+  queue.register('advance_real_world_service_v1',advanceRealWorldServiceJob,PRODUCTION_JOB_CONTRACTS.advance_real_world_service_v1);
+  queue.register('compile_market_operating_program_v1',compileMarketOperatingProgramJob,PRODUCTION_JOB_CONTRACTS.compile_market_operating_program_v1);
+  queue.register('advance_market_operating_program_v1',advanceMarketOperatingProgramJob,PRODUCTION_JOB_CONTRACTS.advance_market_operating_program_v1);
   queue.register('learn_strategic_response_model_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.learn_strategic_response_model_v1);
   queue.register('evaluate_strategic_response_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.evaluate_strategic_response_v1);
-  queue.register('construct_interaction_protocol_v1',constructInteractionProtocolJob,PRODUCTION_JOB_CONTRACTS.construct_interaction_protocol_v1);
+  queue.register('construct_interaction_protocol_v1',dispatchInteractionProtocolJob,PRODUCTION_JOB_CONTRACTS.construct_interaction_protocol_v1);
   queue.register('construct_economic_action_theory_v1',constructEconomicActionTheoryJob,PRODUCTION_JOB_CONTRACTS.construct_economic_action_theory_v1);
   queue.register('run_economic_programme_v1',runEconomicProgrammeJob,PRODUCTION_JOB_CONTRACTS.run_economic_programme_v1);
   queue.register('run_confidential_economic_computation_v1',runConfidentialEconomicJob,PRODUCTION_JOB_CONTRACTS.run_confidential_economic_computation_v1);
@@ -96,6 +115,8 @@ export function createWorker(): JobQueue {
   queue.register('run_counterexample_search_v1',runCounterexampleSearchJob,PRODUCTION_JOB_CONTRACTS.run_counterexample_search_v1);
   queue.register('run_procedure_induction_v1',runProcedureInductionJob,PRODUCTION_JOB_CONTRACTS.run_procedure_induction_v1);
   queue.register('run_programme_continuation_v1',runProgrammeContinuationJob,PRODUCTION_JOB_CONTRACTS.run_programme_continuation_v1);
+  queue.register('run_z3_viability_synthesis_v1',runZ3ViabilitySynthesisJob,PRODUCTION_JOB_CONTRACTS.run_z3_viability_synthesis_v1);
+  queue.register('run_z3_viability_recovery_v1',runZ3ViabilityRecoveryJob,PRODUCTION_JOB_CONTRACTS.run_z3_viability_recovery_v1);
   queue.register('run_r1_dependency_continuation_v1',runProgrammeContinuationJob,PRODUCTION_JOB_CONTRACTS.run_r1_dependency_continuation_v1);
   queue.register('run_interface_acquisition_v1',runInterfaceAcquisitionJob,PRODUCTION_JOB_CONTRACTS.run_interface_acquisition_v1);
   queue.register('run_branch_fabric_v1',(payload,execution)=>handleBranch(payload,execution!),PRODUCTION_JOB_CONTRACTS.run_branch_fabric_v1);
@@ -144,6 +165,7 @@ export function createWorker(): JobQueue {
   queue.register("scan_epistemic_freshness_v2", scanEpistemicFreshness, PRODUCTION_JOB_CONTRACTS.scan_epistemic_freshness_v2);
   queue.register("recover_epistemic_changes_v2", recoverEpistemicChanges, PRODUCTION_JOB_CONTRACTS.recover_epistemic_changes_v2);
   queue.register("refresh_epistemic_graph_v2", refreshEpistemicGraph, PRODUCTION_JOB_CONTRACTS.refresh_epistemic_graph_v2);
+  queue.register("prove_exact_execution_v1", runExecutionProofJob, PRODUCTION_JOB_CONTRACTS.prove_exact_execution_v1);
   return queue;
 }
 
@@ -204,7 +226,7 @@ if (isMain) {
   if (faultedCapabilities.length > 0) {
     log.warn({ event: "emulator_faults_applied", capabilities: faultedCapabilities }, "[worker] EMULATOR_FAULTS applied — emulators are adversarial");
   }
-  const certificationMode = process.env.FINNOR_ENVIRONMENT?.trim() === "staging" && process.env.P3_DISABLE_PROACTIVE_SCHEDULER?.trim() === "1";
+  const certificationMode = z2ReplayWorkerMode() || (process.env.FINNOR_ENVIRONMENT?.trim() === "staging" && process.env.P3_DISABLE_PROACTIVE_SCHEDULER?.trim() === "1");
   const schedulerEligible = workloadClass === "BACKGROUND" || workloadClass === null;
   const scheduler = schedulerEligible && !certificationMode
     ? startScheduler(ACTIVE_SCHEDULED_SCANS, 15 * 60_000, controller.signal)
@@ -212,7 +234,7 @@ if (isMain) {
   const heartbeat = startHeartbeat(30_000, controller.signal, { workloadClass, ownsScheduler: () => scheduler?.isLeader() === true });
   if (workloadClass) startComputeTelemetry(workloadClass, controller.signal);
   if (certificationMode) {
-    log.warn({ event: "proactive_scheduler_disabled", reason: "P3 staging certification mode" }, "[scheduler] proactive scans disabled for isolated staging certification");
+    log.warn({ event: "proactive_scheduler_disabled", reason: z2ReplayWorkerMode() ? "Z2 exclusive disposable replay" : "P3 staging certification mode" }, "[scheduler] proactive scans disabled for isolated staging certification");
   }
   // The SSE gateway shares the persistent worker process and binds only when the
   // deployment supplies PORT. Local job-loop development does not require a port.

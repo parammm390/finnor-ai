@@ -18,6 +18,20 @@ export function nativeRecordReference(value:any):NativeTransportReference|null{
  return ownerTransportHash(normalize(content))===ref.contentDigest?{...ref,content:normalize(content)}:null;
 }
 
+function matchesVerifiedReference(candidate:NativeTransportReference,stored:NativeTransportReference):boolean{
+ const prototype=Object.getPrototypeOf(candidate);
+ if((prototype!==Object.prototype&&prototype!==null)||!Object.prototype.propertyIsEnumerable.call(candidate,'content'))
+  return ownerTransportHash(candidate)===ownerTransportHash(stored);
+ const {content:candidateContent,...candidateIdentity}=candidate;
+ const {content:storedContent,...storedIdentity}=stored;
+ if(ownerTransportHash(candidateIdentity)!==ownerTransportHash(storedIdentity))return false;
+ // The signed stored preimage was already verified. Check the candidate at
+ // the point of use, including exact string identity for native UTF-8 refs.
+ return stored.digestEncoding==='NATIVE_UTF8_SHA256_V1'
+  ?candidateContent===storedContent
+  :referencePreimageDigest({content:candidateContent})===stored.contentDigest;
+}
+
 /** One bounded cut, signed by the actual original owner, preserves every native
  * ID/encoding/preimage. Unknown foreign owner routes confer no append authority. */
 export async function enqueueNativeReferences(ctx:PeMutationContext,references:readonly NativeTransportReference[],rightsRefs:readonly string[]){
@@ -52,7 +66,7 @@ export async function enqueueNativeReferences(ctx:PeMutationContext,references:r
     if(ownerTransportHash(row.envelope.payload)!==row.payload_digest)throw new LedgerFault(503,'OWNER_ORIGIN_STORAGE_BINDING_INVALID');
     for(const reference of [row.envelope.payload.reference,...(row.envelope.payload.relatedReferences??[])]){
      const candidate=group.get(reference.id);if(!candidate)continue;
-     if(ownerTransportHash(candidate)!==ownerTransportHash(reference))throw new LedgerFault(503,'NATIVE_OWNER_REFERENCE_CONFLICT');
+     if(!matchesVerifiedReference(candidate,reference))throw new LedgerFault(503,'NATIVE_OWNER_REFERENCE_CONFLICT');
      known.add(candidate.id);
     }
    }

@@ -2,7 +2,7 @@ import {
   baselineDurableEpistemicGraph,
   compareEpistemicAssessmentToOutcome,
   stageDurableEpistemicGraph,
-} from "@finnor/epistemic-runtime";
+} from "../../epistemic-runtime/src/durable";
 import { buildPrivateEquityDurableGraphDefinition } from "./epistemic";
 import {
   evaluateDealCloseEligibility,

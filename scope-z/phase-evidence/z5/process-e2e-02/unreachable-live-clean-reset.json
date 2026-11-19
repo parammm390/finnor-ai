@@ -1,0 +1,14 @@
+{
+  "id": "unreachable-live-clean-reset",
+  "passed": true,
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "{\"checked\":false,\"checker\":\"z5-original-semantics-checker-v1\",\"executionAuthorityGranted\":false,\"reason\":\"LIVE_BRIDGE_LOSES_ORIGINAL_RESERVATION_OR_UNRESOLVED_OBLIGATION\",\"schema\":\"finnor.z5.independent-check.v1\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 90.57243199999994
+  },
+  "corruptionDigest": "04a959a429bc8dd3294bada5c60e7a861bd102d6ed9681dc1724d400f4fc5133",
+  "expected": "INDEPENDENT_REJECTION"
+}

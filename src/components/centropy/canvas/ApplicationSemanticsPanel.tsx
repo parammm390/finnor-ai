@@ -14,7 +14,7 @@ import {
   cancelApplication,
   executeApplication,
   readApplicationProjection,
-  readApplicationScope,
+  readApplicationSnapshot,
   type ApplicationAcquisitionDraft,
   type ApplicationAcquisitionRequest,
   type ApplicationExecutionDraft,
@@ -69,8 +69,12 @@ function Reference({ value }: { value: ApplicationReference }) {
   </code>
 }
 
-function ReferenceList({ title, values }: { title: string; values: ApplicationReference[] }) {
-  return <details>
+function ReferenceList({ title, values, claimClass }: {
+  title: string
+  values: ApplicationReference[]
+  claimClass?: "observed" | "inferred" | "predicted"
+}) {
+  return <details data-claim-class={claimClass}>
     <summary>{title} · {values.length} supplied reference{values.length === 1 ? "" : "s"}</summary>
     {values.length ? <ul>{values.map((value, index) =>
       <li key={`${index}:${value.owner}:${value.id}`}><Reference value={value}/></li>,
@@ -210,7 +214,18 @@ function ModelEvidence({ model, check, now }: {
           <summary>Counterexamples and remaining falsifiers</summary><JsonEvidence value={check.counterexamples}/>
         </details> : <p>No counterexamples supplied in this check. That is not a universal external proof.</p>}
       </> : <p>No independent model check supplied. Qualification is UNKNOWN, not accepted.</p>}
-      <p>Observed, declared, inferred and predicted claims are separate. A checked logical model is not admission or evidence that a requested external effect occurred.</p>
+      <p>Each claim retains its own evidence basis. The independent effect observation determines what happened outside FINNOR.</p>
+      <ReferenceList title="Observed claims" values={envelope.observed_claims} claimClass="observed"/>
+      <ReferenceList title="Inferred claims" values={envelope.inferred_claims} claimClass="inferred"/>
+      <ReferenceList title="Predicted claims" values={envelope.predicted_claims} claimClass="predicted"/>
+      <details data-claim-class="unresolved">
+        <summary>Unresolved claims · {envelope.unresolved_claims.length}</summary>
+        {envelope.unresolved_claims.length ? <ul>{envelope.unresolved_claims.map(({ code, reference }, index) => (
+          <li key={`${code}:${index}`}>
+            <code>{code}</code>{reference ? <> · <Reference value={reference}/></> : null}
+          </li>
+        ))}</ul> : <p>No unresolved claims supplied.</p>}
+      </details>
       <ReferenceList title="Source observations" values={model.source_observations}/>
       <ReferenceList title="Application identity/version evidence" values={model.application_identity_and_version_evidence}/>
       <ReferenceList title="Declared type-signature evidence" values={model.declared_type_signatures}/>
@@ -230,10 +245,6 @@ function ModelEvidence({ model, check, now }: {
           permittedExplorationRecord: model.permitted_exploration_record,
           checkerResults: model.checker_results,
           independentCheckRefs: envelope.independent_check_refs,
-          observedClaims: envelope.observed_claims,
-          inferredClaims: envelope.inferred_claims,
-          predictedClaims: envelope.predicted_claims,
-          unresolvedClaims: envelope.unresolved_claims,
         }}/>
       </details>
     </section>
@@ -266,19 +277,68 @@ function ModelEvidence({ model, check, now }: {
   </>
 }
 
+function sessionNextAction(session: ApplicationSession, now: number): string | null {
+  if (session.status === "UNKNOWN") {
+    return "Review the retained effect records and have the original owner reconcile outstanding observations before any further action."
+  }
+  if (!["BLOCKED", "STALE", "FAILED"].includes(session.status)) return null
+  if (now >= Date.parse(session.deadlineAt)) {
+    return "The original deadline has passed. The Work owner can inspect the retained evidence and outstanding effects."
+  }
+  switch (session.reason) {
+    case "X2_CURRENT_APPLICATION_PROFILE_CHANGED":
+    case "X2_CURRENT_READ_PROFILE_CHANGED":
+    case "X2_CURRENT_PROFILE_EXPIRED":
+      return "The Work owner must ask the connection owner to verify access for the original application profile and refresh this Work."
+    case "X2_CURRENT_S1_RIGHTS_CHANGED":
+      return "The Work owner must verify current authorization for the original responsibility before requesting any continuation."
+    default:
+      return "The Work owner can review the recorded reason and refresh this Work after the required input or authority has been resolved."
+  }
+}
+
 function SessionEvidence({ session, now }: { session: ApplicationSession; now: number }) {
   const { model, composition } = session
+  const nextAction = sessionNextAction(session, now)
   return <>
     <section>
       <h4>{sessionLabels[session.status]}</h4>
       <p>Session {session.id} · native generation {session.generation} · parent session {session.parentId}.
         {" "}{session.id === session.parentId ? "Acquisition parent." : "Fresh execution child; original allocation is retained."}</p>
       <p>Reason: {session.reason ?? "No reason supplied."}</p>
+      {nextAction ? <p data-application-next-action>{nextAction}</p> : null}
       <p>Original parent: <Reference value={session.originalParentRef}/></p>
       <p>Original deadline: {session.deadlineAt}
         {now >= Date.parse(session.deadlineAt) ? " · expired; no fresh work is implied" : " · this is not a renewed allocation"}.</p>
       {session.cancelledAt ? <p>Cancellation requested at {session.cancelledAt}; this is not rollback or resource release.</p> : null}
     </section>
+    {session.acquisition ? <details>
+      <summary>Requested application computation</summary>
+      <p>Requested deadline: <time dateTime={session.acquisition.deadlineAt}>{session.acquisition.deadlineAt}</time></p>
+      <h5>Requested resource demand</h5>
+      <ul>{session.acquisition.resourceDemand.map(({ resourceId, amount, unit }) =>
+        <li key={resourceId}>Requested {amount} {unit} from <code>{resourceId}</code></li>)}</ul>
+      <h5>Requested targets</h5>
+      <ul>{session.acquisition.targetIds.map(id => <li key={id}><code>{id}</code></li>)}</ul>
+    </details> : null}
+    {session.institutional ? <section>
+      <h4>Original institutional responsibility</h4>
+      <p>Original Work: {session.institutional.originalWorkId}. Input: {session.institutional.originalWorkInputId}.</p>
+      <p>Original compiler request: {session.institutional.compilerRequestId}.</p>
+      <p>Original P1: {session.institutional.programId} · {session.institutional.programmeStatus}.
+        Responsibility: <code>{session.institutional.responsibilityIdentity}</code>.</p>
+      <p>Institution artifact: <Reference value={session.institutional.institutionalProgramRef}/></p>
+      <p>Same original S5 reservation: <Reference value={session.institutional.originalReservationRef}/></p>
+      <p>Original deadline: {session.institutional.originalDeadlineAt}. Wall deadline: {session.institutional.wallDeadlineAt}.
+        Learning cutoff: {session.institutional.childDeadlineAt}. None is renewed.</p>
+      <p>Original P1 consumed the checked model: {session.institutional.modelConsumedByOriginalP1 ? "yes" : "not observed"}.
+        Learning never fulfills the responsibility. The original owner and independent canonical observer still decide completion.</p>
+      {session.institutional.modelAcceptanceRef ? <p>S4 acceptance: <Reference value={session.institutional.modelAcceptanceRef}/></p> : null}
+      <details><summary>Remaining original resources and known accounting gaps</summary>
+        <JsonEvidence value={session.institutional.budget}/>
+      </details>
+      <p>No new reservation, budget, release, protected admission or fresh business-effect authority is granted.</p>
+    </section> : null}
     {model ? <ModelEvidence model={model} check={session.check} now={now}/>
       : <section><h4>Logical model not yet supplied</h4>
         <p>Operation signatures, supported domain, source validity and independent qualification are not yet established. There is no successful substitute or simulated application binding.</p>
@@ -341,7 +401,7 @@ function SessionEvidence({ session, now }: { session: ApplicationSession; now: n
     <section>
       <h4>Original resources and cost qualification</h4>
       <p>Billing: {session.billing}. Original resource release: {session.resourceReleaseGranted ? "granted" : "not granted"}.</p>
-      <p>S5 charges describe conservative occupation of the original parent, across its children. They are not provider billing, per-session totals or renewed allowances.</p>
+      <p>These S5 charges cover this application allocation and its children. The remaining resources above include all charges on the original reservation.</p>
       <dl className="ct-evidence__values">
         <div><dt>Money / currency-qualified billing</dt><dd data-application-cost="money">UNKNOWN</dd></div>
         <div><dt>Complete attributable human work</dt><dd data-application-cost="humanSeconds">UNKNOWN</dd></div>
@@ -384,7 +444,7 @@ function ApplicationAcquisitionForm({ busy, blockedReason, onSubmit }: {
 }) {
   const helpId = useId()
   const [draft, setDraft] = useState<ApplicationAcquisitionDraft>({
-    profileIdsJson: "", targetsJson: "", resourceDemandJson: "", deadlineAt: "",
+    profileIdsJson: "", targetsJson: "", resourceDemandJson: "", deadlineAt: "", institutionalOriginJson: "",
   })
   function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); onSubmit(draft) }
   return <section>
@@ -414,7 +474,19 @@ function ApplicationAcquisitionForm({ busy, blockedReason, onSubmit }: {
             required maxLength={64} autoComplete="off" spellCheck={false}/>
         </label>
         <p>The native development window is at most one hour and must fit current profile/grant validity. Child execution, recovery and cancellation do not renew it.</p>
-        <button type="submit">Request acquisition and native reservation</button>
+        <details>
+          <summary>Learn for an unfinished original X1 responsibility</summary>
+          <p>Supply only existing compilerRequestId, programId and responsibilityIdentity references as one JSON object.
+            The native owner revalidates the checked responsibility, original input, deadline and remaining S5 resources.
+            This request cannot create a new allowance or complete the original Work.</p>
+          <label>Original institution references (optional for a standalone non-X1 Work)
+            <textarea name="institutionalOrigin" value={draft.institutionalOriginJson ?? ""}
+              onChange={event => setDraft({ ...draft, institutionalOriginJson: event.target.value })}
+              rows={3} maxLength={1024} spellCheck={false} autoComplete="off"/>
+          </label>
+        </details>
+        <button type="submit">{draft.institutionalOriginJson?.trim()
+          ? "Request learning under original reservation" : "Request acquisition and native reservation"}</button>
       </fieldset>
     </form>
   </section>
@@ -494,7 +566,7 @@ interface Snapshot {
 }
 interface Notice {
   stamp: number
-  phase: "idle" | "reading" | "ready" | "error"
+  phase: "idle" | "reading" | "retrying" | "ready" | "error"
   message: string
 }
 interface ActionNotice {
@@ -544,6 +616,7 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
   // contains no parameters/result/token and cannot render until native identity
   // and scope are freshly matched. Canonical records remain the only truth.
   const unconfirmedRef = useRef<UnconfirmedUse | null>(null)
+  const projectionRetry = useRef<{ stamp: number; sequence: number } | null>(null)
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null)
   const [notice, setNotice] = useState<Notice | null>(null)
   const [actionNotice, setActionNotice] = useState<ActionNotice | null>(null)
@@ -573,7 +646,7 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
     setFormRevision(revision => revision + 1)
   }, [])
 
-  const readCanonical = useCallback(async (marker: Marker, message: string): Promise<Snapshot | null> => {
+  const readCanonical = useCallback(async (marker: Marker, message: string, allowRetry = false): Promise<Snapshot | null> => {
     if (!isCurrent(marker)) return null
     activeRead.current?.controller.abort()
     const request = { marker, controller: new AbortController() }
@@ -584,12 +657,10 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
         sessionKey: marker.sessionKey,
         signal: request.controller.signal,
       }
-      const scope = await readApplicationScope(workSelection, transport)
-      if (!isCurrent(marker)) return null
+      const { scope, data } = await readApplicationSnapshot(workSelection, transport, allowRetry && !nativeScope.current)
+      if (!isCurrent(marker) || request.controller.signal.aborted) return null
       if (nativeScope.current && JSON.stringify(nativeScope.current) !== JSON.stringify(scope)) erasePrivate()
       nativeScope.current = scope
-      const data = await readApplicationProjection(scope, transport)
-      if (!isCurrent(marker) || request.controller.signal.aborted) return null
       const pending = unconfirmedRef.current
       if (pending && pending.sourceKey === scopeKey && pending.tenantId === scope.tenantId
         && pending.principalId === scope.principalId) {
@@ -618,6 +689,7 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
       setClock(now)
       const next = { stamp: marker.stamp, scope, data, readAt: new Date(now).toISOString() }
       setSnapshot(next)
+      projectionRetry.current = null
       setNotice({
         stamp: marker.stamp,
         phase: "ready",
@@ -627,17 +699,22 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
       })
       return next
     } catch (error) {
-      if (!isCurrent(marker)) return null
+      if (!isCurrent(marker) || request.controller.signal.aborted) return null
       erasePrivate()
+      const retrying = allowRetry && error instanceof CentropyApiError && error.retryable
+        && projectionRetry.current?.stamp !== marker.stamp
+      if (retrying) projectionRetry.current = { stamp: marker.stamp, sequence: marker.sequence }
       setNotice({
         stamp: marker.stamp,
-        phase: "error",
-        message: error instanceof CentropyApiError && [401, 403, 404].includes(error.status)
+        phase: retrying ? "retrying" : "error",
+        message: retrying ? "The current owner read was interrupted. Retrying in this Work."
+          : error instanceof CentropyApiError && [401, 403, 404].includes(error.status)
           ? "Current application evidence is unavailable in this access scope. Private records and inputs have been cleared."
           : "The current-use projection could not be verified. Private records and inputs have been cleared; no ready or complete claim is retained.",
       })
       return null
     } finally {
+      request.controller.abort()
       if (activeRead.current === request) activeRead.current = null
     }
   }, [workSelection, scopeKey, isCurrent, erasePrivate])
@@ -645,10 +722,14 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
   const refresh = useCallback(async (clear: boolean) => {
     if (!ready || !sessionKey || fence.current?.stamp !== stamp || activeAction.current?.stamp === stamp
       || !navigator.onLine || document.visibilityState !== "visible") return
+    if (!clear && activeRead.current?.marker.stamp === stamp && !activeRead.current.controller.signal.aborted) return
     const marker = { stamp, sequence: ++generation.current, sessionKey }
     activeRead.current?.controller.abort()
-    if (clear) erasePrivate()
-    await readCanonical(marker, "Reading the current native Work, principal, tenant and root scope…")
+    if (clear) {
+      erasePrivate()
+      projectionRetry.current = null
+    }
+    await readCanonical(marker, "Reading the current native Work, principal, tenant and root scope…", true)
   }, [ready, sessionKey, stamp, erasePrivate, readCanonical])
 
   const invalidate = useCallback((message: string) => {
@@ -656,6 +737,7 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
     activeRead.current?.controller.abort()
     actionController.current?.abort()
     activeAction.current = null
+    projectionRetry.current = null
     erasePrivate()
     setUnconfirmed(null)
     setActionNotice(null)
@@ -687,12 +769,17 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
 
   useEffect(() => {
     const usable = () => navigator.onLine && document.visibilityState === "visible"
-    setAvailable(usable())
+    let lastUsable = usable()
+    setAvailable(lastUsable)
     const environment = () => {
       if (fence.current?.stamp !== stamp) return
-      setAvailable(usable())
-      invalidate("Connectivity or visibility changed. Private evidence and inputs are cleared until current identity and scope are revalidated.")
-      if (usable()) void refresh(false)
+      const nextUsable = usable()
+      if (lastUsable !== nextUsable) {
+        lastUsable = nextUsable
+        setAvailable(nextUsable)
+        invalidate("Connectivity or visibility changed. Private evidence and inputs are cleared until current identity and scope are revalidated.")
+      }
+      if (nextUsable) void refresh(false)
     }
     document.addEventListener("visibilitychange", environment)
     window.addEventListener("offline", environment)
@@ -711,9 +798,21 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
     // The maintained client publishes our own write acknowledgement too; it is
     // not a revocation event or completion. Its explicit post-write read owns it.
     if (signal.source === "mutation" && /company-brain\/application-(?:acquire|execute|cancel)$/.test(signal.path ?? "")) return
-    invalidate("Owner state or access changed. Private evidence and inputs are cleared pending current-use revalidation.")
+    if (signal.tags.some(tag => ["authority", "connections", "source", "workspace"].includes(tag))) {
+      invalidate("Owner state or access changed. Private evidence and inputs are cleared pending current-use revalidation.")
+    }
     void refresh(false)
   }), [invalidate, refresh])
+
+  useEffect(() => {
+    if (currentNotice?.phase !== "retrying" || !sessionKey) return
+    const retry = projectionRetry.current
+    if (retry?.stamp !== stamp) return
+    const timer = window.setTimeout(() => {
+      if (isCurrent({ ...retry, sessionKey })) void refresh(false)
+    }, 1500)
+    return () => window.clearTimeout(timer)
+  }, [currentNotice, isCurrent, refresh, sessionKey, stamp])
 
   useEffect(() => {
     if (!visible || busy) return
@@ -876,7 +975,7 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
     data-application-work={visible?.workId ?? "none"}
     data-application-session={selected?.id ?? "none"}
     data-application-status={selected?.status ?? "none"}
-    aria-busy={Boolean(busy || currentNotice?.phase === "reading")}
+    aria-busy={Boolean(busy || currentNotice?.phase === "reading" || currentNotice?.phase === "retrying")}
   >
     <h3>Application operations · FRONTIER5.X2</h3>
     <p>Learned logical software semantics in maintained native Work. Acquisition, evidence, fresh binding, independent effects, admission and production activation are separate.</p>
@@ -913,7 +1012,7 @@ export function ApplicationSemanticsPanel(props: ApplicationSemanticsPanelProps)
         <FreshApplicationUseForm
           key={`${stamp}:${formRevision}:${selected.id}`}
           busy={busy}
-          blockedReason={blockReason}
+          blockedReason={selected.institutional ? "Institution learning returns to the original P1 owner. This grant cannot fund a fresh business assignment." : blockReason}
           onSubmit={draft => void control("execute", draft)}
         />
       </> : <ApplicationAcquisitionForm

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { PoolClient } from 'pg';
+import { lockTenantMaterialCutTx, transactionDb } from '@finnor/db';
 import type { AllocationClearingInput, AuthorityRequest, DomainAction, ExecutionResult } from '@finnor/shared-types';
 import { evaluateAuthorityTx, exactControlRequirementsTx, employeeAuthoritySnapshotTx, lockCurrentAuthorityTx, validateExactControlApprovalsTx } from '@finnor/authority';
 import { LIVE_CONTROL_OPERATION_SCHEMAS as schemas, ControlIntentSchema, LiveControlError, unavailable, type ControlIntent, type OwnerVector } from './contracts';
@@ -284,7 +285,8 @@ async function approveTx(ctx: PeMutationContext, session: SessionRow, input: Inp
   return { proposalId: proposal.id, decisionRef: decision.id, status: 'EXACT_REVIEW_RECORDED', executionAuthorityGranted: false };
 }
 
-export async function assertNativeControlActionTx(ctx: PeMutationContext, actionId: string, client: PoolClient) {
+export async function assertNativeControlActionTx(ctx: PeMutationContext, actionId: string, client: PoolClient,
+  options?: { acquireMaterialFence: boolean }) {
   const visible = (await client.query<ProposalRow>('SELECT * FROM finnor_os.v5_proposals WHERE tenant_id=$1 AND id=$2', [ctx.auth.tenantId, actionId])).rows[0];
   if (!visible) {
     const retained = (await client.query('SELECT proposal_id FROM finnor_os.v5_proposal_custody WHERE tenant_id=$1 AND proposal_id=$2',
@@ -296,6 +298,7 @@ export async function assertNativeControlActionTx(ctx: PeMutationContext, action
   }
   if (visible.principal_id !== actor(ctx)) throw unavailable();
   await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', ['s5-portfolio:' + ctx.auth.tenantId]);
+  if (options?.acquireMaterialFence) await lockTenantMaterialCutTx(transactionDb(client), ctx.auth.tenantId);
   await lockCurrentAuthorityTx(ctx.auth, client);
   const session = await sessionRow(ctx, visible.session_id, client), original = await proposalRow(ctx, session, visible.id, client),
     branch = await branchRow(ctx, session, original.branch_id, client);

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { withDatabaseExecutionDeadline } from '@finnor/db';
 import { elicitationOperation } from '@finnor/private-equity/src/r3/api';
-import { PeDomainError } from '@finnor/private-equity';
+import { PeDomainError } from '../../../../../../packages/private-equity/src/types';
 import { requireContext, errorResponse } from '../../../../lib/auth';
 export const runtime = 'nodejs';
 async function bounded(req: Request, deadline: number) {

@@ -136,6 +136,17 @@ export async function writeDiscoveredActionManifest(actions?: DiscoveredAction[]
   const manifestActions = actions ?? await discoverActionRegistry();
   await mkdir(generatedReleaseDirectory, { recursive: true });
   const target = join(generatedReleaseDirectory, "action-manifest.json");
+  const previous = await readFile(target, "utf8").catch((error: NodeJS.ErrnoException) => {
+    if (error.code === "ENOENT") return null;
+    throw error;
+  });
+  if (previous) {
+    let recorded: { generatedAt?: unknown; actionCount?: unknown; actions?: unknown } | null = null;
+    try { recorded = JSON.parse(previous); } catch { /* Regenerate malformed derived output from the source registry. */ }
+    if (recorded && Object.keys(recorded).join(",") === "generatedAt,actionCount,actions"
+        && typeof recorded.generatedAt === "string" && recorded.actionCount === manifestActions.length
+        && JSON.stringify(recorded.actions) === JSON.stringify(manifestActions)) return target;
+  }
   await writeFile(target, `${JSON.stringify({ generatedAt: new Date().toISOString(), actionCount: manifestActions.length, actions: manifestActions }, null, 2)}\n`);
   return target;
 }

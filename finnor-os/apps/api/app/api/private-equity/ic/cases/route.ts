@@ -1,4 +1,4 @@
-import { createIcCase, listIcCases } from "@finnor/private-equity";
+import { createIcCase, listIcCases } from "../../../../../../../packages/private-equity/src/ic-repository";
 import { handleIcGet, handleIcPost, IcCreateCaseSchema } from "../../../../../lib/ic";
 
 export const runtime = "nodejs";

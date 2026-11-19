@@ -3,7 +3,7 @@
 Frozen campaign rule: no imports from producer, checker, or precompiled games.
 Every pure contingent continuation is enumerated. Mixed continuations cannot
 improve the maximum because expected utility is multilinear in behavior.
-This oracle is bounded to eight information sets for either party.
+This oracle is bounded to 4096 complete original pure continuations per participant.
 """
 import hashlib
 import itertools
@@ -31,7 +31,7 @@ def run(problem, candidate):
                 token = {"date": n["date"], "key": o["key"], "value": o["value"], "visibility": "PUBLIC" if "PUBLIC" in o["recipients"] else "PRIVATE"}
                 if "PUBLIC" in o["recipients"]:
                     public.append(token)
-                for i, party in enumerate(("P0", "P1")):
+                for i, party in enumerate(p["id"] for p in problem["participants"]):
                     if party in o["recipients"] or "PUBLIC" in o["recipients"]:
                         observations[i].append(token)
             state = {"node": n, "children": [], "informationKey": None}
@@ -55,7 +55,7 @@ def run(problem, candidate):
                     next_recall[p].append({"informationKey": k, "actionId": e["actionId"]})
                 state["children"].append((e["actionId"], e["next"], F(e["probability"]) if n["kind"] == "CHANCE" else F(1)))
                 walk(e["next"], observations, public, next_recall)
-        walk(model["root"], [[], []], [], [[], []])
+        walk(model["root"], [[] for _ in problem["participants"]], [], [[] for _ in problem["participants"]])
         assessment = next(x for x in candidate["models"] if x["modelId"] == model["id"])
         def payoff(nid, participant, plan):
             state = states[nid]
@@ -74,8 +74,11 @@ def run(problem, candidate):
         for start, info in infos.items():
             participant = info["participant"]
             party_infos = [(k, v["actions"]) for k, v in infos.items() if v["participant"] == participant]
-            if len(party_infos) > 8:
-                raise ValueError("REFERENCE_SMALL_GAME_BOUND")
+            count = 1
+            for _, actions in party_infos:
+                count *= len(actions)
+            if count > 4096:
+                raise ValueError("REFERENCE_ORIGINAL_CONTINUATION_BOUND")
             mu = {n: F(v) for n, v in assessment["beliefs"][start].items()}
             prescribed = sum((mu[n] * payoff(n, participant, {}) for n in info["nodes"]), F(0))
             best, witness = prescribed, {}

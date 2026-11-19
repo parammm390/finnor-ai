@@ -3,6 +3,7 @@ import { createHash, createPrivateKey, createPublicKey, randomBytes, sign, verif
 import { constants } from 'node:fs';
 import { open } from 'node:fs/promises';
 import { canonical, LedgerFault,referencePreimageDigest } from './protocol.js';
+import { GOVERNED_DISPATCH_RESPONSE_MS } from './broker-io.js';
 
 export interface OwnerTransportScope { semanticOwner:string; tenantId:string; principalId:string }
 export interface OwnerOriginKey { id:string; publicKey:string; validAfter:string; validUntil:string; revoked:boolean }
@@ -27,7 +28,7 @@ const time=(v:any):number=>typeof v==='string'&&Number.isFinite(Date.parse(v))?D
 export const ownerTransportHash=(v:unknown)=>createHash('sha256').update(canonical(v)).digest('hex');
 const bytesHash=(v:Uint8Array|string)=>createHash('sha256').update(v).digest('hex');
 const same=(a:unknown,b:unknown)=>ownerTransportHash(a)===ownerTransportHash(b);
-function bounded(v:unknown){if(Buffer.byteLength(canonical(v))>8*1024*1024)fail('OWNER_TRANSPORT_BYTE_BOUND');}
+function bounded(v:unknown){const encoded=canonical(v);if(Buffer.byteLength(encoded)>8*1024*1024)fail('OWNER_TRANSPORT_BYTE_BOUND');return encoded;}
 function publicKey(v:any){const key=createPublicKey(text(v,8192));if(key.asymmetricKeyType!=='ed25519')fail('OWNER_TRANSPORT_KEY_TYPE_INVALID');return key;}
 function signature(v:any){const encoded=text(v,256),bytes=Buffer.from(encoded,'base64');if(bytes.length!==64||bytes.toString('base64')!==encoded)fail('OWNER_TRANSPORT_SIGNATURE_ENCODING_INVALID');return bytes;}
 function scope(v:any){object(v);text(v.semanticOwner,128);if(![v.tenantId,v.principalId].every(id=>typeof id==='string'&&/^[a-f0-9-]{36}$/i.test(id)))fail('OWNER_TRANSPORT_SCOPE_INVALID');}
@@ -44,8 +45,8 @@ export async function ownerTransportRoute(identity:OwnerTransportScope,purpose:'
  scope(identity);const path=process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG;if(!path)return null;
  const root=process.env.FINNOR_S6_OWNER_TRANSPORT_ROOT;if(!root)fail('OWNER_TRANSPORT_ROOT_UNAVAILABLE');
  const config=object(JSON.parse((await privateFile(path)).toString()));keys(config,['policy','signature']);
- const policy=object(config.policy);bounded(policy);
- if(!verify(null,Buffer.from(canonical(policy)),publicKey(root),signature(config.signature)))fail('OWNER_TRANSPORT_CONFIGURATION_SIGNATURE_INVALID');
+ const policy=object(config.policy),encodedPolicy=bounded(policy);
+ if(!verify(null,Buffer.from(encodedPolicy),publicKey(root),signature(config.signature)))fail('OWNER_TRANSPORT_CONFIGURATION_SIGNATURE_INVALID');
  keys(policy,['schema','domain','validAfter','validUntil','routes']);
  if(policy.schema!=='finnor.s6.owner-transport-policy.v1'||!['DISPOSABLE_TEST_AUTHORITY','REVIEWED_PROTECTED_DOMAIN'].includes(policy.domain))fail('OWNER_TRANSPORT_POLICY_UNSUPPORTED');
  const now=Date.now(),after=time(policy.validAfter),until=time(policy.validUntil);
@@ -70,11 +71,16 @@ export async function ownerTransportRoute(identity:OwnerTransportScope,purpose:'
 }
 
 export function verifyOwnerDeliveryOrigin(route:OwnerTransportRoute,envelope:OwnerDeliveryEnvelope,encodedSignature:string){
- object(envelope);bounded(envelope);keys(envelope,['schema','semanticOwner','tenantId','principalId','kind','identity','payload','signedAt','originKeyId']);
+ verifyOwnerDeliveryOriginBytes(route,envelope,encodedSignature,bounded(envelope));
+}
+
+function verifyOwnerDeliveryOriginBytes(route:OwnerTransportRoute,envelope:OwnerDeliveryEnvelope,
+ encodedSignature:string,encodedEnvelope:string){
+ object(envelope);keys(envelope,['schema','semanticOwner','tenantId','principalId','kind','identity','payload','signedAt','originKeyId']);
  if(envelope.schema!=='finnor.s6.owner-delivery.v1'||!sameScope(route,envelope)||!['REFERENCE','EVENT'].includes(envelope.kind))fail('OWNER_ORIGIN_SCOPE_INVALID');
  text(envelope.identity);const signedAt=time(envelope.signedAt),key=route.originKeys.find(k=>k.id===envelope.originKeyId);
  if(!key||key.revoked||signedAt<time(key.validAfter)||signedAt>=time(key.validUntil)||signedAt>Date.now())fail('OWNER_ORIGIN_KEY_REVOKED_OR_UNAVAILABLE');
- if(!verify(null,Buffer.from(canonical(envelope)),publicKey(key.publicKey),signature(encodedSignature)))fail('OWNER_ORIGIN_SIGNATURE_INVALID');
+ if(!verify(null,Buffer.from(encodedEnvelope),publicKey(key.publicKey),signature(encodedSignature)))fail('OWNER_ORIGIN_SIGNATURE_INVALID');
  const payload=object(envelope.payload);let rights:any[];
  if(envelope.kind==='REFERENCE'){
   keys(payload,['reference','rightsRefs'],['sealed','relatedReferences']);const ref=object(payload.reference);keys(ref,['id','owner','version','contentDigest','content'],['digestEncoding']);
@@ -96,7 +102,9 @@ export async function signOwnerDeliveryOrigin(route:OwnerTransportRoute,input:Om
  const key=createPrivateKey(await privateFile(signer.path));const expected=route.originKeys.find(k=>k.id===signer.keyId);
  if(key.asymmetricKeyType!=='ed25519'||!expected||createPublicKey(key).export({type:'spki',format:'pem'}).toString()!==publicKey(expected.publicKey).export({type:'spki',format:'pem'}).toString())fail('OWNER_ORIGIN_SIGNER_MISMATCH');
  const envelope:OwnerDeliveryEnvelope={schema:'finnor.s6.owner-delivery.v1',...input,signedAt:new Date().toISOString(),originKeyId:signer.keyId};
- const encoded=sign(null,Buffer.from(canonical(envelope)),key).toString('base64');verifyOwnerDeliveryOrigin(route,envelope,encoded);
+ const encodedEnvelope=bounded(envelope);
+ const encoded=sign(null,Buffer.from(encodedEnvelope),key).toString('base64');
+ verifyOwnerDeliveryOriginBytes(route,envelope,encoded,encodedEnvelope);
  return {envelope,signature:encoded};
 }
 
@@ -106,11 +114,11 @@ function operationDeadline(route:OwnerTransportRoute,options:{deadlineAt?:number
  if(!Number.isFinite(requested)||requested<=now)fail('OWNER_TRANSPORT_LEASE_DEADLINE_EXCEEDED');
  return Math.min(requested-500,now+30000);
 }
-async function request(route:OwnerTransportRoute,path:string,body?:unknown,deadlineAt=Date.now()+route.requestTimeoutMs):Promise<Record<string,any>>{
+async function request(route:OwnerTransportRoute,path:string,body?:unknown,deadlineAt=Date.now()+route.requestTimeoutMs,timeoutMs=route.requestTimeoutMs):Promise<Record<string,any>>{
  if(Date.now()>=deadlineAt)fail('OWNER_TRANSPORT_LEASE_DEADLINE_EXCEEDED');
  const secret=await privateFile(route.tokenPath);if(bytesHash(secret)!==route.tokenSha256)fail('OWNER_TRANSPORT_TOKEN_CHANGED');
  const token=secret.toString();if(!/^[\x21-\x7e]{16,4096}$/.test(token))fail('OWNER_TRANSPORT_TOKEN_INVALID');
- const remaining=Math.min(route.requestTimeoutMs,deadlineAt-Date.now());
+ const remaining=Math.min(timeoutMs,deadlineAt-Date.now());
  if(remaining<=0)fail('OWNER_TRANSPORT_LEASE_DEADLINE_EXCEEDED');
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),remaining);
  try{
@@ -289,7 +297,7 @@ export async function readOwnerTransportEvent(identity:OwnerTransportScope,id:st
 export async function dispatchOwnerTransportRequest(identity:OwnerTransportScope,input:{request:Record<string,any>;authorization:Record<string,any>;delivery?:Record<string,any>},reconcile=false){
  if(identity.semanticOwner!=='S6')fail('DISPATCH_SEMANTIC_OWNER_REQUIRED');
  const transport=await ownerTransportRoute(identity)??fail('OWNER_TRANSPORT_ROUTE_UNAVAILABLE');
- const answer=await request(transport,reconcile?'/reconcile':'/dispatch',input,Date.now()+30000);
+ const answer=await request(transport,reconcile?'/reconcile':'/dispatch',input,Date.now()+GOVERNED_DISPATCH_RESPONSE_MS,GOVERNED_DISPATCH_RESPONSE_MS);
  if(!['VERIFIED','UNRESOLVED'].includes(answer.status)||!answer.receipt?.identity)fail('DISPATCH_RESPONSE_INVALID');
  const accepted=await readOwnerTransportEvent(identity,answer.receipt.identity),detail=accepted.event.detail;
  if(!same(accepted.receipt,answer.receipt)||accepted.receipt.protectedExecution!==true||accepted.receipt.semanticOwner!=='S6'||detail?.schema!=='finnor.s6.protected-execution.v1'||!same(detail.obligationRef,input.request.ir?.obligationRef)||!same(detail.requestRef,input.request.ref)||!same(detail.effectRef,input.request.ir?.effectRef))fail('DISPATCH_PROTECTED_EVENT_BINDING_INVALID');

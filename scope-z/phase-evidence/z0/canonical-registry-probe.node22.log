@@ -1,0 +1,1728 @@
+{
+  "evidenceClass": "source-runtime-enumeration-only",
+  "networkGuard": "Parent Node HTTP/HTTPS/fetch/socket calls throw; not a general child-process sandbox",
+  "node": "v22.23.4",
+  "vertical": "private_equity",
+  "total": 77,
+  "entries": [
+    {
+      "capability": "clarification_request",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "decision_receipt",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "search_web",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "provider_observation",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "computer_task",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "high",
+      "irreversible": true,
+      "requiredReferences": [
+        "authProfileRef",
+        "target"
+      ],
+      "effectClass": "EXTERNAL_SIDE_EFFECT",
+      "observationStrategy": "business_effect",
+      "reversibility": "irreversible",
+      "supportedRecoveryModes": [
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": true,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "send_message",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "high",
+      "irreversible": true,
+      "requiredReferences": [
+        "recipient"
+      ],
+      "effectClass": "EXTERNAL_SIDE_EFFECT",
+      "observationStrategy": "business_effect",
+      "reversibility": "irreversible",
+      "supportedRecoveryModes": [
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": true,
+      "authorityRequirement": "approval"
+    },
+    {
+      "capability": "place_call",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "high",
+      "irreversible": true,
+      "requiredReferences": [
+        "recipient"
+      ],
+      "effectClass": "EXTERNAL_SIDE_EFFECT",
+      "observationStrategy": "business_effect",
+      "reversibility": "irreversible",
+      "supportedRecoveryModes": [
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": true,
+      "authorityRequirement": "approval"
+    },
+    {
+      "capability": "request_acknowledgement",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "recipient"
+      ],
+      "effectClass": "INTERNAL_WRITE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "notify_group",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "high",
+      "irreversible": true,
+      "requiredReferences": [
+        "teamRef"
+      ],
+      "effectClass": "BATCH_EXTERNAL",
+      "observationStrategy": "business_effect",
+      "reversibility": "irreversible",
+      "supportedRecoveryModes": [
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": true,
+      "authorityRequirement": "typed_approval"
+    },
+    {
+      "capability": "create_task",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "subjectRef"
+      ],
+      "effectClass": "INTERNAL_WRITE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "assign_task",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "assigneeRef",
+        "taskRef"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "approval"
+    },
+    {
+      "capability": "update_task",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "taskRef"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "approval"
+    },
+    {
+      "capability": "handoff_work",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "targetEmployeeRef",
+        "workRef"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "approval"
+    },
+    {
+      "capability": "delegate_objective",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "high",
+      "irreversible": false,
+      "requiredReferences": [
+        "targetRef",
+        "workRef"
+      ],
+      "effectClass": "DURABLE_WORKFLOW",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "approval"
+    },
+    {
+      "capability": "escalate_work",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "delegationRef"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "approval"
+    },
+    {
+      "capability": "cancel_delegation",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "delegationRef"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "approval"
+    },
+    {
+      "capability": "schedule_internal_event",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "approval"
+    },
+    {
+      "capability": "reschedule_internal_event",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "internalEventRef"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "approval"
+    },
+    {
+      "capability": "share_document",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "high",
+      "irreversible": true,
+      "requiredReferences": [
+        "documentRef",
+        "recipient"
+      ],
+      "effectClass": "EXTERNAL_SIDE_EFFECT",
+      "observationStrategy": "business_effect",
+      "reversibility": "irreversible",
+      "supportedRecoveryModes": [
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": true,
+      "authorityRequirement": "approval"
+    },
+    {
+      "capability": "execute_closing_operation",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "high",
+      "irreversible": true,
+      "requiredReferences": [
+        "dealId",
+        "programmeId"
+      ],
+      "effectClass": "EXTERNAL_SPEND",
+      "observationStrategy": "business_effect",
+      "reversibility": "irreversible",
+      "supportedRecoveryModes": [
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": true,
+      "authorityRequirement": "typed_approval"
+    },
+    {
+      "capability": "create_underwriting_run",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "investmentCaseId",
+        "modelVersionId"
+      ],
+      "effectClass": "INTERNAL_WRITE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "open_ic_case",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "high",
+      "irreversible": false,
+      "requiredReferences": [
+        "committeeConfigVersionId",
+        "dealId",
+        "investmentCaseId"
+      ],
+      "effectClass": "DURABLE_WORKFLOW",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "approval"
+    },
+    {
+      "capability": "begin_ic_preparation",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "icCaseId"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "create_ic_deck_draft",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "icCaseId",
+        "templateVersionId"
+      ],
+      "effectClass": "INTERNAL_DRAFT",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "create_ic_memo_draft",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "icCaseId"
+      ],
+      "effectClass": "INTERNAL_DRAFT",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "select_ic_memo_version",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "documentId",
+        "documentVersionId",
+        "icCaseId"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "approval"
+    },
+    {
+      "capability": "select_ic_underwriting_run",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "icCaseId",
+        "underwritingRunId"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "approval"
+    },
+    {
+      "capability": "create_ic_question",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "icCaseId"
+      ],
+      "effectClass": "INTERNAL_WRITE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "attach_ic_question_evidence",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "icCaseId",
+        "questionId"
+      ],
+      "effectClass": "INTERNAL_WRITE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "request_ic_memo_review",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "icCaseId"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "prepare_ic_recommendation",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "icCaseId",
+        "memoId",
+        "underwritingRunId"
+      ],
+      "effectClass": "INTERNAL_DRAFT",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "satisfy_ic_condition",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "conditionId",
+        "dealId",
+        "icCaseId"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "prepare_ic_decision_proposal",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "icCaseId"
+      ],
+      "effectClass": "INTERNAL_DRAFT",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "open_workstream",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId"
+      ],
+      "effectClass": "INTERNAL_WRITE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "create_deal_request",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "requestedFromDealPartyId",
+        "workstreamId"
+      ],
+      "effectClass": "INTERNAL_WRITE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "submit_deliverable",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "deliverableId"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "record_finding",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "workstreamId"
+      ],
+      "effectClass": "INTERNAL_WRITE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "resolve_finding",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "findingId"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "raise_deal_risk",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "workstreamId"
+      ],
+      "effectClass": "INTERNAL_WRITE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "resolve_deal_risk",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "dealRiskId"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "link_deal_dependency",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "mark_dependency_resolved",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "dependencyId"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "create_closing_condition",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId",
+        "workstreamId"
+      ],
+      "effectClass": "INTERNAL_WRITE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "submit_condition_evidence",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "closingConditionId",
+        "dealId",
+        "evidenceSourceId"
+      ],
+      "effectClass": "INTERNAL_WRITE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "satisfy_closing_condition",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "closingConditionId",
+        "dealId"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "waive_closing_condition",
+      "kind": "action",
+      "modelProposable": false,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "closingConditionId",
+        "dealId"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "approval"
+    },
+    {
+      "capability": "verify_closing_item",
+      "kind": "action",
+      "modelProposable": false,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "closingItemId",
+        "dealId"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "declare_deal_closed",
+      "kind": "action",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId"
+      ],
+      "effectClass": "OPERATIONAL_CHANGE",
+      "observationStrategy": "business_effect",
+      "reversibility": "unknown_provider_dependent",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "typed_approval"
+    },
+    {
+      "capability": "configure_ic_committee",
+      "kind": "action",
+      "modelProposable": false,
+      "available": false,
+      "health": "unavailable",
+      "risk": "high",
+      "irreversible": true,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "objective_success",
+      "reversibility": "irreversible",
+      "supportedRecoveryModes": [
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "human_attestation"
+    },
+    {
+      "capability": "record_ic_vote",
+      "kind": "action",
+      "modelProposable": false,
+      "available": false,
+      "health": "unavailable",
+      "risk": "high",
+      "irreversible": true,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "objective_success",
+      "reversibility": "irreversible",
+      "supportedRecoveryModes": [
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "human_attestation"
+    },
+    {
+      "capability": "cast_ic_vote",
+      "kind": "action",
+      "modelProposable": false,
+      "available": false,
+      "health": "unavailable",
+      "risk": "high",
+      "irreversible": true,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "objective_success",
+      "reversibility": "irreversible",
+      "supportedRecoveryModes": [
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "human_attestation"
+    },
+    {
+      "capability": "record_ic_dissent",
+      "kind": "action",
+      "modelProposable": false,
+      "available": false,
+      "health": "unavailable",
+      "risk": "high",
+      "irreversible": true,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "objective_success",
+      "reversibility": "irreversible",
+      "supportedRecoveryModes": [
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "human_attestation"
+    },
+    {
+      "capability": "waive_ic_question",
+      "kind": "action",
+      "modelProposable": false,
+      "available": false,
+      "health": "unavailable",
+      "risk": "high",
+      "irreversible": true,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "objective_success",
+      "reversibility": "irreversible",
+      "supportedRecoveryModes": [
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "human_attestation"
+    },
+    {
+      "capability": "waive_ic_condition",
+      "kind": "action",
+      "modelProposable": false,
+      "available": false,
+      "health": "unavailable",
+      "risk": "high",
+      "irreversible": true,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "objective_success",
+      "reversibility": "irreversible",
+      "supportedRecoveryModes": [
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "human_attestation"
+    },
+    {
+      "capability": "open_ic_voting",
+      "kind": "action",
+      "modelProposable": false,
+      "available": false,
+      "health": "unavailable",
+      "risk": "high",
+      "irreversible": true,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "objective_success",
+      "reversibility": "irreversible",
+      "supportedRecoveryModes": [
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "human_attestation"
+    },
+    {
+      "capability": "close_ic_voting",
+      "kind": "action",
+      "modelProposable": false,
+      "available": false,
+      "health": "unavailable",
+      "risk": "high",
+      "irreversible": true,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "objective_success",
+      "reversibility": "irreversible",
+      "supportedRecoveryModes": [
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "human_attestation"
+    },
+    {
+      "capability": "finalize_ic_decision",
+      "kind": "action",
+      "modelProposable": false,
+      "available": false,
+      "health": "unavailable",
+      "risk": "high",
+      "irreversible": true,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "objective_success",
+      "reversibility": "irreversible",
+      "supportedRecoveryModes": [
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "human_attestation"
+    },
+    {
+      "capability": "execute_economic_right_transition",
+      "kind": "action",
+      "modelProposable": false,
+      "available": false,
+      "health": "unavailable",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "theoryRef",
+        "programmeId",
+        "reservationRef"
+      ],
+      "effectClass": "INTERNAL_WRITE",
+      "observationStrategy": "business_effect",
+      "reversibility": "compensatable",
+      "supportedRecoveryModes": [
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "query:work_list",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:attention_queue",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:agent_activity",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:workforce_status",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:company_context",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:party_lookup",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:party_context",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:team_roster",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:pe_world_state",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [
+        "root"
+      ],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:deal_context",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId"
+      ],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:deal_workstreams",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId"
+      ],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:open_requests",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId"
+      ],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:open_findings",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId"
+      ],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:open_deal_risks",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId"
+      ],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:critical_dependencies",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId"
+      ],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:closing_readiness",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [
+        "dealId"
+      ],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:harness_program_v1",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [
+        "workId",
+        "programId"
+      ],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:economic_programme_v1",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [
+        "workId",
+        "programmeId"
+      ],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "query:confidential_economic_computation_v1",
+      "kind": "query",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [
+        "workId"
+      ],
+      "effectClass": null,
+      "observationStrategy": "operational_query",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "retry",
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    },
+    {
+      "capability": "wait:event",
+      "kind": "wait",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "medium",
+      "irreversible": false,
+      "requiredReferences": [
+        "correlation"
+      ],
+      "effectClass": null,
+      "observationStrategy": "integration_event",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "replan",
+        "recover",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "policy"
+    },
+    {
+      "capability": "check:objective_success",
+      "kind": "check",
+      "modelProposable": true,
+      "available": true,
+      "health": "available",
+      "risk": "low",
+      "irreversible": false,
+      "requiredReferences": [
+        "criterionId"
+      ],
+      "effectClass": null,
+      "observationStrategy": "objective_success",
+      "reversibility": "read_only",
+      "supportedRecoveryModes": [
+        "replan",
+        "escalate"
+      ],
+      "externalSideEffect": false,
+      "authorityRequirement": "query"
+    }
+  ]
+}

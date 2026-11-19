@@ -1,0 +1,22 @@
+{
+  "model": "gpt-6.1-sol",
+  "reasoningEffort": "max",
+  "missionOrchestratorModel": "gpt-6.1-sol",
+  "missionOrchestratorReasoningEffort": "max",
+  "missionModelSettings": {
+    "workerModel": "gpt-6.1-sol",
+    "workerReasoningEffort": "max",
+    "validationWorkerModel": "gpt-6.1-sol",
+    "validationWorkerReasoningEffort": "max",
+    "skipScrutiny": false,
+    "skipUserTesting": false
+  },
+  "subagentModelSettings": {
+    "lightModel": "gpt-6.1-sol",
+    "lightReasoningEffort": "max",
+    "mediumModel": "gpt-6.1-sol",
+    "mediumReasoningEffort": "max",
+    "heavyModel": "gpt-6.1-sol",
+    "heavyReasoningEffort": "max"
+  }
+}

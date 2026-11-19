@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import pg from "pg";
 import { randomUUID } from "node:crypto";
 import { migrate } from "../../packages/db/migrate";
-import { workCases } from "../../packages/read-models";
+import { workCases, workCasesPage } from "../../packages/read-models";
 import {
   actionLog,
   businessEvents,
@@ -22,6 +22,7 @@ import {
   voiceTurns,
   withTenant,
   works,
+  users,
   workflowRuns,
   workflowSteps,
 } from "@finnor/db";
@@ -35,6 +36,8 @@ const TENANT_ID = randomUUID();
 const OTHER_TENANT_ID = randomUUID();
 const HOUSEHOLD_ID = randomUUID();
 const INVOICE_ID = randomUUID();
+const OWNER_ID = randomUUID();
+const PEER_ID = randomUUID();
 const INSTRUCTION_A = randomUUID();
 const INSTRUCTION_B = randomUUID();
 const INSTRUCTION_C = randomUUID();
@@ -64,7 +67,7 @@ const available = await dbUp();
 
 function request(query = ""): Request {
   return new Request(`http://localhost/api/read-models/work-cases${query}`, {
-    headers: { "x-tenant-id": TENANT_ID, "x-user-role": "owner" },
+    headers: { "x-tenant-id": TENANT_ID, "x-user-role": "owner", "x-user-id": OWNER_ID },
   });
 }
 
@@ -79,6 +82,10 @@ describe.skipIf(!available)("P2.T1 Work correlation + derived projection", () =>
     await withTenant(TENANT_ID, async (db) => {
       await db.insert(tenants).values({ id: TENANT_ID, name: "P2 T1 Work Correlation" }).onConflictDoNothing();
       await db.insert(tenants).values({ id: OTHER_TENANT_ID, name: "P2 T1 Other Tenant" }).onConflictDoNothing();
+      await db.insert(users).values([
+        { id: OWNER_ID, tenantId: TENANT_ID, email: `case-owner-${OWNER_ID}@example.test`, role: "owner" },
+        { id: PEER_ID, tenantId: TENANT_ID, email: `case-peer-${PEER_ID}@example.test`, role: "dispatcher" },
+      ]);
       await db.insert(instructionSessions).values([
         { id: INSTRUCTION_A, tenantId: TENANT_ID, instructionText: "Prepare Henderson service and payment follow-up", source: "typed" },
         { id: INSTRUCTION_B, tenantId: TENANT_ID, instructionText: "Follow up with the Henderson household", source: "typed" },
@@ -176,50 +183,71 @@ describe.skipIf(!available)("P2.T1 Work correlation + derived projection", () =>
     expect((await GET(new Request("http://localhost/api/read-models/work-cases"), { params: Promise.resolve({ view: "work-cases" }) })).status).toBe(401);
     const response = await GET(request(), { params: Promise.resolve({ view: "work-cases" }) });
     expect(response.status).toBe(200);
-    expect((await response.json() as { data: WorkCaseProjection[] }).data.some((item) => item.root.id === INSTRUCTION_A)).toBe(true);
+    const scoped = await response.json() as { data: WorkCaseProjection[]; page: { rootScope: string } };
+    expect(scoped.data).toEqual([]);
+    expect(scoped.page.rootScope).toBe("canonical_work");
+    expect(JSON.stringify(scoped)).not.toContain("Henderson");
   });
 
-  it("paginates bounded legacy roots and reports its completeness contract", async () => {
-    const first = await GET(request("?limit=2"), { params: Promise.resolve({ view: "work-cases" }) });
-    expect(first.status).toBe(200);
-    const firstBody = await first.json() as {
-      data: WorkCaseProjection[];
-      page: { limit: number; hasMore: boolean; nextCursor: string | null; rootScope: string; childRowsTruncated: boolean };
-    };
-    expect(firstBody.data).toHaveLength(2);
-    expect(firstBody.page).toMatchObject({ limit: 2, hasMore: true, rootScope: "legacy_instruction", childRowsTruncated: false });
-    expect(firstBody.page.nextCursor).toEqual(expect.any(String));
+  it("preserves bounded legacy paging internally without exposing unowned history through HTTP", async () => {
+    const first = await workCasesPage(TENANT_ID, { limit: 2 });
+    expect(first.items).toHaveLength(2);
+    expect(first.page).toMatchObject({ limit: 2, hasMore: true, rootScope: "legacy_instruction", childRowsTruncated: false });
+    expect(first.page.nextCursor).toEqual(expect.any(String));
 
-    const second = await GET(request(`?limit=2&cursor=${encodeURIComponent(firstBody.page.nextCursor!)}`), { params: Promise.resolve({ view: "work-cases" }) });
-    const secondBody = await second.json() as { data: WorkCaseProjection[]; page: { hasMore: boolean; nextCursor: string | null } };
-    expect(secondBody.data).toHaveLength(1);
-    expect(secondBody.page).toMatchObject({ hasMore: false, nextCursor: null });
-    expect(new Set([...firstBody.data, ...secondBody.data].map((item) => item.id)).size).toBe(3);
+    const second = await workCasesPage(TENANT_ID, { limit: 2, cursor: first.page.nextCursor! });
+    expect(second.items).toHaveLength(1);
+    expect(second.page).toMatchObject({ hasMore: false, nextCursor: null });
+    expect(new Set([...first.items, ...second.items].map(item => item.id)).size).toBe(3);
   });
 
-  it("continues from canonical Work into legacy history without hiding either scope", async () => {
-    const [work] = await withTenant(TENANT_ID, (db) => db.insert(works).values({
-      tenantId: TENANT_ID,
-      initialChannel: "text",
-      initialInstruction: "Canonical root before legacy history",
+  it("preserves internal legacy fallthrough but lets employees see only participating Work", async () => {
+    const secret = `case-private-${randomUUID()}`;
+    const [work] = await withTenant(TENANT_ID, db => db.insert(works).values({
+      tenantId: TENANT_ID, createdBy: OWNER_ID, currentOwnerId: OWNER_ID,
+      initialChannel: "text", initialInstruction: "Canonical root before legacy history",
       status: "executing",
     }).returning());
-    const canonical = await GET(request("?limit=1"), { params: Promise.resolve({ view: "work-cases" }) });
-    const canonicalBody = await canonical.json() as {
-      data: WorkCaseProjection[];
-      page: { rootScope: string; hasMore: boolean; nextCursor: string | null };
-    };
-    expect(canonicalBody.data.map((item) => item.root.id)).toEqual([work!.id]);
-    expect(canonicalBody.page).toMatchObject({ rootScope: "canonical_work", hasMore: true });
+    const internal = await workCasesPage(TENANT_ID, { limit: 1 });
+    expect(internal.items.map(item => item.root.id)).toEqual([work!.id]);
+    expect(internal.page).toMatchObject({ rootScope: "canonical_work", hasMore: true });
+    const legacy = await workCasesPage(TENANT_ID, { limit: 1, cursor: internal.page.nextCursor! });
+    expect(legacy.page.rootScope).toBe("legacy_instruction");
+    expect(legacy.items[0]?.root.kind).toBe("instruction");
 
-    const legacy = await GET(request(`?limit=1&cursor=${encodeURIComponent(canonicalBody.page.nextCursor!)}`), { params: Promise.resolve({ view: "work-cases" }) });
-    const legacyBody = await legacy.json() as { data: WorkCaseProjection[]; page: { rootScope: string } };
-    expect(legacyBody.page.rootScope).toBe("legacy_instruction");
-    expect(legacyBody.data[0]?.root.kind).toBe("instruction");
-    // Operational deltas are append-only and may retain this Work as provenance.
-    // The isolated test database owns the fixture lifecycle; deleting Work would
-    // attempt to rewrite that immutable audit record through ON DELETE SET NULL.
+    const foreign = await withTenant(TENANT_ID, db => db.insert(works).values({
+      tenantId: TENANT_ID, createdBy: PEER_ID, currentOwnerId: PEER_ID,
+      initialChannel: "text", initialInstruction: secret, status: "received",
+    }).returning());
+    const owner = await GET(request("?limit=100"), { params: Promise.resolve({ view: "work-cases" }) });
+    const ownerPage = await owner.json() as { data: WorkCaseProjection[]; page: { rootScope: string } };
+    expect(ownerPage.page.rootScope).toBe("canonical_work");
+    expect(owner.headers.get("cache-control")).toBe("private, no-store");
+    expect(ownerPage.data.map(item => item.root.id)).toContain(work!.id);
+    expect(ownerPage.data.map(item => item.root.id)).not.toContain(foreign[0]!.id);
+    expect(JSON.stringify(ownerPage)).not.toContain(secret);
+
+    const peerRequest = new Request("http://localhost/api/read-models/work-cases", {
+      headers: { "x-tenant-id": TENANT_ID, "x-user-id": PEER_ID, "x-user-role": "owner" },
+    });
+    const peerResponse = await GET(peerRequest, { params: Promise.resolve({ view: "work-cases" }) });
+    const peerPage = await peerResponse.json() as { data: WorkCaseProjection[] };
+    expect(peerPage.data.map(item => item.root.id)).toContain(foreign[0]!.id);
+    expect(peerPage.data.map(item => item.root.id)).not.toContain(work!.id);
+
+    // An explicit assignment is a valid existing Work relationship.
+    await withTenant(TENANT_ID, db => db.update(works).set({ assignedTo: OWNER_ID }).where(eq(works.id, foreign[0]!.id)));
+    const assigned = await GET(request("?limit=100"), { params: Promise.resolve({ view: "work-cases" }) });
+    const assignedPage = await assigned.json() as { data: WorkCaseProjection[] };
+    expect(assignedPage.data.map(item => item.root.id)).toContain(foreign[0]!.id);
+
+    await withTenant(TENANT_ID, db => db.update(users).set({ status: "suspended" }).where(eq(users.id, PEER_ID)));
+    const suspended = await GET(peerRequest, { params: Promise.resolve({ view: "work-cases" }) });
+    expect((await suspended.json() as { data: WorkCaseProjection[] }).data).toEqual([]);
+    await withTenant(TENANT_ID, db => db.update(users).set({ status: "active" }).where(eq(users.id, PEER_ID)));
+    // Historical internal retention is untouched. No destructive cleanup of audit truth.
   });
+
 });
 
 type WorkCaseProjection = Awaited<ReturnType<typeof workCases>>[number];

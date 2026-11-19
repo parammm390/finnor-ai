@@ -1,0 +1,164 @@
+name: Phase W shared-company actual native owners, controlled DEV only
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  native:
+    name: "Run shared-company native owners"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 185
+    env:
+      AUTH_DEV_BYPASS: "0"
+      NEXT_TELEMETRY_DISABLED: "1"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    steps:
+      - name: Create private declared preparation assets
+        timeout-minutes: 1
+        run: |
+          set -euo pipefail
+          umask 077
+          home="$RUNNER_TEMP/phase-w-home"
+          assets="$RUNNER_TEMP/phase-w-assets"
+          install -d -m 700 "$home" "$assets/uv-cache" "$assets/python" "$assets/python-bin" "$assets/npm"
+          {
+            printf 'HOME=%s\n' "$home"
+            printf 'FINNOR_W3_UV=%s\n' "$assets/uv"
+            printf 'UV_CACHE_DIR=%s\n' "$assets/uv-cache"
+            printf 'UV_PYTHON_INSTALL_DIR=%s\n' "$assets/python"
+            printf 'UV_PYTHON_BIN_DIR=%s\n' "$assets/python-bin"
+            printf 'npm_config_cache=%s\n' "$assets/npm"
+          } >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 5
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require the exact caller-selected committed cut
+        timeout-minutes: 1
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        timeout-minutes: 5
+        with:
+          node-version: 22.22.3
+      - name: Acquire exact root dependencies
+        timeout-minutes: 5
+        run: npm ci --no-audit --no-fund
+      - name: Acquire exact backend dependencies
+        timeout-minutes: 5
+        run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Prepare both exact existing scientific populations
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          umask 077
+          uv_container="$(docker create ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb02acbac4c69920fe9d278f82)"
+          trap 'docker rm "$uv_container" >/dev/null' EXIT
+          docker cp "$uv_container:/uv" "$FINNOR_W3_UV"
+          "$FINNOR_W3_UV" python install 3.11.15 3.12.13
+          "$FINNOR_W3_UV" venv --python 3.11.15 "$RUNNER_TEMP/phase-w-s3"
+          "$FINNOR_W3_UV" venv --python 3.12.13 "$RUNNER_TEMP/phase-w-s5"
+          "$FINNOR_W3_UV" pip sync --link-mode copy --only-binary :all: --python "$RUNNER_TEMP/phase-w-s3/bin/python" finnor-os/scripts/postz/w3/requirements-s3.lock
+          "$FINNOR_W3_UV" pip sync --link-mode copy --require-hashes --only-binary :all: --python "$RUNNER_TEMP/phase-w-s5/bin/python" finnor-os/scripts/postz-w1/requirements-native.txt
+      - name: Prepare the existing disposable fixed-root S6 callee
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          cc -std=c11 -O2 -Wall -Wextra -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -Wl,-z,relro,-z,now -o "$RUNNER_TEMP/phase-w-linux-launcher" finnor-os/packages/governed-execution/native/linux-launcher.c -lcrypto
+          node_path="$(command -v node)"
+          architecture="$(node -p process.arch)"
+          sudo "$node_path" finnor-os/scripts/r3/package-linux-jail.mjs "$node_path" "$RUNNER_TEMP/phase-w-linux-launcher" "/opt/finnor-s6-jail-$architecture"
+      - name: Verify the existing actual S6 isolation boundary
+        timeout-minutes: 4
+        working-directory: finnor-os
+        env:
+          FINNOR_S6_EXECUTOR_EVIDENCE_DIR: ${{ runner.temp }}/phase-w-executor
+        run: |
+          set -euo pipefail
+          timeout --signal=TERM --kill-after=30s 180s node --import=tsx scripts/s6/run-executor-e2e.mts
+      - name: Check complete owner and combined-driver types under original bounds
+        id: owner_types
+        timeout-minutes: 6
+        working-directory: finnor-os
+        run: |
+          set -euo pipefail
+          umask 077
+          timeout --signal=TERM --kill-after=30s 300s node --max-old-space-size=128 scripts/postz/w3/typecheck.mjs --project "$GITHUB_WORKSPACE/finnor-os/scripts/postz/w3/tsconfig.json" --output "$RUNNER_TEMP/phase-w-types"
+      - name: Run the exact combined native interface under its frozen aggregate bound
+        id: native_run
+        timeout-minutes: 121
+        working-directory: finnor-os
+        env:
+          FINNOR_S3_PYTHON: ${{ runner.temp }}/phase-w-s3/bin/python
+          FINNOR_S5_PYTHON: ${{ runner.temp }}/phase-w-s5/bin/python
+          FINNOR_TEST_PYTHON: ${{ runner.temp }}/phase-w-s5/bin/python
+        run: |
+          set -euo pipefail
+          umask 077
+          timeout --signal=TERM --kill-after=30s 7200s node --import=tsx scripts/postz/w3/native.mts --integrated-company --output "$RUNNER_TEMP/phase-w-native"
+      - name: Independently require every fixed native output and consumption receipt
+        id: native_receipts
+        timeout-minutes: 3
+        working-directory: finnor-os
+        run: |
+          set -euo pipefail
+          node --max-old-space-size=256 scripts/postz/phase-w-ci/verify-native-evidence.mjs --source "$GITHUB_WORKSPACE" --output "$RUNNER_TEMP/phase-w-native" --sha "$GITHUB_SHA"
+      - name: Independently stage only fixed-shape public native and type projections
+        id: stage_public
+        if: ${{ always() }}
+        timeout-minutes: 3
+        working-directory: finnor-os
+        env:
+          NATIVE_OUTCOME: ${{ steps.native_run.outcome }}
+          VERIFIER_OUTCOME: ${{ steps.native_receipts.outcome }}
+          TYPES_OUTCOME: ${{ steps.owner_types.outcome }}
+        run: |
+          set -euo pipefail
+          umask 077
+          node --max-old-space-size=256 scripts/postz/phase-w-ci/stage-native-evidence.mjs \
+            --source "$GITHUB_WORKSPACE" --output "$RUNNER_TEMP/phase-w-native" \
+            --types-output "$RUNNER_TEMP/phase-w-types" --staging "$RUNNER_TEMP/phase-w-native-public" \
+            --sha "$GITHUB_SHA" --native-outcome "$NATIVE_OUTCOME" \
+            --verifier-outcome "$VERIFIER_OUTCOME" --types-outcome "$TYPES_OUTCOME"
+      - name: Require actual staged native and complete-program type PASS
+        id: public_verdict
+        if: ${{ always() }}
+        timeout-minutes: 1
+        env:
+          STAGING_RESULT: ${{ steps.stage_public.outcome }}
+          NATIVE_STATUS: ${{ steps.stage_public.outputs.native_status }}
+          TYPES_STATUS: ${{ steps.stage_public.outputs.types_status }}
+        run: |
+          set -euo pipefail
+          test "$STAGING_RESULT" = success
+          test "$NATIVE_STATUS" = PASS_CONTROLLED_NATIVE_RECEIPTS
+          test "$TYPES_STATUS" = PASS_COMPLETE_PROGRAM_DIAGNOSTICS
+      - name: Check exact committed source preservation
+        if: ${{ always() }}
+        timeout-minutes: 1
+        run: |
+          set -euo pipefail
+          git diff --exit-code
+          test -z "$(git ls-files --others --exclude-standard)"
+      - name: Retain only the independently sanitized native CI projection
+        if: ${{ always() && steps.stage_public.outcome == 'success' }}
+        timeout-minutes: 5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: phase-w-native-controlled-dev-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/phase-w-native-public/native-ci-public.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain only the separate sanitized type status and receipt hash
+        if: ${{ always() && steps.stage_public.outcome == 'success' }}
+        timeout-minutes: 5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: phase-w-native-types-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/phase-w-native-public/types-ci-public.json
+          if-no-files-found: error
+          retention-days: 7

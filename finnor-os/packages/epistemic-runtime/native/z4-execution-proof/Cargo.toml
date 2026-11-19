@@ -1,0 +1,26 @@
+[package]
+name = "finnor-z4-execution-proof"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+publish = false
+license = "MIT"
+
+[workspace]
+
+[[bin]]
+name = "z4-field-falsifier"
+path = "src/field_falsifier.rs"
+
+[dependencies]
+nova-snark = { git = "https://github.com/microsoft/Nova", rev = "01b1e2d662a847ed7029770ecbaf6687398899dd", default-features = false }
+ff = "=0.13.1"
+serde = { version = "=1.0.228", features = ["derive"] }
+serde_json = "=1.0.149"
+sha2 = "=0.10.9"
+hex = "=0.4.3"
+bincode = { version = "=2.0.1", features = ["serde", "std"] }
+
+[profile.release]
+codegen-units = 1
+lto = "thin"

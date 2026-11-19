@@ -1,0 +1,94 @@
+name: "W2 - Run a payment settlement scenario"
+on:
+  workflow_call:
+    inputs:
+      episode:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  run:
+    name: "Payment settlement - Verify original comparison"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Verify exact forward and baseline owner source before setup
+        run: python3 -B finnor-os/scripts/postz-w2/run-compensation-pair.py --check-preimages
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Prepare exact locked scientific runtime
+        run: |
+          set -euo pipefail
+          umask 077
+          w2_uv_container="$(docker create ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb02acbac4c69920fe9d278f82)"
+          trap 'docker rm "$w2_uv_container" >/dev/null' EXIT
+          docker cp "$w2_uv_container:/uv" "$RUNNER_TEMP/w2-uv"
+          "$RUNNER_TEMP/w2-uv" python install 3.12.13
+          "$RUNNER_TEMP/w2-uv" venv --python 3.12.13 "$RUNNER_TEMP/w2-scientific"
+          "$RUNNER_TEMP/w2-uv" pip sync --require-hashes --only-binary :all: --python "$RUNNER_TEMP/w2-scientific/bin/python" finnor-os/scripts/postz-w1/requirements-native.txt
+      - name: Check the complete W2 owner and driver types
+        # The complete merged import closure measures about 2.5 GiB in tsc.
+        # This compiler process exits before native-owner resource accounting.
+        run: node --max-old-space-size=3072 finnor-os/node_modules/typescript/bin/tsc -p finnor-os/scripts/postz-w2/tsconfig.native.json
+      - name: Verify all existing reader plans and confidentiality boundaries
+        working-directory: finnor-os
+        run: node --import=tsx scripts/audits/verify-reader-policy-plans.mts "$RUNNER_TEMP/w2-reader-policies"
+      - name: Verify canonical Work completion preserves later instructions
+        timeout-minutes: 3
+        working-directory: finnor-os
+        run: node --import=tsx scripts/audits/verify-workforce-completion.mjs "$RUNNER_TEMP/w2-work-completion.json"
+      - name: Retain canonical Work completion proof
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: w2-work-completion-${{ inputs.episode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/w2-work-completion.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain rolled-back reader-policy proof
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: w2-reader-policies-${{ inputs.episode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/w2-reader-policies/result.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Exercise registered original and repaired receiving-owner joins
+        env:
+          FINNOR_COMPENSATION_EPISODE: ${{ inputs.episode }}
+          FINNOR_W2_CUT_SECTION_DIAGNOSTIC: ${{ (github.ref_name == 'codex/w2-cut-section-diagnostics-20261114' || github.ref_name == 'codex/zw-integration-quality-20261115') && '1' || '0' }}
+        run: python3 finnor-os/scripts/postz-w2/run-compensation-pair.py --episode "$FINNOR_COMPENSATION_EPISODE" --python "$RUNNER_TEMP/w2-scientific/bin/python" --output "$RUNNER_TEMP/w2-compensation"
+      - name: Check exact source restoration
+        if: ${{ always() }}
+        run: git diff --exit-code
+      - name: Verify operational heartbeat isolation and all business fences
+        if: ${{ always() && inputs.episode == 'after-exact' }}
+        working-directory: finnor-os
+        run: node --import=tsx scripts/v3/closing-read-contention.e2e.mts "$RUNNER_TEMP/w2-compensation/owner" "$RUNNER_TEMP/w2-controller-lease" lease
+      - name: Retain finite lease-boundary receipt
+        if: ${{ always() && inputs.episode == 'after-exact' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: w2-controller-lease-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/w2-controller-lease/result.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Retain controlled owner comparison without private runtime files
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: w2-compensation-${{ inputs.episode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/w2-compensation/report/
+          if-no-files-found: error
+          retention-days: 7

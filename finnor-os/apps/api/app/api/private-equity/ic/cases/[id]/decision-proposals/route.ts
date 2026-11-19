@@ -1,4 +1,4 @@
-import { prepareIcDecisionProposal } from "@finnor/private-equity";
+import { prepareIcDecisionProposal } from "../../../../../../../../../packages/private-equity/src/ic-repository";
 import { handleIcPost, IcDecisionProposalSchema, IcUuidSchema } from "../../../../../../../lib/ic";
 
 export const runtime = "nodejs";

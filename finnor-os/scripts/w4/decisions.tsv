@@ -1,0 +1,6 @@
+ts	phase	decision	why	evidence	result
+2026-11-01T00:00:00Z	frame	Use the coordinator-approved exact cumulative base and isolated worktree	Preserve active user and peer work	cecec15d64fe8f8fb63a5a29b98979f978ba6138	approved isolated tree
+2026-11-01T00:00:00Z	design	Keep core external identities and S1/S5/S6/S7 as owners	Retired Water commerce tables are not a lawful new CRM	packages/db/migrations/0109_atomic_water_runtime_retirement.sql	selected
+2026-11-01T00:00:00Z	verification	Record the failure model and finite acceptance before critical code	An artifact name cannot establish customer demand	scripts/w4/failure-model.md	NOT_RUN
+2026-11-01T01:04:32.155Z	correction	The first three rows used placeholder midnight timestamps, not observed event times	Do not present placeholders as measured chronology	Original timestamps retained in this append-only trail	Historical times unknown; this correction uses an observed timestamp
+2026-11-01T01:04:32.155Z	verification	Use the complete original TypeScript project with all owned and shared semantic targets	Ad-hoc compiler flags are not the project configuration	/tmp/w4-full-context-types-002/report.json	PASS scoped semantics: 4575 files, 1568 configured roots, 25 targets, zero diagnostics; native/mounted/field not established

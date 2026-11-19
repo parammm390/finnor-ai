@@ -2,7 +2,15 @@ import {randomUUID} from 'node:crypto';
 import type {PoolClient} from 'pg';
 import {executionDeadlineMilliseconds} from '@finnor/db';
 import type {BeliefViewPin,EconomicMandate,ExperimentRef} from '@finnor/shared-types';
-import {parseEconomicMandate,parseExactInformationModel,ControlFraction as Q,controlBytesDigest,epistemicHash,ExactControlError,allocationNumber} from '@finnor/epistemic-runtime';
+import { parseEconomicMandate } from '../../../epistemic-runtime/src/control-contracts';
+import { parseExactInformationModel } from '../../../epistemic-runtime/src/certified-state-reduction/model';
+import {
+  ControlFraction as Q,
+  controlBytesDigest,
+  ExactControlError,
+} from '../../../epistemic-runtime/src/certified-state-reduction/exact';
+import { epistemicHash } from '../../../epistemic-runtime/src/source-precedence';
+import { allocationNumber } from '../../../epistemic-runtime/src/allocation-contracts';
 import type {PeMutationContext,PeWorldRootRef} from '../types';
 import {loadEnterpriseBeliefView,validateBeliefViewPin} from '../enterprise-beliefs';
 import {authorize,principal,tx,sha,stable,revisions,assertDependencies,unavailable} from '../evidence-execution/store';

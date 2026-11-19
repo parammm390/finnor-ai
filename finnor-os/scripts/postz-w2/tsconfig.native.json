@@ -1,0 +1,29 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "noEmit": true, "incremental": false, "allowImportingTsExtensions": true },
+  "include": [
+    "../../packages/orchestration/src/workforce-execution/**/*.ts",
+    "../../packages/private-equity/src/workforce-allocation.ts",
+    "../../packages/private-equity/src/workforce-compensation.ts",
+    "../../apps/api/app/api/workforce/**/*.ts",
+    "./run-native-e2e.mts",
+    "./run-native-bound-e2e.mts",
+    "./run-native-recovery-e2e.mts",
+    "./native-bound-body.mts",
+    "./native-recovery-body.mts",
+    "./owned-campaign-supervisor.mts",
+    "./run-supervision-controls.mts",
+    "./fixtures/supervision-control-body.mts",
+    "./run-participant-authority-e2e.mts",
+    "./participant-authority-body.mts",
+    "./run-structural-e2e.mts",
+    "./run-dynamic-e2e.mts",
+    "./physical-worker.mts",
+    "./closing-compensation-fixture.mts",
+    "./pg-source-custody-e2e.mts",
+    "./specialist-publication-service.mts",
+    "../v3/run-closing-e2e.mts",
+    "../v3/provider-authority.mts"
+  ],
+  "exclude": ["../../node_modules", "../../**/.next"]
+}

@@ -1,18 +1,18 @@
 import generated from "./capability-manifest.generated.json"
+import type { PlanningSnapshotCapability } from "../../../finnor-os/packages/planning/src/contracts"
 
 export type ProductMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
 export type ProductClassification = "READ" | "MUTATION" | "CONTROL" | "ADMIN" | "STREAM"
 
-export interface ProductCapability {
+interface ProductCapabilityBase {
   capabilityId: string
   family: string
   owner: string
-  transport: "http" | "planner"
   method: ProductMethod | null
   routePattern: string | null
   routeDepth: number
   classification: ProductClassification
-  kind: "read" | "mutation" | "control"
+  kind: "read" | "mutation" | "control" | "wait" | "check"
   userProduct: boolean
   agentProduct: boolean
   modelCallable: boolean
@@ -29,6 +29,11 @@ export interface ProductCapability {
   tests: string[]
   source: string
 }
+
+export type ProductCapability = ProductCapabilityBase & (
+  { transport: "http"; planning?: never } |
+  { transport: "planner"; planning: PlanningSnapshotCapability }
+)
 
 export const PRODUCT_CAPABILITIES: readonly ProductCapability[] = generated.capabilities as ProductCapability[]
 

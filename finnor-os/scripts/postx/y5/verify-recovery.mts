@@ -20,12 +20,13 @@ async function control(os:string,workerUrl:string,installed:boolean){
  child.on('message',(m:any)=>{const p=pending.get(m?.id);if(!p)return;clearTimeout(p.timer);pending.delete(m.id);
   if(m.error)p.no(Error(m.error));else p.yes(m);
  });
- try{await new Promise<void>((yes,no)=>{
+ let leaseSeconds:number;
+ try{leaseSeconds=await new Promise<number>((yes,no)=>{
   const timer=setTimeout(()=>no(Error('Y5_REAL_QUEUE_READY_TIMEOUT')),10000);
   child.once('error',error=>{clearTimeout(timer);no(error);});
-  child.once('message',(m:any)=>{clearTimeout(timer);try{assert.equal(m.kind,'READY');assert.equal(m.productionWorkerFactory,true);assert.equal(m.leaseSeconds,6);yes();}catch(error){no(error as Error);}});
+  child.once('message',(m:any)=>{clearTimeout(timer);try{assert.equal(m.kind,'READY');assert.equal(m.productionWorkerFactory,true);assert.equal(m.leaseSeconds,6);yes(m.leaseSeconds);}catch(error){no(error as Error);}});
  });}catch(error){child.kill('SIGKILL');await ended;throw error;}
- return {child,logs,ended,command:(operation:'TICK'|'RECOVER')=>new Promise<any>((yes,no)=>{
+ return {child,logs,ended,leaseSeconds,command:(operation:'TICK'|'RECOVER')=>new Promise<any>((yes,no)=>{
   const current=++id,timer=setTimeout(()=>{pending.delete(current);no(Error('Y5_REAL_QUEUE_COMMAND_TIMEOUT'));},180000);
   pending.set(current,{yes,no,timer});child.send({id:current,operation},error=>{if(error){clearTimeout(timer);pending.delete(current);no(error);}});
  }),kill:async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGKILL');await ended;}},
@@ -75,7 +76,7 @@ export async function verifyRecovery(f:{env:any;os:string;root:string;tenant:str
   assert.equal(lost.length,1);assert.equal(lost[0].outcome,'lease_lost');
   let stale='';
   try{await discoverUniformAlgorithmJob(original.payload,{jobId,tenantId:tenant,claimToken:original.claim_token,claimFence:Number(original.claim_fence),
-   deliveryAttemptId:lost[0].id,protocolVersion:1,workerId:original.lease_owner,retrySafety:'locally_idempotent',
+   deliveryAttemptId:lost[0].id,protocolVersion:1,workerId:original.lease_owner,retrySafety:'locally_idempotent',leaseSeconds:first.leaseSeconds,
    registerHeartbeat:()=>{throw Error('STALE_CLAIM_REACHED_HEARTBEAT');}});}
   catch(error){stale=(error as Error).message;}
   assert.equal(stale,'Y5_PHYSICAL_DELIVERY_FENCE');

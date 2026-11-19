@@ -1,0 +1,24 @@
+{
+  "schema": "finnor.w4.verification-plan.v1",
+  "requirements": "FINNOR-POSTZ-W-PRD-1.0.0",
+  "baseCommit": "cecec15d64fe8f8fb63a5a29b98979f978ba6138",
+  "baseTree": "1e12ec22da8b6fe3c9f1469746892f1effe7a5f1",
+  "sourcePolicy": "Record actual dirty source hashes and runtime/schema per run. Never reuse another source cut's PASS.",
+  "domain": "Existing authorized company, finite lawful capability composition, controlled participants and admitted disposable operations",
+  "cases": [
+    {"id":"W033","driver":"run-contract-e2e.mts","predicate":"Original competing hypotheses, exposure, consent, independent observation, stop and costs"},
+    {"id":"W034","driver":"run-contract-e2e.mts","predicate":"Interest/decline/nonresponse is not viable demand or revenue"},
+    {"id":"W035","driver":"run-contract-e2e.mts","predicate":"No commitment without complete current delivery and support feasibility"},
+    {"id":"W036","driver":"run-native-e2e.mts","predicate":"Actual authenticated Work/API/queue/worker/checker/artifact/S5/S6/observation/S7 chain"},
+    {"id":"W037","driver":"run-contract-e2e.mts","predicate":"Full accounting, losses, cannibalization, refunds, missing costs and residuals"},
+    {"id":"W038","driver":"run-contract-e2e.mts","predicate":"Related/employee/synthetic demand excluded; actual costs retained"},
+    {"id":"W039","driver":null,"predicate":"Independent genuine buyer field campaign","status":"BLOCKED_EXTERNAL"},
+    {"id":"W040","driver":"run-contract-e2e.mts","predicate":"Stale inference/scale with preserved accepted obligations"},
+    {"id":"OWNER_PRIVACY_RECOVERY","driver":"run-native-e2e.mts","predicate":"Wrong identities/terms/currentness, physical worker kill, duplicate and stale queue delivery"},
+    {"id":"MOUNTED","driver":null,"status":"HARNESS_PENDING","predicate":"Mounted initiation, pending/current/unknown/evidence, source and auth lifecycle"},
+    {"id":"RECONSTRUCTION","driver":null,"status":"HARNESS_PENDING","predicate":"Separately installed exact-cut API/worker/native assets and affected positive paths"}
+  ],
+  "limits": {"contractWallSeconds":120,"ownerWallSeconds":1200,"outerSupervisorSeconds":1320,"workerProcessSeconds":60,"workerTicksPerProcess":16,"maximumPumpTicks":192,"nodeHeapMiB":1536,"minimumAvailableRamGiB":2,"minimumFreeDiskGiB":4,"browserWallSeconds":600,"reconstructionWallSeconds":1800,"externalBuyerContacts":0,"productionEffects":0},
+  "rerunRule":"Rerun only affected proof after a relevant code change/failure; diagnose identical failures twice before another attempt.",
+  "initialStatus":"NOT_RUN"
+}

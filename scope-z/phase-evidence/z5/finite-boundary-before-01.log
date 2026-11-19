@@ -1,0 +1,1 @@
+{"output":"/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/finite-boundary-before-01","state":"FAILED","cases":7,"failures":["initial-overflow","large-shared-domain-row-overflow","rebound-over-budget-positive"],"producerExecutions":6,"checkerExecutions":7}

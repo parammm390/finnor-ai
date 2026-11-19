@@ -10,7 +10,7 @@
     "requireCleanWorktree": true
   },
   "release": {
-    "requiredMigrationHead": "postx_y9_ic_terminal_basis_fence.sql",
+    "requiredMigrationHead": "postz_zzzzz_specialist_reader_policy_acl.sql",
     "metadata": [
       "FINNOR_COMMIT_SHA",
       "FINNOR_BUILD_ID",

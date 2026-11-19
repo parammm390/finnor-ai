@@ -1,4 +1,4 @@
-import { compareUnderwritingRunToArtifact } from "@finnor/private-equity";
+import { compareUnderwritingRunToArtifact } from "../../../../../../packages/private-equity/src/underwriting-artifacts";
 import { requireContext } from "../../../../lib/auth";
 import {
   UnderwritingArtifactComparisonSchema,

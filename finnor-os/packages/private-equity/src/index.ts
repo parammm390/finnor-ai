@@ -76,3 +76,11 @@ export {PROCEDURE_OPERATIONS,PROCEDURE_OPERATION_SCHEMAS,submitProcedureInductio
 export type {ProcedureCapsule,EpisodeCut} from './procedure-induction/contracts';
 export * from "./r6/verified-capital-compiler";
 export * from "./financial-explanation";
+
+// Controlled W4 owner port. Existing Work, sources, S5, S6 and S7 retain authority.
+export { intakeGrowthWork, writeGrowthSource, submitGrowthOutcome, prepareNativeGrowthObligation,
+  readGrowthWork, advanceGrowthProgram, inviteGrowthParticipant, growthParticipantInbox, growthParticipantProgress,
+  setGrowthParticipantConsent, reportGrowthEvent, growthExecutionRecordKey, growthNativeChange,
+  growthDispatchAssessment, growthAccountingPayload, demandToBusinessOperation,
+  compileOperatingProgram, checkOperatingProgram, projectOperatingProgram } from "./demand-to-business";
+export type { GrowthInput, MarketValidatedOperatingProgram, BusinessProjection } from "./demand-to-business";

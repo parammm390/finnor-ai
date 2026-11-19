@@ -1,0 +1,14 @@
+{
+  "id": "change-atomic-update",
+  "passed": true,
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "{\"checked\":false,\"checker\":\"z5-original-semantics-checker-v1\",\"executionAuthorityGranted\":false,\"reason\":\"FORGED_CONTEXT_TRANSITION\",\"schema\":\"finnor.z5.independent-check.v1\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 60.470642
+  },
+  "corruptionDigest": "757620c4b5ad8726cca038f9bad56dadad24654f197093ada20e68fe97ef912a",
+  "expected": "INDEPENDENT_REJECTION"
+}

@@ -1,5 +1,7 @@
 import {z} from "zod";
-import {ExperimentRefSchema,AllocationContractError,ControlContractError} from "@finnor/epistemic-runtime";
+import { ExperimentRefSchema } from "../../../../../../packages/epistemic-runtime/src/experiments";
+import { AllocationContractError } from "../../../../../../packages/epistemic-runtime/src/allocation-contracts";
+import { ControlContractError } from "../../../../../../packages/epistemic-runtime/src/control-contracts";
 import {requireContext,errorResponse} from "../../../../lib/auth";
 import {readCoalitionOwnerProgramme,runCoalitionOwnerProgramme} from "../../../../../../packages/private-equity/src/program-synthesis/coalition";
 import {CapitalProgramV2Error} from "../../../../../../packages/private-equity/src/capital-program/v2-contracts";

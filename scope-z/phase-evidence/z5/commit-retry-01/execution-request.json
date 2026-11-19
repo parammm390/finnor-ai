@@ -1,0 +1,21 @@
+{
+  "actualExecutionResult": "MUST_BE_RECONCILED_FROM_TOOL_RESULT_AND_GIT_HEAD",
+  "headBefore": "9f3edfd3b4c6758832c53139da0773218062191e",
+  "hookOrIdentityOverride": false,
+  "intentSha256": "b2af948cef16054c6b8becec7fa5b65cb1cfa9ddb2451caf7f9b66ec0d9b3aa1",
+  "normalCommand": [
+    "git",
+    "-C",
+    "/home/factory-user/repos/finnor-z5",
+    "commit",
+    "-F",
+    "-"
+  ],
+  "requestedAt": "2026-10-25T11:04:50.680316+00:00",
+  "retryAllowedAfterRefusal": false,
+  "schema": "finnor.z5.single-commit-execution-request.v1",
+  "shieldBypass": false,
+  "sourceDigest": "017c02c2f1074abfaeb62134602391422d7401bb30071947605159e46d7f1b71",
+  "stagedTree": "73cd0be4e7cbc4f119efd1717261aa484a308614",
+  "state": "ONE_NORMAL_COMMIT_SUBMISSION_RESERVED"
+}

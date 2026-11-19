@@ -1,0 +1,941 @@
+FINNOR POST-X FRONTIER-5: Economic construction PRD and Factory mission
+Revision: 1.0.
+Date: 13 October 2026, Asia/Kolkata.
+Status: Proposed engineering, research and qualification contracts.
+Owner-reported position: R pull requests are drafted; the newest X programme is in progress.
+Planning baseline: Completed and independently qualified S/P/M/R/V plus the newest X1–X5. This is the stipulated future comparator, not a claim that the current release has already passed every gate.
+Scope register: Exactly five new product scopes, POSTX.Y1–Y5. Existing R/X identifiers and ownership remain unchanged.
+
+FINNOR's next unit of construction is an economic decision system. It can propose new economic action semantics, predict how interacting counterparties respond to changed policies, synthesize a multistage interaction, compute a joint result across confidential institutional inputs, and discover a generally proved computational method.
+
+The programme targets another 100× in independently accepted material business work over completed newest X, under matched total resources and authority. Financial value remains separately qualified through the inherited S7 protocol. Neither five implementations nor five component ratios establish that result.
+
+All numerical requirements below are proposed gates. No measured FINNOR result, universal invention capability or guaranteed return is asserted.
+1. Five scope register
+Phase	Fundamental computational change	Principal output	New boundary
+Y1 Economic Action-Theory Compiler	Synthesize and independently qualify operator-family semantics that extend the admitted economic programme language.	EconomicActionTheory	Search can construct the meaning of an economic action rather than select only among supplied action meanings.
+Y2 Strategic Response World Model	Learn and execute coupled models whose actors respond to FINNOR's changed policies and each other's actions.	StrategicResponseModel	The predicted world changes endogenously when the institution changes its rules or commitments.
+Y3 Dynamic Interaction Synthesizer	Optimize information, communication and commitment policies over histories with evolving private information.	InteractionProtocol	FINNOR designs a multistage economic interaction rather than only a static report-to-payment table.
+Y4 Confidential Economic Compiler	Compile an admitted joint economic function into securely executed computation over separately controlled private inputs.	ConfidentialEconomicComputation	Institutions can obtain a qualified joint decision while prohibiting central pooling of their raw information.
+Y5 Uniform Algorithm Discovery	Discover useful lemmas, reductions and algorithms with machine-checked guarantees over variable-size problem families.	AlgorithmTheoryCapsule	Reuse rests on a general theorem, beyond a finite catalogue, finite atlas or sampled learned policy.
+
+
+Each scope owns one computational transformation and one principal output. Input adapters, experiments, proof generation, deployment, validation and UI integration are work needed to establish those five outputs. They are not additional product programmes.
+1.1 Exact increment beyond newest X and R
+Existing contract in the stipulated baseline	What Y must add	What earns no new-scope credit
+X1 reconstructs institutional structure and compiles standing responsibility.	Y1 constructs an independently admitted economic operator theory.	Another organization model, process mapping or responsibility scheduler.
+X2 learns application operations; X3 constructs and maintains applications.	Y4 acquires qualified computational access across a private-data boundary.	A generated integration or application containing an installed cryptography library.
+X4 identifies unfamiliar digital mechanisms and creates measurement instruments.	Y2 computes policy-dependent strategic responses and cross-actor spillovers.	Another black-box predictor or several LLMs roleplaying counterparties.
+R3 synthesizes a finite deterministic private-report rule.	Y3 synthesizes history-dependent information and commitment policies with evolving private state.	More rows in the same static report table.
+R5 searches participant coalitions and shared programmes.	Y4 evaluates admitted joint functions without a central raw-input view.	Centrally solving R5 with larger participant counts.
+R6 proves bounded programme translation; R7 constructs a finite affine atlas; R8 verifies a finite decision family.	Y5 discovers a useful general theorem and algorithm across instance sizes.	A larger finite test domain, cached atlas or code mutation that passes visible tests.
+X5 compiles experience into policies and genuinely trained components.	Y1/Y5 establish new admitted semantics or uniform mathematical guarantees.	Renaming a learned procedure, prompt, adapter or checkpoint.
+
+
+These exclusions are binding. The implementation must test the actual completed baseline with its full native capabilities, code generation, tools and specialists. A proposed feature already satisfied by that baseline is REUSED and receives no incremental credit.
+1.2 One consequential firm-level case
+A PE firm maintains transaction readiness, financing capacity and institutional liquidity under a standing mandate. Lenders, co-investors, administrators and LP-related counterparties have independently controlled data, rights and changing alternatives.
+
+The owner asks FINNOR to find and advance materially better permissible arrangements while preserving the firm's risk, liquidity, staffing, compensation and employee-benefit conditions.
+
+FINNOR can already source opportunities, obtain primary evidence, prepare/close authorized transactions, secure verified capital commitments and operate its software through V/X. Y must add something beyond those routes.
+
+The new chain is:
+1. Construct a candidate economic operator family whose meanings are not already supplied by the admitted programme grammar.
+2. Establish which strategic responses to its use are supported, which are ambiguous, and how one party's choices affect others.
+3. Synthesize the permitted disclosure, negotiation and commitment history.
+4. Evaluate joint constraints and select a qualified programme without unauthorized raw-data pooling.
+5. Discover and prove a reusable reduction or algorithm for a recurring problem family.
+S4 selects the programme. S5 checks feasibility and reservations. Each real effect remains under S6. Actual counterparty acceptance, signatures, conditions and settlement remain independently observed V/S6 outcomes. S7 measures net owner value.
+
+A conditional loan, staged consideration, shared collateral, rollover, cross-default or ordinary co-investment is not automatically a new Y1 action. V already includes those classes. The action-theory separation must be established against the actual baseline.
+1.3 Architectural selection
+Two whole-shape designs were examined.
+
+The selected design changes economic construction: action meaning, strategic response, interaction history, private computational access and general algorithm knowledge.
+
+The alternative concentrated on probability circuits, distribution ambiguity, time-uniform evidence, stochastic path certificates and continuous stopping. Those are useful candidate techniques where their assumptions fit. They chiefly enlarge reasoning within an existing economic action space.
+
+This PRD selects economic construction because the requested outcome concerns newly attainable business results as well as computational efficiency. The alternative techniques may be implementation choices inside an engine; they do not become five additional scopes.
+
+No empirical superiority between these designs is claimed. During implementation, measured baseline limitations must determine whether the selected mechanisms actually create the expected increment.
+1.4 What another 100× would mean
+The comparator is completed newest X, including its cheap native execution, learned assets and strongest eligible fallback. It is not pre-R FINNOR, a chat-only model or a deliberately restricted programme menu.
+
+The candidate must complete one hundred times the registered material business work inside the same total envelope. It cannot count invented operators, generated models, proof terms, confidential queries or intermediate agent tasks as completed business assignments.
+
+If the initial X target and this target are measured on different populations, rights, resources or endpoints, do not multiply them into a 10,000× claim. Such a cumulative claim needs its own compatible comparison.
+2. Baseline, domain and canonical ownership
+2.1 Resolve the two meanings of X
+The older R document used X to mean its S/P/M baseline. In this document, B_X means the newest completed five-engine X programme on top of qualified S/P/M/R/V.
+
+Record:
+- B_live: actual checkout, active capabilities and measured release state.
+- B_X_plan: the full stipulated completed-X contract.
+- B_X_release: the immutable release and qualification manifest actually used in comparison.
+- B_ref: additional independently equipped comparator implementations.
+B_X_plan supports design. Only B_X_release supports an incremental performance claim. If it is unavailable, continue engineering against B_live and leave the post-X multiplier BLOCKED.
+
+Bind source/dirty-tree identity, migrations, dependency locks, model/checkpoint versions, tools, data, authority, preparation, resource meters, admission receipts and qualifications.
+2.2 Current source grounding
+On 13 October 2026, GitHub main resolved to 517003a4396bc8101a90be4b425ee01de9446740.
+
+The inspected R5 pull request #123 was an open draft at b9803bce28cd446f6bf459da6f7329d7b0020bb7. Its description reports cumulative R1/R2/R4/R5 changes and explicitly leaves qualification and other work open. Those descriptions are author reports; this PRD has not rerun their tests or certified deployment.
+
+The newest X PRD was reread in full at its current version. Earlier R, V, F and U contracts and the twelve-section FRONTIER-5 blueprint were also reread. F/U proposals do not become implemented dependencies merely because they were referenced.
+
+This is limited grounding, not a whole-codebase or dependency audit. The implementation mission must trace the actual current source before choosing files or claiming an absent capability.
+2.3 First admitted domain
+The first domain is a PE firm's own investment and institutional operations. It includes admitted opportunity, financing, liquidity, transaction-readiness and decision/approval work. It excludes taking over portfolio-company operations.
+
+Freeze an EconomicConstructionProfile containing:
+institution_and_participant_classes
+admitted_rights_and_atomic_effects
+economic_operator_and_state_semantics
+information_and_disclosure_constraints
+actor_model_and_identification_classes
+protocol_horizon_and_deviation_classes
+private_computation_and_corruption_profile
+theorem_and_runtime_problem_family
+units_currencies_time_and_rounding
+resource_risk_and_exposure_limits
+independent_oracles_and_field_coverage
+Initial bounded development profiles are not global capability limits or evidence of a production rollout. Extension requires corresponding evidence and admission.
+
+Missing rights, data, preference identification, trustworthy observation or professional interpretation remain explicit blockers. A language model cannot fill them with plausible values.
+2.4 Frozen owners
+Owner	Retained responsibility
+S1 / P4	Evidence, identity, rights, temporal truth, contradictions and derived-state lineage.
+S2	Experiments, instruments, admissibility, exposure and observations.
+S3	Causal/strategic models, identification and transport/regime validity.
+S4 / P1	Objectives, policies, mandate binding and durable programme progression.
+S5 / P2/P3	Joint resources, reservations, numerical feasibility and bounded execution.
+S6 / P5	Current authority, credentials, exact effects, UNKNOWN outcomes and reconciliation.
+S7	Complete costs, causal attribution and net owner-value accounting.
+S8	Independent protected evaluation, typed admission, promotion and revocation.
+P7	Revision dependencies, invalidation and continuation.
+V5 / current Work	Shared inspection, consequence-aware control and authorized intervention.
+
+
+Y outputs are producers. No scope owns another institution's grants or changes trusted authority, financial truth, evaluation or settlement.
+2.5 Inherited financial gates
+Preserve the current R/V/X qualification contracts where the new engines enter a financial path:
+Gate	Retained requirement
+Correctness	At least 95%, with the original oracle, estimation and confidence basis.
+Decision loss	Normalized expected regret or correctly labelled reference-policy shortfall at most 0.05.
+Calibration	Coverage error at most 0.02 at 50/80/90/95%; mean 90% interval width at most 0.5 of the fixed outcome range.
+Episode envelope	$100 total compute/data/integration; 900 human seconds; 16 GiB aggregate simultaneous peak; 30-second initial response; 3,600-second wall limit.
+Preparation	Eighty human hours and $10,000 per admitted comparison actor.
+Reach	Ninety operational days; one hundred companies/deals; ten system types; one thousand concurrent missions; ten thousand interacting decision opportunities.
+Generator	Sixteen firms, eight strategic counterparties, four resource pools; K = {1,2,4,8,16,64,256,1000}; retain all frozen coordinates.
+Economics	Preserve original attribution/comparator requirements, the $100 million additional net owner-value objective and H2's thirty-six-month mature horizon.
+
+
+Register separate aggregate envelopes for construction, training, experiments, cryptographic preparation, proof search and multiweek programmes. Descendant runs do not reset an episode grant.
+
+No low modeled probability authorizes violation of a hard financial, rights or employee-benefit constraint.
+3. Common executable contracts
+3.1 PostXArtifactEnvelope
+PostXArtifactEnvelope {
+  artifact_id, kind, schema_revision, content_digest,
+  work_and_revision_refs, tenant_and_participant_scope,
+  baseline_manifest_ref,
+  producer_code_dependency_model_and_runtime_refs,
+  source_revision_vector, knowledge_cut, effective_time,
+  rights_and_authority_revision_refs, mandate_ref,
+  economic_semantics_and_domain_refs,
+  claim_basis_and_independent_checker_refs,
+  unresolved_assumptions_and_excluded_claims,
+  resource_reservation_and_complete_cost_refs,
+  invalidation_dependencies, admission_and_release_refs,
+  external_observation_and_s6_obligation_refs
+}
+Every quantity binds unit, currency where applicable, time basis, ownership, rounding and source/estimation status. Probabilities bind their population, conditioning information and model/identification basis.
+
+Store artifact payloads and references through existing owners. Do not create a second economic truth store or global authority ledger.
+3.2 Five meanings that cannot be conflated
+1. Observed: admissible retained observations support the statement.
+2. Model-relative: a statement follows from an explicitly supplied/inferred model under listed assumptions.
+3. Empirically qualified: protected independent observations support the claimed performance in a stated population.
+4. Formally checked: the declared theorem holds under its exact specification and accepted assumptions.
+5. Externally effective: the required authorized real-world acceptance, conditions and effects are independently established.
+A machine-checked theorem does not establish a counterparty valuation. A signature authenticates an assertion; it does not prove its financial content. A simulation is not settlement. Legal efficacy is not derived from executable contract syntax.
+3.3 Producer and consumer contract
+construct({
+  canonical_work_revision,
+  baseline_manifest_ref,
+  objective_and_semantics_refs,
+  admitted_domain_profile,
+  rights_and_budget_grants,
+  existing_artifact_refs,
+  cancellation_ref
+}) -> {
+  artifact_ref?,
+  result: CANDIDATE | CHECKED | INCOMPLETE |
+          INFEASIBLE | UNIDENTIFIED | UNSUPPORTED | UNKNOWN,
+  claim_and_gap_refs,
+  independent_check_refs,
+  cost_and_outstanding_obligation_refs
+}
+INFEASIBLE needs a checked basis over the stated domain. Otherwise return UNKNOWN. A checked artifact remains subject to S8 admission and current execution applicability.
+
+S4 may retain an independently checked feasible incumbent after a timeout. It must display its actual optimality, identification and remaining gaps.
+3.4 Protected custody
+Generators cannot change the objective, trusted semantic interpreter, hidden truth, oracle, evaluation assets, privacy policy or promotion criteria.
+
+Independent validators use separately governed credentials/processes and immutable specification/checker identities. The scored FINNOR runtime cannot inspect hidden test mechanisms, private oracle inputs or protected future outcomes.
+
+Training and adaptive discovery must not consume protected cases. Public development fixtures remain development evidence. Repeatedly testing a candidate against visible answers cannot establish discovery.
+3.5 Revision and effect integrity
+Changes to semantics, data rights, participant inputs, model assumptions, protocol terms, methods or runtime invalidate the dependent claims through P7.
+
+Retain the original artifact, failed episode, cost and effect history. Recompute the smallest sound dependency closure.
+
+Before consequential commitment, check the current terms, authority, reservations and external prerequisites. Preserve S6 identity through interrupted or ambiguous attempts. UNKNOWN remains unresolved until independent reconciliation; it is not permission for a fresh duplicate submission.
+3.6 Independent ownership of admission
+Economic semantics, actor models, dynamic protocols, private computations and uniform algorithm modules need actual typed-domain admission under existing S8.
+
+Completed X may supply part of that machinery. Verify the current domain coverage and extend it additively where necessary. Never disguise an arbitrary new payload as an admitted finite S5 allocation method.
+
+No research result can promote itself, change its checker or broaden its effect permissions.
+4. Y1 Economic Action-Theory Compiler
+4.1 Outcome and boundary
+FINNOR receives an authorized economic objective, existing atomic rights/effects and independently accepted constraints. It proposes a parametric family of economic operators, establishes their transition meanings and obtains the required independent semantic/admission checks.
+
+An operator defines how events change claims, choices, liabilities and resources. It is not just a name for a cashflow schedule.
+
+R2 searches an admitted programme language. R6 validates a translation against supplied reference meaning. X5 compiles experience into a policy. Y1 constructs candidate meanings and composition laws for an extension of that language.
+
+The output can enlarge what programmes FINNOR can safely represent and evaluate. It does not create a legal right, money, permission or counterparty consent.
+4.2 Principal output
+EconomicActionTheory {
+  envelope: PostXArtifactEnvelope,
+  starting_programme_grammar_ref,
+  atomic_rights_effects_and_event_refs,
+  synthesized_operator_constructors,
+  state_variables_and_quantity_types,
+  denotational_transition_semantics,
+  composition_and_observation_laws,
+  cash_liability_and_exposure_invariants,
+  nonempty_domain_and_trace_witnesses,
+  baseline_separation_or_construction_gain_evidence,
+  counterexamples_and_independent_semantic_checks,
+  professional_or_authority_interpretation_requirements,
+  s8_admission_and_lowering_contract
+}
+A constructor binds inputs, preconditions, event observations, state transitions, resources, termination/expiry and S6 effects. Proposed legal meaning and established operational meaning remain distinct fields.
+
+The theory is versioned independently of a programme using it. Y3 cannot alter the theory's meaning to make its own protocol pass.
+4.3 Required computation
+1. Trace the actual admitted grammar and its semantics. Record existing operators, compositional closure, parameter domains and relevant capability producers.
+2. Express the objective and constraints in existing canonical quantities. Preserve missing or disputed interpretations.
+3. Generate candidate state variables, right/obligation structures and operator constructors. Use frontier models, symbolic search or learned library induction as appropriate.
+4. Derive an executable denotation from each candidate. Specify the event traces that cause commitment, expiry, transfer, release or reconciliation.
+5. Reject candidates with hidden liabilities, double use, inconsistent units, anticipatory information or unavailable authority.
+6. Independently check interpretation against the supplied business/atomic-rights contract, adversarial traces and conservation/exposure conditions.
+7. Establish the incremental claim: a certified extension of the frozen admitted semantic closure, or autonomous generation and qualification of a new semantic body and its composition laws at the protected construction margin. A macro, policy or implementation of supplied meanings satisfies neither route.
+8. Compile only admitted meanings into current programme/execution interfaces. Retain professional interpretation and counterparty-confirmation requirements.
+Generating an operator and generating its own “reference” interpreter cannot establish semantic correctness. Independent meaning comes from an accepted specification, qualified interpretation process or separately governed oracle.
+
+Ordinary code may be computationally universal. This PRD does not claim an action is impossible to implement in arbitrary code. The claim concerns independent construction and qualification in FINNOR's admitted economic language.
+4.4 Qualification profile
+Use twenty previously unseen operator-family construction problems, with independently specified business constraints and hidden trace/interpretation checks.
+
+The candidate receives the authorized objective, atomic vocabulary, allowed observations and constraints. It does not receive the target operator implementation, interpreter or admission proof.
+
+The equipped baseline receives the same evidence, tools and preparation allowance. It may write code, seek interpretation and extend its own supported interfaces through the same permitted release process. All resulting human and computational work is charged.
+
+Register finite trace domains and family parameters before exposure. Check at least two hundred generated/adversarial traces per family, including boundary timing, unknown effects and contradictory evidence. Finite tests alone do not earn an all-trace theorem.
+
+At least five families must establish the declared incremental semantic/construction boundary against B_X_release. Freeze the starting admitted grammar, its eligible compositional closure, bounded parameter/trace domain and independently defined observational-equivalence relation. A new label over an existing operator does not count.
+
+The construction route must generate the state/right/obligation meanings and composition laws themselves. Both actors receive the same objectives, property constraints and admissible atomic vocabulary; neither receives an operator-specific semantic body or proof template. A compiler translating supplied meanings, an application generator, a learned macro over unchanged meanings or a procedure library does not pass.
+4.5 Decisive fixtures
+Public mechanics fixture: A permitted reservation-right substitution preserves a fixed capacity C. The current right remains active until exact consent and replacement conditions are established. An admitted replacement retires the old right and activates the new one without a state permitting both to consume C.
+
+Rejection, expiry, revoked consent and ambiguous external observation have independently prescribed states. A previously settled external effect cannot be undone by changing an internal right record.
+
+Mutation fixtures introduce a double-active state, erase a pending obligation, move expiry, change currency or treat an unsigned interpretation as acceptance. The compiler/checker path must reject them.
+
+This is a public safety fixture, not evidence of novelty. Existing S5/S6/V capabilities may already express it.
+
+Protected separation fixture: An independently administered problem family requires an economic semantic theory meeting withheld interpretation/trace checks. Before either actor runs, the oracle fixes the property contract, admitted comparison closure, equivalence relation and eligible construction resources. It does not supply the target semantic body to either actor.
+
+An expressiveness certificate must quantify over every eligible programme in the frozen bounded admitted closure: no such programme has an observationally equivalent denotation within the registered parameter/trace profile. Use an independently checked certificate or complete search. A separating trace against one attempted baseline programme is insufficient. This is a claim about that admitted closure, never about arbitrary-code impossibility.
+
+For the construction route, require independently accepted synthesis of the semantic body and composition laws with at least 10× lower complete construction cost than equipped X at the same meaning, reuse and admission floors. Count interpretation labor, search, failures, checking and admission. Preregister the cost meter and simultaneous interval method; require a positive material baseline cost and a lower confidence bound of at least 10 on the baseline/candidate cost ratio. Baseline failures under a finite budget establish only an absolute construction result or a censored bound supported by the registered protocol, not an invented cost ratio.
+
+If equipped X constructs and admits an equivalent family comparably, mark it REUSED. Component construction gain is not a whole-product 100× result and cannot be multiplied with other component gains.
+4.6 Protected gates
+Claim	Required evidence
+Construction	At least eighteen of twenty families produce independently accepted operator theories within the registered resource profile.
+Meaning	Every registered critical conservation, liability, unit, timing and authority invariant passes.
+Increment	At least five families establish the fully quantified bounded semantic separation or the protected >=10× complete construction-cost margin against qualified equipped X.
+Parameter reuse	Held-out parameter values and event compositions pass without human operator-specific code edits.
+Nonvacuity	Every theorem/check has a nonempty domain and observable witness; contradictory or impossible assumptions cannot manufacture a pass.
+Lowering	A programme using the admitted theory preserves the same independent transition meaning through actual S4/S5/S6 execution.
+Economic relevance	The operator changes a registered material decision or feasible programme; vocabulary growth alone contributes zero business work.
+
+
+Y1 falsifier: The output is an existing V/R arrangement, a macro, a policy abstraction, or a human-defined semantic body presented as autonomous invention.
+5. Y2 Strategic Response World Model
+5.1 Outcome and boundary
+FINNOR changes a policy, information rule or proposed economic arrangement. The model computes how independently acting parties may respond, how their responses affect others and which resulting futures remain supported.
+
+The model must condition on the changed rule itself. Reusing historical payoff worlds as if counterparties did not adapt is insufficient.
+
+R3 assumes a declared preference/type model. R5's first profile excludes strategic spillovers between coalitions. X4 can identify digital mechanisms. Y2 must establish a coupled, policy-dependent strategic response computation.
+5.2 Principal output
+StrategicResponseModel {
+  envelope: PostXArtifactEnvelope,
+  participant_and_private_state_hypotheses,
+  authorized_observation_and_intervention_refs,
+  policy_conditioned_actor_response_models,
+  coupled_state_transition_and_observation_model,
+  beliefs_and_identification_status,
+  equilibrium_or_behavioral_solution_basis,
+  alternative_model_and_selection_set,
+  regime_and_transport_conditions,
+  held_out_policy_response_predictions,
+  calibration_and_decision_loss_evidence,
+  unsupported_behavior_and_invalidation_contract
+}
+The output may be a set of models. Unidentified preferences, multiple equilibria or unresolved dependence cannot be collapsed into one convenient prediction.
+5.3 Required computation
+Represent actor-local observations, economic objectives/preferences as hypotheses, permitted actions, messages and current commitments. Retain which state is actually observed and which is latent.
+
+Learn policy-conditioned response functions from admitted observations and interventions. Model coupled transitions rather than an independent forecast for each party.
+
+A supported computation may take the form:
+a_i,t ~ response_i(local_information_i,t,
+                   public_rule_t, commitments_t, private_state_i,t)
+
+s_t+1 ~ transition(s_t, a_1,t, ..., a_n,t, common_regime_t)
+The implementation may use agent-based dynamics, structural econometrics, probabilistic programmes, differentiable games or other qualified techniques. A roleplay transcript is not a calibrated economic transition model.
+
+Distinguish observed predictive fit from causal policy-response identification. Use S2/S3 to establish permitted interventions and identification assumptions. If different models fit the same evidence but predict different policy responses, retain their disagreement.
+
+Compute the joint response under the declared behavioral/equilibrium basis. A solver converging to one fixed point does not establish uniqueness, stability or relevance to actual parties.
+
+Evaluate withheld policies, strategic spillovers and regime changes. Test which assumptions are needed for transport. Calibrate uncertainty and apply the original decision-loss rules.
+
+Publish model-relative predictions separately from qualified field predictions. Observed counterparty interest or funding remains a direct V/S6 fact, not a predicted state.
+5.4 Qualification profile
+Use twelve independently administered economic environments, each containing interacting actors and at least three materially different policy regimes.
+
+Development actor counts are two, four and eight. Qualify larger counts separately. Vary private information, outside options, delay, shared resource competition, actor adaptation and equilibrium selection.
+
+For each environment, withhold policy changes and future observations. The candidate receives permissible historical observations and interventions, not the source of the actor simulator or private oracle state.
+
+Supply at least one thousand preregistered prediction/decision trials per environment. Cluster analysis by environment, actor cohort and time. Increase sample size where the inherited calibration/power requirements demand it.
+
+Keep synthetic, controlled human-participant and consented field evidence separate. A synthetic actor that follows its programmed utility is not proof that a real lender has that utility.
+5.5 Decisive fixture
+Two model families match all observations under the incumbent financing rule. Under a withheld rule, one predicts complementary counterparty participation and the other predicts crowd-out.
+
+FINNOR initially must retain both. A permitted intervention can distinguish them only if the registered identification conditions hold. A forbidden or uninformative intervention cannot resolve the ambiguity.
+
+After acquiring admissible evidence, the model predicts a fresh interaction involving changed outside options and another actor's response. Independent observations check the joint prediction and recommended programme.
+
+A later regime removes the transport basis. FINNOR invalidates that claim and retains actual commitments already created. It cannot keep the optimistic model because the recommended transaction would otherwise lose feasibility.
+5.6 Protected gates
+Claim	Required evidence
+Endogenous response	Predictions change appropriately with the policy and other actors' actions on withheld interventions.
+Joint correctness	At least 95% correct registered qualitative response/decision outcomes, with original numerical calibration and loss gates also passing where claimed.
+Identification	Every causal-response claim has its S3 basis; indistinguishable models remain a set.
+Equilibrium basis	Explicit assumptions, alternative selections and solver/checker gaps; no unsupported uniqueness claim.
+Strategic coverage	Withheld spillover and adaptation cases pass; an independent-marginals model does not receive joint-response credit.
+Decisions	A simultaneous confidence-supported material improvement on the frozen business decision endpoint against equipped X.
+Transport	Supported regimes qualify separately; unsupported policy/actor changes invalidate the dependent prediction.
+
+
+The material business margin is specified in currency or the original normalized decision-loss units before exposure. It cannot be a post-hoc percentage of whichever forecast score improved.
+
+Y2 falsifier: A model simulates fixed supplied worlds, generates plausible counterparties, or forecasts marginal values without establishing policy-dependent strategic response.
+6. Y3 Dynamic Interaction Synthesizer
+6.1 Outcome and boundary
+FINNOR designs an economic interaction over time. Parties acquire information, send permitted messages, make or withdraw commitments and respond to earlier events.
+
+The variables being optimized include who can observe what, when an authorized commitment occurs and which continuation follows each history.
+
+R3's static report table is the comparator, not the intended output. A time-expanded table earns no new credit unless it preserves evolving private information, nonanticipativity and the declared dynamic deviation semantics.
+
+Y1 fixes an operator's meaning. Y3 chooses the interaction using that meaning. It cannot change an operator, outside option or mandatory disclosure to improve the score.
+6.2 Principal output
+InteractionProtocol {
+  envelope: PostXArtifactEnvelope,
+  fixed_operator_and_actor_model_refs,
+  participant_information_sets,
+  message_and_disclosure_contracts,
+  history_dependent_action_and_commitment_policy,
+  observable_event_and_continuation_rules,
+  randomization_basis_if_admitted,
+  prescribed_strategy_and_incentive_concept,
+  common_prior_signal_law_and_belief_assessment,
+  sequential_rationality_and_belief_consistency_certificate,
+  participation_and_outside_option_conditions,
+  deviation_class_and_checked_regret_bounds,
+  model_relative_value_and_search_gap,
+  joint_resource_and_s6_effect_bindings,
+  consent_expiry_failure_and_reconciliation_contract
+}
+Every message is classified as a sourced fact, authenticated assertion, model-relative statement or unresolved claim. Mandatory disclosures are immutable constraints.
+6.3 Required computation
+Build the supported extensive-form interaction from admitted operators, model sets, observation rights and the mandate.
+
+Represent each party's information set. A participant cannot condition an action on another party's private value or its own future observation. The planner cannot use oracle state to choose a current branch.
+
+Search communication, disclosure and commitment policies. Use suitable game/optimization techniques, contingent-policy search or certified relaxation within the chosen profile.
+
+Evaluate full permitted deviation strategies, not only one report changed while all later behavior is held truthful. Check participation, payments, timing, current resources and every relevant continuation.
+
+The first profile uses model-relative sequential equilibrium in finite extensive-form games with perfect recall. Bind the prescribed participant strategies, independently admitted common prior, state/signal laws, information partitions, utilities and outside options. The protocol fixes disclosure and commitment rules; it cannot choose convenient participant beliefs independently of those rules.
+
+For every admitted model, the independent checker verifies exact sequential rationality: at each supported participant information set, the prescribed continuation has zero profitable gain from any permitted unilateral contingent continuation deviation. It also verifies belief consistency with the prior, chance laws and protocol. At positive-probability information sets, beliefs follow Bayes' rule. At off-path information sets possible under the fixed chance support, supply an independently checked consistency certificate establishing the assessment as a limit of completely mixed participant-strategy assessments. Histories impossible under the admitted chance law are explicitly outside that model's domain. Missing off-path support or an unchecked consistency claim yields UNKNOWN.
+
+One common sequence of completely mixed joint strategy profiles must induce the entire belief assessment. Separate convenient sequences for different participants or information sets do not qualify.
+
+Full permitted continuation strategies, including coordinated early misreports and later choices, remain in the deviation family. This guarantee is relative to the declared models and unilateral deviations; it does not establish coalition resistance or predict actual counterparties will comply. A different incentive concept needs its own separately labeled qualification.
+
+If randomness is used, bind its probability grid, provenance and financial semantics. A randomized policy is outside R3's stated deterministic profile; it still needs its own qualification and the same hard constraints.
+
+Retain valid objective bounds and witnesses. A heuristic best response cannot certify absence of a profitable deviation. A sampled history cannot certify the entire supported strategy space.
+
+Compile the accepted interaction into existing participant-local Work/policy/effect interfaces. Obtain exact current consent to the same terms revision. Actual behavior that leaves the model domain invalidates the incentive claim.
+6.4 Qualification profile
+Use twenty-four independently specified dynamic games: sixteen with a nontrivial feasible protocol under the independent reference, and eight with an infeasible stated goal. First development bounds are two parties, two private-state values, three decision dates and at most sixteen information sets per party.
+
+Supply independently qualified state-transition/payoff semantics, common priors, observation constraints and outside options. Where admitted, signal probabilities use the exact grid {0, 1/2, 1}. Do not infer a distribution merely because expected utility is convenient. The independent feasibility reference uses the same sequential-equilibrium concept, strategy family and belief-consistency requirements.
+
+Each game includes withheld type trajectories and a permitted policy/deviation family. Independent exhaustive or formally checked reference computation defines the oracle for small cases. Larger profiles need valid bound-based checking.
+
+Qualify first with existing economic operators and supplied qualified actor models. Y1/Y2 improve reach later; they are not prerequisites for proving the dynamic engine.
+6.5 Decisive fixture
+A financing participant learns a new private-state value after its first report. An early false report changes the later option, payment or withdrawal opportunity.
+
+A superficially attractive protocol passes a one-stage report check but admits a profitable contingent deviation: an early lie combined with a later action. The independent full-strategy oracle supplies that counterstrategy. The protocol must fail its incentive claim.
+
+Another fixture reveals future information only after a commitment deadline. A protocol selecting the commitment using that future value must fail nonanticipativity even if its modeled payoff is high.
+
+A third fixture changes a terms revision after one party consents. The original consent cannot authorize the new interaction. Pending effects retain the old obligation identity and reconciliation state.
+
+A fourth fixture changes the signal/disclosure policy while retaining the old posterior beliefs. A fifth inserts convenient off-path beliefs with no consistent tremble-limit assessment. Both must fail the incentive certificate even when an isolated best-response calculation appears favorable.
+6.6 Protected gates
+Claim	Required evidence
+Dynamic synthesis	At least fifteen of sixteen feasible games yield accepted nontrivial protocols; all eight infeasible cases yield independently checked infeasibility. UNKNOWN is preserved honestly but does not pass this gate.
+Incentives	Exact zero-regret sequential rationality and independently checked belief consistency at every supported information set for every admitted model. Approximate concepts retain distinct labels and do not pass this first-profile gate.
+Information	All nonanticipativity, mandatory-disclosure and private-observation conditions pass.
+Participation/resources	Declared outside options, payment limits, exposure and joint S5 constraints hold on every relevant supported history.
+Search basis	Full-family bounds where claimed; heuristic/completeness gaps remain explicit.
+Execution	Exact terms, consents, current grants and independently observed effects survive interruption and revision tests.
+Increment	Protected comparison and ablation establish the dynamic capability beyond equipped X/R3; an economically equivalent cheap static flattening receives no new credit.
+
+
+Checked infeasibility contributes to correctness evaluation, not completed financing or positive business throughput. A wait-only protocol cannot manufacture an economic gain.
+
+Y3 falsifier: Future information leaks into current decisions, only isolated lies are checked, or a static rule is relabelled as dynamic interaction.
+7. Y4 Confidential Economic Compiler
+7.1 Outcome and boundary
+Several independently controlled institutions authorize a joint computation but prohibit central pooling of raw inputs.
+
+FINNOR compiles the admitted function, numerical semantics and data-use grants into a multiparty computation, obtains qualified execution evidence and releases only authorized outputs.
+
+The boundary is computational access under confidentiality. R5 can solve a centrally supplied coalition problem. X3 can build an application. Neither fact alone establishes this compiler.
+
+Ordinary authenticated federation and cryptographic joint computation are different. Reuse existing participant-local authority and coordination; add only the missing private-computation contract.
+7.2 Principal output
+ConfidentialEconomicComputation {
+  envelope: PostXArtifactEnvelope,
+  admitted_function_and_exact_numerical_semantics,
+  participant_local_input_and_rights_contracts,
+  input_commitment_freshness_and_validation_refs,
+  compiled_circuit_or_protocol_identity,
+  corruption_and_trust_profile,
+  permitted_output_and_leakage_contract,
+  preprocessing_key_and_execution_receipts,
+  independently_checked_result_basis,
+  query_release_and_revocation_conditions,
+  participant_abort_and_reconciliation_state
+}
+The artifact does not confer a global credential or merge participant ledgers. Actual commitments/effects retain separately issued local authority.
+7.3 Required computation
+Trace the requested economic function through existing S3/S4/S5/R owners. Define inputs, units, ranges, comparisons, rounding and permitted outputs.
+
+Resolve each participant, its current grant, source freshness and local validation boundary. Each institution validates its own input use and required primary-evidence basis.
+
+Compile into a qualified secure-computation profile. Choose an established protocol/backend with the required corruption model. Do not invent cryptography or silently substitute a weaker security model.
+
+For the first protected profile with n participants, require active-malicious security with abort for up to n-1 corrupted participants, under the selected protocol's qualified assumptions. At least one participant is honest. State setup/trust and network assumptions explicitly. Completion is not guaranteed when a participant aborts.
+
+Preserve exact financial/numerical interpretation. Fixed-point approximation, bit width, overflow and division must satisfy the independent function contract. Encryption does not repair a numerical error.
+
+Obtain input commitments and execution receipts. Check circuit identity, current input/grant revisions and output conditions. Release only authorized fields. Repeated adaptive queries are subject to the same disclosure contract; individual authorized outputs can jointly disclose too much.
+
+Reconcile dropouts, revocation and ambiguous completion. Never treat an MPC abort as financial settlement or release previously committed external exposure automatically.
+7.4 Privacy limits
+Secret computation protects specified information under its assumptions. It does not prove a private assertion true or prevent information inherent in an authorized output.
+
+A signature or commitment does not establish a lender's actual capacity. Required V2/S1 source confirmation remains separate.
+
+Noisy privacy mechanisms are optional and need a separately qualified utility/numerical contract. Do not add noise to hard financial feasibility and then label the result exact.
+
+Retained model/checkpoint use after input-rights revocation follows the explicit data-use contract. Where influence cannot lawfully remain, suspend the affected artifact and perform the required deletion/retraining process. “The raw file was deleted” is not a proof that a learned asset no longer depends on it.
+7.5 Qualification profile
+Use one hundred assigned joint computations across at least ten institutional identities, with three to eight separately administered participants per case.
+
+The case family includes joint liquidity/commitment feasibility, permitted programme ranking and admitted strategic calculations. Use existing supported semantics first.
+
+Freeze the general compiler, supported function IR, backend selection rules and qualification artifacts before protected exposure. At least forty cases reveal previously unseen admitted function definitions/compositions only during the scored run. These functions combine supported operations with withheld control-flow structure and numerical boundary requirements; they are not input substitutions into a prebuilt application. The candidate must derive the circuit/protocol at runtime and obtain independent semantic-correspondence checks without a case-specific circuit or human patch. Remaining cases test known functions under new inputs, identities and failures. Keep both partitions in the record.
+
+Candidate and baseline receive the same permitted data-use functions, libraries, identities and complete budgets. The baseline may use established MPC software. A plaintext baseline given inaccessible raw data is invalid.
+
+Independent oracle administrators hold consented synthetic/control truth solely for checking. The scored runtime and its workers cannot inspect that truth.
+
+Test key/preprocessing validity, false input-range claims, altered commitments, malicious shares, duplicate/reordered messages, adaptive probing, revocation and participant dropout. Record every output disclosure and retained derivative.
+7.6 Decisive fixture
+A fund and several financing parties permit evaluation of joint programme feasibility. They do not permit revealing all reservation values, capacity limits or internal terms to the coordinator.
+
+The compiler produces the agreed function with exact units and ranges. Participants supply authenticated current inputs. The permitted output reports a qualified feasible choice and authorized participant-local obligations.
+
+An adversary changes an input after commitment, attempts a distinguishing sequence of queries or sends inconsistent protocol data. The result must be rejected or the computation aborted on its stated basis.
+
+Another participant drops out after an unrelated real effect was dispatched. Private-computation failure must not erase that effect or declare the whole programme rolled back.
+7.7 Protected gates
+Claim	Required evidence
+Correct result	Every accepted result matches the independent exact reference semantics; approximate profiles retain explicit error bounds.
+Supported completion	At least 95% completion on the preregistered non-aborting supported population; all abort/adverse assignments remain in the overall record.
+Compiler independence	All forty held-out function/composition cases use runtime-derived circuits/protocols with independently checked correspondence to their exact function semantics; no per-case human circuit, private-function adapter or numerical patch during scored construction. Completion and rejection/abort counts remain separately visible.
+Confidentiality	No observed unauthorized disclosure in the tested threat profile, with protocol assumptions and authorized-output leakage explicitly checked.
+Currentness	Revoked, stale or changed inputs cannot be used under the old commitment/grant.
+Cross-institution authority	No participant inherits another's grants; downstream effects require exact local authorization.
+Increment/economics	Qualified joint computations and business results exceed the frozen material margin against equipped X with standard MPC, after all setup/preprocessing/validation costs.
+
+
+Production use requires actual security review of the shipped deployment and threat profile. A framework's protocol documentation alone is insufficient.
+
+Y4 falsifier: Data are centrally pooled, a trusted coordinator sees supposedly protected inputs, or success is only an installed library/application wrapper.
+8. Y5 Uniform Algorithm Discovery
+8.1 Outcome and boundary
+FINNOR identifies a recurring economic problem family, discovers useful structure and produces an executable algorithm with a machine-checked theorem uniform in instance size.
+
+The object being learned includes the lemma, invariant, reduction or decomposition that makes the method correct and useful.
+
+R6's bounded translation proof, R7's finite atlas, R8's finite-domain CEGIS and X5's empirical transfer remain equipped comparators. Y5 must establish a general guarantee beyond those finite qualifications.
+
+A familiar theorem can be useful, but copying a supplied proof template is not evidence of autonomous discovery. No world-first mathematical claim is required or inferred.
+8.2 Principal output
+AlgorithmTheoryCapsule {
+  envelope: PostXArtifactEnvelope,
+  independently_accepted_problem_family_specification,
+  structural_assumptions_and_nonempty_domain,
+  discovered_lemmas_reductions_and_invariants,
+  uniform_theorem_statement_and_proof_object,
+  algorithm_source_and_translation_contract,
+  termination_quality_and_resource_bound,
+  trusted_kernel_import_and_axiom_inventory,
+  practical_runtime_domain_and_measurements,
+  protected_generalization_and_counterexample_evidence,
+  s8_admission_invalidation_and_fallback_refs
+}
+The theorem can quantify over all admitted mathematical sizes n. The actual runtime still admits only independently tested resource/bit-width/host profiles. An unbounded theorem is not an unlimited cloud grant.
+8.3 Required computation
+Mine independently accepted problem episodes and specifications for recurring structure. Keep objective meaning and authority fixed.
+
+Generate candidate invariants, decomposition hypotheses and algorithms. Test counterexamples on development cases and abandon unsupported conjectures.
+
+Formalize promising claims against independently accepted definitions. Derive feasibility, termination, decision quality and the declared cost-model bound across variable-size instances.
+
+Generate a proof through a suitable prover and check it through the independently governed kernel path. Inspect the exact theorem type, imported dependencies and approved assumptions. Unresolved goals, hidden arbitrary axioms, vacuous domains and a renamed theorem fail.
+
+Validate that the shipped implementation corresponds to the proved algorithm and numerical semantics. A proof about ideal integers does not automatically cover overflowing machine arithmetic or a changed floating-point solver.
+
+Measure complete runtime behavior on protected larger sizes. Qualify actual memory, latency, fallback and end-to-end accepted work. Account for unsuccessful proof search and independent checking.
+
+Promote only through S8. P7 invalidates applicable theory/method uses when specifications or structural conditions change.
+8.4 Qualification profile
+Use twelve previously unseen structured problem families drawn from admitted cash/commitment scheduling, resource allocation, strategy computation and private economic functions.
+
+The independently supplied specification defines the task, objective and constraints. It does not supply the successful lemma, reduction, algorithm body or proof script.
+
+At least eight families must produce independently accepted uniform algorithm capsules. Each needs a nontrivial structural theorem and a practically useful method under a preregistered material-cost or supported-reach criterion.
+
+Test sizes and parameter combinations withheld from discovery. At least two qualification families must require a structure not present in the development examples. If a required theorem cannot be established, retain UNKNOWN; passing tests cannot replace it.
+
+Each admitted theorem undergoes adversarial checks for changed assumptions, missing edge cases, arithmetic mismatch, wrong theorem binding and false domain witnesses.
+
+General optimization problems do not become tractable because a model generates a confident proof. A claimed polynomial or exact method must prove its structural domain and correctness. Hardness outside that domain remains relevant.
+8.5 Public exact fixture
+Use an explicitly synthetic time-homogeneous Markov chain with states 0 through N. States 0 and N are absorbing. Conditional on an interior state and the prior history, the next transition moves upward with probability 1/3 and downward with probability 2/3.
+
+The public reference asks for the probability of reaching N before 0 from state 1, over arbitrarily many events. For N >= 1:
+p_N = 1 / (2^N - 1)
+
+h_N(i) = (2^i - 1) / (2^N - 1)
+h_N(0) = 0
+h_N(N) = 1
+h_N(i) = (1/3) h_N(i+1) + (2/3) h_N(i-1)
+At N = 8, the exact answer is 1/255.
+
+The full formal claim requires the absorbing-process and bounded-martingale reasoning, not just checking seven equalities at N = 8. A twelve-period simulation does not establish the arbitrary-horizon probability.
+
+This is a public mechanics fixture with a supplied answer. It does not count as a protected discovery or real financial risk model. Actual LP remittance, lender behavior or money exposure does not inherit this random-walk assumption.
+8.6 Decisive protected fixture
+An unseen family exhibits an economically relevant decomposition or exchange structure. The synthesis worker receives its task specification and development observations, not the reduction.
+
+The worker must discover a lemma, prove its applicability, generate a method and establish its quality over every size in the formal domain. Independent larger instances test the actual delivered runtime.
+
+Remove a structural assumption in a withheld case. The capsule must reject applicability or use the correctly labelled fallback. It cannot retain the theorem merely because the new instance resembles earlier examples.
+
+A second fixture substitutes an implementation with the same function name but changed rounding, tie or liability semantics. Proof/source binding must fail.
+8.7 Protected gates
+Claim	Required evidence
+Uniform discovery	At least eight of twelve families produce accepted general theorem/algorithm capsules; no finite enumeration is labelled a uniform proof.
+Theorem correctness	Exact statement, nonempty domain, approved assumptions and independent kernel receipt all pass.
+Implementation correspondence	Actual shipped code and numerical semantics satisfy the proved contract in the admitted runtime domain.
+New structure	Protected families establish discovery beyond supplied templates and equipped X/R8 capability.
+Practical gain	Confidence-supported material improvement in complete accepted-work cost or reach, with original quality/resource floors.
+Generalization	Withheld sizes/structures and assumption-breaking cases are classified correctly.
+Admission	Trusted checkers and authority remain fixed; only S8 can activate the candidate.
+
+
+Y5 falsifier: A finite test suite, fixed atlas, empirical policy or unsupported axiom is presented as a general algorithm theorem.
+9. Five delivery phases and integrated qualification
+9.1 Exactly five release units
+Phase	Single output to deliver	Independent first qualification	Later integration
+Y1	EconomicActionTheory	Accepted semantics/construction on unseen economic operator families.	Extends an explicitly revised admitted programme language.
+Y2	StrategicResponseModel	Withheld coupled policy-response computation and calibrated decision evidence.	Informs programme/protocol evaluation under S3.
+Y3	InteractionProtocol	Correct dynamic information, commitment and deviation semantics.	Executes fixed admitted operators under separate current consents.
+Y4	ConfidentialEconomicComputation	Correct authorized private function without central raw-input pooling.	Evaluates joint economic decisions across participant-local authority.
+Y5	AlgorithmTheoryCapsule	Useful uniform theorem, implementation correspondence and runtime qualification.	Supplies an admitted method to any compatible economic engine.
+
+
+Numbering is not a mandatory serial dependency. Y2 can qualify on existing policies; Y3 on fixed operators and supplied models; Y4 on already admitted functions; Y5 on existing problem families.
+
+Shared migrations, enforcement/admission changes and final integration are serialized under the actual repository/runtime rules. Independent research and scrutiny can run concurrently.
+9.2 Integrated campaign
+Assign a material PE-firm mandate with eligible financing, transaction-readiness and institutional decision work. Fix the business completion criteria, resources, rights and staffing/benefit conditions.
+
+Expose unfamiliar economic specifications, policy changes, cross-actor spillovers, private data constraints and variable-size problem instances.
+
+The delivered runtime must produce and use the five checked artifacts. It must advance authorized work to the original externally observed completion condition. A proposed economic theory cannot substitute for verified financing, a completed diligence assignment or an approved decision packet.
+
+Follow actual preparation, actor interactions, failed attempts and unresolved effects across the inherited ninety-day campaign. Preserve the original reach/generator coordinates. Replay, controlled test services and live field operation remain separate evidence classes.
+
+A second independently administered cohort tests transfer without copied private facts, grants, hidden source models or evaluator answers.
+9.3 Register business units before exposure
+Use the same accepted-material-work definition as newest X. Register the task mix, business weights, unique assignment IDs, deadlines, intent-to-treat basis and independent completion oracles.
+
+An assignment is a material business result. Do not count each instrument proposal, model rollout, protocol message, private query, theorem or subagent as another assignment.
+
+Freeze weights from independent business requirements and calibration. The candidate cannot choose weights after discovering which tasks it solves.
+
+Retain refusals, failures, overrides, missed deadlines and unfinished programmes. A correct refusal contributes to safety correctness but not positive completed-business throughput.
+
+Count distinct real assignments. Replaying one synthetic result, splitting one closing into one hundred steps or asking for duplicate reports cannot create capacity.
+9.4 Equipped-X and competitive comparisons
+B_X_release must include every completed X capability, native method, learned policy, proof/atlas asset, integration and strongest eligible fallback.
+
+Allow baseline code generation, model/tool use, qualified standard MPC, native specialists and ordinary expert assistance within the same preparation/operating resources. Do not force it to remain inside a hand-weakened two-choice financing menu.
+
+Tune all actors on disjoint calibration data. Freeze versions, models, rights, data access, capital, risk, opportunity/contact exposure, work horizon and resource grants.
+
+Include additional competitor systems only when an appropriately equipped configured version actually runs the relevant qualified population. An inaccessible product is NOT_RUN, not defeated.
+
+Candidate-specific acquisition, learning, semantic construction, experiments, security setup, cryptographic preprocessing, proof search, checking, deployment, failure, invalidation, maintenance and human intervention remain charged.
+
+General product engineering expenditure is disclosed separately and included in the preregistered lifecycle analysis. Do not invent historical competitor development costs.
+9.5 Five ablations
+Disabled new engine	Boundary that must lose its claimed evidence
+Y1	Autonomous accepted construction of the new economic semantic family.
+Y2	Supported joint responses to changed policies and strategic spillovers.
+Y3	Accepted history-dependent interaction/deviation behavior.
+Y4	Qualified computation under the actual no-pooling data rights.
+Y5	Uniform discovered algorithm guarantee and its useful practical consequence.
+
+
+Keep other eligible capabilities, providers and resources enabled. Also compare the complete candidate with all five disabled against B_X_release.
+
+A successful ablation can reveal reuse or a measurement error. Do not preserve a redundant engine merely to report five new scopes.
+9.6 Mandatory operational 100× gate
+For actor a, registered offered-load level lambda and operator-week w:
+Q_a(lambda,w) =
+  sum_i(fixed_business_weight_i
+        * independently_accepted_completion_i_within_deadline)
+
+C_a =
+  max over preregistered lambda levels that meet the original floors:
+      expected Q_a(lambda,w)
+Run a preregistered load curve from the same eligible task population and task mix. Each actor may sustain a different load under the same parent resources. Every assignment offered at a tested load, including unstarted and missed work, remains in that load's denominator.
+
+This avoids requiring the slower actor to meet completion floors at the faster actor's load. It does not remove failed overload trials from the record. Freeze the load grid, arrival/sampling rules, deadlines and saturation checks before exposure.
+
+Use simultaneous inference across all actors, strata and tested loads. Untested potentially qualifying comparator loads remain an upper-capacity gap; do not assume their capacity is zero. No extrapolation outside the qualified grid may support the ratio.
+
+Use the preregistered simultaneous 95% analysis, with institution/period clustering, incomplete work, measurement error, missing costs and resource violations included.
+
+At least thirty independent institution/period blocks are required; power analysis may increase that number. Do not treat thousands of correlated substeps as independent trials.
+
+The new programme passes only when:
+L_candidate >= 100 * max_b(U_b)
+L_B_X_release >= epsilon_X > 0
+max_b(L_b) >= epsilon > 0
+Here b includes qualified B_X_release and every mandatory registered comparator. Freeze materially positive epsilon values before exposure.
+
+All five new engine gates must pass. Original correctness, loss, calibration, authority, resource and hard-constraint floors also pass. Measure claimed-completion correctness before filtering accepted results into the numerator.
+
+A zero or negligible X denominator supports an absolute/new-capability result, not an incremental 100× ratio.
+
+Ninety-nine times, ten times, one hundred percent and one thousand percent improvement do not pass this contract. Five separately measured gains cannot be multiplied into it.
+
+If the qualified baseline, complete meters, protected oracle, eligible backlog or comparator is missing, report BLOCKED. A completed implementation with lower measured improvement remains a partial result.
+9.7 Economic headroom and owner value
+The capacity test must contain financially material decision work. Retain the original business-decision-payoff endpoint excluding clerical savings.
+
+Before field assignment, register capital/rights/risk/resource/horizon matching, downside limits, the additional net owner-value endpoint, and the material positive decision-payoff margin over B_X_release.
+
+At field qualification, require the simultaneous lower confidence bound on the registered signed economic improvement to exceed that margin. The amount is fixed from the mandate and independent calibration before exposure, not from candidate outcomes.
+
+Preserve the original $100 million additional net owner-value objective and historical principal economic 100× protocol. Track H0 observations/settlement, H1 provisional outcomes and H2 at the thirty-six-month mature horizon.
+
+A new financial 100× claim over completed X additionally requires:
+L_candidate_net_owner_value >= 100 * max_b(U_b_net_owner_value)
+L_B_X_release_net_owner_value >= epsilon_financial_X > 0
+Use S7 attribution/accounting with uncertainty from identification, valuation, costs and missing outcomes. Retain all unsuccessful programmes and human overrides.
+
+Capital raised, AUM, transaction value, predicted returns, modeled surplus, simulated cash and general market appreciation are not additional attributable owner value.
+
+Operational 100× and financial 100× have separate statuses. The construction programme does not assume sufficient opportunity supply or economic headroom; those are measured requirements.
+9.8 Feasibility before scaling
+Measure X's limiting resource and cost decomposition first. Map each selected engine to a measured term or a previously unavailable completed-business result.
+
+For a sequential limiting resource, an unchanged share f caps improvement at 1/f even if every other term disappears. An unchanged 2% share caps that resource at 50×. New overhead must also fit inside the residual budget.
+
+Use the actual concurrency/throughput model rather than applying a sequential bound indiscriminately. Include approvals, observations, counterparty participation, security and proof checking.
+
+If measured constraints prevent 100×, redesign the responsible computation or retain UNPASSED. Adding unmatched resources or lowering the business completion criterion is not a passing route.
+10. Infrastructure and resource contracts
+10.1 One product computation graph
+```mermaid
+flowchart TD
+  W["Canonical Work and mandate"] --> A["Y1 Action theory"]
+  A --> P["Y3 Interaction protocol"]
+  M["Y2 Strategic response"] --> P
+  P --> C["Y4 Private computation"]
+  C --> E["Existing S4/S5/S6 execution"]
+  E --> O["Independent outcomes and S7"]
+  O --> M
+  O --> T["Y5 Algorithm theory"]
+  T --> G["Existing S8 admission"]
+  G --> P
+  G --> C
+```
+This graph describes dependencies, not a required deployment topology. Artifacts and execution remain on existing FINNOR ownership and persistence.
+
+Y5 can improve any compatible engine. Its output cannot bypass current per-instance applicability, feasibility or effect checks.
+10.2 Parent resource accounting
+Resource	Required meter
+Models	Actual provider/model/checkpoint, input/output/cache/reasoning usage where reported, pricing basis and billed cost.
+Compute	Project/region/runtime, CPU/GPU time, simultaneous memory, storage, network and descendants.
+Discovery	Data acquisition, semantic interpretation, experiments, rejected candidates and actor-model learning.
+Private computation	Key setup, preprocessing, protocol rounds, transport, output validation, failed/aborted executions and security review.
+Formal research	Candidate generation, solver/prover runs, failed proof search, kernel checks and implementation correspondence.
+Humans	Preparation, interpretation, legal/fiduciary authorization, validation, supervision, rescue and maintenance.
+Effects	Reservations, unresolved exposure, observation/reconciliation work and authorized compensating actions.
+
+
+Caches and private preprocessing are not free. Charge their construction, retention, invalidation and actual reuse. Register the amortization horizon and eligible demand before scoring.
+
+Verify actual model availability, cloud resources, selected AWS project/region and paid-service grants. No spare cluster, credential or global deployment is assumed.
+10.3 Isolation and coordination
+Run generated semantics, models, circuits and proof-search code with bounded filesystem, network, credentials and resources. They remain untrusted producers.
+
+Separate private participant inputs from public model/protocol artifacts. Keep protected truth and checkers inaccessible to candidate discovery.
+
+Use the current queue, cancellation, checkpoint and obligation machinery. No new workflow engine or overlapping truth registry is required.
+
+Shared schema, financial IR, S5 resources, S6 enforcement and S8 admission changes need independent review and ordered migration/integration. Candidate code cannot replace its own validator.
+10.4 Reproducibility and supply chain
+Pin source commits, transitive locks, model/checkpoint identity, images, compiler/prover versions, numerical settings, circuit/protocol parameters, schemas and oracle assets.
+
+Verify actual license/commercial-use terms, compatibility and security for every adopted dependency. A reference below is not an installation instruction or completed audit.
+
+Use existing supported substrates before new infrastructure. GPU needs depend on the chosen trainable component, not programme ambition.
+11. Product experience, failure behavior and release
+11.1 One economic Work
+The partner continues using the existing Work, focus and consequence-aware surface.
+
+Show the proposed economic action and its meaning, supported response models, exact interaction terms, required private inputs, proof basis, real consents, costs and current external outcomes.
+
+The user can inspect:
+- How the proposed programme differs from admitted alternatives.
+- Which statement is observed, model-relative, empirically qualified or formally proved.
+- Who owns each right, obligation, input and effect.
+- Which uncertainty or missing interpretation blocks a conclusion.
+- Which commitment can occur under current authority.
+- What independent observation establishes actual completion.
+A partner changes terms or the mandate through existing authority. FINNOR shows the affected revision and invalidated dependencies before execution.
+
+No five-engine dashboard suite, theorem game or new page-count requirement is introduced.
+11.2 Failure matrix
+Failure	Required behavior	Independent evidence
+Candidate operator is an existing macro	Reuse it; assign no new semantic credit.	Pinned grammar/interpreter and separation check.
+Unapproved meaning or legal efficacy	Keep proposal/interpretation unresolved; no effective-right claim.	Independent interpretation and actual acceptance record.
+Model identifies no unique response	Retain supported alternatives and conditional bounds.	Withheld interventions and S3 identification record.
+Preferred equilibrium chosen without basis	Withdraw the selection claim; retain the model set.	Solver/checker and alternative-selection evidence.
+Protocol uses future/private oracle information	Reject current decision and dependent certificate.	Information-set oracle.
+Profitable dynamic deviation	Reject the incentive claim and preserve counterstrategy.	Full supported deviation checker.
+Mandatory disclosure altered	Block release/execution under the original contract.	Disclosure policy and source witnesses.
+Private inputs/rights change	Invalidate affected circuit/result and recheck current grants.	Participant-local authority and commitments.
+Malicious MPC or unauthorized leakage	Reject/abort within the threat profile; retain all exposure.	Protocol, output and access receipts.
+Private computation aborts after an effect	Preserve the real effect and UNKNOWN reconciliation.	Existing S6/provider observations.
+False/vacuous/changed theorem	Reject proof claim and candidate method.	Exact theorem, assumptions, kernel and nonempty witness.
+Runtime violates proved numeric semantics	Withdraw implementation correspondence; use admitted fallback.	Actual binary, arithmetic and persisted result.
+Budget exhaustion or interruption	Cancel/checkpoint safely; reconcile outstanding obligations.	Parent resource/effect ledger.
+Benchmark leakage or hidden worker rescue	Invalidate affected qualification evidence.	Oracle custody and assistance accounting.
+Work splitting or missing costs	Reject the multiplier calculation.	Frozen business IDs and complete meters.
+
+
+Zero observed protected violations is a tested requirement, not a universal zero-error probability.
+11.3 Release states
+Report separately for each engine:
+1. DESIGNED.
+2. CODE_COMPLETE.
+3. E2E_DEV_VERIFIED.
+4. DOMAIN_QUALIFIED.
+5. PRODUCTION_ACTIVE under current authority.
+Separately report POSTX_OPERATIONAL_100X_PASSED / UNPASSED / BLOCKED and each economic/financial gate's state and horizon.
+
+Generated artifacts can be useful before admission. Development success cannot stand in for protected qualification, production activation or owner value.
+11.4 Completion manifest
+Deliver the actual source revision and changed-source manifest; canonical owners; schemas/migrations; installed builds; supported profiles; actual model/prover/MPC identities; and S8 receipts.
+
+For each claim, bind independent specification/oracle, commands/environment, input rights, starting/ending state, real observations, cost/human/exposure ledger, failures and validator identity.
+
+Include B_X_release, comparator configurations, ablations, per-stratum results, confidence/power analysis, reuse assumptions, retained-domain regression results and blocked external requirements.
+
+The manifest must make every claimed new ability and every claimed number independently reviewable.
+12. Sources and interpretation
+12.1 Blueprint and source basis
+This document follows the previous twelve-section PRD structure: scope register, baseline/ownership, common contracts, five engines, integrated qualification, infrastructure, product/release and sources.
+
+The current X, R, V, F and U documents were reread. The R document's older use of X was resolved explicitly. Two independent architecture explorations compared economic construction with a probability/control-focused alternative.
+
+Reference code and research motivate implementation candidates and identify limits. They do not establish a FINNOR multiplier, deployed capability or sufficient economic headroom.
+- Inspected FINNOR main.
+- Repository instructions at that commit.
+- Inspected R5 draft.
+- Existing source adapter boundary.
+12.2 Engineering methods
+Read reference	Specific consequence in this PRD
+Poteto's pstack at the retained pin and architect	Compare structurally different whole designs; trace actual owners before choosing source changes.
+Model the Domain	Five typed outputs with independent meanings; no boolean collection or duplicate authority.
+Prove It Works	Real installed/runtime observations, independent semantic checks and actual proof-kernel receipts.
+Explain the Number and benchmark checklist	Qualified load curves, measured limiters, complete costs, tuned actors and preserved failed trials.
+Guard the Context Window	Bulk source snapshots separated from focused design scrutiny; source pointers retained.
+Ponytail at its retained pin	Reuse existing complete primitives and owners; minimize additional runtime infrastructure while preserving all required outcomes.
+Cursor quality review at its retained pin	Inspect changed ownership, callers, types and unnecessary wrappers; prefer structural simplification.
+OpenClaw test audit at its retained pin	Every test needs a real observable contract, credible failure and coverage gap; no self-derived expected answers or test-only production seams.
+
+
+Apply relevant principles under FINNOR's actual repository rules. Do not copy another project's commands, permission model or entire skill catalogue.
+12.3 Computational foundations
+Primary source	Relevant basis	Limit retained
+DreamCoder	Learned symbolic libraries and neural search policies.	Library induction alone is already close to X5; it does not establish new economic semantics.
+Stipula	Executable contractual agreement, permissions, violations and obligations.	Syntax/operational semantics do not prove legal efficacy or useful autonomous invention.
+Multiplayer Performative Prediction	Population/actor response to decision makers' policies.	Efficient equilibrium results depend on structural conditions; general response need not be unique or identified.
+ABIDES-Economist	Multi-actor economic simulation with learning agents.	A simulator is not an empirically qualified PE counterparty model.
+Dynamic Mechanism Design and Bayesian Persuasion	Dynamic private information, commitment and information-policy design.	Commitment, beliefs, preferences and mandatory disclosures must fit the admitted profile.
+Kreps–Wilson Sequential Equilibria and MIT equilibrium refinements	Sequential rationality plus a globally consistent limiting assessment from completely mixed strategies.	Finite-game/model-relative qualification; checking convenient beliefs or isolated reports is insufficient.
+MP-SPDZ and documentation	Secure-computation protocols under differing corruption models.	Documentation explicitly does not establish critical-production security review; input truth and authorized-output leakage remain separate.
+AlphaEvolve and research description	Evaluator-guided algorithmic discovery.	Generated code/evaluation is not automatically a general theorem or available production service.
+DeepSeek-Prover-V2 and Lean proof validation	Formal proof generation and independent validation.	Check the exact theorem, trusted dependencies and approved axioms; sampled arithmetic checks do not replace a uniform proof.
+
+
+Candidate algorithms from the alternative design include probabilistic circuits, distributionally robust optimization, confidence sequences, stochastic barrier certificates and occupation-measure control. Use only where the actual model assumptions and numerical/checking paths are qualified. They are not extra product scopes.
+12.4 Retained execution and evaluation references
+Retain the earlier substrate references without assigning duplicate capability credit:
+- Pi 1.0, Pi Durable and Pi repository. Composition, routing and checkpoint substrate; S6 retains effect semantics.
+- Context Language Models. The inspected README describes model-managed context files, not a context-to-weight hypernetwork. It declares CC BY-NC 4.0; verify actual adoption rights before commercial code reuse. Context management remains a harness technique, not a Y scope.
+- PM4Py, cvc5 synthesis and PEFT. Existing discovery, bounded synthesis and trainable-component options.
+- Storm, SCIP, VIPR, Gurobi numerical semantics, OpenSpiel, y0 and Rosette. Retained R computation/checking substrates; actual backend/domain compatibility is required.
+- WorkArena, OSWorld-V2 and Sierra's tau benchmark repository. Development/evaluation references; version-pinned public tasks do not replace protected economic qualification.
+- Factory Missions, planning, reference and skills. Native execution workflow; verify the installed scheduling/configuration interface.
+These are options and references. The mission is not to install every framework. No source's reported result is treated as FINNOR's result.
+12.5 Paste-ready Factory/Codex mission
+You are the mission orchestrator. Implement the five POSTX.Y1–Y5 outcomes in this PRD as one integrated FINNOR programme. The entire document is the product and acceptance contract.
+
+You control algorithms, libraries, implementation shape, decomposition and execution order. Use actual code and measurements. Replace a weak mechanism when another delivers the same independent outcome. Do not lower the five new boundaries or the post-X 100× acceptance contract.
+A. Ground the current product and comparator
+Read repository instructions, canonical architecture, frozen S/P/M/R/V/X contracts, active branches, dirty work, source, migrations, tests, installed configuration and release/admission evidence.
+
+Exercise the strongest existing Work/runtime paths. Trace every proposed artifact from producer to evidence, policy, resources, authority, external observation and user-visible result.
+
+Resolve the older R document's X versus the newest five-engine X. Build B_live and the actual B_X_release manifest. An incomplete release is not the completed comparison actor.
+
+Map each proposed Y ability to actual baseline code and qualifications. Reuse existing capability. Do not rebuild R3/R5/R6/R7/R8, X1–X5 or their owners merely under new names.
+
+Read relevant pinned engineering references. Follow FINNOR's actual test, deployment and protected-boundary rules.
+B. Produce the concrete mission design
+Compare at least two whole-shape designs, using existing source and measured limiting terms. The chosen design must deliver the five single outputs and their independent boundaries.
+
+For each scope, state:
+- Exact computational change and principal artifact.
+- Actual files/interfaces/owners and consumer path.
+- Baseline duplication test and decisive falsifier.
+- Supported domain, independent oracle and protected custody.
+- Worker responsibility, isolated edit boundary and real dependencies.
+- Resource/data/security/authority needs and external blockers.
+- Executable end-to-end scenario, recovery and integration gate.
+- Contribution to the measured complete-business-work bottleneck.
+Freeze business units, load curve, comparator preparation, numerical semantics, threat model, proof assumptions and material margins before protected exposure.
+
+Use native planning. Present the concrete source plan, budget, domain and validation contract. Obtain only platform-required or genuinely missing material approval. Existing authorization persists; routine reversible implementation choices do not need repeated questions.
+
+A missing field authorization or long-term outcome blocks its dependent claim. Continue independent implementation and test preparation.
+C. Execute without substituting build agents for product capability
+Use capable orchestration for architectural choices, suitable efficient workers for bounded implementation and independent capable validators for actual behavior and adversarial scrutiny.
+
+Choose models actually available. Keep precise module/model identities and complete costs. Do not copy third-party token/cache percentages as expected results.
+
+Honor native scheduling. Parallelize supported independent research/review. Serialize shared contracts, migrations, protected admission and integration. Do not assume arbitrary simultaneous writers can modify the same owners safely.
+
+Factory/Codex agents construct FINNOR. The scored FINNOR runtime must perform semantic discovery, strategic computation, protocol synthesis, private compilation and algorithm discovery itself. Human or build-worker rescue during a scored run is assistance, not autonomous success.
+
+Keep durable work/evidence state through interruption and compaction. Progress updates identify new evidence, unresolved questions and next proof. Do not restart completed work or hide retained failures.
+D. Prove the delivered behavior
+Before critical changes, write the credible failure model and observable owning contract. Follow actual repository policy.
+
+Create real application-level verification that launches the correct build, confirms readiness, uses correct users/grants, drives the Work, inspects canonical/external state and tears down safely.
+
+Inspect actual dependency interfaces and numerical semantics where a claim depends on them. Expected answers come from independent specifications/oracles, not the implementation under test.
+
+Validators inspect changed source, complete data/effect paths and real runtime behavior. They cannot approve from worker prose, a build success or screenshots alone.
+
+Use exact/interval/independently checked paths for financial and proof claims. Preserve model-relative limits. Verify private output policy, adversarial corruption behavior, exact theorem type, nonempty domain and implementation correspondence.
+
+Exercise revocation, semantic drift, unknown effects, concurrent changes, bad input commitments, withheld strategic responses, dynamic deviations, broken proof assumptions, failed migrations and budget interruption where applicable.
+
+Preserve failing evidence. Repair a bounded defect and rerun the affected owning proof and necessary regressions. Expand testing only when changes or unresolved risk justify it. Do not weaken an oracle or remove useful protected tests to achieve green status.
+E. Integrate, measure and finish authorized work
+Deliver the five artifacts through existing Work/policy/resource/effect/admission owners. Remove redundant code and unnecessary control layers while preserving all required capability.
+
+Run independent scope gates, integrated campaigns, ablations and the matched-resource load curve. Include current X native paths, learned assets, standard MPC and strongest fallbacks.
+
+Charge experiments, training, setup, preprocessing, proof search, independent validation, failed negotiations, human approvals and all descendants. Retain current authority, external effect identity, outstanding exposures and original failures.
+
+Do not contact customers, create new economic commitments, deploy publicly, transfer funds or promote models without applicable current authority. Authorized local/test engineering continues.
+
+If proof research, data access, security review, professional interpretation, participant consent, ninety-day operation or mature S7 outcomes are not available, finish every independently achievable artifact and proof. Report the exact unmet condition, responsible owner and executable continuation.
+
+Do not replace unavailable capability with a staged demonstration or label smaller measured gains as completion of 100×.
+F. Return a reviewable release
+Deliver actual source changes, installed test paths, domains, reproducible commands, independent receipts, baselines, complete cost/exposure meters, retained failures and remaining blockers.
+
+Report each engine's implementation/qualification/activation state separately. Report post-X operational 100× and economic/financial states separately again.
+
+Every claimed result must resolve to evidence produced by the delivered FINNOR runtime under the declared authority and resource profile.
+
+Mission result: a system that can construct, evaluate and carry out independently accepted economic programmes beyond completed X's demonstrated reach, with a genuinely qualified additional 100× only when the full comparison passes.
+
+
+

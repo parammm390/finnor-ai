@@ -10,6 +10,7 @@ import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {migrate} from '../../packages/db/migrate';
+import {orderMigrationNames} from '../../packages/db/migration-order';
 import {closePool} from '@finnor/db';
 import {startR1HttpFixture} from './http-fixture.mts';
 import {prepareR1Owners,ok} from './owner-fixture.mts';
@@ -59,17 +60,20 @@ async function snapshot(f:any,id:string){
  await artifact(f.name+'/sql-'+id+'.json',tables);return tables;
 }
 const env=()=>({admin,http,evidence,repo});
-try{
+campaign: try{
  process.env.NODE_ENV='test';process.env.FINNOR_TEST_MANAGED_EXTENSIONS='omit';process.env.FINNOR_P4_PROFILE='ordinary_disposable';process.env.AUTH_DEV_BYPASS='0';
  process.env.FINNOR_S4_POLICY_STORE=join(evidence,'ordinary-policies');process.env.FINNOR_S3_MODEL_STORE=join(evidence,'ordinary-models');process.env.FINNOR_M1_STORE=join(evidence,'ordinary-producer');
  const port=await new Promise<number>((yes,no)=>{const s=createServer();s.once('error',no);s.listen(0,'127.0.0.1',()=>{const a=s.address();if(!a||typeof a==='string')return no(Error('Local database port'));s.close(()=>yes(a.port));});});
- postgres=new EmbeddedPostgres({databaseDir:directory,user:'finnor',password:'finnor',port,persistent:false,onLog:()=>undefined});
+ postgres=new EmbeddedPostgres({databaseDir:directory,user:'finnor',password:'finnor',port,persistent:false,
+  postgresFlags:['-h','127.0.0.1','-k',''],onLog:()=>undefined});
  await artifact('database-lifecycle.json',{directory,port,database:'r1_e2e',role:'finnor_app',status:'INITIALIZING',retention:'Disposable database; exact SQL/input/source receipts retained separately'});
  await postgres.initialise();await appendFile(join(directory,'postgresql.conf'),'\ntrack_commit_timestamp=on\n');await postgres.start();await postgres.createDatabase('r1_e2e');
  const postmasterPid=Number((await readFile(join(directory,'postmaster.pid'),'utf8')).split('\n')[0]);await artifact('database-lifecycle.json',{directory,port,database:'r1_e2e',role:'finnor_app',postmasterPid,status:'RUNNING'});
  const adminUrl='postgres://finnor:finnor@127.0.0.1:'+port+'/r1_e2e';
- if(selected==='runtime'){
-  const migrations=join(repo,'finnor-os/packages/db/migrations'),files=await Promise.all((await readdir(migrations)).filter(p=>p.endsWith('.sql')).sort().map(async name=>({name,sql:await readFile(join(migrations,name),'utf8')})));
+ if(selected==='runtime'||selected==='runtime-migrations'){
+  const migrations=join(repo,'finnor-os/packages/db/migrations');
+  const names=orderMigrationNames((await readdir(migrations)).filter(p=>p.endsWith('.sql')));
+  const files=await Promise.all(names.map(async name=>({name,sql:await readFile(join(migrations,name),'utf8')})));
   const split=files.findIndex(p=>p.name==='0182_r1_certified_state_reduction.sql');assert(split>0,'R1 migration must follow the retained historical prefix');
   const prior=files.slice(0,split),successors=files.slice(split).map(p=>p.name);
   const priorApplied=await migrate(adminUrl,prior),c=new pg.Client({connectionString:adminUrl});await c.connect();
@@ -78,8 +82,12 @@ try{
    const catalogSql="SELECT column_name,data_type,is_nullable,column_default FROM information_schema.columns WHERE table_schema='finnor_os' AND table_name='jobs' ORDER BY ordinal_position",before=(await c.query(catalogSql)).rows;
    const upgrade=await migrate(adminUrl,files),replay=await migrate(adminUrl,files),after=(await c.query(catalogSql)).rows,preserved=(await c.query('SELECT * FROM finnor_os.jobs WHERE id=$1',[old.id])).rows[0];
    await artifact('migration-upgrade-replay.json',{priorApplied,upgrade,replay,old,preserved,before,after,migrations:files.map(f=>({name:f.name,sha256:sha(f.sql)})),ordinaryDisposable:true});
-   assert.deepEqual(upgrade,successors);assert.deepEqual(replay,[]);assert.deepEqual(preserved,old);assert.deepEqual(after,before);migrationCount=priorApplied.length+upgrade.length;
+   assert.deepEqual(priorApplied,prior.map(p=>p.name));assert.deepEqual(upgrade,successors);assert.deepEqual(replay,[]);assert.deepEqual(preserved,old);assert.deepEqual(after,before);migrationCount=priorApplied.length+upgrade.length;
   }finally{await c.end();}
+  if(selected==='runtime-migrations'){
+   results.push({id:'runtime-migration-upgrade-replay',status:'PASS',observed:{migrationCount}});
+   break campaign;
+  }
  }else migrationCount=(await migrate(adminUrl)).length;
  admin=new pg.Client({connectionString:adminUrl});await admin.connect();await admin.query("SET app.test_vertical_mode='explicit'");
  await admin.query("ALTER ROLE finnor_app LOGIN PASSWORD 'finnor_app'");

@@ -1,0 +1,73 @@
+name: "W3 - Real-world fulfillment and publication"
+on:
+  push:
+    branches: [cloud/postz-w3, codex/zw-integration-quality-20261115]
+    paths:
+      - .github/workflows/w3-owning-*.yml
+      - finnor-os/**
+      - packages/**
+      - scripts/**
+      - src/**
+      - package.json
+      - package-lock.json
+      - scope-postz/w3-real-world-fulfillment/**
+      - scope-frontier5/x1-institutional-programme-compiler/verification-plan.json
+      - vendor/**
+permissions:
+  contents: read
+concurrency:
+  group: w3-owning-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  fast-owner:
+    name: "W3 - Fast fulfillment journey"
+    uses: ./.github/workflows/w3-owning-episode.yml
+    with:
+      episode: fast
+  full-positive-and-publication:
+    name: "W3 - ${{ matrix.episode == 'native' && 'Full fulfillment journey' || 'Reject invalid publication' }}"
+    needs: fast-owner
+    strategy:
+      fail-fast: false
+      matrix:
+        episode: [native, publication]
+    uses: ./.github/workflows/w3-owning-episode.yml
+    with:
+      episode: ${{ matrix.episode }}
+  cold-installed-and-mounted:
+    name: "Verify cold W3 installation and browser"
+    needs: full-positive-and-publication
+    uses: ./.github/workflows/w3-owning-qualification.yml
+  verdict:
+    name: "W3 result - fulfillment and publication"
+    needs: [fast-owner, full-positive-and-publication, cold-installed-and-mounted]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Require every original scenario and control
+        env:
+          FAST: ${{ needs.fast-owner.result }}
+          FULL: ${{ needs.full-positive-and-publication.result }}
+          INSTALLED: ${{ needs.cold-installed-and-mounted.result }}
+        run: |
+          node --input-type=module <<'NODE'
+          const results = { fast: process.env.FAST, full: process.env.FULL, installed: process.env.INSTALLED }
+          console.log(JSON.stringify({ phase: "W3", checks: results }))
+          if (!Object.values(results).every(result => result === "success")) throw Error("W3_REQUIRED_CHECKS_FAILED")
+          NODE
+  completion-receipt:
+    name: "Report completed W3 checks"
+    needs: verdict
+    if: ${{ always() && github.ref_name == 'codex/zw-integration-quality-20261115' }}
+    permissions:
+      actions: read
+      contents: read
+      issues: read
+      pull-requests: write
+    uses: ./.github/workflows/ci-completion.yml
+    with:
+      pr_number: 187
+      head_sha: ${{ github.sha }}
+      gate: "W3 result - fulfillment and publication"
+      result: ${{ needs.verdict.result }}

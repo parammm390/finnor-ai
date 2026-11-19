@@ -1,4 +1,4 @@
-name: security
+name: "Security - Secrets and vulnerable dependencies"
 on:
   workflow_call:
     inputs:
@@ -13,7 +13,7 @@ permissions:
   security-events: write
 jobs:
   gitleaks:
-    name: gitleaks
+    name: "Secrets - Scan complete Git history"
     runs-on: ubuntu-latest
     timeout-minutes: 8
     permissions:
@@ -27,6 +27,7 @@ jobs:
       # One pinned scanner covers the complete history, including side parents
       # and each merge parent; the overlapping first-page action is unnecessary.
       - name: Scan complete base-to-head history
+        id: secret-history
         shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -50,6 +51,7 @@ jobs:
           tar -xzf "${tooling}/${archive}" -C "$tooling" gitleaks || fail "Cannot extract verified scanner"
           scanner="${tooling}/gitleaks"
           [[ "$("$scanner" version)" == "$version" ]] || fail "Scanner version mismatch"
+          printf 'gitleaks=%s\n' "$scanner" >> "$GITHUB_OUTPUT"
           : > "${tooling}/no-ignore-file"
 
           if [[ -n "$PR_BASE_SHA" || -n "$PR_HEAD_SHA" ]]; then
@@ -80,29 +82,92 @@ jobs:
             --ignore-gitleaks-allow --gitleaks-ignore-path="${tooling}/no-ignore-file" \
             --report-format=json --report-path="${RUNNER_TEMP}/finnor-secret-history-redacted.json" \
             --log-opts="-m ${scan_range}"
+      - name: Verify exact exceptions and adversarial history controls
+        if: ${{ always() && steps.secret-history.outputs.gitleaks != '' }}
+        env:
+          GITLEAKS_BIN: ${{ steps.secret-history.outputs.gitleaks }}
+          GIT_AUTHOR_NAME: FINNOR scanner fixture
+          GIT_AUTHOR_EMAIL: fixture@example.invalid
+          GIT_COMMITTER_NAME: FINNOR scanner fixture
+          GIT_COMMITTER_EMAIL: fixture@example.invalid
+        run: node scripts/centropy/verify-secret-scan-policy.mjs "$GITLEAKS_BIN" "$RUNNER_TEMP/finnor-secret-policy-proof.json"
       - name: Retain redacted complete-history findings
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: secret-history-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/finnor-secret-history-redacted.json
+          path: |
+            ${{ runner.temp }}/finnor-secret-history-redacted.json
+            ${{ runner.temp }}/finnor-secret-policy-proof.json
           if-no-files-found: warn
           retention-days: 7
   osv:
-    name: osv-scanner
+    name: "Dependencies - Scan known vulnerabilities"
     if: ${{ github.event_name == 'push' || inputs.run_dependency_scan }}
-    # v2 ships reusable workflows, not a root action.yml. Calling the root as an
-    # action makes GitHub reject it before the dependency scan begins.
-    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@9a498708959aeaef5ef730655706c5a1df1edbc2
-    with:
-      fail-on-vuln: true
-      scan-args: |-
-        --lockfile=package-lock.json
-        --lockfile=finnor-os/package-lock.json
-        --lockfile=finnor-os/apps/supplier-canary/package-lock.json
-        --lockfile=requirements.txt:finnor-os/packages/epistemic-runtime/src/requirements-s5.txt
-        --lockfile=requirements.txt:finnor-os/packages/epistemic-runtime/src/intervention-requirements.txt
-        --lockfile=requirements.txt:finnor-os/scripts/r3/requirements.lock
-        --lockfile=requirements.txt:finnor-os/scripts/r3/upstream-requirements.lock
-        --lockfile=finnor-os/scripts/r3/requirements.lock
-        --lockfile=finnor-os/scripts/r3/upstream-requirements.lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Scan declared dependency locks with OSV 2.3.8
+        id: scan
+        run: |
+          set -euo pipefail
+          scanner="$RUNNER_TEMP/osv-scanner"
+          curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' \
+            https://github.com/google/osv-scanner/releases/download/v2.3.8/osv-scanner_linux_amd64 \
+            --output "$scanner"
+          printf '%s  %s\n' bc98e15319ed0d515e3f9235287ba53cdc5535d576d24fd573978ecfe9ab92dc "$scanner" \
+            | sha256sum --check --strict
+          chmod 700 "$scanner"
+          status=0
+          # Every Python input here is an exact version closure. Scan those
+          # pins directly so a remote resolver cannot omit a lock from the run.
+          "$scanner" scan source --no-resolve --format=json --output-file=osv-results.json \
+            --lockfile=package-lock.json \
+            --lockfile=finnor-os/package-lock.json \
+            --lockfile=finnor-os/apps/supplier-canary/package-lock.json \
+            --lockfile=finnor-os/packages/epistemic-runtime/native/z4-execution-proof/Cargo.lock \
+            --lockfile=requirements.txt:finnor-os/packages/epistemic-runtime/src/requirements-s5.txt \
+            --lockfile=requirements.txt:finnor-os/packages/epistemic-runtime/src/intervention-requirements.txt \
+            --lockfile=requirements.txt:finnor-os/scripts/r3/requirements.lock \
+            --lockfile=requirements.txt:finnor-os/scripts/r3/upstream-requirements.lock \
+            --lockfile=requirements.txt:finnor-os/scripts/r4/requirements.lock \
+            --lockfile=requirements.txt:finnor-os/scripts/r4/numerical-requirements.lock \
+            --lockfile=requirements.txt:finnor-os/scripts/postz/w3/requirements-s3.lock || status=$?
+          if [[ "$status" != 0 && "$status" != 1 ]]; then
+            echo "::error::OSV scanner failed with exit $status"
+            exit 1
+          fi
+          test -s osv-results.json
+          printf 'status=%s\n' "$status" >> "$GITHUB_OUTPUT"
+      - name: Enforce dependency findings
+        env:
+          OSV_SCANNER_STATUS: ${{ steps.scan.outputs.status }}
+        run: node scripts/release/verify-dependency-scan.mjs osv-results.json osv-sarif-input.json
+      - name: Render complete findings for GitHub Code Scanning
+        id: sarif
+        if: ${{ !cancelled() && steps.scan.outcome == 'success' }}
+        uses: google/osv-scanner-action/osv-reporter-action@8dc09193bb540e09b23da07ad7e30bd33bf87018
+        with:
+          scan-args: |-
+            --output=osv-results.sarif
+            --new=osv-sarif-input.json
+            --gh-annotations=false
+            --fail-on-vuln=false
+      - name: Upload complete findings to Code Scanning
+        if: ${{ !cancelled() && steps.sarif.outcome == 'success' }}
+        uses: github/codeql-action/upload-sarif@cdefb33c0f6224e58673d9004f47f7cb3e328b89
+        with:
+          sarif_file: osv-results.sarif
+      - name: Retain full OSV evidence
+        if: ${{ !cancelled() && steps.scan.outcome == 'success' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: dependency-scan-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            osv-results.json
+            osv-results.sarif
+          if-no-files-found: error
+          retention-days: 7

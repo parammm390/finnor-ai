@@ -1,0 +1,32 @@
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/consumer.ts(62,21): error TS2554: Expected 2 arguments, but got 1.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/owners.ts(137,9): error TS7034: Variable 'observed' implicitly has type 'any[]' in some locations where its type cannot be determined.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/owners.ts(160,87): error TS7005: Variable 'observed' implicitly has an 'any[]' type.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/owners.ts(169,85): error TS18047: 'issued.reservation' is possibly 'null'.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/owners.ts(188,76): error TS7005: Variable 'observed' implicitly has an 'any[]' type.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/process.ts(25,7): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Property 'NODE_ENV' is missing in type '{ PATH: string; LANG: string; PYTHONDONTWRITEBYTECODE: string; }' but required in type 'ProcessEnv'.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/process.ts(29,64): error TS2339: Property 'kill' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/process.ts(34,18): error TS2339: Property 'pid' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/process.ts(36,36): error TS2339: Property 'pid' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/process.ts(41,11): error TS2339: Property 'stdout' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/process.ts(41,29): error TS7006: Parameter 'bytes' implicitly has an 'any' type.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/process.ts(42,11): error TS2339: Property 'stderr' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/process.ts(42,29): error TS7006: Parameter 'bytes' implicitly has an 'any' type.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/process.ts(43,11): error TS2339: Property 'on' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/process.ts(44,11): error TS2339: Property 'on' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/process.ts(44,23): error TS7006: Parameter 'code' implicitly has an 'any' type.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/process.ts(54,11): error TS2339: Property 'stdin' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/process.ts(55,11): error TS2339: Property 'stdin' does not exist on type 'never'.
+  The intersection 'ChildProcessWithoutNullStreams & ChildProcessByStdio<Writable, Readable, Readable> & ... 7 more ... & ChildProcess' was reduced to 'never' because property 'stdin' has conflicting types in some constituents.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/worker.ts(167,13): error TS2554: Expected 2 arguments, but got 1.
+finnor-os/packages/private-equity/src/project-z/z5-institution-linker/worker.ts(199,11): error TS2554: Expected 2 arguments, but got 1.
+{"schema":"finnor.z5.read-only-engineering-typecheck.v1","graph":"backend","sourceRepository":"/home/factory-user/repos/finnor-z5","compiler":"/home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/typescript/lib/typescript.js","compilerVersion":"5.9.3","compilerSha256":"3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675","declarationRepository":"/home/factory-user/repos/finnor-z-coordinator","borrowedDeclarations":true,"installedZ5Proof":false,"rootFiles":1454,"checkedSourceFiles":4466,"diagnostics":20,"fallbackPackages":["@aws-sdk/client-bedrock-runtime","@aws-sdk/client-secrets-manager","@aws-sdk/client-sts","@getzep/zep-cloud","@langchain/langgraph","@langchain/langgraph-checkpoint-postgres","@modelcontextprotocol/sdk/client/index.js","@modelcontextprotocol/sdk/client/streamableHttp.js","@sentry/node","@supabase/supabase-js","@vapi-ai/web","decimal.js","dotenv","dotenv/config","drizzle-kit","drizzle-orm","drizzle-orm/node-postgres","drizzle-orm/pg-core","embedded-postgres","esbuild","fast-check","groq-sdk","ioredis","next/navigation","next/server","nodemailer","pdf-parse","pino","playwright","playwright-core","saxes","steel-sdk","typescript","vitest","zod","zod-to-json-schema"],"wallMs":63923.561676000005,"maxRssBytes":3315023872}

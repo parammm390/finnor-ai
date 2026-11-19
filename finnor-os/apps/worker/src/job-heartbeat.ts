@@ -19,6 +19,11 @@ export function startJobHeartbeat(input: HeartbeatLease & {
   let timer: ReturnType<typeof setTimeout> | undefined;
   let pending: Promise<void> | null = null;
   let stopped = false, lost = false;
+  const leaseLoss = new AbortController();
+  const markLost = () => {
+    lost = true;
+    if (!leaseLoss.signal.aborted) leaseLoss.abort(new Error("Worker lost a durable job or owned claim lease"));
+  };
 
   const schedule = () => {
     clearTimeout(timer);
@@ -34,22 +39,34 @@ export function startJobHeartbeat(input: HeartbeatLease & {
   };
   const renew = async () => {
     try {
-      if (!await input.renew()) { lost = true; return; }
+      if (!await input.renew()) { markLost(); return; }
       jobDueAt = performance.now() + jobInterval;
       await Promise.all([...registrations].map(async registration => {
         if (!registrations.has(registration) || registration.dueAt > performance.now()) return;
         let owned = false;
         try { owned = await registration.callback(); }
-        catch (error) { input.onError(error); }
-        if (!owned && registrations.has(registration)) lost = true;
+        catch (error) {
+          if (registrations.has(registration)) markLost();
+          input.onError(error);
+        }
+        if (!owned && registrations.has(registration)) markLost();
         registration.dueAt = performance.now() + registration.interval;
       }));
-    } catch (error) { lost = true; input.onError(error); }
+    } catch (error) { markLost(); input.onError(error); }
   };
   schedule();
   return {
     get lost() { return lost; },
-    register(callback: () => Promise<boolean>, lease: HeartbeatLease): () => void {
+    leaseLossSignal: leaseLoss.signal,
+    async sourceBarrier(): Promise<void> {
+      const originalPending = pending;
+      if (originalPending) await originalPending;
+      if (stopped || lost || leaseLoss.signal.aborted)
+        throw new Error("SPECIALIST_ORIGIN_ACTUAL_JOB_SOURCE_ENDED");
+    },
+    // A guard of this physical job inherits its real lifetime. Independent
+    // resources must supply their own lease so shorter reservations renew in time.
+    register(callback: () => Promise<boolean>, lease: HeartbeatLease = input): () => void {
       if (stopped || lost) throw new Error("Cannot register a claim after job lease ownership ended");
       const interval = renewalInterval(lease.leaseSeconds);
       const registration = { callback, interval, dueAt: performance.now() + interval };

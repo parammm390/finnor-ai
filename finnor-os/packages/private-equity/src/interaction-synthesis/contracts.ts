@@ -50,16 +50,19 @@ export const QuantitySchema = z.object({
 }).strict().superRefine((v, ctx) => {
   if (v.value === null && !v.unknownReason) ctx.addIssue({ code: "custom", message: "Y3_UNKNOWN_REASON_REQUIRED" });
 });
-const party = z.enum(["P0", "P1"]);
-const recipient = z.enum(["P0", "P1", "PUBLIC"]);
+export const PartySchema = z.enum(["P0", "P1", "P2", "P3"]);
+export type Party = z.infer<typeof PartySchema>;
+const party = PartySchema;
+export const participantIndex = (participant: Party) => Number(participant.slice(1));
+const recipient = z.enum(["P0", "P1", "P2", "P3", "PUBLIC"]);
 const date = z.union([z.literal(0), z.literal(1), z.literal(2)]);
 const edge = z.object({ actionId: identifier, next: identifier }).strict();
 const common = {
-  id: identifier, date, state: z.tuple([z.union([z.literal(0), z.literal(1)]), z.union([z.literal(0), z.literal(1)])]),
+  id: identifier, date, state: z.array(z.union([z.literal(0), z.literal(1)])).min(2).max(4),
   observations: z.array(z.object({
-    key: identifier, value: z.string().max(4096), recipients: z.array(recipient).min(1).max(3)
+    key: identifier, value: z.string().max(4096), recipients: z.array(recipient).min(1).max(5)
   }).strict()).max(PROFILE.maxObservationsPerNode),
-  resources: z.record(identifier, rational), payments: z.tuple([rational, rational]), liabilities: z.tuple([rational, rational])
+  resources: z.record(identifier, rational), payments: z.array(rational).min(2).max(4), liabilities: z.array(rational).min(2).max(4)
 };
 export const NodeSchema = z.discriminatedUnion("kind", [
   z.object({ ...common, kind: z.literal("CHANCE"), chanceRole: z.enum(["PRIOR", "TRANSITION", "SIGNAL"]),
@@ -69,26 +72,23 @@ export const NodeSchema = z.discriminatedUnion("kind", [
     edges: z.array(edge).min(1).max(PROFILE.maxActions), informationSet: identifier.optional() }).strict(),
   z.object({ ...common, kind: z.literal("PROTOCOL"), controlId: identifier,
     edges: z.array(edge).min(1).max(PROFILE.maxProtocolOptions) }).strict(),
-  z.object({ ...common, kind: z.literal("TERMINAL"), payoff: z.tuple([rational.nullable(), rational.nullable()]),
+  z.object({ ...common, kind: z.literal("TERMINAL"), payoff: z.array(rational.nullable()).min(2).max(4),
     ownerValue: rational.nullable() }).strict()
 ]);
 export type Node = z.infer<typeof NodeSchema>;
 export const ProblemSchema = z.object({
   schema: z.literal("finnor.interaction-problem.v1"), id: identifier, title: text,
-  participants: z.tuple([
-    z.object({ id: z.literal("P0"), principalId: z.string().uuid(), outsideOption: QuantitySchema }).strict(),
-    z.object({ id: z.literal("P1"), principalId: z.string().uuid(), outsideOption: QuantitySchema }).strict()
-  ]),
+  participants: z.array(z.object({ id: party, principalId: z.string().uuid(), outsideOption: QuantitySchema }).strict()).min(2).max(4),
   dates: z.tuple([z.string().datetime({ offset: true }), z.string().datetime({ offset: true }), z.string().datetime({ offset: true })]),
   fixedOperatorRefs: z.array(RefSchema).min(1).max(64), actorModelRefs: z.array(RefSchema).min(1).max(64),
-  quantityBasis: z.object({ utilities: z.tuple([BasisSchema, BasisSchema]), ownerValue: BasisSchema }).strict(),
+  quantityBasis: z.object({ utilities: z.array(BasisSchema).min(2).max(4), ownerValue: BasisSchema }).strict(),
   financialLimits: z.object({
-    absolutePayments: z.tuple([QuantitySchema, QuantitySchema]),
-    liabilities: z.tuple([QuantitySchema, QuantitySchema]),
+    absolutePayments: z.array(QuantitySchema).min(2).max(4),
+    liabilities: z.array(QuantitySchema).min(2).max(4),
     semantics: z.literal("SIGNED_NODE_SNAPSHOTS_NO_IMPLICIT_NETTING_OR_UTILITY_CONVERSION")
   }).strict(),
   observationRules: z.array(z.object({
-    key: identifier, allowedRecipients: z.array(recipient).min(1).max(3), mandatoryByDate: date.nullable(),
+    key: identifier, allowedRecipients: z.array(recipient).min(1).max(5), mandatoryByDate: date.nullable(),
     classification: z.enum(["SOURCED_FACT", "AUTHENTICATED_ASSERTION", "MODEL_RELATIVE_STATEMENT", "UNRESOLVED_CLAIM"]),
     sourceRef: RefSchema
   }).strict()).max(64),
@@ -105,8 +105,20 @@ export const ProblemSchema = z.object({
 }).strict().superRefine((v, ctx) => {
   if (!(Date.parse(v.dates[0]) < Date.parse(v.dates[1]) && Date.parse(v.dates[1]) < Date.parse(v.dates[2])))
     ctx.addIssue({ code: "custom", message: "Y3_ORDERED_DATES_REQUIRED" });
-  if (v.participants[0].principalId === v.participants[1].principalId)
-    ctx.addIssue({ code: "custom", message: "Y3_DISTINCT_PRINCIPALS_REQUIRED" });
+  const n = v.participants.length, parties = new Set<string>(v.participants.map(p => p.id));
+  const issue = (message: string) => ctx.addIssue({ code: "custom", message });
+  if (v.participants.some((p, i) => p.id !== "P"+i)) issue("Y3_PARTY_ID");
+  if (new Set(v.participants.map(p => p.principalId)).size !== n) issue("Y3_DISTINCT_PRINCIPALS_REQUIRED");
+  if ([v.quantityBasis.utilities, v.financialLimits.absolutePayments, v.financialLimits.liabilities].some(a => a.length !== n))
+    issue("Y3_PARTICIPANT_VECTOR_DIMENSION");
+  const lawful = (recipient: string) => recipient === "PUBLIC" || parties.has(recipient);
+  if (v.observationRules.some(r => r.allowedRecipients.some(p => !lawful(p)))) issue("Y3_RECIPIENTS");
+  for (const model of v.models) for (const node of model.nodes) {
+    if ([node.state, node.payments, node.liabilities, ...(node.kind === "TERMINAL" ? [node.payoff] : [])].some(a => a.length !== n))
+      issue("Y3_PARTICIPANT_VECTOR_DIMENSION");
+    if (node.kind === "DECISION" && !parties.has(node.participant)) issue("Y3_PARTY_ID");
+    if (node.observations.some(o => o.recipients.some(p => !lawful(p)))) issue("Y3_RECIPIENTS");
+  }
 });
 export type InteractionProblem = z.infer<typeof ProblemSchema>;
 export type InteractionModel = InteractionProblem["models"][number];

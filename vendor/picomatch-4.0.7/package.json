@@ -1,0 +1,18 @@
+{
+  "name": "@finnor/picomatch",
+  "description": "Blazing fast and accurate glob matcher written in JavaScript, with no dependencies and full support for standard and extended Bash glob features, including braces, extglobs, POSIX brackets, and regular expressions.",
+  "version": "4.0.7-finnor.1",
+  "license": "MIT",
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "repository": "micromatch/picomatch",
+  "homepage": "https://github.com/micromatch/picomatch",
+  "engines": {
+    "node": ">=12"
+  },
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "posix.js",
+    "lib"
+  ]
+}

@@ -1,4 +1,5 @@
 import type { JobExecutionContext } from '../../../../apps/worker/src/queue';
+import { assertInstitutionApplicationDeliveryCurrent } from '../../../orchestration/src/project-z/z0-convergence/institution-consumer';
 import { employeeAuthoritySnapshot } from '@finnor/authority';
 import { validateInstitutionDemand, chargeInstitutionDemand } from '../allocation-store';
 import { persistInstitutionCompute } from '../institution-program/meter';
@@ -253,6 +254,7 @@ export async function runInstitutionHarnessJob(ctx:PeMutationContext,q:Instituti
    responsibilityIdentity:`x1-compiler-episode:${episode.id}`,phase:'RECOVERY',
    ordinal:nativeOrdinal,units:1});
  }
+ await assertInstitutionApplicationDeliveryCurrent(ctx,current.id,execution);
  const head:InstitutionHarnessProgram=structuredClone(q.proposed);
  head.runtime={node:process.version,imageDigest:null,jobId:execution.jobId,
   workerId:execution.workerId,deliveryAttemptId:execution.deliveryAttemptId,claimFence:execution.claimFence};

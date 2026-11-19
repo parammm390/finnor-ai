@@ -1,0 +1,164 @@
+name: W4 original commercial owner
+on:
+  push:
+    branches: [codex/project-w4-owner-ci, codex/zw-integration-quality-20261115]
+permissions:
+  contents: read
+concurrency:
+  group: w4-owner-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  controlled-owner:
+    name: "Verify original W4 commercial owner"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      AUTH_DEV_BYPASS: "0"
+      NEXT_TELEMETRY_DISABLED: "1"
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+      - name: Install the exact dependency locks
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          npm ci --no-audit --no-fund
+          npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Verify W4 compiler, checker and projection
+        working-directory: finnor-os
+        env:
+          FINNOR_W4_EVIDENCE_DIR: ${{ runner.temp }}/w4-contract
+        run: timeout --signal=TERM --kill-after=15s 120s node --import=tsx scripts/w4/run-contract-e2e.mts
+      - name: Install the existing scientific runtime pins
+        run: |
+          set -euo pipefail
+          umask 077
+          uv_container="$(docker create ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb02acbac4c69920fe9d278f82)"
+          trap 'docker rm "$uv_container" >/dev/null' EXIT
+          docker cp "$uv_container:/uv" "$RUNNER_TEMP/w4-uv"
+          uv="$RUNNER_TEMP/w4-uv"
+          "$uv" python install 3.11.15 3.12.13
+          "$uv" venv --python 3.11.15 "$RUNNER_TEMP/w4-s3"
+          "$uv" venv --python 3.12.13 "$RUNNER_TEMP/w4-s5"
+          "$uv" pip sync --only-binary :all: --python "$RUNNER_TEMP/w4-s3/bin/python" finnor-os/scripts/postz/w3/requirements-s3.lock
+          "$uv" pip sync --only-binary :all: --python "$RUNNER_TEMP/w4-s5/bin/python" finnor-os/packages/epistemic-runtime/src/requirements-s5.txt
+      - name: Prepare the existing fixed S6 Linux executor
+        run: |
+          set -euo pipefail
+          cc -std=c11 -O2 -Wall -Wextra -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -Wl,-z,relro,-z,now \
+            -o "$RUNNER_TEMP/w4-linux-launcher" finnor-os/packages/governed-execution/native/linux-launcher.c -lcrypto
+          node_path="$(command -v node)"
+          sudo "$node_path" finnor-os/scripts/r3/package-linux-jail.mjs \
+            "$node_path" "$RUNNER_TEMP/w4-linux-launcher" "/opt/finnor-s6-jail-$(node -p process.arch)"
+      - name: Run W4 through the original Work and owners
+        working-directory: finnor-os
+        env:
+          FINNOR_S3_PYTHON: ${{ runner.temp }}/w4-s3/bin/python
+          FINNOR_S5_PYTHON: ${{ runner.temp }}/w4-s5/bin/python
+          FINNOR_TEST_PYTHON: ${{ runner.temp }}/w4-s5/bin/python
+        run: |
+          set -euo pipefail
+          umask 077
+          set +e
+          timeout --signal=TERM --kill-after=30s 1320s node --max-old-space-size=1536 --import=tsx \
+            scripts/w4/run-native-e2e.mts --output "$RUNNER_TEMP/w4-native" \
+            > "$RUNNER_TEMP/w4-native.private.log" 2>&1
+          exit_code="$?"
+          set -e
+          printf '%s\n' "$exit_code" > "$RUNNER_TEMP/w4-driver-exit"
+          exit "$exit_code"
+      - name: Verify and retain bounded W4 results
+        if: ${{ always() }}
+        run: |
+          node --input-type=module <<'JS'
+          import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+          import { join } from 'node:path'
+
+          const temp = process.env.RUNNER_TEMP
+          const file = name => join(temp, 'w4-native', name)
+          const json = path => existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : null
+          const code = value => typeof value === 'string' && /^[A-Z][A-Z0-9_]{2,120}$/.test(value) ? value : null
+          const native = json(file('native-owner-evidence.json'))
+          const fail = json(file('first-failure.json'))
+          const contract = json(join(temp, 'w4-contract', 'evidence.json'))
+          const componentIds = ['W033', 'W034', 'W035', 'W036_COMPONENT', 'W037', 'W038', 'W040', 'ADVERSARIAL']
+          const componentPassed = contract?.schema === 'finnor.w4.contract-evidence.v1'
+            && Array.isArray(contract.cases) && contract.cases.length === componentIds.length
+            && componentIds.every(id => contract.cases.some(row => row.id === id && row.status === 'PASS'))
+          const exit = join(temp, 'w4-driver-exit')
+          const driverExit = existsSync(exit) ? Number(readFileSync(exit, 'utf8').trim()) : null
+          const message = fail?.failure?.message ?? ''
+          let owner = null
+          try { owner = JSON.parse(message.split('\n', 1)[0]) } catch {}
+          const types = new Set(['compile_market_operating_program_v1', 'advance_market_operating_program_v1'])
+          const jobs = (native?.physical ?? []).filter(row => types.has(row.type))
+          const successful = native?.status === 'PASS_NATIVE_SMOKE' && driverExit === 0
+            && native.workCount === 1 && [...types].every(type => jobs.some(row => row.type === type && row.status === 'completed'))
+            && native.restart?.signal === 'SIGKILL'
+          // Preserve only bounded status/reason codes from private owner-delivery evidence.
+          // No payload, envelope, reference identity, token or owner SQL is uploaded.
+          const { readdirSync } = await import('node:fs')
+          const deliveryDir = file('native-deliveries')
+          const deliveryFiles = existsSync(deliveryDir) ? readdirSync(deliveryDir)
+            .filter(name => /^[1-9][0-9]*\.json$/.test(name))
+            .sort((a, b) => Number(a.slice(0, -5)) - Number(b.slice(0, -5))) : []
+          const lastDelivery = deliveryFiles.length ? json(join(deliveryDir, deliveryFiles.at(-1))) : null
+          const safeStatus = value => typeof value === 'string' && /^[A-Z][A-Z0-9_]{1,100}$/.test(value) ? value : 'UNCLASSIFIED'
+          const outstanding = Array.isArray(lastDelivery?.unresolved) ? lastDelivery.unresolved : []
+          const lastBatches = Array.isArray(lastDelivery?.batches) ? lastDelivery.batches : []
+          const deliveryEvidence = lastDelivery ? {
+            rounds: [...new Set(lastBatches.map(row => row.round).filter(Number.isInteger))].length,
+            pending: outstanding.length,
+            statuses: Object.fromEntries([...new Set(outstanding.map(row => safeStatus(row.status)))]
+              .map(status => [status, outstanding.filter(row => safeStatus(row.status) === status).length])),
+            lastErrors: Object.fromEntries([...new Set(outstanding.map(row => safeStatus(row.lastError)).filter(x => x !== 'UNCLASSIFIED'))]
+              .map(reason => [reason, outstanding.filter(row => row.lastError === reason).length])),
+            batches: lastBatches.length,
+            examined: lastBatches.reduce((n, row) => n + (Number(row.report?.inspected) || 0), 0),
+            accepted: lastBatches.reduce((n, row) => n + (Number(row.report?.accepted) || 0), 0),
+            failureCodes: [...new Set(lastBatches.flatMap(row => (row.report?.failures ?? [])
+              .map(item => safeStatus(item.code))))].slice(0, 20),
+          } : null
+          const receipt = {
+            ownerDelivery: deliveryEvidence,
+            source: process.env.GITHUB_SHA,
+            contract: componentPassed ? 'PASS' : contract ? 'FAILED' : 'NOT_RUN',
+            native: successful ? 'PASS_CONTROLLED_OWNER' : driverExit === null ? 'NOT_RUN' : 'FAIL',
+            driverExit,
+            failure: fail ? {
+              predicate: code(message.match(/^(?:Error: )?([A-Z][A-Z0-9_]{2,120})(?=[:\s]|$)/)?.[1]),
+              migration: message.match(/^Migration ([a-z0-9_]{1,140}\.sql) failed:/)?.[1] ?? null,
+              ownerStatus: code(owner?.status),
+              reasonCodes: Array.isArray(owner?.reasons) ? owner.reasons.map(code).filter(Boolean).slice(0, 12) : [],
+              gapCodes: Array.isArray(owner?.gaps) ? owner.gaps.map(value => typeof value === 'string'
+                ? code(value.split(':', 1)[0]) : null).filter(Boolean).slice(0, 12) : [],
+              httpStatus: Number.isInteger(owner?.status) ? owner.status : null,
+              responseCode: code(owner?.body?.code),
+            } : null,
+            fieldValidated: false,
+            workCount: Number.isInteger(native?.workCount) ? native.workCount : null,
+            completedJobs: jobs.filter(row => row.status === 'completed').map(row => row.type),
+          }
+          writeFileSync(join(temp, 'w4-owner-receipt.json'), JSON.stringify(receipt, null, 2) + '\n')
+          if (!successful || receipt.contract !== 'PASS') process.exitCode = 1
+          JS
+      - name: Confirm committed source stayed intact
+        if: ${{ always() }}
+        run: git diff --exit-code
+      - name: Retain W4 receipt
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: w4-owner-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/w4-owner-receipt.json
+          if-no-files-found: error
+          retention-days: 7

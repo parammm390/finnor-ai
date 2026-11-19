@@ -1,4 +1,4 @@
-import { listUnderwritingWorkspace } from "@finnor/private-equity";
+import { listUnderwritingWorkspace } from "../../../../../../../packages/private-equity/src/underwriting-repository";
 import { requireContext } from "../../../../../lib/auth";
 import { UnderwritingUuidSchema, underwritingContext, underwritingErrorResponse, underwritingJson } from "../../../../../lib/underwriting";
 

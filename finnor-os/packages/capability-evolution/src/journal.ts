@@ -35,20 +35,35 @@ export interface JournalEntry {
     digest: string;
     signature: string;
 }
+export type JournalMutationFence=(kind:string,identity:string,payload:unknown)=>Promise<void>;
 export class CapabilityJournal {
-    private constructor(private fd: Awaited<ReturnType<typeof open>>, private lock: Awaited<ReturnType<typeof open>>, private path: string, private signer: ReturnType<typeof createPrivateKey>, private publicKey: string, readonly policyDigest: string, readonly maxEntries: number, readonly entries: JournalEntry[]) { }
+    private constructor(private fd: Awaited<ReturnType<typeof open>>, private lock: Awaited<ReturnType<typeof open>>, private path: string, private signer: ReturnType<typeof createPrivateKey>, private publicKey: string, readonly policyDigest: string, readonly maxEntries: number, readonly entries: JournalEntry[],private beforeMutation?:JournalMutationFence,private readOnly=false) { }
     static async open(directory: string, signerPath: string, publicKey: string, policyDigest: string, maxEntries: number, authorizeTornRecovery?: (tail: JournalEntry | null, discarded: {
         bytes: number;
         sha256: string;
-    }) => Promise<void>) {
-        await mkdir(directory, { recursive: true, mode: 0o700 });
+    }) => Promise<void>,beforeMutation?:JournalMutationFence,readOnly=false) {
+        try{await lstat(directory);}catch(error){
+            if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;
+            if(readOnly)fault('S8_ORIGINAL_JOURNAL_DIRECTORY_REQUIRED',503);
+            await beforeMutation?.('JOURNAL_DIRECTORY_CREATE',directory,{mode:0o700});
+            await mkdir(directory, { recursive: true, mode: 0o700 });
+        }
         const st = await lstat(directory);
         if (!st.isDirectory() || st.isSymbolicLink() || (st.mode & 0o077) !== 0 || await realpath(directory) !== resolve(directory))
             fault('UNSAFE_S8_DIRECTORY', 503);
         const key = createPrivateKey(await privateFile(signerPath));
         if (key.asymmetricKeyType !== 'ed25519' || createPublicKey(key).export({ type: 'spki', format: 'pem' }).toString() !== publicKey)
             fault('S8_JOURNAL_SIGNER_MISMATCH', 503);
-        const lock = await open(join(directory, 'writer.lock'), constants.O_CREAT | constants.O_RDWR | constants.O_NOFOLLOW, 0o600);
+        const openExistingOrCreate=async(path:string)=>{
+            try{return await open(path,(readOnly?constants.O_RDONLY:constants.O_RDWR|constants.O_APPEND)|constants.O_NOFOLLOW);}
+            catch(error){
+                if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;
+                if(readOnly)fault('S8_ORIGINAL_JOURNAL_FILE_REQUIRED',503);
+                await beforeMutation?.('JOURNAL_FILE_CREATE',path,{mode:0o600});
+                return open(path,constants.O_CREAT|constants.O_EXCL|constants.O_RDWR|constants.O_APPEND|constants.O_NOFOLLOW,0o600);
+            }
+        };
+        const lock = await openExistingOrCreate(join(directory, 'writer.lock'));
         try {
             createRequire(import.meta.url)('fs-ext').flockSync(lock.fd, 'exnb');
         }
@@ -58,7 +73,7 @@ export class CapabilityJournal {
         }
         let fd: Awaited<ReturnType<typeof open>> | null = null;
         try {
-            fd = await open(join(directory, 'history.jsonl'), constants.O_CREAT | constants.O_RDWR | constants.O_APPEND | constants.O_NOFOLLOW, 0o600);
+            fd = await openExistingOrCreate(join(directory, 'history.jsonl'));
             const stat = await fd.stat();
             if (!stat.isFile() || stat.size > 64 * 1024 * 1024 || (stat.mode & 0o077) !== 0)
                 fault('S8_JOURNAL_BYTE_OR_TYPE_BOUND', 503);
@@ -75,14 +90,18 @@ export class CapabilityJournal {
                     fault('S8_JOURNAL_RETENTION_BOUND', 503);
             }
             if (torn) {
+                if(readOnly)fault('S8_ENROLLMENT_REQUIRES_COMPLETE_ORIGINAL_JOURNAL',503);
                 if (prefix !== entries.map(e => canonical(e) + '\n').join(''))
                     fault('S8_TORN_PREFIX_NOT_CANONICAL', 503);
                 const discarded = Buffer.from(raw.slice(prefix.length));
                 await authorizeTornRecovery!(entries.at(-1) ?? null, { bytes: discarded.length, sha256: (await import('./contracts')).byteDigest(discarded) });
+                await beforeMutation?.('JOURNAL_TORN_TRUNCATE',join(directory,'history.jsonl'),
+                    {retainedSequence:entries.length,retainedDigest:entries.at(-1)?.digest??null,
+                    retainedBytes:Buffer.byteLength(prefix),discardedSha256:(await import('./contracts')).byteDigest(discarded)});
                 await fd.truncate(Buffer.byteLength(prefix));
                 await fd.sync();
             }
-            return new CapabilityJournal(fd, lock, join(directory, 'history.jsonl'), key, publicKey, policyDigest, maxEntries, entries);
+            return new CapabilityJournal(fd, lock, join(directory, 'history.jsonl'), key, publicKey, policyDigest, maxEntries, entries,beforeMutation,readOnly);
         }
         catch (error) {
             await fd?.close();
@@ -109,6 +128,7 @@ export class CapabilityJournal {
             fault('S8_LIVE_JOURNAL_CONTENT_SUBSTITUTION', 503);
     }
     async append(input: Omit<JournalEntry, 'sequence' | 'previous' | 'policyDigest' | 'digest' | 'signature' | 'knowledgeAt'>) {
+        if(this.readOnly)fault('S8_ORIGINAL_ENROLLMENT_JOURNAL_IS_READ_ONLY',503);
         await this.assertIntegrity();
         if (this.entries.length >= this.maxEntries)
             fault('S8_JOURNAL_RETENTION_BOUND', 429);
@@ -118,6 +138,7 @@ export class CapabilityJournal {
             fault('S8_JOURNAL_ENTRY_BOUND', 413);
         if ((await this.fd.stat()).size + Buffer.byteLength(bytes) > 64 * 1024 * 1024)
             fault('S8_JOURNAL_BYTE_BOUND', 429);
+        await this.beforeMutation?.('JOURNAL_APPEND',digest(input),input);
         await this.fd.writeFile(bytes);
         await this.fd.sync();
         this.entries.push(entry);

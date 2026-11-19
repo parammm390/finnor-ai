@@ -115,9 +115,11 @@ describe.skipIf(!available)("POST /api/actions/:id/revert (D2.T4)", () => {
 
   it("RBAC: a role without canApprove on this action_type is rejected 403, status unchanged", async () => {
     const id = await seedAction(TENANT_ID, "approved");
-    const res = await revertPOST(req(TENANT_ID, "analyst"), { params: Promise.resolve({ id }) });
-    expect(res.status).toBe(403);
-    expect(await actionStatus(TENANT_ID, id)).toBe("approved");
+    for (const role of ["analyst", "participant"]) {
+      const res = await revertPOST(req(TENANT_ID, role), { params: Promise.resolve({ id }) });
+      expect(res.status).toBe(403);
+      expect(await actionStatus(TENANT_ID, id)).toBe("approved");
+    }
   });
 
   it("tenant isolation: tenant B cannot revert tenant A's action (404, not leaked)", async () => {

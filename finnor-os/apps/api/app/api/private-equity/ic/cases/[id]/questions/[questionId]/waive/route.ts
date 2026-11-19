@@ -1,4 +1,4 @@
-import { waiveIcQuestion } from "@finnor/private-equity";
+import { waiveIcQuestion } from "../../../../../../../../../../../packages/private-equity/src/ic-repository";
 import { handleIcPost, IcUuidSchema, IcWaiveQuestionSchema } from "../../../../../../../../../lib/ic";
 
 export const runtime = "nodejs";
