@@ -57,13 +57,33 @@ export function useCanvasSources(workId: string | null, root: PeWorldRootRef | n
     if (!enabled || !root || !rootKey) { setProjection(idle()); return }
     let active = true
     setProjection((previous) => ({ data: previous.key === rootKey && previous.scope === scopeKey ? previous.data : null, key: rootKey, scope: scopeKey, status: "loading", error: null }))
-    void centropyPost<CompanyBrainProjection>("company-brain/projection", { root: { entityType: root.entityType, entityId: root.entityId } }).then((result) => {
-      if (!active || !isCurrent(scopeKey)) return
-      if (result.root?.entityType !== root.entityType || result.root?.entityId !== root.entityId || !Array.isArray(result.nodes)) throw new Error("Company Brain response did not match the selected context")
-      setProjection({ data: result, status: "ready", error: null, key: rootKey, scope: scopeKey })
-    }).catch((cause) => {
-      if (active && isCurrent(scopeKey)) setProjection({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Company Brain unavailable", key: rootKey, scope: scopeKey })
-    })
+    // A transient proxy 502/503/504 is not an authorization refusal. Make one
+    // additional real canonical read, fenced to this exact token/Work/root scope.
+    // A 401/403, mismatched root, or stale scope never retries or publishes data.
+    const load = async () => {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+          const result = await centropyPost<CompanyBrainProjection>("company-brain/projection", {
+            root: { entityType: root.entityType, entityId: root.entityId },
+          })
+          if (!active || !isCurrent(scopeKey)) return
+          if (result.root?.entityType !== root.entityType || result.root?.entityId !== root.entityId || !Array.isArray(result.nodes))
+            throw new Error("Company Brain response did not match the selected context")
+          setProjection({ data: result, status: "ready", error: null, key: rootKey, scope: scopeKey })
+          return
+        } catch (cause) {
+          if (!active || !isCurrent(scopeKey)) return
+          if (attempt === 0 && cause instanceof CentropyApiError && cause.retryable) {
+            await new Promise<void>(resolve => window.setTimeout(resolve, 1500))
+            if (!active || !isCurrent(scopeKey)) return
+            continue
+          }
+          setProjection({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Company Brain unavailable", key: rootKey, scope: scopeKey })
+          return
+        }
+      }
+    }
+    void load()
     return () => { active = false }
   }, [enabled, revision, rootKey, root, scopeKey, isCurrent])
 
