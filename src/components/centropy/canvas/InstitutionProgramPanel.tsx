@@ -50,6 +50,11 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
   const [sources, setSources] = useState<{ key: string; value: Sources } | null>(null)
   const [reading, setReading] = useState<{ key: string; value: Read } | null>(null)
   const [readFailureScope, setReadFailureScope] = useState<string | null>(null)
+  // Only a transient gateway failure may trigger automatic re-observation.
+  // Explicit identity denial and inconsistent native revisions never do.
+  const [transientReadFailureScope, setTransientReadFailureScope] = useState<string | null>(null)
+  const transientRetries = useRef<{ key: string; attempts: number }>({ key: scopeKey, attempts: 0 })
+  if (transientRetries.current.key !== scopeKey) transientRetries.current = { key: scopeKey, attempts: 0 }
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [configure, setConfigure] = useState(false)
@@ -108,11 +113,14 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
         } else setReading(null)
         setMessage(null)
         setReadFailureScope(null)
+        setTransientReadFailureScope(null)
+        if (transientRetries.current.key === key) transientRetries.current.attempts = 0
       } catch (error) {
         if (!current()) return
         setSources(null); setReading(null)
         setMessage(error instanceof Error ? error.message : "Responsibility is unavailable in this scope")
         setReadFailureScope(key)
+        setTransientReadFailureScope(error instanceof CentropyApiError && [502, 503, 504].includes(error.status) ? key : null)
       } finally {
         if (pendingRefresh.current?.generation === generation) {
           pendingRefresh.current = null
@@ -125,8 +133,23 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
   }, [allowed, isCurrent, scopeKey, workId])
   useEffect(() => {
     setSources(null); setReading(null); setMessage(null); setBusy(false); setConfigure(false)
+    setTransientReadFailureScope(null)
     void refresh()
   }, [refresh])
+  useEffect(() => {
+    if (!allowed || busy || refreshingScope === scopeKey || transientReadFailureScope !== scopeKey) return
+    const retry = transientRetries.current
+    if (retry.key !== scopeKey || retry.attempts >= 2) return
+    // A previous 502/503/504 did not prove the native Work was absent.
+    // Make at most two further canonical observations, using the same
+    // current-session/Work fence and existing exact revision checks.
+    const timer = window.setTimeout(() => {
+      if (!isCurrent(scopeKey) || transientRetries.current.key !== scopeKey) return
+      transientRetries.current.attempts++
+      void refresh()
+    }, 1500 * (retry.attempts + 1))
+    return () => window.clearTimeout(timer)
+  }, [allowed, busy, refreshingScope, transientReadFailureScope, scopeKey, isCurrent, refresh])
   useEffect(() => {
     if (busy || refreshingScope === scopeKey || !visibleSources?.request || visible?.status === "CANCELLED") return
     const active = ["QUEUED", "RUNNING", "WAITING"].includes(visible?.status ?? "")

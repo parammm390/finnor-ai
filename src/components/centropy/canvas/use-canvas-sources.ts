@@ -57,13 +57,33 @@ export function useCanvasSources(workId: string | null, root: PeWorldRootRef | n
     if (!enabled || !root || !rootKey) { setProjection(idle()); return }
     let active = true
     setProjection((previous) => ({ data: previous.key === rootKey && previous.scope === scopeKey ? previous.data : null, key: rootKey, scope: scopeKey, status: "loading", error: null }))
-    void centropyPost<CompanyBrainProjection>("company-brain/projection", { root: { entityType: root.entityType, entityId: root.entityId } }).then((result) => {
-      if (!active || !isCurrent(scopeKey)) return
-      if (result.root?.entityType !== root.entityType || result.root?.entityId !== root.entityId || !Array.isArray(result.nodes)) throw new Error("Company Brain response did not match the selected context")
-      setProjection({ data: result, status: "ready", error: null, key: rootKey, scope: scopeKey })
-    }).catch((cause) => {
-      if (active && isCurrent(scopeKey)) setProjection({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Company Brain unavailable", key: rootKey, scope: scopeKey })
-    })
+    const readCurrentProjection = async () => {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (!active || !isCurrent(scopeKey)) return
+        try {
+          const result = await centropyPost<CompanyBrainProjection>("company-brain/projection", {
+            root: { entityType: root.entityType, entityId: root.entityId },
+          })
+          if (!active || !isCurrent(scopeKey)) return
+          if (result.root?.entityType !== root.entityType || result.root?.entityId !== root.entityId || !Array.isArray(result.nodes))
+            throw new Error("Company Brain response did not match the selected context")
+          setProjection({ data: result, status: "ready", error: null, key: rootKey, scope: scopeKey })
+          return
+        } catch (cause) {
+          if (!active || !isCurrent(scopeKey)) return
+          if (cause instanceof CentropyApiError && [502, 503, 504].includes(cause.status) && attempt < 2) {
+            // READ-only retries never use a former principal's response or
+            // cached graph; every attempt must pass current backend RBAC.
+            await new Promise<void>(resolve => window.setTimeout(resolve, 1200 * (attempt + 1)))
+            continue
+          }
+          setProjection({ data: null, status: "error",
+            error: cause instanceof Error ? cause.message : "Company Brain unavailable", key: rootKey, scope: scopeKey })
+          return
+        }
+      }
+    }
+    void readCurrentProjection()
     return () => { active = false }
   }, [enabled, revision, rootKey, root, scopeKey, isCurrent])
 
