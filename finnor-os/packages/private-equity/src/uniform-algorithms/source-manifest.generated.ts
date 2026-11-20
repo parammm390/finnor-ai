@@ -344,7 +344,7 @@ export default {
     },
     {
       "path": "src/components/centropy/lib/centropy-auth.tsx",
-      "sha256": "da2a8c6b9605f3a5c57847c79a254c9997d311e6201d60ebc9b4d6f3f1aac16a"
+      "sha256": "059e12e11940de50b815db8b238092b0b5e789cc54c49d1f6678dbab54ed35fc"
     },
     {
       "path": "src/components/centropy/lib/use-private-request-scope.ts",
@@ -4000,7 +4000,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
-      "sha256": "e044351aca0e9ef7632a108ae355babebc4fe009464ab67d14dfb3961ef1c1c1"
+      "sha256": "ad489fbf2e9d10b5987b73b158616c758f4d04b9a767702d51f83dbff6a9ab27"
     },
     {
       "path": "src/components/centropy/canvas/InterfaceSynthesisPanel.tsx",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "b590d03e759e24829b1977a7b4230d1693c8acfd897de42797f45d1aea996f8e"
+  "sourceDigest": "d8c4ce3c93f932a863988639bc438da1e53bdbad31743ecdda9cedcd2b058228"
 } as const;

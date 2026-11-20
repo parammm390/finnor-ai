@@ -56,6 +56,8 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
   const [refreshingScope, setRefreshingScope] = useState<string | null>(null)
   const refreshGeneration = useRef(0)
   const pendingRefresh = useRef<{ key: string; generation: number; task: Promise<void> } | null>(null)
+  const transientFailures = useRef<{ key: string; count: number } | null>(null)
+  const [recoveryRevision, setRecoveryRevision] = useState(0)
   const head = useRef<{ key: string; inputId: string | null; revision: number; requestId: string } | null>(null)
   if (head.current?.key !== scopeKey) head.current = null
   const visibleSources = allowed && sources?.key === scopeKey ? sources.value : null
@@ -106,6 +108,7 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
             throw Error("Responsibility returned a different Work input or programme revision")
           setReading({ key, value: result })
         } else setReading(null)
+        transientFailures.current = null
         setMessage(null)
         setReadFailureScope(null)
       } catch (error) {
@@ -113,6 +116,16 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
         setSources(null); setReading(null)
         setMessage(error instanceof Error ? error.message : "Responsibility is unavailable in this scope")
         setReadFailureScope(key)
+        // The owner read is already retried once in observe(). If both real reads
+        // return transient errors, schedule at most two later fresh reads for the
+        // same authenticated Work. Never retry refusal or publish previous facts.
+        if (error instanceof CentropyApiError && error.retryable) {
+          const previous = transientFailures.current?.key === key ? transientFailures.current.count : 0
+          if (previous < 2) {
+            transientFailures.current = { key, count: previous + 1 }
+            setRecoveryRevision(value => value + 1)
+          }
+        }
       } finally {
         if (pendingRefresh.current?.generation === generation) {
           pendingRefresh.current = null
@@ -124,9 +137,18 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
     return task
   }, [allowed, isCurrent, scopeKey, workId])
   useEffect(() => {
+    transientFailures.current = null
     setSources(null); setReading(null); setMessage(null); setBusy(false); setConfigure(false)
     void refresh()
   }, [refresh])
+  useEffect(() => {
+    const retry = transientFailures.current
+    if (!allowed || readFailureScope !== scopeKey || retry?.key !== scopeKey || retry.count > 2) return
+    const timer = window.setTimeout(() => {
+      if (isCurrent(scopeKey)) void refresh()
+    }, 2500 * retry.count)
+    return () => window.clearTimeout(timer)
+  }, [allowed, readFailureScope, scopeKey, recoveryRevision, isCurrent, refresh])
   useEffect(() => {
     if (busy || refreshingScope === scopeKey || !visibleSources?.request || visible?.status === "CANCELLED") return
     const active = ["QUEUED", "RUNNING", "WAITING"].includes(visible?.status ?? "")
