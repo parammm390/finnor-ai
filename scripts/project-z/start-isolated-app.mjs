@@ -55,6 +55,8 @@ const authTlsOrigin = option("auth-tls-origin")
 const authTlsCertificate = option("auth-tls-cert")
 const authTlsState = option("auth-tls-state")
 const productionBuild = process.argv.includes("--production-build")
+const frontendProductionBuild = process.argv.includes("--frontend-production-build")
+assert.ok(!(productionBuild && frontendProductionBuild), "BUILD_PROFILES_MUTUALLY_EXCLUSIVE")
 const s3Python = option("s3-python")
 assert.ok(!("NODE_TLS_REJECT_UNAUTHORIZED" in process.env), "NODE_TLS_REJECT_UNAUTHORIZED_REFUSED")
 assert.ok(!profiles.has("z4") || (s3Python && isAbsolute(s3Python) && existsSync(s3Python)), "Z4_PROFILE_REQUIRES_S3_PYTHON")
@@ -62,7 +64,7 @@ assert.ok(!profiles.has("z4") || (s3Python && isAbsolute(s3Python) && existsSync
 const z1Chain = profiles.has("z1") && s3Python !== undefined
 assert.ok(!z1Chain || (isAbsolute(s3Python) && existsSync(s3Python)), "Z1_CHAIN_REQUIRES_EXISTING_ABSOLUTE_S3_PYTHON")
 // A longer native episode (three physical kills, seven stages) needs more than the 30 minute default; bounded either way.
-const setupBudgetMs = Number(option("budget-ms") ?? (productionBuild ? 3000000 : 1800000))
+const setupBudgetMs = Number(option("budget-ms") ?? (productionBuild || frontendProductionBuild ? 3000000 : 1800000))
 assert.ok(Number.isInteger(setupBudgetMs) && setupBudgetMs >= 600000 && setupBudgetMs <= 7200000, "SETUP_BUDGET_OUT_OF_RANGE")
 // END
 let authTlsReceipt
@@ -240,7 +242,7 @@ async function waitFor(url, allowedStatuses) {
   throw new Error("OWNED_APPLICATION_READINESS_TIMEOUT")
 }
 // BEGIN production build (own pass per run; never reuses a pre-existing build directory)
-async function buildProduction() {
+async function buildProduction(frontendOnly = false) {
   const head = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], { encoding: "utf8" }).trim()
   const dirty = execFileSync("git", ["-C", root, "diff", "--name-only", "HEAD", "--", ".", ":(exclude)next-env.d.ts",
     ":(exclude)finnor-os/apps/api/next-env.d.ts", ":(exclude)finnor-os/apps/web/next-env.d.ts"], { encoding: "utf8" }).trim()
@@ -256,8 +258,8 @@ async function buildProduction() {
   const buildEnv = { ...appEnv, NODE_ENV: "production", FINNOR_BUILD_ID: buildId, CI: "1" }
   // The browser bundle inlines NEXT_PUBLIC_* at build time, so the Auth URL it will use is fixed here.
   const frontendEnv = { ...buildEnv, NEXT_PUBLIC_OS_API_URL: isolated.NEXT_PUBLIC_OS_API_URL }
-  receipt.productionBuild = { requested: true, stage: "BUILDING", buildId, sourceCommit: head }
-  for (const [label, env] of [["api", buildEnv], ["frontend", frontendEnv]]) {
+  receipt.productionBuild = { requested: true, stage: "BUILDING", buildId, sourceCommit: head, frontendOnly }
+  for (const [label, env] of (frontendOnly ? [["frontend", frontendEnv]] : [["api", buildEnv], ["frontend", frontendEnv]])) {
     receipt.stage = `PRODUCTION_BUILD_${label.toUpperCase()}`
     save()
     const target = targets[label]
@@ -367,8 +369,8 @@ try {
   receipt.stage = "LOOPBACK_SERVERS"
   save()
   // BEGIN production build and start
-  const production = productionBuild ? await buildProduction() : null
-  const api = production ? child("api", production.spawned.api, join(backend, "apps/api"), production.serverEnv)
+  const production = productionBuild || frontendProductionBuild ? await buildProduction(frontendProductionBuild) : null
+  const api = productionBuild && production ? child("api", production.spawned.api, join(backend, "apps/api"), production.serverEnv)
     : child("api", [join(backend, "node_modules/next/dist/bin/next"), "dev", "-H", "127.0.0.1", "-p", "3101"], join(backend, "apps/api"), appEnv)
   const frontend = production ? child("frontend", production.spawned.frontend, root, production.serverEnv)
     : child("frontend", [join(root, "node_modules/next/dist/bin/next"), "dev", "--webpack", "-H", "127.0.0.1", "-p", "3001"], root, appEnv)
@@ -384,7 +386,7 @@ try {
   }
   // BEGIN production identity of the listening servers
   if (production) {
-    for (const [label, port] of [["frontend", 3001], ["api", 3101]]) {
+    for (const [label, port] of (frontendProductionBuild ? [["frontend", 3001]] : [["frontend", 3001], ["api", 3101]])) {
       const listener = execFileSync("ss", ["-ltnpH", `sport = :${port}`], { encoding: "utf8" }).match(/pid=(\d+)/)
       assert.ok(listener, "PRODUCTION_LISTENER_NOT_OBSERVED")
       // The server renames its process title, so the spawned argv and the process environment are the evidence.
