@@ -2050,8 +2050,8 @@
     },
     {
       "file": "packages/private-equity/src/company-brain.ts",
-      "bytes": 89834,
-      "sha256": "7b45821096947f651c16472db31e52489b3ff690eb2806767258352a8b0028ea"
+      "bytes": 90544,
+      "sha256": "4685e93d0fdc89be9fb25b946be53cc68943c4e40614c65be0cfa62ca2d452e0"
     },
     {
       "file": "packages/private-equity/src/compute-search/admission.ts",
@@ -3561,7 +3561,7 @@
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-manifest.generated.ts",
       "bytes": 265417,
-      "sha256": "6bbdce05baa4222533d95e664cea6630795763abd32416aa91ebc842ef491524"
+      "sha256": "c3b95a47a9ba4fb86bc2573659eeb492b3eb75dd4700c4b7094dbd7ddc72b463"
     },
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-paths.ts",

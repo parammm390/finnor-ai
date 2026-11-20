@@ -1960,7 +1960,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/company-brain.ts",
-      "sha256": "7b45821096947f651c16472db31e52489b3ff690eb2806767258352a8b0028ea"
+      "sha256": "4685e93d0fdc89be9fb25b946be53cc68943c4e40614c65be0cfa62ca2d452e0"
     },
     {
       "path": "finnor-os/packages/private-equity/src/compute-search/admission.ts",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "b590d03e759e24829b1977a7b4230d1693c8acfd897de42797f45d1aea996f8e"
+  "sourceDigest": "0996a68a2a151392623ad2cc7d06ac97bae35809367edbd8079eb80ddc62d37f"
 } as const;

@@ -1041,12 +1041,25 @@ export function projectCompanyBrain(
   };
 }
 
+/** Bound simultaneous tenant-scoped aggregate reads. Every selected source is
+ * still attempted and reported in its original order. Launching all linked
+ * Work aggregates at once can occupy the entire local 10-client pg pool with
+ * multi-query transactions, starving independent Work/identity reads. */
 async function settledMany<T>(
   owner: string,
-  inputs: Array<Promise<T>>,
+  inputs: Array<() => Promise<T>>,
   statuses: NonNullable<CompanyBrainSourceBundle["sourceStatus"]>,
 ): Promise<T[]> {
-  const results = await Promise.allSettled(inputs);
+  const results: PromiseSettledResult<T>[] = new Array(inputs.length);
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(4, inputs.length) }, async () => {
+    for (;;) {
+      const index = next++;
+      if (index >= inputs.length) return;
+      try { results[index] = { status: "fulfilled", value: await inputs[index]!() }; }
+      catch (reason) { results[index] = { status: "rejected", reason }; }
+    }
+  }));
   const values = results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
   const failures = results.length - values.length;
   statuses.push({ owner, status: failures ? "partial" : "complete", ...(failures ? { reason: `${failures} bounded source reads were unavailable` } : {}) });
@@ -1077,7 +1090,7 @@ export async function loadCompanyBrainSourceBundle(
       { owner: "Attention", status: "unsupported", reason: "Attention is a current projection" },
     );
   } else {
-    const underwritingRows = await settledMany("P4 underwriting", investmentCaseIds.map(async (investmentCaseId) => ({ investmentCaseId, workspace: await listUnderwritingWorkspace(ctx, investmentCaseId) })), statuses);
+    const underwritingRows = await settledMany("P4 underwriting", investmentCaseIds.map((investmentCaseId) => async () => ({ investmentCaseId, workspace: await listUnderwritingWorkspace(ctx, investmentCaseId) })), statuses);
     underwriting = underwritingRows;
     const workIds = [...new Set(world.workLinks.map((row) => text(row.workId)).filter((id): id is string => Boolean(id)))].slice(0, 100);
     // A PE root is not a grant to view another employee's private Work.
@@ -1091,7 +1104,7 @@ export async function loadCompanyBrainSourceBundle(
     const visibleWorkIds = employeeRead
       ? await readableEmployeeWorkIds(ctx.auth.tenantId, workIds, actorId)
       : workIds;
-    works = (await settledMany("P6 Work", visibleWorkIds.map((workId) => workAggregate(ctx.auth.tenantId, workId)), statuses)).filter((value): value is WorkAggregate => value !== null);
+    works = (await settledMany("P6 Work", visibleWorkIds.map((workId) => () => workAggregate(ctx.auth.tenantId, workId)), statuses)).filter((value): value is WorkAggregate => value !== null);
     const [workforceResult, attentionResult] = await Promise.allSettled([
       workforceStatus(ctx.auth.tenantId, { page: { limit: 100 } }),
       executeAttentionQueueQuery(ctx.auth.tenantId, { intent: "attention_queue", page: { limit: 100 } }, { employeeId: ctx.auth.employeeId, userId: ctx.auth.userId, verticalKey: "private_equity", maxRows: 100 }, new Date(world.stateAt)),
@@ -1107,7 +1120,7 @@ export async function loadCompanyBrainSourceBundle(
     const listed = await listIcCases(ctx, { limit: 100 });
     const relevant = listed.cases.filter((row) => investmentCaseIds.includes(String(row.investmentCaseId))).slice(0, 50);
     const icAsOf = input.knowledgeAt ?? input.asOf;
-    ic = await settledMany("P5 IC", relevant.map((row) => getIcWorkspace(ctx, { icCaseId: String(row.id), ...(icAsOf ? { asOf: icAsOf } : {}) })), statuses);
+    ic = await settledMany("P5 IC", relevant.map((row) => () => getIcWorkspace(ctx, { icCaseId: String(row.id), ...(icAsOf ? { asOf: icAsOf } : {}) })), statuses);
   } catch (error) {
     statuses.push({ owner: "P5 IC", status: "partial", reason: "IC source unavailable" });
   }
