@@ -4604,7 +4604,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/use-canvas-sources.ts",
-      "sha256": "ee27c9b8bc09498941d562c3f6e2f00c45e24d02686f6ff26132b6f23e8f6e48"
+      "sha256": "5963671aca559680ed0a71fc6e97a71349d3cc96d4f312f97b7047fba55cff3f"
     },
     {
       "path": "src/components/centropy/controls/ArtifactCreationDesk.tsx",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "0fabfad6c7d053ba0756fbf6418fadec489f55d93bdbf4f94e1ecbe78f2366c2"
+  "sourceDigest": "0d87ac88a1e8d1ec04a89440ea5f77748ddc2fb38949be8bd667307b15735b56"
 } as const;

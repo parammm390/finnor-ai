@@ -53,19 +53,29 @@ export function useCanvasSources(workId: string | null, root: PeWorldRootRef | n
     return () => { active = false; if (timer !== null) window.clearTimeout(timer) }
   }, [workEnabled, revision, workId, workScopeKey, isWorkCurrent])
 
+  const workReadyForCompanyProjection = !workId || currentWork.status === "ready"
   useEffect(() => {
     if (!enabled || !root || !rootKey) { setProjection(idle()); return }
     let active = true
-    setProjection((previous) => ({ data: previous.key === rootKey && previous.scope === scopeKey ? previous.data : null, key: rootKey, scope: scopeKey, status: "loading", error: null }))
-    void centropyPost<CompanyBrainProjection>("company-brain/projection", { root: { entityType: root.entityType, entityId: root.entityId } }).then((result) => {
+    // Work and its separately scoped application/institution readers must first
+    // become live. A broad company graph also aggregates linked Works; launching
+    // that graph at the same instant as initial Work restoration can congest the
+    // native RLS read pool. This only delays one READ, never substitutes evidence,
+    // mutates resources, or exposes an earlier principal's data.
+    setProjection({ data: null, key: rootKey, scope: scopeKey, status: "loading", error: null })
+    if (!workReadyForCompanyProjection) return () => { active = false }
+    const timer = window.setTimeout(() => {
       if (!active || !isCurrent(scopeKey)) return
-      if (result.root?.entityType !== root.entityType || result.root?.entityId !== root.entityId || !Array.isArray(result.nodes)) throw new Error("Company Brain response did not match the selected context")
-      setProjection({ data: result, status: "ready", error: null, key: rootKey, scope: scopeKey })
-    }).catch((cause) => {
-      if (active && isCurrent(scopeKey)) setProjection({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Company Brain unavailable", key: rootKey, scope: scopeKey })
-    })
-    return () => { active = false }
-  }, [enabled, revision, rootKey, root, scopeKey, isCurrent])
+      void centropyPost<CompanyBrainProjection>("company-brain/projection", { root: { entityType: root.entityType, entityId: root.entityId } }).then((result) => {
+        if (!active || !isCurrent(scopeKey)) return
+        if (result.root?.entityType !== root.entityType || result.root?.entityId !== root.entityId || !Array.isArray(result.nodes)) throw new Error("Company Brain response did not match the selected context")
+        setProjection({ data: result, status: "ready", error: null, key: rootKey, scope: scopeKey })
+      }).catch((cause) => {
+        if (active && isCurrent(scopeKey)) setProjection({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Company Brain unavailable", key: rootKey, scope: scopeKey })
+      })
+    }, workId ? 750 : 0)
+    return () => { active = false; window.clearTimeout(timer) }
+  }, [enabled, revision, rootKey, root, scopeKey, isCurrent, workId, workReadyForCompanyProjection])
 
   useEffect(() => {
     if (!enabled || !caseId) { setUnderwriting(idle()); return }
