@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { earliestMessageSequence, mergeConversationMessages, type LoadedConversationThread } from "./thread-contract"
 import { loadInvestigation } from "./thread-api"
+import { CentropyApiError } from "../lib/api"
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
 
 export interface InvestigationState {
@@ -75,26 +76,39 @@ export function useInvestigation(threadId: string | null, enabled: boolean, refr
     setState((previous) => previous.forScope === scope.key && previous.loaded?.thread.id === threadId
       ? { ...previous, forThreadId: threadId, status: "ready", error: null, olderLoading: false, olderError: null }
       : { ...EMPTY, forThreadId: threadId, forScope: scope.key, status: "loading" })
-    try {
-      const loaded = await loadInvestigation(threadId)
+    // A transient gateway timeout during sign-in must not permanently strand
+    // the original Work in "Canvas unavailable". Repeat only the canonical GET
+    // within this exact, still-authorized thread/principal/token scope. No cached
+    // private facts are restored from an old session and 401/403/404 never retry.
+    for (let attempt = 0; attempt < 3; attempt++) {
       if (request !== generation.current || !scope.isCurrent(scope.key)) return
-      setState((previous) => {
-        const sameThread = previous.forScope === scope.key && previous.loaded?.thread.id === threadId
-        const messages = sameThread ? mergeConversationMessages(previous.loaded!.messages, loaded.messages) : loaded.messages
-        const earliest = earliestMessageSequence(messages)
-        return {
-          ...previous,
-          forThreadId: threadId,
-          forScope: scope.key,
-          loaded: { thread: loaded.thread, messages },
-          status: "ready", error: null, olderError: null,
-          // Refreshing the latest page must not forget older pages already loaded.
-          hasOlder: earliest !== null && earliest > 1 && (sameThread ? previous.hasOlder : loaded.messages.length === 100),
+      try {
+        const loaded = await loadInvestigation(threadId)
+        if (request !== generation.current || !scope.isCurrent(scope.key)) return
+        setState((previous) => {
+          const sameThread = previous.forScope === scope.key && previous.loaded?.thread.id === threadId
+          const messages = sameThread ? mergeConversationMessages(previous.loaded!.messages, loaded.messages) : loaded.messages
+          const earliest = earliestMessageSequence(messages)
+          return {
+            ...previous,
+            forThreadId: threadId,
+            forScope: scope.key,
+            loaded: { thread: loaded.thread, messages },
+            status: "ready", error: null, olderError: null,
+            // Refreshing the latest page must not forget older pages already loaded.
+            hasOlder: earliest !== null && earliest > 1 && (sameThread ? previous.hasOlder : loaded.messages.length === 100),
+          }
+        })
+        return
+      } catch (cause) {
+        if (request !== generation.current || !scope.isCurrent(scope.key)) return
+        if (attempt < 2 && cause instanceof CentropyApiError && cause.retryable) {
+          await new Promise<void>((resolve) => globalThis.setTimeout(resolve, 1000 * (attempt + 1)))
+          continue
         }
-      })
-    } catch (cause) {
-      if (request !== generation.current || !scope.isCurrent(scope.key)) return
-      setState((previous) => refreshFailureState(previous, threadId, scope.key, cause))
+        setState((previous) => refreshFailureState(previous, threadId, scope.key, cause))
+        return
+      }
     }
   }, [enabled, threadId, scope.key, scope.isCurrent])
 

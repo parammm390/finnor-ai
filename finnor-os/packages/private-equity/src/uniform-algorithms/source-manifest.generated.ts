@@ -4732,7 +4732,7 @@ export default {
     },
     {
       "path": "src/components/centropy/thread/use-investigation.ts",
-      "sha256": "dbf5d00ea406a791e11d40292089a48079db647fb74c23d6a2c04b52548d9a14"
+      "sha256": "4a6944f096f5cd7fcafefafe59a9e6d0e1c869ec3759a0c69ab0129350b74669"
     },
     {
       "path": "src/components/centropy/world/ConfidentialComputationPanel.tsx",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "b590d03e759e24829b1977a7b4230d1693c8acfd897de42797f45d1aea996f8e"
+  "sourceDigest": "0fabfad6c7d053ba0756fbf6418fadec489f55d93bdbf4f94e1ecbe78f2366c2"
 } as const;
