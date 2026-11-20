@@ -12,6 +12,11 @@ import {releaseUntouchedInstitutionDemand} from "../allocation-store";
 import { authorizeInstitutionWork, assertInstitutionCompilerCurrent, compilerRow, compilerEvent,
   compilerEpisode, enqueueInstitutionCompiler, submitInstitutionCompiler,reconcileInstitutionCompilerDelivery } from "./store";
 
+// Isolated, non-sensitive Z0 diagnostics. No IDs, tokens or tenant data.
+let z0TimingSequence = 0
+function z0Timing(call: number, stage: string, started: number) {
+  console.error("X1_READ_PROFILE " + JSON.stringify({ call, stage, ms: Math.round(performance.now() - started) }))
+}
 export const INSTITUTION_OPERATIONS = ["institution-submit", "institution-revise", "institution-read",
   "institution-status", "institution-cancel", "institution-resume", "institution-witness", "institution-sources",
   'institution-inputs','institution-mandate','institution-register-source','institution-consent'] as const;
@@ -23,10 +28,16 @@ const submit = z.object({ workId: z.string().uuid(), workInputId: z.string().uui
   grantIds: z.array(z.string().uuid()).min(1).max(16), idempotencyKey: z.string().min(1).max(160) }).strict();
 
 export async function readInstitutionCompiler(ctx: PeMutationContext, requestId: string, purpose?: "WORK_OBSERVATION") {
-  let q = await compilerRow(ctx, requestId);
-  await authorizeInstitutionWork(ctx, q.work_id);
-  q=await reconcileInstitutionCompilerDelivery(ctx,q);
-  const episode = await compilerEpisode(ctx, q.episode_id);
+  const trace = ++z0TimingSequence, started = performance.now()
+  z0Timing(trace, "read.begin", started)
+  let q = await compilerRow(ctx, requestId)
+  z0Timing(trace, "read.compiler-row", started)
+  await authorizeInstitutionWork(ctx, q.work_id)
+  z0Timing(trace, "read.authorize", started)
+  q = await reconcileInstitutionCompilerDelivery(ctx,q)
+  z0Timing(trace, "read.reconcile", started)
+  const episode = await compilerEpisode(ctx, q.episode_id)
+  z0Timing(trace, "read.episode", started)
   const costs = { parentReservation: episode.parent_reservation, originalDeadline: episode.original_deadline.toISOString(),
     wallDeadline: episode.wall_deadline.toISOString(), acquisitionCalls: episode.acquisition_calls,
     compilerAttempts: episode.attempts, monetaryCost: null, monetaryCostStatus: "UNKNOWN",
@@ -35,6 +46,7 @@ export async function readInstitutionCompiler(ctx: PeMutationContext, requestId:
       excludeWorkObservations: purpose === "WORK_OBSERVATION",
     }),
     aggregatePeakMemoryBytes: null, humanSeconds: null };
+  z0Timing(trace, "read.costs", started)
   if (["CANCELLED", "INVALIDATED"].includes(q.status)) return { requestId: q.id, workId: q.work_id,
     workRevision: q.work_input_id, revision: q.revision, status: q.status, artifact: null,
     programme: null, reason: q.failure, costs, exposureRetained: true };
@@ -80,11 +92,14 @@ export async function readInstitutionCompiler(ctx: PeMutationContext, requestId:
     return { requestId: q.id, workId: q.work_id, workRevision: q.work_input_id, revision: q.revision,
       status: "INVALIDATED", reason, artifact: null, programme: null, costs, exposureRetained: true };
   }
-  const programme = q.program_id ? await readInstitutionHarnessProgram(ctx, q.program_id) : null;
+  z0Timing(trace, "read.artifact", started)
+  const programme = q.program_id ? await readInstitutionHarnessProgram(ctx, q.program_id) : null
+  z0Timing(trace, "read.programme", started)
   if(programme&&["OBSERVED","PARTIAL","INVALIDATED"].includes(programme.status)&&programme.status!==q.status)
     await tx(ctx,async c=>{await c.query(`UPDATE finnor_os.x1_compiler_requests SET status=$4,updated_at=clock_timestamp()
       WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 AND generation=$5 AND status NOT IN('CANCELLED','INVALIDATED')`,
       [q.tenant_id,q.principal_id,q.id,programme.status,q.generation]);});
+  z0Timing(trace, "read.complete", started)
   return { requestId: q.id, workId: q.work_id, workRevision: q.work_input_id, revision: q.revision,
     status: programme?.status ?? q.status, artifact: artifact ? InstitutionProgram.parse(artifact.body) : null,
     check: artifact?.check_result ?? null, programme, reason: q.failure, costs,
@@ -199,7 +214,10 @@ export async function handleInstitutionOperation(ctx:PeMutationContext,operation
   const observation = operation === "institution-sources" ? sourceRead.safeParse(body)
     : operation === "institution-read" ? programmeRead.safeParse(body) : null;
   const purpose = observation?.success ? observation.data.purpose : undefined;
+  const call = ++z0TimingSequence
+  if (operation === "institution-read" || operation === "institution-sources") z0Timing(call, operation + ".begin", started)
   const response=await handleInstitutionOperationBody(ctx,operation,body);let elapsedMs=performance.now()-started;
+  if (operation === "institution-read" || operation === "institution-sources") z0Timing(call, operation + ".body", started)
   const handles=body&&typeof body==='object'&&!Array.isArray(body)?body as {workId?:unknown;requestId?:unknown}:{};
   const valid=(value:unknown):value is string=>typeof value==='string'&&z.string().uuid().safeParse(value).success;
   let attribution:Awaited<ReturnType<typeof compilerRow>>|null=null;
@@ -237,5 +255,6 @@ export async function handleInstitutionOperation(ctx:PeMutationContext,operation
     if(attribution)await compilerEvent(ctx,attribution,'API_COMPUTE_METER_GAP',{operation,statusCode:response.status,
       startedAt,elapsedMs,predicate:safePredicate(error),originalEpisode:attribution.episode_id}).catch(()=>undefined);
   }
+  if (operation === "institution-read" || operation === "institution-sources") z0Timing(call, operation + ".meter", started)
   return response;
 }
