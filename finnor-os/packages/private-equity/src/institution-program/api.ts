@@ -111,8 +111,8 @@ async function handleInstitutionOperationBody(ctx: PeMutationContext, operation:
     }
     if (operation === "institution-sources") {
       const { workId } = sourceRead.parse(body);
-      await authorizeInstitutionWork(ctx, workId);
       return { status: 200, body: await tx(ctx, async c => {
+        await authorizeInstitutionWork(ctx, workId, c);
         const grants = (await c.query(`SELECT id::text,source_id,source_class,protocol,revision,expires_at
           FROM finnor_os.x1_source_grants g WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3
           AND NOT EXISTS(SELECT 1 FROM finnor_os.x1_source_grants n WHERE n.tenant_id=g.tenant_id
@@ -128,11 +128,12 @@ async function handleInstitutionOperationBody(ctx: PeMutationContext, operation:
     }
     const input: z.infer<typeof programmeRead> = (operation === "institution-read" ? programmeRead : id).parse(body);
     const { requestId, purpose } = input;
+    // readInstitutionCompiler itself loads the owner and rechecks current Work rights.
+    if (["institution-read", "institution-status", "institution-witness"].includes(operation))
+      return { status: 200, body: await readInstitutionCompiler(ctx, requestId, purpose) };
     let q = await compilerRow(ctx, requestId);
     await authorizeInstitutionWork(ctx, q.work_id);
     if(operation==='institution-resume')q=await reconcileInstitutionCompilerDelivery(ctx,q);
-    if (["institution-read", "institution-status", "institution-witness"].includes(operation))
-      return { status: 200, body: await readInstitutionCompiler(ctx, requestId, purpose) };
     if (operation === "institution-cancel") {
       // Cancellation remains available after source-grant invalidation. This
       // historical status only decides whether to preserve an already completed
@@ -205,30 +206,45 @@ export async function handleInstitutionOperation(ctx:PeMutationContext,operation
   let attribution:Awaited<ReturnType<typeof compilerRow>>|null=null;
   let preparationWorkId:string|null=null;
   try{
-    if(valid(handles.requestId))attribution=await compilerRow(ctx,handles.requestId);
-    else if(valid(handles.workId)){
-      await authorizeInstitutionWork(ctx,handles.workId);
-      preparationWorkId=handles.workId;
-      const latest=await tx(ctx,async c=>(await c.query<{id:string}>(`SELECT id::text FROM finnor_os.x1_compiler_requests
-        WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY revision DESC LIMIT 1`,
-        [ctx.auth.tenantId,principal(ctx),handles.workId])).rows[0],true);
-      if(latest)attribution=await compilerRow(ctx,latest.id);
-    }
-    if(attribution){
-      await authorizeInstitutionWork(ctx,attribution.work_id);
-      const episode=await compilerEpisode(ctx,attribution.episode_id);
-      const rights=await tx(ctx,async c=>(await c.query<{revision:string}>('SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=$1',
-        [ctx.auth.tenantId])).rows[0],true);
+    if(valid(handles.requestId)||valid(handles.workId)){
+      // One current RLS snapshot for metering preflight, released before S7
+      // persistence. Preserve all owner/role/rights checks and physical cost.
+      const preflight = await tx(ctx, async c => {
+        let owner: Awaited<ReturnType<typeof compilerRow>> | null = null;
+        let preparation: string | null = null;
+        if(valid(handles.requestId))owner=await compilerRow(ctx,handles.requestId,c);
+        else if(valid(handles.workId)){
+          await authorizeInstitutionWork(ctx,handles.workId,c);
+          preparation=handles.workId;
+          const latest=(await c.query<{id:string}>(`SELECT id::text FROM finnor_os.x1_compiler_requests
+            WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY revision DESC LIMIT 1`,
+            [ctx.auth.tenantId,principal(ctx),handles.workId])).rows[0];
+          if(latest)owner=await compilerRow(ctx,latest.id,c);
+        }
+        if(owner){
+          await authorizeInstitutionWork(ctx,owner.work_id,c);
+          const episode=await compilerEpisode(ctx,owner.episode_id,c);
+          const rights=(await c.query<{revision:string}>('SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=$1',
+            [ctx.auth.tenantId])).rows[0];
+          return {owner,preparation,episode,rights};
+        }
+        const rights=preparation?(await c.query<{revision:string}>(
+          'SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=$1',
+          [ctx.auth.tenantId])).rows[0]:null;
+        return {owner,preparation,episode:null,rights};
+      },true);
+      attribution=preflight.owner;
+      preparationWorkId=preflight.preparation;
       elapsedMs=performance.now()-started;
-      await persistInstitutionApiCompute(ctx,{workId:attribution.work_id,requestId:attribution.id,episodeId:episode.id,
-        parentReservation:episode.parent_reservation,rightsRevision:rights?.revision??'UNKNOWN',operation,
-        statusCode:response.status,startedAt,elapsedMs,...(purpose ? { purpose } : {})});
-    }else if(preparationWorkId){
-      const rights=await tx(ctx,async c=>(await c.query<{revision:string}>(
-        'SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=$1',[ctx.auth.tenantId])).rows[0],true);
-      elapsedMs=performance.now()-started;
-      await persistInstitutionWorkPreparationCompute(ctx,{workId:preparationWorkId,rightsRevision:rights?.revision??'UNKNOWN',
-        operation,statusCode:response.status,startedAt,elapsedMs,...(purpose ? { purpose } : {})});
+      if(attribution&&preflight.episode){
+        const episode=preflight.episode;
+        await persistInstitutionApiCompute(ctx,{workId:attribution.work_id,requestId:attribution.id,episodeId:episode.id,
+          parentReservation:episode.parent_reservation,rightsRevision:preflight.rights?.revision??'UNKNOWN',operation,
+          statusCode:response.status,startedAt,elapsedMs,...(purpose ? { purpose } : {})});
+      }else if(preparationWorkId){
+        await persistInstitutionWorkPreparationCompute(ctx,{workId:preparationWorkId,rightsRevision:preflight.rights?.revision??'UNKNOWN',
+          operation,statusCode:response.status,startedAt,elapsedMs,...(purpose ? { purpose } : {})});
+      }
     }
   }catch(error){
     // A revoked/unavailable principal cannot write a private meter. Retain a

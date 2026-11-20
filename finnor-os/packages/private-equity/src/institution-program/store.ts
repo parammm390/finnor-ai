@@ -33,7 +33,7 @@ export type CompilerEpisodeRow = { id: string; tenant_id: string; principal_id: 
   parent_demand: InstitutionResourceDemand | null; acquisition_calls: number; attempts: number; coordination_calls:number };
 
 export async function authorizeInstitutionWork(ctx: PeMutationContext, workId: string, c?: PoolClient) {
-  await authorizeBeliefResources(ctx, [{ type: "work", id: workId }]);
+  await authorizeBeliefResources(ctx, [{ type: "work", id: workId }], c);
   const read = async (client: PoolClient) => {
     const row = (await client.query(`SELECT w.id FROM finnor_os.works w JOIN finnor_os.users u
       ON u.tenant_id=w.tenant_id AND u.id=w.created_by

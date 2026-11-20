@@ -2436,7 +2436,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/institution-program/api.ts",
-      "sha256": "d53fc0561c772af588e67658455a124d222473850b5d76f18e39c2c9bdaf671e"
+      "sha256": "939235dbc6a308700ca68ad4b47815e712d6a5783832a95723fdd4600d89012b"
     },
     {
       "path": "finnor-os/packages/private-equity/src/institution-program/artifact.ts",
@@ -2528,7 +2528,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/institution-program/store.ts",
-      "sha256": "0923a39f1963d04a8a5068ef9047c3edcf01cbf86ddb361ebfb857cfd10ba5df"
+      "sha256": "c093e68b815224db9df05d5e482cc41c29d0452e6eed5027d9d246623934c7c4"
     },
     {
       "path": "finnor-os/packages/private-equity/src/institution-program/worker.ts",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "b590d03e759e24829b1977a7b4230d1693c8acfd897de42797f45d1aea996f8e"
+  "sourceDigest": "204ead46498d7bb72a0a9adf9cd246114839a64a923c781be1962549bd17579d"
 } as const;
