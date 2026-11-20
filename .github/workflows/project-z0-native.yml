@@ -347,15 +347,6 @@ jobs:
               .slice(-30).map(row => ({ route: row.route, status: httpStatus(row.status), failed: row.failed === true,
                 ageMs: Number.isSafeInteger(row.ageMs) && row.ageMs >= 0 && row.ageMs <= 3600000 ? row.ageMs : null })),
           } : null
-          // Only sanitized browser states and HTTP status codes enter public CI receipts.
-          // Never publish token values, Auth error bodies or private Work contents.
-          const browserDiagnostics = value => value && typeof value === 'object' ? {
-            pageState: value.pageState ? Object.fromEntries(['loginForm', 'workspace', 'canvas', 'workInstrument',
-              'applicationPanel', 'authBoundary', 'invalidCanvas'].map(key => [key, value.pageState[key] === true])) : null,
-            ...Object.fromEntries(['authTokenStatuses', 'meStatuses', 'workStatuses', 'applicationStatuses',
-              'companyStatuses'].map(key => [key, Array.isArray(value[key])
-              ? value[key].slice(-12).map(httpStatus) : null])),
-          } : null
           for (const { id, outcome, error, reason, checks, observations, wallMs } of mountedCases) {
             const browserOperation = typeof error === 'string'
               ? error.match(/^(browserType\.launch|browser\.newContext|page\.(?:goto|reload|waitForResponse|evaluate)|locator\.(?:fill|click|evaluate|waitFor)):/)?.[1] ?? null : null
@@ -383,13 +374,6 @@ jobs:
                 .filter(key => key in observations.budgetCutChecks)
                 .map(key => [key, member(budgetCutResults, observations.budgetCutChecks[key])])) : null,
               browserOperation, browserProbeCause: browserProbeCauses.has(probeCause) ? probeCause : null,
-              browserDiagnostics: browserDiagnostics(observations?.browserDiagnostics),
-              databasePressure: observations?.databasePressure ? Object.fromEntries(
-                ['samples', 'errors', 'peakBackends', 'peakActive', 'peakIdleInTransaction', 'peakLockWaiters',
-                  'peakClientWaiters', 'peakIoWaiters', 'peakLongestTransactionSeconds']
-                  .map(key => [key, Number.isSafeInteger(observations.databasePressure[key])
-                    && observations.databasePressure[key] >= 0 && observations.databasePressure[key] <= 100000
-                      ? observations.databasePressure[key] : null])) : null,
               networkError, setupPredicate, setupCause,
               wallMs: Number.isSafeInteger(wallMs) && wallMs >= 0 ? wallMs : null,
               browserStage: browserStages.has(observations?.browserStage) ? observations.browserStage : null,

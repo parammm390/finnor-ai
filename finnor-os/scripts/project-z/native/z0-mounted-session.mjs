@@ -92,61 +92,6 @@ const { default: pg } = await import("pg");
 const sql = new pg.Client({ connectionString: env.CENTROPY_E2E_DB_ADMIN_URL });
 await sql.connect();
 const q = async (text, params = []) => { costs.sqlQueries++; return (await sql.query(text, params)).rows; };
-// Observe PostgreSQL capacity during the real mounted reads. This uses its own
-// admin read-only connection and exports ONLY aggregate counts, never SQL, tenant
-// identity, credentials or Work data. It cannot change a case's pass conditions.
-async function withDatabasePressure(c, read) {
-  const observer = new pg.Client({
-    connectionString: env.CENTROPY_E2E_DB_ADMIN_URL,
-    connectionTimeoutMillis: 2000,
-    query_timeout: 2500,
-  });
-  let connected = false, running = false, errors = 0;
-  const samples = [];
-  const poll = async () => {
-    if (!connected || running) return;
-    running = true;
-    try {
-      const { rows } = await observer.query(`SELECT
-        count(*)::int AS "backends",
-        count(*) FILTER (WHERE state='active')::int AS "active",
-        count(*) FILTER (WHERE state='idle in transaction')::int AS "idleInTransaction",
-        count(*) FILTER (WHERE wait_event_type='Lock')::int AS "lockWaiters",
-        count(*) FILTER (WHERE wait_event_type='Client')::int AS "clientWaiters",
-        count(*) FILTER (WHERE wait_event_type='IO')::int AS "ioWaiters",
-        coalesce(max(extract(epoch from (clock_timestamp() - xact_start))::int),0) AS "longestTransactionSeconds"
-        FROM pg_stat_activity WHERE datname=current_database()`);
-      if (rows[0] && samples.length < 160) samples.push(rows[0]);
-    } catch { errors++; }
-    finally { running = false; }
-  };
-  try { await observer.connect(); connected = true; }
-  catch { errors++; await observer.end().catch(() => undefined); }
-  let timer = null;
-  if (connected) {
-    await poll();
-    timer = setInterval(() => { void poll(); }, 1200);
-    timer.unref();
-  }
-  try { return await read(); }
-  finally {
-    if (timer) clearInterval(timer);
-    if (connected) {
-      await poll();
-      await observer.end().catch(() => undefined);
-    }
-    const peak = key => samples.length ? Math.max(...samples.map(value => Number(value[key]) || 0)) : null;
-    c.observations.databasePressure = {
-      samples: samples.length, errors,
-      peakBackends: peak('backends'), peakActive: peak('active'),
-      peakIdleInTransaction: peak('idleInTransaction'),
-      peakLockWaiters: peak('lockWaiters'),
-      peakClientWaiters: peak('clientWaiters'),
-      peakIoWaiters: peak('ioWaiters'),
-      peakLongestTransactionSeconds: peak('longestTransactionSeconds'),
-    };
-  }
-}
 const record = (name, value) => writePrivateJson(join(evidence, `fixture-${name}.json`), value);
 
 const worker = env.FINNOR_WORKER_DATABASE_URL ? await startOwnedWorker(env, { logPath: join(privateRoot, "worker.log"), leaseSeconds: 30 }) : null;
@@ -346,33 +291,6 @@ async function renderBoundaryFacts() {
       status: Number.isInteger(row.status) ? row.status : null, failed: Boolean(row.failure),
       ageMs: Math.min(3600000, Math.max(0, Date.now() - row.at)) }] : []).slice(-30) };
 }
-// Failure-only observability: no tokens, response bodies or private Work facts.
-async function browserFailureDiagnostics(targetPage, requestWatch, expectedWorkId) {
-  await requestWatch.settle();
-  const pageState = await targetPage.evaluate(workId => {
-    const canvas = document.querySelector('main[aria-label="Investigation Canvas"]');
-    const instrument = document.getElementById('canvas-work-' + workId);
-    return {
-      loginForm: Boolean(document.querySelector('form')),
-      workspace: Boolean(document.querySelector('.ct-topbar')),
-      canvas: Boolean(canvas),
-      workInstrument: Boolean(canvas && instrument && canvas.contains(instrument)),
-      applicationPanel: Boolean(canvas?.querySelector('.ct-application-semantics')),
-      authBoundary: Boolean(document.querySelector('.ct-auth-state')),
-      invalidCanvas: Boolean(canvas?.querySelector('.ct-canvas__invalid')),
-    };
-  }, expectedWorkId).catch(() => null);
-  const statuses = predicate => requestWatch.records.filter(predicate).slice(-12)
-    .map(row => Number.isInteger(row.status) ? row.status : null);
-  return {
-    pageState,
-    authTokenStatuses: statuses(row => row.kind === 'auth-token'),
-    meStatuses: statuses(row => row.path === '/api/centropy/me'),
-    workStatuses: statuses(row => row.path === '/api/centropy/works/' + expectedWorkId),
-    applicationStatuses: statuses(row => row.path === '/api/centropy/company-brain/application-projection'),
-    companyStatuses: statuses(row => row.path === '/api/centropy/company-brain/projection'),
-  };
-}
 async function startBrowser() {
   const { chromium } = loadPlaywright(root);
   browser = await chromium.launch({ headless: true, env: { ...process.env, TMPDIR: browserTmp } });
@@ -453,7 +371,7 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
     { meStatus: login.meStatus, role: login.identity?.role, tenantMatches: login.identity?.tenantId === parentA.tenantId, principalMatches: login.identity?.userId === parentA.ownerId, idpStatus: idp.status, idpIdEqualsNativePrincipal: idp.id === login.identity?.userId },
     login.meStatus === 200 && login.identity?.role === "owner" && login.identity?.tenantId === parentA.tenantId && login.identity?.userId === parentA.ownerId && idp.status === 200);
   c.observations.browserStage = "OPEN_ORIGINAL_WORK";
-  const opened = await withDatabasePressure(c, () => openWork(page, threadA.id, parentA.workId));
+  const opened = await openWork(page, threadA.id, parentA.workId);
   c.observations.rootCarriedBy = opened.rootCarriedBy;
   const ownerCuts = c.observations.ownerCuts = { beforeMount: ownerCutBeforeMounted };
   const cut = () => mountedOwnerCut(q, parentA, acqA.sessionId, ownerCutBeforeMounted.captured_at);
@@ -821,7 +739,7 @@ await runCase("M-08", ["Z0-R09-C04", "Z0-R45-C04"], "Real logout then new sign-i
   c.observations.browserStage = "SIGN_IN_AGAIN";
   const login = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
   c.observations.browserStage = "OPEN_WORK_AFTER_SIGN_IN";
-  await withDatabasePressure(c, () => openWork(page, threadA.id, parentA.workId));
+  await openWork(page, threadA.id, parentA.workId);
   const fresh = await readSettledPanels(page, parentA.workId);
   c.observations.reloadDifferences = referenceFieldDifferences(fresh);
   await watch.settle();
@@ -931,9 +849,6 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
     const summary = clockWatch.summary(mark);
     c.observations.requests = summary;
     check(c, "no-mutating-requests", "0 mutating browser requests; every observed refresh is a real 200 grant", "browser request watch", { mutations: summary.mutations, otherNonGet: summary.otherNonGet, authToken: summary.authToken }, summary.mutations === 0 && summary.otherNonGet === 0);
-  } catch (error) {
-    c.observations.browserDiagnostics = await browserFailureDiagnostics(clockPage, clockWatch, parentA.workId);
-    throw error;
   } finally {
     await clockContext.close().catch(() => undefined);
     if (!page.isClosed()) await page.bringToFront().catch(() => undefined);
@@ -951,13 +866,7 @@ await runCase("M-10", ["Z0-R09-C06"], "Delayed old-principal response (owned dat
   page = await context.newPage();
   watch.attach(page, "delayed-original", authOrigin);
   c.observations.browserStage = "SIGN_IN_ORIGINAL_OWNER";
-  let original;
-  try {
-    original = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
-  } catch (error) {
-    c.observations.browserDiagnostics = await browserFailureDiagnostics(page, watch, parentA.workId);
-    throw error;
-  }
+  const original = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
   check(c, "original.identity", "real sign-in matches the original owner and tenant", "O-API /me",
     { status: original.meStatus }, original.meStatus === 200
       && original.identity?.tenantId === parentA.tenantId && original.identity?.userId === parentA.ownerId);
