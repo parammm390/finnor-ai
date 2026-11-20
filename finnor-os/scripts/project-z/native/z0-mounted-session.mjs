@@ -210,6 +210,43 @@ await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_REA
       && programme.data?.workId === parentA.workId && programme.data?.workRevision === sources.data?.workInputId
       && programme.data?.requestId === request?.id && programme.data?.revision === request?.revision);
 
+  // Development Next compiles these route handlers lazily. The mounted browser
+  // must test real authenticated Work reads, not charge a cold module build to
+  // its fixed assertion budget. Preflight does NOT fabricate or cache any value:
+  // the browser still issues its own fresh reads and must match the original
+  // database/API oracles in every M-case.
+  const frontendProjection = async (operation, body) => {
+    // Use a fresh bearer for each attempt, just like the existing institutional
+    // preflight. The real Auth/tenant boundary remains authoritative.
+    const invoke = async () => fetch(`${FRONTEND}/api/centropy/company-brain/${operation}`, {
+      method: "POST", cache: "no-store",
+      headers: { "content-type": "application/json", authorization: `Bearer ${await owner.token()}` },
+      body: JSON.stringify(body), signal: AbortSignal.timeout(30000),
+    });
+    let response = await invoke();
+    if ([502, 503, 504].includes(response.status)) {
+      await response.body?.cancel();
+      response = await invoke();
+    }
+    return { status: response.status, data: await response.json().catch(() => null) };
+  };
+  const expectedRoot = { entityType: "pe_deal", entityId: parentA.dealId };
+  const company = await frontendProjection("projection", { root: expectedRoot });
+  check(c, "A.company-projection-proxy-ready", "real authenticated frontend company projection returns the original root",
+    "frontend proxy + original owner bearer", { status: company.status,
+      rootMatches: company.data?.root?.entityType === expectedRoot.entityType && company.data?.root?.entityId === expectedRoot.entityId },
+    company.status === 200 && company.data?.root?.entityType === expectedRoot.entityType
+      && company.data?.root?.entityId === expectedRoot.entityId);
+  const application = await frontendProjection("application-projection", {
+    root: expectedRoot, workId: parentA.workId, includeAcquisition: true,
+  });
+  check(c, "A.application-projection-proxy-ready", "real authenticated frontend application projection returns the original Work and root",
+    "frontend proxy + original owner bearer", { status: application.status,
+      workMatches: application.data?.workId === parentA.workId,
+      rootMatches: application.data?.root?.entityType === expectedRoot.entityType && application.data?.root?.entityId === expectedRoot.entityId },
+    application.status === 200 && application.data?.workId === parentA.workId
+      && application.data?.root?.entityType === expectedRoot.entityType && application.data?.root?.entityId === expectedRoot.entityId);
+
   witnessBefore = await witness(q, parentA);
   ownerCutBeforeMounted = await mountedOwnerCut(q, parentA, acqA.sessionId, null);
   workStatusBeforeMounted = ownerCutBeforeMounted.work;

@@ -2,7 +2,7 @@ name: "Z0 - Work display, reload, sign-in and privacy"
 
 on:
   push:
-    branches: [codex/project-z0-resume, codex/project-z0-identity, codex/project-z0-useful, codex/project-z0-r12, codex/project-z0-mounted, codex/project-z0-recovery, codex/project-z0-economic, codex/project-z0-confidential, codex/zw-integration-quality-20261115]
+    branches: [codex/project-z0-resume, codex/project-z0-identity, codex/project-z0-useful, codex/project-z0-r12, codex/project-z0-mounted, codex/project-z0-recovery, codex/project-z0-economic, codex/project-z0-confidential, codex/zw-integration-quality-20261115, codex/z0-native-route-prewarm-20261120]
 
 permissions:
   contents: read
@@ -60,7 +60,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - name: Install the locked Chromium build
-        if: github.ref_name == 'codex/project-z0-mounted' || github.ref_name == 'codex/zw-integration-quality-20261115'
+        if: github.ref_name == 'codex/project-z0-mounted' || github.ref_name == 'codex/zw-integration-quality-20261115' || github.ref_name == 'codex/z0-native-route-prewarm-20261120'
         run: PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/z0-chromium" node node_modules/playwright/cli.js install --with-deps chromium
       - name: Compare real Canvas activation before and after the repair
         if: github.ref_name == 'codex/zw-integration-quality-20261115'
@@ -145,7 +145,7 @@ jobs:
           elif [ "$GITHUB_REF_NAME" = "codex/project-z0-r12" ]; then
             scenario=z0-r12-session.mjs
             profiles=v2
-          elif [ "$GITHUB_REF_NAME" = "codex/project-z0-mounted" ] || [ "$GITHUB_REF_NAME" = "codex/zw-integration-quality-20261115" ]; then
+          elif [ "$GITHUB_REF_NAME" = "codex/project-z0-mounted" ] || [ "$GITHUB_REF_NAME" = "codex/zw-integration-quality-20261115" ] || [ "$GITHUB_REF_NAME" = "codex/z0-native-route-prewarm-20261120" ]; then
             scenario=z0-mounted-session.mjs
             export PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/z0-chromium"
             launch_args+=(--budget-ms=3300000)
@@ -461,6 +461,7 @@ jobs:
             'codex/project-z0-r12': ['R12-02', 'R12-03', 'R12-04'],
             'codex/project-z0-mounted': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),
             'codex/zw-integration-quality-20261115': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),
+            'codex/z0-native-route-prewarm-20261120': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),
             'codex/project-z0-recovery': recoveryRequired,
           })[process.env.GITHUB_REF_NAME] ?? continuation
           const mountedCaseTitles = {
