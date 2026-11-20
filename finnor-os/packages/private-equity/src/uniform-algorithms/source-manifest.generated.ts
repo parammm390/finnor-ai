@@ -2488,7 +2488,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/institution-program/meter.ts",
-      "sha256": "8fbfc4ea9c6a31e39237fa7700440ff3e468f3f04b45878c5f7f835926449ad3"
+      "sha256": "e186bdb3999f5b323060d609d5770100e5013ee63cbdabf1ee3f8ffa1c25ad72"
     },
     {
       "path": "finnor-os/packages/private-equity/src/institution-program/owner-admission.ts",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "b590d03e759e24829b1977a7b4230d1693c8acfd897de42797f45d1aea996f8e"
+  "sourceDigest": "3688772062a91d834ad24a25758d2d6641c6f8eae62f6075c950964d87ff8efd"
 } as const;
