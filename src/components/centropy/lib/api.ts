@@ -75,6 +75,30 @@ function publish(r: CentropyRequestLog): void {
   requestListeners.forEach((cb) => cb(r))
 }
 
+// The mounted Work opens these CPU/DB-intensive *read-only* endpoints
+// together. Cap just this request class at two concurrent proxy calls; never
+// queue identity discovery, durable writes, or unrelated routes. The queue does
+// not cache results, bypass RBAC, or change server deadlines.
+const HEAVY_WORK_READS = new Set([
+  "company-brain/projection",
+  "company-brain/application-projection",
+  "company-brain/institution-sources",
+  "company-brain/institution-read",
+])
+const MAX_HEAVY_WORK_READS = 2
+let heavyWorkReadsActive = 0
+const heavyWorkReadWaiters: Array<() => void> = []
+async function limitHeavyWorkReads<T>(operation: () => Promise<T>): Promise<T> {
+  if (heavyWorkReadsActive < MAX_HEAVY_WORK_READS) heavyWorkReadsActive++
+  else await new Promise<void>(resolve => heavyWorkReadWaiters.push(resolve))
+  try { return await operation() }
+  finally {
+    const next = heavyWorkReadWaiters.shift()
+    if (next) next() // Hand this permit to the next read without over-admitting.
+    else heavyWorkReadsActive--
+  }
+}
+
 function authHeaders(): Record<string, string> | undefined {
   const token = getCurrentAccessToken()
   if (token) return { authorization: `Bearer ${token}` }
@@ -129,7 +153,7 @@ async function centropyRequest<T>(method: CentropyMethod, path: string, body?: u
       status = 401
       throw new CentropyApiError(auth ? "Sign in required" : "Test key or sign in required", 401, false)
     }
-    const res = await fetch(`/api/centropy/${path}${qs}`, {
+    const send = () => fetch(`/api/centropy/${path}${qs}`, {
       method,
       cache: "no-store",
       headers: {
@@ -139,6 +163,20 @@ async function centropyRequest<T>(method: CentropyMethod, path: string, body?: u
       ...(method !== "GET" ? { body: JSON.stringify(body ?? {}) } : {}),
       signal: controller.signal,
     })
+    const res = method === "POST" && HEAVY_WORK_READS.has(path)
+      ? await limitHeavyWorkReads(async () => {
+          // The request may have waited behind another expensive read. Do not
+          // dispatch an earlier bearer after token refresh or principal switch.
+          if (sessionKey !== getCurrentSessionKey()
+            || (credential && (accessGeneration !== getCurrentAccessGeneration()
+              || getCurrentAccessToken() !== credential))) {
+            status = 401
+            throw new CentropyApiError("An earlier authenticated Work read was discarded before dispatch", 401, false)
+          }
+          signal?.throwIfAborted()
+          return send()
+        })
+      : await send()
     status = res.status
     // A route-scoped 401 is not necessarily a rejected login. Only the
     // authenticated backend's explicit identity-denied marker may close the
