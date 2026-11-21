@@ -83,10 +83,11 @@ async function runCase(id, rows, title, body) {
         return kind ? [{ kind, status: row.status, failed: Boolean(row.failure) }] : [];
       }).slice(-24);
   }
-  if (id === "M-04" && c.outcome === "FAIL") {
+  if ((id === "M-01" || id === "M-04") && c.outcome === "FAIL") {
     c.observations.mountedReads = watch.since(caseMark).flatMap(row => {
       const route = /\/api\/centropy\/company-brain\/(application-projection|institution-sources|institution-read|projection)$/.exec(row.path)?.[1];
-      return route ? [{ route, status: row.status, failed: Boolean(row.failure) }] : [];
+      return route ? [{ route, status: row.status, failed: Boolean(row.failure),
+        startedMs: row.at - t0, responseMs: row.responseAt === undefined ? null : row.responseAt - row.at }] : [];
     }).slice(-24);
   }
   c.wallMs = Date.now() - t0;

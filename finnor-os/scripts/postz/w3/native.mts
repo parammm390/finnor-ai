@@ -14,6 +14,7 @@ import { monitorEventLoopDelay } from "node:perf_hooks";
 import EmbeddedPostgres from "embedded-postgres";
 import pg from "pg";
 import { mountedResponseBarrier, mountedServiceProof } from "./mounted.mts";
+import type { OwnerReadTiming } from "../../frontier5/x1/authenticated-api-fixture.mts";
 import { NATIVE_WORKER_LIMITS } from "./worker-protocol.mts";
 import { createIntegratedEvidence } from "../integrated/evidence.mts";
 import { INTEGRATED_PROFILE } from "../integrated/profile.mts";
@@ -326,8 +327,13 @@ try {
   }
   process.env.FINNOR_W3_TENANT = tenant;
   const mountedBarrier = mountedResponseBarrier();
+  const installedReadTimings: OwnerReadTiming[] = [];
   auth = await authenticatedApiFixture(repo, owner, (row: unknown) => traffic.push(row),
     { additionalActors: actors.slice(1), maximumActors: 8, ...(installation ? { installation } : {}),
+      observeInstalledRead: { path: "/api/real-world-services/read", begin: sample => {
+        installedReadTimings.push(sample);
+        if (installedReadTimings.length > 32) installedReadTimings.shift();
+      } },
       afterResponse: async (path, body, status, request) => {
         if (status >= 400) traffic.push({ event: "W3_API_REFUSAL", path, status, body: JSON.parse(body) });
         await mountedBarrier.afterResponse(path, body, status, request);
@@ -873,9 +879,15 @@ try {
     idempotencyKey: "original-week", outcomeSource: outcomeRef, providerSources: [],
     budgetObligationRef: obligations.OFFER.ref, s7EstimandId: null });
   const requestId = submitted.requestId;
+  let lastDirectRead: Parameters<typeof mountedServiceProof>[0]["lastDirectRead"] = null;
   const read = async () => {
+    const began = performance.now();
     const r = await ok("real-world-services", "read", { workId: intake.workId });
-    assert.equal(r.scope.principalId, owner); return r.requests.find((r: any) => r.requestId === requestId);
+    assert.equal(r.scope.principalId, owner);
+    const original = r.requests.find((r: any) => r.requestId === requestId);
+    lastDirectRead = { elapsedMs: Math.round(performance.now() - began),
+      projectedInstances: original?.projection?.instances?.length ?? 0, exactWork: r.scope.workId === intake.workId };
+    return original;
   };
   await run("W004-read-is-not-activation", { workId: intake.workId }, { newRequests: 0, newEffects: 0 }, async () => {
     const counts = async () => (await admin!.query(`SELECT
@@ -2005,12 +2017,15 @@ try {
       }
       await artifact("mounted-input.json", { workId: intake.workId, owner, requestId,
         expected: { instances: 7, qualification: "CONTROLLED_DEVELOPMENT_ONLY", fieldValidated: false } });
+      installedReadTimings.length = 0;
       if (installation) await mountedServiceProof({
         installation, descriptor: installedDescriptor, auth, owner, participant: provider, companyId: f.root.entityId,
         participantProtocolIds: [discover.protocolId, ...terms.map(t => protocols.get(reportKey(t) + ":PROVIDER").id)],
         revokeProtocolId: protocols.get(reportKey(terms.at(-1)!) + ":PROVIDER").id,
         alternateCompanyId, workId: intake.workId, expectedInstanceIds: demands.map(d => d.id),
         barrier: mountedBarrier, output, artifact, run, pump, checkBound,
+        lastDirectRead,
+        installedReadTimings,
         restartApi: () => auth.restartCompiled(),
         revokeOwner: async revoked => { await admin!.query("UPDATE finnor_os.users SET status=$3 WHERE tenant_id=$1 AND id=$2",
           [tenant, owner, revoked ? "inactive" : "active"]) },

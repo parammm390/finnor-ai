@@ -7,9 +7,20 @@ import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
 import { spawn } from 'node:child_process';
 
+export type OwnerReadTiming = {
+  sequence: number;
+  receivedMs: number;
+  upstreamHeadersMs: number | null;
+  upstreamBodyMs: number | null;
+  forwardedMs: number | null;
+  upstreamStatus: number | null;
+  clientClosed: boolean;
+};
+
 export async function authenticatedApiFixture(repo: string, actor: string, record: (entry: unknown) => void,
   options: { frontendOrigin?: string; installation?: string; installationProfile?: "POSTZ_W2";
     additionalActors?:string[]; maximumActors?:number;
+    observeInstalledRead?: { path: string; begin: (sample: OwnerReadTiming) => void };
     afterResponse?: (path:string,body:string,status:number,request:{method:string;observer:boolean;body:string})=>Promise<void> } = {}) {
   const secret = randomBytes(32), password = randomBytes(24).toString("hex"), email = actor + "@test.invalid";
   const actors=[actor,...(options.additionalActors??[])];
@@ -112,6 +123,7 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
     else if (item.name === "route.ts") routes.push({ file: path, parts: relative(apiRoot, directory).split("/") });
   } };
   await scan(apiRoot); routes.sort((a, b) => a.parts.filter(p => p.startsWith("[")).length - b.parts.filter(p => p.startsWith("[")).length);
+  let readSequence = 0;
   const api = createServer(async (req, res) => {
     const started = performance.now();
     const finish=(path:string,status:number,headers:Record<string,string>,bytes:Buffer)=>{
@@ -128,11 +140,26 @@ export async function authenticatedApiFixture(repo: string, actor: string, recor
     try {
       const url = new URL(req.url ?? "/", "http://localhost"), parts = url.pathname.replace(/^\/api\//, "").split("/").map(decodeURIComponent);
       if(compiledOrigin){
+        const observer = options.observeInstalledRead;
+        const timing: OwnerReadTiming | null = observer?.path === url.pathname && req.method === "POST" ? {
+          sequence: ++readSequence, receivedMs: started, upstreamHeadersMs: null, upstreamBodyMs: null,
+          forwardedMs: null, upstreamStatus: null, clientClosed: false,
+        } : null;
+        if (timing && observer) {
+          observer.begin(timing);
+          res.once("finish", () => { timing.forwardedMs = performance.now() - started });
+          res.once("close", () => { timing.clientClosed = !res.writableFinished });
+        }
         let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>8388608)throw Error('BODY_BOUND');}
         const headers=new Headers();for(const [name,value]of Object.entries(req.headers))if(typeof value==='string')headers.set(name,value);
         const response=await fetch(compiledOrigin+url.pathname+url.search,{method:req.method,headers,
           ...(!['GET','HEAD'].includes(req.method??'GET')?{body}:{})});
+        if (timing) {
+          timing.upstreamHeadersMs = performance.now() - started;
+          timing.upstreamStatus = response.status;
+        }
         const bytes=Buffer.from(await response.arrayBuffer()),out:Record<string,string>={};response.headers.forEach((v,k)=>{out[k]=v;});
+        if (timing) timing.upstreamBodyMs = performance.now() - started;
         await options.afterResponse?.(url.pathname,bytes.toString('utf8'),response.status,
           {method:req.method??'GET',observer:req.headers['x-x1-observer']==='1',body});
         finish(url.pathname,response.status,out,bytes);

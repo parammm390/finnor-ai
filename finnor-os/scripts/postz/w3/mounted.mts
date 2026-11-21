@@ -8,6 +8,7 @@ import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { createRequire } from "node:module";
 import { chromium, type BrowserContext, type Page, type Request as BrowserRequest } from "playwright";
+import type { OwnerReadTiming } from "../../frontier5/x1/authenticated-api-fixture.mts";
 
 type Gate = { id: string; principalId: string; workId: string; enteredAt: string | null;
   releasedAt: string | null; bodyDigest: string | null; automatic: boolean;
@@ -77,6 +78,8 @@ type MountedInput = {
   alternateCompanyId: string;
   workId: string;
   expectedInstanceIds: string[];
+  lastDirectRead: { elapsedMs: number; projectedInstances: number; exactWork: boolean } | null;
+  installedReadTimings: readonly OwnerReadTiming[];
   barrier: ReturnType<typeof mountedResponseBarrier>;
   output: string;
   artifact: (name: string, value: unknown) => Promise<unknown>;
@@ -107,7 +110,7 @@ export async function mountedServiceProof(input: MountedInput) {
   // These response summaries contain route classes and statuses only, never tokens,
   // request bodies, private Work content or browser storage.
   const mountedReadOutcomes: Array<{ route: string; status: number; responseStartMs: number | null }> = [];
-  const serviceRequests = new Map<BrowserRequest, { began: number; status: number | null; failed: boolean }>();
+  const serviceRequests = new Map<BrowserRequest, { began: number; status: number | null; responseMs: number | null; failed: boolean }>();
   const mountedNavigations: Array<{ path: string; queryKeys: string[] }> = [];
   const mountedRuntimeErrors: Array<{ name: string; category: string; property?: string }> = [];
   const mountedAuthResponses: Array<{ route: string; method: string; status: number; identityDenied: boolean }> = [];
@@ -169,6 +172,12 @@ export async function mountedServiceProof(input: MountedInput) {
     try {
       await wait(selector => document.querySelectorAll(selector + " tbody tr").length === 7, panel);
     } catch (error) {
+      const cutoff = performance.now();
+      const recentReads = [...serviceRequests].slice(-16);
+      const serviceReads = recentReads.map(([, { began, status, responseMs, failed }]) => ({
+        ageMs: Math.round(cutoff - began), responseMs, status, failed,
+      }));
+      const pendingRead = recentReads.reverse().find(([, row]) => row.status === null && !row.failed);
       // An absent row is not proof that fulfillment is absent. Retain the
       // exact mounted/transport boundary before propagating the original failure.
       const browserState = await currentPage().evaluate((selector: string) => {
@@ -214,12 +223,28 @@ export async function mountedServiceProof(input: MountedInput) {
           workRecordTab: Boolean(document.querySelector('button[aria-current="page"]')),
         };
       }, panel).catch(() => ({ browserProbeUnavailable: true }));
+      if (pendingRead) {
+        // The verdict already failed. Observe the same request briefly to retain
+        // its outcome when the browser assertion ends ahead of the owner deadline.
+        const [request, row] = pendingRead;
+        if (row.status === null && !row.failed) {
+          await currentPage().waitForResponse(response => response.request() === request,
+            { timeout: Math.max(1, Math.min(6000, 32000 - (performance.now() - row.began))) }).catch(() => null);
+        }
+      }
+      const duration = (value: number | null) => value === null ? null : Math.round(value);
       await input.artifact("mounted/first-render-failure.json", {
         schema: "finnor.w3.mounted-read-diagnostic.v1",
         browserState, routeStatuses: mountedReadOutcomes.slice(-60),
-        serviceReads: [...serviceRequests.values()].slice(-16).map(({ began, status, failed }) => ({
-          ageMs: Math.round(performance.now() - began), status, failed,
+        serviceReads,
+        lastDirectRead: input.lastDirectRead,
+        installedApiReads: input.installedReadTimings.filter(sample => sample.receivedMs <= cutoff).slice(-16).map(sample => ({
+          sequence: sample.sequence, receivedBeforeCutoffMs: Math.round(cutoff - sample.receivedMs),
+          upstreamHeadersMs: duration(sample.upstreamHeadersMs), upstreamBodyMs: duration(sample.upstreamBodyMs),
+          forwardedMs: duration(sample.forwardedMs), status: sample.upstreamStatus, clientClosed: sample.clientClosed,
         })),
+        watchedAfterCutoff: pendingRead ? { status: pendingRead[1].status,
+          responseMs: pendingRead[1].responseMs, failed: pendingRead[1].failed } : null,
         navigations: mountedNavigations.slice(-25),
         runtimeErrors: mountedRuntimeErrors.slice(-20),
         authResponses: mountedAuthResponses.slice(-75),
@@ -409,7 +434,9 @@ export async function mountedServiceProof(input: MountedInput) {
     });
     page.on("request", request => {
       if (request.method() === "POST" && new URL(request.url()).pathname === "/api/centropy/real-world-services/read"
-          && serviceRequests.size < 128) serviceRequests.set(request, { began: performance.now(), status: null, failed: false });
+          && serviceRequests.size < 128) serviceRequests.set(request, {
+        began: performance.now(), status: null, responseMs: null, failed: false,
+      });
     });
     page.on("requestfailed", request => {
       const service = serviceRequests.get(request);
@@ -420,7 +447,10 @@ export async function mountedServiceProof(input: MountedInput) {
       try { path = new URL(response.url()).pathname } catch { return }
       const status = response.status();
       const service = serviceRequests.get(response.request());
-      if (service) service.status = status;
+      if (service) {
+        service.status = status;
+        service.responseMs = Math.round(performance.now() - service.began);
+      }
       if (path.startsWith("/api/centropy/") && (status >= 400 || path === "/api/centropy/me")) {
         const routeParts = path.slice("/api/centropy/".length).split("/").slice(0, 3);
         const route = routeParts.map(part => /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(part) ? ":id"
