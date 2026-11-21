@@ -148,9 +148,9 @@ export async function readServiceNativeEffects(ctx: PeMutationContext, execution
   }
   return { effects, gaps };
 }
-export function serviceOperationGap(
+function serviceOperationGap(
   program: RealWorldServiceProgram, originals: ObservationOriginal[], effects: NativeEffectObservation[],
-  b: NativeServiceExecution, now: number,
+  b: NativeServiceExecution, now: number, projection?: ServiceProjection,
 ): string | null {
   if (program.original.reservedDecisions.length) return "W3_ORIGINAL_RESERVED_DECISION_UNRESOLVED";
   for (const term of b.coveredTerms) {
@@ -161,7 +161,7 @@ export function serviceOperationGap(
     const view = { ...program, selection: program.selection.map(s => s.instanceId === term.instanceId
       ? { ...s, providerId: term.providerId, termsDigest: term.termsDigest } : s) };
     const projected = projectServiceProgram(view, reports, effects, now).instances.find(i => i.instanceId === term.instanceId)!;
-    const full = projectServiceProgram(program, originals, effects, now);
+    const full = projection ??= projectServiceProgram(program, originals, effects, now);
     if (selected && selected.providerId !== term.providerId && !["CANCEL", "RETIRE_ACCESS", "PAY"].includes(b.operation)) {
       const primary = full.instances.find(i => i.instanceId === term.instanceId)!;
       const failed = primary.originalFailures.length > 0 || originals.some(r => r.body.instanceId === term.instanceId
@@ -323,24 +323,27 @@ export async function readServiceWork(ctx: PeMutationContext, raw: unknown) {
             executions: await serviceExecutions(ctx, retained, c, false) };
         });
       });
-      const native = cut.artifact
-        ? await readServiceNativeEffects(ctx, cut.executions, { row: cut.row, program: cut.artifact.body })
-        : { effects: [] as NativeEffectObservation[], gaps: ["W3_CHECKED_ARTIFACT_PENDING"] };
+      const [native, budget] = await Promise.all([
+        cut.artifact
+          ? readServiceNativeEffects(ctx, cut.executions, { row: cut.row, program: cut.artifact.body })
+          : { effects: [] as NativeEffectObservation[], gaps: ["W3_CHECKED_ARTIFACT_PENDING"] },
+        readEnterpriseDurableObligationBudgets(ctx, { obligationRef: row.budget_obligation_ref }).then(
+          value => ({ value, gap: null }), error => ({ value: null, gap: safeCode(error) })),
+      ]);
       native.gaps.push(...currentnessGaps);
+      const now = serviceNow();
+      const projection = cut.artifact ? projectServiceProgram(cut.artifact.body, cut.originals, native.effects, now) : null;
       if (cut.artifact) for (const { body } of cut.executions) {
         if (!native.effects.some(effect => equal(effect.ref, body.obligationRef) && effect.state === "NOT_ATTEMPTED")) continue;
-        const gap = serviceOperationGap(cut.artifact.body, cut.originals, native.effects, body, serviceNow());
+        const gap = serviceOperationGap(cut.artifact.body, cut.originals, native.effects, body, now, projection ?? undefined);
         if (gap) native.gaps.push(gap + ":" + body.instanceId);
       }
-      let budgets: unknown = null;
-      try { budgets = await readEnterpriseDurableObligationBudgets(ctx, { obligationRef: row.budget_obligation_ref }) }
-      catch (error) { native.gaps.push(safeCode(error)) }
+      if (budget.gap) native.gaps.push(budget.gap);
       requests.push({ requestId: row.id, status: row.status, generation: row.generation,
         current, executionAuthorityGranted: false,
         artifactDigest: cut.artifact?.body_digest ?? null, program: cut.artifact?.body ?? null,
         check: cut.artifact?.check_result ?? null,
-        projection: cut.artifact ? projectServiceProgram(cut.artifact.body, cut.originals, native.effects, serviceNow()) : null,
-        nativeEffects: native.effects, budgets, gaps: [...new Set(native.gaps)],
+        projection, nativeEffects: native.effects, budgets: budget.value, gaps: [...new Set(native.gaps)],
         originalDeadlineAt: row.original_deadline.toISOString() });
     } catch (error) {
       requests.push({ requestId: row.id, status: "CURRENTNESS_UNAVAILABLE_RESPONSIBILITY_RETAINED",

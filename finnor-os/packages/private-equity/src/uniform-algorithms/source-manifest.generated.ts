@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "9ce000ef9e963c27c9badb7c625ea565c1b56d289ab5bdf254adbfb4d2092594"
+      "sha256": "a68c9cd9a79b034c17d99b5f895d3b5b29dca98af67adc2b003028cecbac4cce"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -4732,7 +4732,7 @@ export default {
     },
     {
       "path": "src/components/centropy/thread/use-investigation.ts",
-      "sha256": "dbf5d00ea406a791e11d40292089a48079db647fb74c23d6a2c04b52548d9a14"
+      "sha256": "4e86bf42bfc52bee3025674a64c643886b338c33274bec6dc2a3c7ca5d2ef5d8"
     },
     {
       "path": "src/components/centropy/world/ConfidentialComputationPanel.tsx",
@@ -4740,7 +4740,7 @@ export default {
     },
     {
       "path": "src/components/centropy/world/WorldExplorer.tsx",
-      "sha256": "3793691dda6cf828cfd2f56e8a51ddff165d725c3d022f64960f7315e7dfa575"
+      "sha256": "bc58c69946137cdce82d09a3aa4befafae8b00159d93f86d99e495a16d7e4111"
     },
     {
       "path": "src/components/centropy/world/WorldRelationships.tsx",
@@ -5384,7 +5384,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/real-world-service/consumer.ts",
-      "sha256": "0ee01acb94a213c5b331591092901e9f8eec69eba537e40e0e8c722705a5ab2a"
+      "sha256": "40d16ca866dbb6782bbaa51c0890c9549f480b61e01ae2938f0808cc4f343edc"
     },
     {
       "path": "finnor-os/packages/private-equity/src/real-world-service/contracts.ts",
@@ -5408,7 +5408,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/real-world-service/store.ts",
-      "sha256": "7c381ebaf2e711ed0b7e8ef57ddc4a0aa69029f643de1ddf30281180fadf804e"
+      "sha256": "cc87fe9454690e47bbc86f700a2da14683b1b4ca2df01a6ed621d8ba230f47a2"
     },
     {
       "path": "finnor-os/packages/private-equity/src/real-world-service/worker.ts",
@@ -6028,11 +6028,11 @@ export default {
     },
     {
       "path": "src/app/api/centropy/[...path]/proxy-config.ts",
-      "sha256": "528bbbe92b36e942229ed0ecacaffd56e9d01c287fded8590843155a200b7681"
+      "sha256": "d60e9814738c7fe4254eece48172107a205331b80e7cd1a98d39086719b8d3cb"
     },
     {
       "path": "src/app/api/centropy/[...path]/route.ts",
-      "sha256": "b75a65e493f42110aa09f9023fbced525c7b0b83edc6a6c1428679d2cfcf2c89"
+      "sha256": "d556b4cbdb7ae6a56f84daaf13ed5974b7eac93b956f023d0894009f1eddc611"
     },
     {
       "path": "src/components/centropy/lib/private-workspace-availability.ts",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "51e5497b0daa02519ff404df2ca8431f80f9142ffa4acdab7f4c3a30ac167889"
+  "sourceDigest": "e32f5a1615a1211c1224c33e88e9433a788769f3fbeeb426ff3b9de42219a718"
 } as const;

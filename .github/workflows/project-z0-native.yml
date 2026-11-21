@@ -148,7 +148,7 @@ jobs:
           elif [ "$GITHUB_REF_NAME" = "codex/project-z0-mounted" ] || [ "$GITHUB_REF_NAME" = "codex/zw-integration-quality-20261115" ] || [ "$GITHUB_REF_NAME" = "codex/zw-release-proof-20261121" ]; then
             scenario=z0-mounted-session.mjs
             export PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/z0-chromium"
-            launch_args+=(--budget-ms=3300000)
+            launch_args+=(--budget-ms=3300000 --compiled-frontend)
           elif [ "$GITHUB_REF_NAME" = "codex/project-z0-recovery" ]; then
             case "$Z0_RECOVERY_MODE" in
               current-*)
@@ -423,7 +423,7 @@ jobs:
               reloadBudget: observations?.reloadBudget
                 ? Object.fromEntries(budgetChecks.map(key => [key, observations.reloadBudget[key] === true])) : null,
               rootCarriedBy, rootFallbackAfter: member(['Z0_BROWSER_WORK_INSTRUMENT_UNAVAILABLE', 'Z0_BROWSER_WORK_NOT_PROJECTED',
-                'Z0_BROWSER_SESSION_NOT_PROJECTED'], observations?.rootFallbackAfter),
+                'Z0_BROWSER_SESSION_NOT_PROJECTED', 'Z0_BROWSER_PANEL_UNMOUNTED'], observations?.rootFallbackAfter),
               reloadsSettled: [0, 1, 2].includes(observations?.reloadsSettled) ? observations.reloadsSettled : null,
               oracle: oracle ? { projectionStatus: httpStatus(oracle.projectionStatus),
                 institutionReadStatus: httpStatus(oracle.institutionReadStatus),
@@ -444,6 +444,7 @@ jobs:
           const setupLabel = value => typeof value === 'string' && /^[a-zA-Z0-9_.-]{1,80}$/.test(value) ? value : null
           const launcher = app ? { status: typedCode(app.status), reason: typedCode(app.reason), failure: typedCode(app.failureCode),
             stage: setupLabel(app.stage), buildStage: typedCode(app.productionBuild?.stage),
+            buildTargets: (app.productionBuild?.targets ?? []).filter(name => ['api', 'frontend'].includes(name)),
             steps: (Array.isArray(app.steps) ? app.steps : []).slice(0, 32).map(step => ({ label: setupLabel(step.label),
               code: Number.isInteger(step.code) && step.code >= 0 && step.code <= 255 ? step.code : null,
               signal: ['SIGTERM', 'SIGKILL', 'SIGABRT', 'SIGSEGV', 'SPAWN_ERROR'].includes(step.signal) ? step.signal : null })) } : null

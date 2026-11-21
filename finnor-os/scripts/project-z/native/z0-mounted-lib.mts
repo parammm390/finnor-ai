@@ -404,13 +404,18 @@ export const workUrl = (threadId: string, root?: { entityType: string; entityId:
 
 export const panelFor = (page: any, workId: string) => page.locator(`${APP}[data-application-work="${workId}"]`);
 
+const canvasFor = (page: any) => page.getByRole("main", { name: "Investigation Canvas", exact: true });
+const instrumentFor = (canvas: any, workId: string) =>
+  canvas.locator('section[data-type="work_execution"][id="canvas-work-' + workId + '"]');
+export const mountedWorkPanel = (page: any, workId: string) => instrumentFor(canvasFor(page), workId).locator(APP);
+
 /** Waits for both panels of the original Work to finish their current reads. */
 export async function waitForPanel(page: any, workId: string, timeoutMs = 60000) {
-  const shell = page.getByRole("main", { name: "Investigation Canvas", exact: true });
+  const shell = canvasFor(page);
   const deadline = performance.now() + timeoutMs;
   await shell.waitFor({ state: "visible", timeout: timeoutMs })
     .catch((cause: unknown) => { throw new Error("Z0_BROWSER_INVESTIGATION_CANVAS_UNAVAILABLE", { cause }); });
-  const instrument = shell.locator(`section[data-type="work_execution"][id="canvas-work-${workId}"]`);
+  const instrument = instrumentFor(shell, workId);
   await instrument.waitFor({ state: "attached", timeout: Math.max(1, deadline - performance.now()) })
     .catch((cause: unknown) => { throw new Error("Z0_BROWSER_WORK_INSTRUMENT_UNAVAILABLE", { cause }); });
   const panel = panelFor(page, workId);
@@ -423,12 +428,12 @@ export async function waitForPanel(page: any, workId: string, timeoutMs = 60000)
     const probe = page.evaluate(({ app, institution, expectedWork }: { app: string; institution: string; expectedWork: string }) => {
       const canvas = document.querySelector('main[aria-label="Investigation Canvas"]');
       if (!canvas) return "INVESTIGATION_CANVAS_UNAVAILABLE";
-      const mounted = canvas.querySelector(app);
+      const workInstrument = document.getElementById("canvas-work-" + expectedWork);
+      if (!workInstrument || !canvas.contains(workInstrument)) {
+        return canvas.querySelector(".ct-canvas__invalid") ? "CANVAS_INVALID" : "WORK_INSTRUMENT_UNAVAILABLE";
+      }
+      const mounted = workInstrument.querySelector(app);
       if (!mounted) {
-        const workInstrument = document.getElementById("canvas-work-" + expectedWork);
-        if (!workInstrument || !canvas.contains(workInstrument)) {
-          return canvas.querySelector(".ct-canvas__invalid") ? "CANVAS_INVALID" : "WORK_INSTRUMENT_UNAVAILABLE";
-        }
         if (workInstrument.querySelector('[aria-busy="true"]')) return "WORK_INSTRUMENT_NOT_READY";
         const status = [...workInstrument.querySelectorAll('[role="status"]')].map(node => node.textContent);
         return status.includes("Opening current Work application operations…") ? "PANEL_MODULE_LOADING" : "PANEL_UNMOUNTED";
@@ -472,12 +477,12 @@ export async function openWork(page: any, threadId: string, workId: string, root
   }
   const deadline = performance.now() + 60000;
   try {
-    await panelFor(page, workId).waitFor({ state: "attached", timeout: 30000 });
+    await mountedWorkPanel(page, workId).waitFor({ state: "attached", timeout: 30000 });
   } catch (error) {
     if (!(error instanceof Error) || error.name !== "TimeoutError" || page.isClosed()) throw error;
     await page.goto(workUrl(threadId, root), { waitUntil: "domcontentloaded", timeout: 120000 });
     await waitForPanel(page, workId);
-    return { rootCarriedBy: "ROOT_URL_PARAMETER", rootFallbackAfter: "Z0_BROWSER_WORK_NOT_PROJECTED" };
+    return { rootCarriedBy: "ROOT_URL_PARAMETER", rootFallbackAfter: "Z0_BROWSER_PANEL_UNMOUNTED" };
   }
   await waitForPanel(page, workId, Math.max(1, deadline - performance.now()));
   return { rootCarriedBy: "THREAD_PERSISTED_ROOT" };

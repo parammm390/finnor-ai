@@ -143,10 +143,14 @@ function WorldExplorerContent({ root, projection, projectionStatus, projectionEr
   const closingType = selectedNode?.type === "pe_closing_condition" ? "closing-waivers" : selectedNode?.type === "pe_closing_item" ? "closing-verification" : null
   const closingVersion = Number(selectedNode?.version)
   const closingEligible = Boolean(selectedNode && (closingType === "closing-waivers" ? ["open", "evidence_pending"].includes(selectedNode.state ?? "") : selectedNode.state === "ready"))
+  const [serviceInvitationsOpen, setServiceInvitationsOpen] = useState(false)
 
   return <div className="ct-world">
     <header className="ct-world__header"><div><span className="ct-eyebrow">WORLD / COMPANY BRAIN</span><button type="button" onClick={onRefresh} disabled={projectionStatus === "loading"} aria-label="Refresh WORLD projection"><RefreshCw size={15} /> Refresh WORLD</button></div><h2>{root ? projection?.nodes.find((node) => node.ref.type === root.entityType && node.ref.id === root.entityId)?.label ?? "Explore this context" : "Explore institutional truth"}</h2><p>Select a canonical object to propose exact changes and inspect consequences. Chat remains available for explanation.</p></header>
-    <details><summary>My purpose-bound service invitations</summary><RealWorldServicePanel /></details>
+    <details onToggle={event => setServiceInvitationsOpen(event.currentTarget.open)}>
+      <summary>My purpose-bound service invitations</summary>
+      {serviceInvitationsOpen ? <RealWorldServicePanel /> : null}
+    </details>
     <GrowthBusinessInvitations contextKey={root ? `${root.entityType}:${root.entityId}` : "all-roots"}
       companyId={root?.entityType === "external_organization" ? root.entityId : undefined} />
     <div className="ct-world__toolbar"><label><Search size={17} aria-hidden /><span className="ct-visually-hidden">Search WORLD</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={root ? "Search this context…" : "Search all roots…"} /></label><select aria-label="Choose WORLD root" value={root ? rootKey(root) : ""} onChange={(event) => { const found = rootsList.find((item) => rootKey(item.root) === event.target.value); if (found) selectRoot(found.root) }}><option value="">Choose a root</option>{rootsList.map((item) => <option value={rootKey(item.root)} key={rootKey(item.root)}>{item.label}</option>)}</select></div>

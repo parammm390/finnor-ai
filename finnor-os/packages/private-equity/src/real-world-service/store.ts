@@ -139,8 +139,9 @@ export async function loadOutcome(ctx: PeMutationContext, row: ServiceRequestRow
 }
 export async function loadProviders(ctx: PeMutationContext, row: ServiceRequestRow, c: PoolClient): Promise<ProviderOriginal[]> {
   const providers: ProviderOriginal[] = [];
-  for (const ref of row.provider_refs) {
-    const source = await sourceOriginal(ctx, row.work_id, ref, c, false);
+  const sources = await sourceOriginals(ctx, row.work_id, row.provider_refs, c, false);
+  for (const [index, source] of sources.entries()) {
+    const ref = row.provider_refs[index]!;
     const body = ProviderEvidenceSchema.parse(JSON.parse(source.content));
     if (body.reportingPrincipalId !== source.author_id || body.providerId !== body.reportingPrincipalId)
       throw Error("W3_ACTUAL_PROVIDER_AUTHORED_AVAILABILITY_REQUIRED");
@@ -167,7 +168,7 @@ export async function loadProviders(ctx: PeMutationContext, row: ServiceRequestR
           || Date.parse(qualified.expiresAt) < Date.parse(qualification.validUntil)
           || Date.parse(qualified.expiresAt) <= Date.now())
           throw Error("W3_INDEPENDENT_QUALIFICATION_SOURCE_REQUIRED");
-        for (const basis of qualified.evidence) await sourceOriginal(ctx, row.work_id, basis, c);
+        await sourceOriginals(ctx, row.work_id, qualified.evidence, c);
       } catch (error) {
         if (!(error instanceof z.ZodError) && !(error instanceof SyntaxError)
           && !(error instanceof Error && [

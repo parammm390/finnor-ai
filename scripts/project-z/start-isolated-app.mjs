@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { createHash, generateKeyPairSync } from "node:crypto"
 import { execFileSync, spawn } from "node:child_process"
 import { createRequire } from "node:module"
-import { chmodSync, createWriteStream, existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs"
+import { chmodSync, cpSync, createWriteStream, existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs"
 import { dirname, isAbsolute, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { setTimeout as delay } from "node:timers/promises"
@@ -55,6 +55,8 @@ const authTlsOrigin = option("auth-tls-origin")
 const authTlsCertificate = option("auth-tls-cert")
 const authTlsState = option("auth-tls-state")
 const productionBuild = process.argv.includes("--production-build")
+const compiledFrontend = process.argv.includes("--compiled-frontend")
+assert.ok(!(productionBuild && compiledFrontend), "CHOOSE_ONE_NATIVE_BUILD_MODE")
 const s3Python = option("s3-python")
 assert.ok(!("NODE_TLS_REJECT_UNAUTHORIZED" in process.env), "NODE_TLS_REJECT_UNAUTHORIZED_REFUSED")
 assert.ok(!profiles.has("z4") || (s3Python && isAbsolute(s3Python) && existsSync(s3Python)), "Z4_PROFILE_REQUIRES_S3_PYTHON")
@@ -62,7 +64,7 @@ assert.ok(!profiles.has("z4") || (s3Python && isAbsolute(s3Python) && existsSync
 const z1Chain = profiles.has("z1") && s3Python !== undefined
 assert.ok(!z1Chain || (isAbsolute(s3Python) && existsSync(s3Python)), "Z1_CHAIN_REQUIRES_EXISTING_ABSOLUTE_S3_PYTHON")
 // A longer native episode (three physical kills, seven stages) needs more than the 30 minute default; bounded either way.
-const setupBudgetMs = Number(option("budget-ms") ?? (productionBuild ? 3000000 : 1800000))
+const setupBudgetMs = Number(option("budget-ms") ?? (productionBuild || compiledFrontend ? 3000000 : 1800000))
 assert.ok(Number.isInteger(setupBudgetMs) && setupBudgetMs >= 600000 && setupBudgetMs <= 7200000, "SETUP_BUDGET_OUT_OF_RANGE")
 // END
 let authTlsReceipt
@@ -170,7 +172,8 @@ const receipt = {
   externalCredentials: false, application: "NOT_READY", phasesAccepted: [], steps: [], pids: { harness: process.pid },
   ...(profiles.size ? { profiles: [...profiles].sort(), profileEnvNames: Object.keys(profileEnv).sort() } : {}),
   ...(authTlsReceipt ? { authTls: authTlsReceipt } : {}),
-  ...(productionBuild ? { productionBuild: { requested: true, stage: "NOT_BUILT" } } : {}),
+  ...(productionBuild || compiledFrontend ? { productionBuild: { requested: true, stage: "NOT_BUILT",
+    targets: productionBuild ? ["api", "frontend"] : ["frontend"] } } : {}),
 }
 function save() { writeFileSync(stateFile, JSON.stringify(receipt, null, 2) + "\n", { mode: 0o600 }) }
 const children = []
@@ -248,19 +251,25 @@ async function buildProduction() {
   const buildId = `pz-${head.slice(0, 12)}-${state.split("/").pop()}`
   const apiNext = join(backend, "node_modules/next/dist/bin/next")
   const frontendNext = join(root, "node_modules/next/dist/bin/next")
-  const targets = { api: { cwd: join(backend, "apps/api"), next: apiNext }, frontend: { cwd: root, next: frontendNext } }
+  const frontendDist = compiledFrontend ? ".next-x1-install" : ".next"
+  const targets = {
+    ...(productionBuild ? { api: { cwd: join(backend, "apps/api"), next: apiNext, dist: ".next" } } : {}),
+    frontend: { cwd: root, next: frontendNext, dist: frontendDist },
+  }
   for (const target of Object.values(targets)) {
     assert.ok(realpathSync(target.next).startsWith(realpathSync(root) + "/"), "PRODUCTION_BUILD_DONOR_NEXT_REFUSED")
-    assert.ok(!existsSync(join(target.cwd, ".next")), "PRODUCTION_BUILD_DIRECTORY_MUST_NOT_PRE_EXIST")
+    assert.ok(!existsSync(join(target.cwd, target.dist)), "PRODUCTION_BUILD_DIRECTORY_MUST_NOT_PRE_EXIST")
   }
-  const buildEnv = { ...appEnv, NODE_ENV: "production", FINNOR_BUILD_ID: buildId, CI: "1" }
+  const serverEnv = { ...appEnv, NODE_ENV: "production", FINNOR_BUILD_ID: buildId }
+  const buildEnv = { ...serverEnv, CI: "1" }
   // The browser bundle inlines NEXT_PUBLIC_* at build time, so the Auth URL it will use is fixed here.
-  const frontendEnv = { ...buildEnv, NEXT_PUBLIC_OS_API_URL: isolated.NEXT_PUBLIC_OS_API_URL }
-  receipt.productionBuild = { requested: true, stage: "BUILDING", buildId, sourceCommit: head }
-  for (const [label, env] of [["api", buildEnv], ["frontend", frontendEnv]]) {
+  const frontendEnv = { ...buildEnv, NEXT_PUBLIC_OS_API_URL: isolated.NEXT_PUBLIC_OS_API_URL,
+    ...(compiledFrontend ? { FINNOR_X1_FRONTEND_INSTALL: "1" } : {}) }
+  receipt.productionBuild = { ...receipt.productionBuild, stage: "BUILDING", buildId, sourceCommit: head }
+  for (const [label, target] of Object.entries(targets)) {
     receipt.stage = `PRODUCTION_BUILD_${label.toUpperCase()}`
     save()
-    const target = targets[label]
+    const env = label === "frontend" ? frontendEnv : buildEnv
     const start = new Date().toISOString()
     // Only `next build`: the API package's npm build script would restamp tracked source files.
     const proc = child(`build-${label}`, [target.next, "build", ...(label === "frontend" ? ["--webpack"] : [])], target.cwd, env)
@@ -273,24 +282,39 @@ async function buildProduction() {
     receipt.productionBuild[label] = { start, end: new Date().toISOString(), ...result }
     save()
     assert.ok(result.code === 0 && result.signal === null, "PRODUCTION_BUILD_FAILED")
-    const idFile = join(target.cwd, ".next/BUILD_ID")
+    const idFile = join(target.cwd, target.dist, "BUILD_ID")
     assert.ok(existsSync(idFile), "PRODUCTION_BUILD_ID_FILE_REQUIRED")
     const bytes = readFileSync(idFile)
     assert.equal(bytes.toString("utf8"), buildId, "PRODUCTION_BUILD_ID_MISMATCH")
     receipt.productionBuild[label] = { ...receipt.productionBuild[label], buildIdFile: idFile, buildIdSha256: createHash("sha256").update(bytes).digest("hex") }
     save()
   }
+  let frontend = [frontendNext, "start", "-H", "127.0.0.1", "-p", "3001"]
+  const frontendServerEnv = { ...serverEnv }
+  if (compiledFrontend) {
+    // The installed X1 frontend profile uses the real browser Auth origin and its own emitted assets.
+    const standalone = join(root, frontendDist, "standalone")
+    const entry = join(standalone, "server.js")
+    assert.ok(existsSync(entry), "COMPILED_FRONTEND_ENTRY_REQUIRED")
+    assert.equal(readFileSync(join(standalone, frontendDist, "BUILD_ID"), "utf8"), buildId, "COMPILED_FRONTEND_BUILD_ID_MISMATCH")
+    cpSync(join(root, frontendDist, "static"), join(standalone, frontendDist, "static"),
+      { recursive: true, force: false, errorOnExist: true })
+    if (existsSync(join(root, "public"))) cpSync(join(root, "public"), join(standalone, "public"),
+      { recursive: true, force: false, errorOnExist: true })
+    frontend = [entry]
+    Object.assign(frontendServerEnv, { FINNOR_X1_FRONTEND_INSTALL: "1", HOSTNAME: "127.0.0.1", PORT: "3001" })
+  }
   if (authTlsReceipt) {
     // A browser bundle still pointing at the http gateway would make https Auth unreachable from the mounted login.
-    const scan = pattern => { try { return execFileSync("grep", ["-rlF", "--include=*.js", pattern, join(root, ".next/static")], { encoding: "utf8" }).trim() } catch { return "" } }
+    const scan = pattern => { try { return execFileSync("grep", ["-rlF", "--include=*.js", pattern, join(root, frontendDist, "static")], { encoding: "utf8" }).trim() } catch { return "" } }
     assert.ok(scan(authTlsReceipt.origin) !== "", "FRONTEND_BUNDLE_MISSING_HTTPS_AUTH_ORIGIN")
     assert.equal(scan(isolated.SUPABASE_URL), "", "FRONTEND_BUNDLE_STILL_INLINES_HTTP_AUTH_ORIGIN")
     receipt.productionBuild.frontend.authOriginInlined = authTlsReceipt.origin
   }
   receipt.productionBuild.stage = "BUILT"
   save()
-  return { apiNext, frontendNext, buildId, serverEnv: { ...appEnv, NODE_ENV: "production", FINNOR_BUILD_ID: buildId },
-    spawned: { api: [apiNext, "start", "-H", "127.0.0.1", "-p", "3101"], frontend: [frontendNext, "start", "-H", "127.0.0.1", "-p", "3001"] } }
+  return { buildId, serverEnv, frontendServerEnv,
+    spawned: { ...(productionBuild ? { api: [apiNext, "start", "-H", "127.0.0.1", "-p", "3101"] } : {}), frontend } }
 }
 // END
 save()
@@ -367,10 +391,10 @@ try {
   receipt.stage = "LOOPBACK_SERVERS"
   save()
   // BEGIN production build and start
-  const production = productionBuild ? await buildProduction() : null
-  const api = production ? child("api", production.spawned.api, join(backend, "apps/api"), production.serverEnv)
+  const production = productionBuild || compiledFrontend ? await buildProduction() : null
+  const api = production?.spawned.api ? child("api", production.spawned.api, join(backend, "apps/api"), production.serverEnv)
     : child("api", [join(backend, "node_modules/next/dist/bin/next"), "dev", "-H", "127.0.0.1", "-p", "3101"], join(backend, "apps/api"), appEnv)
-  const frontend = production ? child("frontend", production.spawned.frontend, root, production.serverEnv)
+  const frontend = production ? child("frontend", production.spawned.frontend, root, production.frontendServerEnv)
     : child("frontend", [join(root, "node_modules/next/dist/bin/next"), "dev", "--webpack", "-H", "127.0.0.1", "-p", "3001"], root, appEnv)
   // END
   const worker = ownsWorker ? null : child("worker", ["--import", require.resolve("tsx"), join(backend, "apps/worker/src/index.ts")], backend, workerEnv)
@@ -385,6 +409,7 @@ try {
   // BEGIN production identity of the listening servers
   if (production) {
     for (const [label, port] of [["frontend", 3001], ["api", 3101]]) {
+      if (!production.spawned[label]) continue
       const listener = execFileSync("ss", ["-ltnpH", `sport = :${port}`], { encoding: "utf8" }).match(/pid=(\d+)/)
       assert.ok(listener, "PRODUCTION_LISTENER_NOT_OBSERVED")
       // The server renames its process title, so the spawned argv and the process environment are the evidence.
@@ -395,7 +420,7 @@ try {
       receipt.productionBuild[label] = { ...receipt.productionBuild[label], listenerPid: pid, spawnedArgv: [...production.spawned[label]].map(value => value.replace(root, "<repo>")),
         processTitle: readFileSync(`/proc/${pid}/cmdline`, "utf8").split("\0")[0] }
     }
-    receipt.productionBuild.stage = "SERVING_NEXT_START"
+    receipt.productionBuild.stage = compiledFrontend ? "SERVING_COMPILED_FRONTEND" : "SERVING_NEXT_START"
   }
   // END
   Object.assign(receipt, { status: "READY_REAL_AUTHENTICATED_NATIVE_TARGET", stage: "READY",

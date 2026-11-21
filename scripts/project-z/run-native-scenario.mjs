@@ -39,6 +39,8 @@ mkdirSync(dirname(state), { recursive: true, mode: 0o700 })
 // BEGIN --auth-tls / --production-build / z4 profile (inert unless the flag or profile is given)
 const authTls = process.argv.includes("--auth-tls")
 const productionBuild = process.argv.includes("--production-build")
+const compiledFrontend = process.argv.includes("--compiled-frontend")
+assert.ok(!(productionBuild && compiledFrontend), "CHOOSE_ONE_NATIVE_BUILD_MODE")
 const authTlsPort = Number(option("auth-tls-port") ?? "54443")
 const tlsDirectory = join(evidence, "tls")
 const tlsCertificate = join(tlsDirectory, "auth-tls-cert.pem")
@@ -187,11 +189,12 @@ try {
     ...(profiles ? ["--profile=" + profiles] : []), ...(z3Producer ? ["--z3-producer=" + z3Producer] : []),
     ...(noWorker ? ["--no-worker"] : []),
     ...(authTls ? ["--auth-tls-origin=" + receipt.authTls.origin, "--auth-tls-cert=" + tlsCertificate, "--auth-tls-state=" + tlsState] : []),
-    ...(productionBuild ? ["--production-build"] : []), ...(z4Profile || z1Chain ? ["--s3-python=" + s3Python] : []),
+    ...(productionBuild ? ["--production-build"] : []), ...(compiledFrontend ? ["--compiled-frontend"] : []),
+    ...(z4Profile || z1Chain ? ["--s3-python=" + s3Python] : []),
     ...(profiles?.split(",").includes("z5") ? ["--z5-s3-python=" + process.env.FINNOR_S3_PYTHON] : []), // z5-native
     ...(budgetMs ? ["--budget-ms=" + budgetMs] : [])],
     "READY_REAL_AUTHENTICATED_NATIVE_TARGET")
-  assert.ok(await waitForNativeStage(bounded(app.ready, productionBuild ? 3000000 : 1200000), requiredServices), "REAL_APPLICATION_READY_REQUIRED")
+  assert.ok(await waitForNativeStage(bounded(app.ready, productionBuild || compiledFrontend ? 3000000 : 1200000), requiredServices), "REAL_APPLICATION_READY_REQUIRED")
   requiredServices.push(app)
   receipt.stage = hold ? "HELD_READY" : "SCENARIOS"
   receipt.readyAt = new Date().toISOString()

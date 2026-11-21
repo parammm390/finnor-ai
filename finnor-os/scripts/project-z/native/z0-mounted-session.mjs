@@ -19,7 +19,7 @@ import {
   driveAcquisitionToModelReady, submitInstitutionAcquisition,
 } from "./x1-origin-fixture.mts";
 import {
-  APP, FRONTEND, INST, RequestWatch, claimLabelProbe, elementWith, ensureAuthCredential, idpUserId, loadPlaywright, newMountedContext,
+  APP, FRONTEND, INST, RequestWatch, claimLabelProbe, elementWith, ensureAuthCredential, idpUserId, loadPlaywright, mountedWorkPanel, newMountedContext,
   openWork, panelFor, privateDir, readPanels, readSettledPanels, refreshGrantStatus, screenshots, sha, sleep, storageScan, uiSignIn, uiSignOut,
   waitForPanel, waitUntil, workUrl, writePrivateJson,
 } from "./z0-mounted-lib.mts";
@@ -415,7 +415,7 @@ async function ensureOwnerOnWork(which = "A") {
   const root = { entityType: "pe_deal", entityId: target.parent.dealId };
   if (!(await page.locator(".ct-topbar").isVisible().catch(() => false))) await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
   if ([workUrl(target.thread.id), workUrl(target.thread.id, root)].includes(page.url())
-      && await panelFor(page, target.parent.workId).count() === 1) {
+      && await mountedWorkPanel(page, target.parent.workId).count() === 1) {
     await waitForPanel(page, target.parent.workId);
     return { rootCarriedBy: page.url() === workUrl(target.thread.id) ? "THREAD_PERSISTED_ROOT" : "ROOT_URL_PARAMETER" };
   }

@@ -7,7 +7,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { createRequire } from "node:module";
-import { chromium, type BrowserContext, type Page } from "playwright";
+import { chromium, type BrowserContext, type Page, type Request as BrowserRequest } from "playwright";
 
 type Gate = { id: string; principalId: string; workId: string; enteredAt: string | null;
   releasedAt: string | null; bodyDigest: string | null; automatic: boolean;
@@ -107,6 +107,7 @@ export async function mountedServiceProof(input: MountedInput) {
   // These response summaries contain route classes and statuses only, never tokens,
   // request bodies, private Work content or browser storage.
   const mountedReadOutcomes: Array<{ route: string; status: number; responseStartMs: number | null }> = [];
+  const serviceRequests = new Map<BrowserRequest, { began: number; status: number | null; failed: boolean }>();
   const mountedNavigations: Array<{ path: string; queryKeys: string[] }> = [];
   const mountedRuntimeErrors: Array<{ name: string; category: string; property?: string }> = [];
   const mountedAuthResponses: Array<{ route: string; method: string; status: number; identityDenied: boolean }> = [];
@@ -216,6 +217,9 @@ export async function mountedServiceProof(input: MountedInput) {
       await input.artifact("mounted/first-render-failure.json", {
         schema: "finnor.w3.mounted-read-diagnostic.v1",
         browserState, routeStatuses: mountedReadOutcomes.slice(-60),
+        serviceReads: [...serviceRequests.values()].slice(-16).map(({ began, status, failed }) => ({
+          ageMs: Math.round(performance.now() - began), status, failed,
+        })),
         navigations: mountedNavigations.slice(-25),
         runtimeErrors: mountedRuntimeErrors.slice(-20),
         authResponses: mountedAuthResponses.slice(-75),
@@ -403,10 +407,20 @@ export async function mountedServiceProof(input: MountedInput) {
       mountedRuntimeErrors.push({ name, category,
         ...(readProperty ? { property: readProperty } : {}) });
     });
+    page.on("request", request => {
+      if (request.method() === "POST" && new URL(request.url()).pathname === "/api/centropy/real-world-services/read"
+          && serviceRequests.size < 128) serviceRequests.set(request, { began: performance.now(), status: null, failed: false });
+    });
+    page.on("requestfailed", request => {
+      const service = serviceRequests.get(request);
+      if (service) service.failed = true;
+    });
     page.on("response", response => {
       let path = "";
       try { path = new URL(response.url()).pathname } catch { return }
       const status = response.status();
+      const service = serviceRequests.get(response.request());
+      if (service) service.status = status;
       if (path.startsWith("/api/centropy/") && (status >= 400 || path === "/api/centropy/me")) {
         const routeParts = path.slice("/api/centropy/".length).split("/").slice(0, 3);
         const route = routeParts.map(part => /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(part) ? ":id"
@@ -497,6 +511,7 @@ export async function mountedServiceProof(input: MountedInput) {
         await clear();
         await wait(() => Array.from(document.querySelectorAll("summary"))
           .some(x => x.textContent?.includes("My purpose-bound service invitations")), undefined);
+        await browser(["find", "text", "My purpose-bound service invitations", "click", "--exact"]);
         await wait(({ selector, expected }) => {
           const actual = Array.from(document.querySelectorAll(selector + " [data-w3-protocol-id]"))
             .map(element => element.getAttribute('data-w3-protocol-id'));
@@ -518,7 +533,6 @@ export async function mountedServiceProof(input: MountedInput) {
           for (const forbidden of ["originalMeaning", "parentPolicy", "parentAllocation", "mandateSource"])
             assert(!Object.hasOwn(protocol.disclosure, forbidden));
         }
-        await browser(["find", "text", "My purpose-bound service invitations", "click", "--exact"]);
         await input.run("W052-participant-exact-purpose-and-consent-revocation",
           { protocolId: input.revokeProtocolId, participantId: input.participant },
           { actualParticipantControl: true, historicalReceiptOnly: true, ownerWorkHidden: true }, async () => {
