@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { ArrowRight, RefreshCw, ShieldCheck } from "lucide-react"
 import { centropyGet } from "@/components/centropy/lib/api"
 import type { WorkAggregateView } from "@/components/centropy/product/contracts"
@@ -39,6 +39,14 @@ function summary(value: unknown): string | null {
   return fields.length ? fields.slice(0, 4).map(([key, entry]) => `${label(key)}: ${displayValue(entry as string | boolean | number)}`).join(" · ") : null
 }
 
+function WorkToolsDisclosure({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return <details className="ct-record-controls" onToggle={event => setOpen(event.currentTarget.open)}>
+    <summary>Other Work tools</summary>
+    {open ? children : null}
+  </details>
+}
+
 export function WorldWorkRecord({ workId, root, onChanged }: { workId: string; root?: PeWorldRootRef | null; onChanged: () => void }) {
   const scope = usePrivateRequestScope(JSON.stringify([workId, root?.entityType, root?.entityId]))
   const [stored, setStored] = useState<{ scope: string; value: WorkAggregateView } | null>(null)
@@ -66,6 +74,17 @@ export function WorldWorkRecord({ workId, root, onChanged }: { workId: string; r
   if (replay && aggregate) return <CausalReplayPanel key={scope.key} workId={workId} onClose={() => setReplay(false)} returnLabel="Work record" />
   const finalized = aggregate?.receipts.filter((item) => Boolean(item.finalizedAt)) ?? []
   const verified = aggregate?.businessEffects.filter((item) => item.status === "verified") ?? []
+  const serviceWork = record(aggregate?.inputs?.[0]?.contextSnapshot)?.compiler === "POSTZ.W3"
+  const otherWorkTools = <>
+    <GrowthOperatingProgramPanel key={`growth:${scope.key}`} workId={workId} ownerWork />
+    {root ? <EconomicActionTheoryPanel key={`${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
+    {root ? <StrategicResponsePanel key={`response:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
+    {root ? <ConfidentialComputationPanel key={workId} root={root} workId={workId} /> : null}
+    {root ? <ExecutionProofPanel key={`proof:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} onChanged={onChanged} /> : null}
+    {root ? <InstitutionCompositionPanel key={`composition:${scope.key}`} root={root} workId={workId} /> : null}
+    {root ? <InteractionProtocolPanel key={`interaction:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
+    {root ? <ViabilityPanel key={`viability:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
+  </>
   return <div className="ct-world__detail-content ct-world-work">
     <div className="ct-world-work__top"><p>Durable Work execution, observed effects, and receipts for this exact WORLD record.</p><button type="button" aria-label="Refresh Work record" onClick={() => setRevision((value) => value + 1)} disabled={loading}><RefreshCw size={15} /></button></div>
     {loading ? <p role="status">Reading the exact Work record…</p> : null}
@@ -77,14 +96,9 @@ export function WorldWorkRecord({ workId, root, onChanged }: { workId: string; r
       {root?.entityType === "pe_deal" ? <SharedWorkPanel key={`z1:${scope.key}`} root={{entityType:"pe_deal",entityId:root.entityId}} workId={workId} /> : null}
       <ClosingProgrammePanel key={workId} workId={workId} onChanged={onChanged} />
       <RealWorldServicePanel key={`service:${scope.key}`} workId={workId} />
-      <GrowthOperatingProgramPanel key={`growth:${scope.key}`} workId={workId} ownerWork />
-      {root ? <EconomicActionTheoryPanel key={`${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
-      {root ? <StrategicResponsePanel key={`response:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
-      {root ? <ConfidentialComputationPanel key={workId} root={root} workId={workId} /> : null}
-      {root ? <ExecutionProofPanel key={`proof:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} onChanged={onChanged} /> : null}
-      {root ? <InstitutionCompositionPanel key={`composition:${scope.key}`} root={root} workId={workId} /> : null}
-      {root ? <InteractionProtocolPanel key={`interaction:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
-      {root ? <ViabilityPanel key={`viability:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
+      {serviceWork
+        ? <WorkToolsDisclosure key={scope.key}>{otherWorkTools}</WorkToolsDisclosure>
+        : otherWorkTools}
       {summary(aggregate.work.finalOutcome) ? <p className="ct-world-work__outcome"><ShieldCheck size={16} /> {summary(aggregate.work.finalOutcome)}</p> : null}
       {aggregate.read?.complete === false ? <p className="ct-world-work__caveat">This bounded Work read is incomplete. The counts below cover only returned rows.</p> : null}
       <div className="ct-world-work__section"><h4>Recorded actions and verification</h4>{aggregate.actions.map((action) => {

@@ -494,9 +494,14 @@ export async function mountedServiceProof(input: MountedInput) {
     await browser(["open", origin + "/centropy/world"]);
     await chooseRoot(input.companyId, true);
     await input.run("W052-emitted-mounted-original-Work", { companyId: input.companyId, workId: input.workId },
-      { emittedNext: true, visibleHeadedFreshProfile: true, originalInstances: 7, noFieldClaim: true }, async () => ({
-        hostReady, browser: browserProof, view: await rendered(), screenshot: await screenshot("original-Work"), durable: await input.snapshot(),
-      }));
+      { emittedNext: true, visibleHeadedFreshProfile: true, originalInstances: 7, noFieldClaim: true }, async () => {
+        const view = await rendered();
+        const tools = currentPage().getByText("Other Work tools", { exact: true });
+        assert(await tools.isVisible(), "W3_ADDITIONAL_WORK_TOOLS_MUST_REMAIN_REACHABLE");
+        assert(await tools.evaluate(summary => summary.parentElement?.matches("details:not([open])")),
+          "W3_INITIAL_WORK_READ_MUST_NOT_OPEN_OTHER_TOOLS");
+        return { hostReady, browser: browserProof, view, screenshot: await screenshot("original-Work"), durable: await input.snapshot() };
+      });
     await input.run("W052-mounted-native-continuation", { workId: input.workId },
       { actualAuthorizedAdvanceAndWorker: true }, async () => {
         const before = await input.snapshot();

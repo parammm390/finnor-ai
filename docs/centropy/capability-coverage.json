@@ -1537,7 +1537,7 @@
       },
       {
         "file": "src/components/centropy/world/WorldWorkRecord.tsx",
-        "sha256": "d6b1a31571bcb6480212ba082354151e79fddbe3acf87c647ace1a4291d40a47"
+        "sha256": "83cebbe8824ac9751b98567d420d0ef0672ca945d0c361f3626b203c5fb08d08"
       },
       {
         "file": "src/components/centropy/thread/PendingEffects.tsx",
