@@ -25,6 +25,8 @@ const nativeRequire=createRequire(import.meta.url);
 interface Owner { tokenHash:string; owner:string; tenantId:string; principalId:string; rightsRefs:string[]; append:boolean; read:boolean; sealedAppend:boolean; sealedRead:boolean; protectedExecution?:boolean; dispatch?:boolean }
 interface Reference { id:string; owner:string; version:string; contentDigest:string; content:Json;digestEncoding?:'NATIVE_UTF8_SHA256_V1' }
 interface Receipt extends ObjectValue { schema:string; kind:'EVENT'|'REFERENCE'; identity:string; tenantId:string; principalId:string; semanticOwner:string; rightsRefs:string[]; episodeId:string|null; sequence:number; previousCheckpoint:string|null; checkpointDigest:string; signature:string; sealed:boolean; contentFile:string; storedDigest:string; requestDigest:string; references:Array<Omit<Reference,'content'>> }
+type ObligationHistory=Array<{event:ObjectValue;receipt:Receipt}>;
+const OBLIGATION_HISTORY_LIMIT=512;
 const preparedTypes:Record<string,string[]>={
  S1:['BELIEF_VIEW','BELIEF_INVALIDATION'],
  S2:['PROPOSAL','DESIGN_REJECTION','SELECTION','ALLOCATION_REFERENCE','COLLECTION','STOPPING','DEVIATION','COST','CORRECTION','INVALIDATION','COMPUTE'],
@@ -333,14 +335,23 @@ export class ExperienceLedger {
   });
  }
  releaseIdentity(){return {releaseId:this.config.release.releaseId,verifierDigest:this.verifierDigest,policyDigest:this.policyDigest,sourceDigests:this.config.release.sourceDigests,runtime:this.config.release.runtime,domain:this.config.policy.domain};}
- private async collectObligationHistory(owner:Owner,obligationId:string){
-   const result:Array<{event:ObjectValue;receipt:Receipt}>=[];
+ private async collectObligationHistories(owner:Owner,obligationIds:readonly string[]){
+   const histories=new Map<string,ObligationHistory>(obligationIds.map(id=>[id,[]]));
+   let pending=histories.size;
    for(const state of this.states.values()){
     const receipt=state.receipt;if(receipt.kind!=='EVENT'||receipt.tenantId!==owner.tenantId||receipt.principalId!==owner.principalId||receipt.semanticOwner!=='S6'||receipt.protectedExecution!==true||receipt.sealed&&!owner.sealedRead||receipt.rightsRefs.some(r=>!owner.rightsRefs.includes(r)))continue;
     const event=object((await this.loadContent(receipt)).event);
-    if(event.detail?.schema!=='finnor.s6.protected-execution.v1'||event.detail.obligationRef?.id!==obligationId)continue;
-    result.push({event,receipt});if(result.length>512)deny(429,'OBLIGATION_HISTORY_BOUND');
+    if(event.detail?.schema!=='finnor.s6.protected-execution.v1')continue;
+    const history=histories.get(event.detail.obligationRef?.id);
+    if(!history||history.length>OBLIGATION_HISTORY_LIMIT)continue;
+    history.push({event,receipt});
+    if(history.length>OBLIGATION_HISTORY_LIMIT&&--pending===0)break;
    }
+   return histories;
+ }
+ private async collectObligationHistory(owner:Owner,obligationId:string,collection=this.collectObligationHistories(owner,[obligationId])){
+   const result=(await collection).get(obligationId)??deny(503,'OBLIGATION_HISTORY_UNAVAILABLE');
+   if(result.length>OBLIGATION_HISTORY_LIMIT)deny(429,'OBLIGATION_HISTORY_BOUND');
    return result.sort((a,b)=>a.receipt.sequence-b.receipt.sequence);
  }
  /** Projection over authenticated accepted history, not an additional effect ledger. */
@@ -364,16 +375,18 @@ export class ExperienceLedger {
   if(!ids.length||new Set(ids).size!==ids.length)deny(400,'HANDOFF_BATCH_IDENTITIES_INVALID');
   return this.serialized(async()=>{
    await this.integrity();
+   let collection:ReturnType<ExperienceLedger['collectObligationHistories']>|undefined;
+   const readHistory=(id:string)=>this.collectObligationHistory(owner,id,collection??=this.collectObligationHistories(owner,ids));
    const results=[];
    for(const id of ids){
-    try{results.push({id,...await this.executionHandoffAtHead(owner,id)});}
+    try{results.push({id,...await this.executionHandoffAtHead(owner,id,readHistory)});}
     catch(error){if(!(error instanceof LedgerFault)||error.status>=500)throw error;results.push({id,error:error.code});}
    }
    if(Buffer.byteLength(JSON.stringify({results}))>8*1024*1024)deny(413,'HANDOFF_BATCH_BYTE_BOUND');
    return {results};
   });
  }
- private async executionHandoffAtHead(owner:Owner,obligationId:string){
+ private async executionHandoffAtHead(owner:Owner,obligationId:string,readHistory=(id:string)=>this.collectObligationHistory(owner,id)){
    const accepted=this.refs.get(refKey(owner.tenantId,obligationId));
    if(!accepted||accepted.reference.owner!=='S6'||accepted.receipt.principalId!==owner.principalId)deny(404,'OBLIGATION_HANDOFF_NOT_FOUND');
    if(accepted.receipt.sealed&&!owner.sealedRead||accepted.receipt.rightsRefs.some(r=>!owner.rightsRefs.includes(r)))deny(403,'EVALUATOR_OR_RIGHTS_NOT_AUTHORIZED');
@@ -381,7 +394,7 @@ export class ExperienceLedger {
    if(!reference||referencePreimageDigest(reference)!==accepted.reference.contentDigest)deny(503,'OBLIGATION_HANDOFF_PREIMAGE_INVALID');
    const obligation={...reference.content,ref:accepted.reference};delete obligation.ref.content;
    if(obligation.tenantId!==owner.tenantId||obligation.principalId!==owner.principalId||!owner.rightsRefs.includes(obligation.rightsRef))deny(403,'HANDOFF_OBLIGATION_SCOPE_INVALID');
-   const history=await this.collectObligationHistory(owner,obligationId),intent=history.find(row=>row.event.type==='INTENT');
+   const history=await readHistory(obligationId),intent=history.find(row=>row.event.type==='INTENT');
    const refs=[obligation.ref,obligation.mandateRef,obligation.policyRef,obligation.decisionRef,obligation.allocationRef,obligation.reservationRef,obligation.consumptionRef,obligation.interventionRef,intent?.event.detail.requestRef].filter(Boolean).map(ref=>{
     const original=this.refs.get(refKey(owner.tenantId,ref.id));
     return original&&!original.receipt.sealed&&original.receipt.rightsRefs.every(r=>owner.rightsRefs.includes(r))?{reference:original.reference,receipt:original.receipt}:{reference:ref,receipt:null,qualification:'OWNER_PREIMAGE_OR_AUTHORIZED_ACCESS_PENDING'};

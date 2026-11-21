@@ -106,7 +106,7 @@ export async function mountedServiceProof(input: MountedInput) {
   const inputEvents = { pointerActions: 0, keyboardActions: 0 };
   // These response summaries contain route classes and statuses only, never tokens,
   // request bodies, private Work content or browser storage.
-  const mountedReadOutcomes: Array<{ route: string; status: number }> = [];
+  const mountedReadOutcomes: Array<{ route: string; status: number; responseStartMs: number | null }> = [];
   const mountedNavigations: Array<{ path: string; queryKeys: string[] }> = [];
   const mountedRuntimeErrors: Array<{ name: string; category: string; property?: string }> = [];
   const mountedAuthResponses: Array<{ route: string; method: string; status: number; identityDenied: boolean }> = [];
@@ -420,7 +420,11 @@ export async function mountedServiceProof(input: MountedInput) {
         : path === "/api/centropy/real-world-services/read" ? "service-read"
         : path === "/api/centropy/real-world-services/inbox" ? "service-inbox"
         : path === "/api/centropy/company-brain/project" ? "world-projection" : null;
-      if (route) mountedReadOutcomes.push({ route, status: response.status() });
+      if (route) {
+        const responseStart = response.request().timing().responseStart;
+        mountedReadOutcomes.push({ route, status, responseStartMs: Number.isFinite(responseStart) && responseStart >= 0
+          ? Math.round(responseStart) : null });
+      }
     });
     await page.bringToFront();
     await wait(() => document.visibilityState === "visible", undefined);

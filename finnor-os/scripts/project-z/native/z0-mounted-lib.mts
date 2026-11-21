@@ -461,16 +461,17 @@ export async function openWork(page: any, threadId: string, workId: string, root
     await waitForPanel(page, workId);
     return { rootCarriedBy: "THREAD_PERSISTED_ROOT" };
   }
+  const deadline = performance.now() + 60000;
   try {
-    await waitForPanel(page, workId, 30000);
-    return { rootCarriedBy: "THREAD_PERSISTED_ROOT" };
+    await panelFor(page, workId).waitFor({ state: "attached", timeout: 30000 });
   } catch (error) {
-    if (!(error instanceof Error) || !/^Z0_BROWSER_(WORK_INSTRUMENT_UNAVAILABLE|WORK_NOT_PROJECTED|SESSION_NOT_PROJECTED)$/.test(error.message))
-      throw error;
+    if (!(error instanceof Error) || error.name !== "TimeoutError" || page.isClosed()) throw error;
     await page.goto(workUrl(threadId, root), { waitUntil: "domcontentloaded", timeout: 120000 });
-    await waitForPanel(page, workId, 30000);
-    return { rootCarriedBy: "ROOT_URL_PARAMETER", rootFallbackAfter: error.message };
+    await waitForPanel(page, workId);
+    return { rootCarriedBy: "ROOT_URL_PARAMETER", rootFallbackAfter: "Z0_BROWSER_WORK_NOT_PROJECTED" };
   }
+  await waitForPanel(page, workId, Math.max(1, deadline - performance.now()));
+  return { rootCarriedBy: "THREAD_PERSISTED_ROOT" };
 }
 
 /* ------------------------------------------------------------------ evidence output */

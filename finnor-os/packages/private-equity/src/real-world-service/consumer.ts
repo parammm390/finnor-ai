@@ -17,7 +17,7 @@ import { serviceNow, requireServiceProfile } from "./identity";
 import { checkServiceProgram } from "./checker";
 import { projectServiceProgram } from "./projection";
 import { observationOriginals } from "./participants";
-import { serviceTx, serviceRequest, authorizeServiceWork, currentServiceCut, serviceArtifact, sourceOriginal,
+import { serviceTx, serviceRequest, authorizeServiceWork, currentServiceCut, serviceArtifact, sourceOriginal, sourceOriginals,
   enqueueService, type ServiceRequestRow } from "./store";
 
 export interface ServiceExecutionOriginal { ref: SourceRef; body: NativeServiceExecution }
@@ -62,13 +62,11 @@ export async function serviceExecutions(ctx: PeMutationContext, row: ServiceRequ
    ORDER BY l.created_at,l.source_id LIMIT 257`,
   [row.tenant_id, row.principal_id, row.work_id, row.business_assignment_id])).rows;
   if (refs.length > 256) throw Error("W3_NATIVE_BINDING_BOUND_INCOMPLETE");
-  const result: ServiceExecutionOriginal[] = [];
-  for (const ref of refs) {
-    const sourceRef = { sourceId: ref.source_id, versionId: ref.version_id, contentDigest: ref.content_digest };
-    const source = await sourceOriginal(ctx, row.work_id, sourceRef, c, current);
-    result.push({ ref: sourceRef, body: NativeExecutionSchema.parse(JSON.parse(source.content)) });
-  }
-  return result;
+  const originals = refs.map(ref => ({ sourceId: ref.source_id, versionId: ref.version_id, contentDigest: ref.content_digest }));
+  const sources = await sourceOriginals(ctx, row.work_id, originals, c, current);
+  return sources.map((source, index) => ({
+    ref: originals[index]!, body: NativeExecutionSchema.parse(JSON.parse(source.content)),
+  }));
 }
 export async function assertNativeServiceBinding(
   ctx: PeMutationContext, row: ServiceRequestRow, program: RealWorldServiceProgram, body: NativeServiceExecution,

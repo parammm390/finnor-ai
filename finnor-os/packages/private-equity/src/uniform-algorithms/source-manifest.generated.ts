@@ -5384,7 +5384,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/real-world-service/consumer.ts",
-      "sha256": "b660fc838dceafb1f0847f1a0d7d3fd1f23ef65b83d56b1c6adf2039de8e5aeb"
+      "sha256": "0ee01acb94a213c5b331591092901e9f8eec69eba537e40e0e8c722705a5ab2a"
     },
     {
       "path": "finnor-os/packages/private-equity/src/real-world-service/contracts.ts",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "29f54fbfe75bb92a1ea5e413cc69acd9d17ed74d13c0f11e0c2e89516cf752a9"
+  "sourceDigest": "d073e6209ceb45e1173967a9558892ed93c184e28158947ac13684286b4a54c3"
 } as const;
