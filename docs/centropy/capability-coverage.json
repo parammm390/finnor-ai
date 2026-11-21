@@ -8,8 +8,8 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-21T17:06:37.722Z",
-  "sourceBaseCommit": "f49f86e2c7588676e33568ff7828f2f4aad38e47",
+  "generatedAt": "2026-11-21T23:30:39.051Z",
+  "sourceBaseCommit": "b5b6cf6b4e58539325440d53e6530aefaf89543a",
   "manifestSha256": "e68051fd74494792ebb66d7156bae1b6ac5ef64e369d60057bc4c596fb0aebe3",
   "formsSha256": "35b57673d9d86e461f2b6056aaf326cb789901dfdd4481734aefef91da8052fd",
   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -564,7 +564,7 @@
       "file": "src/components/centropy/canvas/ResearchCapabilityDesk.tsx",
       "route": "capabilities/runs/:ref",
       "method": "GET",
-      "line": 33,
+      "line": 34,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
@@ -599,7 +599,7 @@
       "file": "src/components/centropy/world/WorldWorkRecord.tsx",
       "route": "works/:ref",
       "method": "GET",
-      "line": 56,
+      "line": 64,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
@@ -2605,7 +2605,7 @@
           "file": "src/components/centropy/canvas/ResearchCapabilityDesk.tsx",
           "route": "capabilities/runs",
           "method": "GET",
-          "line": 24,
+          "line": 25,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -2685,7 +2685,7 @@
           "file": "src/components/centropy/canvas/ResearchCapabilityDesk.tsx",
           "route": "capabilities/runs/:ref",
           "method": "GET",
-          "line": 33,
+          "line": 34,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -8418,7 +8418,7 @@
           "file": "src/components/centropy/world/WorldWorkRecord.tsx",
           "route": "works/:ref",
           "method": "GET",
-          "line": 56,
+          "line": 64,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -11313,7 +11313,7 @@
           "file": "src/components/centropy/canvas/ResearchCapabilityDesk.tsx",
           "route": "capabilities/runs",
           "method": "POST",
-          "line": 43,
+          "line": 44,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
