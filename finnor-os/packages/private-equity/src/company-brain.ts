@@ -1053,7 +1053,7 @@ async function settledMany<T>(
   return values;
 }
 
-export async function loadCompanyBrainSourceBundle(
+async function assembleCompanyBrainSourceBundle(
   ctx: PeMutationContext,
   input: { root: PeWorldRootRef; asOf?: string; validAt?: string; knowledgeAt?: string },
 ): Promise<CompanyBrainSourceBundle> {
@@ -1111,18 +1111,29 @@ export async function loadCompanyBrainSourceBundle(
   } catch (error) {
     statuses.push({ owner: "P5 IC", status: "partial", reason: "IC source unavailable" });
   }
-  const bundle = { world, underwriting, ic, works, workforce, attention, sourceStatus: statuses };
-  // The raw bundle also feeds semantic activity. Recheck current policy before
-  // returning it, rather than relying solely on the projection's later check.
-  const resourceProjection = projectCompanyBrain(bundle, { maxNodes: DEFAULT_MAX_NODES, maxEdges: DEFAULT_MAX_EDGES });
+  return { world, underwriting, ic, works, workforce, attention, sourceStatus: statuses };
+}
+
+async function authorizeCompanyBrainSources(
+  ctx: PeMutationContext, root: PeWorldRootRef, bundle: CompanyBrainSourceBundle,
+  resourceProjection: CompanyBrainProjection,
+) {
   const current = await authorizeBeliefResources(ctx, [
-    { type: "tenant", id: ctx.auth.tenantId }, { type: input.root.entityType, id: input.root.entityId },
+    { type: "tenant", id: ctx.auth.tenantId }, { type: root.entityType, id: root.entityId },
     ...resourceProjection.nodes.map(node => ({ type: node.ref.type, id: node.ref.id })),
     ...resourceProjection.nodes.flatMap(node => node.provenanceRefs.map(ref => ({ type: ref.table, id: ref.id }))),
   ]);
+  if (current.revision !== bundle.world.beliefView?.rights.revision) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE world root was not found in the authenticated tenant");
+}
+
+export async function loadCompanyBrainSourceBundle(
+  ctx: PeMutationContext,
+  input: { root: PeWorldRootRef; asOf?: string; validAt?: string; knowledgeAt?: string },
+): Promise<CompanyBrainSourceBundle> {
+  const bundle = await assembleCompanyBrainSourceBundle(ctx, input);
+  await authorizeCompanyBrainSources(ctx, input.root, bundle, projectCompanyBrain(bundle));
   await authorizeBeliefCandidateCut(ctx);
-  await authorizeBeliefSourceScopes(ctx, input.root, world.evidence.map(row => String(row.sourceId)));
-  if (current.revision !== world.beliefView?.rights.revision) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE world root was not found in the authenticated tenant");
+  await authorizeBeliefSourceScopes(ctx, input.root, bundle.world.evidence.map(row => String(row.sourceId)));
   return bundle;
 }
 
@@ -1130,14 +1141,12 @@ export async function loadCompanyBrainProjection(
   ctx: PeMutationContext,
   input: { root: PeWorldRootRef; asOf?: string; validAt?: string; knowledgeAt?: string; maxNodes?: number; maxEdges?: number },
 ): Promise<CompanyBrainProjection> {
-  const bundle = await loadCompanyBrainSourceBundle(ctx, input);
-  const projection = projectCompanyBrain(bundle, { maxNodes: input.maxNodes, maxEdges: input.maxEdges });
-  const current = await authorizeBeliefResources(ctx, [
-    { type: "tenant", id: ctx.auth.tenantId }, { type: input.root.entityType, id: input.root.entityId },
-    ...projection.nodes.map(node => ({ type: node.ref.type, id: node.ref.id })),
-    ...projection.nodes.flatMap(node => node.provenanceRefs.map(ref => ({ type: ref.table, id: ref.id }))),
-  ]);
-  if (current.revision !== bundle.world.beliefView?.rights.revision) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "PE world root was not found in the authenticated tenant");
+  const bundle = await assembleCompanyBrainSourceBundle(ctx, input);
+  const fullProjection = projectCompanyBrain(bundle);
+  const projection = input.maxNodes === undefined && input.maxEdges === undefined ? fullProjection
+    : projectCompanyBrain(bundle, { maxNodes: input.maxNodes, maxEdges: input.maxEdges });
+  await authorizeBeliefSourceScopes(ctx, input.root, bundle.world.evidence.map(row => String(row.sourceId)));
+  await authorizeCompanyBrainSources(ctx, input.root, bundle, fullProjection);
   return projection;
 }
 
