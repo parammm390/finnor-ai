@@ -414,7 +414,8 @@ async function ensureOwnerOnWork(which = "A") {
   const target = which === "A" ? { thread: threadA, parent: parentA } : { thread: threadB, parent: parentB };
   const root = { entityType: "pe_deal", entityId: target.parent.dealId };
   if (!(await page.locator(".ct-topbar").isVisible().catch(() => false))) await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
-  if ([workUrl(target.thread.id), workUrl(target.thread.id, root)].includes(page.url())) {
+  if ([workUrl(target.thread.id), workUrl(target.thread.id, root)].includes(page.url())
+      && await panelFor(page, target.parent.workId).count() === 1) {
     await waitForPanel(page, target.parent.workId);
     return { rootCarriedBy: page.url() === workUrl(target.thread.id) ? "THREAD_PERSISTED_ROOT" : "ROOT_URL_PARAMETER" };
   }
@@ -813,7 +814,7 @@ await runCase("M-08", ["Z0-R09-C04", "Z0-R45-C04"], "Real logout then new sign-i
   c.observations.browserStage = "SIGN_IN_AGAIN";
   const login = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
   c.observations.browserStage = "OPEN_WORK_AFTER_SIGN_IN";
-  await openWork(page, threadA.id, parentA.workId);
+  await openWork(page, threadA.id, parentA.workId, rootA);
   const fresh = await readSettledPanels(page, parentA.workId);
   c.observations.reloadDifferences = referenceFieldDifferences(fresh);
   await watch.settle();
@@ -862,7 +863,7 @@ await runCase("M-06", ["Z0-R09-C02", "Z0-R09-C04", "Z0-R45-C04"], "Principal swi
   await uiSignOut(page);
   const back = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
   const mark2 = watch.mark();
-  await openWork(page, threadA.id, parentA.workId);
+  await openWork(page, threadA.id, parentA.workId, rootA);
   await waitForPanel(page, parentA.workId);
   await watch.settle();
   const reads = watch.since(mark2).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId);

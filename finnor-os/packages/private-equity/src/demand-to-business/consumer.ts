@@ -1,9 +1,10 @@
 import type { PoolClient } from "pg";
 import type { DurableObligation } from "@finnor/shared-types";
 import type { PeMutationContext } from "../types";
+import { readOwnerTransportExecutionHandoffs } from "../../../governed-execution/src/owner-transport";
 import { principal } from "../owner-context";
 import { prepareEnterpriseDurableObligation, readEnterpriseDurableObligation,
-  readEnterpriseDurableObligationExecutionHandoff, readEnterpriseDurableObligationBudgets,
+  readEnterpriseDurableObligationBudgets,
   scheduleEnterpriseDurableObligationRequest } from "../enterprise-obligations";
 import { validateEnterpriseAllocation } from "../enterprise-allocation";
 import { ObligationOperationSchemas } from "../obligation-contracts";
@@ -16,7 +17,7 @@ import { checkOperatingProgram } from "./checker";
 import { projectOperatingProgram } from "./projection";
 import { growthEventOriginals } from "./participants";
 import { growthPreparedOutcomes, growthOwnerProductInfo } from "./product";
-import { growthTx, growthRequest, growthSourceOriginal, authorizeGrowthWork, currentGrowthCut,
+import { growthTx, growthRequest, growthSourceOriginal, growthSourceOriginals, authorizeGrowthWork, currentGrowthCut,
   loadGrowthInput, growthArtifact, enqueueGrowth, type GrowthRequestRow } from "./store";
 
 export interface GrowthExecutionOriginal { ref: SourceRef; body: GrowthNativeExecution }
@@ -63,12 +64,12 @@ export async function growthExecutions(ctx: PeMutationContext, row: GrowthReques
   [row.tenant_id, row.principal_id, row.work_id, row.business_assignment_id])).rows;
   if (refs.length > 1024) throw Error("W4_NATIVE_BINDING_BOUND_INCOMPLETE");
   const result: GrowthExecutionOriginal[] = [], identities = new Set<string>(), semanticKeys = new Set<string>();
-  for (const ref of refs) {
-    const sourceRef = { sourceId: ref.source_id, versionId: ref.version_id, contentDigest: ref.content_digest };
-    const source = await growthSourceOriginal(ctx, row.work_id, sourceRef, c, false);
+  const originals = refs.map(ref => ({ sourceId: ref.source_id, versionId: ref.version_id, contentDigest: ref.content_digest }));
+  const sources = await growthSourceOriginals(ctx, row.work_id, originals, c, false);
+  for (const [index, source] of sources.entries()) {
     const body = growthNativeExecutionSchema.parse(JSON.parse(source.content)), key = growthExecutionRecordKey(body);
     if (identities.has(body.obligationRef.id) || semanticKeys.has(key)) throw Error("W4_NATIVE_IDENTITY_REBOUND");
-    identities.add(body.obligationRef.id); semanticKeys.add(key); result.push({ ref: sourceRef, body });
+    identities.add(body.obligationRef.id); semanticKeys.add(key); result.push({ ref: originals[index]!, body });
   }
   return result;
 }
@@ -100,32 +101,44 @@ export async function assertNativeGrowthBinding(ctx: PeMutationContext, row: Gro
 export async function readGrowthNativeEffects(ctx: PeMutationContext, executions: GrowthExecutionOriginal[],
   original: { row: GrowthRequestRow; program: MarketValidatedOperatingProgram }) {
   const effects: EffectObservation[] = [], gaps: string[] = [];
-  for (const { body } of executions) {
-    let state: EffectObservation["state"] = "UNKNOWN", originalIdentityReadback = false;
-    let notBeforeAt: string | undefined;
-    try {
-      await assertNativeGrowthBinding(ctx, original.row, original.program, body);
-      const { handoff } = await readEnterpriseDurableObligationExecutionHandoff(ctx, { obligationRef: body.obligationRef });
-      if (!same(handoff.obligation.ref, body.obligationRef)) throw Error("W4_NATIVE_READBACK_IDENTITY_MISMATCH");
-      const ir = nativeGrowthIRSchema.parse(body.execution.request.ir), member = ir.members[0]!, change = growthNativeChange(body);
-      if (body.execution.request.ref.contentDigest !== hash(body.execution.request.ir)
-        || handoff.request && same(handoff.request.ref, body.execution.request.ref)
-          && !same(handoff.request.ir, body.execution.request.ir)
-        || member.request.recordKey !== growthExecutionRecordKey(body)
-        || member.request.applicationAccountId !== body.applicationAccountId
-        || member.semantic.operation !== "SERVICE_TRANSITION_V1" || member.semantic.unit !== change.unit
-        || member.semantic.dose !== change.value || !same(member.request.changes, { [change.field]: change.value }))
-        throw Error("W4_NATIVE_READBACK_EXACT_TRANSACTION_MISMATCH");
-      const verified = handoff.settlements.some((s: { event: { detail: { status: string; requestRef: NativeRef } } }) =>
-        s.event.detail.status === "VERIFIED" && same(s.event.detail.requestRef, body.execution.request.ref));
-      state = verified && same(handoff.request?.ref, body.execution.request.ref)
-        ? "VERIFIED" : handoff.attempts.length ? "UNKNOWN" : "NOT_ATTEMPTED";
-      notBeforeAt = handoff.attempts[0]?.event.knowledgeAt;
-      originalIdentityReadback = true;
-    } catch (error) { gaps.push(growthPredicate(error) + ":" + body.obligationRef.id) }
-    effects.push({ ref: body.obligationRef, kind: body.operation, buyerId: body.buyerId, offerId: body.offerId,
-      termsDigest: body.termsDigest, state, quantity: body.quantity, amount: body.amount, originalIdentityReadback,
-      basisSourceIds: body.basis.map(ref => ref.sourceId), ...(notBeforeAt ? { notBeforeAt } : {}) });
+  const scope = { semanticOwner: "S6", tenantId: ctx.auth.tenantId, principalId: principal(ctx) };
+  for (let offset = 0; offset < executions.length; offset += 8) {
+    const batch = executions.slice(offset, offset + 8);
+    const bindings = await Promise.allSettled(batch.map(({ body }) => assertNativeGrowthBinding(ctx, original.row, original.program, body)));
+    const authorized = bindings.flatMap(binding => binding.status === "fulfilled" ? [binding.value.ref.id] : []);
+    const answers = authorized.length ? await readOwnerTransportExecutionHandoffs(scope, authorized)
+      .catch(reason => authorized.map(() => ({ status: "rejected" as const, reason }))) : [];
+    const byId = new Map(authorized.map((id, index) => [id, answers[index]!]));
+    for (const [index, { body }] of batch.entries()) {
+      let state: EffectObservation["state"] = "UNKNOWN", originalIdentityReadback = false;
+      let notBeforeAt: string | undefined;
+      try {
+        const binding = bindings[index]!;
+        if (binding.status === "rejected") throw binding.reason;
+        const answer = byId.get(binding.value.ref.id)!;
+        if (answer.status === "rejected") throw answer.reason;
+        const { handoff } = answer.value;
+        if (!same(handoff.obligation.ref, body.obligationRef)) throw Error("W4_NATIVE_READBACK_IDENTITY_MISMATCH");
+        const ir = nativeGrowthIRSchema.parse(body.execution.request.ir), member = ir.members[0]!, change = growthNativeChange(body);
+        if (body.execution.request.ref.contentDigest !== hash(body.execution.request.ir)
+          || handoff.request && same(handoff.request.ref, body.execution.request.ref)
+            && !same(handoff.request.ir, body.execution.request.ir)
+          || member.request.recordKey !== growthExecutionRecordKey(body)
+          || member.request.applicationAccountId !== body.applicationAccountId
+          || member.semantic.operation !== "SERVICE_TRANSITION_V1" || member.semantic.unit !== change.unit
+          || member.semantic.dose !== change.value || !same(member.request.changes, { [change.field]: change.value }))
+          throw Error("W4_NATIVE_READBACK_EXACT_TRANSACTION_MISMATCH");
+        const verified = handoff.settlements.some((s: { event: { detail: { status: string; requestRef: NativeRef } } }) =>
+          s.event.detail.status === "VERIFIED" && same(s.event.detail.requestRef, body.execution.request.ref));
+        state = verified && same(handoff.request?.ref, body.execution.request.ref)
+          ? "VERIFIED" : handoff.attempts.length ? "UNKNOWN" : "NOT_ATTEMPTED";
+        notBeforeAt = handoff.attempts[0]?.event.knowledgeAt;
+        originalIdentityReadback = true;
+      } catch (error) { gaps.push(growthPredicate(error) + ":" + body.obligationRef.id) }
+      effects.push({ ref: body.obligationRef, kind: body.operation, buyerId: body.buyerId, offerId: body.offerId,
+        termsDigest: body.termsDigest, state, quantity: body.quantity, amount: body.amount, originalIdentityReadback,
+        basisSourceIds: body.basis.map(ref => ref.sourceId), ...(notBeforeAt ? { notBeforeAt } : {}) });
+    }
   }
   return { effects, gaps };
 }

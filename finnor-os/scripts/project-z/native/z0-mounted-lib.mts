@@ -222,19 +222,26 @@ export const INST = 'section[aria-label="Institution responsibility"]';
 export async function openAllDetails(page: any, scope: string, deadline = Date.now() + 25000) {
   const closed = page.locator(`${scope} details:not([open]) > summary:visible`);
   let opened = 0;
+  let lastClickFailure: string | null = null;
+  const unavailable = (cause?: unknown) => Object.assign(Error("Z0_DISCLOSURE_CLICK_DEADLINE_EXCEEDED", { cause }),
+    { code: lastClickFailure ?? "Z0_DISCLOSURE_CLICK_BUDGET" });
   while (await closed.count()) {
     const remaining = deadline - Date.now();
-    if (remaining <= 0) throw Error("Z0_DISCLOSURE_CLICK_DEADLINE_EXCEEDED");
+    if (remaining <= 0) throw unavailable();
     try {
-      await closed.first().click({ timeout: Math.min(1500, remaining) });
+      await closed.first().click({ timeout: remaining });
       opened++;
+      lastClickFailure = null;
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : String(cause);
-      const replaceOrActionability = /Timeout .*exceeded|element is not attached|element is not stable|Element is not visible|intercepts pointer events|Element is outside of the viewport/i.test(message);
-      if (!replaceOrActionability || page.isClosed()) throw cause;
-      // A single changing panel cannot make this test pass by looping forever.
-      // Every retry still requires the real summary to be opened by a click.
-      if (Date.now() >= deadline) throw Error("Z0_DISCLOSURE_CLICK_DEADLINE_EXCEEDED", { cause });
+      lastClickFailure = /intercepts pointer events/i.test(message) ? "Z0_DISCLOSURE_CLICK_INTERCEPTED"
+        : /outside of the viewport/i.test(message) ? "Z0_DISCLOSURE_OUTSIDE_VIEWPORT"
+        : /not attached|detached/i.test(message) ? "Z0_DISCLOSURE_REPLACED"
+        : /not stable/i.test(message) ? "Z0_DISCLOSURE_UNSTABLE"
+        : /not visible/i.test(message) ? "Z0_DISCLOSURE_HIDDEN"
+        : /Timeout .*exceeded/i.test(message) ? "Z0_DISCLOSURE_CLICK_TIMED_OUT" : null;
+      if (!lastClickFailure || page.isClosed()) throw cause;
+      if (Date.now() >= deadline) throw unavailable(cause);
       await sleep(Math.min(100, Math.max(0, deadline - Date.now())));
     }
   }
@@ -242,9 +249,11 @@ export async function openAllDetails(page: any, scope: string, deadline = Date.n
 }
 
 /** DOM facts of both private panels plus the whole-document marker haystack. Collapsed content is opened first. */
-export async function readPanels(page: any, deadline = Date.now() + 25000) {
-  await openAllDetails(page, APP, deadline);
-  await openAllDetails(page, INST, deadline);
+export async function readPanels(page: any, deadline = Date.now() + 25000, workId?: string) {
+  const app = workId ? APP + '[data-application-work="' + workId + '"]' : APP;
+  const inst = workId ? INST + '[data-institution-work="' + workId + '"]' : INST;
+  await openAllDetails(page, app, deadline);
+  await openAllDetails(page, inst, deadline);
   return page.evaluate(({ app, inst }: { app: string; inst: string }) => {
     const collapse = (value: string | null) => (value ?? "").replace(/\s+/g, " ").trim();
     const noPre = (root: Element) => { const copy = root.cloneNode(true) as Element; copy.querySelectorAll("pre").forEach(node => node.remove()); return collapse(copy.textContent); };
@@ -293,7 +302,7 @@ export async function readPanels(page: any, deadline = Date.now() + 25000) {
       topbar: Boolean(document.querySelector(".ct-topbar")),
       applicationCount: document.querySelectorAll(app).length,
     };
-  }, { app: APP, inst: INST });
+  }, { app, inst });
 }
 
 /** Checking and exercising the disclosures can cross a normal owner refresh. */
@@ -301,7 +310,7 @@ export async function readSettledPanels(page: any, workId: string, timeoutMs = 6
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     await waitForPanel(page, workId, deadline - Date.now());
-    const facts = await readPanels(page, Math.min(deadline, Date.now() + 25000));
+    const facts = await readPanels(page, Math.min(deadline, Date.now() + 25000), workId);
     if (facts.appAttributes?.work === workId && facts.appAttributes.session !== "none" && facts.appAttributes.busy === "false"
         && facts.instAttributes?.work === workId && facts.instAttributes.state === "settled"
         && facts.instAttributes.busy === "false" && facts.closedDisclosures === 0) return facts;

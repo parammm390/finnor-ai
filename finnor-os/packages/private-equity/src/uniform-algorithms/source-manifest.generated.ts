@@ -5160,7 +5160,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/demand-to-business/consumer.ts",
-      "sha256": "0d97280db6ae39c707294aeece414478ed99fb7e3bfac7c377622ba138aa9381"
+      "sha256": "77ce85604ab34cc048d76cb2d2d31b608cf2875219ab516288da937a94f4bca1"
     },
     {
       "path": "finnor-os/packages/private-equity/src/demand-to-business/contracts.ts",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "d073e6209ceb45e1173967a9558892ed93c184e28158947ac13684286b4a54c3"
+  "sourceDigest": "51e5497b0daa02519ff404df2ca8431f80f9142ffa4acdab7f4c3a30ac167889"
 } as const;

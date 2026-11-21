@@ -2295,8 +2295,8 @@
     },
     {
       "file": "packages/private-equity/src/demand-to-business/consumer.ts",
-      "bytes": 23909,
-      "sha256": "0d97280db6ae39c707294aeece414478ed99fb7e3bfac7c377622ba138aa9381"
+      "bytes": 24917,
+      "sha256": "77ce85604ab34cc048d76cb2d2d31b608cf2875219ab516288da937a94f4bca1"
     },
     {
       "file": "packages/private-equity/src/demand-to-business/contracts.ts",
@@ -3561,7 +3561,7 @@
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-manifest.generated.ts",
       "bytes": 265417,
-      "sha256": "a2e96b3724f6fcaec59f7c4e65d2d58b20a9ced41ae229e2d09f42794bae5256"
+      "sha256": "62745991cba2889748db0d135ede4463fe2ee7b27bf4f4f1332a6554bc83bafb"
     },
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-paths.ts",

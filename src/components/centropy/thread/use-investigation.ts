@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { earliestMessageSequence, mergeConversationMessages, type LoadedConversationThread } from "./thread-contract"
 import { loadInvestigation } from "./thread-api"
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
+import { CentropyApiError } from "../lib/api"
 
 export interface InvestigationState {
   forThreadId: string | null
@@ -76,7 +77,11 @@ export function useInvestigation(threadId: string | null, enabled: boolean, refr
       ? { ...previous, forThreadId: threadId, status: "ready", error: null, olderLoading: false, olderError: null }
       : { ...EMPTY, forThreadId: threadId, forScope: scope.key, status: "loading" })
     try {
-      const loaded = await loadInvestigation(threadId)
+      const loaded = await loadInvestigation(threadId).catch(cause => {
+        if (!(cause instanceof CentropyApiError) || !cause.retryable
+          || request !== generation.current || !scope.isCurrent(scope.key)) throw cause
+        return loadInvestigation(threadId)
+      })
       if (request !== generation.current || !scope.isCurrent(scope.key)) return
       setState((previous) => {
         const sameThread = previous.forScope === scope.key && previous.loaded?.thread.id === threadId

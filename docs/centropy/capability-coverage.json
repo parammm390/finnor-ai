@@ -1629,7 +1629,7 @@
       },
       {
         "file": "src/components/centropy/thread/use-investigation.ts",
-        "sha256": "dbf5d00ea406a791e11d40292089a48079db647fb74c23d6a2c04b52548d9a14"
+        "sha256": "4e86bf42bfc52bee3025674a64c643886b338c33274bec6dc2a3c7ca5d2ef5d8"
       },
       {
         "file": "src/components/centropy/thread/Composer.tsx",

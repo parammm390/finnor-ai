@@ -97,6 +97,10 @@ jobs:
           const exit = join(temp, 'w4-driver-exit')
           const driverExit = existsSync(exit) ? Number(readFileSync(exit, 'utf8').trim()) : null
           const message = fail?.failure?.message ?? ''
+          const elapsed = native?.elapsedMs ?? fail?.elapsedMs
+          const frames = typeof fail?.failure?.stack === 'string'
+            ? [...fail.failure.stack.matchAll(/\/w4\/((?:run-native-e2e|native-growth-journey|recipient)\.mts:\d{1,4}:\d{1,4})(?:\)|\n|$)/g)]
+              .slice(0, 4).map(match => match[1]) : []
           let owner = null
           try { owner = JSON.parse(message.split('\n', 1)[0]) } catch {}
           const types = new Set(['compile_market_operating_program_v1', 'advance_market_operating_program_v1'])
@@ -143,8 +147,10 @@ jobs:
             contract: componentPassed ? 'PASS' : contract ? 'FAILED' : 'NOT_RUN',
             native: successful ? 'PASS_CONTROLLED_OWNER' : driverExit === null ? 'NOT_RUN' : 'FAIL',
             driverExit,
+            elapsedMs: Number.isFinite(elapsed) && elapsed >= 0 ? Math.round(elapsed) : null,
             failure: fail ? {
               predicate: code(message.match(/^(?:Error: )?([A-Z][A-Z0-9_]{2,120})(?=[:\s]|$)/)?.[1]),
+              driverFrames: frames,
               migration: message.match(/^Migration ([a-z0-9_]{1,140}\.sql) failed:/)?.[1] ?? null,
               ownerStatus: code(owner?.status),
               reasonCodes: Array.isArray(owner?.reasons) ? owner.reasons.map(code).filter(Boolean).slice(0, 12) : [],

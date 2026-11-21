@@ -6,6 +6,8 @@
 // 10s proxy cutoff therefore converted a real upstream 200 into a false UNAVAILABLE.
 // Keep the boundary bounded, but allow one honest cold-start compilation window.
 export const CENTROPY_PROXY_READ_TIMEOUT_MS = 20_000
+// The W3 Work reader enforces its own 29s deadline before returning the receipt.
+export const CENTROPY_PROXY_W3_WORK_READ_TIMEOUT_MS = 30_000
 // Durable approvals can synchronously cross the planner/executor boundary and take
 // just over 30s on a cold worker. Keep the proxy alive long enough to return the
 // committed receipt instead of manufacturing a client-visible timeout after the

@@ -10,7 +10,7 @@ import { NextRequest } from "next/server"
 import { z } from "zod"
 import { getServiceToken } from "@/lib/centropy/proxy-auth"
 import { resolveProductRoute, type ProductCapability } from "@/lib/centropy/capability-manifest"
-import { CENTROPY_PROXY_READ_TIMEOUT_MS, CENTROPY_PROXY_WRITE_TIMEOUT_MS } from "./proxy-config"
+import { CENTROPY_PROXY_READ_TIMEOUT_MS, CENTROPY_PROXY_W3_WORK_READ_TIMEOUT_MS, CENTROPY_PROXY_WRITE_TIMEOUT_MS } from "./proxy-config"
 import { oauthRequestCookie, oauthResponseHeaders, oauthStartBody, oauthTransport } from "@/lib/centropy/oauth-transport"
 
 // Resolve this per request so a warmed serverless module cannot retain an old
@@ -116,7 +116,9 @@ async function doForward(
   req.nextUrl.searchParams.forEach((v, k) => url.searchParams.append(k, v));
 
   const controller = new AbortController();
-  const timeoutMs = capability
+  const timeoutMs = capability?.routePattern === "real-world-services/read" && capability.timeoutClass === "READ"
+    ? CENTROPY_PROXY_W3_WORK_READ_TIMEOUT_MS
+    : capability
     ? capability.timeoutClass === "WRITE" ? CENTROPY_PROXY_WRITE_TIMEOUT_MS : CENTROPY_PROXY_READ_TIMEOUT_MS
     : method === "GET" ? CENTROPY_PROXY_READ_TIMEOUT_MS : CENTROPY_PROXY_WRITE_TIMEOUT_MS;
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
