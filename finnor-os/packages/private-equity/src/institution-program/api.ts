@@ -43,6 +43,7 @@ export async function readInstitutionCompiler(ctx: PeMutationContext, requestId:
   }>(`SELECT body,body_digest,input_manifest,candidate,check_result FROM finnor_os.x1_compiler_artifacts
     WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 AND request_id=$4`,
   [q.tenant_id, q.principal_id, q.artifact_id, q.id])).rows[0], true) : null;
+  let parsedArtifact: z.infer<typeof InstitutionProgram> | null = null;
   try {
     await assertInstitutionCompilerCurrent(ctx, q, artifact?.input_manifest?.current);
     if (artifact && sha(artifact.body) !== artifact.body_digest) throw Error("X1_IMMUTABLE_ARTIFACT_DIGEST_MISMATCH");
@@ -64,6 +65,7 @@ export async function readInstitutionCompiler(ctx: PeMutationContext, requestId:
           ||binding?.status!=='known'||binding.ref!==parent.id||binding.digest!==parent.body_digest)
           throw Error('X1_IMMUTABLE_PARENT_BINDING_MISMATCH');
       }else if(parsed.envelope.parent_artifact_refs.length)throw Error('X1_UNEXPECTED_PARENT_ARTIFACT');
+      parsedArtifact = parsed;
     }
   } catch (error) {
     const reason = safePredicate(error);
@@ -86,7 +88,7 @@ export async function readInstitutionCompiler(ctx: PeMutationContext, requestId:
       WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 AND generation=$5 AND status NOT IN('CANCELLED','INVALIDATED')`,
       [q.tenant_id,q.principal_id,q.id,programme.status,q.generation]);});
   return { requestId: q.id, workId: q.work_id, workRevision: q.work_input_id, revision: q.revision,
-    status: programme?.status ?? q.status, artifact: artifact ? InstitutionProgram.parse(artifact.body) : null,
+    status: programme?.status ?? q.status, artifact: parsedArtifact,
     check: artifact?.check_result ?? null, programme, reason: q.failure, costs,
     sourceCoverage:{gaps:(artifact?.candidate as {sourceCoverageGaps?:unknown[]}|undefined)?.sourceCoverageGaps??[],
       normativePopulation:!artifact||(artifact.candidate as {sourceCoverageGaps?:unknown[]}).sourceCoverageGaps?.length?'UNKNOWN':'KNOWN_MODEL_RELATIVE'},
@@ -128,11 +130,11 @@ async function handleInstitutionOperationBody(ctx: PeMutationContext, operation:
     }
     const input: z.infer<typeof programmeRead> = (operation === "institution-read" ? programmeRead : id).parse(body);
     const { requestId, purpose } = input;
+    if (["institution-read", "institution-status", "institution-witness"].includes(operation))
+      return { status: 200, body: await readInstitutionCompiler(ctx, requestId, purpose) };
     let q = await compilerRow(ctx, requestId);
     await authorizeInstitutionWork(ctx, q.work_id);
     if(operation==='institution-resume')q=await reconcileInstitutionCompilerDelivery(ctx,q);
-    if (["institution-read", "institution-status", "institution-witness"].includes(operation))
-      return { status: 200, body: await readInstitutionCompiler(ctx, requestId, purpose) };
     if (operation === "institution-cancel") {
       // Cancellation remains available after source-grant invalidation. This
       // historical status only decides whether to preserve an already completed

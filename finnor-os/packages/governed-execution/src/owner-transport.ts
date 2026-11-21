@@ -152,9 +152,19 @@ export function verifyOwnerTransportReceipt(route:OwnerTransportRoute,raw:unknow
 
 /** Read-only S6 evidence; signatures confer no causal/economic attribution. */
 export async function readOwnerTransportExecutionHandoff(identity:OwnerTransportScope,obligationId:string){
- const route=await ownerTransportRoute(identity,['S7','S8'].includes(identity.semanticOwner)?'CONSUMER':'OWNER');if(!route)fail('OWNER_TRANSPORT_CONFIGURATION_UNAVAILABLE');
- if(!['S6','S7','S8'].includes(identity.semanticOwner)||!/^durable-obligation:[a-f0-9]{64}$/.test(obligationId))fail('OWNER_HANDOFF_IDENTITY_INVALID');
- const answer=await request(route,'/execution-handoff/'+encodeURIComponent(obligationId)),handoff=object(answer.handoff),consumer=object(handoff.consumer),release=object(handoff.release);
+ const route=await handoffRoute(identity,[obligationId]);
+ const answer=await request(route,'/execution-handoff/'+encodeURIComponent(obligationId));
+ return verifyExecutionHandoff(route,identity,obligationId,answer);
+}
+
+async function handoffRoute(identity:OwnerTransportScope,ids:readonly string[]){
+ if(!['S6','S7','S8'].includes(identity.semanticOwner)||ids.some(id=>!/^durable-obligation:[a-f0-9]{64}$/.test(id)))fail('OWNER_HANDOFF_IDENTITY_INVALID');
+ return await ownerTransportRoute(identity,['S7','S8'].includes(identity.semanticOwner)?'CONSUMER':'OWNER')
+  ??fail('OWNER_TRANSPORT_CONFIGURATION_UNAVAILABLE');
+}
+
+function verifyExecutionHandoff(route:OwnerTransportRoute,identity:OwnerTransportScope,obligationId:string,answer:Record<string,any>){
+ const handoff=object(answer.handoff),consumer=object(handoff.consumer),release=object(handoff.release);
  const pin=route.ledger.acceptedReceipts.find(p=>p.releaseId===release.releaseId&&p.verifierDigest===release.verifierDigest&&p.policyDigest===release.policyDigest)??fail('OWNER_HANDOFF_RELEASE_UNADMITTED');
  if(!verify(null,Buffer.from(canonical(handoff)),publicKey(pin.signerPublicKey),signature(answer.signature)))fail('OWNER_HANDOFF_SIGNATURE_INVALID');
  if(handoff.schema!=='finnor.s6.consumer-handoff.v1'||handoff.version!=='s6-consumer-handoff-v1'||handoff.semanticOwner!=='S6'||consumer.semanticOwner!==identity.semanticOwner||consumer.tenantId!==identity.tenantId||consumer.principalId!==identity.principalId||!same([...consumer.rightsRefs].sort(),[...route.rightsRefs].sort())||consumer.appendAuthorityGranted!==false||handoff.attributionGranted!==false||handoff.resourceReleaseGranted!==false||handoff.executionAuthorityGranted!==false)fail('OWNER_HANDOFF_SCOPE_OR_QUALIFICATION_INVALID');
@@ -165,6 +175,35 @@ export async function readOwnerTransportExecutionHandoff(identity:OwnerTransport
  let prior=0;for(const row of handoff.history){object(row);object(row.event);const receipt=verifyOwnerTransportReceipt(route,row.receipt,{kind:'EVENT',identity:row.event.eventId,semanticOwner:'S6',principalId:identity.principalId,event:row.event});if(receipt.protectedExecution!==true||receipt.sequence<=prior||!same(row.event.detail?.obligationRef,ref))fail('OWNER_HANDOFF_HISTORY_BINDING_INVALID');prior=receipt.sequence;}
  if(!same(handoff.attempts,handoff.history.filter((row:any)=>row.event.type==='ATTEMPT'))||!same(handoff.observations,handoff.history.filter((row:any)=>row.event.type==='OBSERVATION'))||!same(handoff.settlements,handoff.history.filter((row:any)=>row.event.type==='VERIFICATION')))fail('OWNER_HANDOFF_PROJECTION_INVALID');
  return answer;
+}
+
+/** A Work read can verify several obligations against one serialized ledger head. */
+export async function readOwnerTransportExecutionHandoffs(identity:OwnerTransportScope,obligationIds:readonly string[]){
+ if(!obligationIds.length||obligationIds.length>8||new Set(obligationIds).size!==obligationIds.length)fail('HANDOFF_BATCH_IDENTITIES_INVALID');
+ const route=await handoffRoute(identity,obligationIds);
+ let answer:Record<string,any>;
+ try{answer=await request(route,'/execution-handoffs',{obligationIds});}
+ catch(error){
+  if(!(error instanceof LedgerFault)||!['NOT_FOUND','HANDOFF_BATCH_BYTE_BOUND','LEDGER_RESPONSE_BYTE_BOUND','JSON_COMPLEXITY_LIMIT'].includes(error.code))throw error;
+  return Promise.allSettled(obligationIds.map(id=>readOwnerTransportExecutionHandoff(identity,id)));
+ }
+ keys(answer,['results']);
+ if(!Array.isArray(answer.results)||answer.results.length!==obligationIds.length)fail('OWNER_HANDOFF_BATCH_INVALID');
+ let checkpoint:Record<string,any>|undefined;
+ return obligationIds.map((id,index):PromiseSettledResult<Record<string,any>>=>{
+  const result=object(answer.results[index]);
+  if(result.id!==id)fail('OWNER_HANDOFF_BATCH_INVALID');
+  if(Object.hasOwn(result,'error')){
+   keys(result,['id','error']);
+   if(typeof result.error!=='string'||!/^[A-Z0-9_]{1,80}$/.test(result.error))fail('OWNER_HANDOFF_BATCH_INVALID');
+   return {status:'rejected',reason:new LedgerFault(503,result.error)};
+  }
+  keys(result,['id','handoff','signature']);
+  const value=verifyExecutionHandoff(route,identity,id,result),cut=object(value.handoff.checkpoint);
+  if(checkpoint&&!same(checkpoint,cut))fail('OWNER_HANDOFF_BATCH_CHECKPOINT_MISMATCH');
+  checkpoint=cut;
+  return {status:'fulfilled',value};
+ });
 }
 
 async function originalOwnerRequest(route:OwnerTransportRoute,envelope:OwnerDeliveryEnvelope,deadlineAt:number){

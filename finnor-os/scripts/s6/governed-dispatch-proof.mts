@@ -355,6 +355,15 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
   const nativeHandoff=await api(f,'read-execution-handoff',{obligationRef:obligation.ref},POST);assert.equal(nativeHandoff.status,200,JSON.stringify(nativeHandoff));assert.equal(nativeHandoff.body.handoff.consumer.semanticOwner,'S6');
   const downstream=await call('/execution-handoff/'+encodeURIComponent(obligation.ref.id),undefined,consumerToken);assert.equal(downstream.status,200,JSON.stringify(downstream));
   assert(verify(null,Buffer.from(canonical(downstream.body.handoff)),publicPem(ledgerKey),Buffer.from(downstream.body.signature,'base64')));assert.deepEqual(downstream.body.handoff.history,history);assert.deepEqual(downstream.body.handoff.request,request);assert.equal(downstream.body.handoff.consumer.semanticOwner,'S7');assert.equal(downstream.body.handoff.attributionGranted,false);
+  const absentId='durable-obligation:'+hash({unregistered:obligation.ref.id});
+  const batch=await call('/execution-handoffs',{obligationIds:[obligation.ref.id,absentId]},consumerToken);
+  assert.equal(batch.status,200);
+  const [present,absent]=batch.body.results;
+  assert.equal(present.id,obligation.ref.id);
+  assert(verify(null,Buffer.from(canonical(present.handoff)),publicPem(ledgerKey),Buffer.from(present.signature,'base64')));
+  assert.deepEqual(present.handoff.history,history);
+  assert.deepEqual(present.handoff.checkpoint,downstream.body.handoff.checkpoint);
+  assert.deepEqual(absent,{id:absentId,error:'OBLIGATION_HANDOFF_NOT_FOUND'});
   const deniedConsumerDispatch=await call('/dispatch',input,consumerToken);assert.equal(deniedConsumerDispatch.status,403);
   const finalBudgets=await api(f,'budget-status',{obligationRef:obligation.ref},POST);assert.equal(finalBudgets.status,200);const charged=sharedCompany?(await originalPopulation()).charges.sort((a:any,b:any)=>Date.parse(a.created_at)-Date.parse(b.created_at)||a.charge_key.localeCompare(b.charge_key)).map((c:any)=>({phase:c.phase,resource_id:c.resource_id,unit:c.unit,units:String(c.units),body:c.body})):(await admin.query('SELECT phase,resource_id,unit,units::text,body FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 ORDER BY created_at',[f.tenant])).rows;
   await artifact('s5-governed-budgets-before-storage-probe.json',{finalBudgets,charged});

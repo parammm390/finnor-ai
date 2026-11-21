@@ -156,7 +156,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/security/src/auth.ts",
-      "sha256": "3d810b71fa476e560ec7e6792c2cb4f30b8910bce409ef64e3fb7db9df537a61"
+      "sha256": "fa19dc8721b09e0bdbae794f12fc3e3d51318c94a93e0d2f02c097044899e530"
     },
     {
       "path": "finnor-os/packages/security/src/workos-auth.ts",

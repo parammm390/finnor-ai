@@ -380,6 +380,8 @@ jobs:
               revocation: revocation ? {
                 raceReached: revocation.raceReached === true,
                 requestsObserved: count(revocation.requestsObserved),
+                settledRequests: count(revocation.settledRequests),
+                unresolvedRequests: count(revocation.unresolvedRequests),
                 revokedAccounts: count(revocation.revokedAccounts),
                 expectedAccounts: count(revocation.expectedAccounts),
                 status: typedCode(revocation.final?.status), reason: typedCode(revocation.final?.reason),

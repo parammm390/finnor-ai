@@ -2,8 +2,9 @@ import { z } from "zod";
 import type { PoolClient } from "pg";
 import type { PeMutationContext } from "../types";
 import type { DurableObligation } from "@finnor/shared-types";
+import { readOwnerTransportExecutionHandoffs } from "../../../governed-execution/src/owner-transport";
 import {
-  readEnterpriseDurableObligation, readEnterpriseDurableObligationExecutionHandoff,
+  readEnterpriseDurableObligation,
   scheduleEnterpriseDurableObligationRequest, readEnterpriseDurableObligationBudgets,
   prepareEnterpriseDurableObligation,
 } from "../enterprise-obligations";
@@ -109,34 +110,43 @@ export async function assertNativeServiceBinding(
 export async function readServiceNativeEffects(ctx: PeMutationContext, executions: ServiceExecutionOriginal[],
   cut: { row: ServiceRequestRow; program: RealWorldServiceProgram }) {
   const effects: NativeEffectObservation[] = [], gaps: string[] = [];
-  const identities = new Set<string>();
-  for (const original of executions) {
-    const b = original.body;
-    if (identities.has(b.obligationRef.id)) throw Error("W3_NATIVE_IDENTITY_REBOUND");
-    identities.add(b.obligationRef.id);
-    let state: NativeEffectObservation["state"] = "UNKNOWN", originalIdentityReadback = false;
-    try {
-      await assertNativeServiceBinding(ctx, cut.row, cut.program, b);
-      const answer = await readEnterpriseDurableObligationExecutionHandoff(ctx, { obligationRef: b.obligationRef });
-      const handoff = answer.handoff;
-      if (!equal(handoff.obligation.ref, b.obligationRef)) throw Error("W3_NATIVE_READBACK_IDENTITY_MISMATCH");
-      const declared = NativeServiceIRSchema.parse(b.execution.request.ir);
-      if (b.execution.request.ref.contentDigest !== hash(b.execution.request.ir)
-        || handoff.request && equal(handoff.request.ref, b.execution.request.ref)
-          && !equal(handoff.request.ir, b.execution.request.ir)
-        || declared.members.length !== 1 || declared.members[0]!.request.recordKey !== serviceExecutionRecordKey(b)
-        || declared.members[0]!.semantic.operation !== "SERVICE_TRANSITION_V1"
-        || declared.members[0]!.request.applicationAccountId !== b.providerId)
-        throw Error("W3_NATIVE_READBACK_TERMS_MISMATCH");
-      const settled = handoff.settlements.some((r: { event: { detail: { status: string; requestRef: NativeRef } } }) =>
-        r.event.detail.status === "VERIFIED" && equal(r.event.detail.requestRef, b.execution.request.ref));
-      if (settled && equal(handoff.request?.ref, b.execution.request.ref)) state = "VERIFIED";
-      else state = handoff.attempts.length ? "UNKNOWN" : "NOT_ATTEMPTED";
-      originalIdentityReadback = true;
-    } catch (error) { gaps.push(safeCode(error) + ":" + b.obligationRef.id) }
-    for (const term of b.coveredTerms) effects.push({ ...term, ref: b.obligationRef, operation: b.operation, state,
-      originalIdentityReadback, invoiceSourceIds: b.paymentPlan.filter(p => p.instanceId === term.instanceId
-        && p.termsDigest === term.termsDigest).map(p => p.invoiceSource.sourceId) });
+  const identities = new Set(executions.map(({ body }) => body.obligationRef.id));
+  if (identities.size !== executions.length) throw Error("W3_NATIVE_IDENTITY_REBOUND");
+  const scope = { semanticOwner: "S6", tenantId: ctx.auth.tenantId, principalId: ctx.auth.employeeId ?? ctx.auth.userId };
+  for (let offset = 0; offset < executions.length; offset += 8) {
+    const batch = executions.slice(offset, offset + 8);
+    const bindings = await Promise.allSettled(batch.map(({ body }) => assertNativeServiceBinding(ctx, cut.row, cut.program, body)));
+    const authorized = bindings.flatMap(binding => binding.status === "fulfilled" ? [binding.value.ref.id] : []);
+    const answers = authorized.length ? await readOwnerTransportExecutionHandoffs(scope, authorized)
+      .catch(reason => authorized.map(() => ({ status: "rejected" as const, reason }))) : [];
+    const byId = new Map(authorized.map((id, index) => [id, answers[index]!]));
+    for (const [index, { body: b }] of batch.entries()) {
+      let state: NativeEffectObservation["state"] = "UNKNOWN", originalIdentityReadback = false;
+      try {
+        const binding = bindings[index]!;
+        if (binding.status === "rejected") throw binding.reason;
+        const answer = byId.get(b.obligationRef.id)!;
+        if (answer.status === "rejected") throw answer.reason;
+        const handoff = answer.value.handoff;
+        if (!equal(handoff.obligation.ref, b.obligationRef)) throw Error("W3_NATIVE_READBACK_IDENTITY_MISMATCH");
+        const declared = NativeServiceIRSchema.parse(b.execution.request.ir);
+        if (b.execution.request.ref.contentDigest !== hash(b.execution.request.ir)
+          || handoff.request && equal(handoff.request.ref, b.execution.request.ref)
+            && !equal(handoff.request.ir, b.execution.request.ir)
+          || declared.members.length !== 1 || declared.members[0]!.request.recordKey !== serviceExecutionRecordKey(b)
+          || declared.members[0]!.semantic.operation !== "SERVICE_TRANSITION_V1"
+          || declared.members[0]!.request.applicationAccountId !== b.providerId)
+          throw Error("W3_NATIVE_READBACK_TERMS_MISMATCH");
+        const settled = handoff.settlements.some((r: { event: { detail: { status: string; requestRef: NativeRef } } }) =>
+          r.event.detail.status === "VERIFIED" && equal(r.event.detail.requestRef, b.execution.request.ref));
+        if (settled && equal(handoff.request?.ref, b.execution.request.ref)) state = "VERIFIED";
+        else state = handoff.attempts.length ? "UNKNOWN" : "NOT_ATTEMPTED";
+        originalIdentityReadback = true;
+      } catch (error) { gaps.push(safeCode(error) + ":" + b.obligationRef.id) }
+      for (const term of b.coveredTerms) effects.push({ ...term, ref: b.obligationRef, operation: b.operation, state,
+        originalIdentityReadback, invoiceSourceIds: b.paymentPlan.filter(p => p.instanceId === term.instanceId
+          && p.termsDigest === term.termsDigest).map(p => p.invoiceSource.sourceId) });
+    }
   }
   return { effects, gaps };
 }
@@ -339,6 +349,7 @@ export async function readServiceWork(ctx: PeMutationContext, raw: unknown) {
         program: null, projection: null, gaps: [safeCode(error)], originalDeadlineAt: row.original_deadline.toISOString() });
     }
   }
+  await serviceTx(ctx, c => authorizeServiceWork(ctx, input.workId, c));
   return { scope: { tenantId: ctx.auth.tenantId, principalId: ctx.auth.employeeId ?? ctx.auth.userId, workId: input.workId },
     requests, complete: true, qualification: "CONTROLLED_DEVELOPMENT_ONLY", admissionGranted: false, fieldValidated: false };
 }

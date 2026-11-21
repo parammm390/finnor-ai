@@ -148,27 +148,38 @@ await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_REA
       sessionB = submitted.response.body.sessionId;
       const scope = [parentB.tenantId, sessionB];
       const status = async () => (await q("SELECT status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", scope))[0];
+      const readRevocationCut = async () => (await q(`SELECT s.status,s.reason,
+        count(r.id)::int requests,
+        count(*) FILTER (WHERE r.status IN ('VERIFIED','DENIED'))::int settled,
+        count(*) FILTER (WHERE r.possible_egress AND r.status NOT IN ('VERIFIED','DENIED'))::int unresolved
+        FROM finnor_os.application_semantics_sessions s
+        LEFT JOIN finnor_os.application_semantics_requests r ON r.tenant_id=s.tenant_id AND r.session_id=s.id
+        WHERE s.tenant_id=$1 AND s.id=$2 GROUP BY s.status,s.reason`, scope))[0];
+      const readyToRevoke = cut => cut?.status === "ACQUIRING" && cut.settled >= 2 && cut.unresolved === 0;
       let revoked = [], progress = null;
       const raceDeadline = Date.now() + 600000;
       while (Date.now() < raceDeadline) {
-        progress = (await q(`SELECT s.status,s.reason,
-          (SELECT count(*)::int FROM finnor_os.application_semantics_requests r
-            WHERE r.tenant_id=s.tenant_id AND r.session_id=s.id) requests,
-          (SELECT r.id FROM finnor_os.application_semantics_requests r
-            WHERE r.tenant_id=s.tenant_id AND r.session_id=s.id AND r.status='POSSIBLE_EGRESS'
-              AND r.possible_egress AND r.observation_ref IS NULL ORDER BY r.created_at LIMIT 1) waiting
-          FROM finnor_os.application_semantics_sessions s WHERE s.tenant_id=$1 AND s.id=$2`, scope))[0];
+        progress = await readRevocationCut();
         if (TERMINAL.includes(progress?.status)) break;
-        if (progress?.requests >= 2 && progress.waiting) {
-          revoked = await q(`WITH cut AS (SELECT clock_timestamp() AS at)
-            UPDATE finnor_os.application_accounts a SET status='disabled' FROM cut
-            WHERE a.tenant_id=$1 AND a.id=ANY($5::uuid[]) AND a.application='x2_portal' AND a.status='active'
-              AND EXISTS (
-                SELECT 1 FROM finnor_os.application_semantics_sessions s
-                JOIN finnor_os.application_semantics_requests r ON r.tenant_id=s.tenant_id AND r.session_id=s.id
-                WHERE s.tenant_id=$1 AND s.id=$2 AND s.status<>ALL($3::text[]) AND r.id=$4
-                  AND r.status='POSSIBLE_EGRESS' AND r.possible_egress AND r.observation_ref IS NULL
-              ) RETURNING cut.at`, [...scope, TERMINAL, progress.waiting, applicationAccountIds]);
+        if (readyToRevoke(progress)) {
+          // The wire fence takes a share lock on this session before possible
+          // egress. Revocation must win that fence after prior outcomes settle.
+          await q("BEGIN");
+          try {
+            await q("SET LOCAL lock_timeout='250ms'");
+            await q("SELECT id FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2 FOR UPDATE NOWAIT", scope);
+            progress = await readRevocationCut();
+            if (readyToRevoke(progress)) {
+              revoked = await q(`UPDATE finnor_os.application_accounts SET status='disabled'
+                WHERE tenant_id=$1 AND id=ANY($2::uuid[]) AND application='x2_portal' AND status='active'
+                RETURNING statement_timestamp() AS at`, [parentB.tenantId, applicationAccountIds]);
+            }
+            await q("COMMIT");
+          } catch (error) {
+            await q("ROLLBACK");
+            if (error?.code !== "55P03") throw error;
+            revoked = [];
+          }
           if (revoked.length) break;
         }
         await sleep(50);
@@ -188,8 +199,9 @@ await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_REA
         .filter(event => event.type === "session.created" && Date.parse(event.at) > revocationAt.getTime()).length : null;
       const programmeUnchanged = Boolean(originalProgramme) && isDeepStrictEqual(originalProgramme, await programme());
       setup.B = { sessionId: sessionB, raceReached: revoked.length > 0, requestsObserved: progress?.requests ?? null,
+        settledRequests: progress?.settled ?? null, unresolvedRequests: progress?.unresolved ?? null,
         revokedAccounts: revoked.length, expectedAccounts: applicationAccountIds.length, final, requestsAfter, loginsAfter, programmeUnchanged };
-      setup.B.verified = check(c, "B.revocation.race", "B's accounts were disabled during an outstanding request after at least two requests, with a reasoned blocked settlement, no new requests or logins, and the original programme unchanged",
+      setup.B.verified = check(c, "B.revocation.race", "B's accounts were disabled during acquisition after at least two settled requests, with a reasoned blocked settlement, no new requests or logins, and the original programme unchanged",
         "O-SQL acquisition, account and programme rows plus the portal journal", setup.B,
         revoked.length > 0 && revoked.length === applicationAccountIds.length && BLOCKED.includes(final?.status)
           && Boolean(final.reason) && requestsAfter === 0 && loginsAfter === 0 && programmeUnchanged);

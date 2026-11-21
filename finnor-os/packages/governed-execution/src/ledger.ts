@@ -350,10 +350,31 @@ export class ExperienceLedger {
  }
  /** Read-only S6-owned contract for future semantic consumers. Its signature
   * authenticates accepted bytes and access qualification, never attribution. */
+ private assertHandoffReader(owner:Owner){
+  if(!owner.read||!['S6','S7','S8'].includes(owner.owner)||owner.owner!=='S6'&&(owner.append||owner.protectedExecution||owner.dispatch||owner.sealedAppend))deny(403,'CONSUMER_HANDOFF_REQUIRES_ATTENUATED_READER');
+ }
  async readExecutionHandoff(owner:Owner,obligationId:string){
-  if(!owner.read||!['S6','S7','S8'].includes(owner.owner)||owner.owner!=='S6'&&(owner.append||owner.protectedExecution||owner.dispatch||owner.sealedAppend))deny(403,'CONSUMER_HANDOFF_REQUIRES_ATTENUATED_READER');text(obligationId);
+  this.assertHandoffReader(owner);text(obligationId);
+  return this.serialized(async()=>{await this.integrity();return this.executionHandoffAtHead(owner,obligationId);});
+ }
+ async readExecutionHandoffs(owner:Owner,input:unknown){
+  this.assertHandoffReader(owner);
+  const request=object(input);exactKeys(request,['obligationIds']);
+  const ids=list(request.obligationIds,8).map(text);
+  if(!ids.length||new Set(ids).size!==ids.length)deny(400,'HANDOFF_BATCH_IDENTITIES_INVALID');
   return this.serialized(async()=>{
-   await this.integrity();const accepted=this.refs.get(refKey(owner.tenantId,obligationId));
+   await this.integrity();
+   const results=[];
+   for(const id of ids){
+    try{results.push({id,...await this.executionHandoffAtHead(owner,id)});}
+    catch(error){if(!(error instanceof LedgerFault)||error.status>=500)throw error;results.push({id,error:error.code});}
+   }
+   if(Buffer.byteLength(JSON.stringify({results}))>8*1024*1024)deny(413,'HANDOFF_BATCH_BYTE_BOUND');
+   return {results};
+  });
+ }
+ private async executionHandoffAtHead(owner:Owner,obligationId:string){
+   const accepted=this.refs.get(refKey(owner.tenantId,obligationId));
    if(!accepted||accepted.reference.owner!=='S6'||accepted.receipt.principalId!==owner.principalId)deny(404,'OBLIGATION_HANDOFF_NOT_FOUND');
    if(accepted.receipt.sealed&&!owner.sealedRead||accepted.receipt.rightsRefs.some(r=>!owner.rightsRefs.includes(r)))deny(403,'EVALUATOR_OR_RIGHTS_NOT_AUTHORIZED');
    const content=await this.loadContent(accepted.receipt),reference=[content.reference,...list(content.relatedReferences??[],255)].find(r=>r?.id===obligationId);
@@ -368,6 +389,5 @@ export class ExperienceLedger {
    const handoff={schema:'finnor.s6.consumer-handoff.v1',semanticOwner:'S6',version:'s6-consumer-handoff-v1',consumer:{semanticOwner:owner.owner,tenantId:owner.tenantId,principalId:owner.principalId,rightsRefs:owner.rightsRefs,sealedRead:owner.sealedRead,appendAuthorityGranted:false},obligation,obligationReceipt:accepted.receipt,request:intent?.event.detail.request??null,methodAdmissions:intent?.event.detail.request?.admissions??[],executorContract:s6AdapterContract('CONDITIONAL_JSON_RECORD_V1'),history,attempts:history.filter(row=>row.event.type==='ATTEMPT'),exposure:history.filter(row=>['ATTEMPT','ACKNOWLEDGMENT'].includes(row.event.type)),observations:history.filter(row=>row.event.type==='OBSERVATION'),settlements:history.filter(row=>row.event.type==='VERIFICATION'),costs:history.map(row=>({eventId:row.event.eventId,costs:row.event.detail.costs,funding:row.event.detail.funding??null})),references:refs,checkpoint:{sequence:this.last?.sequence??0,checkpointDigest:this.last?.checkpointDigest??null},release:this.releaseIdentity(),witness:this.witnessedHead??null,evaluatorAccess:{sealedContentIncluded:owner.sealedRead,independentReleaseEstablished:false},horizons:{accepted:history.map(row=>({eventId:row.event.eventId,horizon:row.event.horizon})),futureH1H2Attribution:'NOT_ESTABLISHED_BY_S6_TRANSPORT'},attributionGranted:false,resourceReleaseGranted:false,executionAuthorityGranted:false,knowledgeAt:new Date().toISOString()};
    if(Buffer.byteLength(canonical(handoff))>8*1024*1024)deny(413,'CONSUMER_HANDOFF_BYTE_BOUND');
    return {handoff,signature:this.signed(handoff).signature};
-  });
  }
 }
