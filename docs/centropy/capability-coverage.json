@@ -8,8 +8,8 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-19T21:08:25.224Z",
-  "sourceBaseCommit": "30bd9b87e0ab7e1d6644c3400cf141c353d70f5a",
+  "generatedAt": "2026-11-21T17:06:37.722Z",
+  "sourceBaseCommit": "f49f86e2c7588676e33568ff7828f2f4aad38e47",
   "manifestSha256": "e68051fd74494792ebb66d7156bae1b6ac5ef64e369d60057bc4c596fb0aebe3",
   "formsSha256": "35b57673d9d86e461f2b6056aaf326cb789901dfdd4481734aefef91da8052fd",
   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -578,21 +578,21 @@
       "file": "src/components/centropy/canvas/use-canvas-sources.ts",
       "route": "works/:ref",
       "method": "GET",
-      "line": 39,
+      "line": 44,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
       "file": "src/components/centropy/canvas/use-canvas-sources.ts",
       "route": "investment-cases/:ref/underwriting",
       "method": "GET",
-      "line": 74,
+      "line": 79,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
       "file": "src/components/centropy/canvas/use-canvas-sources.ts",
       "route": "private-equity/ic/cases/:ref",
       "method": "GET",
-      "line": 88,
+      "line": 93,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
@@ -1525,7 +1525,7 @@
       },
       {
         "file": "src/components/centropy/canvas/use-canvas-sources.ts",
-        "sha256": "ee27c9b8bc09498941d562c3f6e2f00c45e24d02686f6ff26132b6f23e8f6e48"
+        "sha256": "fc9346d6089ed52f222ec4e5d09e87ddc51123c6e248081c84eb7962e06dab95"
       },
       {
         "file": "src/components/centropy/world/WorldExplorer.tsx",
@@ -4860,7 +4860,7 @@
           "file": "src/components/centropy/canvas/use-canvas-sources.ts",
           "route": "investment-cases/:ref/underwriting",
           "method": "GET",
-          "line": 74,
+          "line": 79,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -5997,7 +5997,7 @@
           "file": "src/components/centropy/canvas/use-canvas-sources.ts",
           "route": "private-equity/ic/cases/:ref",
           "method": "GET",
-          "line": 88,
+          "line": 93,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -8411,7 +8411,7 @@
           "file": "src/components/centropy/canvas/use-canvas-sources.ts",
           "route": "works/:ref",
           "method": "GET",
-          "line": 39,
+          "line": 44,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
@@ -29562,7 +29562,7 @@
           "file": "src/components/centropy/canvas/use-canvas-sources.ts",
           "route": "company-brain/projection",
           "method": "POST",
-          "line": 60,
+          "line": 65,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],

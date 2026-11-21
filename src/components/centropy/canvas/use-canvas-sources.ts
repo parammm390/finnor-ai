@@ -12,23 +12,28 @@ const idle = <T,>(): SourceState<T> => ({ data: null, status: "idle", error: nul
 
 /** Loads only sources relevant to the selected Investigation. Previous data is never shown for a different identity. */
 export function useCanvasSources(workId: string | null, root: PeWorldRootRef | null, enabled: boolean, revision: number, underwritingRevision = 0, icCaseOverride: string | null = null) {
+  const rootType = root?.entityType
+  const rootId = root?.entityId
+  const rootKey = rootType && rootId ? `${rootType}:${rootId}` : null
   const { key: scopeKey, isCurrent, allowed } = usePrivateRequestScope(`${workId ?? "none"}:${root?.entityType ?? "none"}:${root?.entityId ?? "none"}`)
   const { key: workScopeKey, isCurrent: isWorkCurrent, allowed: workAllowed } = usePrivateRequestScope(workId ?? "no-work")
+  const { key: graphScopeKey, isCurrent: isGraphCurrent, allowed: graphAllowed } = usePrivateRequestScope(rootKey ?? "no-root")
   enabled = enabled && allowed
   const workEnabled = enabled && workAllowed
+  const graphEnabled = enabled && graphAllowed
   const [work, setWork] = useState<SourceState<WorkAggregateView>>(idle)
   const [projection, setProjection] = useState<SourceState<CompanyBrainProjection>>(idle)
   const [underwriting, setUnderwriting] = useState<SourceState<UnderwritingWorkspace>>(idle)
   const [ic, setIc] = useState<SourceState<IcWorkspace>>(idle)
-  const rootKey = root ? `${root.entityType}:${root.entityId}` : null
+  const currentProjection = graphEnabled && projection.key === rootKey && projection.scope === graphScopeKey ? projection : idle<CompanyBrainProjection>()
   const dealId = root?.entityType === "pe_deal" ? root.entityId : null
-  const caseId = projection.key === rootKey && projection.scope === scopeKey ? projection.data?.nodes.find((node) => node.type === "pe_investment_case")?.ref.id ?? null : null
+  const caseId = currentProjection.data?.nodes.find((node) => node.type === "pe_investment_case")?.ref.id ?? null
   const currentWork = workEnabled && work.key === workId && work.scope === workScopeKey ? work : idle<WorkAggregateView>()
   const workDeck = verifiedWorkDeck(currentWork.data, dealId)
   const workIcCaseId = verifiedWorkIcCase(currentWork.data, dealId)
   const icCaseId = dealId && icCaseOverride ? icCaseOverride : workIcCaseId
     ?? workDeck?.caseId
-    ?? (projection.key === rootKey && projection.scope === scopeKey ? projection.data?.nodes.find((node) => node.type === "pe_ic_case")?.ref.id ?? null : null)
+    ?? currentProjection.data?.nodes.find((node) => node.type === "pe_ic_case")?.ref.id ?? null
 
   useEffect(() => {
     if (!workEnabled || !workId) { setWork(idle()); return }
@@ -54,18 +59,18 @@ export function useCanvasSources(workId: string | null, root: PeWorldRootRef | n
   }, [workEnabled, revision, workId, workScopeKey, isWorkCurrent])
 
   useEffect(() => {
-    if (!enabled || !root || !rootKey) { setProjection(idle()); return }
+    if (!graphEnabled || !rootType || !rootId || !rootKey) { setProjection(idle()); return }
     let active = true
-    setProjection((previous) => ({ data: previous.key === rootKey && previous.scope === scopeKey ? previous.data : null, key: rootKey, scope: scopeKey, status: "loading", error: null }))
-    void centropyPost<CompanyBrainProjection>("company-brain/projection", { root: { entityType: root.entityType, entityId: root.entityId } }).then((result) => {
-      if (!active || !isCurrent(scopeKey)) return
-      if (result.root?.entityType !== root.entityType || result.root?.entityId !== root.entityId || !Array.isArray(result.nodes)) throw new Error("Company Brain response did not match the selected context")
-      setProjection({ data: result, status: "ready", error: null, key: rootKey, scope: scopeKey })
+    setProjection((previous) => ({ data: previous.key === rootKey && previous.scope === graphScopeKey ? previous.data : null, key: rootKey, scope: graphScopeKey, status: "loading", error: null }))
+    void centropyPost<CompanyBrainProjection>("company-brain/projection", { root: { entityType: rootType, entityId: rootId } }).then((result) => {
+      if (!active || !isGraphCurrent(graphScopeKey)) return
+      if (result.root?.entityType !== rootType || result.root?.entityId !== rootId || !Array.isArray(result.nodes)) throw new Error("Company Brain response did not match the selected context")
+      setProjection({ data: result, status: "ready", error: null, key: rootKey, scope: graphScopeKey })
     }).catch((cause) => {
-      if (active && isCurrent(scopeKey)) setProjection({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Company Brain unavailable", key: rootKey, scope: scopeKey })
+      if (active && isGraphCurrent(graphScopeKey)) setProjection({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Company Brain unavailable", key: rootKey, scope: graphScopeKey })
     })
     return () => { active = false }
-  }, [enabled, revision, rootKey, root, scopeKey, isCurrent])
+  }, [graphEnabled, revision, rootKey, rootType, rootId, graphScopeKey, isGraphCurrent])
 
   useEffect(() => {
     if (!enabled || !caseId) { setUnderwriting(idle()); return }
@@ -97,7 +102,7 @@ export function useCanvasSources(workId: string | null, root: PeWorldRootRef | n
 
   return {
     work: currentWork,
-    projection: enabled && projection.scope === scopeKey && projection.key === rootKey ? projection : idle<CompanyBrainProjection>(),
+    projection: currentProjection,
     underwriting: enabled && underwriting.scope === scopeKey && underwriting.key === caseId ? underwriting : idle<UnderwritingWorkspace>(),
     ic: enabled && ic.scope === scopeKey && ic.key === icCaseId ? ic : idle<IcWorkspace>(),
   }

@@ -2,7 +2,7 @@ name: "Z0 - Work display, reload, sign-in and privacy"
 
 on:
   push:
-    branches: [codex/project-z0-resume, codex/project-z0-identity, codex/project-z0-useful, codex/project-z0-r12, codex/project-z0-mounted, codex/project-z0-recovery, codex/project-z0-economic, codex/project-z0-confidential, codex/zw-integration-quality-20261115]
+    branches: [codex/project-z0-resume, codex/project-z0-identity, codex/project-z0-useful, codex/project-z0-r12, codex/project-z0-mounted, codex/project-z0-recovery, codex/project-z0-economic, codex/project-z0-confidential, codex/zw-integration-quality-20261115, codex/zw-release-proof-20261121]
 
 permissions:
   contents: read
@@ -60,10 +60,10 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - name: Install the locked Chromium build
-        if: github.ref_name == 'codex/project-z0-mounted' || github.ref_name == 'codex/zw-integration-quality-20261115'
+        if: github.ref_name == 'codex/project-z0-mounted' || (github.ref_name == 'codex/zw-integration-quality-20261115' || github.ref_name == 'codex/zw-release-proof-20261121')
         run: PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/z0-chromium" node node_modules/playwright/cli.js install --with-deps chromium
       - name: Compare real Canvas activation before and after the repair
-        if: github.ref_name == 'codex/zw-integration-quality-20261115'
+        if: (github.ref_name == 'codex/zw-integration-quality-20261115' || github.ref_name == 'codex/zw-release-proof-20261121')
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/z0-chromium
         run: |
@@ -84,7 +84,7 @@ jobs:
           JS
           node scripts/centropy/verify-canvas-activation.mjs "$RUNNER_TEMP/canvas-after"
       - name: Compare actual Workspace refresh, private scope and late responses
-        if: github.ref_name == 'codex/zw-integration-quality-20261115'
+        if: (github.ref_name == 'codex/zw-integration-quality-20261115' || github.ref_name == 'codex/zw-release-proof-20261121')
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/z0-chromium
         run: |
@@ -106,7 +106,7 @@ jobs:
           JS
           node scripts/centropy/verify-workspace-refresh.mjs "$RUNNER_TEMP/workspace-after"
       - name: Retain Canvas comparison receipts
-        if: ${{ always() && github.ref_name == 'codex/zw-integration-quality-20261115' }}
+        if: ${{ always() && (github.ref_name == 'codex/zw-integration-quality-20261115' || github.ref_name == 'codex/zw-release-proof-20261121') }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: canvas-activation-${{ github.run_id }}-${{ github.run_attempt }}
@@ -135,6 +135,7 @@ jobs:
           scenario=z0-session.mjs
           profiles=z0
           launch_args=()
+          affinity=(taskset -c 0,1)
           if [ "$GITHUB_REF_NAME" = "codex/project-z0-identity" ]; then
             scenario=z0-d1-session.mjs
           elif [ "$GITHUB_REF_NAME" = "codex/project-z0-confidential" ]; then
@@ -145,8 +146,9 @@ jobs:
           elif [ "$GITHUB_REF_NAME" = "codex/project-z0-r12" ]; then
             scenario=z0-r12-session.mjs
             profiles=v2
-          elif [ "$GITHUB_REF_NAME" = "codex/project-z0-mounted" ] || [ "$GITHUB_REF_NAME" = "codex/zw-integration-quality-20261115" ]; then
+          elif [ "$GITHUB_REF_NAME" = "codex/project-z0-mounted" ] || [ "$GITHUB_REF_NAME" = "codex/zw-integration-quality-20261115" ] || [ "$GITHUB_REF_NAME" = "codex/zw-release-proof-20261121" ]; then
             scenario=z0-mounted-session.mjs
+            affinity=()
             export PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/z0-chromium"
             launch_args+=(--budget-ms=3300000)
           elif [ "$GITHUB_REF_NAME" = "codex/project-z0-recovery" ]; then
@@ -164,7 +166,7 @@ jobs:
             esac
           fi
           install -d -m 700 "$GITHUB_WORKSPACE/.centropy-certification"
-          taskset -c 0,1 node scripts/project-z/run-native-scenario.mjs \
+          "${affinity[@]}" node scripts/project-z/run-native-scenario.mjs \
             --name="z0-ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
             --evidence="$RUNNER_TEMP/z0-native" --profiles="$profiles" --no-worker --forward-env=FINNOR_Z0_MODE \
             --forward-env=PLAYWRIGHT_BROWSERS_PATH --forward-env=FINNOR_Z0_DEPENDENCY \
@@ -277,7 +279,8 @@ jobs:
           const browserStages = new Set(['START_BROWSER', 'SIGN_IN', 'CONFIRM_IDENTITY', 'OPEN_ORIGINAL_WORK',
             'READ_OWNER_ORACLE', 'READ_INITIAL_PANELS', 'FIRST_RELOAD', 'SECOND_RELOAD', 'CHECK_RELOADED_PANELS',
             'START_REFRESH_BROWSER', 'SIGN_IN_FOR_REFRESH', 'OPEN_WORK_FOR_REFRESH', 'ADVANCE_REFRESH_CLOCK', 'READ_WORK_AFTER_REFRESH',
-            'BEFORE_LOGOUT_WORK', 'AUTH_LOGOUT', 'SIGN_IN_AGAIN', 'OPEN_WORK_AFTER_SIGN_IN', 'CHECK_RESTORED_WORK'])
+            'BEFORE_LOGOUT_WORK', 'AUTH_LOGOUT', 'SIGN_IN_AGAIN', 'OPEN_WORK_AFTER_SIGN_IN', 'CHECK_RESTORED_WORK',
+            'CONFIRM_ORIGINAL_OWNER', 'SWITCH_PRINCIPAL_WITH_HELD_READ'])
           const browserProbeCauses = new Set(['NAVIGATION_CONTEXT_DESTROYED', 'PAGE_OR_BROWSER_CLOSED',
             'EVALUATOR_HELPER_MISSING', 'PAGE_EVALUATOR_REFERENCE_ERROR', 'PAGE_EVALUATOR_SYNTAX_ERROR',
             'EVALUATION_TIMEOUT', 'BROWSER_PROTOCOL_ERROR', 'OTHER_EVALUATE_FAILURE'])
@@ -461,6 +464,7 @@ jobs:
             'codex/project-z0-r12': ['R12-02', 'R12-03', 'R12-04'],
             'codex/project-z0-mounted': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),
             'codex/zw-integration-quality-20261115': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),
+            'codex/zw-release-proof-20261121': Array.from({ length: 11 }, (_, index) => 'M-' + String(index).padStart(2, '0')),
             'codex/project-z0-recovery': recoveryRequired,
           })[process.env.GITHUB_REF_NAME] ?? continuation
           const mountedCaseTitles = {

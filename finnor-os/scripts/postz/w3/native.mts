@@ -2155,7 +2155,15 @@ try {
   }
   }
 } catch (error) {
-  await artifact("terminal-failure.json", { message: error instanceof Error ? error.message : String(error),
+  const message = error instanceof Error ? error.message : String(error);
+  if (integratedCompany) {
+    const predicate = /^(W(?:[1-5]|049)_[A-Z0-9_]{2,120})(?=[:\s]|$)/.exec(message)?.[1];
+    const driverLine = error instanceof Error
+      ? /[\\/]postz[\\/]w3[\\/]native\.mts:(\d{1,4}):\d+/.exec(error.stack ?? "")?.[1] : undefined;
+    console.error(JSON.stringify({ event: "PHASE_W_NATIVE_FAILED", predicate: predicate ?? null,
+      driverLine: driverLine ? Number(driverLine) : null }));
+  }
+  await artifact("terminal-failure.json", { message,
     stack: error instanceof Error ? error.stack : null }); terminalExit = 1;
   if (admin && !organizationNativePhaseClosed) {
     try {

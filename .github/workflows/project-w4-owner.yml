@@ -1,7 +1,7 @@
 name: W4 original commercial owner
 on:
   push:
-    branches: [codex/project-w4-owner-ci, codex/zw-integration-quality-20261115]
+    branches: [codex/project-w4-owner-ci, codex/zw-integration-quality-20261115, codex/zw-release-proof-20261121]
 permissions:
   contents: read
 concurrency:
@@ -114,10 +114,19 @@ jobs:
           const lastDelivery = deliveryFiles.length ? json(join(deliveryDir, deliveryFiles.at(-1))) : null
           const safeStatus = value => typeof value === 'string' && /^[A-Z][A-Z0-9_]{1,100}$/.test(value) ? value : 'UNCLASSIFIED'
           const outstanding = Array.isArray(lastDelivery?.unresolved) ? lastDelivery.unresolved : []
+          const knownOwners = new Set(['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'BUSINESS_OWNER'])
+          const originKinds = new Map()
+          for (const origin of lastDelivery?.unresolvedOrigins ?? []) {
+            const owner = knownOwners.has(origin.semantic_owner) ? origin.semantic_owner : 'OTHER_REGISTERED_OWNER'
+            const kind = ['EVENT', 'REFERENCE'].includes(origin.kind) ? origin.kind : 'UNKNOWN'
+            const key = `${owner}:${kind}`
+            originKinds.set(key, (originKinds.get(key) ?? 0) + 1)
+          }
           const lastBatches = Array.isArray(lastDelivery?.batches) ? lastDelivery.batches : []
           const deliveryEvidence = lastDelivery ? {
             rounds: [...new Set(lastBatches.map(row => row.round).filter(Number.isInteger))].length,
             pending: outstanding.length,
+            unresolvedByOwnerAndKind: Object.fromEntries(originKinds),
             statuses: Object.fromEntries([...new Set(outstanding.map(row => safeStatus(row.status)))]
               .map(status => [status, outstanding.filter(row => safeStatus(row.status) === status).length])),
             lastErrors: Object.fromEntries([...new Set(outstanding.map(row => safeStatus(row.lastError)).filter(x => x !== 'UNCLASSIFIED'))]

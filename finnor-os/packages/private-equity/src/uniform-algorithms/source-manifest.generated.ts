@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "e7fb50b41e22cafa5eaf6e7690185b1bc9067090ebf4e4f9162175b51e33b2b6"
+      "sha256": "9ce000ef9e963c27c9badb7c625ea565c1b56d289ab5bdf254adbfb4d2092594"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -4604,7 +4604,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/use-canvas-sources.ts",
-      "sha256": "ee27c9b8bc09498941d562c3f6e2f00c45e24d02686f6ff26132b6f23e8f6e48"
+      "sha256": "fc9346d6089ed52f222ec4e5d09e87ddc51123c6e248081c84eb7962e06dab95"
     },
     {
       "path": "src/components/centropy/controls/ArtifactCreationDesk.tsx",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "b590d03e759e24829b1977a7b4230d1693c8acfd897de42797f45d1aea996f8e"
+  "sourceDigest": "1dec3dbc8cce096cb9d0d88fdf4b6ea6735b1d3a87e02066341281df2c15b10d"
 } as const;

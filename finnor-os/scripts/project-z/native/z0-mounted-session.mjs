@@ -859,21 +859,13 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
 await runCase("M-10", ["Z0-R09-C06"], "Delayed old-principal response (owned database lock hold)", async c => {
   if (!referenceTruthA) notRun("M-01_DID_NOT_READ_THE_ORIGINAL_WORK");
   if (!foreignCreds) notRun("FOREIGN_OWNER_NOT_SEEDED");
-  // Start the delayed-response case with its own authenticated original scope.
-  // This case follows the separate fake-clock token refresh context.
-  await context.close();
-  context = await newMountedContext(browser);
-  page = await context.newPage();
-  watch.attach(page, "delayed-original", authOrigin);
-  c.observations.browserStage = "SIGN_IN_ORIGINAL_OWNER";
-  const original = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
-  check(c, "original.identity", "real sign-in matches the original owner and tenant", "O-API /me",
-    { status: original.meStatus }, original.meStatus === 200
-      && original.identity?.tenantId === parentA.tenantId && original.identity?.userId === parentA.ownerId);
-  c.observations.browserStage = "OPEN_ORIGINAL_WORK";
-  await openWork(page, threadA.id, parentA.workId);
+  c.observations.browserStage = "CONFIRM_ORIGINAL_OWNER";
+  await ensureOwnerOnWork("A");
   const markers = [...referenceTruthA.markers, { label: "threadTitle", value: threadA.title }];
   const prior = await storageScan(page, context, markers);
+  const original = prior.accessToken ? await idpUserId(env, prior.accessToken) : { status: 0, id: null };
+  check(c, "original.identity", "the active browser session opens the original Work and the identity provider confirms the original owner",
+    "Real Auth /auth/v1/user and mounted original Work", { status: original.status }, original.status === 200 && original.id === parentA.ownerId);
   const secrets = [{ label: "previousRefreshToken", value: prior.refreshToken }];
   const lock = new pg.Client({ connectionString: env.CENTROPY_E2E_DB_ADMIN_URL });
   await lock.connect();
@@ -895,6 +887,7 @@ await runCase("M-10", ["Z0-R09-C06"], "Delayed old-principal response (owned dat
     check(c, "hold.in-flight", "a Postgres backend is waiting on the lock with the sessions query and the browser's projection request has no response yet", "O-SQL pg_stat_activity + browser request watch",
       { waiting: hold ? { state: hold.state, waitEventType: hold.wait_event_type } : null, requests: inflight.map(r => ({ status: r.status ?? null, failure: r.failure ?? null })) },
       Boolean(hold) && inflight.length >= 1 && inflight.every(row => row.status === undefined));
+    c.observations.browserStage = "SWITCH_PRINCIPAL_WITH_HELD_READ";
     await uiSignOut(page);
     const signedOutAt = Date.now() - tLock;
     const login = await uiSignIn(page, foreignCreds.email, foreignCreds.password, watch);
