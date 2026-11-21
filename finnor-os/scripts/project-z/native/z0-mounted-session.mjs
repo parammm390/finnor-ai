@@ -10,7 +10,7 @@
  * supabase-js refresh against the real Auth after the page clock is advanced.
  */
 import { execFileSync } from "node:child_process";
-import { chmodSync, mkdirSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { isDeepStrictEqual } from "node:util";
@@ -103,6 +103,7 @@ for (const route of ["institution-mandate", "institution-register-source", "inst
 const setup = { workerOwned: Boolean(worker), A: null, B: null, foreign: null, errors: [] };
 let parentA = null, acqA = null, threadA = null, parentB = null, sessionB = null, threadB = null, acquisitionB = null, foreignCreds = null, foreignRow = null;
 const TERMINAL = ["MODEL_READY", "FAILED", "BLOCKED", "UNKNOWN", "STALE", "CANCELLED"];
+const BLOCKED = ["FAILED", "BLOCKED", "STALE"];
 const tagA = "ma" + randomUUID().slice(0, 6), tagB = "mb" + randomUUID().slice(0, 6);
 let witnessBefore = null, ownerCutBeforeMounted = null, workStatusBeforeMounted = null;
 
@@ -134,26 +135,67 @@ await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_REA
     parentB = await createOriginalInstitutionParent(env, { record, tag: tagB, resourcePool });
     await confirmRoot("B", parentB);
     if (parentA.parentReservation.id === parentB.parentReservation.id) throw Error("MOUNTED_FIXTURE_REUSED_A_RESERVATION");
-    const submitted = await submitInstitutionAcquisition(env, parentB, { privateRoot, record }, owner);
-    acquisitionB = submitted.request;
-    if (submitted.response.status !== 202) { await submitted.handle.portal.stop(); throw Error("B_ACQUIRE_" + submitted.response.status); }
-    sessionB = submitted.response.body.sessionId;
-    const status = async () => (await q("SELECT status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", [parentB.tenantId, sessionB]))[0];
-    const requests = async () => (await q("SELECT count(*)::int n FROM finnor_os.application_semantics_requests WHERE tenant_id=$1 AND session_id=$2", [parentB.tenantId, sessionB]))[0].n;
-    let reached = false;
-    for (let i = 0; i < 12000 && !reached; i++) {
-      if (TERMINAL.includes((await status())?.status)) break;
-      if (await requests() >= 2) { reached = true; break; }
-      await sleep(50);
+    const programme = async () => (await q("SELECT status,generation FROM finnor_os.p1_requests WHERE tenant_id=$1 AND id=$2",
+      [parentB.tenantId, parentB.programId]))[0];
+    const originalProgramme = await programme();
+    // The existing disposable portal delay leaves time to observe the actual
+    // outbound request. It does not supply an application response or result.
+    const submitted = await submitInstitutionAcquisition(env, parentB, { privateRoot, record, portalReadbackDelayMs: 3000 }, owner);
+    const { portal, applicationAccountIds } = submitted.handle;
+    try {
+      acquisitionB = submitted.request;
+      if (submitted.response.status !== 202) throw Error("B_ACQUIRE_" + submitted.response.status);
+      sessionB = submitted.response.body.sessionId;
+      const scope = [parentB.tenantId, sessionB];
+      const status = async () => (await q("SELECT status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2", scope))[0];
+      let revoked = [], progress = null;
+      const raceDeadline = Date.now() + 600000;
+      while (Date.now() < raceDeadline) {
+        progress = (await q(`SELECT s.status,s.reason,
+          (SELECT count(*)::int FROM finnor_os.application_semantics_requests r
+            WHERE r.tenant_id=s.tenant_id AND r.session_id=s.id) requests,
+          (SELECT r.id FROM finnor_os.application_semantics_requests r
+            WHERE r.tenant_id=s.tenant_id AND r.session_id=s.id AND r.status='POSSIBLE_EGRESS'
+              AND r.possible_egress AND r.observation_ref IS NULL ORDER BY r.created_at LIMIT 1) waiting
+          FROM finnor_os.application_semantics_sessions s WHERE s.tenant_id=$1 AND s.id=$2`, scope))[0];
+        if (TERMINAL.includes(progress?.status)) break;
+        if (progress?.requests >= 2 && progress.waiting) {
+          revoked = await q(`WITH cut AS (SELECT clock_timestamp() AS at)
+            UPDATE finnor_os.application_accounts a SET status='disabled' FROM cut
+            WHERE a.tenant_id=$1 AND a.id=ANY($5::uuid[]) AND a.application='x2_portal' AND a.status='active'
+              AND EXISTS (
+                SELECT 1 FROM finnor_os.application_semantics_sessions s
+                JOIN finnor_os.application_semantics_requests r ON r.tenant_id=s.tenant_id AND r.session_id=s.id
+                WHERE s.tenant_id=$1 AND s.id=$2 AND s.status<>ALL($3::text[]) AND r.id=$4
+                  AND r.status='POSSIBLE_EGRESS' AND r.possible_egress AND r.observation_ref IS NULL
+              ) RETURNING cut.at`, [...scope, TERMINAL, progress.waiting, applicationAccountIds]);
+          if (revoked.length) break;
+        }
+        await sleep(50);
+      }
+      let final = await status();
+      if (revoked.length) {
+        for (let i = 0; i < 120 && !TERMINAL.includes(final?.status); i++) {
+          await sleep(2500);
+          final = await status();
+        }
+      }
+      const revocationAt = revoked[0]?.at;
+      const requestsAfter = revocationAt ? (await q(`SELECT count(*)::int n FROM finnor_os.application_semantics_requests
+        WHERE tenant_id=$1 AND session_id=$2 AND created_at>$3`, [...scope, revocationAt]))[0].n : null;
+      const loginsAfter = revocationAt ? readFileSync(join(portal.dir, "provider", "journal.ndjson"), "utf8")
+        .trim().split("\n").flatMap(line => JSON.parse(line).events ?? [])
+        .filter(event => event.type === "session.created" && Date.parse(event.at) > revocationAt.getTime()).length : null;
+      const programmeUnchanged = Boolean(originalProgramme) && isDeepStrictEqual(originalProgramme, await programme());
+      setup.B = { sessionId: sessionB, raceReached: revoked.length > 0, requestsObserved: progress?.requests ?? null,
+        revokedAccounts: revoked.length, expectedAccounts: applicationAccountIds.length, final, requestsAfter, loginsAfter, programmeUnchanged };
+      setup.B.verified = check(c, "B.revocation.race", "B's accounts were disabled during an outstanding request after at least two requests, with a reasoned blocked settlement, no new requests or logins, and the original programme unchanged",
+        "O-SQL acquisition, account and programme rows plus the portal journal", setup.B,
+        revoked.length > 0 && revoked.length === applicationAccountIds.length && BLOCKED.includes(final?.status)
+          && Boolean(final.reason) && requestsAfter === 0 && loginsAfter === 0 && programmeUnchanged);
+    } finally {
+      await portal.stop();
     }
-    let revoked = [];
-    if (reached) revoked = await q("UPDATE finnor_os.application_accounts SET status='disabled' WHERE tenant_id=$1 AND application='x2_portal' AND status<>'disabled' AND account_key LIKE $2 RETURNING id", [parentB.tenantId, `x2-%-${tagB}-%`]);
-    let final = null;
-    for (let i = 0; i < 120; i++) { final = await status(); if (TERMINAL.includes(final?.status)) break; await sleep(2500); }
-    await submitted.handle.portal.stop().catch(() => undefined);
-    setup.B = { sessionId: sessionB, raceReached: reached, revokedAccounts: revoked.length, final };
-    check(c, "B.revocation.race", "revocation reached while the acquisition was in flight and B settled in a non-ready terminal state", "O-SQL sessions/application_accounts",
-      setup.B, reached && revoked.length > 0 && TERMINAL.includes(final?.status) && final.status !== "MODEL_READY");
     const titleB = `Z0 mounted blocked ${tagB} ${randomUUID().slice(0, 8)}`;
     const createdB = await owner.call("/api/threads", { title: titleB, workId: parentB.workId });
     threadB = { id: createdB.body?.thread?.id, title: createdB.body?.thread?.title ?? titleB };
@@ -221,7 +263,7 @@ await runCase("M-00", [], "Preconditions: worker, original parent A at MODEL_REA
   setup.A = { tag: tagA, workId: parentA.workId, dealId: parentA.dealId, sessionId: acqA.sessionId, threadId: threadA.id, status: row?.status };
   setup.foreign = foreignRow;
 });
-const setupOk = cases[0]?.outcome === "PASS";
+const aReady = Boolean(setup.A) && cases[0].checks.filter(entry => entry.id.startsWith("A.")).every(entry => entry.pass);
 const rootA = parentA ? { entityType: "pe_deal", entityId: parentA.dealId } : null;
 const ownerCreds = { email: env.TEST_OWNER_EMAIL, password: env.TEST_OWNER_PASSWORD };
 
@@ -359,7 +401,7 @@ const mutationsOf = (c, mark, allowed = 0) => {
 
 /* ---- M-01 */
 await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows original mandate/Work, terms, remaining resources, requested computation", async c => {
-  if (!setupOk) notRun("M-00_PRECONDITIONS_NOT_MET");
+  if (!aReady) notRun("ORIGINAL_A_PRECONDITIONS_NOT_MET");
   c.observations.browserStage = "START_BROWSER";
   await startBrowser();
   const mark = watch.mark();
@@ -540,9 +582,9 @@ await runCase("M-03", ["Z0-R45-C02"], "Claim basis classes are distinguishable a
 
 /* ---- M-04 */
 await runCase("M-04", ["Z0-R45-C03", "Z0-R09-C01"], "Blocked/needs-action state survives reload (B: revoked acquisition)", async c => {
-  if (!setupOk || !parentB || !threadB?.id) notRun("PARENT_B_NOT_AVAILABLE");
+  if (!parentB || !threadB?.id) notRun("PARENT_B_NOT_AVAILABLE");
   if (!page) notRun("BROWSER_NOT_STARTED");
-  if (!setup.B?.raceReached || !TERMINAL.includes(setup.B.final?.status) || setup.B.final.status === "MODEL_READY") notRun("REVOCATION_RACE_NOT_REACHED");
+  if (!setup.B?.verified) notRun(setup.B?.raceReached ? "REVOCATION_OUTCOME_NOT_VERIFIED" : "REVOCATION_RACE_NOT_REACHED");
   const mark = watch.mark();
   const beforeOpen = await mountedOwnerCut(q, parentB, sessionB, null);
   const ownerCuts = c.observations.ownerCuts = { beforeOpen };
@@ -606,7 +648,7 @@ await runCase("M-04", ["Z0-R45-C03", "Z0-R09-C01"], "Blocked/needs-action state 
 
 /* ---- M-05 */
 await runCase("M-05", ["Z0-R09-C02", "Z0-R45-C04"], "Work/root switch through the real Investigations drawer", async c => {
-  if (!referenceTruthA || !parentB || !threadB?.id) notRun("PARENT_A_OR_B_NOT_AVAILABLE");
+  if (!referenceTruthA || !parentB || !threadB?.id || !setup.B?.verified) notRun("PARENT_A_OR_B_NOT_AVAILABLE");
   const mark = watch.mark();
   await ensureOwnerOnWork("A");
   const truthB = await readOwnerTruth({ q, owner, parent: parentB, sessionId: sessionB, acquisitionInput: acquisitionB });
@@ -827,6 +869,9 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
       const rows = clockWatch.since(mark).filter(row => row.kind === "auth-token" && /grant_type=refresh_token/.test(row.query) && row.status !== undefined);
       return rows.length ? rows : null;
     }, 500).catch(() => null);
+    // The clock jump initiates the real Auth exchange. Continuing an hour ahead
+    // would place the newly issued server-time token in the refresh window again.
+    await clockPage.clock.setSystemTime(new Date());
     check(c, "refresh.observed", "the browser performed a real refresh_token grant against the real Auth and it answered 200", "browser request watch (page.on) + O-IDP",
       { requests: refresh?.map(row => ({ status: row.status, path: row.path })) ?? [] }, Boolean(refresh) && refresh.every(row => row.status === 200));
     await sleep(2000);
@@ -848,7 +893,10 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
     c.observations.fullSignatureEqualsReference = signature(f) === referenceSignature;
     const summary = clockWatch.summary(mark);
     c.observations.requests = summary;
-    check(c, "no-mutating-requests", "0 mutating browser requests; every observed refresh is a real 200 grant", "browser request watch", { mutations: summary.mutations, otherNonGet: summary.otherNonGet, authToken: summary.authToken }, summary.mutations === 0 && summary.otherNonGet === 0);
+    const refreshGrants = clockWatch.since(mark).filter(row => row.kind === "auth-token" && /grant_type=refresh_token/.test(row.query));
+    check(c, "no-mutating-requests", "0 mutating browser requests and exactly one real 200 refresh grant", "browser request watch", {
+      mutations: summary.mutations, otherNonGet: summary.otherNonGet, refreshGrants: refreshGrants.map(row => row.status ?? null),
+    }, summary.mutations === 0 && summary.otherNonGet === 0 && refreshGrants.length === 1 && refreshGrants[0].status === 200);
   } finally {
     await clockContext.close().catch(() => undefined);
     if (!page.isClosed()) await page.bringToFront().catch(() => undefined);
@@ -870,30 +918,35 @@ await runCase("M-10", ["Z0-R09-C06"], "Delayed old-principal response (owned dat
   const lock = new pg.Client({ connectionString: env.CENTROPY_E2E_DB_ADMIN_URL });
   await lock.connect();
   let released = null;
-  const release = async by => { if (released) return; released = { by, atMs: Date.now() - tLock }; await lock.query("COMMIT").catch(() => undefined); };
+  let releaseTask;
   let tLock = Date.now();
+  let releaseTimer;
+  const release = by => releaseTask ??= lock.query("COMMIT").then(result => {
+    if (result.command !== "COMMIT") throw Error("Z0_SQL_HOLD_RELEASE_NOT_COMMITTED");
+    released = { by, atMs: Date.now() - tLock };
+  });
   try {
     await lock.query("BEGIN");
     await lock.query("SET LOCAL lock_timeout='15s'");
     await lock.query("LOCK TABLE finnor_os.application_semantics_sessions IN ACCESS EXCLUSIVE MODE");
     const lockPid = (await lock.query("SELECT pg_backend_pid() pid")).rows[0].pid;
     tLock = Date.now();
-    const timer = setTimeout(() => void release("TIMER_BEFORE_PROXY_BUDGET"), 14000);
+    releaseTimer = setTimeout(() => void release("TIMER_BEFORE_PROXY_BUDGET").catch(() => undefined), 14000);
     const mark = watch.mark();
     await page.getByRole("button", { name: "Refresh current scope", exact: true }).click();
     const hold = await waitUntil("HOLD_NOT_IN_FLIGHT", 12000, async () => (await q(
-      "SELECT pid,state,wait_event_type,left(query,120) query FROM pg_stat_activity WHERE datname=current_database() AND pid<>$1 AND pid<>pg_backend_pid() AND wait_event_type='Lock' AND query ILIKE '%application_semantics_sessions%' LIMIT 1", [lockPid]))[0], 250).catch(() => null);
+      "SELECT state,wait_event_type FROM pg_stat_activity WHERE datname=current_database() AND usename='finnor_app' AND wait_event_type='Lock' AND $1::int=ANY(pg_blocking_pids(pid)) AND query ILIKE '%application_semantics_sessions%' LIMIT 1", [lockPid]))[0], 250).catch(() => null);
     const inflight = watch.since(mark).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId);
     check(c, "hold.in-flight", "a Postgres backend is waiting on the lock with the sessions query and the browser's projection request has no response yet", "O-SQL pg_stat_activity + browser request watch",
       { waiting: hold ? { state: hold.state, waitEventType: hold.wait_event_type } : null, requests: inflight.map(r => ({ status: r.status ?? null, failure: r.failure ?? null })) },
-      Boolean(hold) && inflight.length >= 1 && inflight.every(row => row.status === undefined));
+      Boolean(hold) && inflight.length >= 1 && inflight.every(row => row.status === undefined && !row.failure));
     c.observations.browserStage = "SWITCH_PRINCIPAL_WITH_HELD_READ";
     await uiSignOut(page);
     const signedOutAt = Date.now() - tLock;
     const login = await uiSignIn(page, foreignCreds.email, foreignCreds.password, watch);
     const foreignAt = Date.now() - tLock;
-    await release("FOREIGN_SIGNED_IN"); clearTimeout(timer);
-    const f1 = await readPanels(page);
+    const f1 = releaseTask ? null : await readPanels(page);
+    await release("FOREIGN_SIGNED_IN"); clearTimeout(releaseTimer);
     await sleep(5000);
     await watch.settle();
     const f2 = await readPanels(page);
@@ -901,15 +954,21 @@ await runCase("M-10", ["Z0-R09-C06"], "Delayed old-principal response (owned dat
     const old = watch.since(mark).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId);
     c.observations.oldRequestOutcome = old.map(row => ({ status: row.status ?? null, failure: row.failure ?? null }));
     c.observations.timeline = { signedOutAtMs: signedOutAt, foreignSignedInAtMs: foreignAt, released };
-    check(c, "foreign.identity", "the new principal is the foreign owner", "browser /api/centropy/me", { tenantDiffers: login.identity?.tenantId !== parentA.tenantId }, login.identity?.tenantId !== parentA.tenantId);
+    check(c, "foreign.identity", "the new principal is the foreign owner", "browser /api/centropy/me",
+      { tenantDiffers: login.identity?.tenantId !== parentA.tenantId, principalMatches: login.identity?.userId === foreignRow.userId },
+      login.meStatus === 200 && login.identity?.tenantId !== parentA.tenantId && login.identity?.userId === foreignRow.userId);
+    check(c, "old-response-settled", "the held read received its real response or the browser aborted it", "browser request watch",
+      c.observations.oldRequestOutcome, old.length > 0 && old.every(row => [200, 401, 403, 404].includes(row.status) || row.failure === "net::ERR_ABORTED"));
     check(c, "foreign.dom-clean-before-and-after-release", "no panel of the original Work and no original private value, before the release and after a further 5 s", "O-SQL markers",
-      { before: { panels: f1.applicationCount, leaked: hits(f1.html, markers) }, after: { panels: f2.applicationCount, leaked: hits(f2.html, markers) } },
-      f1.applicationCount === 0 && f2.applicationCount === 0 && hits(f1.html, markers).length === 0 && hits(f2.html, markers).length === 0);
+      { before: f1 ? { panels: f1.applicationCount, leaked: hits(f1.html, markers) } : null,
+        after: { panels: f2.applicationCount, leaked: hits(f2.html, markers) } },
+      f1 !== null && f1.applicationCount === 0 && f2.applicationCount === 0 && hits(f1.html, markers).length === 0 && hits(f2.html, markers).length === 0);
     const store = await storageScan(page, context, markers, secrets);
     check(c, "foreign.storage-clean", "no original private value and no previous refresh token in any storage", "storage scan", { markers: store.markerHitCount, secrets: store.secretHitCount }, store.markerHitCount === 0 && store.secretHitCount === 0);
-    check(c, "released-before-proxy-budget", "the lock was released before the proxy's 20 s budget so the old request completes at the API", "timeline", released, Boolean(released) && released.atMs < 20000);
+    check(c, "released-after-switch-before-proxy-budget", "the lock was released after the real principal switch and within the proxy's 20 s budget",
+      "timeline", released, released?.by === "FOREIGN_SIGNED_IN" && released.atMs >= foreignAt && released.atMs < 20000);
     mutationsOf(c, mark);
-  } finally { await release("FINALLY"); await lock.end().catch(() => undefined); }
+  } finally { clearTimeout(releaseTimer); await lock.end(); }
 });
 
 /* ---------------------------------------------------------------- finish */

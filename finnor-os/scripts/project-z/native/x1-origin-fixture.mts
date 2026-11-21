@@ -460,6 +460,7 @@ export async function createOriginalInstitutionParent(env: NativeEnvironment, op
 
 export interface AcquisitionOptions {
   record?: Recorder; privateRoot: string; timeoutMs?: number;
+  portalReadbackDelayMs?: number;
   /** Child allocation ceiling inside the original remaining (envelope 520 minus about 13 used by the compiler).
    * A full two-target, two-role exploration of the fake portal charges about 150 requests, so 128 exhausts it. */
   requestUnits?: number;
@@ -475,6 +476,7 @@ export interface ModelReadyAcquisition {
   parent: OriginalInstitutionParent; sessionId: string; status: string;
   portal: { origin: string; dir: string; expiresAt: string; applicationId: string; stop(): Promise<void> };
   profileIds: string[]; targets: unknown[]; request: Record<string, unknown>; deadlineAt: string;
+  applicationAccountIds: string[];
   originalReservationRef: unknown; resourceDemand: unknown[];
   model: { ref: any; operations: number } | null; check: { ref: any; disposition: string } | null;
   acceptance: { eventId: string; acceptanceRef: any } | null;
@@ -496,6 +498,9 @@ export async function submitInstitutionAcquisition(env: NativeEnvironment, paren
     const dir = join(options.privateRoot, `portal-${parent.tag}-${unique}`);
     mkdirSync(options.privateRoot, { recursive: true, mode: 0o700 });
     await portalModule.initialize(dir, "api");
+    if (options.portalReadbackDelayMs !== undefined) {
+      await portalModule.configure(dir, { readbackDelayMs: options.portalReadbackDelayMs });
+    }
     const credentials = JSON.parse(readFileSync(join(dir, "credentials.json"), "utf8"));
     const workstream = parent.gated?.operation === "open_workstream" ? parent.gated : null;
     if (workstream) writeFileSync(join(dir, "workstream-demo.private.json"), JSON.stringify({
@@ -519,7 +524,7 @@ export async function submitInstitutionAcquisition(env: NativeEnvironment, paren
     const secretRoot = env.FINNOR_X2_DISPOSABLE_SECRET_ROOT!;
     const tenantSecrets = join(secretRoot, parent.tenantId);
     mkdirSync(tenantSecrets, { recursive: true, mode: 0o700 }); chmodSync(tenantSecrets, 0o700);
-    const profileIds: string[] = [];
+    const profileIds: string[] = [], applicationAccountIds: string[] = [];
     const recordIds = [credentials.recordIds.discoveryOne, credentials.recordIds.discoveryTwo];
     const portalRoles = [["editor", "discovery"], ["approver", "approval"]] as const;
     for (const [role, grantName] of workstream ? portalRoles.slice(0, 1) : portalRoles) {
@@ -537,6 +542,7 @@ export async function submitInstitutionAcquisition(env: NativeEnvironment, paren
             recordPathTemplate: "/api/accounts/{accountId}/records/{recordId}", requestPathTemplate: "/api/requests/{requestId}",
             allowedTargets: recordIds, allowedEntities: [credentials.entities.usd], discoverySurface: "API" } })]);
       profileIds.push(profileId);
+      applicationAccountIds.push(accountId);
     }
     const reservation = (await sql.query("SELECT envelopes FROM finnor_os.s5_reservations WHERE tenant_id=$1 AND reservation_id=$2",
       [parent.tenantId, (parent.parentReservation as any).id])).rows[0];
@@ -557,7 +563,7 @@ export async function submitInstitutionAcquisition(env: NativeEnvironment, paren
     const retainedPortal = portal;
     const result = { response, request, handle: { portal: { origin, dir, expiresAt: state.expiresAt, applicationId: credentials.applicationId,
       stop: async () => { await stopNativeProcess(retainedPortal); } },
-      profileIds, targets: request.targets as unknown[], request, deadlineAt: String(request.deadlineAt ?? deadlineAt), originalReservationRef: parent.parentReservation, resourceDemand,
+      profileIds, applicationAccountIds, targets: request.targets as unknown[], request, deadlineAt: String(request.deadlineAt ?? deadlineAt), originalReservationRef: parent.parentReservation, resourceDemand,
       credentials: { applicationId: credentials.applicationId, account: credentials.accounts.primary, entity: credentials.entities.usd, recordIds, principalIds: credentials.principalIds } } };
     await sql.end();
     transferred = true;

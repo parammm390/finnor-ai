@@ -221,6 +221,7 @@ const postgres = new EmbeddedPostgres({ databaseDir: pgDirectory, user: "w3_admi
   onLog: line => { postgresStartLog = (postgresStartLog + line).slice(-8192); } });
 let admin: pg.Client | null = null, auth: any = null, recipient: any = null, activeWorker: ChildProcess | null = null;
 let closePool: (() => Promise<void>) | null = null;
+let failedOwnerCall: { group: string; operation: string; status: number; code: string | null } | null = null;
 const workers: any[] = [];
 try {
   await postgres.initialise(); await appendFile(join(pgDirectory, "postgresql.conf"), "\ntrack_commit_timestamp=on\n");
@@ -383,6 +384,11 @@ try {
   };
   const ok = async (group: string, operation: string, body: unknown, actor: string = owner) => {
     const result = await http(group, operation, body, actor);
+    if (integratedCompany && result.status !== 200) {
+      const code: unknown = result.body?.code;
+      failedOwnerCall = { group, operation, status: result.status,
+        code: typeof code === "string" && /^[A-Z][A-Z0-9_]{2,100}$/.test(code) ? code : null };
+    }
     assert.equal(result.status, 200, JSON.stringify({ group, operation, ...result })); return result.body;
   };
   // The established port already derives GET from undefined. Keep it intact;
@@ -2158,10 +2164,10 @@ try {
   const message = error instanceof Error ? error.message : String(error);
   if (integratedCompany) {
     const predicate = /^(W(?:[1-5]|049)_[A-Z0-9_]{2,120})(?=[:\s]|$)/.exec(message)?.[1];
-    const driverLine = error instanceof Error
-      ? /[\\/]postz[\\/]w3[\\/]native\.mts:(\d{1,4}):\d+/.exec(error.stack ?? "")?.[1] : undefined;
+    const driverLines = error instanceof Error
+      ? [...(error.stack ?? "").matchAll(/[\\/]postz[\\/]w3[\\/]native\.mts:(\d{1,4}):\d+/g)].slice(0, 4).map(match => Number(match[1])) : [];
     console.error(JSON.stringify({ event: "PHASE_W_NATIVE_FAILED", predicate: predicate ?? null,
-      driverLine: driverLine ? Number(driverLine) : null }));
+      driverLines, ownerCall: failedOwnerCall }));
   }
   await artifact("terminal-failure.json", { message,
     stack: error instanceof Error ? error.stack : null }); terminalExit = 1;

@@ -6,12 +6,14 @@
  */
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { hash, type GrowthInput, type SourceRef, type NativeRef, type CommercialEvent,
+import { canonical, hash, type GrowthInput, type SourceRef, type NativeRef, type CommercialEvent,
   type MarketValidatedOperatingProgram } from "../../packages/private-equity/src/demand-to-business/contracts";
+import { referencePreimageDigest } from "../../packages/governed-execution/src/protocol";
 import { growthExecutionRecordKey, growthNativeChange } from "../../packages/private-equity/src/demand-to-business/consumer";
 import { growthAccountingPayload } from "../../packages/private-equity/src/demand-to-business/participants";
 import type { GrowthNativeExecution } from "../../packages/private-equity/src/demand-to-business/boundaries";
 import { prepareCommercialMeasurementFixtures } from "./controlled-commercial-fixture.mjs";
+import type { ExperimentInputReference } from "./recipient.mts";
 
 export const NATIVE_GROWTH_LIMITS = Object.freeze({ maximumMilliseconds: 1200000, maximumPumpTicks: 192,
   maximumActors: 8, maximumCompanies: 1, maximumAssignments: 1, maximumContacts: 1,
@@ -27,6 +29,7 @@ export interface NativeGrowthJourneyContext {
   admin: { query: (sql: string, params?: any[]) => Promise<{ rows: any[] }> };
   recipient: { bind: (obligation: any, account: string, key: string,
     declaration: { field: string; value: number; unit: string }) => Promise<any>;
+    registerExperimentInputs: (references: readonly ExperimentInputReference[]) => Promise<void>;
     drainNativeReferences: (minimumPendingPerOwner?: number) => Promise<void> };
   pump: (maximumTicks?: number) => Promise<unknown>;
   artifact: (name: string, body: unknown) => Promise<unknown>;
@@ -109,13 +112,16 @@ export function createNativeGrowthJourney(c: NativeGrowthJourneyContext) {
     await c.artifact(namespace + "/protocol-" + key + ".json", { role, actor, protocolId: p.protocolId, kinds, evidenceKinds });
     return p.protocolId as string;
   };
-  const evidence = async (kind: string, subjectId: string, data: Record<string, unknown>, actor: string,
-    protocolId: string, key: string, basis: SourceRef[] = [], nativeRefs: NativeRef[] = []) => source({
+  const evidenceBody = (kind: string, subjectId: string, data: Record<string, unknown>,
+    basis: SourceRef[] = [], nativeRefs: NativeRef[] = []) => ({
       schema: "finnor.growth-evidence.v1", scope, kind, subjectId, validFrom, validUntil: deadline, data, basis, nativeRefs,
       limitations: ["Authenticated original in a controlled disposable software journey.",
         "Synthetic participant and generated measurement population; not field demand, physical delivery or real cash.",
         "No causal identification, protected business admission or realized-profit qualification."],
-    }, key, actor, protocolId);
+  });
+  const evidence = (kind: string, subjectId: string, data: Record<string, unknown>, actor: string,
+    protocolId: string, key: string, basis?: SourceRef[], nativeRefs?: NativeRef[]) =>
+    source(evidenceBody(kind, subjectId, data, basis, nativeRefs), key, actor, protocolId);
   const report = async (body: CommercialEvent, actor: string, protocolId: string, key: string) => {
     const result = await ok("demand-to-business", "report", { protocolId, idempotencyKey: namespace + ":" + key, event: body }, actor);
     recorded[key] = result.source; return result.source as SourceRef;
@@ -202,9 +208,10 @@ export function createNativeGrowthJourney(c: NativeGrowthJourneyContext) {
     const originalClearing = c.native.clearing(units, Object.fromEntries(Object.keys(policies).map(op => [op, ["100"]])));
     const clearing = await ok("allocations", "clear", originalClearing);
     assert.equal(clearing.status, "FEASIBLE", JSON.stringify(clearing)); parentAllocation = clearing.certificate.ref;
-    mandate = await source({ schema: "finnor.growth-mandate.v1", scope, authorizedByPrincipalId: c.owner, purpose,
+    const mandateBody = { schema: "finnor.growth-mandate.v1", scope, authorizedByPrincipalId: c.owner, purpose,
       permittedCapabilityIds: ["registered-transform"], maximumContacts: 1, maximumMoney: money("100"),
-      maximumHumanSeconds: 900, validFrom, expiresAt: deadline, revoked: false }, "original-mandate");
+      maximumHumanSeconds: 900, validFrom, expiresAt: deadline, revoked: false };
+    mandate = await source(mandateBody, "original-mandate");
     const handoffs: Record<string, any> = {};
     for (const [op, policy] of Object.entries(policies)) {
       if (integratedConditionalRefund && op === "REFUND") continue;
@@ -255,32 +262,53 @@ export function createNativeGrowthJourney(c: NativeGrowthJourneyContext) {
     const consentData = { buyerId: buyer, customerRef, affiliation: "SYNTHETIC",
       consentValidUntil: deadline, permittedPurpose: purpose };
     const consentSource = await evidence("CONSENT", buyer, consentData, buyer, evidenceProtocols.buyer, "original-consent");
-    const populationSource = await evidence("POPULATION", namespace, { buyerIds: [buyer],
-      affiliations: [{ buyerId: buyer, affiliation: "SYNTHETIC" }] }, observer, evidenceProtocols.observer, "original-population");
-    const supplied = (id: string) => ({ owner: "SUPPLIED", id: namespace + "-" + id, version: "w4-controlled-declaration-v1",
-      contentDigest: hash({ id, namespace, qualification: "SYNTHETIC_UNCALIBRATED_HYPOTHESIS" }) });
-    const populationRef = nativeRef(populationSource), instrumentRef = supplied("binary-instrument");
+    const populationBody = evidenceBody("POPULATION", namespace, { buyerIds: [buyer],
+      affiliations: [{ buyerId: buyer, affiliation: "SYNTHETIC" }] });
+    const populationSource = await source(populationBody, "original-population", observer, evidenceProtocols.observer);
+    const populationRef = nativeRef(populationSource), mandateRef = nativeRef(mandate);
+    const experimentInputs: ExperimentInputReference[] = [
+      { ...mandateRef, owner: "S1", content: canonical(mandateBody), digestEncoding: "NATIVE_UTF8_SHA256_V1" },
+      { ...populationRef, owner: "S1", content: canonical(populationBody), digestEncoding: "NATIVE_UTF8_SHA256_V1" },
+    ];
+    const supplied = (id: string, declaration: object) => {
+      const content = { qualification: "SYNTHETIC_UNCALIBRATED_INPUT", declaration };
+      const ref = { owner: "SUPPLIED" as const, id: namespace + "-" + id, version: "w4-controlled-declaration-v1",
+        contentDigest: referencePreimageDigest({ content }) };
+      experimentInputs.push({ ...ref, content });
+      return ref;
+    };
+    const endpoint = { id: "registered-response", unit: "category", categories: ["none", "commit"] };
+    const instrumentRef = supplied("binary-instrument", endpoint);
+    const utility = { lossUnit: "registered-loss", actionIds: ["stop", "continue"], lossByHypothesis: [["0", "1"], ["1", "0"]] };
+    const decision = { horizonEnd: closesAt, ...utility };
+    const hypotheses = [
+      { prior: "0.5", meaning: "Synthetic no-demand hypothesis, not learned market probability" },
+      { prior: "0.5", meaning: "Synthetic viable-demand hypothesis, still requires delivery and accounting" },
+    ];
+    const method = { instrumentError: "IN_LIKELIHOOD", missingness: "NONE",
+      dependence: "CONDITIONAL_IID", interference: "NONE", reactivity: "NONE", nuisance: "FIXED_SUPPLIED" };
     const measurementUnit = "consenting-participant";
     const inquiry = { schema: "finnor.s2.design-request.v1", inquiryId: namespace, episodeId: namespace,
-      mandateRef: nativeRef(mandate), decisionContext: { ref: supplied("decision"), utilityRef: supplied("utility"),
-        horizonEnd: closesAt, lossUnit: "registered-loss", actionIds: ["stop", "continue"], lossByHypothesis: [["0", "1"], ["1", "0"]] },
-      hypotheses: [{ ref: supplied("no-demand"), prior: "0.5", meaning: "Synthetic no-demand hypothesis, not learned market probability" },
-        { ref: supplied("viable"), prior: "0.5", meaning: "Synthetic viable-demand hypothesis, still requires delivery and accounting" }],
+      mandateRef, decisionContext: { ref: supplied("decision", decision), utilityRef: supplied("utility", utility), ...decision },
+      hypotheses: [
+        { ref: supplied("no-demand", hypotheses[0]!), ...hypotheses[0] },
+        { ref: supplied("viable", hypotheses[1]!), ...hypotheses[1] },
+      ],
       requiredClaimRefs: [], validUntil: closesAt, maxBeliefAgeMs: 3600000,
       constraints: { maxSamples: 1, maxElapsedMs: 20 * 60000, maxExposureUnits: "1", maxPrivacyUnits: "0",
         moneyLimit: { value: "0", unit: "USD" }, permittedPopulationRefs: [populationRef], permittedInstrumentRefs: [instrumentRef] },
       candidates: [{ id: namespace + "-controlled-design", instrumentRef,
-        endpoint: { id: "registered-response", unit: "category", categories: ["none", "commit"] },
+        endpoint,
         populationRef, measurementUnit, assignment: { kind: "OBSERVATIONAL", unit: measurementUnit, probability: "1" },
         timing: { startAt: now(), endAt: closesAt, minimumIntervalMs: 0 },
-        process: { methodRef: supplied("response-method"), instrumentError: "IN_LIKELIHOOD", missingness: "NONE",
-          dependence: "CONDITIONAL_IID", interference: "NONE", reactivity: "NONE", nuisance: "FIXED_SUPPLIED" },
+        process: { methodRef: supplied("response-method", method), ...method },
         likelihood: { status: "SUPPLIED_CONDITIONAL", probabilities: [["0.8", "0.2"], ["0.2", "0.8"]],
           calibrationRef: null, assumptions: ["Synthetic supplied likelihood only; not genuine field identification or market probability."] },
         samples: 1, stopping: { method: "FIXED_SAMPLE", alpha: "0.05", beta: "0.05", minimumPower: "0" },
         costEstimate: { money: { value: "0", unit: "USD" }, elapsedMs: 100, humanSeconds: 0, dataBytes: 1024,
           integrationUnits: 0, computeMs: null }, exposure: { unitsPerSample: "1", privacyUnitsPerSample: "0",
           riskAssumptions: ["Controlled disposable software participant only."] } }] };
+    await c.recipient.registerExperimentInputs(experimentInputs);
     const design = await ok("experiments", "design", { root, request: inquiry });
     const protocol = design.designs[0]?.protocol; assert(protocol, JSON.stringify(design));
     assert.equal((await ok("experiments", "validate", { protocol })).status, "CURRENT");

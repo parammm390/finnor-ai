@@ -11,7 +11,8 @@ import { createRequire } from "node:module";
 import { resolve, join, dirname } from "node:path";
 import type { BeliefView } from "@finnor/shared-types";
 import { listCanonicalTruthRegistrations, withTenantTransaction } from "@finnor/db";
-import { deliverOwnerTransportBatch } from "../../packages/governed-execution/src/owner-delivery-store";
+import { deliverOwnerTransportBatch, enqueueOwnerDeliveryInTransaction } from "../../packages/governed-execution/src/owner-delivery-store";
+import { referencePreimageDigest } from "../../packages/governed-execution/src/protocol";
 import { canonical, hash } from "../../packages/private-equity/src/demand-to-business/contracts";
 import { enterpriseObligationAuthoritySourcePaths } from "../../packages/private-equity/src/enterprise-obligations";
 
@@ -24,6 +25,10 @@ const listen = (s: ReturnType<typeof httpServer>) => new Promise<number>((yes, n
 const close = (s: ReturnType<typeof httpServer>) => new Promise<void>(yes => { s.closeAllConnections(); s.close(() => yes()) });
 type RecordState = { applicationAccountId: string; recordKey: string; version: string;
   fields: Record<string, number>; lastOperationId: string | null };
+export type ExperimentInputReference = {
+  owner: "SUPPLIED" | "S1"; id: string; version: string; contentDigest: string; content: unknown;
+  digestEncoding?: "NATIVE_UTF8_SHA256_V1";
+};
 export async function growthRecipient(input: {
   directory: string; tenantId: string; principalId: string; companyId: string; accountIds: string[]; rightsRef: string;
   readCanonicalOwnerView: () => Promise<BeliefView>;
@@ -72,8 +77,10 @@ export async function growthRecipient(input: {
     "W4_CANONICAL_VIEW_SOURCE_OWNER_MISMATCH");
   const canonicalSourceOwners = [...new Set(sourceOwners.values())].sort();
   const canonicalRightsOwners = [...new Set(["S1", "S2", "S3", ...canonicalSourceOwners])];
-  const rightsForOwner = (owner: string) => canonicalRightsOwners.includes(owner)
-    ? [input.rightsRef, canonicalOwnerAuthority.rightsRef] : [input.rightsRef];
+  const rightsForOwner = (owner: string) => {
+    if (owner === "SUPPLIED") return [canonicalOwnerAuthority.rightsRef];
+    return canonicalRightsOwners.includes(owner) ? [input.rightsRef, canonicalOwnerAuthority.rightsRef] : [input.rightsRef];
+  };
   await input.artifact("canonical-owner-authority-readback.json", { sourceOperation: "/api/company-brain/belief-view",
     canonicalOwnerAuthority, rights: { ref: view.rights.ref, revision: view.rights.revision,
       evaluatedAt: view.rights.evaluatedAt, scope: view.rights.scope }, initialAuthority, canonicalRightsOwners,
@@ -87,7 +94,7 @@ export async function growthRecipient(input: {
   const method = generateKeyPairSync("ed25519"), authorityKey = generateKeyPairSync("ed25519");
   const business = generateKeyPairSync("ed25519"), ledger = generateKeyPairSync("ed25519");
   const release = generateKeyPairSync("ed25519"), origin = generateKeyPairSync("ed25519");
-  const owners = [...new Set([...canonicalSourceOwners, "S1", "S3", "S2", "BUSINESS_OWNER", "S4", "S5", "S6", "S7"])];
+  const owners = [...new Set([...canonicalSourceOwners, "S1", "SUPPLIED", "S3", "S2", "BUSINESS_OWNER", "S4", "S5", "S6", "S7"])];
   const ownerTokenName = (owner: string) => "owner-" + bytesHash(owner) + ".token";
   const tokens: Record<string, string> = Object.fromEntries([...owners, "protected", "provider", "authority"].map(k => [k, randomUUID() + randomUUID()]));
   const path = (name: string) => join(root, name);
@@ -220,6 +227,21 @@ export async function growthRecipient(input: {
   };
   try { await start() }
   catch (error) { await stop(); await close(provider); await close(authority); throw error }
+  const registerExperimentInputs = async (references: readonly ExperimentInputReference[]) => {
+    await assertCurrentOwnerAuthority();
+    // The disposable SUPPLIED owner attests input bytes only. S1 references
+    // bind the exact bytes of originals already recorded through the owner API.
+    await withTenantTransaction(input.tenantId, { userId: input.principalId }, async (_db, c) => {
+      for (const reference of references) {
+        assert.equal(referencePreimageDigest(reference), reference.contentDigest, "W4_EXPERIMENT_SOURCE_PREIMAGE_MISMATCH");
+        const queued = await enqueueOwnerDeliveryInTransaction(c, {
+          tenantId: input.tenantId, principalId: input.principalId, semanticOwner: reference.owner,
+        }, { kind: "REFERENCE", identity: reference.id,
+          payload: { reference, rightsRefs: [canonicalOwnerAuthority.rightsRef] } });
+        assert.equal(queued.status, "AUTHENTICATED_OWNER_INTENT_PENDING_LEDGER", "W4_EXPERIMENT_SOURCE_ORIGIN_REQUIRED");
+      }
+    });
+  };
   let drainNumber = 0;
   const drainNativeReferences = async (minimumPendingPerOwner = 0) => {
     const batches = [];
@@ -322,7 +344,7 @@ export async function growthRecipient(input: {
     return { request, authorization: { body: authorization,
       signature: sign(null, Buffer.from(canonical(authorization)), business.privateKey).toString("base64") } };
   };
-  return { bind, requests, assessments, records, sourceDigests, assertCurrentOwnerAuthority, drainNativeReferences, loseNextResponse: () => { loseNext = true },
+  return { bind, requests, assessments, records, sourceDigests, assertCurrentOwnerAuthority, registerExperimentInputs, drainNativeReferences, loseNextResponse: () => { loseNext = true },
     wrongRead: (v: boolean) => { wrongRead = v }, killNextPatch: (kill: () => void) => { killOnPatch = kill },
     reloadRecords: async () => { const original = [...records.entries()];
       const stored = JSON.parse(await readFile(path("records.json"), "utf8")); assert.deepEqual(stored, original.sort(([a], [b]) => a.localeCompare(b)));
