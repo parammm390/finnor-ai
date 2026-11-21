@@ -71,6 +71,13 @@ export async function serviceExecutions(ctx: PeMutationContext, row: ServiceRequ
 export async function assertNativeServiceBinding(
   ctx: PeMutationContext, row: ServiceRequestRow, program: RealWorldServiceProgram, body: NativeServiceExecution,
 ): Promise<DurableObligation> {
+  return checkNativeServiceBinding(ctx, row, program, body,
+    () => readEnterpriseDurableObligation(ctx, row.budget_obligation_ref));
+}
+async function checkNativeServiceBinding(
+  ctx: PeMutationContext, row: ServiceRequestRow, program: RealWorldServiceProgram, body: NativeServiceExecution,
+  readBudget: () => Promise<DurableObligation>,
+): Promise<DurableObligation> {
   if (!sameScope(body.scope, program.envelope.scope) || !equal(body.parentAllocation, row.parent_allocation)
     || !program.original.permittedOperations.includes(body.operation)
     || new Set(body.coveredTerms.map(t => t.instanceId)).size !== body.coveredTerms.length
@@ -87,7 +94,7 @@ export async function assertNativeServiceBinding(
     throw Error("W3_NATIVE_EXACT_PAYMENT_PLAN_REQUIRED");
   const execution = ObligationOperationSchemas["schedule-request"].parse(body.execution);
   const obligation = await readEnterpriseDurableObligation(ctx, body.obligationRef);
-  const budget = await readEnterpriseDurableObligation(ctx, row.budget_obligation_ref);
+  const budget = await readBudget();
   const ir = NativeServiceIRSchema.parse(execution.request.ir);
   if (!equal(obligation.allocationRef, row.parent_allocation) || !equal(ir.allocationRef, row.parent_allocation)
     || !equal(ir.obligationRef, body.obligationRef) || !equal(ir.effectRef, obligation.effectRef)
@@ -110,10 +117,13 @@ export async function readServiceNativeEffects(ctx: PeMutationContext, execution
   const effects: NativeEffectObservation[] = [], gaps: string[] = [];
   const identities = new Set(executions.map(({ body }) => body.obligationRef.id));
   if (identities.size !== executions.length) throw Error("W3_NATIVE_IDENTITY_REBOUND");
+  let originalBudget: Promise<DurableObligation> | undefined;
+  const readBudget = () => originalBudget ??= readEnterpriseDurableObligation(ctx, cut.row.budget_obligation_ref);
   const scope = { semanticOwner: "S6", tenantId: ctx.auth.tenantId, principalId: ctx.auth.employeeId ?? ctx.auth.userId };
   for (let offset = 0; offset < executions.length; offset += 8) {
     const batch = executions.slice(offset, offset + 8);
-    const bindings = await Promise.allSettled(batch.map(({ body }) => assertNativeServiceBinding(ctx, cut.row, cut.program, body)));
+    const bindings = await Promise.allSettled(batch.map(({ body }) =>
+      checkNativeServiceBinding(ctx, cut.row, cut.program, body, readBudget)));
     const authorized = bindings.flatMap(binding => binding.status === "fulfilled" ? [binding.value.ref.id] : []);
     const answers = authorized.length ? await readOwnerTransportExecutionHandoffs(scope, authorized)
       .catch(reason => authorized.map(() => ({ status: "rejected" as const, reason }))) : [];

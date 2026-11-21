@@ -113,8 +113,8 @@ async function handleInstitutionOperationBody(ctx: PeMutationContext, operation:
     }
     if (operation === "institution-sources") {
       const { workId } = sourceRead.parse(body);
-      await authorizeInstitutionWork(ctx, workId);
       return { status: 200, body: await tx(ctx, async c => {
+        await authorizeInstitutionWork(ctx, workId, c);
         const grants = (await c.query(`SELECT id::text,source_id,source_class,protocol,revision,expires_at
           FROM finnor_os.x1_source_grants g WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3
           AND NOT EXISTS(SELECT 1 FROM finnor_os.x1_source_grants n WHERE n.tenant_id=g.tenant_id
