@@ -55,7 +55,7 @@ export async function waitUntil<T>(label: string, timeoutMs: number, probe: () =
 const MUTATIONS = /\/api\/centropy\/(company-brain\/(application-(acquire|execute|cancel|resume)|institution-(submit|revise|cancel|resume|mandate|register-source|consent|revoke-consent))|actions(\/|$)|outcome-packs|threads$|works\/[^/]+\/objective|instructions\/[^/]+\/cancel)/;
 
 export type WatchRecord = { seq: number; at: number; page: string; method: string; origin: string; path: string; kind: string; operation: string | null;
-  hasBearer: boolean; bearerTag: string | null; workId: string | null; query: string; status?: number; failure?: string };
+  hasBearer: boolean; bearerTag: string | null; workId: string | null; query: string; status?: number; responseAt?: number; failure?: string };
 
 /** Observes with page.on only. Bearer values stay in memory; records carry a short hash tag. */
 export class RequestWatch {
@@ -91,7 +91,7 @@ export class RequestWatch {
     page.on("response", (response: any) => {
       const seq = this.byRequest.get(response.request());
       const row = seq ? this.records.find(item => item.seq === seq) : null;
-      if (row) row.status = response.status();
+      if (row) { row.status = response.status(); row.responseAt = Date.now(); }
     });
     page.on("requestfailed", (request: any) => {
       const seq = this.byRequest.get(request);
@@ -297,8 +297,8 @@ export async function readPanels(page: any, deadline = Date.now() + 25000) {
 }
 
 /** Checking and exercising the disclosures can cross a normal owner refresh. */
-export async function readSettledPanels(page: any, workId: string) {
-  const deadline = Date.now() + 60000;
+export async function readSettledPanels(page: any, workId: string, timeoutMs = 60000) {
+  const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     await waitForPanel(page, workId, deadline - Date.now());
     const facts = await readPanels(page, Math.min(deadline, Date.now() + 25000));
@@ -455,10 +455,22 @@ export async function waitForPanel(page: any, workId: string, timeoutMs = 60000)
   }
 }
 
-export async function openWork(page: any, threadId: string, workId: string) {
+export async function openWork(page: any, threadId: string, workId: string, root?: { entityType: string; entityId: string }) {
   await page.goto(workUrl(threadId), { waitUntil: "domcontentloaded", timeout: 120000 });
-  await waitForPanel(page, workId);
-  return { rootCarriedBy: "THREAD_PERSISTED_ROOT" };
+  if (!root) {
+    await waitForPanel(page, workId);
+    return { rootCarriedBy: "THREAD_PERSISTED_ROOT" };
+  }
+  try {
+    await waitForPanel(page, workId, 30000);
+    return { rootCarriedBy: "THREAD_PERSISTED_ROOT" };
+  } catch (error) {
+    if (!(error instanceof Error) || !/^Z0_BROWSER_(WORK_INSTRUMENT_UNAVAILABLE|WORK_NOT_PROJECTED|SESSION_NOT_PROJECTED)$/.test(error.message))
+      throw error;
+    await page.goto(workUrl(threadId, root), { waitUntil: "domcontentloaded", timeout: 120000 });
+    await waitForPanel(page, workId, 30000);
+    return { rootCarriedBy: "ROOT_URL_PARAMETER", rootFallbackAfter: error.message };
+  }
 }
 
 /* ------------------------------------------------------------------ evidence output */

@@ -54,7 +54,13 @@ async function runCase(id, rows, title, body) {
   try { await body(c); }
   catch (error) {
     if (error instanceof NotRun) { c.reason = error.message; c.outcome = c.checks.some(item => !item.pass) ? "FAIL" : "NOT_RUN"; }
-    else { c.outcome = "FAIL"; c.error = String(error?.message ?? error).slice(0, 700); }
+    else {
+      c.outcome = "FAIL"; c.error = String(error?.message ?? error).slice(0, 700);
+      c.observations.failureType = error?.name;
+      c.observations.failureCode = error?.code;
+      c.observations.failureFrame = typeof error?.stack === "string"
+        ? /\/(z0-mounted-(?:session\.mjs|(?:lib|oracle)\.mts):\d{1,4}:\d{1,4})(?:\)|\n|$)/.exec(error.stack)?.[1] : null;
+    }
   }
   if (c.outcome === "PASS" && c.checks.some(item => !item.pass)) c.outcome = "FAIL";
   if (c.outcome === "PASS" && c.checks.length === 0) { c.outcome = "FAIL"; c.error = "NO_CHECKS_EVALUATED"; }
@@ -76,6 +82,12 @@ async function runCase(id, rows, title, body) {
             ? row.path.split("/").at(-1) : null;
         return kind ? [{ kind, status: row.status, failed: Boolean(row.failure) }] : [];
       }).slice(-24);
+  }
+  if (id === "M-04" && c.outcome === "FAIL") {
+    c.observations.mountedReads = watch.since(caseMark).flatMap(row => {
+      const route = /\/api\/centropy\/company-brain\/(application-projection|institution-sources|institution-read|projection)$/.exec(row.path)?.[1];
+      return route ? [{ route, status: row.status, failed: Boolean(row.failure) }] : [];
+    }).slice(-24);
   }
   c.wallMs = Date.now() - t0;
   c.failedChecks = c.checks.filter(item => !item.pass).map(item => item.id);
@@ -383,14 +395,16 @@ const budgetDifferences = (before, after) => {
       if (!isDeepStrictEqual(before?.resources?.[index]?.[field], after?.resources?.[index]?.[field])) differences.push(`resources.${index}.${field}`);
   return differences;
 };
-const coreSignature = f => sha({ work: f.appAttributes?.work, session: f.appAttributes?.session, status: f.appAttributes?.status, budget: f.budgetJson, charges: f.charges.map(item => item.text), costs: f.appCosts });
 const instants = text => [...(text ?? "").matchAll(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)/g)].map(match => Date.parse(match[0]));
+const coreSignature = f => sha({ work: f.appAttributes?.work, session: f.appAttributes?.session, status: f.appAttributes?.status,
+  budget: f.budgetJson, charges: f.charges.map(item => item.text), costs: f.appCosts,
+  applicationInstants: instants(normalise(f.app?.textNoPre)), institution: normalise(f.inst?.text) });
 const minuteText = value => new Date(value).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).replace(/[\u202f\u00a0]/g, " ");
 const flat = text => (text ?? "").replace(/[\u202f\u00a0]/g, " ");
 const jsonOf = text => { try { return JSON.parse(text); } catch { return null; } };
 const hits = (haystack, markers) => markers.filter(marker => haystack.includes(marker.value)).map(marker => marker.label);
 const strongLabels = new Set(["sessionId", "programId", "compilerRequestId", "responsibilityIdentity", "reservationId", "computeResource", "humanResource", "institutionId"]);
-let referenceSignature = null, referenceCore = null, referenceTruthA = null, referenceFacts = null;
+let referenceSignature = null, referenceCore = null, referenceTruthA = null, referenceFacts = null, originalIdpSubject = null;
 // Diagnostics publish field names only; native Work data and original identities stay private.
 const referenceFieldDifferences = facts => referenceFacts
   ? Object.keys(referenceFacts).filter(field => JSON.stringify(referenceFacts[field]) !== JSON.stringify(signatureFacts(facts)[field]))
@@ -398,12 +412,13 @@ const referenceFieldDifferences = facts => referenceFacts
 
 async function ensureOwnerOnWork(which = "A") {
   const target = which === "A" ? { thread: threadA, parent: parentA } : { thread: threadB, parent: parentB };
+  const root = { entityType: "pe_deal", entityId: target.parent.dealId };
   if (!(await page.locator(".ct-topbar").isVisible().catch(() => false))) await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
-  if (page.url() === workUrl(target.thread.id)) {
+  if ([workUrl(target.thread.id), workUrl(target.thread.id, root)].includes(page.url())) {
     await waitForPanel(page, target.parent.workId);
-    return { rootCarriedBy: "THREAD_PERSISTED_ROOT" };
+    return { rootCarriedBy: page.url() === workUrl(target.thread.id) ? "THREAD_PERSISTED_ROOT" : "ROOT_URL_PARAMETER" };
   }
-  return openWork(page, target.thread.id, target.parent.workId);
+  return openWork(page, target.thread.id, target.parent.workId, root);
 }
 const mutationsOf = (c, mark, allowed = 0) => {
   const summary = watch.summary(mark);
@@ -421,12 +436,14 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
   const login = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
   c.observations.browserStage = "CONFIRM_IDENTITY";
   const idp = login.bearer ? await idpUserId(env, login.bearer) : { status: 0, id: null };
-  check(c, "identity.me", "browser /api/centropy/me carried a Bearer, answered 200 for the owner of the original tenant", "O-IDP /auth/v1/user + O-SQL",
+  if (check(c, "identity.me", "browser /api/centropy/me carried a Bearer, answered 200 for the owner of the original tenant", "O-IDP /auth/v1/user + O-SQL",
     { meStatus: login.meStatus, role: login.identity?.role, tenantMatches: login.identity?.tenantId === parentA.tenantId, principalMatches: login.identity?.userId === parentA.ownerId, idpStatus: idp.status, idpIdEqualsNativePrincipal: idp.id === login.identity?.userId },
-    login.meStatus === 200 && login.identity?.role === "owner" && login.identity?.tenantId === parentA.tenantId && login.identity?.userId === parentA.ownerId && idp.status === 200);
+    login.meStatus === 200 && login.identity?.role === "owner" && login.identity?.tenantId === parentA.tenantId && login.identity?.userId === parentA.ownerId && idp.status === 200 && Boolean(idp.id)))
+    originalIdpSubject = idp.id;
   c.observations.browserStage = "OPEN_ORIGINAL_WORK";
-  const opened = await openWork(page, threadA.id, parentA.workId);
+  const opened = await openWork(page, threadA.id, parentA.workId, rootA);
   c.observations.rootCarriedBy = opened.rootCarriedBy;
+  c.observations.rootFallbackAfter = opened.rootFallbackAfter;
   const ownerCuts = c.observations.ownerCuts = { beforeMount: ownerCutBeforeMounted };
   const cut = () => mountedOwnerCut(q, parentA, acqA.sessionId, ownerCutBeforeMounted.captured_at);
   ownerCuts.open = await cut();
@@ -528,12 +545,17 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
 await runCase("M-02", ["Z0-R08-C02", "Z0-R45-C03"], "S5/S6/S7 accounting, producer/checker/consumer, observation, no predicted completion", async c => {
   if (!referenceTruthA) notRun("M-01_DID_NOT_READ_THE_ORIGINAL_WORK");
   const mark = watch.mark();
+  c.observations.browserStage = "OPEN_ORIGINAL_WORK";
   await ensureOwnerOnWork("A");
+  c.observations.browserStage = "READ_INITIAL_PANELS";
   const f = await readSettledPanels(page, parentA.workId);
   await shot(page, c, "accounting");
+  c.observations.browserStage = "READ_OWNER_ORACLE";
   const truth = await readOwnerTruth({ q, owner, parent: parentA, sessionId: acqA.sessionId, acquisitionInput: acqA.request });
+  c.observations.browserStage = "READ_OWNER_CUT";
   c.observations.ownerCuts = { afterRead: await mountedOwnerCut(q, parentA, acqA.sessionId, ownerCutBeforeMounted.captured_at) };
   const app = f.app?.text ?? "";
+  c.observations.browserStage = "READ_ACCOUNTING_WITNESS";
   const after = await witness(q, parentA);
   check(c, "1.same-parent", "reservation shown = original reservation; reservation count and envelope digest unchanged by the mounted phase", "O-SQL s5_reservations before/after",
     { shown: app.includes(truth.reservation.id), before: witnessBefore.reservations, after: after.reservations }, app.includes(truth.reservation.id) && witnessBefore.reservations.count === after.reservations.count && witnessBefore.reservations.digest === after.reservations.digest);
@@ -605,6 +627,7 @@ await runCase("M-04", ["Z0-R45-C03", "Z0-R09-C01"], "Blocked/needs-action state 
   c.observations.browserStage = "OPEN_ORIGINAL_WORK";
   const opened = await ensureOwnerOnWork("B");
   c.observations.rootCarriedBy = opened.rootCarriedBy;
+  c.observations.rootFallbackAfter = opened.rootFallbackAfter;
   c.observations.browserStage = "READ_OWNER_ORACLE";
   const truth = await readOwnerTruth({ q, owner, parent: parentB, sessionId: sessionB, acquisitionInput: acquisitionB });
   const f0 = await readSettledPanels(page, parentB.workId);
@@ -671,35 +694,32 @@ await runCase("M-05", ["Z0-R09-C02", "Z0-R45-C04"], "Work/root switch through th
     const control = drawer.locator("ol li button").filter({ has: page.getByText(thread.title, { exact: true }) });
     await control.waitFor({ state: "visible", timeout: 30000 });
     if (await control.count() !== 1) throw Error("DRAWER_CONTROL_COUNT_" + await control.count());
-    await control.focus(); await control.press("Enter");
+    await control.focus();
+    const switchMark = watch.mark();
+    await control.press("Enter");
     await page.waitForURL(url => url.pathname === "/centropy/investigations/" + thread.id, { timeout: 30000 });
+    return switchMark;
   };
-  await select(threadB);
-  const markB = watch.mark();
-  let mountedB = true;
-  try { await waitForPanel(page, parentB.workId, 45000); } catch { mountedB = false; }
-  const fb = await readPanels(page);
+  const markB = await select(threadB);
+  const fb = await readSettledPanels(page, parentB.workId, 45000);
   await shot(page, c, "after-switch-to-B");
   check(c, "B.mounted-with-own-root", "after the drawer switch the panel is B's: its own Work attribute, root and ids", "O-SQL B rows",
-    { mounted: mountedB, work: fb.appAttributes?.work, rootShown: (fb.app?.text ?? "").includes(`root pe_deal / ${parentB.dealId}`) },
-    mountedB && fb.appAttributes?.work === parentB.workId && (fb.app?.text ?? "").includes(`root pe_deal / ${parentB.dealId}`));
+    { work: fb.appAttributes?.work, rootShown: (fb.app?.text ?? "").includes(`root pe_deal / ${parentB.dealId}`) },
+    fb.appAttributes?.work === parentB.workId && (fb.app?.text ?? "").includes(`root pe_deal / ${parentB.dealId}`));
   check(c, "A.absent-under-B", "no panel of the original Work and none of A's distinguishing private values anywhere in the DOM", "O-SQL A rows (values not shared with B)",
     { panelsOfA: await panelFor(page, parentA.workId).count(), leaked: hits(fb.html, aOnly.filter(m => m.label !== "ownerId")) }, await panelFor(page, parentA.workId).count() === 0 && hits(fb.html, aOnly.filter(m => m.label !== "ownerId")).length === 0);
   const projB = watch.since(markB).filter(row => row.path.endsWith("application-projection"));
   check(c, "only-B-projection-requests", "after the switch every projection request names B's Work", "browser request watch", projB.map(r => (r.workId === parentB.workId ? "B" : r.workId === parentA.workId ? "A" : r.workId)),
     projB.length >= 1 && projB.every(row => row.workId === parentB.workId));
-  const mark2 = watch.mark();
-  await select(threadA);
-  let mountedA = true;
-  try { await waitForPanel(page, parentA.workId, 45000); } catch { mountedA = false; }
-  const fa = await readPanels(page);
+  const mark2 = await select(threadA);
+  const fa = await readSettledPanels(page, parentA.workId, 45000);
   c.observations.reloadDifferences = referenceFieldDifferences(fa);
   await watch.settle();
-  const reread = watch.since(mark2).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId);
+  const reread = watch.since(mark2).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId && row.status === 200);
   await shot(page, c, "back-on-A");
   check(c, "A.restored-from-fresh-read", "returning to A issues a fresh projection read for A and the facts equal the earlier A facts", "browser request watch + M-01 reference signature",
-    { mountedA, freshReads: reread.length, signatureEqual: signature(fa) === referenceSignature, panelsOfB: await panelFor(page, parentB.workId).count() },
-    mountedA && reread.length >= 1 && signature(fa) === referenceSignature && await panelFor(page, parentB.workId).count() === 0);
+    { freshReads: reread.length, signatureEqual: signature(fa) === referenceSignature, panelsOfB: await panelFor(page, parentB.workId).count() },
+    reread.length >= 1 && signature(fa) === referenceSignature && await panelFor(page, parentB.workId).count() === 0);
   mutationsOf(c, mark);
 });
 
@@ -868,47 +888,67 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
     c.observations.browserStage = "SIGN_IN_FOR_REFRESH";
     await uiSignIn(clockPage, ownerCreds.email, ownerCreds.password, clockWatch);
     c.observations.browserStage = "OPEN_WORK_FOR_REFRESH";
-    await openWork(clockPage, threadA.id, parentA.workId);
+    await openWork(clockPage, threadA.id, parentA.workId, rootA);
     await clockWatch.settle();
     const before = await storageScan(clockPage, clockContext, referenceTruthA.markers);
     const beforeTag = before.accessToken ? sha(before.accessToken).slice(0, 12) : null;
-    const lastReadTag = clockWatch.records.filter(r => r.path.endsWith("application-projection")).at(-1)?.bearerTag ?? null;
+    const ownerBefore = await witness(q, parentA);
     const mark = clockWatch.mark();
     c.observations.browserStage = "ADVANCE_REFRESH_CLOCK";
     if (await clockPage.evaluate(() => document.visibilityState) !== "visible") throw Error("Z0_BROWSER_REFRESH_PAGE_NOT_VISIBLE");
-    await clockPage.clock.fastForward(3520 * 1000);
-    const refresh = await waitUntil("REFRESH_NOT_OBSERVED", 60000, async () => {
-      const rows = clockWatch.since(mark).filter(row => row.kind === "auth-token" && /grant_type=refresh_token/.test(row.query) && row.status !== undefined);
-      return rows.length ? rows : null;
-    }, 500).catch(() => null);
-    // The clock jump initiates the real Auth exchange. Continuing an hour ahead
-    // would place the newly issued server-time token in the refresh window again.
-    await clockPage.clock.setSystemTime(new Date());
+    const [{ firstGrant, readDeadline }] = await Promise.all([
+      clockPage.waitForResponse(response => {
+        const url = new URL(response.url());
+        return url.origin === authOrigin && url.pathname === "/auth/v1/token"
+          && url.searchParams.get("grant_type") === "refresh_token" && response.request().method() === "POST";
+      }, { timeout: 60000 }).then(response => ({ firstGrant: response, readDeadline: Date.now() + 45000 }),
+        () => { throw Error("Z0_BROWSER_REFRESH_NOT_OBSERVED"); }),
+      clockPage.clock.fastForward(3520 * 1000),
+    ]);
+    const token = (await firstGrant.json().catch(() => null))?.access_token;
+    const refreshedTag = typeof token === "string" ? sha(token).slice(0, 12) : null;
     check(c, "refresh.observed", "the browser performed a real refresh_token grant against the real Auth and it answered 200", "browser request watch (page.on) + O-IDP",
-      { requests: refresh?.map(row => ({ status: row.status, path: row.path })) ?? [] }, Boolean(refresh) && refresh.every(row => row.status === 200));
-    await sleep(2000);
-    await clockWatch.settle();
-    const after = await storageScan(clockPage, clockContext, referenceTruthA.markers);
-    const afterTag = after.accessToken ? sha(after.accessToken).slice(0, 12) : null;
-    const idp = after.accessToken ? await idpUserId(env, after.accessToken) : { status: 0 };
-    check(c, "refresh.new-token", "the stored access token changed to a new one that the real Auth accepts", "storage scan (hash tags only) + O-IDP /auth/v1/user", { beforeTag, afterTag, idpStatus: idp.status }, Boolean(afterTag) && afterTag !== beforeTag && idp.status === 200);
+      { status: firstGrant.status() }, firstGrant.status() === 200);
+    const idp = refreshedTag ? await idpUserId(env, token) : { status: 0, id: null };
+    check(c, "refresh.new-token", "the first grant changed the token and Auth confirms the original owner", "real grant response and O-IDP /auth/v1/user",
+      { changed: Boolean(refreshedTag) && refreshedTag !== beforeTag, idpStatus: idp.status },
+      Boolean(beforeTag && refreshedTag) && refreshedTag !== beforeTag && idp.status === 200 && idp.id === originalIdpSubject);
     c.observations.browserStage = "READ_WORK_AFTER_REFRESH";
-    const reread = await waitUntil("REREAD_AFTER_REFRESH", 45000, async () => {
+    const reread = await waitUntil("REREAD_AFTER_REFRESH", Math.max(1, readDeadline - Date.now()), async () => {
       await clockWatch.settle();
-      return clockWatch.since(mark).find(row => row.path.endsWith("application-projection") && row.workId === parentA.workId && row.bearerTag && row.bearerTag !== lastReadTag && row.status === 200);
+      return clockWatch.since(mark).find(row => row.path.endsWith("application-projection") && row.workId === parentA.workId
+        && refreshedTag && clockWatch.bearerOf(row.seq) === token && row.status === 200 && row.responseAt <= readDeadline);
     }, 1000).catch(() => null);
-    check(c, "refresh.panel-reread-under-new-token", "the panel re-reads under the new token without any click", "browser request watch", { lastReadTag, newReadTag: reread?.bearerTag ?? null }, Boolean(reread));
+    check(c, "refresh.panel-reread-under-new-token", "the panel re-reads under the first refreshed token within 45 seconds without a click",
+      "browser request watch", { freshBearerRead: Boolean(reread) }, Boolean(reread));
     const f = await readSettledPanels(clockPage, parentA.workId);
     await shot(clockPage, c, "after-refresh");
-    check(c, "refresh.facts-equal", "Work, session, status, remaining resources, charges and cost cells equal the M-01 facts (the page clock is advanced, so clock-dependent phrases are not compared)", "M-01 reference core signature + O-SQL",
+    check(c, "refresh.facts-equal", "Work, session, status, original instants, institutional evidence and accounting match the M-01 facts", "M-01 reference signature + O-SQL",
       { equal: coreSignature(f) === referenceCore, work: f.appAttributes?.work }, f.appAttributes?.work === parentA.workId && coreSignature(f) === referenceCore);
     c.observations.fullSignatureEqualsReference = signature(f) === referenceSignature;
+    const ownerAfter = await witness(q, parentA);
+    const earlierCharges = new Set(ownerBefore.chargeKeys);
+    const newReadCharges = ownerAfter.meteredOriginalReadKeys.filter(key => !earlierCharges.has(key)).length;
+    const newCharges = ownerAfter.charges.count - ownerBefore.charges.count;
+    const onlyReadCharges = newCharges === newReadCharges
+      && BigInt(ownerAfter.charges.units) - BigInt(ownerBefore.charges.units) === BigInt(newReadCharges);
+    check(c, "refresh.owner-unchanged", "the original responsibilities and application requests are unchanged apart from actual read charges",
+      "O-SQL sessions, requests, S5 charges and S7 read receipts", { newCharges, newReadCharges },
+      isDeepStrictEqual(ownerBefore.sessions, ownerAfter.sessions) && ownerBefore.requests === ownerAfter.requests
+        && isDeepStrictEqual(ownerBefore.reservations, ownerAfter.reservations) && onlyReadCharges);
+    const isRefresh = row => row.kind === "auth-token" && row.method === "POST"
+      && new URLSearchParams(row.query).get("grant_type") === "refresh_token";
+    await waitUntil("OBSERVED_REFRESH_GRANTS_SETTLE", 15000, async () =>
+      clockWatch.since(mark).filter(isRefresh).every(row => row.status !== undefined || row.failure), 1000).catch(() => false);
     const summary = clockWatch.summary(mark);
     c.observations.requests = summary;
-    const refreshGrants = clockWatch.since(mark).filter(row => row.kind === "auth-token" && /grant_type=refresh_token/.test(row.query));
-    check(c, "no-mutating-requests", "0 mutating browser requests and exactly one real 200 refresh grant", "browser request watch", {
-      mutations: summary.mutations, otherNonGet: summary.otherNonGet, refreshGrants: refreshGrants.map(row => row.status ?? null),
-    }, summary.mutations === 0 && summary.otherNonGet === 0 && refreshGrants.length === 1 && refreshGrants[0].status === 200);
+    const refreshGrants = clockWatch.since(mark).filter(isRefresh);
+    const otherAuthWrites = clockWatch.since(mark).filter(row => row.origin === authOrigin && row.kind !== "read" && !isRefresh(row)).length;
+    check(c, "no-mutating-requests", "at least one real refresh and every observed refresh receives 200, with zero mutating requests", "browser request watch", {
+      mutations: summary.mutations, signOut: summary.signOut, otherNonGet: summary.otherNonGet, otherAuthWrites,
+      refreshGrants: refreshGrants.map(row => row.status ?? null),
+    }, summary.mutations === 0 && summary.signOut === 0 && summary.otherNonGet === 0 && otherAuthWrites === 0
+      && refreshGrants.length > 0 && refreshGrants.every(row => row.status === 200 && !row.failure));
   } finally {
     await clockContext.close().catch(() => undefined);
     if (!page.isClosed()) await page.bringToFront().catch(() => undefined);
@@ -924,8 +964,12 @@ await runCase("M-10", ["Z0-R09-C06"], "Delayed old-principal response (owned dat
   const markers = [...referenceTruthA.markers, { label: "threadTitle", value: threadA.title }];
   const prior = await storageScan(page, context, markers);
   const original = prior.accessToken ? await idpUserId(env, prior.accessToken) : { status: 0, id: null };
+  const nativeIdentity = prior.accessToken ? await owner.call("/api/me", undefined, { bearer: prior.accessToken }) : null;
   check(c, "original.identity", "the active browser session opens the original Work and the identity provider confirms the original owner",
-    "Real Auth /auth/v1/user and mounted original Work", { status: original.status }, original.status === 200 && original.id === parentA.ownerId);
+    "Real Auth subject from M-01 and fresh native /api/me for the same browser bearer",
+    { status: original.status, sameIdpSubject: Boolean(original.id) && original.id === originalIdpSubject, nativeStatus: nativeIdentity?.status },
+    original.status === 200 && Boolean(original.id) && original.id === originalIdpSubject
+      && nativeIdentity?.status === 200 && nativeIdentity.body?.userId === parentA.ownerId && nativeIdentity.body?.tenantId === parentA.tenantId);
   const secrets = [{ label: "previousRefreshToken", value: prior.refreshToken }];
   const lock = new pg.Client({ connectionString: env.CENTROPY_E2E_DB_ADMIN_URL });
   await lock.connect();

@@ -275,7 +275,7 @@ jobs:
           const oracleFields = new Set(['status', 'deadline', 'charge count', 'effect count', 'budget', 'consumed',
             'original deadline', 'wall deadline', 'compiler status', 'compiler revision', 'compiler attempts', 'acquisition units'])
           const browserStages = new Set(['START_BROWSER', 'SIGN_IN', 'CONFIRM_IDENTITY', 'OPEN_ORIGINAL_WORK',
-            'READ_OWNER_ORACLE', 'READ_INITIAL_PANELS', 'FIRST_RELOAD', 'SECOND_RELOAD', 'CHECK_RELOADED_PANELS',
+            'READ_OWNER_ORACLE', 'READ_OWNER_CUT', 'READ_ACCOUNTING_WITNESS', 'READ_INITIAL_PANELS', 'FIRST_RELOAD', 'SECOND_RELOAD', 'CHECK_RELOADED_PANELS',
             'START_REFRESH_BROWSER', 'SIGN_IN_FOR_REFRESH', 'OPEN_WORK_FOR_REFRESH', 'ADVANCE_REFRESH_CLOCK', 'READ_WORK_AFTER_REFRESH',
             'BEFORE_LOGOUT_WORK', 'AUTH_LOGOUT', 'SIGN_IN_AGAIN', 'OPEN_WORK_AFTER_SIGN_IN', 'CHECK_RESTORED_WORK',
             'CONFIRM_ORIGINAL_OWNER', 'SWITCH_PRINCIPAL_WITH_HELD_READ'])
@@ -363,6 +363,8 @@ jobs:
             const baseline = checks.find(check => check.id === 'A.canonical-work-baseline')?.observed
             const rootCarriedBy = ['THREAD_PERSISTED_ROOT', 'ROOT_URL_PARAMETER'].includes(observations?.rootCarriedBy)
               ? observations.rootCarriedBy : null
+            const refresh = id === 'M-07' ? checks.find(check => check.id === 'no-mutating-requests')?.observed : null
+            const identity = id === 'M-10' ? checks.find(check => check.id === 'original.identity')?.observed : null
             results.push({ id, outcome, predicate: predicateFrom(error) ?? predicateFrom(reason),
               renderBoundary: renderBoundary(observations?.renderBoundary),
               originalIdentities: id === 'M-01' ? Object.fromEntries(['programId', 'compilerRequestId', 'responsibilityIdentity', 'reservationId', 'originalWorkInputId']
@@ -377,6 +379,20 @@ jobs:
                 .map(key => [key, member(budgetCutResults, observations.budgetCutChecks[key])])) : null,
               browserOperation, browserProbeCause: browserProbeCauses.has(probeCause) ? probeCause : null,
               networkError, setupPredicate, setupCause,
+              failure: error ? { type: member(['Error', 'TypeError', 'ReferenceError', 'RangeError', 'TimeoutError', 'AbortError',
+                'SyntaxError', 'AggregateError', 'AssertionError', 'DatabaseError', 'ZodError', 'ProtocolError', 'TargetClosedError'],
+                observations?.failureType), code: typedCode(observations?.failureCode),
+                frame: /^z0-mounted-(?:session\.mjs|(?:lib|oracle)\.mts):\d{1,4}:\d{1,4}$/.test(observations?.failureFrame ?? '')
+                  ? observations.failureFrame : null } : null,
+              mountedReads: observations?.mountedReads?.slice(-24).map(row => ({
+                route: member(['application-projection', 'institution-sources', 'institution-read', 'projection'], row.route),
+                status: httpStatus(row.status), failed: row.failed === true,
+              })) ?? null,
+              refresh: refresh ? { grants: (refresh.refreshGrants ?? []).slice(0, 16).map(httpStatus), mutations: count(refresh.mutations),
+                signOut: count(refresh.signOut), otherNonGet: count(refresh.otherNonGet), otherAuthWrites: count(refresh.otherAuthWrites),
+                firstTokenReread: checks.find(check => check.id === 'refresh.panel-reread-under-new-token')?.pass === true } : null,
+              identity: identity ? { auth: httpStatus(identity.status), native: httpStatus(identity.nativeStatus),
+                sameIdpSubject: identity.sameIdpSubject === true } : null,
               revocation: revocation ? {
                 raceReached: revocation.raceReached === true,
                 requestsObserved: count(revocation.requestsObserved),
@@ -406,7 +422,9 @@ jobs:
               reloadDifferences: (observations?.reloadDifferences ?? []).filter(field => reloadFields.has(field)),
               reloadBudget: observations?.reloadBudget
                 ? Object.fromEntries(budgetChecks.map(key => [key, observations.reloadBudget[key] === true])) : null,
-              rootCarriedBy, reloadsSettled: [0, 1, 2].includes(observations?.reloadsSettled) ? observations.reloadsSettled : null,
+              rootCarriedBy, rootFallbackAfter: member(['Z0_BROWSER_WORK_INSTRUMENT_UNAVAILABLE', 'Z0_BROWSER_WORK_NOT_PROJECTED',
+                'Z0_BROWSER_SESSION_NOT_PROJECTED'], observations?.rootFallbackAfter),
+              reloadsSettled: [0, 1, 2].includes(observations?.reloadsSettled) ? observations.reloadsSettled : null,
               oracle: oracle ? { projectionStatus: httpStatus(oracle.projectionStatus),
                 institutionReadStatus: httpStatus(oracle.institutionReadStatus),
                 projectedSessionFound: oracle.projectedSessionFound === true,
