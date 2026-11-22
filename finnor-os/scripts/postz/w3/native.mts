@@ -235,6 +235,7 @@ const postgres = new EmbeddedPostgres({ databaseDir: pgDirectory, user: "w3_admi
   onLog: line => { postgresStartLog = (postgresStartLog + line).slice(-8192); } });
 let admin: pg.Client | null = null, auth: any = null, recipient: any = null, activeWorker: ChildProcess | null = null;
 let closePool: (() => Promise<void>) | null = null;
+const diagnosticCode = (value: unknown) => typeof value === "string" && /^[A-Z][A-Z0-9_]{2,120}$/.test(value) ? value : null;
 let failedOwnerCall: { group: string; operation: string; status: number; code: string | null;
   refusedContextOwner: "S3" | "S4" | null; staleResourceWitness: boolean } | null = null;
 const retainOwnerRefusal = (group: string, operation: string, result: Awaited<ReturnType<IntegratedOwnerPorts["http"]>>) => {
@@ -417,6 +418,7 @@ try {
       return { originalStatus, ownerStatus, denial, restoredStatus: await confirmOwner() };
     });
   let declareRemainingResources: (() => Promise<void>) | undefined;
+  let marketAssessmentCount = 0;
   const http: IntegratedOwnerPorts["http"] = async (group, operation, body, actor = owner) => {
     checkBound();
     const ordinal = ++httpOrdinal, began = performance.now(), wall = Date.now(), cpu = process.cpuUsage();
@@ -454,6 +456,13 @@ try {
         signal: AbortSignal.timeout(timeoutMs) });
       status = r.status;
       const result = { status, body: await r.json() as any };
+      if (engine === "W4" && group === "obligations" && (operation === "check-dispatch" || operation === "check-budget")
+        && ++marketAssessmentCount <= 16) {
+        console.log(JSON.stringify({ event: "PHASE_W_W4_OWNER_ASSESSMENT", operation,
+          httpStatus: status, status: diagnosticCode(result.body?.status), code: diagnosticCode(result.body?.code),
+          reasons: Array.isArray(result.body?.reasons) ? result.body.reasons.map(diagnosticCode).filter(Boolean) : [],
+          elapsedMs: Math.round(performance.now() - began) }));
+      }
       if (integratedCompany && actor === owner &&
         ((group === "interventions" && operation === "fit" && (status !== 200 || result.body?.status !== "FITTED")) ||
          (group === "policies" && operation === "synthesize" && (status !== 200 || result.body?.status !== "POLICY_AVAILABLE")) ||
@@ -701,7 +710,7 @@ try {
       ticks += result.ticks;
     }
   };
-  const createMarketPump = (tick: ReusedWorkerTick) => {
+  const createMarketPump = (tick: ReusedWorkerTick, workId: string, principalId: string) => {
     let used = 0, sequence = 0;
     const types = ["run_harness_program_v1", "run_evidence_derivation_v1", "run_compute_search_unit_v1",
       "run_workforce_execution_v1", "compile_real_world_service_v1", "advance_real_world_service_v1",
@@ -725,6 +734,38 @@ try {
           used += physical.ticks; invocationTicks += physical.ticks;
           maximumTickMs = Math.max(maximumTickMs, ...physical.observations.map(row => row.elapsedMs));
         }
+      } catch (error) {
+        try {
+          const state = (await admin!.query<{ status: string; execution_state: string; attempts: number;
+              reason: unknown; recovery: unknown; delivery_attempts: number | null; obligation_id: string | null }>(`SELECT s.status,s.execution_state,
+            s.attempts,s.evidence->>'reason' reason,s.evidence->>'recoveryBudget' recovery,
+            s.payload#>>'{obligationRef,id}' obligation_id,
+            (SELECT max(j.attempts) FROM finnor_os.jobs j WHERE j.tenant_id=s.tenant_id
+              AND j.type='run_workflow_step_v3' AND j.payload->>'workflowStepId'=s.id::text) delivery_attempts
+            FROM finnor_os.workflow_steps s JOIN finnor_os.workflow_runs r
+              ON r.tenant_id=s.tenant_id AND r.id=s.workflow_run_id
+            WHERE s.tenant_id=$1 AND r.work_id=$2 AND s.step_type='execute_governed_obligation'
+            ORDER BY s.updated_at DESC LIMIT 4`, [tenant, workId])).rows;
+          console.error(JSON.stringify({ event: "PHASE_W_W4_QUEUE_FAILURE", invocation,
+            steps: state.map(row => ({ status: row.status, executionState: row.execution_state,
+              attempts: row.attempts, deliveryAttempts: row.delivery_attempts,
+              reason: diagnosticCode(row.reason), recovery: diagnosticCode(row.recovery) })) }));
+          const obligationId = state.find(row => row.status !== "completed")?.obligation_id;
+          if (obligationId) {
+            const { readOwnerTransportExecutionHandoff } = await import("../../../packages/governed-execution/src/owner-transport");
+            const scope = { semanticOwner: "S6" as const, tenantId: tenant, principalId };
+            const { handoff } = await readOwnerTransportExecutionHandoff(scope, obligationId);
+            const summarize = (entry: { event: { type: string; detail?: { status?: unknown; reason?: unknown; httpStatus?: unknown } } }) => ({
+              type: diagnosticCode(entry.event.type), status: diagnosticCode(entry.event.detail?.status),
+              reason: diagnosticCode(entry.event.detail?.reason),
+              httpStatus: typeof entry.event.detail?.httpStatus === "number" ? entry.event.detail.httpStatus : null,
+            });
+            console.error(JSON.stringify({ event: "PHASE_W_W4_PROTECTED_HISTORY", invocation,
+              attempts: handoff.attempts.length, exposure: handoff.exposure.slice(-4).map(summarize),
+              observations: handoff.observations.slice(-4).map(summarize), settlements: handoff.settlements.length }));
+          }
+        } catch { console.error(JSON.stringify({ event: "PHASE_W_W4_QUEUE_FAILURE", invocation, diagnosticUnavailable: true })); }
+        throw error;
       } finally {
         console.log(JSON.stringify({ event: "PHASE_W_W4_QUEUE", invocation, complete, invocationTicks, totalTicks: used,
           elapsedMs: Math.round(performance.now() - started), maximumTickMs: Math.round(maximumTickMs) }));
@@ -2360,7 +2401,7 @@ try {
       const marketMeasurements = { units: await declare("units"), money: await declare("money") };
       const market = await withReusedIntegratedWorker(tick => runMarketOwner(ports, {
         actors: { operator: backup, buyer: provider, observer: inspector, accountant: evaluator, unrelated, foreign },
-        native, recipient, pump: createMarketPump(tick),
+        native, recipient, pump: createMarketPump(tick, marketWork.workId, owner),
         namespace: marketNamespace, declaredMeasurements: marketMeasurements, work: marketWork, buyerContact: marketBuyer,
         originalResources: {
           cash: sharedResource(marketResourceIds.cash), execution: sharedResource(marketResourceIds.execution),
