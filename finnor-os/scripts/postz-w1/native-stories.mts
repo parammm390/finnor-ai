@@ -14,7 +14,7 @@ import type { SharedAllocationFixture } from "../postz/integrated/allocation-fix
 export function prepareNativeOwnerFixture(e: any, setup: {
   beforeFit: (owner: any) => Promise<void>;
   existingOwner?: { tenant: string; principal: string; root: { entityType: "external_organization"; entityId: string } };
-  sharedAllocation?: SharedAllocationFixture;
+  sharedAllocation?: SharedAllocationFixture & { outcomeSeriesId: string };
 }) {
   return prepared(e, "ADAPTIVE", { deferSearch: true, beforeFit: setup.beforeFit,
     existingOwner: setup.existingOwner, sharedAllocation: setup.sharedAllocation, beforePolicy: async (owner: any) => {

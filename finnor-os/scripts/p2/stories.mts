@@ -64,7 +64,8 @@ export async function prepared(e:any,topology='ADAPTIVE',extra:any={}) {
   return api(f,op,body,handler);
  }});
  const f=await support.fixture('p2-'+randomUUID(),1,[{id:'compute',unit:'native-attempt',capacity:8,totalLimit:8,resourceClass:'COMPUTE'}],
-  existingOwner?{existing:existingOwner,metricKeyPrefix:'p2-'+randomUUID(),rightsRef:sharedAllocation?.rightsRef}:{});
+  existingOwner?{existing:existingOwner,metricKeyPrefix:'p2-'+randomUUID(),rightsRef:sharedAllocation?.rightsRef,
+    sharedOutcomeSeriesId:sharedAllocation?.outcomeSeriesId}:{});
  if(beforePolicy)await beforePolicy(f);
  const policy=await support.policy(f,'compute',{compute:8});await support.resource(f,'compute','native-attempt','CUMULATIVE_EXPENDITURE',['8','8']);
  const allocation=ok(await api(f,'clear',support.clearing(f,{compute:['1']})));assert.equal(allocation.status,'FEASIBLE');
