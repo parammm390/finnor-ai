@@ -233,11 +233,14 @@ const postgres = new EmbeddedPostgres({ databaseDir: pgDirectory, user: "w3_admi
 let admin: pg.Client | null = null, auth: any = null, recipient: any = null, activeWorker: ChildProcess | null = null;
 let closePool: (() => Promise<void>) | null = null;
 let failedOwnerCall: { group: string; operation: string; status: number; code: string | null;
-  staleResourceWitness: boolean } | null = null;
+  refusedContextOwner: "S3" | "S4" | null; staleResourceWitness: boolean } | null = null;
 const retainOwnerRefusal = (group: string, operation: string, result: Awaited<ReturnType<IntegratedOwnerPorts["http"]>>) => {
   const code: unknown = result.status === 200 ? result.body?.status : result.body?.code;
+  const refusal = result.status === 404 && code === "PE_ENTITY_NOT_FOUND" ? result.body?.error : null;
   failedOwnerCall = { group, operation, status: result.status,
     code: typeof code === "string" && /^[A-Z][A-Z0-9_]{2,100}$/.test(code) ? code : null,
+    refusedContextOwner: refusal === "Permitted S3 context is unavailable" ? "S3"
+      : refusal === "Permitted S4 context is unavailable" ? "S4" : null,
     staleResourceWitness: group === "allocations" && operation === "clear" && code === "STALE_INPUT"
       && result.body?.error === "Resource source or rights witness is no longer current" };
 };
@@ -2298,7 +2301,15 @@ try {
     assert(organizationEffectWork && marketWork && marketBuyer && sharedAllocation,
       "W049_COMBINED_ORIGINALS_MUST_BE_DECLARED_BEFORE_FIT");
     const ports: IntegratedOwnerPorts = integratedPorts;
+    const servicePendingOwnerDeliveries = async (engine: "W4" | "W5") => {
+      const { rows: [pending] } = await ports.admin.query<{ count: number }>(`SELECT count(*)::int count
+        FROM finnor_os.s6_owner_delivery_states WHERE tenant_id=$1 AND principal_id=$2
+        AND semantic_owner='S1' AND status<>'ACCEPTED'`, [tenant, owner]);
+      console.log(JSON.stringify({ event: "PHASE_W_OWNER_DELIVERY_HANDOFF", engine, pendingS1: pending!.count }));
+      await recipient.drainNativeReferences(64);
+    };
     await observeIntegratedOwner("W4", async () => {
+      await servicePendingOwnerDeliveries("W4");
       const { runMarketOwner } = await import("../integrated/market-owner.mts");
       const { prepareNativeGrowthMeasurements } = await import("../../w4/native-growth-journey.mts");
       const declare = await prepareNativeGrowthMeasurements({
@@ -2318,6 +2329,7 @@ try {
       await integratedEvidence.record(market);
     });
     await observeIntegratedOwner("W5", async () => {
+      await servicePendingOwnerDeliveries("W5");
       const effectFixture = { ...f, name: "w5-original-" + organizationEffectWork.workId,
         policies: [], labels: {}, resources: Object.values(organizationEffectResources).map(sharedResource) };
       const fitted = await ok("interventions", "fit", { request: f.model.request });
