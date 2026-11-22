@@ -159,6 +159,7 @@ const profileEnv = {
   ...v2Env, // r12 v2 profile
 }
 const appEnv = { ...adminEnv, ...profileEnv, DATABASE_URL: appUrl.toString(), CENTROPY_E2E_DB_ADMIN_URL: adminUrl.toString() }
+if (compiledFrontend && profiles.has("z0")) appEnv.FINNOR_Z0_MOUNT_READ_TRACE = "1"
 assert.equal(appEnv.FINNOR_ENVIRONMENT, x2Profile || profiles.has("z4") ? "staging" : "ordinary_disposable", "PROFILE_ENVIRONMENT_MISMATCH")
 if (x2Profile) {
   mkdirSync(x2SecretRoot, { mode: 0o700, recursive: true })

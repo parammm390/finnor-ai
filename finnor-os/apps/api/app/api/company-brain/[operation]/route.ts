@@ -345,12 +345,22 @@ export async function POST(req: Request, { params }: { params: Promise<{ operati
     if(M1_OPERATIONS.has(route.operation))return await inM1Episode(m1TransportDeadline(req),()=>dispatchPost(req,route));
     if((ECONOMIC_ORCHESTRATION_OPERATIONS as readonly string[]).includes(route.operation))return await inDeliberationDeadline(deliberationTransportDeadline(req),()=>dispatchPost(req,route));
     if((DELIBERATION_OPERATIONS as readonly string[]).includes(route.operation))return await inDeliberationDeadline(deliberationTransportDeadline(req),()=>dispatchPost(req,route));
-    return await dispatchPost(req,route);
+    const traceId = process.env.FINNOR_Z0_MOUNT_READ_TRACE === "1" &&
+      ["projection", "application-projection", "institution-read", "institution-sources"].includes(route.operation)
+      ? req.headers.get("x-finnor-native-read-id") : null;
+    if (!traceId || !/^[a-f0-9-]{36}$/.test(traceId)) return await dispatchPost(req, route);
+    const startedAt = Date.now();
+    console.info(JSON.stringify({ event: "Z0_MOUNT_API_ENTER", id: traceId, route: route.operation, startedAt }));
+    let preparedMs: number | null = null;
+    const result = await dispatchPost(req, route, () => { preparedMs = Date.now() - startedAt; });
+    console.info(JSON.stringify({ event: "Z0_MOUNT_API_READ", id: traceId, route: route.operation,
+      startedAt, preparedMs, status: result.status, elapsedMs: Date.now() - startedAt }));
+    return result;
   }catch(error){return requestError(error);}
 }
-async function dispatchPost(req:Request,route:{operation:string}):Promise<Response>{
+async function dispatchPost(req:Request,route:{operation:string}, onPrepared?: () => void):Promise<Response>{
   try {
-    const prepared=await Promise.allSettled([requireContext(req),json(req)]);const failed=prepared.find(p=>p.status==='rejected');if(failed?.status==='rejected')throw failed.reason;
+    const prepared=await Promise.allSettled([requireContext(req),json(req)]);onPrepared?.();const failed=prepared.find(p=>p.status==='rejected');if(failed?.status==='rejected')throw failed.reason;
     const auth=(prepared[0] as PromiseFulfilledResult<Awaited<ReturnType<typeof requireContext>>>).value,body=(prepared[1] as PromiseFulfilledResult<unknown>).value;
     const ctx: PeMutationContext = { auth };
     if((APPLICATION_SEMANTICS_OPERATIONS as readonly string[]).includes(route.operation)){const result=await handleApplicationSemanticsOperation(ctx,route.operation,body);return response(result.body,result.status);}

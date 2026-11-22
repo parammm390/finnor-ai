@@ -168,88 +168,91 @@ export async function mountedServiceProof(input: MountedInput) {
   const participantPanel = `[data-testid="w3-service-panel"][data-w3-context="my-invitations"]`;
   const draftPrefix = "CONTROLLED_UNSUBMITTED_W3_DRAFT:";
   const rowCount = () => evaluate(selector => document.querySelectorAll(selector + " tbody tr").length, panel);
+  const retainReadFailure = async (file: string) => {
+    const cutoff = performance.now();
+    const recentReads = [...serviceRequests].slice(-16);
+    const serviceReads = recentReads.map(([, { began, status, responseMs, failed }]) => ({
+      ageMs: Math.round(cutoff - began), responseMs, status, failed,
+    }));
+    const pendingRead = recentReads.reverse().find(([, row]) => row.status === null && !row.failed);
+    // An absent row is not proof that fulfillment is absent. Retain the
+    // exact mounted/transport boundary before propagating the original failure.
+    const browserState = await currentPage().evaluate((selector: string) => {
+      const service = document.querySelector(selector);
+      const work = document.querySelector(".ct-world-work");
+      const contextPanels = Array.from(document.querySelectorAll('[data-testid="w3-service-panel"]'));
+      const locationUrl = new URL(location.href);
+      const visibleRoot = document.querySelector(".ct-world");
+      const auth = document.querySelector(".ct-auth-state");
+      const authTitle = auth?.querySelector("h1")?.textContent?.trim();
+      const authScreen = !auth ? "NONE"
+        : auth.getAttribute("data-private-workspace-state") === "unavailable" ? "VISIBILITY_CLOSED"
+        : auth.getAttribute("role") === "status" ? "AUTH_BOOTSTRAP"
+        : authTitle === "Workspace unavailable" ? "AUTH_OR_ROLE_ERROR"
+        : authTitle === "Participant workspace" ? "PARTICIPANT_SCOPE"
+        : authTitle === "Your investment context stays private." ? "SESSION_MISSING"
+        : "UNKNOWN_CLOSED_SCOPE";
+      const authRejection = !!auth?.textContent?.includes("Your workspace access is no longer available.");
+      return {
+        authScreen, authRejection,
+        pathname: locationUrl.pathname,
+        queryKeys: [...locationUrl.searchParams.keys()]
+          .filter(key => ["root", "object", "workId", "context", "threadId"].includes(key)).slice(0, 8),
+        documentReady: document.readyState,
+        visibility: document.visibilityState,
+        appMounted: Boolean(document.querySelector(".ct-app")),
+        workspaceError: Boolean(document.querySelector(".ct-auth-state")),
+        workspaceUnavailable: Boolean(document.querySelector('[data-private-workspace-state="unavailable"]')),
+        nextErrorOverlay: Boolean(document.querySelector("nextjs-portal")),
+        mainMounted: Boolean(document.querySelector('main[aria-label="WORLD explorer"]')),
+        visibleRoot: Boolean(visibleRoot),
+        loginScreen: Boolean(document.querySelector("#centropy-login-email")),
+        worldExplorer: Boolean(document.querySelector(".ct-world")),
+        workRecord: Boolean(work),
+        workRecordLoading: Boolean(work?.querySelector('[role="status"]')),
+        workRecordAlert: Boolean(work?.querySelector('[role="alert"]')),
+        serviceMounted: Boolean(service),
+        serviceRowCount: service?.querySelectorAll("tbody tr").length ?? null,
+        serviceStatus: Boolean(service?.querySelector('[role="status"]')),
+        servicePanelCount: contextPanels.length,
+        otherServicePanelCount: contextPanels.filter(p => p !== service).length,
+        worldRootSelected: Boolean(document.querySelector('select[aria-label="Choose WORLD root"]')?.getAttribute("value")),
+        workRecordTab: Boolean(document.querySelector('button[aria-current="page"]')),
+      };
+    }, panel).catch(() => ({ browserProbeUnavailable: true }));
+    if (pendingRead) {
+      // The verdict already failed. Observe the same request briefly to retain
+      // its outcome when the browser assertion ends ahead of the owner deadline.
+      const [request, row] = pendingRead;
+      if (row.status === null && !row.failed) {
+        await currentPage().waitForResponse(response => response.request() === request,
+          { timeout: Math.max(1, Math.min(6000, 32000 - (performance.now() - row.began))) }).catch(() => null);
+      }
+    }
+    const duration = (value: number | null) => value === null ? null : Math.round(value);
+    await input.artifact("mounted/" + file + ".json", {
+      schema: "finnor.w3.mounted-read-diagnostic.v1",
+      browserState, routeStatuses: mountedReadOutcomes.slice(-60),
+      serviceReads,
+      lastDirectRead: input.lastDirectRead,
+      installedApiReads: input.installedReadTimings.filter(sample => sample.receivedMs <= cutoff).slice(-16).map(sample => ({
+        sequence: sample.sequence, receivedBeforeCutoffMs: Math.round(cutoff - sample.receivedMs),
+        upstreamHeadersMs: duration(sample.upstreamHeadersMs), upstreamBodyMs: duration(sample.upstreamBodyMs),
+        forwardedMs: duration(sample.forwardedMs), status: sample.upstreamStatus, clientClosed: sample.clientClosed,
+      })),
+      watchedAfterCutoff: pendingRead ? { status: pendingRead[1].status,
+        responseMs: pendingRead[1].responseMs, failed: pendingRead[1].failed } : null,
+      navigations: mountedNavigations.slice(-25),
+      runtimeErrors: mountedRuntimeErrors.slice(-20),
+      authResponses: mountedAuthResponses.slice(-75),
+      noPrivateResponseBodiesOrTokens: true,
+    });
+  };
   const rendered = async () => {
     try {
       await wait(selector => document.querySelectorAll(selector + " tbody tr").length === 7, panel);
     } catch (error) {
-      const cutoff = performance.now();
-      const recentReads = [...serviceRequests].slice(-16);
-      const serviceReads = recentReads.map(([, { began, status, responseMs, failed }]) => ({
-        ageMs: Math.round(cutoff - began), responseMs, status, failed,
-      }));
-      const pendingRead = recentReads.reverse().find(([, row]) => row.status === null && !row.failed);
-      // An absent row is not proof that fulfillment is absent. Retain the
-      // exact mounted/transport boundary before propagating the original failure.
-      const browserState = await currentPage().evaluate((selector: string) => {
-        const service = document.querySelector(selector);
-        const work = document.querySelector(".ct-world-work");
-        const contextPanels = Array.from(document.querySelectorAll('[data-testid="w3-service-panel"]'));
-        const locationUrl = new URL(location.href);
-        const visibleRoot = document.querySelector(".ct-world");
-        const auth = document.querySelector(".ct-auth-state");
-        const authTitle = auth?.querySelector("h1")?.textContent?.trim();
-        const authScreen = !auth ? "NONE"
-          : auth.getAttribute("data-private-workspace-state") === "unavailable" ? "VISIBILITY_CLOSED"
-          : auth.getAttribute("role") === "status" ? "AUTH_BOOTSTRAP"
-          : authTitle === "Workspace unavailable" ? "AUTH_OR_ROLE_ERROR"
-          : authTitle === "Participant workspace" ? "PARTICIPANT_SCOPE"
-          : authTitle === "Your investment context stays private." ? "SESSION_MISSING"
-          : "UNKNOWN_CLOSED_SCOPE";
-        const authRejection = !!auth?.textContent?.includes("Your workspace access is no longer available.");
-        return {
-          authScreen, authRejection,
-          pathname: locationUrl.pathname,
-          queryKeys: [...locationUrl.searchParams.keys()]
-            .filter(key => ["root", "object", "workId", "context", "threadId"].includes(key)).slice(0, 8),
-          documentReady: document.readyState,
-          visibility: document.visibilityState,
-          appMounted: Boolean(document.querySelector(".ct-app")),
-          workspaceError: Boolean(document.querySelector(".ct-auth-state")),
-          workspaceUnavailable: Boolean(document.querySelector('[data-private-workspace-state="unavailable"]')),
-          nextErrorOverlay: Boolean(document.querySelector("nextjs-portal")),
-          mainMounted: Boolean(document.querySelector('main[aria-label="WORLD explorer"]')),
-          visibleRoot: Boolean(visibleRoot),
-          loginScreen: Boolean(document.querySelector("#centropy-login-email")),
-          worldExplorer: Boolean(document.querySelector(".ct-world")),
-          workRecord: Boolean(work),
-          workRecordLoading: Boolean(work?.querySelector('[role="status"]')),
-          workRecordAlert: Boolean(work?.querySelector('[role="alert"]')),
-          serviceMounted: Boolean(service),
-          serviceRowCount: service?.querySelectorAll("tbody tr").length ?? null,
-          serviceStatus: Boolean(service?.querySelector('[role="status"]')),
-          servicePanelCount: contextPanels.length,
-          otherServicePanelCount: contextPanels.filter(p => p !== service).length,
-          worldRootSelected: Boolean(document.querySelector('select[aria-label="Choose WORLD root"]')?.getAttribute("value")),
-          workRecordTab: Boolean(document.querySelector('button[aria-current="page"]')),
-        };
-      }, panel).catch(() => ({ browserProbeUnavailable: true }));
-      if (pendingRead) {
-        // The verdict already failed. Observe the same request briefly to retain
-        // its outcome when the browser assertion ends ahead of the owner deadline.
-        const [request, row] = pendingRead;
-        if (row.status === null && !row.failed) {
-          await currentPage().waitForResponse(response => response.request() === request,
-            { timeout: Math.max(1, Math.min(6000, 32000 - (performance.now() - row.began))) }).catch(() => null);
-        }
-      }
-      const duration = (value: number | null) => value === null ? null : Math.round(value);
-      await input.artifact("mounted/first-render-failure.json", {
-        schema: "finnor.w3.mounted-read-diagnostic.v1",
-        browserState, routeStatuses: mountedReadOutcomes.slice(-60),
-        serviceReads,
-        lastDirectRead: input.lastDirectRead,
-        installedApiReads: input.installedReadTimings.filter(sample => sample.receivedMs <= cutoff).slice(-16).map(sample => ({
-          sequence: sample.sequence, receivedBeforeCutoffMs: Math.round(cutoff - sample.receivedMs),
-          upstreamHeadersMs: duration(sample.upstreamHeadersMs), upstreamBodyMs: duration(sample.upstreamBodyMs),
-          forwardedMs: duration(sample.forwardedMs), status: sample.upstreamStatus, clientClosed: sample.clientClosed,
-        })),
-        watchedAfterCutoff: pendingRead ? { status: pendingRead[1].status,
-          responseMs: pendingRead[1].responseMs, failed: pendingRead[1].failed } : null,
-        navigations: mountedNavigations.slice(-25),
-        runtimeErrors: mountedRuntimeErrors.slice(-20),
-        authResponses: mountedAuthResponses.slice(-75),
-        noPrivateResponseBodiesOrTokens: true,
-      });
+      await retainReadFailure("first-render-failure").catch(() => undefined);
       throw error;
     }
     const view = await evaluate(({ selector, prefix }) => ({
@@ -384,6 +387,9 @@ export async function mountedServiceProof(input: MountedInput) {
       await Promise.race([hold.entered, new Promise((_, reject) => {
         timer = setTimeout(() => reject(Error("W3_MOUNTED_REAL_RESPONSE_NOT_OBSERVED:" + hold.original.id)), 15000);
       })]);
+    } catch (error) {
+      await retainReadFailure("read-barrier-" + hold.original.id).catch(() => undefined);
+      throw error;
     } finally { if (timer) clearTimeout(timer) }
     return hold;
   };
@@ -679,11 +685,16 @@ export async function mountedServiceProof(input: MountedInput) {
         await input.revokeOwner(true); revoked = true;
         // A real reload expires the rendered private scope. The retained old
         // response is delivered only after the new authority has been refused.
-        await browser(["open", workUrl()]);
+        const denied = currentPage().waitForResponse(response =>
+          new URL(response.url()).pathname === "/api/centropy/me"
+          && response.request().method() === "GET" && [401, 403].includes(response.status())
+          && response.headers()["x-finnor-identity-state"] === "denied", { timeout: 15000 });
+        const [refusal] = await Promise.all([denied, browser(["open", workUrl()])]);
+        assert.equal(await refusal.finished(), null, "W3_AUTHORITY_REFUSAL_RESPONSE_INCOMPLETE");
         await clear(); hold.release(); await hold.done;
         assert.equal(hold.original.automatic, false);
         await wait(id => !document.body.innerText.includes(id), input.expectedInstanceIds[0]!);
-        return { draft, barrier: input.barrier.receipts(), durable: await input.snapshot(),
+        return { draft, refusalStatus: refusal.status(), barrier: input.barrier.receipts(), durable: await input.snapshot(),
           screenshot: await screenshot("authority-refused") };
       });
   } catch (error) {

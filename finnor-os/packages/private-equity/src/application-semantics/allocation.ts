@@ -271,8 +271,9 @@ export async function chargeApplicationParent(ctx: PeMutationContext, input: {
   };
   return client ? write(client) : withS5PortfolioTransaction(ctx, write);
 }
-export async function applicationParentCharges(ctx: PeMutationContext, allocationRef: ExperimentRef) {
-  return tx(ctx, async (c) => (await c.query<{ body: Record<string, unknown> }>(
+export async function applicationParentCharges(ctx: PeMutationContext, allocationRef: ExperimentRef, client?: PoolClient) {
+  const read = async (c: PoolClient) => (await c.query<{ body: Record<string, unknown> }>(
     "SELECT body FROM finnor_os.s5_governed_resource_charges WHERE tenant_id=$1 AND principal_id=$2 AND body->'allocationRef'=$3::jsonb ORDER BY created_at,charge_key LIMIT 2049",
-    [ctx.auth.tenantId, principal(ctx), JSON.stringify(allocationRef)])).rows.map((row) => row.body), true);
+    [ctx.auth.tenantId, principal(ctx), JSON.stringify(allocationRef)])).rows.map((row) => row.body);
+  return client ? read(client) : tx(ctx, read, true);
 }

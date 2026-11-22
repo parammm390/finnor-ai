@@ -34,6 +34,22 @@ async function institutionWorkHead(ctx: PeMutationContext, workId: string, clien
   return rows[0] ?? null;
 }
 
+async function readInstitutionWorkSources(ctx: PeMutationContext, workId: string) {
+  return tx(ctx, async c => {
+    await authorizeInstitutionWork(ctx, workId, c);
+    const grants = (await c.query(`SELECT id::text,source_id,source_class,protocol,revision,expires_at
+      FROM finnor_os.x1_source_grants g WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3
+      AND NOT EXISTS(SELECT 1 FROM finnor_os.x1_source_grants n WHERE n.tenant_id=g.tenant_id
+        AND n.work_id=g.work_id AND n.principal_id=g.principal_id AND n.source_id=g.source_id AND n.version>g.version)
+      ORDER BY source_id LIMIT 17`, [ctx.auth.tenantId, principal(ctx), workId])).rows;
+    const work = (await c.query("SELECT id::text FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1",
+      [ctx.auth.tenantId, workId])).rows[0];
+    const request = await institutionWorkHead(ctx, workId, c);
+    return { workId, workInputId: work?.id ?? null, grants, request,
+      completionContracts:INSTITUTION_COMPLETION_CONTRACTS };
+  }, true);
+}
+
 export async function readInstitutionCompiler(ctx: PeMutationContext, requestId: string, purpose?: "WORK_OBSERVATION") {
   let q = await compilerRow(ctx, requestId);
   await authorizeInstitutionWork(ctx, q.work_id);
@@ -125,31 +141,16 @@ async function handleInstitutionOperationBody(ctx: PeMutationContext, operation:
     }
     if (operation === "institution-sources") {
       const { workId } = sourceRead.parse(body);
-      const sources = await tx(ctx, async c => {
-        await authorizeInstitutionWork(ctx, workId, c);
-        const grants = (await c.query(`SELECT id::text,source_id,source_class,protocol,revision,expires_at
-          FROM finnor_os.x1_source_grants g WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3
-          AND NOT EXISTS(SELECT 1 FROM finnor_os.x1_source_grants n WHERE n.tenant_id=g.tenant_id
-            AND n.work_id=g.work_id AND n.principal_id=g.principal_id AND n.source_id=g.source_id AND n.version>g.version)
-          ORDER BY source_id LIMIT 17`, [ctx.auth.tenantId, principal(ctx), workId])).rows;
-        const work = (await c.query("SELECT id::text FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1",
-          [ctx.auth.tenantId, workId])).rows[0];
-        const request = await institutionWorkHead(ctx, workId, c);
-        return { workId, workInputId: work?.id ?? null, grants, request,
-          completionContracts:INSTITUTION_COMPLETION_CONTRACTS };
-      }, true);
+      const sources = await readInstitutionWorkSources(ctx, workId);
       return { status: 200, body: sources, observedHead: sources.request?.id ?? null };
     }
     if (operation === "institution-read") {
       const input = programmeRead.parse(body);
       if ("requestId" in input)
         return { status: 200, body: await readInstitutionCompiler(ctx, input.requestId, input.purpose) };
-      const request = await tx(ctx, async client => {
-        await authorizeInstitutionWork(ctx, input.workId, client);
-        return institutionWorkHead(ctx, input.workId, client);
-      }, true);
-      const programme = request ? await readInstitutionCompiler(ctx, request.id, input.purpose) : null;
-      return { status: 200, body: programme, observedHead: request?.id ?? null };
+      const sources = await readInstitutionWorkSources(ctx, input.workId);
+      const programme = sources.request ? await readInstitutionCompiler(ctx, sources.request.id, input.purpose) : null;
+      return { status: 200, body: { sources, programme }, observedHead: sources.request?.id ?? null };
     }
     const { requestId } = id.parse(body);
     if (operation === "institution-status" || operation === "institution-witness")

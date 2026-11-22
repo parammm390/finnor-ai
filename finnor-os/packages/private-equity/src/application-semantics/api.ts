@@ -220,54 +220,59 @@ export async function requestApplicationExecution(ctx: PeMutationContext, input:
 }
 export async function projectApplicationSemantics(ctx: PeMutationContext, input: unknown) {
   const request = ApplicationProjectionReadSchema.parse(input);
-  await authorize(ctx, request.root, [{ type: "work", id: request.workId }]);
-  const rows = await tx(ctx, async (c) => {
+  const projections = await tx(ctx, async c => {
+    await authorize(ctx, request.root, [{ type: "work", id: request.workId }], [], c);
     const work = await c.query("SELECT 1 FROM finnor_os.works WHERE tenant_id=$1 AND id=$2",
       [ctx.auth.tenantId, request.workId]);
     if (!work.rowCount) throw unavailable();
-    return (await c.query<ApplicationSessionRow>(
+    const rows = (await c.query<ApplicationSessionRow>(
       "SELECT * FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND root=$4::jsonb ORDER BY created_at DESC,id DESC LIMIT 17",
       [ctx.auth.tenantId, principal(ctx), request.workId, JSON.stringify(request.root)])).rows;
+    if (rows.length > 16) x2Fault("X2_SESSION_PROJECTION_REQUIRES_PAGINATION");
+    const observations = [];
+    for (const row of rows) {
+      const { model, check } = row.model_ref && row.check_ref ? await currentApplicationModel(ctx, row, c) : { model: null, check: null };
+      const composition = row.composition_ref ? await applicationArtifact<Record<string, unknown>>(ctx, row.composition_ref, c) : null;
+      const authority = row.id !== row.parent_id ? await currentFreshApplicationAuthority(ctx, row, c) : null;
+      const freshAuthority: ApplicationFreshAuthorityView | null = authority ? {
+        schema: "finnor.x2.application-fresh-authority-view.v1",
+        ref: x2Ref("S4", "application-fresh-authority", authority),
+        sessionId: authority.sessionId, parentId: authority.parentId,
+        tenantId: authority.tenantId, principalId: authority.principalId, workId: authority.workId,
+        originalParentRef: authority.originalParentRef, modelRef: authority.modelRef, checkRef: authority.checkRef,
+        rightsRef: authority.rightsRef, target: authority.target, deadlineAt: authority.deadlineAt,
+        bindings: authority.bindings.map(({ profileId, role, applicationAccountId, originalGrantRef, currentGrantRef, operationIds }) =>
+          ({ profileId, role, applicationAccountId, originalGrantRef, currentGrantRef, operationIds })),
+        qualification: "AUTHENTICATED_CANONICAL_S4_PROJECTION_NOT_AN_AUTHORITY_GRANT",
+        protectionDomain: "DISPOSABLE_TEST_AUTHORITY", protectedAdmission: false, executionAuthorityGranted: false,
+      } : null;
+      const effects = (await c.query(
+        "SELECT r.id request_id,r.status,r.possible_egress,r.observation_ref,o.body->'ref' obligation_ref,o.effect_id,e.status effect_status,e.verification,d.status action_status"
+        + " FROM finnor_os.application_semantics_requests r JOIN finnor_os.s6_obligation_origins o ON o.tenant_id=r.tenant_id AND o.obligation_id=r.obligation_id"
+        + " JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id"
+        + " JOIN finnor_os.domain_actions d ON d.tenant_id=o.tenant_id AND d.id=o.domain_action_id"
+        + " WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.session_id=$3 ORDER BY r.created_at,r.id LIMIT 65",
+        [ctx.auth.tenantId, principal(ctx), row.id])).rows;
+      if (effects.length > 64) x2Fault("X2_EFFECT_PROJECTION_REQUIRES_PAGINATION");
+      const acquisition = request.includeAcquisition && row.id === row.parent_id
+        ? ApplicationAcquireSchema.safeParse(row.request) : null;
+      observations.push({ row, session: { id: row.id, parentId: row.parent_id, status: row.status, reason: row.reason,
+        generation: row.generation, deadlineAt: row.parent.deadlineAt, originalParentRef: row.original_parent_ref,
+        ...(request.includeAcquisition ? { acquisition: acquisition?.success ? {
+          targetIds: acquisition.data.targets.map(target => target.id),
+          resourceDemand: acquisition.data.resourceDemand, deadlineAt: acquisition.data.deadlineAt,
+        } : null } : {}),
+        model, check, freshAuthority, composition: composition && row.composition_ref ? { ...composition, ref: row.composition_ref } : null,
+        effects, charges: await applicationParentCharges(ctx, row.allocation_ref, c), billing: "UNKNOWN",
+        resourceReleaseGranted: false, protectedAdmission: false, cancelledAt: row.cancel_requested_at?.toISOString() ?? null } });
+    }
+    return observations;
   }, true);
-  if (rows.length > 16) x2Fault("X2_SESSION_PROJECTION_REQUIRES_PAGINATION");
   const sessions = [];
-  for (const row of rows) {
-    const { model, check } = row.model_ref && row.check_ref ? await currentApplicationModel(ctx, row) : { model: null, check: null };
-    const composition = row.composition_ref ? await applicationArtifact<Record<string, unknown>>(ctx, row.composition_ref) : null;
-    const authority = row.id !== row.parent_id ? await currentFreshApplicationAuthority(ctx, row) : null;
-    const freshAuthority: ApplicationFreshAuthorityView | null = authority ? {
-      schema: "finnor.x2.application-fresh-authority-view.v1",
-      ref: x2Ref("S4", "application-fresh-authority", authority),
-      sessionId: authority.sessionId, parentId: authority.parentId,
-      tenantId: authority.tenantId, principalId: authority.principalId, workId: authority.workId,
-      originalParentRef: authority.originalParentRef, modelRef: authority.modelRef, checkRef: authority.checkRef,
-      rightsRef: authority.rightsRef, target: authority.target, deadlineAt: authority.deadlineAt,
-      bindings: authority.bindings.map(({ profileId, role, applicationAccountId, originalGrantRef, currentGrantRef, operationIds }) =>
-        ({ profileId, role, applicationAccountId, originalGrantRef, currentGrantRef, operationIds })),
-      qualification: "AUTHENTICATED_CANONICAL_S4_PROJECTION_NOT_AN_AUTHORITY_GRANT",
-      protectionDomain: "DISPOSABLE_TEST_AUTHORITY", protectedAdmission: false, executionAuthorityGranted: false,
-    } : null;
-    const effects = await tx(ctx, async (c) => (await c.query(
-      "SELECT r.id request_id,r.status,r.possible_egress,r.observation_ref,o.body->'ref' obligation_ref,o.effect_id,e.status effect_status,e.verification,d.status action_status"
-      + " FROM finnor_os.application_semantics_requests r JOIN finnor_os.s6_obligation_origins o ON o.tenant_id=r.tenant_id AND o.obligation_id=r.obligation_id"
-      + " JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id"
-      + " JOIN finnor_os.domain_actions d ON d.tenant_id=o.tenant_id AND d.id=o.domain_action_id"
-      + " WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.session_id=$3 ORDER BY r.created_at,r.id LIMIT 65",
-      [ctx.auth.tenantId, principal(ctx), row.id])).rows, true);
-    if (effects.length > 64) x2Fault("X2_EFFECT_PROJECTION_REQUIRES_PAGINATION");
-    const acquisition = request.includeAcquisition && row.id === row.parent_id
-      ? ApplicationAcquireSchema.safeParse(row.request) : null;
-    sessions.push({ id: row.id, parentId: row.parent_id, status: row.status, reason: row.reason,
-      generation: row.generation, deadlineAt: row.parent.deadlineAt, originalParentRef: row.original_parent_ref,
-      ...(request.includeAcquisition ? { acquisition: acquisition?.success ? {
-        targetIds: acquisition.data.targets.map(target => target.id),
-        resourceDemand: acquisition.data.resourceDemand, deadlineAt: acquisition.data.deadlineAt,
-      } : null } : {}),
-      model, check, freshAuthority, composition: composition && row.composition_ref ? { ...composition, ref: row.composition_ref } : null,
-      effects, charges: await applicationParentCharges(ctx, row.allocation_ref), billing: "UNKNOWN",
-      institutional: await projectInstitutionApplication(ctx, row),
-      resourceReleaseGranted: false, protectedAdmission: false, cancelledAt: row.cancel_requested_at?.toISOString() ?? null });
-  }
+  // The inherited S5 budget reader owns its portfolio transaction. Release
+  // the application read connection before calling it.
+  for (const { row, session } of projections)
+    sessions.push({ ...session, institutional: await projectInstitutionApplication(ctx, row) });
   return { schema: "finnor.x2.work-projection.v1", tenantId: ctx.auth.tenantId, principalId: principal(ctx),
     root: request.root, workId: request.workId, sessions };
 }

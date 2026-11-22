@@ -49,7 +49,7 @@ const check = (c, id, expected, provenance, observed, pass) => {
 };
 const mountedReadTimings = (rows, started) => rows.flatMap(row => {
   const route = /\/api\/centropy\/company-brain\/(application-projection|institution-sources|institution-read|projection)$/.exec(row.path)?.[1];
-  return route ? [{ route, status: row.status, failed: Boolean(row.failure),
+  return route ? [{ route, nativeReadId: row.nativeReadId, status: row.status, failed: Boolean(row.failure),
     startedMs: row.at - started, responseMs: row.responseAt === undefined ? null : row.responseAt - row.at }] : [];
 }).slice(-24);
 async function runCase(id, rows, title, body) {

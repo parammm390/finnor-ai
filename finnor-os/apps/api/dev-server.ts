@@ -23,11 +23,36 @@ export async function startDevelopmentApi(routes: DevelopmentRoute[]): Promise<S
   if (!role || role.current_user !== "finnor_app" || role.rolsuper || role.rolbypassrls || role.app_inherits_worker)
     throw Error("X1_RESTRICTED_COMPILED_APP_ROLE_REQUIRED");
   assertInstalledDevelopmentSchema((await getPool().query('SELECT name FROM finnor_os._migrations ORDER BY name')).rows.map(row => row.name), installed);
-  for (const route of routes) if (!installed.manifest.files.some(p => p.path === route.source && p.sha256 === route.sha256))
+  const sourcePins = new Map(installed.manifest.files.map(pin => [pin.path, pin.sha256]));
+  for (const route of routes) if (sourcePins.get(route.source) !== route.sha256)
     throw Error("X1_COMPILED_ROUTE_SOURCE_MISMATCH");
+  const mountedW3 = Boolean(installed.manifest.entrypoints.w3Frontend);
+  if (mountedW3) {
+    // The installed WORLD deep link loads these handlers before it can render
+    // the original fulfillment record. Load their code before announcing readiness.
+    for (const path of ["me", "works/[id]", "company-brain/[operation]", "real-world-services/[operation]"]) {
+      const route = routes.find(candidate => candidate.source === `finnor-os/apps/api/app/api/${path}/route.ts`);
+      if (!route) throw Error("W3_INSTALLED_MOUNTED_ROUTE_REQUIRED:" + path);
+      await route.load();
+    }
+  }
+  let pendingCustody: Promise<void> | null = null;
+  const verifyMountedCustody = () => {
+    // Requests that have arrived before validation starts use the same fresh
+    // walk. No request can reuse a completed validation.
+    pendingCustody ??= new Promise<void>((resolve, reject) => {
+      setImmediate(() => {
+        pendingCustody = null;
+        try { installedDevelopmentRuntime(true); resolve(); }
+        catch (error) { reject(error); }
+      });
+    });
+    return pendingCustody;
+  };
   const api = createServer(async (request, response) => {
     try {
-      installedDevelopmentRuntime(true);
+      if (mountedW3) await verifyMountedCustody();
+      else installedDevelopmentRuntime(true);
       const url = new URL(request.url ?? "/", "http://127.0.0.1"), method = request.method ?? "GET";
       if (!url.pathname.startsWith("/api/")) { response.writeHead(404); response.end("{}"); return; }
       const parts = url.pathname.slice(5).split("/").map(decodeURIComponent);

@@ -55,7 +55,8 @@ export async function waitUntil<T>(label: string, timeoutMs: number, probe: () =
 const MUTATIONS = /\/api\/centropy\/(company-brain\/(application-(acquire|execute|cancel|resume)|institution-(submit|revise|cancel|resume|mandate|register-source|consent|revoke-consent))|actions(\/|$)|outcome-packs|threads$|works\/[^/]+\/objective|instructions\/[^/]+\/cancel)/;
 
 export type WatchRecord = { seq: number; at: number; page: string; method: string; origin: string; path: string; kind: string; operation: string | null;
-  hasBearer: boolean; bearerTag: string | null; workId: string | null; query: string; status?: number; responseAt?: number; failure?: string };
+  hasBearer: boolean; bearerTag: string | null; workId: string | null; query: string; status?: number; responseAt?: number; failure?: string;
+  nativeReadId?: string };
 
 /** Observes with page.on only. Bearer values stay in memory; records carry a short hash tag. */
 export class RequestWatch {
@@ -91,7 +92,11 @@ export class RequestWatch {
     page.on("response", (response: any) => {
       const seq = this.byRequest.get(response.request());
       const row = seq ? this.records.find(item => item.seq === seq) : null;
-      if (row) { row.status = response.status(); row.responseAt = Date.now(); }
+      if (row) {
+        row.status = response.status(); row.responseAt = Date.now();
+        const id = response.headers()["x-finnor-native-read-id"];
+        if (typeof id === "string" && /^[a-f0-9-]{36}$/.test(id)) row.nativeReadId = id;
+      }
     });
     page.on("requestfailed", (request: any) => {
       const seq = this.byRequest.get(request);

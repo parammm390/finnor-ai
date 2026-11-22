@@ -12,29 +12,30 @@ const manifestPath = resolve(root, available[0] || candidates[0]);
 const schema = available[0] === candidates[1]
   ? "finnor.postz.w2.development-installation.v1" : "finnor.x1.development-installation.v1";
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
-let loadedDigest;
+let loadedPlan;
 const measured = new Map();
-const metadata = s => [s.dev,s.ino,s.size,s.mtimeNs,s.ctimeNs,s.mode].join(':');
+const sameFile = (a, b) => a.dev === b.dev && a.ino === b.ino && a.size === b.size
+  && a.mtimeNs === b.mtimeNs && a.ctimeNs === b.ctimeNs && a.mode === b.mode;
 const hashBuffer = Buffer.allocUnsafe(1024 * 1024);
 function measuredFileHash(path, observed = lstatSync(path, { bigint: true })) {
   if (!observed.isFile()) throw Error('X1_INSTALLATION_FILE_OUTSIDE_CUSTODY');
-  const current = metadata(observed), previous = measured.get(path);
-  if (previous?.metadata === current) return previous.sha256;
+  const previous = measured.get(path);
+  if (previous && sameFile(previous.metadata, observed)) return previous.sha256;
   const fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
   let actual;
   try {
     const held = fstatSync(fd, { bigint: true });
-    if (!held.isFile() || metadata(held) !== current) throw Error('X1_INSTALLATION_FILE_CHANGED_DURING_CHECK');
+    if (!held.isFile() || !sameFile(held, observed)) throw Error('X1_INSTALLATION_FILE_CHANGED_DURING_CHECK');
     const hash = createHash('sha256');
     let count, bytes = 0n;
     while ((count = readSync(fd, hashBuffer, 0, hashBuffer.length, null)) !== 0) {
       hash.update(hashBuffer.subarray(0, count)); bytes += BigInt(count);
     }
-    if (bytes !== held.size || metadata(fstatSync(fd, { bigint: true })) !== current)
+    if (bytes !== held.size || !sameFile(fstatSync(fd, { bigint: true }), observed))
       throw Error('X1_INSTALLATION_FILE_CHANGED_DURING_CHECK');
     actual = hash.digest('hex');
   } finally { closeSync(fd); }
-  measured.set(path, { metadata: current, sha256: actual });
+  measured.set(path, { metadata: observed, sha256: actual });
   return actual;
 }
 function pathInRoot(relative) {
@@ -50,91 +51,103 @@ function safeFile(relative) {
       || !lstatSync(path).isFile()) throw Error("X1_INSTALLATION_FILE_OUTSIDE_CUSTODY");
   return path;
 }
-function installedRuntime(required = false) {
-  if (!existsSync(manifestPath)) {
-    if (required || loadedDigest) throw Error("X1_COMPILED_INSTALLATION_MANIFEST_REQUIRED");
-    return null;
-  }
+function readManifest() {
   const manifestStat = lstatSync(manifestPath, { bigint: true });
   if (!manifestStat.isFile() || (manifestStat.mode & 0o7777n) !== 0o444n)
-    throw Error('X1_INSTALLATION_MANIFEST_PATH_OR_MODE_REFUSED');
-  const manifestFd = openSync(manifestPath, constants.O_RDONLY | constants.O_NOFOLLOW);
-  let bytes;
+    throw Error("X1_INSTALLATION_MANIFEST_PATH_OR_MODE_REFUSED");
+  const fd = openSync(manifestPath, constants.O_RDONLY | constants.O_NOFOLLOW);
   try {
-    if (metadata(fstatSync(manifestFd, { bigint: true })) !== metadata(manifestStat))
-      throw Error('X1_INSTALLATION_FILE_CHANGED_DURING_CHECK');
-    bytes = readFileSync(manifestFd);
-    if (BigInt(bytes.length) !== manifestStat.size || metadata(fstatSync(manifestFd, { bigint: true })) !== metadata(manifestStat))
-      throw Error('X1_INSTALLATION_FILE_CHANGED_DURING_CHECK');
-  } finally { closeSync(manifestFd); }
-  const manifestDigest = sha(bytes);
-  if (loadedDigest && loadedDigest !== manifestDigest) throw Error("X1_LOADED_INSTALLATION_MANIFEST_CHANGED");
+    if (!sameFile(fstatSync(fd, { bigint: true }), manifestStat))
+      throw Error("X1_INSTALLATION_FILE_CHANGED_DURING_CHECK");
+    const bytes = readFileSync(fd);
+    if (BigInt(bytes.length) !== manifestStat.size || !sameFile(fstatSync(fd, { bigint: true }), manifestStat))
+      throw Error("X1_INSTALLATION_FILE_CHANGED_DURING_CHECK");
+    return bytes;
+  } finally { closeSync(fd); }
+}
+function freezeJson(value) {
+  if (value && typeof value === "object") {
+    for (const child of Object.values(value)) freezeJson(child);
+    Object.freeze(value);
+  }
+  return value;
+}
+function prepareManifest(bytes, manifestDigest) {
   const manifest = JSON.parse(bytes);
   if (manifest.schema !== schema || manifest.mode !== "DEVELOPMENT_ONLY"
       || manifest.productionActive !== false || manifest.executionAuthorityGranted !== false
       || !Array.isArray(manifest.files) || !Array.isArray(manifest.checkerPins) || !Array.isArray(manifest.links)
       || manifest.runtime.node !== process.version || manifest.runtime.platform !== process.platform
-      || manifest.runtime.architecture !== process.arch
-      || manifest.runtime.nodeBinarySha256 !== measuredFileHash(realpathSync(process.execPath))) {
+      || manifest.runtime.architecture !== process.arch) {
     throw Error("X1_INSTALLATION_CONTRACT_OR_RUNTIME_MISMATCH");
   }
-  const declared = new Map();
-  // All regular-file parent paths must be real directories. Validate each
-  // namespace component once; declared alias links are checked separately.
-  const directories = new Set();
-  for (const pin of manifest.files) {
-    let directory = dirname(pathInRoot(pin.path));
-    while (directory !== root) { directories.add(directory); directory = dirname(directory); }
-  }
-  for (const directory of [...directories].sort((a,b) => a.length-b.length))
-    if (!lstatSync(directory).isDirectory()) throw Error('X1_INSTALLATION_DIRECTORY_REPLACED');
-  for (const link of manifest.links) {
-    if (typeof link.path !== 'string' || link.path.startsWith('/') || link.path.includes('\\')
-        || link.path.split('/').some(p => !p || p === '.' || p === '..') || typeof link.target !== 'string')
-      throw Error('X1_INSTALLATION_LINK_INVALID');
-    const path = resolve(root, link.path);
-    if (!lstatSync(path).isSymbolicLink() || readlinkSync(path) !== link.target
-        || !realpathSync(path).startsWith(root + sep)) throw Error('X1_INSTALLATION_LINK_PIN_MISMATCH:' + link.path);
-  }
-  for (const pin of manifest.files) {
-    if (!/^[a-f0-9]{64}$/.test(pin.sha256) || declared.has(pin.path)) throw Error("X1_INSTALLATION_PIN_INVALID");
-    const path = pathInRoot(pin.path), observed = lstatSync(path, { bigint: true });
-    if (!observed.isFile()) throw Error('X1_INSTALLATION_FILE_OUTSIDE_CUSTODY');
-    if (!Number.isInteger(pin.mode) || Number(observed.mode & 0o7777n) !== pin.mode)
-      throw Error('X1_INSTALLATION_FILE_MODE_MISMATCH:' + pin.path);
-    const actual = measuredFileHash(path, observed);
-    if (actual !== pin.sha256) throw Error("X1_INSTALLATION_BYTE_PIN_MISMATCH:" + pin.path);
-    declared.set(pin.path, pin.sha256);
-  }
+  const directories = new Set(), declared = new Set();
+  const files = manifest.files.map(pin => {
+    if (!/^[a-f0-9]{64}$/.test(pin.sha256) || declared.has(pin.path))
+      throw Error("X1_INSTALLATION_PIN_INVALID");
+    const path = pathInRoot(pin.path);
+    for (let directory = dirname(path); directory !== root && !directories.has(directory); directory = dirname(directory))
+      directories.add(directory);
+    declared.add(pin.path);
+    return { path, pin };
+  });
+  const links = manifest.links.map(link => {
+    if (typeof link.path !== "string" || link.path.startsWith("/") || link.path.includes("\\")
+        || link.path.split("/").some(p => !p || p === "." || p === "..") || typeof link.target !== "string")
+      throw Error("X1_INSTALLATION_LINK_INVALID");
+    return { path: resolve(root, link.path), link };
+  });
   for (const entry of Object.values(manifest.entrypoints)) {
     if (!declared.has(entry)) throw Error("X1_INSTALLATION_ENTRYPOINT_UNPINNED");
   }
   for (const path of manifest.checkerPins) if (!declared.has(path)) throw Error("X1_INSTALLATION_CHECKER_CLOSURE_UNPINNED");
-  // Closed import namespace for the declared scientific interpreter roots:
-  // every loadable entry beneath them must be a declared file or a declared
-  // link. An undeclared bytecode cache or any other unlisted payload beside
-  // declared sources refuses custody here, before any interpreter spawn.
-  // Directory entries themselves carry no payload; every real directory
-  // under the root is reached through its own real path, so declared links
-  // (whose targets remain inside their root) need no traversal.
-  const declaredLinks = new Set(manifest.links.map(link => link.path));
   const scientificRoots = [...new Set(Object.values(manifest.entrypoints)
     .filter(entry => typeof entry === "string" && entry.startsWith("finnor-os/scientific/"))
-    .map(entry => entry.split("/").slice(0, 3).join("/")))];
-  for (const relativeRoot of scientificRoots) {
-    const pending = [pathInRoot(relativeRoot)];
+    .map(entry => pathInRoot(entry.split("/").slice(0, 3).join("/"))))];
+  return { manifest: freezeJson(manifest), manifestDigest, files, links, scientificRoots,
+    declared, declaredLinks: new Set(manifest.links.map(link => link.path)),
+    directories: [...directories].sort((a, b) => a.length - b.length) };
+}
+function installedRuntime(required = false) {
+  if (!existsSync(manifestPath)) {
+    if (required || loadedPlan) throw Error("X1_COMPILED_INSTALLATION_MANIFEST_REQUIRED");
+    return null;
+  }
+  const bytes = readManifest(), manifestDigest = sha(bytes);
+  if (loadedPlan && loadedPlan.manifestDigest !== manifestDigest) throw Error("X1_LOADED_INSTALLATION_MANIFEST_CHANGED");
+  // Reuse the immutable path plan. Inspect every declared directory, link and
+  // file, and the closed scientific import namespace, on every call.
+  const plan = loadedPlan ?? prepareManifest(bytes, manifestDigest);
+  const { manifest } = plan;
+  if (manifest.runtime.nodeBinarySha256 !== measuredFileHash(realpathSync(process.execPath)))
+    throw Error("X1_INSTALLATION_CONTRACT_OR_RUNTIME_MISMATCH");
+  for (const directory of plan.directories)
+    if (!lstatSync(directory).isDirectory()) throw Error("X1_INSTALLATION_DIRECTORY_REPLACED");
+  for (const { path, link } of plan.links) {
+    if (!lstatSync(path).isSymbolicLink() || readlinkSync(path) !== link.target
+        || !realpathSync(path).startsWith(root + sep)) throw Error("X1_INSTALLATION_LINK_PIN_MISMATCH:" + link.path);
+  }
+  for (const { path, pin } of plan.files) {
+    const observed = lstatSync(path, { bigint: true });
+    if (!observed.isFile()) throw Error("X1_INSTALLATION_FILE_OUTSIDE_CUSTODY");
+    if (!Number.isInteger(pin.mode) || Number(observed.mode & 0o7777n) !== pin.mode)
+      throw Error("X1_INSTALLATION_FILE_MODE_MISMATCH:" + pin.path);
+    if (measuredFileHash(path, observed) !== pin.sha256) throw Error("X1_INSTALLATION_BYTE_PIN_MISMATCH:" + pin.path);
+  }
+  for (const rootPath of plan.scientificRoots) {
+    const pending = [rootPath];
     while (pending.length) {
       const directory = pending.pop();
       for (const entry of readdirSync(directory, { withFileTypes: true })) {
         const absolute = join(directory, entry.name);
         if (entry.isDirectory()) { pending.push(absolute); continue; }
         const relative = absolute.slice(root.length + 1);
-        const listed = entry.isSymbolicLink() ? declaredLinks.has(relative) : declared.has(relative);
+        const listed = entry.isSymbolicLink() ? plan.declaredLinks.has(relative) : plan.declared.has(relative);
         if (!listed) throw Error("X1_INSTALLATION_UNLISTED_SCIENTIFIC_INPUT:" + relative);
       }
     }
   }
-  loadedDigest = manifestDigest;
+  loadedPlan = plan;
   return { root, manifestPath, manifestDigest, manifest,
     entrypoint: name => safeFile(manifest.entrypoints[name]),
     checkerPins: () => Object.fromEntries([...new Set([manifestPath,

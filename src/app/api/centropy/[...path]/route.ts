@@ -115,6 +115,18 @@ async function doForward(
   }
   req.nextUrl.searchParams.forEach((v, k) => url.searchParams.append(k, v));
 
+  const trace = process.env.FINNOR_Z0_MOUNT_READ_TRACE === "1"
+    && segments.length === 2 && segments[0] === "company-brain" && method === "POST"
+    && ["projection", "application-projection", "institution-read", "institution-sources"].includes(segments[1]!)
+    ? { id: crypto.randomUUID(), startedAt: Date.now() } : null;
+  const traced = (response: Response) => {
+    if (trace) {
+      response.headers.set("x-finnor-native-read-id", trace.id);
+      console.info(JSON.stringify({ event: "Z0_MOUNT_PROXY_READ", ...trace, route: segments[1],
+        status: response.status, elapsedMs: Date.now() - trace.startedAt }));
+    }
+    return response;
+  };
   const controller = new AbortController();
   const timeoutMs = capability?.routePattern === "real-world-services/read" && capability.timeoutClass === "READ"
     ? CENTROPY_PROXY_W3_WORK_READ_TIMEOUT_MS
@@ -126,6 +138,7 @@ async function doForward(
     method,
     headers: {
       ...(authorization ? { authorization } : {}),
+      ...(trace ? { "x-finnor-native-read-id": trace.id } : {}),
       "content-type": "application/json",
     },
     cache: "no-store",
@@ -179,19 +192,19 @@ async function doForward(
     if (connection) oauthResponseHeaders(req, connection, upstream, headers);
     // Keep the proxy byte-preserving even though active P8 projections are JSON.
     const body = await upstream.arrayBuffer();
-    return new Response(body, {
+    return traced(new Response(body, {
       status: upstream.status,
       headers,
 
-    });
+    }));
   } catch (error) {
-    if (error instanceof ApiRequestError) return proxyError(error.message, error.status);
+    if (error instanceof ApiRequestError) return traced(proxyError(error.message, error.status));
     if (controller.signal.aborted) {
-      return proxyError(`Centropy backend timed out after ${timeoutMs / 1000} seconds`, 504);
+      return traced(proxyError(`Centropy backend timed out after ${timeoutMs / 1000} seconds`, 504));
     }
     // Keep upstream failures as stable retryable boundary responses. Letting a
     // rejected fetch escape turns a recoverable outage into an opaque Next.js 500.
-    return proxyError("Centropy backend is unavailable", 502);
+    return traced(proxyError("Centropy backend is unavailable", 502));
   } finally {
     clearTimeout(timeoutId);
   }

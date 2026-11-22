@@ -8,7 +8,7 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-22T01:05:56.071Z",
+  "generatedAt": "2026-11-22T12:01:34.318Z",
   "sourceBaseCommit": "b5b6cf6b4e58539325440d53e6530aefaf89543a",
   "manifestSha256": "e68051fd74494792ebb66d7156bae1b6ac5ef64e369d60057bc4c596fb0aebe3",
   "formsSha256": "35b57673d9d86e461f2b6056aaf326cb789901dfdd4481734aefef91da8052fd",
@@ -20,16 +20,16 @@
     "classified": 773,
     "classificationCoveragePercent": 100,
     "unclassified": 0,
-    "backendApiWithoutMountedFrontend": 106,
+    "backendApiWithoutMountedFrontend": 107,
     "dynamicFrontendCalls": 85,
     "unresolvedDynamicCalls": 0,
     "disposition": {
       "ACTIVE_TYPED_HUMAN_CONTROL": 69,
       "INTENTIONAL_COMPATIBILITY": 25,
-      "ACTIVE_DIRECT_FRONTEND_PATH": 428,
+      "ACTIVE_DIRECT_FRONTEND_PATH": 427,
       "RESTRICTED_SYSTEM_OR_ADMIN": 59,
       "PROVIDER_PROTOCOL_CALLBACK": 2,
-      "BACKEND_API_NO_MOUNTED_FRONTEND": 106,
+      "BACKEND_API_NO_MOUNTED_FRONTEND": 107,
       "INTENTIONAL_ALTERNATE_CANONICAL_INTAKE": 3,
       "CANONICAL_AGENT_CAPABILITY": 67,
       "HUMAN_ONLY_CANONICAL_DECISION": 11,
@@ -98,6 +98,7 @@
     "http.post.company-brain.economic-orchestration-response-refresh",
     "http.post.company-brain.evidence-consume",
     "http.post.company-brain.institution-link-read",
+    "http.post.company-brain.institution-sources",
     "http.post.company-brain.institution-status",
     "http.post.company-brain.institution-witness",
     "http.post.company-brain.interface-catalogue",
@@ -1305,7 +1306,7 @@
       },
       {
         "file": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
-        "sha256": "85a5596115ea71ac8da9154724d2955ee23e547ee2341e6501fb3ec8221b2979"
+        "sha256": "302cfabac4799dd61abae42acfed74a0de599ba934eeec8ab3208821723a3c45"
       },
       {
         "file": "src/components/centropy/canvas/InstitutionInputForm.tsx",
@@ -23220,7 +23221,7 @@
           "file": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
           "route": "company-brain/institution-cancel",
           "method": "POST",
-          "line": 158,
+          "line": 157,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24008,7 +24009,7 @@
           "file": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
           "route": "company-brain/institution-read",
           "method": "POST",
-          "line": 91,
+          "line": 89,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24142,7 +24143,7 @@
           "file": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
           "route": "company-brain/institution-resume",
           "method": "POST",
-          "line": 158,
+          "line": 157,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24209,7 +24210,7 @@
           "file": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
           "route": "company-brain/institution-revise",
           "method": "POST",
-          "line": 141,
+          "line": 140,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24267,17 +24268,9 @@
       "timeoutClass": "READ",
       "tests": [],
       "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
-      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "disposition": "BACKEND_API_NO_MOUNTED_FRONTEND",
       "actualRouteOrTool": "POST /api/company-brain/institution-sources",
-      "frontendSourceBindings": [
-        {
-          "file": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
-          "route": "company-brain/institution-sources",
-          "method": "POST",
-          "line": 90,
-          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
-        }
-      ],
+      "frontendSourceBindings": [],
       "humanForms": [],
       "humanRoute": null,
       "agentPath": null,
@@ -24398,7 +24391,7 @@
           "file": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
           "route": "company-brain/institution-submit",
           "method": "POST",
-          "line": 141,
+          "line": 140,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],

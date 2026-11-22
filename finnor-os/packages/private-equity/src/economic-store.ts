@@ -112,9 +112,9 @@ export async function listStoredWorkComputeTx(ctx: PeMutationContext, input: Sto
 /** Work preparation precedes the first compiler episode. These immutable
  * measurements retain their observed null episode; the X1 consumer binds the
  * owned Work to its actual original parent without rewriting those records. */
-export async function listStoredWorkPreparationCompute(ctx:PeMutationContext,workId:string,options?:{excludeWorkObservations?:boolean}){
+export async function listStoredWorkPreparationCompute(ctx:PeMutationContext,workId:string,options?:{excludeWorkObservations?:boolean}, client?: pg.PoolClient){
     if(!/^[a-f0-9-]{36}$/i.test(workId))denied();
-    return withTenantTransaction(ctx.auth.tenantId,{userId:economicActor(ctx),readOnly:true},async(_db,c)=>{
+    const read = async (c: pg.PoolClient) => {
         await authorizeEconomicActor(ctx,c,false);
         if(!(await c.query('SELECT id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 AND created_by=$3',
             [ctx.auth.tenantId,workId,economicActor(ctx)])).rows[0])denied();
@@ -126,7 +126,9 @@ export async function listStoredWorkPreparationCompute(ctx:PeMutationContext,wor
             ORDER BY knowledge_at,record_id LIMIT 1025`,[ctx.auth.tenantId,economicActor(ctx),workId,options?.excludeWorkObservations ?? false])).rows;
         return {records:rows.slice(0,1024).map(decode),complete:rows.length<=1024,
             ...(rows.length>1024?{reason:'ECONOMIC_WORK_PREPARATION_HISTORY_BOUND'}:{}),executionAuthorityGranted:false as const};
-    });
+    };
+    return client ? read(client) : withTenantTransaction(ctx.auth.tenantId,
+        { userId: economicActor(ctx), readOnly: true }, (_db, c) => read(c));
 }
 export async function listStoredEconomicHistory(ctx: PeMutationContext, estimandId: string, knowledgeAt?: string) {
     const cut = knowledgeAt ?? new Date().toISOString();

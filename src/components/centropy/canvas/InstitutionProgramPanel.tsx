@@ -85,11 +85,10 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
     setRefreshingScope(key)
     const task = (async () => {
       try {
-        const input = { workId, purpose: "WORK_OBSERVATION" }
-        const [next, result] = await Promise.all([
-          observe(() => centropyPost<Sources>("company-brain/institution-sources", input)),
-          observe(() => centropyPost<Read | null>("company-brain/institution-read", input)),
-        ])
+        const { sources: next, programme: result } = await observe(() =>
+          centropyPost<{ sources: Sources; programme: Read | null }>("company-brain/institution-read", {
+            workId, purpose: "WORK_OBSERVATION",
+          }))
         if (!current()) return
         if (next.workId !== workId) throw Error("Responsibility sources returned another Work")
         const prior = head.current

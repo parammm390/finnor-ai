@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { randomUUID } from "node:crypto";
 import type { PeMutationContext } from "../types";
-import { persistEconomicRecord, listStoredWorkCompute,listStoredWorkPreparationCompute } from "../economic-store";
+import { persistEconomicRecord, listStoredWorkCompute, listStoredWorkComputeTx, listStoredWorkPreparationCompute } from "../economic-store";
 import { sha, tx, principal } from "../evidence-execution/store";
 import {chargeInstitutionDemand} from '../allocation-store';
 import {AllocationContractError} from '../../../epistemic-runtime/src/allocation-contracts';
@@ -74,28 +74,48 @@ export async function persistInstitutionCompute(ctx: PeMutationContext, input: {
 
 export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId: string, compilerEpisodeId: string,
   options?: { excludeWorkObservations: boolean }) {
-  const native = await tx(ctx, async c => (await c.query<{ id: string }>(`SELECT id::text
-    FROM finnor_os.p1_episodes WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3`,
-  [ctx.auth.tenantId, principal(ctx), workId])).rows[0], true);
-  const episodeIds = [...new Set([compilerEpisodeId, ...(native ? [native.id] : [])])];
-  const history = await listStoredWorkCompute(ctx, { workId, episodeIds, schema: "finnor.x1.native-compute.v1" });
-  // The mounted execution view must not change as a side effect of reading it.
-  // Platform observations remain in the economic ledger and the full cost read.
-  const apiHistory=await listStoredWorkCompute(ctx,{workId,episodeIds:[compilerEpisodeId],schema:'finnor.x1.api-compute.v1',
-    excludeWorkObservations: options?.excludeWorkObservations});
-  const preparationHistory=await listStoredWorkPreparationCompute(ctx,workId,options);
-  const originalParent=await tx(ctx,async c=>(await c.query<{parent_reservation:unknown}>(`SELECT parent_reservation
-    FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND id=$4`,
-    [ctx.auth.tenantId,principal(ctx),workId,compilerEpisodeId])).rows[0]?.parent_reservation??null,true);
-  const preparationAllocations=await tx(ctx,async c=>(await c.query<{record_id:string;payload:any}>(`
-    SELECT record_id,body->'payload' payload FROM finnor_os.s7_economic_records
-    WHERE tenant_id=$1 AND principal_id=$2 AND kind='COST'
-      AND body->'payload'->>'schema'='finnor.x1.preparation-allocation.v1'
-      AND body->'payload'->>'workId'=$3 AND body->'payload'->>'episodeId'=$4
-    ORDER BY knowledge_at,record_id LIMIT 1025`,[ctx.auth.tenantId,principal(ctx),workId,compilerEpisodeId])).rows,true);
-  const physicalCharges=await tx(ctx,async c=>(await c.query<{body:any}>(`SELECT body FROM finnor_os.s5_governed_resource_charges
-    WHERE tenant_id=$1 AND principal_id=$2 AND reservation_id=$3 AND phase='PREPARATION' LIMIT 1025`,
-    [ctx.auth.tenantId,principal(ctx),(originalParent as ParentRef|null)?.id??''])).rows.map(row=>row.body),true);
+  const { episodeIds, history, apiHistory, preparationHistory, originalParent, preparationAllocations,
+    physicalCharges, meterGaps, lifecycle, lifecycleCharges } = await tx(ctx, async c => {
+    const native = (await c.query<{ id: string }>(`SELECT id::text
+      FROM finnor_os.p1_episodes WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3`,
+    [ctx.auth.tenantId, principal(ctx), workId])).rows[0];
+    const episodeIds = [...new Set([compilerEpisodeId, ...(native ? [native.id] : [])])];
+    const history = await listStoredWorkComputeTx(ctx, { workId, episodeIds, schema: "finnor.x1.native-compute.v1" }, c);
+    // The mounted execution view must not change as a side effect of reading it.
+    // Platform observations remain in the economic ledger and the full cost read.
+    const apiHistory = await listStoredWorkComputeTx(ctx, { workId, episodeIds: [compilerEpisodeId], schema: 'finnor.x1.api-compute.v1',
+      excludeWorkObservations: options?.excludeWorkObservations }, c);
+    const preparationHistory = await listStoredWorkPreparationCompute(ctx, workId, options, c);
+    const originalParent = (await c.query<{ parent_reservation: ParentRef | null }>(`SELECT parent_reservation
+      FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND id=$4`,
+      [ctx.auth.tenantId,principal(ctx),workId,compilerEpisodeId])).rows[0]?.parent_reservation ?? null;
+    const preparationAllocations = (await c.query<{record_id:string;payload:any}>(`
+      SELECT record_id,body->'payload' payload FROM finnor_os.s7_economic_records
+      WHERE tenant_id=$1 AND principal_id=$2 AND kind='COST'
+        AND body->'payload'->>'schema'='finnor.x1.preparation-allocation.v1'
+        AND body->'payload'->>'workId'=$3 AND body->'payload'->>'episodeId'=$4
+      ORDER BY knowledge_at,record_id LIMIT 1025`,[ctx.auth.tenantId,principal(ctx),workId,compilerEpisodeId])).rows;
+    const physicalCharges = (await c.query<{body:any}>(`SELECT body FROM finnor_os.s5_governed_resource_charges
+      WHERE tenant_id=$1 AND principal_id=$2 AND reservation_id=$3 AND phase='PREPARATION' LIMIT 1025`,
+      [ctx.auth.tenantId, principal(ctx), originalParent?.id ?? ''])).rows.map(row => row.body);
+    const meterGaps = (await c.query<{ kind: string; body: unknown }>(`
+      SELECT e.kind,e.body FROM finnor_os.x1_compiler_events e
+        JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=e.tenant_id AND r.id=e.request_id
+        WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.work_id=$3 AND r.episode_id=$4
+          AND e.kind LIKE '%METER_GAP'
+      UNION ALL
+      SELECT e.kind,e.body FROM finnor_os.p1_events e
+        JOIN finnor_os.p1_requests r ON r.tenant_id=e.tenant_id AND r.id=e.request_id
+        WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.work_id=$3 AND r.episode_id::text=ANY($5::text[])
+          AND e.kind LIKE '%METER_GAP' LIMIT 1025`,
+    [ctx.auth.tenantId, principal(ctx), workId, compilerEpisodeId, episodeIds])).rows;
+    const lifecycle = await listStoredWorkComputeTx(ctx, { workId, episodeIds: [compilerEpisodeId], schema: 'finnor.x1.lifecycle-compute.v1' }, c);
+    const lifecycleCharges = (await c.query<{body:any}>(`SELECT body FROM finnor_os.s5_governed_resource_charges
+      WHERE tenant_id=$1 AND principal_id=$2 AND reservation_id=$3 AND phase='LIFECYCLE' LIMIT 1025`,
+      [ctx.auth.tenantId, principal(ctx), originalParent?.id ?? ''])).rows.map(row => row.body);
+    return { episodeIds, history, apiHistory, preparationHistory, originalParent, preparationAllocations,
+      physicalCharges, meterGaps, lifecycle, lifecycleCharges };
+  }, true);
   const seen = new Set<string>(), gaps: string[] = [], phases = new Map<string, { deliveries: number; attributedElapsedMs: number }>();
   const refs: Array<{ owner: "S7"; id: string; version: string; contentDigest: string }> = [];
   let attributedElapsedMs = 0, sampledProcessRssBytes = 0, rssSamples = 0;
@@ -132,17 +152,6 @@ export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId
       sampledProcessRssBytes = Math.max(sampledProcessRssBytes, rss);
     }
   }
-  const meterGaps = await tx(ctx, async c => (await c.query<{ kind: string; body: unknown }>(`
-    SELECT e.kind,e.body FROM finnor_os.x1_compiler_events e
-      JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=e.tenant_id AND r.id=e.request_id
-      WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.work_id=$3 AND r.episode_id=$4
-        AND e.kind LIKE '%METER_GAP'
-    UNION ALL
-    SELECT e.kind,e.body FROM finnor_os.p1_events e
-      JOIN finnor_os.p1_requests r ON r.tenant_id=e.tenant_id AND r.id=e.request_id
-      WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.work_id=$3 AND r.episode_id::text=ANY($5::text[])
-        AND e.kind LIKE '%METER_GAP' LIMIT 1025`,
-  [ctx.auth.tenantId, principal(ctx), workId, compilerEpisodeId, episodeIds])).rows, true);
   if (!history.complete) gaps.push(history.reason!);
   const apiIdentities=new Set<string>();let apiElapsedMs=0;
   for(const record of apiHistory.records){
@@ -185,10 +194,6 @@ export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId
   if(preparationIdentities.size)phases.set('AUTHENTICATED_WORK_PREPARATION',{
     deliveries:preparationIdentities.size,attributedElapsedMs:preparationElapsedMs});
   if (meterGaps.length > 1024) gaps.push("X1_COMPUTE_METER_GAP_HISTORY_BOUND");
-  const lifecycle=await listStoredWorkCompute(ctx,{workId,episodeIds:[compilerEpisodeId],schema:'finnor.x1.lifecycle-compute.v1'});
-  const lifecycleCharges=await tx(ctx,async c=>(await c.query<{body:any}>(`SELECT body FROM finnor_os.s5_governed_resource_charges
-    WHERE tenant_id=$1 AND principal_id=$2 AND reservation_id=$3 AND phase='LIFECYCLE' LIMIT 1025`,
-    [ctx.auth.tenantId,principal(ctx),(originalParent as ParentRef|null)?.id??''])).rows.map(r=>r.body),true);
   const lifecycleIds=new Set<string>();
   const lifecycleAllocations:Array<{invocationId:string;status:string;reason:string|null}>=[];
   for(const record of lifecycle.records){

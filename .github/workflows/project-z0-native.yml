@@ -387,6 +387,7 @@ jobs:
                   ? observations.failureFrame : null } : null,
               mountedReads: observations?.mountedReads?.slice(-24).map(row => ({
                 route: member(['application-projection', 'institution-sources', 'institution-read', 'projection'], row.route),
+                nativeReadId: /^[a-f0-9-]{36}$/.test(row.nativeReadId ?? '') ? row.nativeReadId : null,
                 status: httpStatus(row.status), failed: row.failed === true,
                 startedMs: durationMs(row.startedMs), responseMs: durationMs(row.responseMs),
               })) ?? null,
@@ -493,8 +494,29 @@ jobs:
               } catch {}
             }
           }
+          const nativeReadTrace = []
+          for (const [file, events] of [
+            ['frontend-01.private.log', ['Z0_MOUNT_PROXY_READ']],
+            ['api-01.private.log', ['Z0_MOUNT_API_ENTER', 'Z0_MOUNT_API_READ']],
+          ]) {
+            const log = join(state, file)
+            if (!existsSync(log)) continue
+            const records = []
+            for (const entry of readFileSync(log, 'utf8').split('\n')) {
+              const line = entry.trim()
+              if (!line.startsWith('{"event":"Z0_MOUNT_') || line.length > 512) continue
+              let row
+              try { row = JSON.parse(line) } catch { continue }
+              const route = member(['application-projection', 'institution-sources', 'institution-read', 'projection'], row.route)
+              if (!events.includes(row.event) || !route || !/^[a-f0-9-]{36}$/.test(row.id ?? '') ||
+                !Number.isSafeInteger(row.startedAt) || row.startedAt < 0) continue
+              records.push({ event: row.event, id: row.id, route, startedAt: row.startedAt,
+                status: httpStatus(row.status), elapsedMs: durationMs(row.elapsedMs), preparedMs: durationMs(row.preparedMs) })
+            }
+            nativeReadTrace.push(...records.slice(-192))
+          }
           const receipt = { sourceSha: process.env.GITHUB_SHA, results, acquisitionFailure, fixtureFailures, launcher,
-            serverErrorKinds: [...serverErrorKinds], serverLifecycle, serverReadTimings: serverReadTimings.slice(-64) }
+            serverErrorKinds: [...serverErrorKinds], serverLifecycle, serverReadTimings: serverReadTimings.slice(-64), nativeReadTrace }
           writeFileSync(join(process.env.RUNNER_TEMP, 'z0-cases.json'), JSON.stringify(receipt, null, 2) + '\n')
           const continuation = ['P0-00', 'P0-01', 'P0-10', 'P0-11']
           const recovery = {
