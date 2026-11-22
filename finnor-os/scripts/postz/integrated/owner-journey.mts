@@ -37,7 +37,8 @@ export interface NativeJourneyOutput {
 /** Reuses W1's actual S1/S3/S4/S5/P1/P2 setup on the canonical business root.
  * The independent arithmetic expectations are literal original inputs, not
  * values obtained from the producer or its checker. */
-export async function runOrchestrationOwner(ports: IntegratedOwnerPorts, sharedAllocation: SharedAllocationFixture): Promise<NativeJourneyOutput> {
+export async function runOrchestrationOwner(ports: IntegratedOwnerPorts,
+  sharedAllocation: SharedAllocationFixture & { outcomeSeriesId: string }): Promise<NativeJourneyOutput> {
   ports.checkBound();
   const root = { entityType: "external_organization" as const, entityId: ports.companyId };
   const existingOwner = { tenant: ports.tenant, principal: ports.owner, root };

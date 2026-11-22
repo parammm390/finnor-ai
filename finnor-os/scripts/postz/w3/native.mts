@@ -228,6 +228,13 @@ let admin: pg.Client | null = null, auth: any = null, recipient: any = null, act
 let closePool: (() => Promise<void>) | null = null;
 let failedOwnerCall: { group: string; operation: string; status: number; code: string | null;
   staleResourceWitness: boolean } | null = null;
+const retainOwnerRefusal = (group: string, operation: string, result: Awaited<ReturnType<IntegratedOwnerPorts["http"]>>) => {
+  const code: unknown = result.status === 200 ? result.body?.status : result.body?.code;
+  failedOwnerCall = { group, operation, status: result.status,
+    code: typeof code === "string" && /^[A-Z][A-Z0-9_]{2,100}$/.test(code) ? code : null,
+    staleResourceWitness: group === "allocations" && operation === "clear" && code === "STALE_INPUT"
+      && result.body?.error === "Resource source or rights witness is no longer current" };
+};
 const workers: any[] = [];
 try {
   await postgres.initialise(); await appendFile(join(pgDirectory, "postgresql.conf"), "\ntrack_commit_timestamp=on\n");
@@ -271,6 +278,7 @@ try {
   const organizationEvaluator = organizationProfile ? randomUUID() : null;
   const integratedWorks = organizationProfile
     ? { workforce: randomUUID(), organization: randomUUID(), organizationSource: randomUUID(),
+      organizationEffect: randomUUID(),
       organizationUnitWorks: Array.from({ length: 40 }, () => randomUUID()) } : null;
   const organizationUnits: NativeProspectiveUnit[] = [];
   let organizationReadRoleId: string | null = null;
@@ -309,6 +317,11 @@ try {
         scope: { kind: "resources", resourceType: "work",
           resourceIds: [integratedWorks.organization, integratedWorks.organizationSource, ...integratedWorks.organizationUnitWorks] },
         capabilities: ["query:work"] },
+      ...(integratedCompany ? [{
+        key: "w-integrated-original-organization-effect-read", principals: [inspector, unrelated],
+        scope: { kind: "resources", resourceType: "work", resourceIds: [integratedWorks.organizationEffect] },
+        capabilities: ["query:work"],
+      }] : []),
     ];
     for (const configured of standing) {
       const roleId = randomUUID();
@@ -425,7 +438,15 @@ try {
         signal: AbortSignal.timeout(organizationOriginal
           ? Math.max(1, Math.min(30000, Math.floor(300000 - (performance.now() - start)))) : 30000) });
       status = r.status;
-      return { status, body: await r.json() as any };
+      const result = { status, body: await r.json() as any };
+      if (integratedCompany && actor === owner &&
+        ((group === "interventions" && operation === "fit" && (status !== 200 || result.body?.status !== "FITTED")) ||
+         (group === "policies" && operation === "synthesize" && (status !== 200 || result.body?.status !== "POLICY_AVAILABLE")) ||
+         (group === "allocations" && operation === "resource" && status !== 200) ||
+         (group === "allocations" && operation === "clear" && (status !== 200 || result.body?.status !== "FEASIBLE")))) {
+        retainOwnerRefusal(group, operation, result);
+      }
+      return result;
     } finally {
       const used = process.cpuUsage(cpu);
       await artifact("api-phases/" + String(ordinal).padStart(4, "0") + ".json", {
@@ -441,13 +462,7 @@ try {
   };
   const ok = async (group: string, operation: string, body: unknown, actor: string = owner) => {
     const result = await http(group, operation, body, actor);
-    if (integratedCompany && result.status !== 200) {
-      const code: unknown = result.body?.code;
-      failedOwnerCall = { group, operation, status: result.status,
-        code: typeof code === "string" && /^[A-Z][A-Z0-9_]{2,100}$/.test(code) ? code : null,
-        staleResourceWitness: group === "allocations" && operation === "clear" && code === "STALE_INPUT"
-          && result.body?.error === "Resource source or rights witness is no longer current" };
-    }
+    if (integratedCompany && result.status !== 200) retainOwnerRefusal(group, operation, result);
     assert.equal(result.status, 200, JSON.stringify({ group, operation, ...result })); return result.body;
   };
   // The established port already derives GET from undefined. Keep it intact;
@@ -756,10 +771,12 @@ try {
       }
       if (integratedCompany) {
         assert(integratedWorks && sharedAllocation);
-        const work = await ok("real-world-services", "intake", { companyId: original.root.entityId,
-          idempotencyKey: "w5-controlled-original-effect",
-          instruction: "Prepare an independent controlled service offer for the organization trial. Preserve the original Work, reservation and effect through its actual owner checks." });
-        assert(typeof work.workId === "string" && typeof work.workInputId === "string");
+        const work = await db.receiveWork({ tenantId: tenant, userId: owner, channel: "text",
+          workId: integratedWorks.organizationEffect, idempotencyKey: "w5-controlled-original-effect",
+          instruction: "Prepare an independent controlled service offer for the organization trial. Preserve the original Work, reservation and effect through its actual owner checks.",
+          requireExactIntake: true, entityAttachments: [{ entityType: "external_organization",
+            entityId: original.root.entityId, relationship: "about", source: "W5_CONTROLLED_ORIGINAL_EFFECT" }] });
+        assert.equal(work.workId, integratedWorks.organizationEffect);
         assert.notEqual(work.workId, intake.workId);
         combinedOriginals.organizationEffectWork = { workId: work.workId, workInputId: work.workInputId };
         await artifact("integrated/w5/predeclared-controlled-original.json", {
@@ -822,7 +839,8 @@ try {
         const workforceOriginal = await prepareWorkforceOriginal(ports, provider, workforceWorkId, workforceResource);
         const upstream = await observeIntegratedOwner("W1", async () => {
           const { runOrchestrationOwner } = await import("../integrated/owner-journey.mts");
-          const actual = await runOrchestrationOwner(ports, sharedAllocation); await integratedEvidence.record(actual); return actual;
+          const actual = await runOrchestrationOwner(ports, { ...sharedAllocation, outcomeSeriesId: original.series.outcome });
+          await integratedEvidence.record(actual); return actual;
         });
         await observeIntegratedOwner("W2", async () => {
           await integratedEvidence.record(await runWorkforceOwner(ports, upstream, workforceOriginal));
