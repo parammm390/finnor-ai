@@ -19,7 +19,8 @@ import type { OwnerReadTiming } from "../../frontier5/x1/authenticated-api-fixtu
 import { NATIVE_WORKER_LIMITS } from "./worker-protocol.mts";
 import { createIntegratedEvidence } from "../integrated/evidence.mts";
 import { INTEGRATED_PROFILE } from "../integrated/profile.mts";
-import { completeSharedAllocation, declareSharedResources, type ResourceDeclaration } from "../integrated/allocation-fixture.mts";
+import { completeSharedAllocation, declareSharedResources, readSharedCapacityBasis,
+  type ResourceDeclaration, type SharedCapacityBasis } from "../integrated/allocation-fixture.mts";
 import type { AllocationResource } from "@finnor/shared-types";
 import type { IntegratedOwnerPorts } from "../integrated/owner-journey.mts";
 import type { NativeGrowthJourneyContext } from "../../w4/native-growth-journey.mts";
@@ -702,7 +703,7 @@ try {
   let integratedPorts: IntegratedOwnerPorts | null = null;
   const combinedOriginals: {
     organizationEffectWork?: { workId: string; workInputId: string };
-    marketMeasurements?: NativeGrowthJourneyContext["declaredMeasurements"];
+    capacity?: SharedCapacityBasis;
     marketWork?: NativeGrowthJourneyContext["work"];
     marketBuyer?: NativeGrowthJourneyContext["buyerContact"];
   } = {};
@@ -786,15 +787,10 @@ try {
           programmeRequests: organizationProgrammeRequests, sharedAllocation, fieldValidated: false,
         });
         const { intakeMarketOriginal } = await import("../integrated/market-owner.mts");
-        const { prepareNativeGrowthMeasurements, declareNativeGrowthBuyer } = await import("../../w4/native-growth-journey.mts");
+        const { declareNativeGrowthBuyer } = await import("../../w4/native-growth-journey.mts");
         const companyId = original.root.entityId;
         combinedOriginals.marketWork = await intakeMarketOriginal({ http, owner, companyId, serviceWorkId: intake.workId }, marketNamespace);
         combinedOriginals.marketBuyer = await declareNativeGrowthBuyer({ tenant, companyId, admin: admin! }, marketNamespace);
-        const declare = await prepareNativeGrowthMeasurements({
-          tenant, owner, companyId: original.root.entityId, admin: admin!, ok,
-          artifact: (name, body) => artifact("integrated/w4/private/" + name, body),
-        }, marketNamespace, checkBound, sharedAllocation);
-        combinedOriginals.marketMeasurements = { units: await declare("units"), money: await declare("money") };
         const companyRoot = [{ entityType: "external_organization", entityId: original.root.entityId }];
         const workRoot = (workId: string) => [{ entityType: "work", entityId: workId }];
         const serviceResources = (ids: { cash: string; execution: string; human: string }): ResourceDeclaration[] => [
@@ -810,8 +806,34 @@ try {
           { resourceId: organizationProgrammeResource, resourceClass: "COMPUTE", unit: "request",
             kind: "CUMULATIVE_EXPENDITURE", capacity: organizationProgrammeRequests, permittedRoots: workRoot(integratedWorks.organization) },
         ];
+        const capacityRoot = { entityType: "external_organization" as const, entityId: randomUUID() };
+        await admin!.query(`INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind)
+          VALUES($1,$2,'w049-controlled-capacity','W049 controlled capacity custodian','other')`, [capacityRoot.entityId, tenant]);
+        const { createEvidenceSource, appendEvidenceVersion } = await import("@finnor/memory");
+        const { attachCanonicalEvidenceToWorld, createMetricSeries } = await import("@finnor/private-equity");
+        const capacitySource = await createEvidenceSource(tenant, { sourceKey: "w049-controlled-original-capacity",
+          sourceType: "pe_document_claim", title: "Original controlled capacity declarations" });
+        const capacityDeclaration = { companyId, declarations, horizon: sharedAllocation.horizon,
+          orchestration: { resourceId: "compute", unit: "native-attempt", capacity: "8" },
+          workforce: { resourceId: "integrated-workforce-" + integratedWorks.workforce, unit: "workforce-operation", capacity: "100" },
+          classification: "DECLARED_DISPOSABLE_CAPACITY" };
+        const content = JSON.stringify(capacityDeclaration);
+        const capacityVersion = await appendEvidenceVersion(tenant, capacitySource.id, { content,
+          snapshot: { worldRoot: capacityRoot, claims: [
+            { propositionId: "original-controlled-capacity", predicate: "reported", value: capacityDeclaration },
+          ] }, asOf: new Date(sharedAllocation.horizon.startAt) });
+        const capacitySeries = await createMetricSeries(original.ctx, { subjectType: capacityRoot.entityType,
+          subjectId: capacityRoot.entityId, metricKey: "w049-capacity-declaration", name: "Controlled capacity declaration",
+          unit: "request", frequency: "daily" });
+        await attachCanonicalEvidenceToWorld(original.ctx, { worldRoot: capacityRoot,
+          entity: { entityType: "pe_metric_series", entityId: String(capacitySeries.row.id) },
+          evidenceSourceId: capacitySource.id, evidenceVersionId: capacityVersion.versionId, relationship: "supports" });
+        const capacity = await readSharedCapacityBasis(http, sharedAllocation, owner, capacityRoot,
+          { owner: "S1", id: capacityVersion.versionId, version: String(capacityVersion.versionNumber),
+            contentDigest: createHash("sha256").update(content).digest("hex") });
+        combinedOriginals.capacity = capacity;
         declareRemainingResources = async () => {
-          const registered = await declareSharedResources(http, sharedAllocation, { tenant, owner, companyId: original.root.entityId }, declarations);
+          const registered = await declareSharedResources(http, sharedAllocation, capacity, { tenant, owner, companyId }, declarations);
           for (const [id, resource] of registered) sharedResources.set(id, resource);
           await artifact("integrated/original-shared-resource-registry.json", { declarations, resources: [...registered.values()] });
         };
@@ -819,7 +841,8 @@ try {
     },
     afterSources: async original => {
       if (integratedEvidence) {
-        assert(integratedWorks && sharedAllocation);
+        const { capacity } = combinedOriginals;
+        assert(integratedWorks && sharedAllocation && capacity);
         const workforceWorkId = integratedWorks.workforce;
         integratedEvidence.bindScope({ tenantId: tenant, principalId: owner, companyId: original.root.entityId,
           originalServiceWorkId: intake.workId, originalServiceWorkInputId: intake.workInputId });
@@ -829,9 +852,9 @@ try {
         const ports = integratedPorts;
         const { prepareWorkforceOriginal, runWorkforceOwner } = await import("../integrated/workforce-owner.mts");
         const workforceResourceId = "integrated-workforce-" + workforceWorkId;
-        const workforceResources = await declareSharedResources(http, sharedAllocation, ports, [{
+        const workforceResources = await declareSharedResources(http, sharedAllocation, capacity, ports, [{
           resourceId: workforceResourceId, resourceClass: "COMPUTE", unit: "workforce-operation",
-          kind: "CUMULATIVE_EXPENDITURE", capacity: "100", directOwnerCapacity: true,
+          kind: "CUMULATIVE_EXPENDITURE", capacity: "100",
           permittedRoots: [{ entityType: "work", entityId: workforceWorkId }],
         }]);
         const workforceResource = workforceResources.get(workforceResourceId);
@@ -839,7 +862,7 @@ try {
         const workforceOriginal = await prepareWorkforceOriginal(ports, provider, workforceWorkId, workforceResource);
         const upstream = await observeIntegratedOwner("W1", async () => {
           const { runOrchestrationOwner } = await import("../integrated/owner-journey.mts");
-          const actual = await runOrchestrationOwner(ports, { ...sharedAllocation, outcomeSeriesId: original.series.outcome });
+          const actual = await runOrchestrationOwner(ports, { ...sharedAllocation, outcomeSeriesId: original.series.outcome, capacity });
           await integratedEvidence.record(actual); return actual;
         });
         await observeIntegratedOwner("W2", async () => {
@@ -2258,12 +2281,18 @@ try {
         independentProtectedCustody: false },
     });
     assert(integratedPorts && recipient && organizationEvaluator && integratedWorks);
-    const { organizationEffectWork, marketMeasurements, marketWork, marketBuyer } = combinedOriginals;
-    assert(organizationEffectWork && marketMeasurements && marketWork && marketBuyer,
+    const { organizationEffectWork, marketWork, marketBuyer } = combinedOriginals;
+    assert(organizationEffectWork && marketWork && marketBuyer && sharedAllocation,
       "W049_COMBINED_ORIGINALS_MUST_BE_DECLARED_BEFORE_FIT");
     const ports: IntegratedOwnerPorts = integratedPorts;
     await observeIntegratedOwner("W4", async () => {
       const { runMarketOwner } = await import("../integrated/market-owner.mts");
+      const { prepareNativeGrowthMeasurements } = await import("../../w4/native-growth-journey.mts");
+      const declare = await prepareNativeGrowthMeasurements({
+        tenant, owner, companyId: ports.companyId, admin: ports.admin, ok,
+        artifact: (name, body) => artifact("integrated/w4/private/" + name, body),
+      }, marketNamespace, checkBound, sharedAllocation);
+      const marketMeasurements = { units: await declare("units"), money: await declare("money") };
       const market = await runMarketOwner(ports, {
         actors: { operator: backup, buyer: provider, observer: inspector, accountant: evaluator, unrelated, foreign },
         native, recipient, pump: createIntegratedPump(),
@@ -2278,6 +2307,9 @@ try {
     await observeIntegratedOwner("W5", async () => {
       const effectFixture = { ...f, name: "w5-original-" + organizationEffectWork.workId,
         policies: [], labels: {}, resources: Object.values(organizationEffectResources).map(sharedResource) };
+      const fitted = await ok("interventions", "fit", { request: f.model.request });
+      assert.equal(fitted.status, "FITTED", "W049_W5_ORIGINAL_MODEL_SOURCE_MUST_BE_CURRENT");
+      effectFixture.model = fitted.model;
       const policy = await native.policy(effectFixture, "OFFER", originalEffectDemand);
       const programmeResource = sharedResource(organizationProgrammeResource);
       const originalClearing = native.clearing(effectFixture, { OFFER: ["100"] }, [], [],
