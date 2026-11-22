@@ -49,7 +49,7 @@ export async function intakeServiceWork(ctx: PeMutationContext, raw: unknown) {
       originalBusinessAssignments: 1, compiler: "POSTZ.W3", executionAuthorityGranted: false } });
 }
 export async function authorizeServiceWork(ctx: PeMutationContext, workId: string, c: PoolClient) {
-  if (ctx.auth.userId !== principal(ctx)) throw unavailable();
+  if (ctx.auth.role !== "owner" || ctx.auth.userId !== principal(ctx)) throw unavailable();
   if (!await canExerciseAuthorityTx(ctx.auth, {
     operation: "query", capability: "query:pe_world_state", resource: { type: "work", id: workId }, risk: "low",
   }, c)) throw unavailable();

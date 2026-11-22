@@ -3844,7 +3844,7 @@ export default {
     },
     {
       "path": "finnor-os/scripts/s5/owner-fixture.mts",
-      "sha256": "ff3c146f322500609fe988efeef010c2456b11230e7742915ebca3bffa27d9ad"
+      "sha256": "9726fba002b0a1f53389ea5e031184b0f666609eab568811f80011bb51c15b79"
     },
     {
       "path": "finnor-os/scripts/x3/environment.mts",
@@ -5408,7 +5408,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/real-world-service/store.ts",
-      "sha256": "cc87fe9454690e47bbc86f700a2da14683b1b4ca2df01a6ed621d8ba230f47a2"
+      "sha256": "5680bcfe493b02d0e7048ab5fa9bd271f0247d361dd64bd222ebf2e0afd8d472"
     },
     {
       "path": "finnor-os/packages/private-equity/src/real-world-service/worker.ts",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "2ea6e3fc2aadb8023fbcdb72575ddcf874b12c10148734e4ce1dded8e07c46be"
+  "sourceDigest": "15c98318212043be441275a32f065957a34985886f1d01b127d371cc17c6b0dc"
 } as const;
