@@ -135,6 +135,7 @@ jobs:
           scenario=z0-session.mjs
           profiles=z0
           launch_args=()
+          runner_prefix=(taskset -c 0,1)
           if [ "$GITHUB_REF_NAME" = "codex/project-z0-identity" ]; then
             scenario=z0-d1-session.mjs
           elif [ "$GITHUB_REF_NAME" = "codex/project-z0-confidential" ]; then
@@ -149,6 +150,11 @@ jobs:
             scenario=z0-mounted-session.mjs
             export PLAYWRIGHT_BROWSERS_PATH="$RUNNER_TEMP/z0-chromium"
             launch_args+=(--budget-ms=3300000 --compiled-frontend)
+            if [ "$GITHUB_REF_NAME" = "codex/zw-integration-quality-20261115" ]; then
+              # The release check runs the browser, Auth, API compilation, database
+              # and worker together. Use the assigned runner CPUs for this stack.
+              runner_prefix=()
+            fi
           elif [ "$GITHUB_REF_NAME" = "codex/project-z0-recovery" ]; then
             case "$Z0_RECOVERY_MODE" in
               current-*)
@@ -164,7 +170,8 @@ jobs:
             esac
           fi
           install -d -m 700 "$GITHUB_WORKSPACE/.centropy-certification"
-          taskset -c 0,1 node scripts/project-z/run-native-scenario.mjs \
+          "${runner_prefix[@]}" bash -c 'taskset -pc "$$"'
+          "${runner_prefix[@]}" node scripts/project-z/run-native-scenario.mjs \
             --name="z0-ci-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
             --evidence="$RUNNER_TEMP/z0-native" --profiles="$profiles" --no-worker --forward-env=FINNOR_Z0_MODE \
             --forward-env=PLAYWRIGHT_BROWSERS_PATH --forward-env=FINNOR_Z0_DEPENDENCY \

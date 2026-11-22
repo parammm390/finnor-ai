@@ -118,6 +118,7 @@ const postgres = new EmbeddedPostgres({ databaseDir: pgDirectory, user: "w4_admi
   onLog: line => { postgresStartLog = (postgresStartLog + line).slice(-8192); } });
 let admin: pg.Client | null = null, auth: Awaited<ReturnType<typeof authenticatedApiFixture>> | null = null;
 let recipient: Awaited<ReturnType<typeof growthRecipient>> | null = null, activeWorker: ChildProcess | null = null;
+let workerReady = false, workerLog = "";
 let closePool: (() => Promise<void>) | undefined, result: unknown, failure: unknown;
 let diagnosticTenant: string | null = null;
 const numericalDiagnostics = captureNumericalProcesses(output);
@@ -265,27 +266,54 @@ try {
     ownerCall: (op, body) => http("obligations", op, body), artifact });
   const tick = async (maximum: number) => {
     checkBound(); const count = Math.min(16, maximum);
-    const p = spawn(process.execPath, ["--max-old-space-size=1536", "--import=tsx", "scripts/w4/worker.mts", String(count)], {
-      cwd: workspace, env: { ...process.env, DATABASE_URL: workerDatabaseUrl }, stdio: ["ignore", "pipe", "pipe"] });
-    activeWorker = p; let log = "";
-    p.stdout!.on("data", b => { log += b; if (log.length > 4 * 1024 * 1024) p.kill("SIGKILL") });
-    p.stderr!.on("data", b => { log += b; if (log.length > 4 * 1024 * 1024) p.kill("SIGKILL") });
-    const physical = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((yes, no) => {
-      const timer = setTimeout(() => p.kill("SIGKILL"), 60000);
-      p.once("error", e => { clearTimeout(timer); no(e) });
-      p.once("close", (code, signal) => { clearTimeout(timer); yes({ code, signal }) });
+    workerLog = "";
+    if (!activeWorker) {
+      const child = spawn(process.execPath, ["--max-old-space-size=1536", "--import=tsx", "scripts/w4/worker.mts"], {
+        cwd: workspace, env: { ...process.env, DATABASE_URL: workerDatabaseUrl },
+        stdio: ["ignore", "pipe", "pipe", "ipc"] });
+      activeWorker = child;
+      const capture = (bytes: Buffer) => {
+        workerLog += bytes.toString();
+        if (workerLog.length > 4 * 1024 * 1024) child.kill("SIGKILL");
+      };
+      child.stdout!.on("data", capture);
+      child.stderr!.on("data", capture);
+      child.on("error", error => capture(Buffer.from(error.message)));
+    }
+    const p = activeWorker;
+    assert(p.connected && p.exitCode === null && p.signalCode === null, "W4_OWNED_WORKER_NOT_RUNNING");
+    const observations = await new Promise<unknown[]>((resolve, reject) => {
+      const cleanup = () => {
+        clearTimeout(timer);
+        p.off("message", message); p.off("error", failed); p.off("exit", closed);
+      };
+      const failed = (error: Error) => { cleanup(); reject(error); };
+      const closed = () => failed(Error("W4_OWNED_WORKER_EXITED"));
+      const request = () => p.send(count, error => { if (error) failed(error); });
+      const message = (result: unknown) => {
+        if (!workerReady && result === "ready") { workerReady = true; request(); }
+        else if (workerReady && Array.isArray(result)) { cleanup(); resolve(result); }
+        else failed(Error("W4_INVALID_WORKER_REPLY"));
+      };
+      const timer = setTimeout(() => {
+        p.kill("SIGKILL");
+        failed(Error("W4_WORKER_TIME_BOUND"));
+      }, 60000);
+      p.on("message", message); p.once("error", failed); p.once("exit", closed);
+      if (workerReady) request();
     });
-    activeWorker = null;
-    const observations = log.split("\n").filter(l => l.startsWith('{"schema":"finnor.w4.worker-observation.v1",')).map(l => JSON.parse(l));
-    const row = { pid: p.pid, ...physical, observations, log };
-    workers.push(row); await artifact("workers/" + workers.length + ".json", row);
-    assert.equal(physical.code, 0, log); assert.equal(physical.signal, null, log);
     assert(observations.length >= 1 && observations.length <= count, "W4_ACTUAL_WORKER_OBSERVATIONS_REQUIRED");
-    for (const observed of observations) {
+    for (const [ordinal, raw] of observations.entries()) {
+      const observed = raw as { schema: string; pid: number; tick: number; worked: boolean; registration: string;
+        role: { current_user: string; rolsuper: boolean; rolbypassrls: boolean } };
+      assert.equal(observed.schema, "finnor.w4.worker-observation.v1");
       assert.equal(observed.pid, p.pid); assert.equal(observed.role.current_user, "finnor_worker");
       assert.equal(observed.role.rolsuper, false); assert.equal(observed.role.rolbypassrls, false);
       assert.equal(observed.registration, "ACTUAL_PRODUCTION_CREATE_WORKER");
+      assert.equal(observed.tick, ordinal); assert.equal(typeof observed.worked, "boolean");
     }
+    const row = { pid: p.pid, observations, log: workerLog };
+    workers.push(row); await artifact("workers/" + workers.length + ".json", row);
     return observations.length;
   };
   const pump = async (maximum: number = NATIVE_GROWTH_LIMITS.maximumPumpTicks) => {
@@ -382,6 +410,7 @@ try {
   assert.deepEqual(recipient.snapshot().records, original.records);
   const readback = await journey.read(); assert.equal(readback.request.nativeEffects.every((e: any) => e.state === "VERIFIED"), true);
   numericalDiagnostics.assertComplete();
+  checkBound();
   await artifact("native-owner-evidence.json", { status: "PASS_NATIVE_SMOKE", startedAt, generatedAt: new Date().toISOString(),
     result, migrations, measurements, physical, restart, workCount: after.n, actualRecipientRequests: recipient.requests,
     elapsedMs: performance.now() - started, dependencySource: "EXISTING_LOCAL_DEVELOPMENT_DEPENDENCIES_NOT_RECONSTRUCTION_EVIDENCE",
@@ -430,14 +459,28 @@ try {
     }
   }
   const cleanupWorker = activeWorker as ChildProcess | null;
-  if (cleanupWorker && cleanupWorker.exitCode === null && cleanupWorker.signalCode === null) {
-    const p = cleanupWorker; await new Promise<void>(yes => { p.once("close", () => yes()); p.kill("SIGKILL") });
+  let workerCleanupFailed = false;
+  if (cleanupWorker?.pid && cleanupWorker.exitCode === null && cleanupWorker.signalCode === null) {
+    const p = cleanupWorker;
+    await new Promise<void>(yes => {
+      const kill = setTimeout(() => { workerCleanupFailed = true; p.kill("SIGKILL"); }, 5000);
+      p.once("exit", (code, signal) => {
+        clearTimeout(kill);
+        workerCleanupFailed ||= code !== 0 || signal !== null;
+        yes();
+      });
+      if (p.connected) p.send("stop", error => { if (error) { workerCleanupFailed = true; p.kill("SIGKILL"); } });
+    });
+  } else if (cleanupWorker) {
+    workerCleanupFailed = cleanupWorker.exitCode !== 0 || cleanupWorker.signalCode !== null;
   }
-  await artifact("http-and-physical-trace.json", { traffic, workers, outcomeEstablished: !!result && !failure, fieldValidated: false });
+  await artifact("http-and-physical-trace.json", { traffic, workers, lastWorkerLog: workerLog, workerCleanupFailed,
+    outcomeEstablished: !!result && !failure && !workerCleanupFailed, fieldValidated: false });
   if (recipient) await recipient.close();
   if (auth) await auth.close();
   if (closePool) await closePool();
   if (admin) await admin.end();
   await postgres.stop();
+  if (workerCleanupFailed && !failure) throw Error("W4_OWNED_WORKER_CLEANUP_FAILED");
   if (diagnosticFlushFailed && !failure) throw Error("W4_PRIVATE_DIAGNOSTIC_FLUSH_FAILED");
 }

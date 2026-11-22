@@ -223,7 +223,8 @@ const postgres = new EmbeddedPostgres({ databaseDir: pgDirectory, user: "w3_admi
   onLog: line => { postgresStartLog = (postgresStartLog + line).slice(-8192); } });
 let admin: pg.Client | null = null, auth: any = null, recipient: any = null, activeWorker: ChildProcess | null = null;
 let closePool: (() => Promise<void>) | null = null;
-let failedOwnerCall: { group: string; operation: string; status: number; code: string | null } | null = null;
+let failedOwnerCall: { group: string; operation: string; status: number; code: string | null;
+  staleResourceWitness: boolean } | null = null;
 const workers: any[] = [];
 try {
   await postgres.initialise(); await appendFile(join(pgDirectory, "postgresql.conf"), "\ntrack_commit_timestamp=on\n");
@@ -429,7 +430,9 @@ try {
     if (integratedCompany && result.status !== 200) {
       const code: unknown = result.body?.code;
       failedOwnerCall = { group, operation, status: result.status,
-        code: typeof code === "string" && /^[A-Z][A-Z0-9_]{2,100}$/.test(code) ? code : null };
+        code: typeof code === "string" && /^[A-Z][A-Z0-9_]{2,100}$/.test(code) ? code : null,
+        staleResourceWitness: group === "allocations" && operation === "clear" && code === "STALE_INPUT"
+          && result.body?.error === "Resource source or rights witness is no longer current" };
     }
     assert.equal(result.status, 200, JSON.stringify({ group, operation, ...result })); return result.body;
   };
