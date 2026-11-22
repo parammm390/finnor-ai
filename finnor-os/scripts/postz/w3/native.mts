@@ -417,6 +417,10 @@ try {
   const http: IntegratedOwnerPorts["http"] = async (group, operation, body, actor = owner) => {
     checkBound();
     const ordinal = ++httpOrdinal, began = performance.now(), wall = Date.now(), cpu = process.cpuUsage();
+    const engine = activeIntegratedOwner?.engine;
+    const timeoutMs = organizationOriginal
+      ? Math.max(1, Math.min(30000, Math.floor(300000 - (performance.now() - start))))
+      : engine === "W4" && group === "policies" && operation === "handoff" ? 60000 : 30000;
     const baseline = new Map([...sqlStatistics].map(([key, value]) => [key, { ...value }]));
     loopDelay.reset(); let status: number | null = null;
     try {
@@ -444,8 +448,7 @@ try {
       }
       const r = await fetch(`${auth.origin}/api/${group}/${operation}`, { method: body === undefined ? "GET" : "POST",
         headers, ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-        signal: AbortSignal.timeout(organizationOriginal
-          ? Math.max(1, Math.min(30000, Math.floor(300000 - (performance.now() - start)))) : 30000) });
+        signal: AbortSignal.timeout(timeoutMs) });
       status = r.status;
       const result = { status, body: await r.json() as any };
       if (integratedCompany && actor === owner &&
@@ -456,6 +459,14 @@ try {
         retainOwnerRefusal(group, operation, result);
       }
       return result;
+    } catch (error) {
+      if (engine === "W4" || engine === "W5") {
+        const name = error instanceof Error ? error.name : null;
+        console.error(JSON.stringify({ event: "PHASE_W_OWNER_REQUEST_FAILED", engine,
+          group, operation: operation.split("?", 1)[0], status, timeoutMs,
+          elapsedMs: Math.round(performance.now() - began), timedOut: name === "TimeoutError" }));
+      }
+      throw error;
     } finally {
       const used = process.cpuUsage(cpu);
       await artifact("api-phases/" + String(ordinal).padStart(4, "0") + ".json", {
@@ -2302,11 +2313,13 @@ try {
       "W049_COMBINED_ORIGINALS_MUST_BE_DECLARED_BEFORE_FIT");
     const ports: IntegratedOwnerPorts = integratedPorts;
     const servicePendingOwnerDeliveries = async (engine: "W4" | "W5") => {
-      const { rows: [pending] } = await ports.admin.query<{ count: number }>(`SELECT count(*)::int count
+      const countPendingS1 = async () => (await ports.admin.query<{ count: number }>(`SELECT count(*)::int count
         FROM finnor_os.s6_owner_delivery_states WHERE tenant_id=$1 AND principal_id=$2
-        AND semantic_owner='S1' AND status<>'ACCEPTED'`, [tenant, owner]);
-      console.log(JSON.stringify({ event: "PHASE_W_OWNER_DELIVERY_HANDOFF", engine, pendingS1: pending!.count }));
+        AND semantic_owner='S1' AND status<>'ACCEPTED'`, [tenant, owner])).rows[0]!.count;
+      const began = performance.now(), pendingBefore = await countPendingS1();
       await recipient.drainNativeReferences(64);
+      console.log(JSON.stringify({ event: "PHASE_W_OWNER_DELIVERY_HANDOFF", engine, pendingBefore,
+        pendingAfter: await countPendingS1(), elapsedMs: Math.round(performance.now() - began) }));
     };
     await observeIntegratedOwner("W4", async () => {
       await servicePendingOwnerDeliveries("W4");
