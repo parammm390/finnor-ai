@@ -359,8 +359,20 @@ export async function mountedServiceProof(input: MountedInput) {
   };
   const logout = async () => {
     await browser(["click", 'summary[aria-label="Account menu"]']);
-    await browser(["find", "role", "button", "click", "--name", "Sign out", "--exact"]);
-    await browser(["wait", "#centropy-login-email"]);
+    const active = currentPage();
+    const providerLogout = active.waitForResponse(response => {
+      const url = new URL(response.url());
+      return url.origin === origin && url.pathname === "/auth/v1/logout"
+        && response.request().method() === "POST" && [200, 204].includes(response.status());
+    });
+    const [response] = await Promise.all([
+      providerLogout, browser(["find", "role", "button", "click", "--name", "Sign out", "--exact"]),
+    ]);
+    assert.equal(await response.finished(), null, "W3_PROVIDER_LOGOUT_RESPONSE_INCOMPLETE");
+    const signedOut = active.locator(".ct-auth-state").getByRole("link", { name: "Sign in", exact: true });
+    await signedOut.waitFor({ state: "visible" });
+    assert.equal(await signedOut.getAttribute("href"), "/centropy/login");
+    assert.equal(await active.locator(".ct-topbar").count(), 0, "W3_SIGNED_OUT_OWNER_SHELL_STILL_MOUNTED");
   };
   const prepare = (id: string) => {
     const hold = input.barrier.arm(id, input.owner, input.workId);

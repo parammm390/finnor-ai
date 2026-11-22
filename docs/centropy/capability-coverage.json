@@ -8,7 +8,7 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-21T23:30:39.051Z",
+  "generatedAt": "2026-11-22T00:25:23.547Z",
   "sourceBaseCommit": "b5b6cf6b4e58539325440d53e6530aefaf89543a",
   "manifestSha256": "e68051fd74494792ebb66d7156bae1b6ac5ef64e369d60057bc4c596fb0aebe3",
   "formsSha256": "35b57673d9d86e461f2b6056aaf326cb789901dfdd4481734aefef91da8052fd",
@@ -1069,7 +1069,7 @@
       },
       {
         "file": "src/components/centropy/lib/centropy-auth.tsx",
-        "sha256": "da2a8c6b9605f3a5c57847c79a254c9997d311e6201d60ebc9b4d6f3f1aac16a"
+        "sha256": "b8c3532d70195538a8a9e1c7b1fff63a829bc9516fe1d57dd3352a68b513cb98"
       },
       {
         "file": "src/lib/auth/browser-session.ts",
@@ -1113,7 +1113,7 @@
       },
       {
         "file": "src/components/centropy/lib/use-private-request-scope.ts",
-        "sha256": "58873b784a73c847e5c6197053bb9c97fe3547c950283572b8a417d22a6eae5a"
+        "sha256": "c02efccd03caea60e8417d8716e72e12eb80bae36842258113d8929af1fbd881"
       },
       {
         "file": "src/components/centropy/lib/private-workspace-availability.ts",

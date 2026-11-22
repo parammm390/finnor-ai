@@ -13,7 +13,7 @@ export function usePrivateRequestScope(resourceIdentity: string, audience: "OWNE
   const [, render] = useState(0)
   const auth = useCentropyAuth()
   const availability = usePrivateWorkspaceAvailability()
-  const allowed = Boolean(auth.session && auth.role &&
+  const allowed = Boolean(auth.session && auth.role && !auth.roleLoading &&
     (auth.role === "owner" || audience === "WORKFORCE_PARTICIPANT") && !auth.roleError && !auth.authError && availability.available)
   const credential = auth.session?.access_token ?? null
   const principal = auth.session?.user.id ?? "signed-out"

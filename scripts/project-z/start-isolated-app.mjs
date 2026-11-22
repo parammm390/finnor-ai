@@ -392,8 +392,18 @@ try {
   save()
   // BEGIN production build and start
   const production = productionBuild || compiledFrontend ? await buildProduction() : null
+  const apiEnv = { ...appEnv }
+  if (compiledFrontend && profiles.has("z0") && process.platform === "linux") {
+    // Next dev can restart its serving process during open browser reads when
+    // the route graph crosses its heap threshold. Use the larger bounded heap
+    // only on runners with enough available RAM for the rest of the stack.
+    const availableKiB = Number(/^MemAvailable:\s+(\d+) kB$/m.exec(readFileSync("/proc/meminfo", "utf8"))?.[1])
+    const heapMiB = availableKiB >= 12 * 1024 ** 2 ? 6144 : 4096
+    apiEnv.NODE_OPTIONS = `--max-old-space-size=${heapMiB}`
+    receipt.apiDevHeapMiB = heapMiB
+  }
   const api = production?.spawned.api ? child("api", production.spawned.api, join(backend, "apps/api"), production.serverEnv)
-    : child("api", [join(backend, "node_modules/next/dist/bin/next"), "dev", "-H", "127.0.0.1", "-p", "3101"], join(backend, "apps/api"), appEnv)
+    : child("api", [join(backend, "node_modules/next/dist/bin/next"), "dev", "-H", "127.0.0.1", "-p", "3101"], join(backend, "apps/api"), apiEnv)
   const frontend = production ? child("frontend", production.spawned.frontend, root, production.frontendServerEnv)
     : child("frontend", [join(root, "node_modules/next/dist/bin/next"), "dev", "--webpack", "-H", "127.0.0.1", "-p", "3001"], root, appEnv)
   // END

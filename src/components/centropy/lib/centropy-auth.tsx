@@ -318,7 +318,12 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
     finally { if (pendingSignOut === logout) pendingSignOut = null }
   }
 
-  return <CentropyAuthContext.Provider value={{ session, loading, authError, retryAuth, role, roleLoading, roleError, retryRole, signOut }}>{children}</CentropyAuthContext.Provider>
+  const sessionKey = getCurrentSessionKey()
+  // The session render can arrive one commit before its role lookup effect.
+  // Gate native reads on the current credential from that first render.
+  const verifyingRole = roleLoading || Boolean(session && !roleError
+    && (!sessionKey || verifiedIdentity?.sessionKey !== sessionKey))
+  return <CentropyAuthContext.Provider value={{ session, loading, authError, retryAuth, role, roleLoading: verifyingRole, roleError, retryRole, signOut }}>{children}</CentropyAuthContext.Provider>
 }
 
 export function useCentropyAuth(): CentropyAuthState {

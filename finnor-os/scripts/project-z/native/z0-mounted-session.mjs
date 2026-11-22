@@ -47,6 +47,11 @@ const check = (c, id, expected, provenance, observed, pass) => {
   c.checks.push({ id, expected, provenance, observed, pass: Boolean(pass) });
   return Boolean(pass);
 };
+const mountedReadTimings = (rows, started) => rows.flatMap(row => {
+  const route = /\/api\/centropy\/company-brain\/(application-projection|institution-sources|institution-read|projection)$/.exec(row.path)?.[1];
+  return route ? [{ route, status: row.status, failed: Boolean(row.failure),
+    startedMs: row.at - started, responseMs: row.responseAt === undefined ? null : row.responseAt - row.at }] : [];
+}).slice(-24);
 async function runCase(id, rows, title, body) {
   const c = { id, rows, title, outcome: "PASS", startedAt: new Date().toISOString(), checks: [], observations: {}, screenshots: [], gaps: [], error: null, reason: null };
   const caseMark = id === "M-00" ? null : watch.mark();
@@ -67,7 +72,7 @@ async function runCase(id, rows, title, body) {
   if ((id === "M-01" || id === "M-08") && c.outcome === "FAIL" && page) {
     c.observations.renderBoundary = await renderBoundaryFacts().catch(() => ({ diagnosticUnavailable: true }));
   }
-  if (caseMark !== null && (c.error === "Z0_BROWSER_INSTITUTION_UNAVAILABLE" || c.error === "Z0_BROWSER_INSTITUTION_BUSY")) {
+  if (id !== "M-07" && caseMark !== null && (c.error === "Z0_BROWSER_INSTITUTION_UNAVAILABLE" || c.error === "Z0_BROWSER_INSTITUTION_BUSY")) {
     c.observations.institutionRequests = watch.since(caseMark)
       .filter(row => ["/api/centropy/company-brain/institution-sources",
         "/api/centropy/company-brain/institution-read", "/api/centropy/company-brain/institution-status"].includes(row.path))
@@ -83,12 +88,8 @@ async function runCase(id, rows, title, body) {
         return kind ? [{ kind, status: row.status, failed: Boolean(row.failure) }] : [];
       }).slice(-24);
   }
-  if ((id === "M-01" || id === "M-04") && c.outcome === "FAIL") {
-    c.observations.mountedReads = watch.since(caseMark).flatMap(row => {
-      const route = /\/api\/centropy\/company-brain\/(application-projection|institution-sources|institution-read|projection)$/.exec(row.path)?.[1];
-      return route ? [{ route, status: row.status, failed: Boolean(row.failure),
-        startedMs: row.at - t0, responseMs: row.responseAt === undefined ? null : row.responseAt - row.at }] : [];
-    }).slice(-24);
+  if (["M-01", "M-04", "M-08"].includes(id) && c.outcome === "FAIL") {
+    c.observations.mountedReads = mountedReadTimings(watch.since(caseMark), t0);
   }
   c.wallMs = Date.now() - t0;
   c.failedChecks = c.checks.filter(item => !item.pass).map(item => item.id);
@@ -884,6 +885,7 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
   const clockPage = await clockContext.newPage();
   const clockWatch = new RequestWatch();
   clockWatch.attach(clockPage, "clock", authOrigin);
+  let refreshStart = null;
   try {
     await clockPage.bringToFront();
     await clockPage.clock.install({ time: new Date() });
@@ -896,6 +898,7 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
     const beforeTag = before.accessToken ? sha(before.accessToken).slice(0, 12) : null;
     const ownerBefore = await witness(q, parentA);
     const mark = clockWatch.mark();
+    refreshStart = { mark, time: Date.now() };
     c.observations.browserStage = "ADVANCE_REFRESH_CLOCK";
     if (await clockPage.evaluate(() => document.visibilityState) !== "visible") throw Error("Z0_BROWSER_REFRESH_PAGE_NOT_VISIBLE");
     const [{ firstGrant, readDeadline }] = await Promise.all([
@@ -952,6 +955,7 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
     }, summary.mutations === 0 && summary.signOut === 0 && summary.otherNonGet === 0 && otherAuthWrites === 0
       && refreshGrants.length > 0 && refreshGrants.every(row => row.status === 200 && !row.failure));
   } finally {
+    if (refreshStart) c.observations.mountedReads = mountedReadTimings(clockWatch.since(refreshStart.mark), refreshStart.time);
     await clockContext.close().catch(() => undefined);
     if (!page.isClosed()) await page.bringToFront().catch(() => undefined);
   }
