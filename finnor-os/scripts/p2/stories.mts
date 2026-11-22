@@ -67,7 +67,10 @@ export async function prepared(e:any,topology='ADAPTIVE',extra:any={}) {
   existingOwner?{existing:existingOwner,metricKeyPrefix:'p2-'+randomUUID(),rightsRef:sharedAllocation?.rightsRef,
     sharedOutcomeSeriesId:sharedAllocation?.outcomeSeriesId}:{});
  if(beforePolicy)await beforePolicy(f);
- const policy=await support.policy(f,'compute',{compute:8});await support.resource(f,'compute','native-attempt','CUMULATIVE_EXPENDITURE',['8','8']);
+ const policy=await support.policy(f,'compute',{compute:8});
+ const capacity=sharedAllocation?.capacity;
+ await support.resource(f,'compute','native-attempt','CUMULATIVE_EXPENDITURE',['8','8'],undefined,[],
+  capacity?{sourceRef:capacity.sourceRef,beliefPins:[capacity.pin]}:{});
  const allocation=ok(await api(f,'clear',support.clearing(f,{compute:['1']})));assert.equal(allocation.status,'FEASIBLE');
  const identity={tenant:f.tenant,actor:f.principal},request=e.request();request.computeSearch='P2_REQUIRED';if(f.browser)request.threadId=f.browser.thread.id;request.root=f.root;request.workId=f.work.workId;request.workInputId=f.work.workInputId;request.ownerBindings={policyRef:policy.ref,allocationRef:allocation.certificate.ref};request.sources=request.sources.map((s:any)=>({...s,source:{...s.source,subject:f.root}}));request.limits={maxCandidates:8,maxAttempts:8,maxSteps:4096,deadlineMs:300000};
  const response=await e.api('program-submit',request,identity);await artifact('p1-submission.json',{request,response});if(response.status!==202){try{await (await import('../../packages/private-equity/src/program-synthesis/api')).submitHarnessProgram(f.ctx,request);}catch(error){await artifact('p1-replay-diagnostic.json',{message:String(error),stack:(error as Error).stack,cause:String((error as any).cause)});}}const p=ok(response,202);

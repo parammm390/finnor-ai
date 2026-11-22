@@ -9,12 +9,12 @@ import { prepared } from "../p2/stories.mjs";
 import { nativeHttpFixture } from "../p7/native-http-fixture.mjs";
 import { observeNativeRun } from "./native-observe.mjs";
 import { driveNativeProgram } from "./native-drive.mjs";
-import type { SharedAllocationFixture } from "../postz/integrated/allocation-fixture.mts";
+import type { SharedAllocationFixture, SharedCapacityBasis } from "../postz/integrated/allocation-fixture.mts";
 
 export function prepareNativeOwnerFixture(e: any, setup: {
   beforeFit: (owner: any) => Promise<void>;
   existingOwner?: { tenant: string; principal: string; root: { entityType: "external_organization"; entityId: string } };
-  sharedAllocation?: SharedAllocationFixture & { outcomeSeriesId: string };
+  sharedAllocation?: SharedAllocationFixture & { outcomeSeriesId: string; capacity: SharedCapacityBasis };
 }) {
   return prepared(e, "ADAPTIVE", { deferSearch: true, beforeFit: setup.beforeFit,
     existingOwner: setup.existingOwner, sharedAllocation: setup.sharedAllocation, beforePolicy: async (owner: any) => {
