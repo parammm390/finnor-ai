@@ -1179,7 +1179,9 @@ try {
       const wrong = await http("real-world-services", "read", { workId: intake.workId }, unrelated);
       const foreignResult = await http("real-world-services", "read", { workId: intake.workId }, foreign);
       const forgedConsent = await http("real-world-services", "consent", { protocolId: discover.protocolId, revoke: false });
-      assert.equal(wrong.status, 404); assert.equal(foreignResult.status, 404); assert.equal(forgedConsent.status, 404);
+      assert.equal(wrong.status, 404, "W3_UNRELATED_PRIVATE_READ_HTTP_" + wrong.status);
+      assert.equal(foreignResult.status, 404, "W3_FOREIGN_PRIVATE_READ_HTTP_" + foreignResult.status);
+      assert.equal(forgedConsent.status, 404, "W3_OTHER_PRINCIPAL_CONSENT_HTTP_" + forgedConsent.status);
       const hidden = await db.withTenantTransaction(tenant, { userId: unrelated, readOnly: true }, async (_d, c) =>
         (await c.query("SELECT content FROM finnor_os.evidence_source_versions WHERE id=$1", [outcomeRef.versionId])).rows);
       assert.equal(hidden.length, 0);
