@@ -85,27 +85,24 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
     setRefreshingScope(key)
     const task = (async () => {
       try {
-        const next = await observe(() => centropyPost<Sources>("company-brain/institution-sources", { workId, purpose: "WORK_OBSERVATION" }))
+        const input = { workId, purpose: "WORK_OBSERVATION" }
+        const [next, result] = await Promise.all([
+          observe(() => centropyPost<Sources>("company-brain/institution-sources", input)),
+          observe(() => centropyPost<Read | null>("company-brain/institution-read", input)),
+        ])
         if (!current()) return
         if (next.workId !== workId) throw Error("Responsibility sources returned another Work")
         const prior = head.current
         if (prior?.key === key && prior.inputId === next.workInputId
             && (!next.request || next.request.revision < prior.revision
               || next.request.revision === prior.revision && next.request.id !== prior.requestId)) return
-        head.current = next.request ? { key, inputId: next.workInputId,
-          revision: next.request.revision, requestId: next.request.id } : null
-        setSources({ key, value: next })
         const request = next.request
-        if (request) {
-          const result = await observe(() => centropyPost<Read>("company-brain/institution-read", {
-            requestId: request.id, purpose: "WORK_OBSERVATION",
-          }))
-          if (!current()) return
-          if (result.workId !== workId || result.workRevision !== next.workInputId
-            || result.requestId !== request.id || result.revision !== request.revision)
-            throw Error("Responsibility returned a different Work input or programme revision")
-          setReading({ key, value: result })
-        } else setReading(null)
+        if (request ? !result || result.workId !== workId || result.workRevision !== next.workInputId
+            || result.requestId !== request.id || result.revision !== request.revision : result !== null)
+          throw Error("Responsibility returned a different Work input or programme revision")
+        head.current = request ? { key, inputId: next.workInputId, revision: request.revision, requestId: request.id } : null
+        setSources({ key, value: next })
+        setReading(result ? { key, value: result } : null)
         setMessage(null)
         setReadFailureScope(null)
       } catch (error) {

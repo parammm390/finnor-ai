@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { PoolClient } from "pg";
 import type { PeMutationContext } from "../types";
 import { tx, principal, sha } from "../evidence-execution/store";
 import { safePredicate } from "../program-synthesis/store";
@@ -18,9 +19,20 @@ export const INSTITUTION_OPERATIONS = ["institution-submit", "institution-revise
 const id = z.object({ requestId: z.string().uuid() }).strict();
 const workObservation = z.literal("WORK_OBSERVATION").optional();
 const sourceRead = z.object({ workId: z.string().uuid(), purpose: workObservation }).strict();
-const programmeRead = id.extend({ purpose: workObservation });
+const programmeRead = z.union([
+  id.extend({ purpose: workObservation }),
+  sourceRead.extend({ purpose: z.literal("WORK_OBSERVATION") }),
+]);
 const submit = z.object({ workId: z.string().uuid(), workInputId: z.string().uuid(),
   grantIds: z.array(z.string().uuid()).min(1).max(16), idempotencyKey: z.string().min(1).max(160) }).strict();
+
+async function institutionWorkHead(ctx: PeMutationContext, workId: string, client: PoolClient) {
+  const { rows } = await client.query<{ id: string; status: string; revision: number }>(
+    `SELECT id::text, status, revision FROM finnor_os.x1_compiler_requests
+     WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY revision DESC LIMIT 1`,
+    [ctx.auth.tenantId, principal(ctx), workId]);
+  return rows[0] ?? null;
+}
 
 export async function readInstitutionCompiler(ctx: PeMutationContext, requestId: string, purpose?: "WORK_OBSERVATION") {
   let q = await compilerRow(ctx, requestId);
@@ -113,7 +125,7 @@ async function handleInstitutionOperationBody(ctx: PeMutationContext, operation:
     }
     if (operation === "institution-sources") {
       const { workId } = sourceRead.parse(body);
-      return { status: 200, body: await tx(ctx, async c => {
+      const sources = await tx(ctx, async c => {
         await authorizeInstitutionWork(ctx, workId, c);
         const grants = (await c.query(`SELECT id::text,source_id,source_class,protocol,revision,expires_at
           FROM finnor_os.x1_source_grants g WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3
@@ -122,16 +134,26 @@ async function handleInstitutionOperationBody(ctx: PeMutationContext, operation:
           ORDER BY source_id LIMIT 17`, [ctx.auth.tenantId, principal(ctx), workId])).rows;
         const work = (await c.query("SELECT id::text FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1",
           [ctx.auth.tenantId, workId])).rows[0];
-        const request = (await c.query("SELECT id::text,status,revision FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY revision DESC LIMIT 1",
-          [ctx.auth.tenantId, principal(ctx), workId])).rows[0] ?? null;
+        const request = await institutionWorkHead(ctx, workId, c);
         return { workId, workInputId: work?.id ?? null, grants, request,
           completionContracts:INSTITUTION_COMPLETION_CONTRACTS };
-      }, true) };
+      }, true);
+      return { status: 200, body: sources, observedHead: sources.request?.id ?? null };
     }
-    const input: z.infer<typeof programmeRead> = (operation === "institution-read" ? programmeRead : id).parse(body);
-    const { requestId, purpose } = input;
-    if (["institution-read", "institution-status", "institution-witness"].includes(operation))
-      return { status: 200, body: await readInstitutionCompiler(ctx, requestId, purpose) };
+    if (operation === "institution-read") {
+      const input = programmeRead.parse(body);
+      if ("requestId" in input)
+        return { status: 200, body: await readInstitutionCompiler(ctx, input.requestId, input.purpose) };
+      const request = await tx(ctx, async client => {
+        await authorizeInstitutionWork(ctx, input.workId, client);
+        return institutionWorkHead(ctx, input.workId, client);
+      }, true);
+      const programme = request ? await readInstitutionCompiler(ctx, request.id, input.purpose) : null;
+      return { status: 200, body: programme, observedHead: request?.id ?? null };
+    }
+    const { requestId } = id.parse(body);
+    if (operation === "institution-status" || operation === "institution-witness")
+      return { status: 200, body: await readInstitutionCompiler(ctx, requestId) };
     let q = await compilerRow(ctx, requestId);
     await authorizeInstitutionWork(ctx, q.work_id);
     if(operation==='institution-resume')q=await reconcileInstitutionCompilerDelivery(ctx,q);
@@ -201,43 +223,50 @@ export async function handleInstitutionOperation(ctx:PeMutationContext,operation
   const observation = operation === "institution-sources" ? sourceRead.safeParse(body)
     : operation === "institution-read" ? programmeRead.safeParse(body) : null;
   const purpose = observation?.success ? observation.data.purpose : undefined;
-  const response=await handleInstitutionOperationBody(ctx,operation,body);let elapsedMs=performance.now()-started;
+  const { observedHead, ...response } = await handleInstitutionOperationBody(ctx, operation, body);
+  let elapsedMs = performance.now() - started;
   const handles=body&&typeof body==='object'&&!Array.isArray(body)?body as {workId?:unknown;requestId?:unknown}:{};
   const valid=(value:unknown):value is string=>typeof value==='string'&&z.string().uuid().safeParse(value).success;
-  let attribution:Awaited<ReturnType<typeof compilerRow>>|null=null;
-  let preparationWorkId:string|null=null;
+  const attribution: { request: Awaited<ReturnType<typeof compilerRow>> | null } = { request: null };
+  const selectedWorkId = valid(handles.workId) ? handles.workId : null;
+  const requestId = valid(handles.requestId) ? handles.requestId : observedHead ?? null;
+  if (!requestId && !selectedWorkId) return response;
   try{
-    if(valid(handles.requestId))attribution=await compilerRow(ctx,handles.requestId);
-    else if(valid(handles.workId)){
-      await authorizeInstitutionWork(ctx,handles.workId);
-      preparationWorkId=handles.workId;
-      const latest=await tx(ctx,async c=>(await c.query<{id:string}>(`SELECT id::text FROM finnor_os.x1_compiler_requests
-        WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY revision DESC LIMIT 1`,
-        [ctx.auth.tenantId,principal(ctx),handles.workId])).rows[0],true);
-      if(latest)attribution=await compilerRow(ctx,latest.id);
-    }
-    if(attribution){
-      await authorizeInstitutionWork(ctx,attribution.work_id);
-      const episode=await compilerEpisode(ctx,attribution.episode_id);
-      const rights=await tx(ctx,async c=>(await c.query<{revision:string}>('SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=$1',
-        [ctx.auth.tenantId])).rows[0],true);
-      elapsedMs=performance.now()-started;
-      await persistInstitutionApiCompute(ctx,{workId:attribution.work_id,requestId:attribution.id,episodeId:episode.id,
-        parentReservation:episode.parent_reservation,rightsRevision:rights?.revision??'UNKNOWN',operation,
-        statusCode:response.status,startedAt,elapsedMs,...(purpose ? { purpose } : {})});
-    }else if(preparationWorkId){
-      const rights=await tx(ctx,async c=>(await c.query<{revision:string}>(
-        'SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=$1',[ctx.auth.tenantId])).rows[0],true);
-      elapsedMs=performance.now()-started;
-      await persistInstitutionWorkPreparationCompute(ctx,{workId:preparationWorkId,rightsRevision:rights?.revision??'UNKNOWN',
-        operation,statusCode:response.status,startedAt,elapsedMs,...(purpose ? { purpose } : {})});
+    const meter = await tx(ctx, async client => {
+      const head = !requestId && selectedWorkId && observedHead === undefined
+        ? await institutionWorkHead(ctx, selectedWorkId, client) : null;
+      const meterRequestId = requestId ?? head?.id;
+      const request = meterRequestId ? await compilerRow(ctx, meterRequestId, client) : null;
+      const workId = request?.work_id ?? selectedWorkId;
+      if (!workId) return null;
+      await authorizeInstitutionWork(ctx, workId, client);
+      attribution.request = request;
+      const episode = request ? await compilerEpisode(ctx, request.episode_id, client) : null;
+      const rights = (await client.query<{ revision: string }>(
+        "SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=$1", [ctx.auth.tenantId])).rows[0];
+      return { workId, request, episode, rightsRevision: rights?.revision ?? "UNKNOWN" };
+    }, true);
+    if (meter) {
+      elapsedMs = performance.now() - started;
+      const { workId, request, episode, rightsRevision } = meter;
+      const measured = { workId, rightsRevision, operation, statusCode: response.status, startedAt, elapsedMs,
+        ...(purpose ? { purpose } : {}) };
+      if (request && episode) {
+        await persistInstitutionApiCompute(ctx, { ...measured, requestId: request.id, episodeId: episode.id,
+          parentReservation: episode.parent_reservation });
+      } else {
+        await persistInstitutionWorkPreparationCompute(ctx, measured);
+      }
     }
   }catch(error){
     // A revoked/unavailable principal cannot write a private meter. Retain a
     // failed writer for an otherwise available owner without replacing the
     // real API disposition or erasing any observed effect.
-    if(attribution)await compilerEvent(ctx,attribution,'API_COMPUTE_METER_GAP',{operation,statusCode:response.status,
-      startedAt,elapsedMs,predicate:safePredicate(error),originalEpisode:attribution.episode_id}).catch(()=>undefined);
+    const request = attribution.request;
+    if (request) await compilerEvent(ctx, request, "API_COMPUTE_METER_GAP", {
+      operation, statusCode: response.status, startedAt, elapsedMs, predicate: safePredicate(error),
+      originalEpisode: request.episode_id,
+    }).catch(() => undefined);
   }
   return response;
 }

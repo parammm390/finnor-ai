@@ -623,13 +623,16 @@ export async function mountedServiceProof(input: MountedInput) {
                 } finally { inbox.release(); consent.release(); await Promise.all([inbox.done, consent.done]) }
               });
             await wait(query => document.querySelector(query)?.getAttribute("data-w3-protocol-state") === "REVOKED", selector);
+            // The consent write clears the prior disclosure and its open state.
+            await browser(["click", selector + " > summary"]);
             const receipt = await evaluate(query => {
-              const protocol = document.querySelector<HTMLElement>(query)!;
-              return { text: protocol.innerText, disclosureCount: protocol.querySelectorAll("pre").length,
+              const protocol = document.querySelector<HTMLDetailsElement>(query)!;
+              return { open: protocol.open, text: protocol.innerText, disclosureCount: protocol.querySelectorAll("pre").length,
                 disabled: Array.from(protocol.querySelectorAll("button")).every(x => x.disabled) };
             }, selector);
+            assert.equal(receipt.open, true);
             assert.equal(receipt.disclosureCount, 0); assert.equal(receipt.disabled, true);
-            assert(receipt.text.includes("Historical protocol receipt only"));
+            assert(receipt.text.includes("Historical protocol receipt only"), "W3_VISIBLE_REVOKED_RECEIPT_REQUIRED");
             assert.equal(await rowCount(), 0); await input.pump();
             return { participantView, receipt, durable: await input.snapshot() };
           });
