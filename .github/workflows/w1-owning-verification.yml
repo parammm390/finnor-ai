@@ -1,7 +1,7 @@
 name: "W1 - Economic orchestration and recovery"
 on:
   push:
-    branches: [cloud/postz-w1, codex/zw-integration-quality-20261115]
+    branches: [cloud/postz-w1, codex/zw-integration-quality-20261115, codex/zw-six-standalone-proof-20261122]
     paths:
       - .github/workflows/w1-owning-*.yml
       - finnor-os/**
