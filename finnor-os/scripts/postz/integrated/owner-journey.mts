@@ -19,7 +19,7 @@ export interface IntegratedOwnerPorts {
   tenant: string; owner: string; foreign: string;
   companyId: string; serviceWorkId: string; serviceWorkInputId: string;
   http(group: string, operation: string, body: unknown, actor?: string | null): Promise<{ status: number; body: any }>;
-  tick(maximumTicks: number): Promise<{
+  tick(maximumTicks: number, signal?: AbortSignal): Promise<{
     pid: number; observations: Array<{ pid: number; role: unknown; registration: string; worked: boolean }>;
   }>;
   artifact(name: string, body: unknown): Promise<unknown>;
@@ -70,13 +70,14 @@ export async function runOrchestrationOwner(ports: IntegratedOwnerPorts,
     ], deliverable: { kind: "analytical_draft", title: "Original company liability-complete analytical draft" } },
   });
   let lastWorker: Awaited<ReturnType<IntegratedOwnerPorts["tick"]>> | null = null;
+  const tickQueue = async (maximum: number, signal?: AbortSignal) => {
+    signal?.throwIfAborted(); ports.checkBound();
+    lastWorker = await ports.tick(maximum, signal);
+    signal?.throwIfAborted(); ports.checkBound();
+    return lastWorker.observations.some(row => row.worked);
+  };
   const queue = {
-    async tick(signal?: AbortSignal) {
-      signal?.throwIfAborted(); ports.checkBound();
-      lastWorker = await ports.tick(16);
-      signal?.throwIfAborted(); ports.checkBound();
-      return lastWorker.observations.some(row => row.worked);
-    },
+    tick: (signal?: AbortSignal) => tickQueue(16, signal),
     registeredTypes: () => ["run_harness_program_v1", "run_evidence_derivation_v1", "run_compute_search_unit_v1"],
   };
   const api = (operation: string, body: unknown, identity = { tenant: ports.tenant, actor: ports.owner }) => {
@@ -100,7 +101,7 @@ export async function runOrchestrationOwner(ports: IntegratedOwnerPorts,
   const verifyProgram = async (programId: string, searchId: string, stage: "WARM" | "FOLLOW_UP") => {
     const began = performance.now();
     try {
-      const status = await driveNativeProgram(ports.admin, queue, programId, began);
+      const status = await driveNativeProgram(ports.admin, { tick: signal => tickQueue(1, signal) }, programId, began);
       assert.equal(status, "TESTED");
       console.log(JSON.stringify({ event: "PHASE_W_W1_STAGE", stage, status, elapsedMs: Math.round(performance.now() - began) }));
     } catch (error) {

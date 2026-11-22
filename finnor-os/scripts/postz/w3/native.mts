@@ -495,13 +495,7 @@ try {
   const source = (workId: string, body: unknown, key: string, actor: string = owner, protocolId: string | null = null) =>
     ok("real-world-services", "source", { workId, body, idempotencyKey: key, purpose: "Controlled W3 service verification", protocolId }, actor);
   let integratedPlaneObserved = false;
-  const tick = async (expectKill = false, maximumTicks = 1,
-    fault?: { mutate: () => Promise<void>; expectedRefusal?: string },
-    schedule?: () => Promise<boolean>) => {
-    checkBound();
-    assert(Number.isSafeInteger(maximumTicks) && maximumTicks >= 1 && maximumTicks <= NATIVE_WORKER_LIMITS.maximumTicks);
-    assert(!expectKill || maximumTicks === 1, "The physical payment kill remains a single tick");
-    assert(!schedule || !expectKill && !fault && !installation, "W3_SCHEDULING_IS_SOURCE_VERIFICATION_ONLY");
+  const observeIntegratedPlane = async () => {
     if (integratedCompany && !integratedPlaneObserved) {
       const plane = (await admin!.query(`SELECT state,accepted_job_epoch,minimum_claim_epoch,enforce_known_job_types,
         legacy_tenant_writes_allowed,activated_release_sha,activated_at,updated_at
@@ -523,6 +517,15 @@ try {
         "W049_ORIGINAL_PREPARING_PLANE_AND_UNCLASSED_MONOLITH_REQUIRED");
       integratedPlaneObserved = true;
     }
+  };
+  const tick = async (expectKill = false, maximumTicks = 1,
+    fault?: { mutate: () => Promise<void>; expectedRefusal?: string },
+    schedule?: () => Promise<boolean>) => {
+    checkBound();
+    assert(Number.isSafeInteger(maximumTicks) && maximumTicks >= 1 && maximumTicks <= NATIVE_WORKER_LIMITS.maximumTicks);
+    assert(!expectKill || maximumTicks === 1, "The physical payment kill remains a single tick");
+    assert(!schedule || !expectKill && !fault && !installation, "W3_SCHEDULING_IS_SOURCE_VERIFICATION_ONLY");
+    await observeIntegratedPlane();
     const workerArgs = installation ? [join(installation, installedDescriptor.entrypoints.w3Worker)]
       : ["--import=tsx", "scripts/postz/w3/worker.mts"];
     const p = spawn(process.execPath, [...workerArgs, "--maximum-ticks", String(maximumTicks),
@@ -881,7 +884,18 @@ try {
         const workforceOriginal = await prepareWorkforceOriginal(ports, provider, workforceWorkId, workforceResource);
         const upstream = await observeIntegratedOwner("W1", async () => {
           const { runOrchestrationOwner } = await import("../integrated/owner-journey.mts");
-          const actual = await runOrchestrationOwner(ports, { ...sharedAllocation, outcomeSeriesId: original.series.outcome, capacity });
+          const { createNativeWorkerClient } = await import("../../w4/worker-client.mts");
+          const worker = createNativeWorkerClient({ workspace, databaseUrl: workerDatabaseUrl, checkBound, recoverWorkflowSteps: true });
+          const w1Ports = { ...ports, tick: async (maximum: number, signal?: AbortSignal) => {
+            await observeIntegratedPlane();
+            const row = await worker.tick(maximum, signal);
+            assert(row.observations.every(entry => entry.workloadClass === null), "W049_ACTUAL_CHILD_QUEUE_MUST_REMAIN_UNCLASSED");
+            workers.push(row); await artifact("workers/" + workers.length + ".json", row);
+            return row;
+          } };
+          const actual = await runOrchestrationOwner(w1Ports, { ...sharedAllocation, outcomeSeriesId: original.series.outcome, capacity })
+            .catch(async error => { await worker.close(); throw error; });
+          assert(await worker.close(), "W049_W1_PHYSICAL_WORKER_DID_NOT_CLOSE_CLEANLY");
           await integratedEvidence.record(actual); return actual;
         });
         await observeIntegratedOwner("W2", async () => {
