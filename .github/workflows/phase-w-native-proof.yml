@@ -1,0 +1,9 @@
+name: Phase W shared-company proof
+on:
+  push:
+    branches: [codex/phase-w-shared-company-proof-20261122]
+permissions:
+  contents: read
+jobs:
+  native:
+    uses: ./.github/workflows/phase-w-native-episode.yml
