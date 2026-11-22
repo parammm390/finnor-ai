@@ -1,0 +1,13 @@
+name: Z/W candidate security proof
+on:
+  push:
+    branches: [codex/zw-clean-security-proof-20261122]
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+jobs:
+  original-security:
+    uses: ./.github/workflows/security.yml
+    with:
+      run_dependency_scan: true
