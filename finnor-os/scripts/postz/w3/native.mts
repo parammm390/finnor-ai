@@ -196,6 +196,11 @@ const run = async (id: string, input: unknown, expected: unknown, action: () => 
     console.log(JSON.stringify({ id, status: "PASS" })); return observed;
   } catch (error) {
     const observed = error instanceof Error ? { message: error.message, stack: error.stack } : { message: String(error) };
+    if (integratedCompany) {
+      const sqlState = error instanceof Error && "code" in error && typeof error.code === "string" &&
+        /^[0-9A-Z]{5}$/.test(error.code) ? error.code : null;
+      console.error(JSON.stringify({ event: "PHASE_W_CASE_FAILED", id, sqlState }));
+    }
     results.push({ id, status: "FAIL", observed }); await artifact("cases/" + id + "-observed.json", observed); throw error;
   }
 };
@@ -1175,7 +1180,7 @@ try {
     });
   await run("W005-authenticated-private-boundaries", { workId: intake.workId, requestId },
     { unrelatedPrincipalDenied: true, foreignTenantDenied: true, ownerCannotConsentForProvider: true,
-      ...(integratedCompany ? { unrelatedCanonicalWorkReadAllowed: false } : {}) }, async () => {
+      ...(integratedCompany ? { unrelatedCanonicalWorkReadAllowed: false, declaredOrganizationWorkReadAllowed: true } : {}) }, async () => {
       const wrong = await http("real-world-services", "read", { workId: intake.workId }, unrelated);
       const foreignResult = await http("real-world-services", "read", { workId: intake.workId }, foreign);
       const forgedConsent = await http("real-world-services", "consent", { protocolId: discover.protocolId, revoke: false });
@@ -1186,19 +1191,25 @@ try {
         (await c.query("SELECT content FROM finnor_os.evidence_source_versions WHERE id=$1", [outcomeRef.versionId])).rows);
       assert.equal(hidden.length, 0);
       let unrelatedCanonicalWorkReadAllowed: boolean | null = null;
+      let declaredOrganizationWorkReadAllowed: boolean | null = null;
       if (integratedCompany) {
         const { requireContext } = await import("../../../apps/api/lib/auth");
         const { canExerciseWorkforceAuthorityTx } = await import("@finnor/authority");
         const actualPrincipal = await requireContext(new Request(auth.origin + "/api/real-world-services/read",
           { headers: { authorization: "Bearer " + tokens.get(unrelated) } }));
-        unrelatedCanonicalWorkReadAllowed = await db.withTenantTransaction(tenant,
-          { userId: unrelated, readOnly: true }, async (_db, c) => canExerciseWorkforceAuthorityTx(actualPrincipal,
-            { operation: "query", capability: "query:work", workId: intake.workId,
-              resource: { type: "work", id: intake.workId }, risk: "low" }, c));
+        const original = combinedOriginals.organizationEffectWork;
+        assert(original);
+        [unrelatedCanonicalWorkReadAllowed, declaredOrganizationWorkReadAllowed] = await db.withTenantTransaction<[boolean, boolean]>(tenant,
+          { userId: unrelated }, async (_db, c) => {
+            const canRead = (workId: string) => canExerciseWorkforceAuthorityTx(actualPrincipal,
+              { operation: "query", capability: "query:work", workId, resource: { type: "work", id: workId }, risk: "low" }, c);
+            return [await canRead(intake.workId), await canRead(original.workId)];
+          });
         assert.equal(unrelatedCanonicalWorkReadAllowed, false, "W049_W5_STANDING_READ_MUST_NOT_EXPOSE_W3_WORK");
+        assert.equal(declaredOrganizationWorkReadAllowed, true, "W049_W5_EXACT_DECLARED_ORIGINAL_READ_REQUIRED");
       }
       return { wrong, foreignResult, forgedConsent, privateOriginalRows: hidden.length,
-        ...(integratedCompany ? { unrelatedCanonicalWorkReadAllowed } : {}) };
+        ...(integratedCompany ? { unrelatedCanonicalWorkReadAllowed, declaredOrganizationWorkReadAllowed } : {}) };
     });
   if (installation && !fast && invoiceChallenge === null) {
     const manifestBytes = await readFile(join(installation, installedDescriptor.compatibilityManifest.path));
