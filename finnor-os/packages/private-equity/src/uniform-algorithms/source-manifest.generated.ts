@@ -128,7 +128,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/allocation-store.ts",
-      "sha256": "98de34adcea28f19dfe8f9b2a6770d22ec9cfc1f566d17577b19bcd0b4ba1d07"
+      "sha256": "fa25d6cc348d23868102c5fc76cb4f0c021b58c634e95109376b4445b40afdab"
     },
     {
       "path": "finnor-os/packages/private-equity/src/allocation-experience.ts",
@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "a68c9cd9a79b034c17d99b5f895d3b5b29dca98af67adc2b003028cecbac4cce"
+      "sha256": "94a13739039dcb6853a6f985b0184b6c12d44abd80474d5d67d849d8afde4e9c"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -332,7 +332,7 @@ export default {
     },
     {
       "path": "finnor-os/package.json",
-      "sha256": "5f883fc55e6e7b317ddef09d0ce638b7b04f9510d2618ae7c30e585ee0f29066"
+      "sha256": "7ca9af52d7d4dca74cad494aedea93dd93ef45b0a76a97eee6ea9e767b21a2ad"
     },
     {
       "path": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
@@ -344,11 +344,11 @@ export default {
     },
     {
       "path": "src/components/centropy/lib/centropy-auth.tsx",
-      "sha256": "da2a8c6b9605f3a5c57847c79a254c9997d311e6201d60ebc9b4d6f3f1aac16a"
+      "sha256": "b8c3532d70195538a8a9e1c7b1fff63a829bc9516fe1d57dd3352a68b513cb98"
     },
     {
       "path": "src/components/centropy/lib/use-private-request-scope.ts",
-      "sha256": "58873b784a73c847e5c6197053bb9c97fe3547c950283572b8a417d22a6eae5a"
+      "sha256": "c02efccd03caea60e8417d8716e72e12eb80bae36842258113d8929af1fbd881"
     },
     {
       "path": "src/components/centropy/lib/private-read-generation.ts",
@@ -364,7 +364,7 @@ export default {
     },
     {
       "path": "finnor-os/package-lock.json",
-      "sha256": "4a326c6ed7a745da7cf5c116549689eb326895145de56eceb94fb6986c1d5158"
+      "sha256": "5a7d87924847f43d336d827022d6509a18cfd561724bb4af0df997e7b582f025"
     },
     {
       "path": "package-lock.json",
@@ -1612,11 +1612,11 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/application-semantics/allocation.ts",
-      "sha256": "937caefee976fb312b9a9ef5805b0115bce81315d246fe33d7dbd0949e001a71"
+      "sha256": "401b1da78f6ae980f523e46755b7ce23bc5935b56bc505cd24b45eec637687de"
     },
     {
       "path": "finnor-os/packages/private-equity/src/application-semantics/api.ts",
-      "sha256": "d8d738c973eb4db38dea22c3c51619cfd2d4be7ec5c432f8a76993e25765596e"
+      "sha256": "9a265e1735732c3e8752d019d82cf960a98fc709adf70da0fa7fcff39a11a6e0"
     },
     {
       "path": "finnor-os/packages/private-equity/src/application-semantics/checker.ts",
@@ -1960,7 +1960,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/company-brain.ts",
-      "sha256": "7b45821096947f651c16472db31e52489b3ff690eb2806767258352a8b0028ea"
+      "sha256": "62d397089a46eb98dc0222f6dabf07a9c389b576ea4b19e28e057a9c0ff27eaa"
     },
     {
       "path": "finnor-os/packages/private-equity/src/compute-search/admission.ts",
@@ -2260,7 +2260,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/economic-store.ts",
-      "sha256": "7d6527fad0387f5ccd0ca4aa74c97779ecf83707379350f1bc661ecde2ab23f4"
+      "sha256": "e059b92d704d4662b782d78501693d1eaec6e898985df4b9cd566544b15a69ef"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/admission.ts",
@@ -2304,7 +2304,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "fa5a746bfb70e79c1fdf181167a68512f05ac26194e6c5d8b4040aca6b3d1e5d"
+      "sha256": "ecc1960583b5cef188393e614806a409efd78a928993c7e5da7b5751d90ee638"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2436,7 +2436,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/institution-program/api.ts",
-      "sha256": "6cd2407f1260d4b60e9da40ef3b94d5020e2d47327b4302d40b6cac09636f28d"
+      "sha256": "485bb525e291e6a27282e755992a0514b3dd4fc644b3c28a39b00c0435088faf"
     },
     {
       "path": "finnor-os/packages/private-equity/src/institution-program/artifact.ts",
@@ -2488,7 +2488,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/institution-program/meter.ts",
-      "sha256": "8fbfc4ea9c6a31e39237fa7700440ff3e468f3f04b45878c5f7f835926449ad3"
+      "sha256": "f4372c281da7df6721fa63f0b98a9b45e9551286163ea1384ae6bb7dbe516d3b"
     },
     {
       "path": "finnor-os/packages/private-equity/src/institution-program/owner-admission.ts",
@@ -2528,7 +2528,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/institution-program/store.ts",
-      "sha256": "0923a39f1963d04a8a5068ef9047c3edcf01cbf86ddb361ebfb857cfd10ba5df"
+      "sha256": "980b26446409718c4e2029ff3c03c125d3743601af805d8959400612cc1b824f"
     },
     {
       "path": "finnor-os/packages/private-equity/src/institution-program/worker.ts",
@@ -2748,7 +2748,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "sha256": "ae33d31770d33789a1c3df05486cc9a77abd806d297beddb4eaa02f1f421a305"
+      "sha256": "d324c7056a8af5b0c62fbc93edd6620290a1fca91cc30c12a7782cb219d1fb87"
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-paths.ts",
@@ -3164,7 +3164,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts",
-      "sha256": "b731dc54bc069cd8c5be3c542d143c9c244a053d36427f9b80af083133c01e19"
+      "sha256": "99d86007960dbf059d4ef644d3ed6580b98d32c2cbfdac9c66b67a685fbc2daf"
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-paths.ts",
@@ -4000,7 +4000,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
-      "sha256": "e044351aca0e9ef7632a108ae355babebc4fe009464ab67d14dfb3961ef1c1c1"
+      "sha256": "302cfabac4799dd61abae42acfed74a0de599ba934eeec8ab3208821723a3c45"
     },
     {
       "path": "src/components/centropy/canvas/InterfaceSynthesisPanel.tsx",
@@ -4036,7 +4036,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/ResearchCapabilityDesk.tsx",
-      "sha256": "9273a216bc176a71a3a00a00b86f779d356f3a1509a241357350259c8dffcb8f"
+      "sha256": "cb613ab0bdce123796b2a603da3113bf6c94fda44a16646e19c0d2630892c9b7"
     },
     {
       "path": "src/components/centropy/canvas/SourceDiagnostics.tsx",
@@ -4200,7 +4200,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
-      "sha256": "de3a50966e99497203b1fc62b7dfee3b91c9d49854916f16cb98b1adda0b0372"
+      "sha256": "86c05af924d97adb915be1fdbf70a0af686099508163b2957c494d757f864e98"
     },
     {
       "path": "finnor-os/apps/api/app/api/obligations/[operation]/route.ts",
@@ -4532,7 +4532,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/source-custody/installation.cjs",
-      "sha256": "a6b0953979ba932a0088ffdf6ff86ce128ec34778cf5bc018ca9c3b3c22711c7"
+      "sha256": "bbc35e0fd75329d61d2be6d34597483d535ef01ecb0348cf5dffa6f8ef8aa9b2"
     },
     {
       "path": "finnor-os/packages/underwriting/package.json",
@@ -4748,7 +4748,7 @@ export default {
     },
     {
       "path": "src/components/centropy/world/WorldWorkRecord.tsx",
-      "sha256": "d6b1a31571bcb6480212ba082354151e79fddbe3acf87c647ace1a4291d40a47"
+      "sha256": "83cebbe8824ac9751b98567d420d0ef0672ca945d0c361f3626b203c5fb08d08"
     },
     {
       "path": "src/components/centropy/world/world-context.ts",
@@ -5384,7 +5384,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/real-world-service/consumer.ts",
-      "sha256": "40d16ca866dbb6782bbaa51c0890c9549f480b61e01ae2938f0808cc4f343edc"
+      "sha256": "afcd3614ca1c19e74fb67ce7dbac061d3c453d5a4cef5c616b7ec667e96784a0"
     },
     {
       "path": "finnor-os/packages/private-equity/src/real-world-service/contracts.ts",
@@ -6032,7 +6032,7 @@ export default {
     },
     {
       "path": "src/app/api/centropy/[...path]/route.ts",
-      "sha256": "d556b4cbdb7ae6a56f84daaf13ed5974b7eac93b956f023d0894009f1eddc611"
+      "sha256": "83347a1b9ed59a0e43fe4304e16ed2a2031065c67326ca17aa9f840b1bb3ad80"
     },
     {
       "path": "src/components/centropy/lib/private-workspace-availability.ts",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "e32f5a1615a1211c1224c33e88e9433a788769f3fbeeb426ff3b9de42219a718"
+  "sourceDigest": "2ea6e3fc2aadb8023fbcdb72575ddcf874b12c10148734e4ce1dded8e07c46be"
 } as const;

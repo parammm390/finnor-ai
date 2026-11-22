@@ -65,7 +65,7 @@ async function enqueueProposalOrigins(ctx:PeMutationContext,c:pg.PoolClient,prob
  await enqueueAllocationOrigin(ctx,c,problem,certificate.rightsRef);
  await enqueueAllocationOrigin(ctx,c,certificate,certificate.rightsRef);
  for(const resource of problem.resources)await enqueueAllocationOrigin(ctx,c,resource,resource.rightsRef);
- await enqueueAllocationComputeOrigin(ctx,c,certificate.compute,certificate.compute.id,certificate.rightsRef);
+ if(certificate.compute)await enqueueAllocationComputeOrigin(ctx,c,certificate.compute,certificate.compute.id,certificate.rightsRef);
 }
 async function enqueueAllocationRequestOrigin(ctx:PeMutationContext,c:pg.PoolClient,request:unknown,
  requestId:string,rightsRef:string){

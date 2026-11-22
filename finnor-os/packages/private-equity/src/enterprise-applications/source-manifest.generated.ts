@@ -104,7 +104,7 @@ export default {
     },
     {
       "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
-      "sha256": "de3a50966e99497203b1fc62b7dfee3b91c9d49854916f16cb98b1adda0b0372"
+      "sha256": "86c05af924d97adb915be1fdbf70a0af686099508163b2957c494d757f864e98"
     },
     {
       "path": "finnor-os/apps/api/lib/auth.ts",
@@ -124,7 +124,7 @@ export default {
     },
     {
       "path": "finnor-os/package-lock.json",
-      "sha256": "4a326c6ed7a745da7cf5c116549689eb326895145de56eceb94fb6986c1d5158"
+      "sha256": "5a7d87924847f43d336d827022d6509a18cfd561724bb4af0df997e7b582f025"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",

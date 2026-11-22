@@ -213,14 +213,26 @@ type InstitutionFixtureResourcePool = {
   resources: OriginalInstitutionParent["resources"];
 };
 
+const fixturePoolBoundary = async <T>(stage: string, operation: () => Promise<T>): Promise<T> => {
+  try { return await operation(); }
+  catch (error) {
+    if (error instanceof TypeError && !(error as Error & { code?: string }).code) {
+      Object.defineProperty(error, "code", {
+        value: `Z0_FIXTURE_RESOURCE_POOL_${stage}_TYPE_ERROR`, enumerable: false,
+      });
+    }
+    throw error;
+  }
+};
+
 /** Register the entire disposable portfolio before the first Work pins S5. */
 export async function prepareInstitutionFixtureResourcePool(env: NativeEnvironment, tags: readonly string[]): Promise<InstitutionFixtureResourcePool> {
   if (!tags.length || tags.length > 16 || new Set(tags).size !== tags.length
     || tags.some(tag => !/^[a-z0-9]{1,16}$/.test(tag))) throw Error("Z0_FIXTURE_RESOURCE_POOL_SCOPE");
-  const { pe, store, contracts } = await owners(env);
-  const { tenantId, userId } = await signInOwner(env);
+  const { pe, store, contracts } = await fixturePoolBoundary("OWNER_MODULES", () => owners(env));
+  const { tenantId, userId } = await fixturePoolBoundary("OWNER_SIGN_IN", () => signInOwner(env));
   const auth = { tenantId, userId, employeeId: userId, role: "owner" as const };
-  const sql = await admin(env);
+  const sql = await fixturePoolBoundary("ADMIN_CONNECT", () => admin(env));
   const deals: InstitutionFixtureResourcePool["deals"] = new Map();
   const now = Date.now(), startAt = new Date(now).toISOString();
   try {
@@ -228,18 +240,25 @@ export async function prepareInstitutionFixtureResourcePool(env: NativeEnvironme
       const organizationId = randomUUID(), registrationId = `DEAL-${tag}-${randomUUID()}`;
       await sql.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,'Z0 original-parent counterparty','other')",
         [organizationId, tenantId, "z0-org-" + organizationId]);
-      const deal = await pe.createDeal({ auth, provenance: { sourceSystem: "existing-crm-owner", createdBy: userId, externalId: registrationId } },
+      const deal = await fixturePoolBoundary("DEAL_CREATE", () => pe.createDeal(
+        { auth, provenance: { sourceSystem: "existing-crm-owner", createdBy: userId, externalId: registrationId } },
         { targetOrganizationId: organizationId, name: `Z0 original ${tag}`, dealLeadEmployeeId: userId,
-          signedLoiAt: new Date(now - 86400000), targetClosingAt: new Date(now + 86400000) });
-      deals.set(tag, { dealId: String(deal.row.id), organizationId, registrationId });
+          signedLoiAt: new Date(now - 86400000), targetClosingAt: new Date(now + 86400000) }));
+      const dealId = deal?.row?.id;
+      if (typeof dealId !== "string") throw Error("Z0_FIXTURE_RESOURCE_POOL_DEAL_RESULT");
+      deals.set(tag, { dealId, organizationId, registrationId });
     }
-    const revision = (await sql.query("SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1", [tenantId])).rows[0].revision;
+    const authority = (await sql.query<{ revision: number }>(
+      "SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1", [tenantId])).rows[0];
+    if (!Number.isSafeInteger(authority?.revision) || authority.revision < 1)
+      throw Error("Z0_FIXTURE_RESOURCE_POOL_AUTHORITY_STATE");
+    const revision = authority.revision;
     const resources = { compute: "z0-compute-" + tags[0], human: "z0-human-" + tags[0] };
     const ref = (owner: string, id: string) => ({ owner, id, version: "owner-fixture-v1", contentDigest: sha(id) });
     const permittedRoots = [...deals.values()].map(({ dealId }) => ({ entityType: "pe_deal", entityId: dealId }));
     for (const [resourceId, resourceClass, unit, capacity] of [[resources.compute, "COMPUTE", "request", 520], [resources.human, "HUMAN_ATTENTION", "seconds", 900]] as const) {
       const amount = String(capacity * tags.length);
-      await store.putAllocationResource({ auth, provenance: { sourceSystem: "existing-crm-owner", createdBy: userId } },
+      const resource = await fixturePoolBoundary("RESOURCE_CONTRACT", async () =>
         contracts.parseAllocationResource({ schema: "finnor.allocation-resource.v1", resourceId, resourceClass, tenantId,
           ownerRef: ref("BUSINESS_OWNER", userId), legalEntityRef: ref("S1", tenantId),
           scopeRef: ref("BUSINESS_OWNER", "z0-fixture-pool-" + tags[0]), permittedRoots,
@@ -248,7 +267,9 @@ export async function prepareInstitutionFixtureResourcePool(env: NativeEnvironme
           asOf: startAt, knowledgeAt: startAt, validUntil: new Date(now + 2 * 3600000).toISOString(), beliefPins: [],
           availability: Array.from({ length: 3 }, () => ({ amount, basis: "REPORTED_AVAILABLE" })),
           existingUse: ["0", "0", "0"], safetyMargin: "0", covenants: [], revoked: false,
-          qualification: "AUTHENTICATED_OWNER_ASSERTION_UNADMITTED" }), null);
+          qualification: "AUTHENTICATED_OWNER_ASSERTION_UNADMITTED" }));
+      await fixturePoolBoundary("RESOURCE_PERSIST", () => store.putAllocationResource(
+        { auth, provenance: { sourceSystem: "existing-crm-owner", createdBy: userId } }, resource, null));
     }
     return { tenantId, userId, deals, resources };
   } finally { await sql.end(); }

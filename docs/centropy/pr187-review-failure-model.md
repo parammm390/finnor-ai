@@ -424,3 +424,62 @@ The W3 correction raises only the compiler heap from 2 GiB to a bounded 3 GiB; t
 
 This correction does not accept W3, Z0, any protected effect or any measured business result. Hosted current-source receipts must establish the new W3 execution result. Z0 remains open at the authenticated institution read/display boundary.
 
+## 2026-11-22 current-head Z0 setup and required-verdict failures
+
+Source under review: `48da4c13a63b4f24ac4eee66548185c28a616f70`.
+
+- Z0 receipt comment `7080194339`, run `45029959382`, attempt 1, job
+  `137231151533`: **FAIL**. The stack, authentication, application and scenario
+  processes all completed, but M-00 failed after 6,055 ms with a `TypeError` at
+  `z0-mounted-session.mjs:126:24` while preparing the institution fixture pool.
+  M-01 through M-10 correctly remained NOT_RUN because their product
+  preconditions were not established. This is a fixture setup failure before
+  the previously observed Work display/read boundary, not product acceptance.
+- Required-verdict receipt comment `7080243060`, run `45029965853`, attempt 1,
+  job `137232767426`: **FAIL**. The independent causes are three new `next`
+  advisories against 15.5.28 (fixed in 15.5.29), stale X3/X4/X5/Y5 generated
+  sources, and a stale planner replay manifest. The RustSec bincode, chrono and
+  paste entries remain maintenance notices under the existing policy and must
+  not be silently suppressed.
+
+The Z0 setup call chain must be checked at each typed boundary: dynamic module
+exports, owner sign-in, deal creation result, authority-revision read, allocation
+resource parsing and resource persistence. A repair must preserve the original
+M-00 and M-01..M-10 assertions, tenant and confidential-recipient isolation,
+budgets, currentness and effect authority. It must not convert a setup exception
+to PASS, seed extra authority, retry a protected mutation, expose private
+payloads, or treat later NOT_RUN cases as acceptance. Official generators must
+produce all stale inputs, and the dependency closure must move to a non-vulnerable
+published Next.js version without weakening the OSV gate.
+
+W2 receipt comment `7080303049`, run `45029959451`, attempt 1, required job
+`137234433987`: **PASS** on this exact source. The exact payment, original
+unrepaired baseline, wrong amount, wrong receipt and wrong payee jobs all
+completed successfully. They passed the complete owner/driver type graph, the
+real PostgreSQL reader-policy and confidential-recipient checks, canonical Work
+completion preservation, registered original/repaired settlement joins, exact
+source restoration and controlled current-cut comparison. The exact-payment
+job additionally passed operational-heartbeat isolation and every business
+fence. The retained compensation, Work-completion, reader-policy and controller
+lease artifacts are bound to run `45029959451`, attempt 1 and source
+`48da4c13a63b4f24ac4eee66548185c28a616f70`.
+
+This resolves the previously open W2 current-cut settlement comparison for this
+source. It qualifies the controlled W2 acceptance contract only; it is not a
+deployment, a real payment, an overall W-phase pass, or evidence for W4/W5.
+
+W1 receipt comment `7080397214`, run `45029959393`, attempt 1, required job
+`137236571111`: **FAIL** on the same exact source. Both original economic
+orchestration journeys and all six recovery/refusal owners completed
+successfully. CI definitions and release-rule regression checks also passed.
+The sole blocking producer was source-consistency job `137231231675`, whose
+aggregate reported `inventory` and `backend`; the required verdict therefore
+failed closed. Artifact `14757635781`, digest
+`sha256:583ddec19d7c004f6deba3123ae2fa511aabd8c6d39c8739250a36d81f308c00`,
+retains the source diagnostics. This is not an economic-orchestration product
+failure: it is the same generated-input/source-closure failure already being
+repaired for the required PR verdict. The repair must pass the complete official
+17-step release-input chain and the unchanged W1 owner scenarios; it may not
+weaken either gate or promote the successful owners to overall W1 acceptance
+until the exact repaired head completes its required verdict.
+
