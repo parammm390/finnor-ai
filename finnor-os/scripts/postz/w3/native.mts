@@ -24,7 +24,10 @@ import { completeSharedAllocation, declareSharedResources, readSharedCapacityBas
 import type { AllocationResource } from "@finnor/shared-types";
 import type { IntegratedOwnerPorts } from "../integrated/owner-journey.mts";
 import type { NativeGrowthJourneyContext } from "../../w4/native-growth-journey.mts";
+import type { createNativeWorkerClient } from "../../w4/worker-client.mts";
 import type { OrganizationLiveInput } from "../w5/live-consumer.mjs";
+
+type ReusedWorkerTick = ReturnType<typeof createNativeWorkerClient>["tick"];
 import type { NativeProspectiveUnit } from "../w5/prospective-native.mjs";
 
 const args = process.argv.slice(2), value = (name: string) => args[args.indexOf(name) + 1];
@@ -518,6 +521,20 @@ try {
       integratedPlaneObserved = true;
     }
   };
+  const withReusedIntegratedWorker = async <T,>(action: (tick: ReusedWorkerTick) => Promise<T>): Promise<T> => {
+    const { createNativeWorkerClient } = await import("../../w4/worker-client.mts");
+    const worker = createNativeWorkerClient({ workspace, databaseUrl: workerDatabaseUrl, checkBound, recoverWorkflowSteps: true });
+    const tick: ReusedWorkerTick = async (maximum, signal) => {
+      await observeIntegratedPlane();
+      const row = await worker.tick(maximum, signal);
+      assert(row.observations.every(entry => entry.workloadClass === null), "W049_ACTUAL_CHILD_QUEUE_MUST_REMAIN_UNCLASSED");
+      workers.push(row); await artifact("workers/" + workers.length + ".json", row);
+      return row;
+    };
+    const value = await action(tick).catch(async error => { await worker.close(); throw error; });
+    assert(await worker.close(), "W049_PHYSICAL_WORKER_DID_NOT_CLOSE_CLEANLY");
+    return value;
+  };
   const tick = async (expectKill = false, maximumTicks = 1,
     fault?: { mutate: () => Promise<void>; expectedRefusal?: string },
     schedule?: () => Promise<boolean>) => {
@@ -684,26 +701,33 @@ try {
       ticks += result.ticks;
     }
   };
-  const createIntegratedPump = () => {
-    let used = 0;
+  const createMarketPump = (tick: ReusedWorkerTick) => {
+    let used = 0, sequence = 0;
     const types = ["run_harness_program_v1", "run_evidence_derivation_v1", "run_compute_search_unit_v1",
       "run_workforce_execution_v1", "compile_real_world_service_v1", "advance_real_world_service_v1",
       "compile_market_operating_program_v1", "advance_market_operating_program_v1",
       "compile_organization_transformation_v1", "advance_organization_transformation_v1", "run_workflow_step_v3"];
     return async (maximum = 192) => {
       assert(integratedCompany && Number.isSafeInteger(maximum) && maximum >= 1 && maximum <= 192);
-      let invocationTicks = 0;
-      for (;;) {
-        checkBound();
-        const pending = (await admin!.query(`SELECT count(*)::int n,min(run_at) due FROM finnor_os.jobs
-          WHERE tenant_id=$1 AND status='queued' AND type=ANY($2::text[])`, [tenant, types])).rows[0];
-        if (!pending.n) return;
-        assert(used < 192 && invocationTicks < maximum, "W049_FINITE_ORIGINAL_OWNER_PUMP_BOUND");
-        const delay = Math.max(0, (pending.due as Date).getTime() - Date.now());
-        assert(delay <= 30000, "W049_NATIVE_CONTINUATION_NOT_DUE_WITHIN_BOUND");
-        if (delay) await new Promise(done => setTimeout(done, delay + 25));
-        const physical = await tick(false, Math.min(16, 192 - used, maximum - invocationTicks));
-        used += physical.ticks; invocationTicks += physical.ticks;
+      const started = performance.now(), invocation = ++sequence;
+      let invocationTicks = 0, maximumTickMs = 0, complete = false;
+      try {
+        for (;;) {
+          checkBound();
+          const pending = (await admin!.query(`SELECT count(*)::int n,min(run_at) due FROM finnor_os.jobs
+            WHERE tenant_id=$1 AND status='queued' AND type=ANY($2::text[])`, [tenant, types])).rows[0];
+          if (!pending.n) { complete = true; return; }
+          assert(used < 192 && invocationTicks < maximum, "W049_FINITE_ORIGINAL_OWNER_PUMP_BOUND");
+          const delay = Math.max(0, (pending.due as Date).getTime() - Date.now());
+          assert(delay <= 30000, "W049_NATIVE_CONTINUATION_NOT_DUE_WITHIN_BOUND");
+          if (delay) await new Promise(done => setTimeout(done, delay + 25));
+          const physical = await tick(Math.min(16, 192 - used, maximum - invocationTicks));
+          used += physical.ticks; invocationTicks += physical.ticks;
+          maximumTickMs = Math.max(maximumTickMs, ...physical.observations.map(row => row.elapsedMs));
+        }
+      } finally {
+        console.log(JSON.stringify({ event: "PHASE_W_W4_QUEUE", invocation, complete, invocationTicks, totalTicks: used,
+          elapsedMs: Math.round(performance.now() - started), maximumTickMs: Math.round(maximumTickMs) }));
       }
     };
   };
@@ -884,18 +908,8 @@ try {
         const workforceOriginal = await prepareWorkforceOriginal(ports, provider, workforceWorkId, workforceResource);
         const upstream = await observeIntegratedOwner("W1", async () => {
           const { runOrchestrationOwner } = await import("../integrated/owner-journey.mts");
-          const { createNativeWorkerClient } = await import("../../w4/worker-client.mts");
-          const worker = createNativeWorkerClient({ workspace, databaseUrl: workerDatabaseUrl, checkBound, recoverWorkflowSteps: true });
-          const w1Ports = { ...ports, tick: async (maximum: number, signal?: AbortSignal) => {
-            await observeIntegratedPlane();
-            const row = await worker.tick(maximum, signal);
-            assert(row.observations.every(entry => entry.workloadClass === null), "W049_ACTUAL_CHILD_QUEUE_MUST_REMAIN_UNCLASSED");
-            workers.push(row); await artifact("workers/" + workers.length + ".json", row);
-            return row;
-          } };
-          const actual = await runOrchestrationOwner(w1Ports, { ...sharedAllocation, outcomeSeriesId: original.series.outcome, capacity })
-            .catch(async error => { await worker.close(); throw error; });
-          assert(await worker.close(), "W049_W1_PHYSICAL_WORKER_DID_NOT_CLOSE_CLEANLY");
+          const actual = await withReusedIntegratedWorker(tick => runOrchestrationOwner({ ...ports, tick },
+            { ...sharedAllocation, outcomeSeriesId: original.series.outcome, capacity }));
           await integratedEvidence.record(actual); return actual;
         });
         await observeIntegratedOwner("W2", async () => {
@@ -2344,15 +2358,15 @@ try {
         artifact: (name, body) => artifact("integrated/w4/private/" + name, body),
       }, marketNamespace, checkBound, sharedAllocation);
       const marketMeasurements = { units: await declare("units"), money: await declare("money") };
-      const market = await runMarketOwner(ports, {
+      const market = await withReusedIntegratedWorker(tick => runMarketOwner(ports, {
         actors: { operator: backup, buyer: provider, observer: inspector, accountant: evaluator, unrelated, foreign },
-        native, recipient, pump: createIntegratedPump(),
+        native, recipient, pump: createMarketPump(tick),
         namespace: marketNamespace, declaredMeasurements: marketMeasurements, work: marketWork, buyerContact: marketBuyer,
         originalResources: {
           cash: sharedResource(marketResourceIds.cash), execution: sharedResource(marketResourceIds.execution),
           human: sharedResource(marketResourceIds.human),
         },
-      });
+      }));
       await integratedEvidence.record(market);
     });
     await observeIntegratedOwner("W5", async () => {
