@@ -11,6 +11,7 @@ import { submitInternalSearch } from "../../postz-w1/native-internal-support.mjs
 import { driveNativeProgram } from "../../postz-w1/native-drive.mjs";
 import { observeNativeRun } from "../../postz-w1/native-observe.mjs";
 import { nativeCapsuleSchema } from "../../../packages/private-equity/src/economic-orchestration/contracts";
+import type { SharedAllocationFixture } from "./allocation-fixture.mts";
 export { INTEGRATED_PROFILE } from "./profile.mts";
 
 export interface IntegratedOwnerPorts {
@@ -36,7 +37,7 @@ export interface NativeJourneyOutput {
 /** Reuses W1's actual S1/S3/S4/S5/P1/P2 setup on the canonical business root.
  * The independent arithmetic expectations are literal original inputs, not
  * values obtained from the producer or its checker. */
-export async function runOrchestrationOwner(ports: IntegratedOwnerPorts): Promise<NativeJourneyOutput> {
+export async function runOrchestrationOwner(ports: IntegratedOwnerPorts, sharedAllocation: SharedAllocationFixture): Promise<NativeJourneyOutput> {
   ports.checkBound();
   const root = { entityType: "external_organization" as const, entityId: ports.companyId };
   const existingOwner = { tenant: ports.tenant, principal: ports.owner, root };
@@ -89,7 +90,7 @@ export async function runOrchestrationOwner(ports: IntegratedOwnerPorts): Promis
       const group = operation === "fit" ? "interventions" : operation === "synthesize" ? "policies" : "allocations";
       return ports.http(group, operation, body, ports.owner);
     } };
-  const fixture = await prepareNativeOwnerFixture(e, { existingOwner, beforeFit: async owner => {
+  const fixture = await prepareNativeOwnerFixture(e, { existingOwner, sharedAllocation, beforeFit: async owner => {
     assert.equal(owner.tenant, ports.tenant); assert.equal(owner.principal, ports.owner);
     assert.deepEqual(owner.root, root, "W049_ACTUAL_COMPANY_NOT_FIXTURE_LABEL_REQUIRED");
   } });

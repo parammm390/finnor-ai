@@ -13,12 +13,16 @@ import { growthExecutionRecordKey, growthNativeChange } from "../../packages/pri
 import { growthAccountingPayload } from "../../packages/private-equity/src/demand-to-business/participants";
 import type { GrowthNativeExecution } from "../../packages/private-equity/src/demand-to-business/boundaries";
 import { prepareCommercialMeasurementFixtures } from "./controlled-commercial-fixture.mjs";
+import type { SharedAllocationFixture } from "../postz/integrated/allocation-fixture.mts";
+import type { AllocationResource } from "@finnor/shared-types";
 import type { ExperimentInputReference } from "./recipient.mts";
 
 export const NATIVE_GROWTH_LIMITS = Object.freeze({ maximumMilliseconds: 1200000, maximumPumpTicks: 192,
   maximumActors: 8, maximumCompanies: 1, maximumAssignments: 1, maximumContacts: 1,
   maximumDeclaredMoneyMinor: "1", maximumNativeRequests: 4, fieldValidated: false });
 type Operation = GrowthNativeExecution["operation"];
+type MeasurementDeclaration = Awaited<ReturnType<typeof prepareCommercialMeasurementFixtures>>["declareMeasurements"];
+type FitMeasurements = Awaited<ReturnType<MeasurementDeclaration>>;
 export interface NativeGrowthJourneyContext {
   tenant: string; owner: string; companyId: string; work: { workId: string; workInputId: string };
   actors: { operator: string; buyer: string; observer: string; accountant: string; unrelated?: string; foreign?: string };
@@ -36,8 +40,41 @@ export interface NativeGrowthJourneyContext {
   observeNativeFitOriginals?: (originals: Readonly<Record<string, unknown>>) => Promise<void>;
   checkBound?: () => void;
   namespace?: string;
+  declaredMeasurements?: { units: FitMeasurements; money: FitMeasurements };
+  buyerContact?: NativeRef;
+  originalResources?: { cash: AllocationResource; execution: AllocationResource; human: AllocationResource };
   /** Integrated-only and fixed before prepare(); default keeps all four upfront originals. */
   integratedConditionalRefund?: boolean;
+}
+
+export async function prepareNativeGrowthMeasurements(
+  c: Pick<NativeGrowthJourneyContext, "tenant" | "owner" | "companyId" | "admin" | "ok" | "artifact">,
+  namespace: string, checkBound: () => void, sharedAllocation?: SharedAllocationFixture,
+) {
+  const root = { entityType: "external_organization" as const, entityId: c.companyId };
+  const commercial = await prepareCommercialMeasurementFixtures({ tenant: c.tenant, principal: c.owner, root,
+    namespace, admin: c.admin, ok: c.ok, artifact: c.artifact, checkBound, sharedAllocation });
+  return (channel: "units" | "money") => {
+    const name = namespace + "-" + channel;
+    return commercial.declareMeasurements(name, {
+      existing: { tenant: c.tenant, principal: c.owner, root }, metricKeyPrefix: name,
+      exposureUnit: channel === "units" ? "commercial_unit" : "minor_USD",
+      operation: "SERVICE_TRANSITION_V1", context: "controlled-commercial-record",
+    });
+  };
+}
+
+export async function declareNativeGrowthBuyer(
+  c: Pick<NativeGrowthJourneyContext, "tenant" | "companyId" | "admin">, namespace: string,
+): Promise<NativeRef> {
+  const contact = (await c.admin.query(`INSERT INTO finnor_os.external_contacts
+    (tenant_id,id,contact_key,name,external_organization_id) VALUES($1,$2,$3,'Synthetic W4 consenting participant',$4)
+    RETURNING id,tenant_id,active,updated_at`,
+  [c.tenant, randomUUID(), namespace + "-buyer", c.companyId])).rows[0];
+  assert(contact);
+  return { owner: "external_contact", id: contact.id, version: "w4-customer-identity-v1",
+    contentDigest: hash({ id: contact.id, tenantId: contact.tenant_id, active: contact.active,
+      updatedAt: new Date(contact.updated_at).toISOString() }) };
 }
 
 export function createNativeGrowthJourney(c: NativeGrowthJourneyContext) {
@@ -147,7 +184,6 @@ export function createNativeGrowthJourney(c: NativeGrowthJourneyContext) {
     const dimensions = [{ id: "cash", unit: "USD", capacity: 100, totalLimit: 100 },
       { id: "execution", unit: "request", capacity: 512, totalLimit: 512, resourceClass: "COMPUTE" },
       { id: "human", unit: "seconds", capacity: 900, totalLimit: 900, resourceClass: "HUMAN_ATTENTION" }];
-    const existing = { tenant: c.tenant, principal: c.owner, root };
     const originalNativeExpiry = new Date(Date.now() + 20 * 60000).toISOString();
     const intake = c.work as unknown as Record<string, unknown>;
     const nativeMandates: Record<string, unknown> = {};
@@ -166,15 +202,12 @@ export function createNativeGrowthJourney(c: NativeGrowthJourneyContext) {
         ? { status: "OBSERVED_IN_COMPLETED_OWNER_FIXTURE", value: nativeMandates[key] }
         : { status: "UNKNOWN", reason: "OWNER_FIXTURE_NOT_YET_COMPLETED_AT_PRE_FIT" }])) });
     await observeOriginals();
-    const commercial = await prepareCommercialMeasurementFixtures({ tenant: c.tenant, principal: c.owner, root,
-      namespace, admin: c.admin, ok, artifact: c.artifact, checkBound: bound });
-    const units = await commercial.fixture(namespace + "-units", 1, dimensions, { existing,
-      metricKeyPrefix: namespace + "-units", exposureUnit: "commercial_unit", operation: "SERVICE_TRANSITION_V1",
-      context: "controlled-commercial-record", expiresAt: originalNativeExpiry });
+    const declareMeasurements = c.declaredMeasurements ? null : await prepareNativeGrowthMeasurements(c, namespace, bound);
+    const fitUnits = c.declaredMeasurements?.units ?? await declareMeasurements!("units");
+    const units = await fitUnits(dimensions, originalNativeExpiry);
     nativeMandates.units = units.mandate; await observeOriginals();
-    const amounts = await commercial.fixture(namespace + "-money", 1, dimensions, { existing,
-      metricKeyPrefix: namespace + "-money", exposureUnit: "minor_USD", operation: "SERVICE_TRANSITION_V1",
-      context: "controlled-commercial-record", expiresAt: originalNativeExpiry });
+    const fitMoney = c.declaredMeasurements?.money ?? await declareMeasurements!("money");
+    const amounts = await fitMoney(dimensions, originalNativeExpiry);
     nativeMandates.amounts = amounts.mandate; await observeOriginals();
     // Adding distinct money series legitimately changes the root's S1 cut.
     // Refit the quantity model against that final actual cut, never relabel it.
@@ -202,10 +235,16 @@ export function createNativeGrowthJourney(c: NativeGrowthJourneyContext) {
       policies[operation] = result.policy; units.policies.push(result.policy); units.labels[result.policy.ref.id] = operation;
       await c.artifact(namespace + "/original-policy-" + operation + ".json", { original, result });
     }
-    await c.native.resource(units, "cash", "USD", "STOCK", ["100", "100"]);
-    await c.native.resource(units, "execution", "request", "CUMULATIVE_EXPENDITURE", ["512", "512"]);
-    await c.native.resource(units, "human", "seconds", "CUMULATIVE_EXPENDITURE", ["900", "900"]);
-    const originalClearing = c.native.clearing(units, Object.fromEntries(Object.keys(policies).map(op => [op, ["100"]])));
+    const resourceIds = c.originalResources ? { cash: c.originalResources.cash.resourceId,
+      execution: c.originalResources.execution.resourceId, human: c.originalResources.human.resourceId } : {};
+    if (c.originalResources) units.resources.push(...Object.values(c.originalResources));
+    else {
+      await c.native.resource(units, "cash", "USD", "STOCK", ["100", "100"]);
+      await c.native.resource(units, "execution", "request", "CUMULATIVE_EXPENDITURE", ["512", "512"]);
+      await c.native.resource(units, "human", "seconds", "CUMULATIVE_EXPENDITURE", ["900", "900"]);
+    }
+    const originalClearing = c.native.clearing(units,
+      Object.fromEntries(Object.keys(policies).map(op => [op, ["100"]])), [], [], units.policies, resourceIds);
     const clearing = await ok("allocations", "clear", originalClearing);
     assert.equal(clearing.status, "FEASIBLE", JSON.stringify(clearing)); parentAllocation = clearing.certificate.ref;
     const mandateBody = { schema: "finnor.growth-mandate.v1", scope, authorizedByPrincipalId: c.owner, purpose,
@@ -252,13 +291,7 @@ export function createNativeGrowthJourney(c: NativeGrowthJourneyContext) {
         })();
       };
     }
-    const contact = (await c.admin.query(`INSERT INTO finnor_os.external_contacts
-     (tenant_id,id,contact_key,name,external_organization_id) VALUES($1,$2,$3,$4,$5)
-     RETURNING id,tenant_id,active,updated_at`, [c.tenant, randomUUID(), namespace + "-buyer",
-      "Synthetic W4 consenting participant", c.companyId])).rows[0]!;
-    const customerRef = { owner: "external_contact", id: contact.id, version: "w4-customer-identity-v1",
-      contentDigest: hash({ id: contact.id, tenantId: contact.tenant_id, active: contact.active,
-        updatedAt: new Date(contact.updated_at).toISOString() }) };
+    const customerRef = c.buyerContact ?? await declareNativeGrowthBuyer(c, namespace);
     const consentData = { buyerId: buyer, customerRef, affiliation: "SYNTHETIC",
       consentValidUntil: deadline, permittedPurpose: purpose };
     const consentSource = await evidence("CONSENT", buyer, consentData, buyer, evidenceProtocols.buyer, "original-consent");

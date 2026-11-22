@@ -42,7 +42,7 @@ async function deferNative(e:any,fixtures:any[]){
 }
 async function releaseNative(e:any,rows:any[]){await e.admin.query("UPDATE finnor_os.jobs SET run_at=clock_timestamp() WHERE id=ANY($1::uuid[]) AND status='queued'",[rows.map(r=>r.id)]);}
 export async function prepared(e:any,topology='ADAPTIVE',extra:any={}) {
- const {deferSearch,beforeFit,beforePolicy,omittedInput,existingOwner,...searchExtra}=extra;
+ const {deferSearch,beforeFit,beforePolicy,omittedInput,existingOwner,sharedAllocation,...searchExtra}=extra;
  const dir=join(e.evidence,topology+'-'+randomUUID());await mkdir(dir,{recursive:true});
  const artifact=async(path:string,body:unknown)=>{const p=join(dir,path);await mkdir(join(p,'..'),{recursive:true});await writeFile(p,JSON.stringify(body,null,2));};
  const api=async(f:any,op:string,body:any,handler=allocationPost)=>{
@@ -50,7 +50,7 @@ export async function prepared(e:any,topology='ADAPTIVE',extra:any={}) {
   const response=await handler(new Request('http://localhost/api/allocations/'+op,{method:'POST',headers:{'content-type':'application/json','x-tenant-id':f.tenant,'x-user-id':f.principal},body:JSON.stringify(body)}),{params:Promise.resolve({operation:op})});return {status:response.status,body:await response.json()};};
  const rows=spawnSync(process.env.FINNOR_S3_PYTHON!,[join(e.repo,'finnor-os/scripts/s3/reference.py')],{input:JSON.stringify({operation:'equivalent'}),encoding:'utf8'});assert.equal(rows.status,0,rows.stderr);
  const day=86400000;
- const support=createUpstreamFixtureSupport({admin:()=>e.admin,generatedRows:JSON.parse(rows.stdout).rows,begin:new Date(Date.now()-128*day).toISOString(),day,fixtures:{},artifact,api:async(f:any,op:string,body:any,handler=allocationPost)=>{
+ const support=createUpstreamFixtureSupport({admin:()=>e.admin,generatedRows:JSON.parse(rows.stdout).rows,begin:sharedAllocation?.begin??new Date(Date.now()-128*day).toISOString(),day,fixtures:{},artifact,api:async(f:any,op:string,body:any,handler=allocationPost)=>{
   if(op==='fit') {
    await artifact('s3-request-before-fit.json',body);
    if(beforeFit)await beforeFit(f);
@@ -64,7 +64,7 @@ export async function prepared(e:any,topology='ADAPTIVE',extra:any={}) {
   return api(f,op,body,handler);
  }});
  const f=await support.fixture('p2-'+randomUUID(),1,[{id:'compute',unit:'native-attempt',capacity:8,totalLimit:8,resourceClass:'COMPUTE'}],
-  existingOwner?{existing:existingOwner,metricKeyPrefix:'p2-'+randomUUID()}:{});
+  existingOwner?{existing:existingOwner,metricKeyPrefix:'p2-'+randomUUID(),rightsRef:sharedAllocation?.rightsRef}:{});
  if(beforePolicy)await beforePolicy(f);
  const policy=await support.policy(f,'compute',{compute:8});await support.resource(f,'compute','native-attempt','CUMULATIVE_EXPENDITURE',['8','8']);
  const allocation=ok(await api(f,'clear',support.clearing(f,{compute:['1']})));assert.equal(allocation.status,'FEASIBLE');
