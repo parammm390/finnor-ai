@@ -87,7 +87,7 @@ type MountedInput = {
   pump: () => Promise<void>;
   snapshot: () => Promise<unknown>;
   restartApi: () => Promise<unknown>;
-  revokeOwner: (revoked: boolean) => Promise<void>;
+  revokeOwner: (revoked: boolean) => Promise<"active" | "suspended">;
   createExpiringProtocol: () => Promise<{ protocolId: string; expiresAt: string; createdAt: string }>;
   refuseExpiredReport: (protocolId: string) => Promise<unknown>;
   checkBound: () => void;
@@ -682,7 +682,8 @@ export async function mountedServiceProof(input: MountedInput) {
       { alreadySuccessfulOldResponseCannotRestore: true, privateDraftHidden: true }, async () => {
         const draft = await seedDraft("authority-revoked");
         const hold = await arm("authority-revocation");
-        await input.revokeOwner(true); revoked = true;
+        const ownerStatus = await input.revokeOwner(true); revoked = true;
+        assert.equal(ownerStatus, "suspended");
         // A real reload expires the rendered private scope. The retained old
         // response is delivered only after the new authority has been refused.
         const denied = currentPage().waitForResponse(response =>
@@ -694,7 +695,7 @@ export async function mountedServiceProof(input: MountedInput) {
         await clear(); hold.release(); await hold.done;
         assert.equal(hold.original.automatic, false);
         await wait(id => !document.body.innerText.includes(id), input.expectedInstanceIds[0]!);
-        return { draft, refusalStatus: refusal.status(), barrier: input.barrier.receipts(), durable: await input.snapshot(),
+        return { draft, ownerStatus, refusalStatus: refusal.status(), barrier: input.barrier.receipts(), durable: await input.snapshot(),
           screenshot: await screenshot("authority-refused") };
       });
   } catch (error) {

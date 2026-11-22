@@ -1,7 +1,7 @@
 name: "W3 - Real-world fulfillment and publication"
 on:
   push:
-    branches: [cloud/postz-w3, codex/zw-integration-quality-20261115, codex/zw-release-proof-20261121]
+    branches: [cloud/postz-w3, codex/zw-integration-quality-20261115, codex/zw-release-proof-20261121, codex/zw-owner-repair-proof-20261122]
     paths:
       - .github/workflows/w3-owning-*.yml
       - finnor-os/**

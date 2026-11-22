@@ -13,6 +13,7 @@ import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { monitorEventLoopDelay } from "node:perf_hooks";
 import EmbeddedPostgres from "embedded-postgres";
 import pg from "pg";
+import type { users } from "@finnor/db";
 import { mountedResponseBarrier, mountedServiceProof } from "./mounted.mts";
 import type { OwnerReadTiming } from "../../frontier5/x1/authenticated-api-fixture.mts";
 import { NATIVE_WORKER_LIMITS } from "./worker-protocol.mts";
@@ -351,6 +352,41 @@ try {
       headers: { "content-type": "application/json" }, body: JSON.stringify({ email: identity.email, password: identity.password }) });
     assert.equal(signedIn.status, 200); tokens.set(identity.actor, (await signedIn.json()).access_token);
   }
+  type OwnerStatus = typeof users.$inferSelect["status"];
+  const setOwnerSuspended = async (suspended: boolean): Promise<OwnerStatus> => {
+    const status: OwnerStatus = suspended ? "suspended" : "active";
+    const original: OwnerStatus = suspended ? "active" : "suspended";
+    const result = await admin!.query<{ status: OwnerStatus }>(`UPDATE finnor_os.users SET status=$3
+      WHERE tenant_id=$1 AND id=$2 AND role='owner' AND status=$4 RETURNING status`,
+    [tenant, owner, status, original]);
+    assert.deepEqual(result.rows, [{ status }], "W3_EXACT_DISPOSABLE_OWNER_STATUS_CHANGE_REQUIRED");
+    return status;
+  };
+  if (fast && !organizationProfile) await run("W052-owner-suspension-preflight", { owner },
+    { originalOwnerAllowed: true, suspendedOwnerDenied: true, sameOwnerRestored: true }, async () => {
+      const readIdentity = () => fetch(auth.origin + "/api/me", {
+        headers: { authorization: "Bearer " + auth.token }, signal: AbortSignal.timeout(10000),
+      });
+      const confirmOwner = async () => {
+        const response = await readIdentity();
+        const identity = await response.json();
+        assert.equal(response.status, 200);
+        assert.equal(identity.userId, owner);
+        assert.equal(identity.tenantId, tenant);
+        assert.equal(identity.role, "owner");
+        return response.status;
+      };
+      const originalStatus = await confirmOwner();
+      const ownerStatus = await setOwnerSuspended(true);
+      let denial: { status: number; identityDenied: boolean };
+      try {
+        const response = await readIdentity();
+        await response.arrayBuffer();
+        denial = { status: response.status, identityDenied: response.headers.get("x-finnor-identity-state") === "denied" };
+        assert.deepEqual(denial, { status: 403, identityDenied: true });
+      } finally { await setOwnerSuspended(false) }
+      return { originalStatus, ownerStatus, denial, restoredStatus: await confirmOwner() };
+    });
   const http = async (group: string, operation: string, body: unknown, actor: string | null = owner) => {
     checkBound();
     const ordinal = ++httpOrdinal, began = performance.now(), wall = Date.now(), cpu = process.cpuUsage();
@@ -2027,8 +2063,7 @@ try {
         lastDirectRead,
         installedReadTimings,
         restartApi: () => auth.restartCompiled(),
-        revokeOwner: async revoked => { await admin!.query("UPDATE finnor_os.users SET status=$3 WHERE tenant_id=$1 AND id=$2",
-          [tenant, owner, revoked ? "inactive" : "active"]) },
+        revokeOwner: setOwnerSuspended,
         createExpiringProtocol: async () => {
           const createdAt = new Date().toISOString(), expiresAt = new Date(Date.now() + 20000).toISOString();
           const protocol = await ok("real-world-services", "invite", { requestId, participantId: provider,
