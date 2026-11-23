@@ -88,7 +88,7 @@ async function runCase(id, rows, title, body) {
         return kind ? [{ kind, status: row.status, failed: Boolean(row.failure) }] : [];
       }).slice(-24);
   }
-  if (["M-01", "M-04", "M-08"].includes(id) && c.outcome === "FAIL") {
+  if (["M-01", "M-04", "M-06", "M-08", "M-09"].includes(id) && c.outcome === "FAIL") {
     c.observations.mountedReads = mountedReadTimings(watch.since(caseMark), t0);
   }
   c.wallMs = Date.now() - t0;
@@ -602,7 +602,7 @@ await runCase("M-03", ["Z0-R45-C02"], "Claim basis classes are distinguishable a
   if (!referenceTruthA) notRun("M-01_DID_NOT_READ_THE_ORIGINAL_WORK");
   const mark = watch.mark();
   await ensureOwnerOnWork("A");
-  const f = await readPanels(page);
+  const f = await readSettledPanels(page, parentA.workId);
   const truth = referenceTruthA;
   const art = truth.api.institution?.artifact;
   const instCounts = f.instCounts;
@@ -761,10 +761,9 @@ await runCase("M-09", ["Z0-R09-C05"], "Offline then reconnect", async c => {
   check(c, "offline.no-writes-emitted", "no non-GET request is emitted while offline", "browser request watch", offlineRequests.map(row => `${row.method} ${row.path}`), offlineRequests.length === 0);
   const mark2 = watch.mark();
   await context.setOffline(false);
-  await waitForPanel(page, parentA.workId, 60000);
+  const after = await readSettledPanels(page, parentA.workId);
   await watch.settle();
-  const fresh = watch.since(mark2).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId);
-  const after = await readPanels(page);
+  const fresh = watch.since(mark2).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId && row.status === 200);
   c.observations.reloadDifferences = referenceFieldDifferences(after);
   const afterWitness = await witness(q, parentA);
   c.observations.ownerCuts.afterReconnect = await mountedOwnerCut(q, parentA, acqA.sessionId, beforeOffline.captured_at);
