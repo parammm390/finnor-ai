@@ -5,7 +5,7 @@ services:
     plan: free
     region: ohio
     autoDeployTrigger: 'off'
-    buildCommand: npm ci --prefix finnor-os --no-audit --no-fund && npm --prefix finnor-os run build --workspace @finnor/api
+    buildCommand: npm ci --prefix finnor-os --no-audit --no-fund && NODE_OPTIONS=--max-old-space-size=4096 npm --prefix finnor-os run build --workspace @finnor/api
     startCommand: npm --prefix finnor-os run start --workspace @finnor/api -- --hostname 0.0.0.0
     healthCheckPath: /api/health
     envVars:
@@ -31,3 +31,5 @@ services:
         value: '22.22.3'
       - key: FINNOR_ENVIRONMENT
         value: staging
+      - key: FINNOR_OS_API_URL
+        value: https://finnor-api-preview.onrender.com
