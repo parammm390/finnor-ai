@@ -2,6 +2,7 @@
 import hashlib
 import json
 from pathlib import Path
+import re
 import sys
 
 source, destination = map(Path, sys.argv[1:])
@@ -62,7 +63,10 @@ assert repeated["witnesses"][0]["sourceId"] != different["witnesses"][0]["source
 race, fresh = result("source-currentness-race"), result("fresh-corrected-primary")
 assert answer(race, "concentration")["status"] == "SOURCE_CHANGED"
 assert answer(race, "concentration")["value"] is None
-assert expected["wrongCommonPremise"] not in json.dumps(race)
+# A timing such as 10.991 ms is not the original value 0.99.
+prior_value = re.escape(expected["wrongCommonPremise"])
+assert re.search(r"(?<![\d.])" + prior_value + r"(?!\d)", json.dumps(race)) is None, (
+    "W1_RESEARCH_STALE_PRIMARY_VALUE_EXPOSED")
 assert answer(fresh, "concentration")["value"] == expected["independentPrimaryConcentration"]
 assert answer(fresh, "concentration")["witness"]["versionId"] != repeated["witnesses"][0]["versionId"]
 for case in cases.values():

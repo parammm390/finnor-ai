@@ -218,6 +218,7 @@ export async function storageScan(page: any, context: any, markers: Marker[], se
 
 export const APP = ".ct-application-semantics";
 export const INST = 'section[aria-label="Institution responsibility"]';
+const disclosureAttemptMs = 2000;
 
 /** Opens each visible disclosure with a real browser click. An authenticated
  * native panel can replace its entire <details> tree while a click is waiting
@@ -234,7 +235,7 @@ export async function openAllDetails(page: any, scope: string, deadline = Date.n
     const remaining = deadline - Date.now();
     if (remaining <= 0) throw unavailable();
     try {
-      await closed.first().click({ timeout: remaining });
+      await closed.first().click({ timeout: Math.min(disclosureAttemptMs, remaining) });
       opened++;
       lastClickFailure = null;
     } catch (cause) {

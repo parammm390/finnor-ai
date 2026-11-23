@@ -2,20 +2,25 @@
 import { on } from "node:events";
 import { createWorker } from "../../apps/worker/src/index";
 import { getPool, closePool } from "@finnor/db";
+import { recoverStaleSteps } from "@finnor/workflow-runtime";
 
 type WorkerRole = { current_user: string; rolsuper: boolean; rolbypassrls: boolean };
-type WorkerObservation = {
+export type WorkerObservation = {
   schema: "finnor.w4.worker-observation.v1";
   pid: number;
   tick: number;
   registration: "ACTUAL_PRODUCTION_CREATE_WORKER";
+  workloadClass: ReturnType<typeof createWorker>["workloadClass"];
   role: WorkerRole;
   recovered: number;
+  steps: Awaited<ReturnType<typeof recoverStaleSteps>> | null;
   worked: boolean;
   elapsedMs: number;
 };
 
 if (!process.send || !process.connected) throw Error("W4_WORKER_CONTROL_REQUIRED");
+const recoverTenant = process.argv.includes("--recover-workflow-steps") ? process.env.FINNOR_W3_TENANT : null;
+if (recoverTenant === undefined) throw Error("W4_WORKER_RECOVERY_TENANT_REQUIRED");
 try {
   const commands = on(process, "message", { close: ["disconnect"] });
   process.send("ready");
@@ -32,10 +37,11 @@ try {
         throw Error("W4_RESTRICTED_PHYSICAL_WORKER_REQUIRED");
       const queue = createWorker();
       const recovered = await queue.recoverExpiredRunningJobs();
+      const steps = recoverTenant ? await recoverStaleSteps(recoverTenant) : null;
       const worked = await queue.tick();
       const elapsedMs = performance.now() - began;
       observations.push({ schema: "finnor.w4.worker-observation.v1", pid: process.pid, tick,
-        registration: "ACTUAL_PRODUCTION_CREATE_WORKER", role, recovered, worked, elapsedMs });
+        registration: "ACTUAL_PRODUCTION_CREATE_WORKER", workloadClass: queue.workloadClass, role, recovered, steps, worked, elapsedMs });
       if (!worked || elapsedMs > 30000) break;
     }
     await new Promise<void>((resolve, reject) => {
