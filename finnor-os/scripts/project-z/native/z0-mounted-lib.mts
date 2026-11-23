@@ -218,13 +218,14 @@ export async function storageScan(page: any, context: any, markers: Marker[], se
 
 export const APP = ".ct-application-semantics";
 export const INST = 'section[aria-label="Institution responsibility"]';
+const disclosureAttemptMs = 2000;
+type DisclosureInput = "pointer" | "keyboard";
 
-/** Opens each visible disclosure with a real browser click. An authenticated
- * native panel can replace its entire <details> tree while a click is waiting
- * for actionability (notably after the real token refresh in M-07). Re-acquire
- * the locator within ONE original wall-clock deadline; never use DOM injection,
- * force-click, or accept an unopened disclosure as evidence. */
-export async function openAllDetails(page: any, scope: string, deadline = Date.now() + 25000) {
+/** Exercise the visible native summary and reacquire it if the panel refreshes.
+ * M-07 can use keyboard input on its clock-driven page without waiting for
+ * pointer stability. Both inputs must leave the actual disclosure open. */
+export async function openAllDetails(page: any, scope: string, deadline = Date.now() + 25000,
+  input: DisclosureInput = "pointer") {
   const closed = page.locator(`${scope} details:not([open]) > summary:visible`);
   let opened = 0;
   let lastClickFailure: string | null = null;
@@ -234,7 +235,10 @@ export async function openAllDetails(page: any, scope: string, deadline = Date.n
     const remaining = deadline - Date.now();
     if (remaining <= 0) throw unavailable();
     try {
-      await closed.first().click({ timeout: remaining });
+      const summary = closed.first();
+      const options = { timeout: Math.min(disclosureAttemptMs, remaining) };
+      if (input === "keyboard") await summary.press("Enter", options);
+      else await summary.click(options);
       opened++;
       lastClickFailure = null;
     } catch (cause) {
@@ -254,11 +258,12 @@ export async function openAllDetails(page: any, scope: string, deadline = Date.n
 }
 
 /** DOM facts of both private panels plus the whole-document marker haystack. Collapsed content is opened first. */
-export async function readPanels(page: any, deadline = Date.now() + 25000, workId?: string) {
+export async function readPanels(page: any, deadline = Date.now() + 25000, workId?: string,
+  input?: DisclosureInput) {
   const app = workId ? APP + '[data-application-work="' + workId + '"]' : APP;
   const inst = workId ? INST + '[data-institution-work="' + workId + '"]' : INST;
-  await openAllDetails(page, app, deadline);
-  await openAllDetails(page, inst, deadline);
+  await openAllDetails(page, app, deadline, input);
+  await openAllDetails(page, inst, deadline, input);
   return page.evaluate(({ app, inst }: { app: string; inst: string }) => {
     const collapse = (value: string | null) => (value ?? "").replace(/\s+/g, " ").trim();
     const noPre = (root: Element) => { const copy = root.cloneNode(true) as Element; copy.querySelectorAll("pre").forEach(node => node.remove()); return collapse(copy.textContent); };
@@ -311,11 +316,11 @@ export async function readPanels(page: any, deadline = Date.now() + 25000, workI
 }
 
 /** Checking and exercising the disclosures can cross a normal owner refresh. */
-export async function readSettledPanels(page: any, workId: string, timeoutMs = 60000) {
+export async function readSettledPanels(page: any, workId: string, timeoutMs = 60000, input?: DisclosureInput) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     await waitForPanel(page, workId, deadline - Date.now());
-    const facts = await readPanels(page, Math.min(deadline, Date.now() + 25000), workId);
+    const facts = await readPanels(page, Math.min(deadline, Date.now() + 25000), workId, input);
     if (facts.appAttributes?.work === workId && facts.appAttributes.session !== "none" && facts.appAttributes.busy === "false"
         && facts.instAttributes?.work === workId && facts.instAttributes.state === "settled"
         && facts.instAttributes.busy === "false" && facts.closedDisclosures === 0) return facts;

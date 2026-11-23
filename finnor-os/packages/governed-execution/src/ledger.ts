@@ -38,22 +38,40 @@ const preparedTypes:Record<string,string[]>={
 };
 interface State { receipt:Receipt }
 interface Configuration { policy:ObjectValue; release:ObjectValue; signerPath:string; protectedDirectory:string; contentDirectory:string; sealedEncryptionKeyPath?:string; dispatchConfigPath?:string }
-async function safeRead(path:string,secret=false):Promise<Buffer> {
+async function withStoredFile<T>(path:string,secret:boolean,
+ scan:(fd:FileHandle,size:number,limit:number)=>Promise<T>):Promise<T>{
  // Inspect and read the same descriptor. Ordinary content can be replaced or
  // grown concurrently; never follow a substituted symlink or allocate its size.
  const fd=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW|constants.O_NONBLOCK);
  try{
   const f=await fd.stat(),limit=path.endsWith('commitments.jsonl')?256*1024*1024:8*1024*1024;
   if(f.size>limit)deny(503,'STORED_BYTE_LIMIT');if(!f.isFile()||(secret&&((f.mode&0o077)!==0||f.uid!==process.getuid?.())))deny(503,'UNSAFE_PROTECTED_FILE');
+  return await scan(fd,f.size,limit);
+ }finally{await fd.close();}
+}
+async function safeRead(path:string,secret=false):Promise<Buffer>{
+ return withStoredFile(path,secret,async(fd,size,limit)=>{
   const chunks:Buffer[]=[];let total=0;
   for(;;){
-   // The initial size only sizes buffers, never establishes EOF. Still read
-   // growth through the original byte bound, then require an actual EOF read.
-   const remaining=f.size-total,chunk=Buffer.allocUnsafe(Math.min(65536,remaining>=0?remaining+1:65536,limit+1-total));
-   const read=await fd.read(chunk,0,chunk.length,null);if(!read.bytesRead)break;total+=read.bytesRead;if(total>limit)deny(503,'STORED_BYTE_LIMIT');chunks.push(chunk.subarray(0,read.bytesRead));
+   // The initial size only sizes buffers, never establishes EOF.
+   const remaining=size-total,chunk=Buffer.allocUnsafe(Math.min(65536,remaining>=0?remaining+1:65536,limit+1-total));
+   const {bytesRead}=await fd.read(chunk,0,chunk.length,null);
+   if(!bytesRead)return Buffer.concat(chunks,total);
+   total+=bytesRead;if(total>limit)deny(503,'STORED_BYTE_LIMIT');
+   chunks.push(chunk.subarray(0,bytesRead));
   }
-  return Buffer.concat(chunks,total);
- }finally{await fd.close();}
+ });
+}
+async function storedDigest(path:string,buffer:Buffer):Promise<string>{
+ return withStoredFile(path,false,async(fd,_size,limit)=>{
+  const digest=createHash('sha256');let total=0;
+  for(;;){
+   const {bytesRead}=await fd.read(buffer,0,Math.min(buffer.length,limit+1-total),null);
+   if(!bytesRead)return digest.digest('hex');
+   total+=bytesRead;if(total>limit)deny(503,'STORED_BYTE_LIMIT');
+   digest.update(buffer.subarray(0,bytesRead));
+  }
+ });
 }
 async function artifactDigest(path:string){
  const fd=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW|constants.O_NONBLOCK);
@@ -172,10 +190,17 @@ export class ExperienceLedger {
  private signed<T extends ObjectValue>(body:T):T&{signature:string}{return {...body,signature:sign(null,Buffer.from(canonical(body)),this.privateKey).toString('base64')};}
  private verifiedSignature(value:ObjectValue){const {signature,...body}=value;if(!verify(null,Buffer.from(canonical(body)),this.publicKey,Buffer.from(text(signature),'base64')))deny(503,'COMMITMENT_SIGNATURE_INVALID');return body;}
  private async persistAnchor(){this.anchor=this.signed({schema:'finnor.s6.ledger-head.v1',sequence:this.last?.sequence??0,checkpointDigest:this.last?.checkpointDigest??null});await atomic(this.anchorPath,canonical(this.anchor));}
- private async verifiedContentBytes(receipt:Receipt):Promise<Buffer>{
+ private committedContentPath(receipt:Receipt):string{
   if(receipt.contentFile!==bytesHash(canonical([receipt.kind,receipt.tenantId,receipt.identity]))+'.json')deny(503,'CONTENT_PATH_INVALID');
-  const bytes=await safeRead(join(this.config.contentDirectory,receipt.contentFile));if(bytesHash(bytes)!==receipt.storedDigest)deny(503,'COMMITTED_CONTENT_CHANGED');
+  return join(this.config.contentDirectory,receipt.contentFile);
+ }
+ private async verifiedContentBytes(receipt:Receipt):Promise<Buffer>{
+  const bytes=await safeRead(this.committedContentPath(receipt));
+  if(bytesHash(bytes)!==receipt.storedDigest)deny(503,'COMMITTED_CONTENT_CHANGED');
   return bytes;
+ }
+ private async verifyContentDigest(receipt:Receipt,buffer:Buffer):Promise<void>{
+  if(await storedDigest(this.committedContentPath(receipt),buffer)!==receipt.storedDigest)deny(503,'COMMITTED_CONTENT_CHANGED');
  }
  private async loadContent(receipt:Receipt):Promise<ObjectValue>{
   const bytes=await this.verifiedContentBytes(receipt);
@@ -242,8 +267,10 @@ export class ExperienceLedger {
   // Identical SHA256-bound bytes retain that verified preimage; decoding all
   // historical requests again adds no acceptance condition. Reads decode again.
   const states=[...this.states.values()];
-  for(let offset=0;offset<states.length;offset+=8){
-   const checked=await Promise.allSettled(states.slice(offset,offset+8).map(state=>this.verifiedContentBytes(state.receipt)));
+  const buffers=Array.from({length:Math.min(states.length,8)},()=>Buffer.allocUnsafe(1024*1024));
+  for(let offset=0;offset<states.length;offset+=buffers.length){
+   const checked=await Promise.allSettled(states.slice(offset,offset+buffers.length)
+    .map((state,index)=>this.verifyContentDigest(state.receipt,buffers[index]!)));
    for(const result of checked)if(result.status==='rejected')throw result.reason;
   }
   await this.ensureWitness();}

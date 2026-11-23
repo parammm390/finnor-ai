@@ -222,10 +222,13 @@ export async function assessEnterpriseDurableObligationDispatch(ctx:PeMutationCo
  if(!obligation.intervention.channels.some(channel=>parsed.memberId===`request-member:${epistemicHash([obligation.ref,channel.exposureId])}`))throw denied();
  const reasons:string[]=[];
  let reservationRevision=obligation.preconditions.reservationRevision,reservationAttemptEventId:string|null=null;
- if(parsed.delivery){
-  try{const issued=await readEnterpriseAllocation(ctx,obligation.allocationRef);if(issued.reservation?.revision!==reservationRevision){const retained=await assessEnterpriseAllocationContinuation(ctx,obligation);reservationRevision=retained.reservationRevision;reservationAttemptEventId=retained.attemptEventId;}}
-  catch{reasons.push('S5_RETAINED_MEMBER_CONTINUATION_NOT_CURRENT');}
- }
+ const checkReservationContinuation=async(issued:Awaited<ReturnType<typeof readEnterpriseAllocation>>)=>{
+  if(!parsed.delivery||issued.reservation?.revision===reservationRevision)return;
+  try{
+   const retained=await assessEnterpriseAllocationContinuation(ctx,obligation,issued);
+   reservationRevision=retained.reservationRevision;reservationAttemptEventId=retained.attemptEventId;
+  }catch{reasons.push('S5_RETAINED_MEMBER_CONTINUATION_NOT_CURRENT');}
+ };
  let physicalClaimExpiresAt=Number.POSITIVE_INFINITY;
  let growthOwned=false;
  try{const growth=await (await import('./demand-to-business/consumer')).growthDispatchAssessment(ctx,obligation,parsed.requestRef);
@@ -237,13 +240,17 @@ export async function assessEnterpriseDurableObligationDispatch(ctx:PeMutationCo
  }
  if(obligation.allocationRef.version==='s5-joint-finite-v1'){
   try{
-   // One fresh canonical S5 validation already reads every original S4 policy.
-   const {issued,validation}=await readValidatedNumericEnterpriseAllocation(ctx,obligation.allocationRef);
+   // Each nonce revalidates the exact originals. The protected assessment records
+   // the result without publishing another full S1 view for each dependent owner.
+   const {issued,validation}=await readValidatedNumericEnterpriseAllocation(ctx,obligation.allocationRef,{recordExperience:false});
+   await checkReservationContinuation(issued);
    if(validation.status!=='CURRENT')reasons.push(...validation.reasons);
    const policy=issued.problem.policies.find(policy=>same(policy.ref,obligation.policyRef));
    if(!policy||!same(policy.mandateRef,obligation.mandateRef)||policy.bindings.rightsRef!==obligation.rightsRef)reasons.push('POLICY_MANDATE_OR_RIGHTS_CHANGED');
   }catch{reasons.push('ALLOCATION_CURRENT_CONTEXT_UNAVAILABLE');}
  }else{
+  if(parsed.delivery)try{await checkReservationContinuation(await readEnterpriseAllocation(ctx,obligation.allocationRef));}
+  catch{reasons.push('S5_RETAINED_MEMBER_CONTINUATION_NOT_CURRENT');}
   try{const policy=await readEnterpriseContingentPolicy(ctx,obligation.policyRef);if(!same(policy.mandateRef,obligation.mandateRef)||policy.bindings.rightsRef!==obligation.rightsRef)reasons.push('POLICY_MANDATE_OR_RIGHTS_CHANGED');}catch{reasons.push('POLICY_OR_S1_SOURCE_RIGHTS_CHANGED');}
   try{const validation=await validateEnterpriseAllocation(ctx,obligation.allocationRef);if(validation.status!=='CURRENT')reasons.push(...validation.reasons);}catch{reasons.push('ALLOCATION_CURRENT_CONTEXT_UNAVAILABLE');}
  }

@@ -254,12 +254,13 @@ jobs:
                 httpStatus, responseCode, budget, rejected, readbackFailures, ownerRead, continuationJobs, objective }
             })
           const acquisitionFile = files.find(name => /^z0-\d+-acquisition-failure-session\.json$/.test(name))
+            ?? files.find(name => /^(?:fixture-|z0-\d+-)acquisition-terminal-readback\.json$/.test(name))
           const acquisition = acquisitionFile ? JSON.parse(readFileSync(join(scenario, acquisitionFile), 'utf8')) : null
           const acquisitionFailure = acquisition ? {
             status: typedCode(acquisition.session?.status),
             reason: typedCode(acquisition.session?.reason),
-            dispositions: (acquisition.dispositions ?? []).map(({ disposition, reason, diagnostic }) => ({
-              disposition: typedCode(disposition), reason: typedCode(reason),
+            dispositions: (acquisition.dispositions ?? []).slice(0, 12).map(({ kind, disposition, reason, diagnostic }) => ({
+              kind: typedCode(kind), disposition: typedCode(disposition), reason: typedCode(reason),
               database: diagnostic ? Object.fromEntries(['code', 'constraint', 'table', 'databaseFunction', 'routine']
                 .map(field => [field, identifier(diagnostic[field])])) : null,
             })),

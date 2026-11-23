@@ -926,7 +926,7 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
     }, 1000).catch(() => null);
     check(c, "refresh.panel-reread-under-new-token", "the panel re-reads under the first refreshed token within 45 seconds without a click",
       "browser request watch", { freshBearerRead: Boolean(reread) }, Boolean(reread));
-    const f = await readSettledPanels(clockPage, parentA.workId);
+    const f = await readSettledPanels(clockPage, parentA.workId, 60000, "keyboard");
     await shot(clockPage, c, "after-refresh");
     check(c, "refresh.facts-equal", "Work, session, status, original instants, institutional evidence and accounting match the M-01 facts", "M-01 reference signature + O-SQL",
       { equal: coreSignature(f) === referenceCore, work: f.appAttributes?.work }, f.appAttributes?.work === parentA.workId && coreSignature(f) === referenceCore);
