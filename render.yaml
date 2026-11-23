@@ -31,5 +31,3 @@ services:
         value: '22.22.3'
       - key: FINNOR_ENVIRONMENT
         value: staging
-      - key: FINNOR_OS_API_URL
-        sync: false
