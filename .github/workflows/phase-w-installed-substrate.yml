@@ -1,0 +1,114 @@
+name: Phase W installed runtime prerequisite
+"on":
+  push:
+    branches: ["codex/phase-w-installed-substrate-20261124"]
+permissions:
+  contents: read
+
+jobs:
+  w2-executor:
+    name: Verify the existing W2 executor under installed filesystem separation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      CANDIDATE_SHA: 6594834fedc38bf15ab22a2e28927a85fd402cd2
+      CANDIDATE_TREE: 5b4fab8f3c5e3ca890584b4b7a342a5df59fbeef
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ env.CANDIDATE_SHA }}
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+      - name: Materialize a separate exact source and dependency tree
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$CANDIDATE_TREE"
+          install -d "$RUNNER_TEMP/phase-w-installed" "$RUNNER_TEMP/phase-w-empty" "$RUNNER_TEMP/phase-w-public"
+          git archive "$CANDIDATE_SHA" | tar -x -C "$RUNNER_TEMP/phase-w-installed"
+          npm ci --prefix "$RUNNER_TEMP/phase-w-installed/finnor-os" --no-audit --no-fund
+      - name: Prepare the existing fixed-root S6 callee
+        working-directory: ${{ runner.temp }}/phase-w-installed/finnor-os
+        run: |
+          set -euo pipefail
+          cc -std=c11 -O2 -Wall -Wextra -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -Wl,-z,relro,-z,now \
+            -o "$RUNNER_TEMP/phase-w-s6-launcher" packages/governed-execution/native/linux-launcher.c -lcrypto
+          node_path="$(command -v node)"
+          sudo "$node_path" scripts/r3/package-linux-jail.mjs "$node_path" "$RUNNER_TEMP/phase-w-s6-launcher" "/opt/finnor-s6-jail-$(node -p process.arch)"
+      - name: Observe baseline, capability refusal, and filesystem-separated execution
+        working-directory: ${{ runner.temp }}/phase-w-installed/finnor-os
+        run: |
+          set -euo pipefail
+          umask 077
+          cat > "$RUNNER_TEMP/phase-w-installed/finnor-os/observe-s6.mjs" <<'NODE'
+          import assert from "node:assert/strict";
+          import { readFile, readlink, writeFile } from "node:fs/promises";
+          import { join } from "node:path";
+          import { launchIsolatedNodeExecutor } from "./packages/governed-execution/src/executor.ts";
+
+          const [mode, donor, mountNamespace, pidNamespace, output, sourceSha, sourceTree] = process.argv.slice(2);
+          assert(["baseline", "no-new-privileges", "separate-mount"].includes(mode));
+          const separate = mode === "separate-mount";
+          const restricted = mode === "no-new-privileges";
+          const self = await readFile("/proc/self/status", "utf8");
+          assert(process.getuid() > 0);
+          assert.match(self, /^CapEff:\s+0+$/m);
+          assert.match(self, restricted ? /^NoNewPrivs:\s+1$/m : /^NoNewPrivs:\s+0$/m);
+          assert.equal(await readlink("/proc/self/ns/mnt") !== mountNamespace, separate);
+          assert.equal(await readlink("/proc/self/ns/pid") !== pidNamespace, separate);
+          const marker = join(donor, "README.md");
+          if (separate) await assert.rejects(readFile(marker), { code: "ENOENT" });
+          else assert((await readFile(marker)).byteLength > 0);
+
+          const result = await launchIsolatedNodeExecutor({
+            script: "console.log(JSON.stringify({ total: 6 * 7 }));",
+            input: {}, wallTimeMs: 10000, protectedExecution: false,
+          });
+          if (restricted) {
+            assert.notEqual(result.exitCode, 0);
+            assert.match(result.stderr, /BOOTSTRAP_CAPS/);
+          } else {
+            assert.equal(result.exitCode, 0, result.stderr);
+            assert.equal(result.termination, "EXITED");
+            assert.deepEqual(JSON.parse(result.stdout), { total: 42 });
+            assert.equal(result.provenance.linuxBootstrap?.capabilities, 0);
+            assert.equal(result.provenance.linuxBootstrap?.noNewPrivileges, 1);
+            assert.equal(result.provenance.linuxBootstrap?.fixedJail, true);
+          }
+          const receipt = {
+            sourceSha, sourceTree, mode, status: "PASS",
+            sourceCheckoutHidden: separate, actualExecutorExit: result.exitCode,
+            capabilityRefusalVerified: restricted,
+            childConfinementVerified: !restricted, productionActive: false,
+          };
+          await writeFile(join(output, mode + ".json"), JSON.stringify(receipt) + "\n", { flag: "wx", mode: 0o600 });
+          console.log(JSON.stringify(receipt));
+          NODE
+
+          node_path="$(command -v node)"
+          uid="$(id -u)"
+          gid="$(id -g)"
+          read -r mount_ns < <(readlink /proc/self/ns/mnt)
+          read -r pid_ns < <(readlink /proc/self/ns/pid)
+          args=("$GITHUB_WORKSPACE" "$mount_ns" "$pid_ns" "$RUNNER_TEMP/phase-w-public" "$CANDIDATE_SHA" "$CANDIDATE_TREE")
+          timeout --kill-after=5s 60s "$node_path" --import=tsx observe-s6.mjs baseline "${args[@]}"
+          timeout --kill-after=5s 60s setpriv --no-new-privs -- "$node_path" --import=tsx observe-s6.mjs no-new-privileges "${args[@]}"
+
+          timeout --kill-after=5s 60s sudo unshare --mount --pid --fork --mount-proc --kill-child --propagation private \
+            /usr/bin/bash -euc '
+              uid=$1; gid=$2; node=$3; empty=$4; donor=$5; shift 4
+              mount --bind "$empty" "$donor"
+              exec /usr/bin/setpriv --reuid "$uid" --regid "$gid" --clear-groups --inh-caps=-all --ambient-caps=-all -- \
+                /usr/bin/env -i PATH=/usr/bin:/bin HOME=/tmp TMPDIR=/tmp "$node" --import=tsx observe-s6.mjs separate-mount "$@"
+            ' boundary "$uid" "$gid" "$node_path" "$RUNNER_TEMP/phase-w-empty" "${args[@]}"
+      - name: Retain narrowly scoped executor receipts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: phase-w-installed-executor-prerequisite
+          path: ${{ runner.temp }}/phase-w-public/*.json
+          retention-days: 7
+          if-no-files-found: warn
