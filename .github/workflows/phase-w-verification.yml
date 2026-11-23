@@ -1,7 +1,7 @@
 name: Phase W NativeControlledDEV and separate W3 qualification
 on:
   push:
-    branches: [main]
+    branches: [main, codex/zw-contract-verification-20261123]
   workflow_call:
   pull_request:
     paths:

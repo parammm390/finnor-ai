@@ -1,7 +1,7 @@
 name: W4 original commercial owner
 on:
   push:
-    branches: [codex/project-w4-owner-ci, codex/zw-integration-quality-20261115]
+    branches: [codex/project-w4-owner-ci, codex/zw-integration-quality-20261115, codex/zw-contract-verification-20261123]
 permissions:
   contents: read
 concurrency:
