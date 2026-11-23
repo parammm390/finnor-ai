@@ -1,0 +1,18 @@
+{
+  "schema": "finnor.project-z.z2.precode-critical-expectations.v1",
+  "beforeCandidateInvocations": true,
+  "omitted-grand-coalition": ["COUNTEREXAMPLE", "Z2_CERTIFICATE_COVERAGE"],
+  "original-operator-revision": ["COUNTEREXAMPLE", "Z2_CONSTRUCTION_BINDING"],
+  "all-history-resource-bound": ["COUNTEREXAMPLE", "Z2_NATIVE_FULL_Y3_FLOOR"],
+  "original-quarter-mixture": ["COUNTEREXAMPLE", "Z2_CHECKED_PROFITABLE_CORRELATED_MIXTURE"],
+  "pooled-private-state": ["COUNTEREXAMPLE", "Z2_LOCAL_PLAN_DOMAIN"],
+  "shared-nonunit-native": ["CHECKED", "Y3_EXACT_SEQUENTIAL_ASSESSMENT"],
+  "shared-nonunit-z2": ["CHECKED_CANDIDATE", "Z2_EXACT_ALL_ORIGINAL_CORRELATED_COALITIONS"],
+  "conflicting-coefficient-native": ["REJECTED", "Y3_GLOBAL_COMMON_TREMBLE_CONFLICT"],
+  "conflicting-coefficient-z2": ["COUNTEREXAMPLE", "Z2_GLOBAL_COMMON_TREMBLE_CONFLICT"],
+  "conflicting-order-native": ["REJECTED", "Y3_GLOBAL_COMMON_TREMBLE_CONFLICT"],
+  "conflicting-order-z2": ["COUNTEREXAMPLE", "Z2_GLOBAL_COMMON_TREMBLE_CONFLICT"],
+  "unrelated-belief-native": ["REJECTED", "Y3_GLOBAL_BELIEF_LIMIT"],
+  "unrelated-belief-z2": ["COUNTEREXAMPLE", "Z2_NATIVE_FULL_Y3_FLOOR"],
+  "individually-unacceptable-native": ["REJECTED", "Y3_OUTSIDE_OPTION_NOT_MET"]
+}

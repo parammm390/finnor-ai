@@ -1,4 +1,4 @@
-import { selectIcMemoVersion } from "@finnor/private-equity";
+import { selectIcMemoVersion } from "../../../../../../../../../packages/private-equity/src/ic-repository";
 import { handleIcPost, IcSelectMemoSchema, IcUuidSchema } from "../../../../../../../lib/ic";
 
 export const runtime = "nodejs";

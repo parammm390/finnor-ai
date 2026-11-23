@@ -10,7 +10,7 @@ import { NextRequest } from "next/server"
 import { z } from "zod"
 import { getServiceToken } from "@/lib/centropy/proxy-auth"
 import { resolveProductRoute, type ProductCapability } from "@/lib/centropy/capability-manifest"
-import { CENTROPY_PROXY_READ_TIMEOUT_MS, CENTROPY_PROXY_WRITE_TIMEOUT_MS } from "./proxy-config"
+import { CENTROPY_PROXY_READ_TIMEOUT_MS, CENTROPY_PROXY_W3_WORK_READ_TIMEOUT_MS, CENTROPY_PROXY_WRITE_TIMEOUT_MS } from "./proxy-config"
 import { oauthRequestCookie, oauthResponseHeaders, oauthStartBody, oauthTransport } from "@/lib/centropy/oauth-transport"
 
 // Resolve this per request so a warmed serverless module cannot retain an old
@@ -115,8 +115,22 @@ async function doForward(
   }
   req.nextUrl.searchParams.forEach((v, k) => url.searchParams.append(k, v));
 
+  const trace = process.env.FINNOR_Z0_MOUNT_READ_TRACE === "1"
+    && segments.length === 2 && segments[0] === "company-brain" && method === "POST"
+    && ["projection", "application-projection", "institution-read", "institution-sources"].includes(segments[1]!)
+    ? { id: crypto.randomUUID(), startedAt: Date.now() } : null;
+  const traced = (response: Response) => {
+    if (trace) {
+      response.headers.set("x-finnor-native-read-id", trace.id);
+      console.info(JSON.stringify({ event: "Z0_MOUNT_PROXY_READ", ...trace, route: segments[1],
+        status: response.status, elapsedMs: Date.now() - trace.startedAt }));
+    }
+    return response;
+  };
   const controller = new AbortController();
-  const timeoutMs = capability
+  const timeoutMs = capability?.routePattern === "real-world-services/read" && capability.timeoutClass === "READ"
+    ? CENTROPY_PROXY_W3_WORK_READ_TIMEOUT_MS
+    : capability
     ? capability.timeoutClass === "WRITE" ? CENTROPY_PROXY_WRITE_TIMEOUT_MS : CENTROPY_PROXY_READ_TIMEOUT_MS
     : method === "GET" ? CENTROPY_PROXY_READ_TIMEOUT_MS : CENTROPY_PROXY_WRITE_TIMEOUT_MS;
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -124,6 +138,7 @@ async function doForward(
     method,
     headers: {
       ...(authorization ? { authorization } : {}),
+      ...(trace ? { "x-finnor-native-read-id": trace.id } : {}),
       "content-type": "application/json",
     },
     cache: "no-store",
@@ -137,7 +152,31 @@ async function doForward(
       if (cookie) init.headers = { ...init.headers, cookie };
     }
     if (method === "POST" || method === "PUT" || method === "DELETE") {
-      const body = await readTextBody(req, 2_000_000);
+      let body: string;
+      if (segments.length === 2 && segments[0] === "company-brain" && [
+        "z1-reserve-original-budget","z1-submit-shared-work","z1-read-shared-work",
+        "z1-admit-shared-work","z1-project-original-work","z1-cancel-shared-work",
+      ].includes(segments[1]!)) {
+        const maximum = 134217728, reader = req.body?.getReader();
+        if (!reader) return proxyError("JSON request body required", 400);
+        const chunks: Uint8Array[] = []; let bytes = 0;
+        const deadline = new AbortController(), timer = setTimeout(() => deadline.abort(), 5000);
+        const expired = new Promise<never>((_resolve,reject) => deadline.signal.addEventListener("abort",() => {
+          void reader.cancel().catch(() => undefined); reject(new Error("Z1 body deadline"));
+        },{once:true}));
+        try {
+          for (;;) {
+            const chunk = await Promise.race([reader.read(),expired]); if (chunk.done) break;
+            bytes += chunk.value.byteLength;
+            if (bytes > maximum) return proxyError("Request body too large", 413);
+            chunks.push(chunk.value);
+          }
+          body = new TextDecoder("utf-8",{fatal:true}).decode(Buffer.concat(chunks));
+        } catch { return proxyError("Bounded JSON body unavailable", 400); }
+        finally { clearTimeout(timer); await reader.cancel().catch(() => undefined); reader.releaseLock(); }
+      } else {
+        body = await readTextBody(req, 2_000_000);
+      }
       let parsed: unknown;
       try { parsed = JSON.parse(body.length > 0 ? body : "{}"); } catch { return proxyError("Invalid JSON body", 400); }
       init.body = connection?.step === "start" ? JSON.stringify(oauthStartBody(parsed, connection)) : body.length > 0 ? body : "{}";
@@ -153,19 +192,19 @@ async function doForward(
     if (connection) oauthResponseHeaders(req, connection, upstream, headers);
     // Keep the proxy byte-preserving even though active P8 projections are JSON.
     const body = await upstream.arrayBuffer();
-    return new Response(body, {
+    return traced(new Response(body, {
       status: upstream.status,
       headers,
 
-    });
+    }));
   } catch (error) {
-    if (error instanceof ApiRequestError) return proxyError(error.message, error.status);
+    if (error instanceof ApiRequestError) return traced(proxyError(error.message, error.status));
     if (controller.signal.aborted) {
-      return proxyError(`Centropy backend timed out after ${timeoutMs / 1000} seconds`, 504);
+      return traced(proxyError(`Centropy backend timed out after ${timeoutMs / 1000} seconds`, 504));
     }
     // Keep upstream failures as stable retryable boundary responses. Letting a
     // rejected fetch escape turns a recoverable outage into an opaque Next.js 500.
-    return proxyError("Centropy backend is unavailable", 502);
+    return traced(proxyError("Centropy backend is unavailable", 502));
   } finally {
     clearTimeout(timeoutId);
   }

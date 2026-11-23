@@ -1,0 +1,28 @@
+{
+  "schema": "finnor.z3.original-internal-readiness.v1",
+  "profile": "S4_READINESS_RECONCILIATION",
+  "resourceMeaning": "S6_OUTSTANDING_CAPACITY_NOT_COMPUTE_ALLOWANCE",
+  "arena": {
+    "schema": "finnor.z3.public-arena.v1",
+    "id": "public-internal-readiness-example-not-authority",
+    "observationMode": "PUBLIC_PERFECT_INFORMATION",
+    "states": [
+      {"id":"readiness","owner":"C","observation":"readiness","safe":true,"remaining":0,"unknown":[]},
+      {"id":"readiness-outcome","owner":"E","observation":"readiness-outcome","safe":true,"remaining":0,"unknown":[]},
+      {"id":"reconcile","owner":"C","observation":"reconcile","safe":true,"remaining":0,"unknown":[]},
+      {"id":"reconcile-outcome","owner":"E","observation":"reconcile-outcome","safe":true,"remaining":0,"unknown":[]}
+    ],
+    "edges": [
+      {"from":"readiness","to":"readiness-outcome","action":"READINESS","renewalRef":null,"settlementRef":null},
+      {"from":"readiness-outcome","to":"reconcile","action":"READY","renewalRef":null,"settlementRef":null},
+      {"from":"readiness-outcome","to":"reconcile","action":"NOT_READY","renewalRef":null,"settlementRef":null},
+      {"from":"reconcile","to":"reconcile-outcome","action":"RECONCILE","renewalRef":null,"settlementRef":null},
+      {"from":"reconcile-outcome","to":"readiness","action":"CLEAR","renewalRef":null,"settlementRef":null},
+      {"from":"reconcile-outcome","to":"readiness","action":"UNKNOWN_RETAINED","renewalRef":null,"settlementRef":null}
+    ],
+    "initial": ["readiness"],
+    "assumptions": [],
+    "goals": [["readiness-outcome"],["reconcile-outcome"]],
+    "resources": {"capacity":0,"maximum":0,"obligationIds":[],"renewalRefs":[],"settlementRefs":[],"unknownOccupiesCapacity":true}
+  }
+}

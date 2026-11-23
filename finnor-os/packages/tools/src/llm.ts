@@ -9,14 +9,18 @@
 // moment a plugin needed an LLM call (the ops-overview grounded-QA action does).
 
 import Groq from "groq-sdk";
-import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
+import { BedrockRuntimeClient, ConverseCommand, type ConverseCommandInput, type ServiceInputTypes, type ServiceOutputTypes } from "@aws-sdk/client-bedrock-runtime";
+import type { DeserializeMiddleware, FinalizeRequestMiddleware } from "@smithy/types";
 import { randomUUID, createHash } from "node:crypto";
+import { Readable } from "node:stream";
 import { withTenant, decisionReceipts, llmCalls, tenantLlmBudgets, withGovernedModelInvocation, ComputeCapacityUnavailableError } from "@finnor/db";
 import { and, eq, gte, sql } from "drizzle-orm";
 import { initObservability, Sentry } from "./observability";
 import { observeAiOperation } from "./langfuse";
 import { orderProvidersByHealth, recordOutcome } from "./provider-health";
 import { compositeContextWindowTokens, LLMContextBudgetError } from "./model-context";
+import type { ComputeResourceLease } from "@finnor/db";
+import type { SpecialistIamSessionLease } from "../../governed-execution/src/specialist-contract";
 
 export { countPromptTokensUpperBound, resolveLLMContextBudget, LLMContextBudgetError, type LLMContextBudget, type LLMContextBudgetErrorCode } from "./model-context";
 
@@ -42,6 +46,21 @@ export interface LLMCallOptions {
   signal?: AbortSignal;
   /** Explicit bounded output allowance; defaults retain each native adapter profile. */
   maxOutputTokens?: number;
+  /** Opt-in streamed bound, before the adapter buffers or parses response data. */
+  maxResponseBytes?: number;
+  /** Opt-in mandatory P3 permits in every environment, not protected admission. */
+  requireGovernance?: boolean;
+  /** Native owner persists its fenced possible-call intent immediately before
+   * I/O, after actual P3 acquisition. Never disclosed to the model/guest. */
+  beforeInvocation?: (context: { signal: AbortSignal; leases: readonly ComputeResourceLease[] }) => Promise<void>;
+  /** Native per-invocation receipt. Do not infer concurrent usage from lastUsage. */
+  onBoundedUsage?: (usage: Readonly<LLMUsage>) => void;
+  /** Opt-in native bounded response owner. Runs before the original P3 permits
+   * are released, under the original wire signal, never a renewed lifetime. */
+  onBoundedResponse?: (context: { text: string; usage: Readonly<LLMUsage>;
+    signal: AbortSignal; leases: readonly ComputeResourceLease[] }) => Promise<void>;
+  /** Opaque existing-session custody. Never a credential/provider or model input. */
+  specialistIamSession?: SpecialistIamSessionLease;
   reasoningEffort?: "low" | "medium" | "high";
 }
 export interface LLMUsage {
@@ -50,6 +69,8 @@ export interface LLMUsage {
   returnedModel?: string | null;
   inputTokens: number | null;
   outputTokens: number | null;
+  /** Raw response body bytes observed before native SDK parsing, not TLS bytes. */
+  responseBytes?: number | null;
 }
 export type LLMProviderQualificationIdentity =
   | { transport: "openai-compatible"; name: string; model: string; endpointSha256: string }
@@ -100,6 +121,10 @@ const DEFAULT_DEADLINE_MS: Record<LLMChannel, number> = {
 
 function normalizeCallOptions(opts: LLMCallOptions): LLMCallOptions {
   if (opts.maxOutputTokens !== undefined && (!Number.isInteger(opts.maxOutputTokens) || opts.maxOutputTokens < 1 || opts.maxOutputTokens > 4096)) throw new Error("LLM_OUTPUT_TOKEN_BOUND");
+  if (opts.maxResponseBytes !== undefined && (!Number.isSafeInteger(opts.maxResponseBytes)
+    || opts.maxResponseBytes < 256 || opts.maxResponseBytes > 65536)) throw new Error("LLM_RESPONSE_BYTE_BOUND");
+  if ((opts.beforeInvocation || opts.onBoundedUsage || opts.specialistIamSession) && (!opts.requireGovernance || opts.maxResponseBytes === undefined
+    || !opts.signal || !Number.isFinite(opts.deadlineAt))) throw new Error("LLM_BOUNDED_INVOCATION_CONTRACT_REQUIRED");
   if (Number.isFinite(opts.deadlineAt)) return opts;
   const relative = opts.deadlineMs ?? opts.timeoutMs ?? DEFAULT_DEADLINE_MS[opts.channel ?? "text"];
   return { ...opts, deadlineAt: Date.now() + Math.max(0, relative) };
@@ -134,7 +159,8 @@ function assertSelectedAwsRegion(region: string): void {
 /** Fetch with both the caller's signal and the shared absolute deadline. The
  * provider-specific timeout is only a ceiling; fallbacks receive the same
  * deadlineAt and therefore cannot restart the full timeout budget. */
-async function fetchWithCallBudget(url: string, init: RequestInit, opts: LLMCallOptions, providerCeilingMs = 8_000): Promise<Response> {
+async function fetchWithCallBudget(url: string, init: RequestInit, opts: LLMCallOptions, providerCeilingMs = 8_000,
+  beforeFetch?: (signal: AbortSignal) => Promise<void>): Promise<Response> {
   const normalized = normalizeCallOptions(opts);
   providerCeilingMs = providerCallCeiling(normalized, providerCeilingMs);
   const budgetMs = remainingMs(normalized, providerCeilingMs);
@@ -150,11 +176,17 @@ async function fetchWithCallBudget(url: string, init: RequestInit, opts: LLMCall
     : Object.assign(new Error("LLM provider timeout"), { name: "ProviderTimeoutError" });
   const timer = setTimeout(() => controller.abort(timerError), budgetMs);
   try {
-    const response = await fetch(url, { ...init, signal: controller.signal });
+    await beforeFetch?.(controller.signal);
+    controller.signal.throwIfAborted();
+    const response = await fetch(url, { ...init, ...(normalized.maxResponseBytes !== undefined
+      ? { redirect: "error" as const, credentials: "omit" as const } : {}), signal: controller.signal });
     // Keep the same physical deadline active through body consumption. Fetch
     // resolves at headers; without this a stalled response body could outlive
     // the model permit and be overlapped by its later expiry.
-    const boundedResponse = typeof response.arrayBuffer === "function"
+    const boundedResponse = normalized.maxResponseBytes !== undefined
+      ? new Response(await readBoundedResponse(response, normalized.maxResponseBytes, controller.signal),
+        { status: response.status, headers: response.headers })
+      : typeof response.arrayBuffer === "function"
       ? new Response(await response.arrayBuffer(), { status: response.status, headers: response.headers })
       : response;
     if (Number.isFinite(normalized.deadlineAt) && Date.now() >= Number(normalized.deadlineAt)) throw new LLMDeadlineExceededError(Number(normalized.deadlineAt));
@@ -170,6 +202,170 @@ async function fetchWithCallBudget(url: string, init: RequestInit, opts: LLMCall
     clearTimeout(timer);
     normalized.signal?.removeEventListener("abort", onCallerAbort);
   }
+}
+
+async function readBoundedResponse(response: Response, limit: number, signal: AbortSignal): Promise<Buffer<ArrayBuffer>> {
+  const length = response.headers.get("content-length");
+  if (length !== null && (!/^\d+$/.test(length) || Number(length) > limit)) {
+    await response.body?.cancel().catch(() => undefined);
+    throw new Error("LLM_RESPONSE_BYTE_BOUND");
+  }
+  if (!response.body) throw new Error("LLM_BOUNDED_RESPONSE_BODY_REQUIRED");
+  const reader = response.body.getReader(), chunks: Uint8Array[] = [];
+  const cancel = () => { void reader.cancel().catch(() => undefined); };
+  signal.addEventListener("abort", cancel, { once: true });
+  let size = 0;
+  try {
+    for (;;) {
+      signal.throwIfAborted();
+      const next = await reader.read();
+      if (next.done) break;
+      if (next.value.length > limit - size) throw new Error("LLM_RESPONSE_BYTE_BOUND");
+      size += next.value.length; chunks.push(next.value);
+    }
+    signal.throwIfAborted();
+    return Buffer.concat(chunks, size);
+  } finally {
+    signal.removeEventListener("abort", cancel);
+    await reader.cancel().catch(() => undefined); reader.releaseLock();
+  }
+}
+
+const providerWrappers = new WeakMap<LLMProvider, { provider: LLMProvider; complete: LLMProvider["complete"] }>();
+const nativeBoundedAdapters = new WeakMap<LLMProvider, string>();
+const boundedOptions = (opts: LLMCallOptions) => opts.maxResponseBytes !== undefined
+  || opts.requireGovernance === true || opts.beforeInvocation !== undefined || opts.onBoundedUsage !== undefined
+  || opts.specialistIamSession !== undefined;
+function refuseUnsupportedBoundedAdapter(opts: LLMCallOptions) {
+  if (boundedOptions(opts)) throw new Error("LLM_BOUNDED_ADAPTER_UNSUPPORTED");
+}
+
+export type NativeBoundedLLMProviderIdentity =
+  | Extract<LLMProviderQualificationIdentity, { transport: "openai-compatible" }>
+  | { transport: "bedrock-converse"; name: string; model: string; region: string;
+    authMode: "IAM"; endpointSha256: string };
+
+/** Actual native adapters, not a reported name or a fallback's first member. */
+export function assertNativeBoundedLLMProvider(provider: LLMProvider): NativeBoundedLLMProviderIdentity {
+  let native = provider;
+  for (let depth = 0; providerWrappers.has(native) && depth < 4; depth++) {
+    const wrapper = providerWrappers.get(native)!;
+    if (native.complete !== wrapper.complete) throw new Error("LLM_BOUNDED_ADAPTER_UNSUPPORTED");
+    native = wrapper.provider;
+  }
+  const identity = native.qualificationIdentity;
+  if (nativeBoundedAdapters.get(native) !== JSON.stringify(identity)
+    || process.env.NODE_TLS_REJECT_UNAUTHORIZED === "0")
+    throw new Error("LLM_BOUNDED_ADAPTER_UNSUPPORTED");
+  if (native instanceof OpenAICompatibleProvider && native.complete === nativeOpenAIComplete
+    && identity?.transport === "openai-compatible") return { ...identity };
+  if (native instanceof BedrockConverseProvider && native.complete === nativeBedrockComplete
+    && identity?.transport === "bedrock-converse" && process.env.AWS_BEDROCK_AUTH_MODE === "iam") {
+    assertSelectedAwsRegion(identity.region);
+    return { ...identity, transport: "bedrock-converse", authMode: "IAM",
+      endpointSha256: createHash("sha256").update(`https://bedrock-runtime.${identity.region}.amazonaws.com`).digest("hex") };
+  }
+  throw new Error("LLM_BOUNDED_ADAPTER_UNSUPPORTED");
+}
+
+async function readBoundedNodeResponse(body: unknown, maximum: number, signal: AbortSignal): Promise<Buffer> {
+  // Require the raw stream from the source-pinned installed transport, rather
+  // than an already buffered body. Readable alone does not prove handler identity.
+  if (!(body instanceof Readable)) throw new Error("LLM_BOUNDED_SDK_STREAM_REQUIRED");
+  const cancel = () => { body.destroy(); };
+  signal.addEventListener("abort", cancel, { once: true });
+  const chunks: Uint8Array[] = []; let size = 0;
+  try {
+    signal.throwIfAborted();
+    for await (const chunk of body) {
+      signal.throwIfAborted();
+      if (!(chunk instanceof Uint8Array)) throw new Error("LLM_BOUNDED_SDK_STREAM_REQUIRED");
+      if (chunk.byteLength > maximum - size) throw new Error("LLM_RESPONSE_BYTE_BOUND");
+      size += chunk.byteLength; chunks.push(chunk);
+    }
+    signal.throwIfAborted();
+    return Buffer.concat(chunks, size);
+  } finally { signal.removeEventListener("abort", cancel); body.destroy(); }
+}
+
+/** Only an authenticated existing-session lease, never a credential chain.
+ * This helper grants no admission, credential, refresh or model-spend authority. */
+async function completeBoundedBedrockIam(session: SpecialistIamSessionLease, input: ConverseCommandInput, region: string,
+  opts: LLMCallOptions, capacitySignal: AbortSignal, leases: readonly ComputeResourceLease[]) {
+  const modelId = input.modelId;
+  if (process.env.AWS_BEDROCK_AUTH_MODE !== "iam" || opts.maxResponseBytes === undefined
+    || !opts.requireGovernance || !opts.beforeInvocation || !opts.onBoundedUsage || !opts.signal
+    || opts.maxOutputTokens === undefined || !Number.isFinite(opts.deadlineAt)
+    || region !== "us-east-1" || opts.model === undefined || typeof modelId !== "string" || modelId !== opts.model)
+    throw new Error("LLM_BOUNDED_IAM_CONTRACT_REQUIRED");
+  const budgetMs = remainingMs(opts, 8_000);
+  if (budgetMs <= 0) throw new LLMDeadlineExceededError(opts.deadlineAt!);
+  const signal = AbortSignal.any([AbortSignal.timeout(budgetMs), capacitySignal, ...(opts.signal ? [opts.signal] : [])]);
+  // Load this source port only for the opt-in protected branch. Ordinary clients
+  // keep their existing default chain; protected clients cannot reach it.
+  const { assertAdmittedSpecialistIamSessionCurrent, consumeAdmittedSpecialistIamSession } =
+    await import("../../governed-execution/src/specialist-iam-session");
+  await assertAdmittedSpecialistIamSessionCurrent(session, signal);
+  const credentials = consumeAdmittedSpecialistIamSession(session, { model: modelId, region,
+    tenantId: opts.tenantId, deadlineAt: opts.deadlineAt, signal: opts.signal });
+  const hostname = `bedrock-runtime.${region}.amazonaws.com`;
+  const client = new BedrockRuntimeClient({ region, credentials: { ...credentials }, endpoint: `https://${hostname}`, maxAttempts: 1,
+    authSchemePreference: ["aws.auth#sigv4"], useDualstackEndpoint: false, useFipsEndpoint: false,
+    requestHandler: { requestTimeout: budgetMs, connectionTimeout: Math.min(2000, budgetMs) } });
+  let wireCount = 0, boundedBodies = 0, responseBytes: number | null = null;
+  const attestWire: FinalizeRequestMiddleware<ServiceInputTypes, ServiceOutputTypes> = next => async args => {
+    const request = args.request as { protocol?: string; hostname?: string; port?: number; method?: string;
+      path?: string; query?: Record<string, unknown>; headers?: Record<string, string> };
+    const authorization = Object.entries(request.headers ?? {}).find(([key]) => key.toLowerCase() === "authorization")?.[1];
+    const path = "/model/" + encodeURIComponent(modelId).replace(/[!'()*]/g,
+      value => "%" + value.charCodeAt(0).toString(16).toUpperCase()) + "/converse";
+    if (++wireCount !== 1 || request.protocol !== "https:" || request.hostname !== hostname
+      || request.port !== undefined && request.port !== 443 || request.method !== "POST" || request.path !== path
+      || Object.keys(request.query ?? {}).length || !authorization?.startsWith("AWS4-HMAC-SHA256 ")
+      || !authorization.includes(`/${region}/bedrock/aws4_request`))
+      throw new Error("LLM_BOUNDED_IAM_WIRE_SUBSTITUTION_OR_REPLAY");
+    signal.throwIfAborted();
+    await assertAdmittedSpecialistIamSessionCurrent(session, signal);
+    await opts.beforeInvocation!({ signal, leases });
+    await assertAdmittedSpecialistIamSessionCurrent(session, signal);
+    signal.throwIfAborted();
+    return next(args);
+  };
+  client.middlewareStack.addRelativeTo(attestWire,
+    { name: "finnorBoundedIamWire", relation: "after", toMiddleware: "httpSigningMiddleware" });
+  const boundResponse: DeserializeMiddleware<ServiceInputTypes, ServiceOutputTypes> = next => async args => {
+    const result = await next(args);
+    const response = result.response as { body: unknown; headers?: Record<string, string> };
+    if (++boundedBodies !== 1) throw new Error("LLM_BOUNDED_IAM_RESPONSE_REPLAY");
+    const declared = Object.entries(response.headers ?? {}).find(([key]) => key.toLowerCase() === "content-length")?.[1];
+    if (declared !== undefined && (!/^\d+$/.test(declared) || Number(declared) > opts.maxResponseBytes!)) {
+      if (response.body instanceof Readable) response.body.destroy();
+      throw new Error("LLM_RESPONSE_BYTE_BOUND");
+    }
+    const body = await readBoundedNodeResponse(response.body, opts.maxResponseBytes!, signal);
+    responseBytes = body.byteLength; response.body = body;
+    return result;
+  };
+  client.middlewareStack.addRelativeTo(boundResponse,
+    { name: "finnorBoundedIamResponse", relation: "after", toMiddleware: "deserializerMiddleware" });
+  let cancel: (() => void) | undefined;
+  const cancelled = new Promise<never>((_, reject) => {
+    cancel = () => reject(signal.reason ?? Object.assign(new Error("LLM request aborted"), { name: "AbortError" }));
+    signal.addEventListener("abort", cancel, { once: true });
+  });
+  try {
+    signal.throwIfAborted();
+    // SDK bookkeeping cannot retain a renewing P3 permit forever. Credentials
+    // are already literal; no credential provider or refresh runs in this call.
+    const result = await Promise.race([client.send(new ConverseCommand(input), { abortSignal: signal }), cancelled]);
+    signal.throwIfAborted();
+    if (wireCount !== 1 || boundedBodies !== 1 || responseBytes === null) throw new Error("LLM_BOUNDED_IAM_BOUNDARY_NOT_OBSERVED");
+    if (Date.now() >= opts.deadlineAt!) throw new LLMDeadlineExceededError(opts.deadlineAt!);
+    return { output: result, responseBytes, signal };
+  } catch (error) {
+    if (signal.aborted) throw signal.reason ?? Object.assign(new Error("LLM request aborted"), { name: "AbortError" });
+    throw error;
+  } finally { if (cancel) signal.removeEventListener("abort", cancel); client.destroy(); }
 }
 
 /** Raised before a non-urgent call once the configured hard daily cap is reached.
@@ -215,16 +411,19 @@ function configuredCostUsd(usage: LLMUsage | undefined): number | null {
   return (usage.inputTokens * inputRate + usage.outputTokens * outputRate) / 1_000_000;
 }
 
-async function recordCall(provider: LLMProvider, opts: LLMCallOptions, status: "completed" | "deferred" | "failed", detail: Record<string, unknown> = {}): Promise<void> {
+type BoundedCallMetering = { usage: LLMUsage | undefined; moneyUnknown: true };
+async function recordCall(provider: LLMProvider, opts: LLMCallOptions, status: "completed" | "deferred" | "failed",
+  detail: Record<string, unknown> = {}, bounded?: BoundedCallMetering): Promise<void> {
   if (!opts.tenantId) return;
-  const usage = provider.lastUsage;
+  const usage = bounded ? bounded.usage : provider.lastUsage;
   const providerName = provider.selectedProviderName ?? provider.name;
   await withTenant(opts.tenantId, async (db) => {
     await db.insert(llmCalls).values({
       tenantId: opts.tenantId!, domainActionId: opts.actionId ?? null, traceId: opts.traceId ?? null,
       purpose: opts.purpose ?? "answer", provider: providerName, model: usage?.model ?? "unknown",
       inputTokens: usage?.inputTokens ?? null, outputTokens: usage?.outputTokens ?? null,
-      costUsd: configuredCostUsd(usage), status, detail,
+      costUsd: bounded?.moneyUnknown ? null : configuredCostUsd(usage), status,
+      detail: bounded ? { ...detail, accountingQualification: "OWN_NATIVE_USAGE_MONEY_UNKNOWN" } : detail,
     });
     // A deferred action has no external effect, but it is still a decision the
     // operator needs to see. This standalone CONFIG receipt makes that explicit.
@@ -250,6 +449,8 @@ function chatContent(data: OpenAICompatibleResponse): string {
   if (typeof content === "string") return content;
   return content?.map((part) => part.text ?? "").join("") ?? "";
 }
+const boundedTokenCount = (value: unknown) =>
+  typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : null;
 
 /** Shared direct-fetch adapter for providers with the OpenAI-compatible chat API.
  * Keys are read from the process environment at provider construction time; no
@@ -262,7 +463,7 @@ class OpenAICompatibleProvider implements LLMProvider {
     private readonly apiKey: string | undefined,
     private readonly model: string,
     private readonly endpoint: string,
-  ) {}
+  ) { nativeBoundedAdapters.set(this, JSON.stringify(this.qualificationIdentity)); }
 
   get qualificationIdentity(): LLMProviderQualificationIdentity {
     return { transport: "openai-compatible", name: this.name, model: this.model,
@@ -270,10 +471,22 @@ class OpenAICompatibleProvider implements LLMProvider {
   }
 
   async complete(opts: LLMCallOptions): Promise<string> {
+    const normalized = normalizeCallOptions(opts);
+    if (opts.specialistIamSession !== undefined) throw new Error("LLM_BOUNDED_IAM_PROVIDER_REQUIRED");
+    if (boundedOptions(normalized)) {
+      const identity = assertNativeBoundedLLMProvider(this);
+      if (opts.model !== undefined && opts.model !== identity.model) throw new Error("LLM_BOUNDED_MODEL_SUBSTITUTION");
+      const endpoint = new URL(this.endpoint);
+      if (endpoint.username || endpoint.password || endpoint.search || endpoint.hash
+        || endpoint.protocol !== "https:" && !(endpoint.protocol === "http:" && endpoint.hostname === "127.0.0.1"))
+        throw new Error("LLM_BOUNDED_ENDPOINT_UNSUPPORTED");
+    }
     if (!this.apiKey) throw new Error(`${this.name.toUpperCase()}_API_KEY is not set`);
     this.lastUsage = undefined;
     const model = opts.model ?? this.model;
-    return withGovernedModelInvocation({ provider: this.name, model, tenantId: opts.tenantId, channel: opts.channel }, async () => {
+    return withGovernedModelInvocation({ provider: this.name, model, tenantId: opts.tenantId, channel: opts.channel,
+      requireGovernance: opts.requireGovernance, deadlineAt: normalized.deadlineAt }, async (capacitySignal, leases) => {
+    const signal = opts.signal ? AbortSignal.any([opts.signal, capacitySignal]) : capacitySignal;
     const res = await fetchWithCallBudget(
       this.endpoint,
       {
@@ -292,20 +505,26 @@ class OpenAICompatibleProvider implements LLMProvider {
           ...(opts.json ? { response_format: { type: "json_object" } } : {}),
         }),
       },
-      opts,
+      { ...normalized, signal },
       8_000,
+      opts.beforeInvocation ? physicalSignal => opts.beforeInvocation!({ signal: physicalSignal, leases }) : undefined,
     );
     if (!res.ok) {
+      if (opts.maxResponseBytes !== undefined) throw new Error(`LLM_BOUNDED_PROVIDER_HTTP_${res.status}`);
       const body = await res.text().catch(() => "");
       throw new Error(`${this.name} failed (${res.status}): ${body.slice(0, 300)}`);
     }
     const data = (await res.json()) as OpenAICompatibleResponse;
-    this.lastUsage = {
+    const usage: LLMUsage = {
       model,
       ...(typeof data.model === "string" ? { returnedModel: data.model } : {}),
-      inputTokens: data.usage?.prompt_tokens ?? data.usage?.input_tokens ?? null,
-      outputTokens: data.usage?.completion_tokens ?? data.usage?.output_tokens ?? null,
+      inputTokens: boundedOptions(opts) ? boundedTokenCount(data.usage?.prompt_tokens ?? data.usage?.input_tokens)
+        : data.usage?.prompt_tokens ?? data.usage?.input_tokens ?? null,
+      outputTokens: boundedOptions(opts) ? boundedTokenCount(data.usage?.completion_tokens ?? data.usage?.output_tokens)
+        : data.usage?.completion_tokens ?? data.usage?.output_tokens ?? null,
     };
+    this.lastUsage = usage;
+    opts.onBoundedUsage?.(Object.freeze({ ...usage }));
     return chatContent(data);
     });
   }
@@ -349,6 +568,7 @@ export class BedrockAnthropicProvider implements LLMProvider {
   }
 
   async complete(opts: LLMCallOptions): Promise<string> {
+    refuseUnsupportedBoundedAdapter(opts);
     if (!this.apiKey) throw new Error("AWS_BEDROCK_API_KEY or AWS_BEARER_TOKEN_BEDROCK is not set");
     assertSelectedAwsRegion(this.region);
     this.lastUsage = undefined;
@@ -397,6 +617,7 @@ export class BedrockConverseProvider implements LLMProvider {
     name = "bedrock-converse",
   ) {
     this.name = name;
+    nativeBoundedAdapters.set(this, JSON.stringify(this.qualificationIdentity));
   }
 
   get qualificationIdentity(): LLMProviderQualificationIdentity {
@@ -404,6 +625,12 @@ export class BedrockConverseProvider implements LLMProvider {
   }
 
   async complete(opts: LLMCallOptions): Promise<string> {
+    if (boundedOptions(opts)) {
+      const identity = assertNativeBoundedLLMProvider(this);
+      if (identity.transport !== "bedrock-converse" || opts.maxResponseBytes === undefined
+        || opts.model !== undefined && opts.model !== this.modelId)
+        throw new Error("LLM_BOUNDED_IAM_CONTRACT_REQUIRED");
+    }
     const iam = process.env.AWS_BEDROCK_AUTH_MODE === "iam";
     if (!iam && !this.apiKey) throw new Error("Bedrock requires explicit IAM authentication or a Bedrock API key");
     assertSelectedAwsRegion(this.region);
@@ -414,14 +641,23 @@ export class BedrockConverseProvider implements LLMProvider {
     opts = normalizeCallOptions(opts);
     this.lastUsage = undefined;
     const planningCall = opts.purpose === "planning" && opts.channel !== "voice";
-    return withGovernedModelInvocation({ provider: "bedrock", model: this.modelId, tenantId: opts.tenantId, channel: opts.channel }, async () => {
+    return withGovernedModelInvocation({ provider: "bedrock", model: this.modelId, tenantId: opts.tenantId, channel: opts.channel,
+      requireGovernance: opts.requireGovernance, deadlineAt: opts.deadlineAt }, async (capacitySignal, leases) => {
       const payload = {
         system: [{ text: opts.system }],
         messages: [{ role: "user" as const, content: [{ text: opts.user }] }],
         inferenceConfig: { maxTokens: opts.maxOutputTokens ?? (planningCall ? 1400 : 700), temperature: 0.1 },
       };
       let data: { output?: { message?: { content?: Array<{ text?: string }> } }; usage?: { inputTokens?: number; outputTokens?: number }; stopReason?: string };
+      let responseBytes: number | null = null;
+      let boundedSignal: AbortSignal | undefined;
       if (iam) {
+        if (boundedOptions(opts)) {
+          if (!opts.specialistIamSession) throw new Error("LLM_BOUNDED_IAM_EXISTING_SESSION_REQUIRED");
+          const bounded = await completeBoundedBedrockIam(opts.specialistIamSession,
+            { modelId: this.modelId, ...payload }, this.region, opts, capacitySignal, leases);
+          data = bounded.output; responseBytes = bounded.responseBytes; boundedSignal = bounded.signal;
+        } else {
         const budgetMs = remainingMs(opts, providerCallCeiling(opts, planningCall ? 25_000 : 8_000));
         if (budgetMs <= 0) throw new LLMDeadlineExceededError(opts.deadlineAt!);
         // Routing owns retries and one shared deadline across every physical attempt.
@@ -435,6 +671,7 @@ export class BedrockConverseProvider implements LLMProvider {
           if (Date.now() >= opts.deadlineAt!) throw new LLMDeadlineExceededError(opts.deadlineAt!);
           if (signal.aborted) throw Object.assign(new Error("LLM provider timeout"), { name: "ProviderTimeoutError" });
           throw error;
+        }
         }
       } else {
         const response = await fetchWithCallBudget(
@@ -450,11 +687,28 @@ export class BedrockConverseProvider implements LLMProvider {
         if (!response.ok) throw new Error(`Bedrock (${this.modelId}) failed (${response.status})`);
         data = await response.json() as typeof data;
       }
-      this.lastUsage = { model: this.modelId, inputTokens: data.usage?.inputTokens ?? null, outputTokens: data.usage?.outputTokens ?? null };
-      return data.output?.message?.content?.map((block) => block.text ?? "").join("") ?? "";
+      const usage: LLMUsage = { model: opts.model ?? this.modelId,
+        inputTokens: boundedOptions(opts) ? boundedTokenCount(data.usage?.inputTokens) : data.usage?.inputTokens ?? null,
+        outputTokens: boundedOptions(opts) ? boundedTokenCount(data.usage?.outputTokens) : data.usage?.outputTokens ?? null,
+        ...(boundedOptions(opts) ? { responseBytes } : {}) };
+      this.lastUsage = usage;
+      opts.onBoundedUsage?.(Object.freeze({ ...usage }));
+      if (boundedOptions(opts) && (data.stopReason !== "end_turn" && data.stopReason !== "stop_sequence"))
+        throw new Error("LLM_BOUNDED_IAM_INCOMPLETE_ANALYSIS");
+      const text = data.output?.message?.content?.map((block) => block.text ?? "").join("") ?? "";
+      if (opts.onBoundedResponse) {
+        if (!boundedOptions(opts) || !iam || !boundedSignal) throw new Error("LLM_NATIVE_BOUNDED_RESPONSE_OWNER_REQUIRED");
+        boundedSignal.throwIfAborted();
+        await opts.onBoundedResponse({ text, usage: Object.freeze({ ...usage }), signal: boundedSignal, leases });
+        boundedSignal.throwIfAborted();
+      }
+      return text;
     });
   }
 }
+// Capture the loaded methods, not mutable prototype properties at assertion time.
+const nativeOpenAIComplete = OpenAICompatibleProvider.prototype.complete;
+const nativeBedrockComplete = BedrockConverseProvider.prototype.complete;
 
 // Compatibility export for existing callers. All current non-Anthropic Bedrock
 // routing intentionally uses Converse; new callers should use the explicit name.
@@ -505,6 +759,7 @@ export class CompositeProvider implements LLMProvider {
   }
 
   async complete(opts: LLMCallOptions): Promise<string> {
+    refuseUnsupportedBoundedAdapter(opts);
     const sharedOpts = normalizeCallOptions(opts);
     this.lastUsage = undefined;
     this.selectedProviderName = undefined;
@@ -570,6 +825,7 @@ export class GroqProvider implements LLMProvider {
   }
 
   async complete(opts: LLMCallOptions): Promise<string> {
+    refuseUnsupportedBoundedAdapter(opts);
     const sharedOpts = normalizeCallOptions(opts);
     this.lastUsage = undefined;
     this.lastAttempts = [];
@@ -700,7 +956,7 @@ export function registerProvider(name: string, factory: () => LLMProvider, confi
  *  ToolRegistry.call()'s tool breadcrumbs follow). No-ops harmlessly without
  *  SENTRY_DSN. */
 function withObservability(provider: LLMProvider): LLMProvider {
-  return {
+  const wrapped: LLMProvider = {
     name: provider.name,
     get qualificationIdentity() { return provider.qualificationIdentity; },
     get contextWindowTokens() { return provider.contextWindowTokens; },
@@ -714,17 +970,27 @@ function withObservability(provider: LLMProvider): LLMProvider {
     recordsHealthInternally: true,
     async complete(opts) {
       const sharedOpts = normalizeCallOptions(opts);
+      const bounded: BoundedCallMetering | undefined = boundedOptions(sharedOpts)
+        ? { usage: undefined, moneyUnknown: true } : undefined;
+      if (bounded) assertNativeBoundedLLMProvider(provider);
+      const callOpts = bounded && sharedOpts.requireGovernance && sharedOpts.maxResponseBytes !== undefined
+        && sharedOpts.signal && Number.isFinite(sharedOpts.deadlineAt)
+        ? { ...sharedOpts, onBoundedUsage: (usage: Readonly<LLMUsage>) => {
+            if (bounded.usage) throw new Error("LLM_BOUNDED_USAGE_RECEIPT_REPLAY");
+            bounded.usage = { ...usage };
+            sharedOpts.onBoundedUsage?.(Object.freeze({ ...usage }));
+          } } : sharedOpts;
       return observeAiOperation({ kind: "generation", name: `llm:${sharedOpts.purpose ?? "answer"}`, tenantId: sharedOpts.tenantId, correlationId: sharedOpts.traceId, actionId: sharedOpts.actionId, purpose: sharedOpts.purpose, channel: sharedOpts.channel, model: sharedOpts.model }, async () => {
       initObservability();
       const start = Date.now();
       try {
         await enforceBudget(sharedOpts);
-        const text = await provider.complete(sharedOpts);
+        const text = await provider.complete(callOpts);
         const ms = Date.now() - start;
         const providerName = provider.selectedProviderName ?? provider.name;
         Sentry.addBreadcrumb({ category: "llm", message: providerName, data: { ok: true, ms } });
         if (!provider.recordsHealthInternally) recordOutcome(providerName, true, ms);
-        await recordCall(provider, sharedOpts, "completed").catch(() => undefined);
+        await recordCall(provider, sharedOpts, "completed", {}, bounded).catch(() => undefined);
         return text;
       } catch (err) {
         const ms = Date.now() - start;
@@ -735,12 +1001,15 @@ function withObservability(provider: LLMProvider): LLMProvider {
           || err instanceof LLMBudgetUnknownUsageError
           || err instanceof ComputeCapacityUnavailableError;
         if (!deferred && !provider.recordsHealthInternally) recordOutcome(providerName, false, ms);
-        await recordCall(provider, sharedOpts, deferred ? "deferred" : "failed", { error: (err as Error).message }).catch(() => undefined);
+        await recordCall(provider, sharedOpts, deferred ? "deferred" : "failed",
+          { error: (err as Error).message }, bounded).catch(() => undefined);
         throw err;
       }
-      }, () => provider.lastUsage);
+      }, () => bounded ? bounded.usage : provider.lastUsage);
     },
   };
+  providerWrappers.set(wrapped, { provider, complete: wrapped.complete });
+  return wrapped;
 }
 
 export function resolveProvider(name?: string): LLMProvider {
@@ -869,7 +1138,7 @@ export function resolveProviderForRequest(request: LLMRouteRequest): LLMProvider
 
 function bindProviderToRequest(provider: LLMProvider, request: LLMRouteRequest): LLMProvider {
   const channel = request.channel ?? "text";
-  return {
+  const wrapped: LLMProvider = {
     name: provider.name,
     get qualificationIdentity() { return provider.qualificationIdentity; },
     get contextWindowTokens() { return provider.contextWindowTokens; },
@@ -889,6 +1158,8 @@ function bindProviderToRequest(provider: LLMProvider, request: LLMRouteRequest):
       });
     },
   };
+  providerWrappers.set(wrapped, { provider, complete: wrapped.complete });
+  return wrapped;
 }
 
 /** Purpose/channel-aware resolver used by orchestration and answer plugins. The

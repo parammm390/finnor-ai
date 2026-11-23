@@ -1,0 +1,1020 @@
+{
+  "binding": {
+    "catalogueRef": "a216196b-4dc8-5631-9f32-9d4f5cc7fe2b",
+    "checkerRef": "c047f5f2-cacb-5481-840b-63417777d738",
+    "deadline": "2099-01-01T00:00:00.000Z",
+    "mandateRef": "aed0c36a-a539-56ec-866d-a561cfff47de",
+    "modelRef": "1f1354db-2f3e-526c-9aed-6b6e6c6afb4e",
+    "outcomeRef": "aac2b519-0139-5e6b-9058-03cec8abf69c",
+    "parentGrantRef": "0f4daa79-33f9-5f59-824b-0ab5eb580aa0",
+    "priceRef": "2a1d94cd-41af-5f71-9a55-57556533abb3",
+    "principalId": "7ddd6c80-6039-5f5e-8636-c576cb7338c7",
+    "responseRef": "13ab6fbe-619e-5f84-987e-e56eaf8b3ef8",
+    "rightsRef": "5db9d7bc-abbc-5206-9b48-de71c73388a8",
+    "runtimeRef": "92bea665-83b5-576d-bf21-e840102b846f",
+    "sourceRef": "bf7f599c-caf0-57aa-a315-9da5ae17da6e",
+    "tenantId": "dbf1ab31-6a3b-55b5-b29e-7ae539fbc4b9",
+    "workId": "5d73d619-1c51-524e-a711-0435c6ba415f"
+  },
+  "id": "eight-stage-dependency-03:public-development-W1-20261029-structural-v1-c73e957c",
+  "maxDecisions": 8,
+  "rootStateId": "root",
+  "schema": "finnor.metalevel-model.v1",
+  "states": [
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "50"
+        },
+        {
+          "computationRef": "admitted-development-method:step-0",
+          "contextRefs": [
+            "lawful-original-context"
+          ],
+          "dependsOn": [],
+          "id": "step-0",
+          "kind": "COMPUTE",
+          "outcomes": [
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "good-0",
+              "observation": "OK",
+              "probability": "1",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "INVALID",
+              "nextStateId": "bad-0",
+              "observation": "INVALID",
+              "probability": "0",
+              "utilityDelta": "0"
+            }
+          ],
+          "reservation": {
+            "computeUnits": "1"
+          },
+          "utilityCost": "1",
+          "verifierRefs": [
+            "original-check"
+          ]
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 0,
+      "history": [],
+      "id": "root",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "8"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "50"
+        },
+        {
+          "computationRef": "admitted-development-method:step-1",
+          "contextRefs": [
+            "lawful-original-context"
+          ],
+          "dependsOn": [
+            "step-0"
+          ],
+          "id": "step-1",
+          "kind": "COMPUTE",
+          "outcomes": [
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "good-1",
+              "observation": "OK",
+              "probability": "1",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "INVALID",
+              "nextStateId": "bad-1",
+              "observation": "INVALID",
+              "probability": "0",
+              "utilityDelta": "0"
+            }
+          ],
+          "reservation": {
+            "computeUnits": "1"
+          },
+          "utilityCost": "1",
+          "verifierRefs": [
+            "original-check"
+          ]
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 1,
+      "history": [
+        {
+          "choiceId": "step-0",
+          "observation": "OK"
+        }
+      ],
+      "id": "good-0",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "7"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 1,
+      "history": [
+        {
+          "choiceId": "step-0",
+          "observation": "INVALID"
+        }
+      ],
+      "id": "bad-0",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "7"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "50"
+        },
+        {
+          "computationRef": "admitted-development-method:step-2",
+          "contextRefs": [
+            "lawful-original-context"
+          ],
+          "dependsOn": [
+            "step-1"
+          ],
+          "id": "step-2",
+          "kind": "COMPUTE",
+          "outcomes": [
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "good-2",
+              "observation": "OK",
+              "probability": "1",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "INVALID",
+              "nextStateId": "bad-2",
+              "observation": "INVALID",
+              "probability": "0",
+              "utilityDelta": "0"
+            }
+          ],
+          "reservation": {
+            "computeUnits": "1"
+          },
+          "utilityCost": "1",
+          "verifierRefs": [
+            "original-check"
+          ]
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 2,
+      "history": [
+        {
+          "choiceId": "step-0",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-1",
+          "observation": "OK"
+        }
+      ],
+      "id": "good-1",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "6"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 2,
+      "history": [
+        {
+          "choiceId": "step-0",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-1",
+          "observation": "INVALID"
+        }
+      ],
+      "id": "bad-1",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "6"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "50"
+        },
+        {
+          "computationRef": "admitted-development-method:step-3",
+          "contextRefs": [
+            "lawful-original-context"
+          ],
+          "dependsOn": [
+            "step-2"
+          ],
+          "id": "step-3",
+          "kind": "COMPUTE",
+          "outcomes": [
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "good-3",
+              "observation": "OK",
+              "probability": "1",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "INVALID",
+              "nextStateId": "bad-3",
+              "observation": "INVALID",
+              "probability": "0",
+              "utilityDelta": "0"
+            }
+          ],
+          "reservation": {
+            "computeUnits": "1"
+          },
+          "utilityCost": "1",
+          "verifierRefs": [
+            "original-check"
+          ]
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 3,
+      "history": [
+        {
+          "choiceId": "step-0",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-1",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-2",
+          "observation": "OK"
+        }
+      ],
+      "id": "good-2",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "5"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 3,
+      "history": [
+        {
+          "choiceId": "step-0",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-1",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-2",
+          "observation": "INVALID"
+        }
+      ],
+      "id": "bad-2",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "5"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "50"
+        },
+        {
+          "computationRef": "admitted-development-method:step-4",
+          "contextRefs": [
+            "lawful-original-context"
+          ],
+          "dependsOn": [
+            "step-3"
+          ],
+          "id": "step-4",
+          "kind": "COMPUTE",
+          "outcomes": [
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "good-4",
+              "observation": "OK",
+              "probability": "1",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "INVALID",
+              "nextStateId": "bad-4",
+              "observation": "INVALID",
+              "probability": "0",
+              "utilityDelta": "0"
+            }
+          ],
+          "reservation": {
+            "computeUnits": "1"
+          },
+          "utilityCost": "1",
+          "verifierRefs": [
+            "original-check"
+          ]
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 4,
+      "history": [
+        {
+          "choiceId": "step-0",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-1",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-2",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-3",
+          "observation": "OK"
+        }
+      ],
+      "id": "good-3",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "4"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 4,
+      "history": [
+        {
+          "choiceId": "step-0",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-1",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-2",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-3",
+          "observation": "INVALID"
+        }
+      ],
+      "id": "bad-3",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "4"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "50"
+        },
+        {
+          "computationRef": "admitted-development-method:step-5",
+          "contextRefs": [
+            "lawful-original-context"
+          ],
+          "dependsOn": [
+            "step-4"
+          ],
+          "id": "step-5",
+          "kind": "COMPUTE",
+          "outcomes": [
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "good-5",
+              "observation": "OK",
+              "probability": "1",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "INVALID",
+              "nextStateId": "bad-5",
+              "observation": "INVALID",
+              "probability": "0",
+              "utilityDelta": "0"
+            }
+          ],
+          "reservation": {
+            "computeUnits": "1"
+          },
+          "utilityCost": "1",
+          "verifierRefs": [
+            "original-check"
+          ]
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 5,
+      "history": [
+        {
+          "choiceId": "step-0",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-1",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-2",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-3",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-4",
+          "observation": "OK"
+        }
+      ],
+      "id": "good-4",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "3"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 5,
+      "history": [
+        {
+          "choiceId": "step-0",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-1",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-2",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-3",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-4",
+          "observation": "INVALID"
+        }
+      ],
+      "id": "bad-4",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "3"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "50"
+        },
+        {
+          "computationRef": "admitted-development-method:step-6",
+          "contextRefs": [
+            "lawful-original-context"
+          ],
+          "dependsOn": [
+            "step-5"
+          ],
+          "id": "step-6",
+          "kind": "COMPUTE",
+          "outcomes": [
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "good-6",
+              "observation": "OK",
+              "probability": "1",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "INVALID",
+              "nextStateId": "bad-6",
+              "observation": "INVALID",
+              "probability": "0",
+              "utilityDelta": "0"
+            }
+          ],
+          "reservation": {
+            "computeUnits": "1"
+          },
+          "utilityCost": "1",
+          "verifierRefs": [
+            "original-check"
+          ]
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 6,
+      "history": [
+        {
+          "choiceId": "step-0",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-1",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-2",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-3",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-4",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-5",
+          "observation": "OK"
+        }
+      ],
+      "id": "good-5",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "2"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 6,
+      "history": [
+        {
+          "choiceId": "step-0",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-1",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-2",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-3",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-4",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-5",
+          "observation": "INVALID"
+        }
+      ],
+      "id": "bad-5",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "2"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "50"
+        },
+        {
+          "computationRef": "admitted-development-method:step-7",
+          "contextRefs": [
+            "lawful-original-context"
+          ],
+          "dependsOn": [
+            "step-6"
+          ],
+          "id": "step-7",
+          "kind": "COMPUTE",
+          "outcomes": [
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "VALID",
+              "nextStateId": "good-7",
+              "observation": "OK",
+              "probability": "1",
+              "utilityDelta": "0"
+            },
+            {
+              "consumption": {
+                "computeUnits": "1"
+              },
+              "kind": "INVALID",
+              "nextStateId": "bad-7",
+              "observation": "INVALID",
+              "probability": "0",
+              "utilityDelta": "0"
+            }
+          ],
+          "reservation": {
+            "computeUnits": "1"
+          },
+          "utilityCost": "1",
+          "verifierRefs": [
+            "original-check"
+          ]
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 7,
+      "history": [
+        {
+          "choiceId": "step-0",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-1",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-2",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-3",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-4",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-5",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-6",
+          "observation": "OK"
+        }
+      ],
+      "id": "good-6",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "1"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 7,
+      "history": [
+        {
+          "choiceId": "step-0",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-1",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-2",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-3",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-4",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-5",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-6",
+          "observation": "INVALID"
+        }
+      ],
+      "id": "bad-6",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "1"
+      },
+      "requiredChecks": []
+    },
+    {
+      "acceptanceRef": "original-model-acceptance:good-7",
+      "choices": [
+        {
+          "disposition": "ACCEPTED",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": "original-result:good-7",
+          "utility": "122"
+        }
+      ],
+      "completedChecks": [
+        "original-check"
+      ],
+      "decisionIndex": 8,
+      "history": [
+        {
+          "choiceId": "step-0",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-1",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-2",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-3",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-4",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-5",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-6",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-7",
+          "observation": "OK"
+        }
+      ],
+      "id": "good-7",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "0"
+      },
+      "requiredChecks": [
+        "original-check"
+      ]
+    },
+    {
+      "acceptanceRef": null,
+      "choices": [
+        {
+          "disposition": "INCOMPLETE",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": null,
+          "utility": "0"
+        }
+      ],
+      "completedChecks": [],
+      "decisionIndex": 8,
+      "history": [
+        {
+          "choiceId": "step-0",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-1",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-2",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-3",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-4",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-5",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-6",
+          "observation": "OK"
+        },
+        {
+          "choiceId": "step-7",
+          "observation": "INVALID"
+        }
+      ],
+      "id": "bad-7",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "0"
+      },
+      "requiredChecks": []
+    }
+  ],
+  "tieOrder": [
+    "stop",
+    "step-0",
+    "step-1",
+    "step-2",
+    "step-3",
+    "step-4",
+    "step-5",
+    "step-6",
+    "step-7"
+  ],
+  "utilityUnit": "synthetic-utility"
+}

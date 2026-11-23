@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { PoolClient } from "pg";
 import type { PeMutationContext } from "../types";
 import { tx, principal, sha } from "../evidence-execution/store";
 import { safePredicate } from "../program-synthesis/store";
@@ -16,10 +17,40 @@ export const INSTITUTION_OPERATIONS = ["institution-submit", "institution-revise
   "institution-status", "institution-cancel", "institution-resume", "institution-witness", "institution-sources",
   'institution-inputs','institution-mandate','institution-register-source','institution-consent'] as const;
 const id = z.object({ requestId: z.string().uuid() }).strict();
+const workObservation = z.literal("WORK_OBSERVATION").optional();
+const sourceRead = z.object({ workId: z.string().uuid(), purpose: workObservation }).strict();
+const programmeRead = z.union([
+  id.extend({ purpose: workObservation }),
+  sourceRead.extend({ purpose: z.literal("WORK_OBSERVATION") }),
+]);
 const submit = z.object({ workId: z.string().uuid(), workInputId: z.string().uuid(),
   grantIds: z.array(z.string().uuid()).min(1).max(16), idempotencyKey: z.string().min(1).max(160) }).strict();
 
-export async function readInstitutionCompiler(ctx: PeMutationContext, requestId: string) {
+async function institutionWorkHead(ctx: PeMutationContext, workId: string, client: PoolClient) {
+  const { rows } = await client.query<{ id: string; status: string; revision: number }>(
+    `SELECT id::text, status, revision FROM finnor_os.x1_compiler_requests
+     WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY revision DESC LIMIT 1`,
+    [ctx.auth.tenantId, principal(ctx), workId]);
+  return rows[0] ?? null;
+}
+
+async function readInstitutionWorkSources(ctx: PeMutationContext, workId: string) {
+  return tx(ctx, async c => {
+    await authorizeInstitutionWork(ctx, workId, c);
+    const grants = (await c.query(`SELECT id::text,source_id,source_class,protocol,revision,expires_at
+      FROM finnor_os.x1_source_grants g WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3
+      AND NOT EXISTS(SELECT 1 FROM finnor_os.x1_source_grants n WHERE n.tenant_id=g.tenant_id
+        AND n.work_id=g.work_id AND n.principal_id=g.principal_id AND n.source_id=g.source_id AND n.version>g.version)
+      ORDER BY source_id LIMIT 17`, [ctx.auth.tenantId, principal(ctx), workId])).rows;
+    const work = (await c.query("SELECT id::text FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1",
+      [ctx.auth.tenantId, workId])).rows[0];
+    const request = await institutionWorkHead(ctx, workId, c);
+    return { workId, workInputId: work?.id ?? null, grants, request,
+      completionContracts:INSTITUTION_COMPLETION_CONTRACTS };
+  }, true);
+}
+
+export async function readInstitutionCompiler(ctx: PeMutationContext, requestId: string, purpose?: "WORK_OBSERVATION") {
   let q = await compilerRow(ctx, requestId);
   await authorizeInstitutionWork(ctx, q.work_id);
   q=await reconcileInstitutionCompilerDelivery(ctx,q);
@@ -28,7 +59,9 @@ export async function readInstitutionCompiler(ctx: PeMutationContext, requestId:
     wallDeadline: episode.wall_deadline.toISOString(), acquisitionCalls: episode.acquisition_calls,
     compilerAttempts: episode.attempts, monetaryCost: null, monetaryCostStatus: "UNKNOWN",
     coordinationCalls: episode.coordination_calls,
-    physicalCompute: await readInstitutionComputeCosts(ctx, q.work_id, episode.id),
+    physicalCompute: await readInstitutionComputeCosts(ctx, q.work_id, episode.id, {
+      excludeWorkObservations: purpose === "WORK_OBSERVATION",
+    }),
     aggregatePeakMemoryBytes: null, humanSeconds: null };
   if (["CANCELLED", "INVALIDATED"].includes(q.status)) return { requestId: q.id, workId: q.work_id,
     workRevision: q.work_input_id, revision: q.revision, status: q.status, artifact: null,
@@ -38,6 +71,7 @@ export async function readInstitutionCompiler(ctx: PeMutationContext, requestId:
   }>(`SELECT body,body_digest,input_manifest,candidate,check_result FROM finnor_os.x1_compiler_artifacts
     WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 AND request_id=$4`,
   [q.tenant_id, q.principal_id, q.artifact_id, q.id])).rows[0], true) : null;
+  let parsedArtifact: z.infer<typeof InstitutionProgram> | null = null;
   try {
     await assertInstitutionCompilerCurrent(ctx, q, artifact?.input_manifest?.current);
     if (artifact && sha(artifact.body) !== artifact.body_digest) throw Error("X1_IMMUTABLE_ARTIFACT_DIGEST_MISMATCH");
@@ -59,6 +93,7 @@ export async function readInstitutionCompiler(ctx: PeMutationContext, requestId:
           ||binding?.status!=='known'||binding.ref!==parent.id||binding.digest!==parent.body_digest)
           throw Error('X1_IMMUTABLE_PARENT_BINDING_MISMATCH');
       }else if(parsed.envelope.parent_artifact_refs.length)throw Error('X1_UNEXPECTED_PARENT_ARTIFACT');
+      parsedArtifact = parsed;
     }
   } catch (error) {
     const reason = safePredicate(error);
@@ -81,7 +116,7 @@ export async function readInstitutionCompiler(ctx: PeMutationContext, requestId:
       WHERE tenant_id=$1 AND principal_id=$2 AND id=$3 AND generation=$5 AND status NOT IN('CANCELLED','INVALIDATED')`,
       [q.tenant_id,q.principal_id,q.id,programme.status,q.generation]);});
   return { requestId: q.id, workId: q.work_id, workRevision: q.work_input_id, revision: q.revision,
-    status: programme?.status ?? q.status, artifact: artifact ? InstitutionProgram.parse(artifact.body) : null,
+    status: programme?.status ?? q.status, artifact: parsedArtifact,
     check: artifact?.check_result ?? null, programme, reason: q.failure, costs,
     sourceCoverage:{gaps:(artifact?.candidate as {sourceCoverageGaps?:unknown[]}|undefined)?.sourceCoverageGaps??[],
       normativePopulation:!artifact||(artifact.candidate as {sourceCoverageGaps?:unknown[]}).sourceCoverageGaps?.length?'UNKNOWN':'KNOWN_MODEL_RELATIVE'},
@@ -105,27 +140,24 @@ async function handleInstitutionOperationBody(ctx: PeMutationContext, operation:
       return { status: 202, body: await submitInstitutionCompiler(ctx, parsed) };
     }
     if (operation === "institution-sources") {
-      const { workId } = z.object({ workId: z.string().uuid() }).strict().parse(body);
-      await authorizeInstitutionWork(ctx, workId);
-      return { status: 200, body: await tx(ctx, async c => {
-        const grants = (await c.query(`SELECT id::text,source_id,source_class,protocol,revision,expires_at
-          FROM finnor_os.x1_source_grants g WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3
-          AND NOT EXISTS(SELECT 1 FROM finnor_os.x1_source_grants n WHERE n.tenant_id=g.tenant_id
-            AND n.work_id=g.work_id AND n.principal_id=g.principal_id AND n.source_id=g.source_id AND n.version>g.version)
-          ORDER BY source_id LIMIT 17`, [ctx.auth.tenantId, principal(ctx), workId])).rows;
-        const work = (await c.query("SELECT id::text FROM finnor_os.work_inputs WHERE tenant_id=$1 AND work_id=$2 ORDER BY created_at DESC,id DESC LIMIT 1",
-          [ctx.auth.tenantId, workId])).rows[0];
-        const request = (await c.query("SELECT id::text,status,revision FROM finnor_os.x1_compiler_requests WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY revision DESC LIMIT 1",
-          [ctx.auth.tenantId, principal(ctx), workId])).rows[0] ?? null;
-        return { workId, workInputId: work?.id ?? null, grants, request,
-          completionContracts:INSTITUTION_COMPLETION_CONTRACTS };
-      }, true) };
+      const { workId } = sourceRead.parse(body);
+      const sources = await readInstitutionWorkSources(ctx, workId);
+      return { status: 200, body: sources, observedHead: sources.request?.id ?? null };
     }
-    const { requestId } = id.parse(body);let q = await compilerRow(ctx, requestId);
+    if (operation === "institution-read") {
+      const input = programmeRead.parse(body);
+      if ("requestId" in input)
+        return { status: 200, body: await readInstitutionCompiler(ctx, input.requestId, input.purpose) };
+      const sources = await readInstitutionWorkSources(ctx, input.workId);
+      const programme = sources.request ? await readInstitutionCompiler(ctx, sources.request.id, input.purpose) : null;
+      return { status: 200, body: { sources, programme }, observedHead: sources.request?.id ?? null };
+    }
+    const { requestId } = id.parse(body);
+    if (operation === "institution-status" || operation === "institution-witness")
+      return { status: 200, body: await readInstitutionCompiler(ctx, requestId) };
+    let q = await compilerRow(ctx, requestId);
     await authorizeInstitutionWork(ctx, q.work_id);
     if(operation==='institution-resume')q=await reconcileInstitutionCompilerDelivery(ctx,q);
-    if (["institution-read", "institution-status", "institution-witness"].includes(operation))
-      return { status: 200, body: await readInstitutionCompiler(ctx, requestId) };
     if (operation === "institution-cancel") {
       // Cancellation remains available after source-grant invalidation. This
       // historical status only decides whether to preserve an already completed
@@ -189,43 +221,53 @@ async function handleInstitutionOperationBody(ctx: PeMutationContext, operation:
 
 export async function handleInstitutionOperation(ctx:PeMutationContext,operation:string,body:unknown){
   const started=performance.now(),startedAt=new Date().toISOString();
-  const response=await handleInstitutionOperationBody(ctx,operation,body);let elapsedMs=performance.now()-started;
+  const observation = operation === "institution-sources" ? sourceRead.safeParse(body)
+    : operation === "institution-read" ? programmeRead.safeParse(body) : null;
+  const purpose = observation?.success ? observation.data.purpose : undefined;
+  const { observedHead, ...response } = await handleInstitutionOperationBody(ctx, operation, body);
+  let elapsedMs = performance.now() - started;
   const handles=body&&typeof body==='object'&&!Array.isArray(body)?body as {workId?:unknown;requestId?:unknown}:{};
   const valid=(value:unknown):value is string=>typeof value==='string'&&z.string().uuid().safeParse(value).success;
-  let attribution:Awaited<ReturnType<typeof compilerRow>>|null=null;
-  let preparationWorkId:string|null=null;
+  const attribution: { request: Awaited<ReturnType<typeof compilerRow>> | null } = { request: null };
+  const selectedWorkId = valid(handles.workId) ? handles.workId : null;
+  const requestId = valid(handles.requestId) ? handles.requestId : observedHead ?? null;
+  if (!requestId && !selectedWorkId) return response;
   try{
-    if(valid(handles.requestId))attribution=await compilerRow(ctx,handles.requestId);
-    else if(valid(handles.workId)){
-      await authorizeInstitutionWork(ctx,handles.workId);
-      preparationWorkId=handles.workId;
-      const latest=await tx(ctx,async c=>(await c.query<{id:string}>(`SELECT id::text FROM finnor_os.x1_compiler_requests
-        WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 ORDER BY revision DESC LIMIT 1`,
-        [ctx.auth.tenantId,principal(ctx),handles.workId])).rows[0],true);
-      if(latest)attribution=await compilerRow(ctx,latest.id);
-    }
-    if(attribution){
-      await authorizeInstitutionWork(ctx,attribution.work_id);
-      const episode=await compilerEpisode(ctx,attribution.episode_id);
-      const rights=await tx(ctx,async c=>(await c.query<{revision:string}>('SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=$1',
-        [ctx.auth.tenantId])).rows[0],true);
-      elapsedMs=performance.now()-started;
-      await persistInstitutionApiCompute(ctx,{workId:attribution.work_id,requestId:attribution.id,episodeId:episode.id,
-        parentReservation:episode.parent_reservation,rightsRevision:rights?.revision??'UNKNOWN',operation,
-        statusCode:response.status,startedAt,elapsedMs});
-    }else if(preparationWorkId){
-      const rights=await tx(ctx,async c=>(await c.query<{revision:string}>(
-        'SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=$1',[ctx.auth.tenantId])).rows[0],true);
-      elapsedMs=performance.now()-started;
-      await persistInstitutionWorkPreparationCompute(ctx,{workId:preparationWorkId,rightsRevision:rights?.revision??'UNKNOWN',
-        operation,statusCode:response.status,startedAt,elapsedMs});
+    const meter = await tx(ctx, async client => {
+      const head = !requestId && selectedWorkId && observedHead === undefined
+        ? await institutionWorkHead(ctx, selectedWorkId, client) : null;
+      const meterRequestId = requestId ?? head?.id;
+      const request = meterRequestId ? await compilerRow(ctx, meterRequestId, client) : null;
+      const workId = request?.work_id ?? selectedWorkId;
+      if (!workId) return null;
+      await authorizeInstitutionWork(ctx, workId, client);
+      attribution.request = request;
+      const episode = request ? await compilerEpisode(ctx, request.episode_id, client) : null;
+      const rights = (await client.query<{ revision: string }>(
+        "SELECT revision::text FROM finnor_os.authority_states WHERE tenant_id=$1", [ctx.auth.tenantId])).rows[0];
+      return { workId, request, episode, rightsRevision: rights?.revision ?? "UNKNOWN" };
+    }, true);
+    if (meter) {
+      elapsedMs = performance.now() - started;
+      const { workId, request, episode, rightsRevision } = meter;
+      const measured = { workId, rightsRevision, operation, statusCode: response.status, startedAt, elapsedMs,
+        ...(purpose ? { purpose } : {}) };
+      if (request && episode) {
+        await persistInstitutionApiCompute(ctx, { ...measured, requestId: request.id, episodeId: episode.id,
+          parentReservation: episode.parent_reservation });
+      } else {
+        await persistInstitutionWorkPreparationCompute(ctx, measured);
+      }
     }
   }catch(error){
     // A revoked/unavailable principal cannot write a private meter. Retain a
     // failed writer for an otherwise available owner without replacing the
     // real API disposition or erasing any observed effect.
-    if(attribution)await compilerEvent(ctx,attribution,'API_COMPUTE_METER_GAP',{operation,statusCode:response.status,
-      startedAt,elapsedMs,predicate:safePredicate(error),originalEpisode:attribution.episode_id}).catch(()=>undefined);
+    const request = attribution.request;
+    if (request) await compilerEvent(ctx, request, "API_COMPUTE_METER_GAP", {
+      operation, statusCode: response.status, startedAt, elapsedMs, predicate: safePredicate(error),
+      originalEpisode: request.episode_id,
+    }).catch(() => undefined);
   }
   return response;
 }

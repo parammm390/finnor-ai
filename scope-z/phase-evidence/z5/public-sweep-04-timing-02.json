@@ -1,0 +1,28 @@
+{
+  "actualReturnCode": 0,
+  "callerOverallTimeoutSeconds": 1200,
+  "childSystemCpuSeconds": 12.969399,
+  "childUserCpuSeconds": 75.586182,
+  "command": [
+    "/usr/bin/flock",
+    "-w",
+    "600",
+    "-x",
+    "/home/factory-user/repos/finnor-z-shared-heavy.lock",
+    "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+    "--max-old-space-size=512",
+    "/home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/offline-e2e.mjs",
+    "/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/public-sweep-04"
+  ],
+  "credentialFreeEnvironment": true,
+  "externalTimingExecutableRequired": false,
+  "finishedAt": "2026-10-25T08:56:11.159112+00:00",
+  "heavyLockWaitBoundSeconds": 600,
+  "isolatedLockWaitMeasured": false,
+  "maximumSingleChildRssBytesFromRusage": 91918336,
+  "python": "3.12.3",
+  "rssBoundary": "Linux RUSAGE_CHILDREN maximum child RSS, not combined simultaneous process-tree peak",
+  "schema": "finnor.z5.public-default-command-timing.v1",
+  "startedAt": "2026-10-25T08:51:10.376581+00:00",
+  "wallMsIncludingLockWaitAndStartup": 300782.535776998
+}

@@ -1,8 +1,10 @@
 /** Native scoped artifacts and run projections. S5/S6, not this projection,
  * decide occupation, possible effects and independently observed settlement. */
 import { readFile } from "node:fs/promises";
+import { currentInstitutionApplicationSession } from "../../../orchestration/src/project-z/z0-convergence/institution-origin";
 import { resolve } from "node:path";
 import type { PoolClient } from "pg";
+import type { JobExecutionContext } from "../../../../apps/worker/src/queue";
 import { NATIVE_APPLICATION_PROFILE_AUTHORITY_SQL } from "@finnor/db";
 import type {
   ApplicationActionModel, ApplicationModelCheck, ExperimentRef, Role,
@@ -38,6 +40,11 @@ export interface NativeApplicationProfile {
   grantBody: Record<string, unknown>;
 }
 export const APPLICATION_SOURCE_FILES = [
+  ...["index", "semantics", "original-work-observation", "institution-origin", "institution-allocation",
+    "institution-consumer", "projection"].map(name => `finnor-os/packages/orchestration/src/project-z/z0-convergence/${name}.ts`),
+  "finnor-os/packages/orchestration/src/project-z/z0-convergence/s5-owner-adapter.sql",
+  "finnor-os/packages/db/migration-head.ts",
+  "finnor-os/packages/db/migrations/postz_z0_institution_application_bridge.sql",
   "finnor-os/packages/shared-types/src/application-semantics.ts",
   ...["contracts", "native-contracts", "ports", "envelope", "learner", "checker", "composition",
     "source", "schema-pattern", "observation", "store", "allocation", "obligations", "runtime", "worker", "api", "validity", "fresh-authority"]
@@ -145,11 +152,12 @@ export async function applicationEvent(ctx: PeMutationContext, session: Applicat
   return ref;
 }
 export async function currentApplicationWork(ctx: PeMutationContext, row: ApplicationSessionRow, client?: PoolClient,
-  recovery = false): Promise<void> {
+  recovery = false, institutionDelivery?: Readonly<JobExecutionContext>): Promise<void> {
   if (ctx.auth.role !== "owner" || principal(ctx) !== ctx.auth.userId) throw unavailable();
   const rights = await authorize(ctx, row.root, [{ type: "work", id: row.work_id }]);
   if (!Number.isSafeInteger(Number(row.rights_revision)) || rights.revision !== Number(row.rights_revision)) x2Fault("X2_CURRENT_S1_RIGHTS_CHANGED");
   const read = async (c: PoolClient) => {
+    await currentInstitutionApplicationSession(ctx, row, c, recovery, institutionDelivery);
     const actor = await c.query("SELECT id FROM finnor_os.users WHERE tenant_id=$1 AND id=$2 AND status='active' AND role='owner' FOR SHARE",
       [ctx.auth.tenantId, principal(ctx)]);
     if (actor.rowCount !== 1) x2Fault("X2_CURRENT_ACTOR_OR_WORK_INPUT_CHANGED");
@@ -176,7 +184,7 @@ export async function currentApplicationWork(ctx: PeMutationContext, row: Applic
       const parent = await applicationSession(ctx, row.parent_id, client);
       if (!sameX2Ref(parent.original_parent_ref, row.original_parent_ref)
         || !sameX2Ref(parent.allocation_ref, row.allocation_ref)) x2Fault("X2_CHILD_ORIGINAL_PARENT_ANCESTRY");
-      await currentApplicationWork(ctx, parent, client);
+      await currentApplicationWork(ctx, parent, client, false, institutionDelivery);
     }
   }
 }
@@ -234,10 +242,10 @@ export function assertProfileTarget(profile: NativeApplicationProfile, target: {
   if (target.application !== profile.profile.application || target.account !== profile.profile.account
     || !profile.profile.allowedTargets.includes(target.id) || !profile.allowedEntities.includes(target.entity)) x2Fault("X2_EXACT_AUTHORIZED_TARGET_REQUIRED", 403);
 }
-export async function currentApplicationModel(ctx: PeMutationContext, row: ApplicationSessionRow): Promise<{ model: ApplicationActionModel; check: ApplicationModelCheck }> {
+export async function currentApplicationModel(ctx: PeMutationContext, row: ApplicationSessionRow, client?: PoolClient): Promise<{ model: ApplicationActionModel; check: ApplicationModelCheck }> {
   if (!row.model_ref || !row.check_ref) x2Fault("X2_NATIVE_CHECKED_MODEL_REQUIRED");
-  const body = await applicationArtifact<Omit<ApplicationActionModel, "ref">>(ctx, row.model_ref);
-  const checkBody = await applicationArtifact<Omit<ApplicationModelCheck, "ref">>(ctx, row.check_ref);
+  const body = await applicationArtifact<Omit<ApplicationActionModel, "ref">>(ctx, row.model_ref, client);
+  const checkBody = await applicationArtifact<Omit<ApplicationModelCheck, "ref">>(ctx, row.check_ref, client);
   return { model: parseApplicationModel({ ...body, ref: row.model_ref }), check: parseApplicationCheck({ ...checkBody, ref: row.check_ref }) };
 }
 export async function enqueueApplicationSession(ctx: PeMutationContext, row: ApplicationSessionRow, stage: string, client: PoolClient) {

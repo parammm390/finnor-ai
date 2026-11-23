@@ -1,0 +1,57 @@
+name: "W2 - Payment settlement and rejection checks"
+on:
+  push:
+    branches:
+      - codex/w2-atomic-closing-settlement-20261114
+      - codex/w2-cut-section-diagnostics-20261114
+      - codex/zw-integration-quality-20261115
+permissions:
+  contents: read
+jobs:
+  verdict:
+    name: w2-pair-verdict
+    needs: [exact, controls]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Require the exact owner and all four original controls
+        env:
+          EXACT: ${{ needs.exact.result }}
+          CONTROLS: ${{ needs.controls.result }}
+        run: test "$EXACT" = success && test "$CONTROLS" = success
+  completion-receipt:
+    name: "Report completed W2 checks"
+    needs: verdict
+    if: ${{ always() && github.ref_name == 'codex/zw-integration-quality-20261115' }}
+    permissions:
+      actions: read
+      contents: read
+      issues: read
+      pull-requests: write
+    uses: ./.github/workflows/ci-completion.yml
+    with:
+      pr_number: 187
+      head_sha: ${{ github.sha }}
+      gate: w2-pair-verdict
+      result: ${{ needs.verdict.result }}
+  exact:
+    name: "W2 - Exact payment settles"
+    uses: ./.github/workflows/w2-compensation-episode.yml
+    with:
+      episode: after-exact
+  controls:
+    name: "W2 - ${{ matrix.episode == 'before-exact' && 'Original baseline without repair' || matrix.episode == 'after-wrong-amount' && 'Reject wrong payment amount' || matrix.episode == 'after-wrong-payee' && 'Reject wrong payee' || 'Reject wrong receipt' }}"
+    needs: exact
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        episode:
+          - before-exact
+          - after-wrong-amount
+          - after-wrong-payee
+          - after-wrong-receipt
+    uses: ./.github/workflows/w2-compensation-episode.yml
+    with:
+      episode: ${{ matrix.episode }}

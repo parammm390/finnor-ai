@@ -1,4 +1,4 @@
-import { comparePrivateEquityOutcomeAssessment } from "@finnor/private-equity";
+import { comparePrivateEquityOutcomeAssessment } from "../../../../../../packages/private-equity/src/durable-epistemic";
 import { z } from "zod";
 import { errorResponse, requireContext } from "../../../../lib/auth";
 

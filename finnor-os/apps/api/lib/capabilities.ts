@@ -1,6 +1,14 @@
 import { z } from "zod";
 import { CapabilityEngineError } from "../../../packages/tools/src/capabilities/python-runner";
-import { errorResponse } from "./auth";
+import { AuthError, errorResponse, requireContext } from "./auth";
+import type { CapabilityActor } from "../../../packages/orchestration/src/capabilities/contracts";
+
+/** Participant identity never grants owner capability administration. */
+export async function requireCapabilityActor(request: Request): Promise<CapabilityActor> {
+  const ctx = await requireContext(request);
+  if (ctx.role !== "owner") throw new AuthError("Owner capability access required", 403);
+  return { ...ctx, role: ctx.role };
+}
 
 export async function capabilityBody(request: Request): Promise<unknown> {
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) throw new CapabilityEngineError("CAPABILITY_JSON_REQUIRED");

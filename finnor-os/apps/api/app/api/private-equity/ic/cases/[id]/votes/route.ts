@@ -1,4 +1,4 @@
-import { recordIcVote } from "@finnor/private-equity";
+import { recordIcVote } from "../../../../../../../../../packages/private-equity/src/ic-repository";
 import { handleIcPost, IcUuidSchema, IcVoteSchema } from "../../../../../../../lib/ic";
 
 export const runtime = "nodejs";

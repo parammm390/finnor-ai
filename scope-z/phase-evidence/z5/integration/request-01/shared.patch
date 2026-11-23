@@ -1,0 +1,422 @@
+diff --git a/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts b/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts
+--- a/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts
++++ b/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts
+@@ -61,6 +61,8 @@
+ import {InteractionOperations,handleInteractionOperation,readInteractionBody} from '@finnor/private-equity/src/interaction-synthesis/api';
+ import {InteractionFault} from '@finnor/private-equity/src/interaction-synthesis/contracts';
+ 
++import {Z5_OPERATIONS,handleInstitutionLinkOperation,readInstitutionBody} from '@finnor/private-equity/src/project-z/z5-institution-linker/api';
++import {intakeInstitutionComposition} from '@finnor/orchestration/src/project-z/z5-institution-linker/intake';
+ export const runtime = "nodejs";
+ 
+ const UuidSchema = z.string().uuid();
+@@ -214,6 +216,20 @@
+ 
+ export async function POST(req: Request, { params }: { params: Promise<{ operation: string }> }): Promise<Response> {
+   try {const route=await params;
++    if((Z5_OPERATIONS as readonly string[]).includes(route.operation)){
++      const auth=await requireContext(req);
++      if(!auth.deliverySession||Date.parse(auth.deliverySession.expiresAt)<=Date.now())
++        return response({code:'Z5_REAL_AUTHENTICATED_OWNER_SESSION_REQUIRED'},401);
++      try{
++        const body=await readInstitutionBody(req);
++        const result=route.operation==='institution-link-submit'
++          ?await intakeInstitutionComposition(auth,body):await handleInstitutionLinkOperation({auth},route.operation,body);
++        return response(result.body,result.status);
++      }catch(error){
++        const code=error instanceof Error&&/^Z5_[A-Z0-9_]+$/.test(error.message)?error.message:'Z5_INVALID_BOUNDED_JSON';
++        return response({code,error:'The bounded original-owner request was refused'},/DEADLINE/.test(code)?408:/BOUND/.test(code)?413:400);
++      }
++    }
+     if(StrategicOperations.some(operation=>operation===route.operation)){
+       const auth=await requireContext(req),body=await readStrategicBody(req);
+       const result=await handleStrategicOperation({auth},route.operation,body);
+diff --git a/finnor-os/apps/api/app/api/policies/[operation]/route.ts b/finnor-os/apps/api/app/api/policies/[operation]/route.ts
+--- a/finnor-os/apps/api/app/api/policies/[operation]/route.ts
++++ b/finnor-os/apps/api/app/api/policies/[operation]/route.ts
+@@ -7,6 +7,7 @@
+ import {CapitalProgramV2Error} from '@finnor/private-equity/src/capital-program/v2-contracts';
+ import { R3OwnerOperationSchemas } from '../../../../../../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts';
+ 
++import {prepareEnterpriseInstitutionCompositionPlan} from '@finnor/private-equity/src/enterprise-control';
+ export const runtime='nodejs';
+ const synthesis=z.object({mandate:z.unknown(),problem:z.unknown(),protocols:z.array(z.unknown()).max(8),scenarios:z.object({pathsPerMechanism:z.number().int().min(1).max(64),seed:z.number().int().min(0).max(4294967295)}).strict()}).strict();
+ const revision=synthesis.extend({priorPolicyRef:ExperimentRefSchema,reason:z.string().min(1).max(2048)});
+@@ -31,6 +32,7 @@
+  case 'observe':return response(await observeEnterpriseControl(ctx,temporal.parse(body)));
+  case 'decide':return response(await chooseEnterpriseControlBranch(ctx,branch.parse(body)));
+  case 'decide-mechanism':return response(await chooseEnterpriseControlBranch(ctx,{schema:'finnor.s4.r3-choice-request.v1',policyRef:R3OwnerOperationSchemas.policies['decide-mechanism'].parse(body).policyRef}));
++ case 'composition-plan':return response(await prepareEnterpriseInstitutionCompositionPlan(ctx,z.object({policyRef:ExperimentRefSchema,allocationRef:ExperimentRefSchema}).strict().parse(body)));
+  case 'handoff':return response(await prepareEnterpriseContingentHandoff(ctx,handoff.parse(body)));
+  default:return response({error:'S4 operation was not found',code:'NOT_FOUND'},404);
+  }}catch(e){if(e instanceof CapitalProgramV2Error)return response({error:e.message,code:e.code},e.code==='UNAVAILABLE'?404:['STALE_INPUT','CONFLICT'].includes(e.code)?409:422);if(e instanceof ExactControlError)return response({status:e.disposition,error:e.predicate,code:'EXACT_MODEL_UNSUPPORTED'},400);if(e instanceof z.ZodError)return response({error:'Invalid S4 request',code:'INVALID_REQUEST'},400);if(e instanceof AllocationContractError)return response({error:e.message,code:e.code},e.code==='LIMIT_EXCEEDED'?413:e.code==='PERMITTED_CONTEXT_UNAVAILABLE'?404:['IDEMPOTENCY_CONFLICT','STALE_INPUT'].includes(e.code)?409:e.code==='BLOCKED_AUTHORITY'?422:400);if(e instanceof ControlContractError||e instanceof InterventionContractError||e instanceof ExperimentContractError)return response({error:e.message,code:e.code},e.code==='LIMIT_EXCEEDED'?413:e.code==='PERMITTED_CONTEXT_UNAVAILABLE'?404:400);if(e instanceof PeDomainError)return response({error:e.message,code:e.code},/NOT_FOUND/.test(e.code)?404:/INVALID/.test(e.code)?400:422);if(e instanceof Error&&/^R1_[A-Z0-9_]{1,155}$/.test(e.message))return response({error:e.message,code:e.message,status:/UNAVAILABLE|UNSUPPORTED|ADMISSION|EXHAUSTED/.test(e.message)?'UNSUPPORTED':'STALE_INPUT'},/UNAVAILABLE|UNSUPPORTED|ADMISSION|EXHAUSTED/.test(e.message)?422:409);return errorResponse(e);}}
+diff --git a/finnor-os/apps/api/next.config.mjs b/finnor-os/apps/api/next.config.mjs
+--- a/finnor-os/apps/api/next.config.mjs
++++ b/finnor-os/apps/api/next.config.mjs
+@@ -93,6 +93,8 @@
+       "../../packages/**/package.json", "../../packages/source-custody/index.cjs",
+       "../../packages/**/fixtures/*.json", "../../scripts/p3/**/*.{ts,mts,cjs,mjs}",
+       "../../scripts/r4/requirements.lock",
++      "../../scripts/project-z/z5/**/*.{mjs,ts,py}",
++      "../../../scope-z/phase-evidence/z5/reconstruction/source-manifest.json",
+       "../../scripts/release/action-hardening-spec.ts",
+       "../../../scripts/release/production-mutation-guard.mjs",
+       "../../apps/worker/src/**/*.ts", "./app/api/**/*.ts",
+diff --git a/finnor-os/apps/worker/src/index.ts b/finnor-os/apps/worker/src/index.ts
+--- a/finnor-os/apps/worker/src/index.ts
++++ b/finnor-os/apps/worker/src/index.ts
+@@ -68,8 +68,10 @@
+ import { startComputeTelemetry } from "./telemetry";
+ import { installWorkerDrainSignals } from "./drain-signals";
+ 
++import {linkInstitutionComponentsJob} from '../../../packages/private-equity/src/project-z/z5-institution-linker/worker';
+ export function createWorker(): JobQueue {
+   const queue = new JobQueue();
++  queue.register('link_institution_components_v1',linkInstitutionComponentsJob,PRODUCTION_JOB_CONTRACTS.link_institution_components_v1);
+   queue.register('learn_strategic_response_model_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.learn_strategic_response_model_v1);
+   queue.register('evaluate_strategic_response_v1',strategicResponseJob,PRODUCTION_JOB_CONTRACTS.evaluate_strategic_response_v1);
+   queue.register('construct_interaction_protocol_v1',constructInteractionProtocolJob,PRODUCTION_JOB_CONTRACTS.construct_interaction_protocol_v1);
+diff --git a/finnor-os/packages/capability-evolution/src/lifecycle.ts b/finnor-os/packages/capability-evolution/src/lifecycle.ts
+--- a/finnor-os/packages/capability-evolution/src/lifecycle.ts
++++ b/finnor-os/packages/capability-evolution/src/lifecycle.ts
+@@ -610,6 +610,14 @@
+                         fault('S8_USE_IDENTITY_SUBSTITUTION');
+                     await this.currentUse(use);
+                 }
++                if(input.operation==='Z5_COMPOSITION_ADMIT'){
++                    this.role(a,'CONSUMER');this.scope(input.body);
++                    if(this.policy.domain!=='DISPOSABLE_TEST_AUTHORITY')fault('S8_Z5_ORDINARY_DOMAIN_ONLY',403);
++                    await CapabilityEvolution.sources(this.policy.sourcePins);
++                    const owner=await import('../../private-equity/src/project-z/z5-institution-linker/native-s8-owner');
++                    await owner.currentInstitutionFromOriginalS8({...this.policy,lifecyclePolicyDigest:digest(this.policy)},
++                        {...input.body,physical:undefined,nativeReference:prior.result.nativeReference});
++                }
+                 await this.checkpoint(prior);
+                 return prior.result;
+             }
+@@ -617,6 +625,18 @@
+             if (this.handedOff && input.operation !== 'READ') fault('S8_RUNTIME_RESPONSIBILITY_TRANSFERRED', 403);
+             if (this.policy.responsibilityHandoff) await this.resolveResponsibilityHandoff();
+             const b = input.body;
++            if(input.operation==='Z5_COMPOSITION_ADMIT'||input.operation==='Z5_COMPOSITION_CURRENT'){
++                this.role(a,'CONSUMER');this.scope(b);
++                if(this.policy.domain!=='DISPOSABLE_TEST_AUTHORITY')fault('S8_Z5_ORDINARY_DOMAIN_ONLY',403);
++                const owner=await import('../../private-equity/src/project-z/z5-institution-linker/native-s8-owner'),
++                    authority={...this.policy,lifecyclePolicyDigest:digest(this.policy)};
++                if(input.operation==='Z5_COMPOSITION_CURRENT')return owner.currentInstitutionFromOriginalS8(authority,b);
++                const assertion=await owner.evaluateInstitutionFromOriginalS8(authority,b),
++                    committed=await this.commitReference('z5-institution-composition-check',assertion),
++                    answer={assertion,nativeReference:committed.ref};
++                await this.persist({requestId:input.requestId,requestDigest,actorId:a.id,operation:input.operation,body:b,result:answer});
++                return answer;
++            }
+             let result: any, journalOperation = input.operation;
+             if(input.operation.startsWith('CONFIDENTIAL_')){
+                 const port=await this.confidentialPort();
+diff --git a/finnor-os/packages/db/compute-contract.ts b/finnor-os/packages/db/compute-contract.ts
+--- a/finnor-os/packages/db/compute-contract.ts
++++ b/finnor-os/packages/db/compute-contract.ts
+@@ -80,6 +80,7 @@
+ 
+ /** Exhaustive registry for every production handler registered by the worker. */
+ export const PRODUCTION_JOB_CONTRACTS = {
++  link_institution_components_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Z5 exact fixed coupled product, independent original-semantics check and S4/S8 declared-contract planning under the original Work and S5 allowance; all old S6 liabilities retained, no effects or protected admission.", {leaseRecovery:"immediate_after_expiry"}),
+   learn_strategic_response_model_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Y2 finite actor-local response learning and independent complete model-set checking; original Work, no effects or protected authority.", {leaseRecovery:"immediate_after_expiry"}),
+   evaluate_strategic_response_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Y2 coupled S3 prediction and actual S4 search with independent programme checking; original episode and cumulative use limits, no effects.", {leaseRecovery:"immediate_after_expiry"}),
+   construct_interaction_protocol_v1: tenantFixed("INTERACTIVE", "locally_idempotent", "Y3 bounded dynamic interaction construction, separately checked full contingent deviations and global beliefs; original episode, no protected or effect authority.", {leaseRecovery:"immediate_after_expiry"}),
+diff --git a/finnor-os/packages/private-equity/src/enterprise-control.ts b/finnor-os/packages/private-equity/src/enterprise-control.ts
+--- a/finnor-os/packages/private-equity/src/enterprise-control.ts
++++ b/finnor-os/packages/private-equity/src/enterprise-control.ts
+@@ -342,13 +342,16 @@
+   const duration=Object.values(action.exposures)[0]!.length;intervention={schema:'finnor.intervention-specification.v1',vocabularyVersion:'s3-intervention-v1',targets:model.request.roots,context:policy.problem.context,timing:{startAt:new Date(Date.parse(policy.mandate.horizon.startAt)+node!.period*policy.mandate.horizon.periodMs).toISOString(),periodMs:policy.mandate.horizon.periodMs,durationMs:duration*policy.mandate.horizon.periodMs},channels:model.request.exposures.map(e=>({exposureId:e.id,operation:e.operation,unit:e.unit,target:e.root,doses:action.exposures[e.id]!,intendedExposure:'REGISTERED_DOSE',permittedRefinements:[]}))};interventionSpecificationRef(intervention);
+  }
+  const result:ContingentChoiceHandoff={schema:'finnor.s4.choice-handoff.v1',status:decision.status==='POLICY_AVAILABLE'?allocation.status:decision.status,policyRef:policy.ref,decision,allocationRef,demandDigest:policy.demand.contentDigest,consumptionRef:null,intervention,interventionRef:intervention?interventionSpecificationRef(intervention):null,inquiryRef:action?.protocolRef??null,requiredContracts:[{owner:'BUSINESS_OWNER',requirement:'Protected authorized immutable mandate/utility/rights revision'},...(policy.exactProfile?[{owner:'S3' as const,requirement:'Independent exact model adequacy and a qualified causal intervention specification; the supplied transition table alone does not issue it'}]:[]),{owner:'S5',requirement:'Owner-resolved current mutually consistent policy/demand/mandate allocation, shared commitments and reservations'},{owner:'S6',requirement:'Protected IR, source/rights/allocation/method/fence rechecks, append receipt, concrete provider binding, execution/exposure/reconciliation/settlement'},{owner:'S7',requirement:'Independent prospective assignment/exposure/outcome/cost accounting and attribution'},{owner:'S8',requirement:'Independent admission of exact policy method and validity domain'}],executionAuthorityGranted:false,effectRef:null,settlementRef:null,attributionGranted:false,protectedReceipt:null};
++ const compositionContract=await (await import('./project-z/z5-institution-linker/consumer')).currentCompositionForHandoff(ctx,policy.ref,allocationRef??undefined);
+  const plannedConsumptionKey=allocationRef&&resolvedAllocation&&decision.status==='POLICY_AVAILABLE'?`s4-handoff:${decision.contextDigest}`:null;
+  const preparation={schema:'finnor.s4.handoff-preparation.v1' as const,handoff:result,plannedConsumptionKey,qualification:'PREPARED_NOT_CONSUMED_NOT_PROTECTED' as const,
++  ...(compositionContract?{compositionContract}:{}),
+   ...(input.confidentialGuard!==undefined?{confidentialGuard:input.confidentialGuard}:{})},digest=epistemicHash(preparation);
+  const preparationRef:ExperimentRef={owner:'S4',id:`contingent-handoff-preparation:${digest}`,version:'s4-handoff-preparation-v1',contentDigest:digest},prepared=immutableControl({...result,preparationRef});
+  // All model construction and fallible S4 persistence precede durable S5 intent.
+  // The S5 consumption transaction supplies the canonical consequence event.
+  await saveArtifact(ctx,'handoff-preparations',digest,preparation);
++ if(compositionContract)await (await import('./project-z/z5-institution-linker/consumer')).recordCompositionHandoffConsumed(ctx,compositionContract,preparationRef);
+  await saveEvents(ctx,[prepareS4Experience(policy.mandate,'HANDOFF',policy.ref.id,{handoff:prepared,plannedConsumptionKey,qualification:preparation.qualification,allocationOwnerResolved:resolvedAllocation!==null},[decision.ref.id],(input.decision as ControlDecisionInput).knowledgeAt)]);
+  if(allocationRef&&plannedConsumptionKey){
+   const consumed=await (await import('./enterprise-allocation')).consumeEnterpriseAllocation(ctx,{...input,allocationRef,policyRef:policy.ref,idempotencyKey:plannedConsumptionKey});
+@@ -358,13 +361,51 @@
+ }
+ 
+ /** S6 resolves the actual immutable producer artifact. Caller bodies are never handoffs. */
+-export async function readEnterpriseContingentHandoffPreparation(ctx:PeMutationContext,value:unknown):Promise<{schema:'finnor.s4.handoff-preparation.v1';handoff:ContingentChoiceHandoff;plannedConsumptionKey:string|null;qualification:'PREPARED_NOT_CONSUMED_NOT_PROTECTED';confidentialGuard?:unknown}>{
++export async function readEnterpriseContingentHandoffPreparation(ctx:PeMutationContext,value:unknown):Promise<{schema:'finnor.s4.handoff-preparation.v1';handoff:ContingentChoiceHandoff;plannedConsumptionKey:string|null;qualification:'PREPARED_NOT_CONSUMED_NOT_PROTECTED';confidentialGuard?:unknown;compositionContract?:unknown}>{
+  const ref=ExperimentRefSchema.parse(value);if(ref.owner!=='S4'||ref.version!=='s4-handoff-preparation-v1'||ref.id!==`contingent-handoff-preparation:${ref.contentDigest}`)throw unavailable();
+  const preparation=await readArtifact(ctx,'handoff-preparations',ref.contentDigest);
+  if(preparation.schema!=='finnor.s4.handoff-preparation.v1'||epistemicHash(preparation)!==ref.contentDigest||preparation.qualification!=='PREPARED_NOT_CONSUMED_NOT_PROTECTED'||preparation.handoff.executionAuthorityGranted!==false||preparation.handoff.protectedReceipt!==null||preparation.handoff.consumptionRef!==null)throw unavailable();
+  await readEnterpriseContingentPolicy(ctx,preparation.handoff.policyRef);
+  await (await import('./confidential-computation/owner-consumer')).assertConfidentialGuard(ctx,preparation.confidentialGuard);
++ if(preparation.compositionContract)await (await import('./project-z/z5-institution-linker/consumer')).assertCompositionHandoffCurrent(ctx,preparation.compositionContract,preparation.handoff.policyRef,preparation.handoff.allocationRef);
+  return immutableControl(preparation);
++}
++
++type InstitutionCompositionPlanBody={
++ schema:'finnor.s4.institution-composition-plan.v1';tenantId:string;principalId:string;workId:string;rightsRef:string;
++ policyRef:ExperimentRef;allocationRef:ExperimentRef;compositionContract:NonNullable<Awaited<ReturnType<typeof import('./project-z/z5-institution-linker/consumer').currentCompositionForHandoff>>>;
++ planningCostRef:ExperimentRef;qualification:'EXACT_DECLARED_CONTRACT_PLANNING_ONLY_OLD_UNKNOWN_RETAINED';
++ executionAuthorityGranted:false;protectedAdmission:false;
++};
++/** Actual S4 integration/replacement planning, including while an old S6
++ * liability is UNKNOWN. This is deliberately NOT chooseBranch or a dispatch. */
++export async function prepareEnterpriseInstitutionCompositionPlan(ctx:PeMutationContext,input:{policyRef:unknown;allocationRef:unknown}){
++ const policy=await readEnterpriseContingentPolicy(ctx,input.policyRef),allocationRef=ExperimentRefSchema.parse(input.allocationRef),
++  consumer=await import('./project-z/z5-institution-linker/consumer'),
++  compositionContract=await consumer.currentCompositionForHandoff(ctx,policy.ref,allocationRef);
++ if(!compositionContract)throw unavailable();
++ const planningCostRef=await consumer.beginCompositionPlanning(ctx,compositionContract);
++ const body:InstitutionCompositionPlanBody={schema:'finnor.s4.institution-composition-plan.v1',tenantId:ctx.auth.tenantId,
++  principalId:actor(ctx),workId:compositionContract.workId,rightsRef:policy.mandate.rightsRef,policyRef:policy.ref,allocationRef,
++  compositionContract,planningCostRef,qualification:'EXACT_DECLARED_CONTRACT_PLANNING_ONLY_OLD_UNKNOWN_RETAINED',
++  executionAuthorityGranted:false,protectedAdmission:false},digest=epistemicHash(body),
++  ref:ExperimentRef={owner:'S4',id:'contingent-institution-plan:'+digest,version:'z5-s4-composition-plan-v1',contentDigest:digest},
++  plan=immutableControl({...body,ref});
++ await saveArtifact(ctx,'institution-composition-plans',digest,plan);
++ await consumer.recordCompositionPlanConsumed(ctx,compositionContract,ref);
++ return plan;
++}
++/** Immutable producer-byte reader used by S4's real consumption recording.
++ * It does not call the composition checker, avoiding recursive owner inspection. */
++export async function readEnterpriseInstitutionCompositionPlanByRef(ctx:PeMutationContext,value:unknown):Promise<InstitutionCompositionPlanBody&{ref:ExperimentRef}>{
++ const ref=ExperimentRefSchema.parse(value);
++ if(ref.owner!=='S4'||ref.version!=='z5-s4-composition-plan-v1'||ref.id!=='contingent-institution-plan:'+ref.contentDigest)throw unavailable();
++ const plan=await readArtifact(ctx,'institution-composition-plans',ref.contentDigest),{ref:stored,...body}=plan;
++ if(body.schema!=='finnor.s4.institution-composition-plan.v1'||body.tenantId!==ctx.auth.tenantId||body.principalId!==actor(ctx)
++  ||epistemicHash(body)!==ref.contentDigest||epistemicHash(stored)!==epistemicHash(ref)
++  ||body.executionAuthorityGranted!==false||body.protectedAdmission!==false)throw unavailable();
++ await readEnterpriseContingentPolicy(ctx,body.policyRef);
++ return immutableControl(plan);
+ }
+ 
+ /** Exact current owner contexts. Nothing is cached across authenticated reads. */
+diff --git a/finnor-os/scripts/generate-openapi.ts b/finnor-os/scripts/generate-openapi.ts
+--- a/finnor-os/scripts/generate-openapi.ts
++++ b/finnor-os/scripts/generate-openapi.ts
+@@ -3,6 +3,7 @@
+ // regain an executable public schema here.
+ import { writeFileSync } from "node:fs";
+ import { z } from "zod";
++import {ExperimentRefSchema} from "@finnor/epistemic-runtime";
+ import { zodToJsonSchema,ignoreOverride } from "zod-to-json-schema";
+ import {
+   SubmitInstructionSchema,
+@@ -72,6 +73,7 @@
+ import {StrategicOperationSchemas,StrategicOperations} from "../packages/private-equity/src/strategic-response/api";
+ import {CONFIDENTIAL_OPERATION_SCHEMAS,CONFIDENTIAL_OPERATIONS} from "../packages/private-equity/src/confidential-computation/api";
+ import {InteractionOperationSchemas,InteractionOperations} from "../packages/private-equity/src/interaction-synthesis/api";
++import {Z5_OPERATIONS,Z5_SCHEMAS} from "../packages/private-equity/src/project-z/z5-institution-linker/contracts";
+ import { ApplicationExpressionSchema } from "../packages/private-equity/src/enterprise-applications/contracts";
+ import { M1_OPERATIONS, M1OperationSchemas } from "../packages/private-equity/src/decision-slice/handler";
+ import { CapitalProgramV2Operations } from "@finnor/shared-types";
+@@ -318,6 +320,7 @@
+  ...Object.entries(StrategicOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
+  ...Object.entries(CONFIDENTIAL_OPERATION_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
+  ...Object.entries(InteractionOperationSchemas).map(([name,schema])=>[name,applicationSchema(schema)]),
++ ...Object.entries(Z5_SCHEMAS).map(([name,schema])=>[name,applicationSchema(schema)]),
+  ["X3Expression",applicationSchema((ApplicationExpressionSchema._def as z.ZodLazyDef).getter())],
+ ])};
+ const secured = [{ bearerAuth: [] }];
+@@ -977,6 +980,21 @@
+   } } });
+ }
+ 
++(paths["/api/company-brain/{operation}"].post.parameters[0]!.schema.enum as string[]).push(...Z5_OPERATIONS);
++for(const operation of Z5_OPERATIONS)Object.assign(paths,{["/api/company-brain/"+operation]:{post:{
++ security:secured,requestBody:{required:true,content:{"application/json":{schema:{$ref:"#/components/schemas/"+operation}}}},
++ responses:{"200":{description:"Exact current original Work, declared fixed-kernel contract, original S8 admission or retained failure. Not protected, production, financial efficacy or effect authority."},
++ "202":{description:"Same original Work accepted into the actual bounded native queue, not completion."},
++ "400":{description:"Strict bounded original-owner request rejected."},"401":{description:"Genuine owner bearer required before body IO."},
++ "403":{description:"Original rights, exact existing owner contract or ordinary disposable profile absent."},
++ "408":{description:"Bounded authenticated body deadline."},"409":{description:"Original live cut, source, rights, reservation, cumulative resources, admission or idempotency changed."},
++ "413":{description:"Input, retained bytes, episode or process bound."},"503":{description:"Pinned native checker, capacity or original S8 custody unavailable."}}
++}}});
++Object.assign(paths,{"/api/policies/composition-plan":{post:{security:secured,
++ requestBody:json(z.object({policyRef:ExperimentRefSchema,allocationRef:ExperimentRefSchema}).strict()),
++ responses:{"200":{description:"Original S4 immutable integration/replacement plan consumed the current conditional contract, retaining original S6 UNKNOWN and S5 liabilities. Not a new control choice or dispatch."},
++ "403":{description:"Genuine original owner required."},"409":{description:"Current S4/S5/S6/S8 source or original remaining planning allowance unavailable."}}}}});
++
+ const document = {
+   openapi: "3.1.0",
+   info: { title: "FINNOR Private Equity API", version: "6.0.0", description: "Private Equity is the only active product vertical. P1 owns temporal InvestmentCase, Assumption, and canonical investment Decision truth; P2 owns Microsoft Source Truth; P3 owns immutable artifacts; P4 owns deterministic underwriting math; P5 owns governed Investment Committee truth; P6 adds deterministic selected PlanGraphs and authenticated employee-specific causal attention without duplicating Core Work, Authority, DomainAction, BusinessEffect, DecisionReceipt, ObjectiveLoop, or prior truth owners. Historical Water payloads remain receipt-only quarantine inputs." },
+diff --git a/scripts/centropy/generate-capability-manifest.mjs b/scripts/centropy/generate-capability-manifest.mjs
+--- a/scripts/centropy/generate-capability-manifest.mjs
++++ b/scripts/centropy/generate-capability-manifest.mjs
+@@ -49,6 +49,7 @@
+   ["StrategicOperations", "strategic-response/contracts.ts"],
+   ["CONFIDENTIAL_OPERATIONS", "confidential-computation/api.ts"],
+   ["InteractionOperations", "interaction-synthesis/api.ts"],
++  ["Z5_OPERATIONS", "project-z/z5-institution-linker/contracts.ts"],
+   ["M1_OPERATIONS", "decision-slice/handler.ts"],
+   ["CONTINUATION_OPERATIONS", "live-recompilation/api.ts"],
+   ["PROCEDURE_OPERATIONS", "procedure-induction/api.ts"],
+@@ -108,6 +109,7 @@
+   "application-read", "application-record", "application-list", "application-history", "application-asset", "application-impact", "application-admission",
+   "learning-read", "learning-list", "learning-experience", "learning-admission",
+   "confidential-read", "confidential-list",
++  "institution-link-read", "institution-link-projection",
+   "identification-targets", "identification-read", "identification-list", "identification-history", "identification-experiment", "identification-admission",
+   "decision-slice-read", "decision-slice-context", "decision-slice-witness", "decision-slice-changes", "decision-slice-view",
+   "continuation-read", "continuation-projection",
+diff --git a/src/components/centropy/world/InstitutionCompositionPanel.tsx b/src/components/centropy/world/InstitutionCompositionPanel.tsx
+--- /dev/null
++++ b/src/components/centropy/world/InstitutionCompositionPanel.tsx
+@@ -0,0 +1,132 @@
++"use client"
++
++import { useEffect, useState } from "react"
++import { centropyPost, CentropyApiError } from "@/components/centropy/lib/api"
++import { usePrivateRequestScope } from "../lib/use-private-request-scope"
++import type { PeWorldRootRef } from "../pe/contracts"
++
++type Ref = { owner: string; id: string; version: string; contentDigest: string }
++type Link = {
++  requestId: string; workId: string; root: PeWorldRootRef; status: string; current: boolean; mayUse: boolean
++  artifactDigest: string | null; profileRef: Ref; admission: { ref: Ref; nativeS8Reference: Ref } | null
++  sourceDigest: string; liveDigest: string; originalDeadline: string; originalReservation: Ref; obligations: Ref[]
++  gates: Record<string, string>; attempts: { id: string; claim_fence: number; charge_ref: Ref | null }[]
++  events: { kind: string }[]; eventsComplete: boolean
++  artifact: null | {
++    ref: Ref
++    envelopeProjection: { sourceCommit: string; sourceTree: string; gaps: string[]; supportedDomain: string
++      producerBuildIdentity: { installedBuildId: string | null }; costAndResourceReceiptReferences: Ref[] }
++    certificate: {
++      disposition: string; reasons: string[]; correspondence: string; discharge: { initial: number; componentTransitions: number; environmentTransitions: number; noncircular: boolean }
++      original: { states: number; transitions: number; initial: number }
++      context: null | { conditionality: string; maximality: string; stateCount: number; edgeCount: number }
++      replacement: null | { status: string; component: string | null; revision: string | null; reasons: string[]; preorder: string; bridge: unknown }
++      originalCounterexample: null | { kind: string; initial: string; steps: { label: string; from: string; to: string }[]; final: string }
++      costs: { operations: number; wallMs: number; peakRssBytes: number; money: null; human: null; gaps: string[] }
++    }
++  }
++}
++type Projection = { workId: string; root: PeWorldRootRef; requests: Link[]; complete: boolean }
++const parse = (text: string): Record<string, unknown> => {
++  if (text.length > 65536) throw Error("Reference input exceeds 64 KiB")
++  const body: unknown = JSON.parse(text)
++  if (!body || typeof body !== "object" || Array.isArray(body)) throw Error("Supply a JSON object containing existing native references")
++  return body as Record<string, unknown>
++}
++export function InstitutionCompositionPanel({ workId, root }: { workId: string; root: PeWorldRootRef }) {
++  const scope = usePrivateRequestScope(JSON.stringify(["institution-composition", workId, root.entityType, root.entityId]))
++  const [stored, setStored] = useState<{ scope: string; value: Projection } | null>(null)
++  const [busy, setBusy] = useState(false), [error, setError] = useState<string | null>(null)
++  const [revision, setRevision] = useState(0), [requestText, setRequestText] = useState(""), [profileText, setProfileText] = useState("")
++  const value = scope.allowed && stored?.scope === scope.key ? stored.value : null
++  useEffect(() => {
++    let active = true
++    const key = scope.key
++    setStored(null); setError(null); setBusy(false)
++    if (!scope.allowed) return
++    void centropyPost<Projection>("company-brain/institution-link-projection", { workId, root }).then(result => {
++      if (result.workId !== workId || result.root.entityType !== root.entityType || result.root.entityId !== root.entityId)
++        throw Error("The institution composition did not match this original Work and root")
++      if (active && scope.isCurrent(key)) setStored({ scope: key, value: result })
++    }).catch(cause => {
++      if (active && scope.isCurrent(key)) setError(cause instanceof CentropyApiError
++        && (cause.details as { code?: string } | undefined)?.code === "Z5_ORDINARY_DEVELOPMENT_PROFILE_REQUIRED"
++        ? "Ordinary-development composition is not enabled. No installed or protected qualification is claimed."
++        : "The current permitted institution composition is unavailable. No stored result may be used.")
++    })
++    return () => { active = false }
++  }, [workId, root, revision, scope.allowed, scope.key, scope.isCurrent])
++  useEffect(() => { setRequestText(""); setProfileText("") }, [scope.key])
++  async function act(operation: string, input: Record<string, unknown>) {
++    const key = scope.key
++    if (!scope.allowed || !scope.isCurrent(key) || busy) return
++    setBusy(true); setError(null); setStored(null)
++    try {
++      await centropyPost("company-brain/" + operation, { ...input, workId, root })
++      if (scope.isCurrent(key)) setRevision(n => n + 1)
++    } catch {
++      if (scope.isCurrent(key)) setError("The original owner refused or could not finish this action. Reload before retrying. Old obligations and committed costs remain.")
++    } finally { if (scope.isCurrent(key)) setBusy(false) }
++  }
++  async function submit() {
++    try {
++      const body = parse(requestText)
++      if (!body.idempotencyKey) body.idempotencyKey = crypto.randomUUID()
++      setRequestText(JSON.stringify(body, null, 2))
++      await act("institution-link-submit", body)
++    } catch { setError("Supply strict existing owner references, original reservation, responsibility and deadline. No new Work or allowance is created.") }
++  }
++  return <section role="region" aria-label="Institution composition" data-work-id={workId} className="ct-world-work__section">
++    <h4>Institution composition</h4>
++    <p>Fixed, separately admitted finite components only. A checked compatible context is conditional, not maximally permissive, inevitable, protected or a financial action.</p>
++    <p>Old S6 obligations, UNKNOWN, original S5 reservation and remaining deadline survive replacement, cancellation and recovery.</p>
++    <button type="button" disabled={!scope.allowed || busy} onClick={() => setRevision(n => n + 1)}>Reload composition</button>
++    {busy ? <p role="status">Waiting for the original owner. A timeout does not undo a debit.</p> : null}
++    {error ? <p role="alert">{error}</p> : null}
++    {value?.requests.length === 0 ? <p>No composition request is recorded for this exact Work.</p> : null}
++    {value?.complete === false ? <p>This bounded projection is incomplete. Missing rows are not success.</p> : null}
++    {value?.requests.map(row => <article key={row.requestId} data-request-id={row.requestId}>
++      <h5>{row.status}, {row.current ? "current original owner cut" : "stale or unavailable, do not reuse"}</h5>
++      <dl><dt>Original request</dt><dd>{row.requestId}</dd><dt>Artifact digest</dt><dd>{row.artifactDigest ?? "Not produced"}</dd>
++        <dt>Source digest</dt><dd>{row.sourceDigest}</dd><dt>Live state digest</dt><dd>{row.liveDigest}</dd>
++        <dt>Original deadline</dt><dd><time dateTime={row.originalDeadline}>{row.originalDeadline}</time></dd>
++        <dt>Original reservation</dt><dd>{row.originalReservation.id}</dd><dt>Carried obligations</dt><dd>{row.obligations.length}, no release inferred</dd></dl>
++      {row.artifact ? <>
++        <p>{row.artifact.certificate.disposition}. {row.artifact.certificate.reasons.join(", ")}</p>
++        <p>Original product: {row.artifact.certificate.original.states} states, {row.artifact.certificate.original.transitions} transitions.
++          Discharge: {row.artifact.certificate.discharge.initial} initial tuples, {row.artifact.certificate.discharge.componentTransitions} component transitions.
++          Noncircular: {String(row.artifact.certificate.discharge.noncircular)}.</p>
++        <p>{row.artifact.certificate.context?.conditionality ?? "No compatible context"}
++          {row.artifact.certificate.context ? ` Context: ${row.artifact.certificate.context.stateCount} states, ${row.artifact.certificate.context.edgeCount} edges. ${row.artifact.certificate.context.maximality}.` : ""}</p>
++        <p>Replacement: {row.artifact.certificate.replacement?.status ?? "Not certified"}.
++          {row.artifact.certificate.replacement?.reasons.join(", ")} Old component is retained or stopped if no actual-live bridge exists.</p>
++        {row.artifact.certificate.originalCounterexample ? <details><summary>Original coupled counterexample</summary>
++          <p>{row.artifact.certificate.originalCounterexample.kind}</p>
++          <ol>{row.artifact.certificate.originalCounterexample.steps.map((step, i) => <li key={i}>{step.label}: {step.from} to {step.to}</li>)}</ol>
++        </details> : null}
++        <p>Commit {row.artifact.envelopeProjection.sourceCommit}; tree {row.artifact.envelopeProjection.sourceTree};
++          installed build {row.artifact.envelopeProjection.producerBuildIdentity.installedBuildId ?? "not established"}.</p>
++        <p>Observed producer cost: {row.artifact.certificate.costs.operations} operations, {Math.round(row.artifact.certificate.costs.wallMs)} ms.
++          Money, human, extraction, integration and installed costs remain unmetered. Failed and interrupted work is not free.</p>
++        <p>{row.artifact.envelopeProjection.gaps.join("; ")} Full proof remains immutable; this is a bounded display.</p>
++      </> : null}
++      <p>S8: {row.admission ? `Original ordinary S8 reference ${row.admission.nativeS8Reference.id}` : "No current native S8 admission"}. No protected admission or production activation.</p>
++      <p>Physical attempts: {row.attempts.length}; original S4 planning consumptions:
++        {row.events.filter(e => e.kind === "S4_ORIGINAL_COMPOSITION_PLAN_CONSUMED" || e.kind === "S4_ORIGINAL_HANDOFF_CONTRACT_CONSUMED").length}.
++        A stored selection alone is not original S4 consumption.</p>
++      {!row.eventsComplete ? <p>The displayed event history is incomplete.</p> : null}
++      <ul>{Object.entries(row.gates).map(([gate, state]) => <li key={gate}>{gate}: {state}</li>)}</ul>
++      <button type="button" disabled={busy || !row.mayUse || Boolean(row.admission)} onClick={() => void act("institution-link-admit", { requestId: row.requestId })}>Request original S8 check</button>
++      <button type="button" disabled={busy || !row.mayUse || !row.admission} onClick={() => void act("institution-link-use", { requestId: row.requestId, artifactDigest: row.artifactDigest, idempotencyKey: "mounted-plan:" + row.requestId })}>Select declared contract for S4 planning</button>
++      <button type="button" disabled={busy || row.status === "CANCELLED"} onClick={() => void act("institution-link-cancel", { requestId: row.requestId })}>Cancel future linking, retain liabilities</button>
++      <button type="button" disabled={busy || row.status === "REVOKED"} onClick={() => void act("institution-contract-revoke", { profileRef: row.profileRef, reason: "OWNER_REQUESTED_REVOKE" })}>Revoke this fixed contract</button>
++    </article>)}
++    {scope.allowed ? <details><summary>Link existing native component contracts</summary>
++      <p>Use only references from the original Work. This form cannot create a mandate, assignment, reservation, component admission or signer. Every physical retry uses the original remaining allowance.</p>
++      <label>Existing S8 profile source reference (JSON)<textarea maxLength={65536} value={profileText} onChange={e => setProfileText(e.target.value)} /></label>
++      <button type="button" disabled={busy} onClick={() => { try { void act("institution-contract-register", { sourceRef: parse(profileText) }) } catch { setError("Supply an existing authenticated S8 profile reference.") } }}>Register existing S8 profile</button>
++      <label>Original owner link request (JSON)<textarea maxLength={65536} value={requestText} onChange={e => setRequestText(e.target.value)} /></label>
++      <button type="button" disabled={busy} onClick={() => void submit()}>Submit fixed-component link</button>
++    </details> : null}
++  </section>
++}
+diff --git a/src/components/centropy/world/WorldWorkRecord.tsx b/src/components/centropy/world/WorldWorkRecord.tsx
+--- a/src/components/centropy/world/WorldWorkRecord.tsx
++++ b/src/components/centropy/world/WorldWorkRecord.tsx
+@@ -16,6 +16,7 @@
+ import { canonicalRootFocus } from "./world-context"
+ import { ConfidentialComputationPanel } from "./ConfidentialComputationPanel"
+ import { usePrivateRequestScope } from "../lib/use-private-request-scope"
++import { InstitutionCompositionPanel } from "./InstitutionCompositionPanel"
+ 
+ const label = (value: string) => value.replaceAll("_", " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase()
+ const record = (value: unknown): Record<string, unknown> | null => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null
+@@ -72,6 +73,7 @@
+       {root ? <EconomicActionTheoryPanel key={`${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
+       {root ? <StrategicResponsePanel key={`response:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
+       {root ? <ConfidentialComputationPanel key={workId} root={root} workId={workId} /> : null}
++      {root ? <InstitutionCompositionPanel key={`composition:${scope.key}`} root={root} workId={workId} /> : null}
+       {root ? <InteractionProtocolPanel key={`interaction:${workId}:${root.entityType}:${root.entityId}`} root={root} workId={workId} /> : null}
+       {summary(aggregate.work.finalOutcome) ? <p className="ct-world-work__outcome"><ShieldCheck size={16} /> {summary(aggregate.work.finalOutcome)}</p> : null}
+       {aggregate.read?.complete === false ? <p className="ct-world-work__caveat">This bounded Work read is incomplete. The counts below cover only returned rows.</p> : null}

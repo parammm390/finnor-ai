@@ -116,7 +116,11 @@ async function populatedUpgrade(): Promise<void> {
     const forwardNames = files.filter((file) => file.name >= "0140_scope5_epistemic_impact.sql").map((file) => file.name);
     assert.equal(forwardNames[0], "0140_scope5_epistemic_impact.sql");
     assert.equal(forwardNames.at(-1), CURRENT_MIGRATION_HEAD);
-    assert.deepEqual(applied, forwardNames);
+    assert.deepEqual([...applied].sort(), forwardNames);
+    assert(applied.indexOf("0204_postz_w2_specialist_publication_authority.sql") >
+      applied.indexOf("postz_w2_zz_participant_legacy_authority.sql"));
+    assert(applied.indexOf("0205_postz_w5_organization_transformation_query_history.sql") >
+      applied.indexOf("0204_postz_w2_specialist_publication_authority.sql"));
     const verify = new pg.Client({ connectionString:url }); await verify.connect();
     try {
       await verify.query("SELECT set_config('app.tenant_id',$1,false),set_config('app.user_id',$2,false)",[tenantId,userId]);

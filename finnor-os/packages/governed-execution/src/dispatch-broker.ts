@@ -4,7 +4,7 @@ import {verify,randomUUID} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import {canonical,LedgerFault} from './protocol.js';
 import type {ExperienceLedger} from './ledger.js';
-import {brokerHash as hash,brokerPrivateFile,brokerSourceDigests,brokerOrigin,brokerToken,brokerRequest} from './broker-io.js';
+import {brokerHash as hash,brokerPrivateFile,brokerSourceDigests,brokerOrigin,brokerToken,brokerRequest,GOVERNED_DISPATCH_WORK_MS} from './broker-io.js';
 import {s6AdapterContract,S6_EXECUTOR_CONTRACT_VERSION} from './adapter-contract.js';
 type ObjectValue=Record<string,any>;
 const fail=(status:number,code:string):never=>{throw new LedgerFault(status,code);};
@@ -12,7 +12,13 @@ const object=(v:any):ObjectValue=>v&&typeof v==='object'&&!Array.isArray(v)?v:fa
 const exact=(v:ObjectValue,keys:string[])=>{if(Object.keys(v).length!==keys.length||keys.some(k=>!Object.hasOwn(v,k)))fail(400,'BROKER_FIELD_SET_INVALID');};
 const same=(a:unknown,b:unknown)=>hash(a)===hash(b);
 const signature=(v:ObjectValue,key:string)=>{const {signature,...body}=v;if(typeof signature!=='string'||signature.length>256||!verify(null,Buffer.from(canonical(body)),key,Buffer.from(signature,'base64')))fail(403,'BROKER_SIGNATURE_INVALID');return body;};
-const sourcePaths=['enterprise-obligations.ts','enterprise-allocation.ts','enterprise-control.ts','enterprise-beliefs.ts','allocation-store.ts','obligation-contracts.ts'].map(name=>fileURLToPath(new URL('../../private-equity/src/'+name,import.meta.url))).concat(fileURLToPath(new URL('../../../apps/api/app/api/obligations/[operation]/route.ts',import.meta.url)));
+const sourcePaths=['enterprise-obligations.ts','enterprise-allocation.ts','enterprise-control.ts','enterprise-beliefs.ts','allocation-store.ts','obligation-contracts.ts',
+ 'real-world-service/consumer.ts','real-world-service/store.ts','real-world-service/boundaries.ts',
+ 'real-world-service/contracts.ts','real-world-service/checker.ts','real-world-service/projection.ts',
+ 'real-world-service/participants.ts','real-world-service/identity.ts',
+ 'demand-to-business/consumer.ts','demand-to-business/store.ts','demand-to-business/boundaries.ts',
+ 'demand-to-business/contracts.ts','demand-to-business/checker.ts','demand-to-business/projection.ts',
+ 'demand-to-business/participants.ts','demand-to-business/identity.ts'].map(name=>fileURLToPath(new URL('../../private-equity/src/'+name,import.meta.url))).concat(fileURLToPath(new URL('../../../apps/api/app/api/obligations/[operation]/route.ts',import.meta.url)));
 
 export class GovernedDispatchBroker {
  private queue:Promise<unknown>=Promise.resolve();private queued=0;
@@ -81,8 +87,10 @@ export class GovernedDispatchBroker {
  }
  execute(caller:any,input:unknown,reconcile=false){
   if(caller.owner!=='S6'||caller.dispatch!==true||caller.tenantId!==this.owner.tenantId||caller.principalId!==this.owner.principalId||caller.rightsRefs.some((r:string)=>!this.owner.rightsRefs.includes(r)))return Promise.reject(new LedgerFault(403,'PROTECTED_DISPATCH_NOT_AUTHORIZED'));
+  const deadlineAt=Date.now()+GOVERNED_DISPATCH_WORK_MS;
   return this.serialized(async()=>{
-   const deadlineAt=Date.now()+30000;await this.currentPolicy();const value=object(input);exact(value,['request','authorization',...(Object.hasOwn(value,'delivery')?['delivery']:[])]);const delivery=value.delivery===undefined?undefined:object(value.delivery);
+   if(Date.now()>=deadlineAt)fail(503,'BROKER_OPERATION_DEADLINE_EXCEEDED');
+   await this.currentPolicy();const value=object(input);exact(value,['request','authorization',...(Object.hasOwn(value,'delivery')?['delivery']:[])]);const delivery=value.delivery===undefined?undefined:object(value.delivery);
    if(delivery){
     const recovery=delivery.kind==='RECOVERY';exact(delivery,['workflowStepId','claimFence','dispatchGeneration','runVersion',...(recovery?['kind','jobId','jobDeliveryAttemptId','jobClaimToken','jobClaimFence']:['claimToken'])]);
     const identities=recovery?[delivery.workflowStepId,delivery.jobId,delivery.jobDeliveryAttemptId,delivery.jobClaimToken]:[delivery.workflowStepId,delivery.claimToken];

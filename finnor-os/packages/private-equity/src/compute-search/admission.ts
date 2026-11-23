@@ -1,4 +1,6 @@
 import {chargeOriginalNativeGrant} from './native-grant';
+import {assertEconomicUnitBoundaryTx,economicAttemptBindingTx} from '../economic-orchestration/currentness';
+import {W1_NATIVE_LIMITS} from '../economic-orchestration/contracts';
 import {randomUUID} from 'node:crypto';
 import type {PoolClient} from 'pg';
 import {ComputeCapacityUnavailableError} from '@finnor/db';
@@ -26,10 +28,11 @@ export async function admit(ctx:PeMutationContext,s:SearchRow,u:UnitRow,x:Readon
   await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',['s5-portfolio:'+s.tenant_id]);
   const locked=await searchRow(ctx,s.id,c,true),q=await requestRow(ctx,s.program_id,c);
   if(locked.generation!==s.generation||locked.status!=='RUNNING')throw Error('P2_SEARCH_ADMISSION_FENCED');
+  if(locked.request.orchestration&&await assertEconomicUnitBoundaryTx(ctx,locked,q,u,'CLAIM',c,x.jobId)!=='CURRENT')return {w1Superseded:true as const};
   await assertProgramCurrent(ctx,q,c,true);await assertDependencies(ctx,s.context.dependencies,c,true);
   const job=(await c.query("SELECT id FROM finnor_os.jobs WHERE id=$1 AND tenant_id=$2 AND type='run_compute_search_unit_v1' AND status='running' AND claim_token=$3 AND claim_fence=$4 AND protocol_version=$5 FOR SHARE",[x.jobId,s.tenant_id,x.claimToken,x.claimFence,x.protocolVersion])).rows[0];if(!job)throw Error('P2_ACTUAL_JOB_CLAIM_REQUIRED');
   const current=(await c.query<UnitRow>('SELECT * FROM finnor_os.p2_units WHERE id=$1 AND tenant_id=$2 AND principal_id=$3 FOR UPDATE',[u.id,s.tenant_id,s.principal_id])).rows[0];
-  const perUnitBound=u.kind==='CONTROL_M2'&&locked.request.deliberation?Math.min(currentModule().body.config.maxRuns,q.proposed.bounds.maxAttempts):2;
+  const perUnitBound=u.kind==='CONTROL_W1'?1:u.kind==='CONTROL_M2'&&locked.request.deliberation?Math.min(currentModule().body.config.maxRuns,q.proposed.bounds.maxAttempts):2;
   if(!current||!['QUEUED','RUNNING'].includes(current.status)||current.generation!==s.generation||current.attempts>=perUnitBound)throw Error('P2_UNIT_PHYSICAL_ATTEMPT_BOUND');
   if(current.digest!==u.digest||sha(current.body)!==u.digest)throw Error('P2_EXACT_ADMISSION_UNIT_BODY_REQUIRED');
   if((await c.query('SELECT id FROM finnor_os.p2_attempts WHERE tenant_id=$1 AND principal_id=$2 AND delivery_id=$3',[s.tenant_id,s.principal_id,x.deliveryAttemptId])).rowCount)throw Error('P2_PHYSICAL_DELIVERY_ALREADY_ADMITTED');
@@ -52,7 +55,8 @@ export async function admit(ctx:PeMutationContext,s:SearchRow,u:UnitRow,x:Readon
   }
   await debitNativeComputeAttemptTx(c,{tenantId:s.tenant_id,principalId:s.principal_id,grantDigest:s.request.computeGrant.contentDigest,resourceId:s.binding.resourceId,capacity:s.binding.capacity});
   const parent=await c.query('UPDATE finnor_os.p1_episodes SET steps_used=steps_used+$4,attempts_used=attempts_used+1 WHERE id=$1 AND tenant_id=$2 AND principal_id=$3 AND steps_used+$4<=max_steps AND attempts_used+1<=max_attempts AND deadline_at>clock_timestamp() RETURNING attempts_used,steps_used',[q.episode_id,s.tenant_id,s.principal_id,steps]);if(!parent.rowCount)throw Error('P2_ORIGINAL_P1_EPISODE_EXHAUSTED');
-  const id=randomUUID(),body={unitId:u.id,unitBodyDigest:u.digest,unitInvocation:current.attempts+1,workKind:u.kind,jobId:x.jobId,deliveryAttemptId:x.deliveryAttemptId,claimFence:x.claimFence,protocolVersion:x.protocolVersion,requestedRoute:endpoint?.id??'P1_NATIVE',requestedModel:endpoint?.model??null,quotaDigest:endpoint?.digest??null,inputReservation:inputTokens,outputReservation:endpoint?.limits.maxOutputTokens??null,grantDigest:s.request.computeGrant.contentDigest,resourceId:s.binding.resourceId,chargedNativeAttempts:1,originalEpisode:q.episode_id,steps,recovery:current.attempts>0&&u.kind!=='CONTROL_M2',controlContinuation:u.kind==='CONTROL_M2'&&current.attempts>0,costUSD:null,createdAt:new Date().toISOString()};
+  const w1Assignment=locked.request.orchestration?await economicAttemptBindingTx(locked,u,c):{};
+  const id=randomUUID(),body={...w1Assignment,unitId:u.id,unitBodyDigest:u.digest,unitInvocation:current.attempts+1,workKind:u.kind,jobId:x.jobId,deliveryAttemptId:x.deliveryAttemptId,claimFence:x.claimFence,protocolVersion:x.protocolVersion,requestedRoute:endpoint?.id??'P1_NATIVE',requestedModel:endpoint?.model??null,quotaDigest:endpoint?.digest??null,inputReservation:inputTokens,outputReservation:endpoint?.limits.maxOutputTokens??null,grantDigest:s.request.computeGrant.contentDigest,resourceId:s.binding.resourceId,chargedNativeAttempts:1,originalEpisode:q.episode_id,steps,...(locked.request.orchestration?{w1ResourceScope:{parentStepUnit:'P1_NATIVE_LOGICAL_OPERATOR_UNITS_NOT_MACHINE_INSTRUCTIONS',controlStepReservation:W1_NATIVE_LIMITS.controllerSteps,kernelStepBoundPerKernelCall:W1_NATIVE_LIMITS.kernelSteps,wholePhysicalInvocationChargedNativeAttempts:1}}:{}),recovery:current.attempts>0&&u.kind!=='CONTROL_M2',controlContinuation:u.kind==='CONTROL_M2'&&current.attempts>0,costUSD:null,createdAt:new Date().toISOString()};
   await c.query("INSERT INTO finnor_os.p2_attempts(id,tenant_id,principal_id,search_id,unit_id,delivery_id,claim_fence,status,endpoint_key,body,digest) VALUES($1,$2,$3,$4,$5,$6,$7,'INTENT',$8,$9::jsonb,$10)",[id,s.tenant_id,s.principal_id,s.id,u.id,x.deliveryAttemptId,x.claimFence,endpoint?.key??null,stable(body),sha(body)]);
   await c.query("UPDATE finnor_os.p2_units SET status='RUNNING',attempts=attempts+1,claim_token=$2,claim_fence=$3,job_id=$4,updated_at=clock_timestamp() WHERE id=$1",[u.id,x.claimToken,x.claimFence,x.jobId]);
   await append(ctx,s,'PHYSICAL_ATTEMPT_ADMITTED',{attemptId:id,...body,quotaPolicyOnly:!!endpoint,allDimensionsAdmitted:true},c);

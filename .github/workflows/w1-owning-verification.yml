@@ -1,0 +1,69 @@
+name: "W1 - Economic orchestration and recovery"
+on:
+  push:
+    branches: [cloud/postz-w1, codex/zw-integration-quality-20261115]
+    paths:
+      - .github/workflows/w1-owning-*.yml
+      - finnor-os/**
+      - packages/**
+      - scripts/**
+      - package.json
+      - package-lock.json
+      - vendor/**
+permissions:
+  contents: read
+concurrency:
+  group: w1-owning-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-checks:
+    name: "W1 - Source and CI rules"
+    uses: ./.github/workflows/source-checks.yml
+  native-positive:
+    name: "W1 - Native orchestration journey"
+    uses: ./.github/workflows/w1-owning-episode.yml
+    with:
+      mode: native
+  owning-regressions:
+    name: "W1 - Recovery and refusal checks (${{ matrix.mode }})"
+    needs: native-positive
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [abc, internal-read-standing, internal-pressure, internal-revocation, internal-sequential, internal-drift]
+    uses: ./.github/workflows/w1-owning-episode.yml
+    with:
+      mode: ${{ matrix.mode }}
+  verdict:
+    name: "W1 result - economic orchestration and recovery"
+    needs: [source-checks, native-positive, owning-regressions]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Require every original scenario and control
+        env:
+          SOURCE: ${{ needs.source-checks.result }}
+          NATIVE: ${{ needs.native-positive.result }}
+          CONTROLS: ${{ needs.owning-regressions.result }}
+        run: |
+          node --input-type=module <<'NODE'
+          const results = { source: process.env.SOURCE, native: process.env.NATIVE, controls: process.env.CONTROLS }
+          console.log(JSON.stringify({ phase: "W1", checks: results }))
+          if (!Object.values(results).every(result => result === "success")) throw Error("W1_REQUIRED_CHECKS_FAILED")
+          NODE
+  completion-receipt:
+    name: "Report completed W1 checks"
+    needs: verdict
+    if: ${{ always() && github.ref_name == 'codex/zw-integration-quality-20261115' }}
+    permissions:
+      actions: read
+      contents: read
+      issues: read
+      pull-requests: write
+    uses: ./.github/workflows/ci-completion.yml
+    with:
+      pr_number: 187
+      head_sha: ${{ github.sha }}
+      gate: "W1 result - economic orchestration and recovery"
+      result: ${{ needs.verdict.result }}

@@ -64,16 +64,27 @@ export async function verifyClosingToolDispatch(ctx: PeMutationContext, effect: 
     domainActionId: request.runtime.domainActionId, businessEffectId: effect.id, businessEffectHash: effect.semanticHash,
   };
   if (closingCanonical(request.input) !== closingCanonical(expected)) throw new ClosingError("CLOSING_CONCRETE_NATIVE_REFS_CHANGED");
-  const link = await tx(ctx, async c => {
+  const readReadiness = () => tx(ctx, async c => {
     const l = (await c.query("SELECT * FROM finnor_os.pe_closing_node_links WHERE tenant_id=$1 AND programme_id=$2 AND node_key=$3", [q.tenant_id, q.id, step.key])).rows[0];
-    const check = (await c.query("SELECT c.body,c.valid_until,c.observation_basis_digest,finnor_os.pe_closing_execution_basis_digest($1,$2,$4) current_basis FROM finnor_os.pe_closing_checks c WHERE c.tenant_id=$1 AND c.id=$3 AND c.programme_id=$2 AND c.spec_digest=$5", [q.tenant_id, q.id, q.last_check_id, effect.id, q.spec_digest])).rows[0];
     if (!l || l.business_effect_id !== effect.id || l.domain_action_id !== request.runtime.domainActionId
-        || !l.consumption_ref || !check || new Date(check.valid_until).getTime() <= Date.now()
-        || check.observation_basis_digest !== check.current_basis || !check.body.readyOperationKeys.includes(step.key)) {
+        || !l.consumption_ref) {
       throw new ClosingError("CLOSING_CURRENT_INDEPENDENT_READINESS_AND_NATIVE_S5_BINDING_REQUIRED");
     }
-    return l;
+    const check = (await c.query("SELECT c.body,c.valid_until,c.observation_basis_digest,finnor_os.pe_closing_execution_basis_digest($1,$2,$3) current_basis FROM finnor_os.pe_closing_programmes p JOIN finnor_os.pe_closing_checks c ON c.tenant_id=p.tenant_id AND c.programme_id=p.id AND c.id=p.last_check_id AND c.spec_digest=p.spec_digest WHERE p.tenant_id=$1 AND p.id=$2 AND p.spec_digest=$4", [q.tenant_id, q.id, effect.id, q.spec_digest])).rows[0];
+    return { link: l, ready: Boolean(check && new Date(check.valid_until).getTime() > Date.now()
+      && check.observation_basis_digest === check.current_basis && check.body.readyOperationKeys.includes(step.key)) };
   }, true);
+  let readiness = await readReadiness();
+  if (!readiness.ready) {
+    // Preparation and approval can outlive the controller's receipt. Spend only
+    // an original finite read, with no lock held across the independent service.
+    // The fresh observation must still satisfy every final dispatch predicate.
+    await refreshIndependentClosingCheck(ctx, q);
+    await assertClosingCurrent(ctx, q);
+    readiness = await readReadiness();
+  }
+  if (!readiness.ready) throw new ClosingError("CLOSING_CURRENT_INDEPENDENT_READINESS_AND_NATIVE_S5_BINDING_REQUIRED");
+  const link = readiness.link;
   const strip = (r: { owner: string; id: string; version: string; contentDigest: string }) =>
     ({ owner: r.owner, id: r.id, version: r.version, contentDigest: r.contentDigest });
   if (!step.allocationRef) throw new ClosingError("CLOSING_ORIGINAL_S5_ALLOCATION_REQUIRED");

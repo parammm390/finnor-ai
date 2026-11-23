@@ -10,6 +10,14 @@ export function r2Quantity(value:string):ExperimentRational {
   if(n.toString().length>512||d.toString().length>512)throw Error('R2_RATIONAL_PRECISION_LIMIT');
   return new ExperimentRational(n,d);
 }
+/** A finite measurement's decimal report, never an original exact-model token. */
+export function r2MeasuredQuantity(value:number):ExperimentRational {
+  if(!Number.isFinite(value))throw Error('R2_NONFINITE_MEASUREMENT');
+  const report=String(value),at=report.search(/[eE]/);
+  if(at<0)return r2Quantity(report);
+  const amount=r2Quantity(report.slice(0,at)),shift=Number(report.slice(at+1));
+  return shift>=0?amount.mul(r2Quantity('1'+'0'.repeat(shift))):amount.div(r2Quantity('1'+'0'.repeat(-shift)));
+}
 export const r2String=(q:ExperimentRational):string=>{if(q.n.toString().length>512||q.d.toString().length>512)throw Error('R2_RATIONAL_PRECISION_LIMIT');return q.d===1n?q.n.toString():`${q.n}/${q.d}`;};
 export const r2Zero=()=>r2Quantity('0');
 export const r2Sum=(v:ExperimentRational[])=>v.reduce((a,b)=>a.add(b),r2Zero());

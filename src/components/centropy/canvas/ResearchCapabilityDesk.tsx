@@ -19,6 +19,7 @@ export function ResearchCapabilityDesk() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const alive = useRef(true), intent = useRef<{ signature: string; key: string } | null>(null)
+  const opened = useRef(false)
   async function refresh() {
     try {
       const pages = await Promise.all(kinds.map(kind => centropyGet<unknown>("capabilities/runs", { kind, limit: "10" })))
@@ -26,7 +27,7 @@ export function ResearchCapabilityDesk() {
       if (alive.current) setRuns(parsed)
     } catch (cause) { if (alive.current) { setRuns([]); setSelected(null); setError(errorText(cause)) } }
   }
-  useEffect(() => { alive.current = true; void refresh(); return () => { alive.current = false } }, [])
+  useEffect(() => { alive.current = true; return () => { alive.current = false } }, [])
   async function inspect(id: string) {
     setError(null)
     try {
@@ -48,7 +49,11 @@ export function ResearchCapabilityDesk() {
     finally { if (alive.current) setBusy(false) }
   }
   const output = selected?.result ? JSON.stringify(selected.result, null, 2) : ""
-  return <details><summary>Research and monitoring tools</summary><section className="ct-source-diagnostics" aria-label="Research and monitoring">
+  return <details onToggle={event => {
+    if (!event.currentTarget.open || opened.current) return
+    opened.current = true
+    void refresh()
+  }}><summary>Research and monitoring tools</summary><section className="ct-source-diagnostics" aria-label="Research and monitoring">
     <header><div><span className="ct-eyebrow">RESEARCH / PARALLEL</span><h3>Research and monitoring</h3></div><button type="button" disabled={busy} onClick={() => void refresh()}>Refresh research runs</button></header>
     <label>Research objective<textarea value={objective} onChange={event => setObjective(event.target.value)} maxLength={10_000} /></label>
     <button type="button" disabled={busy || !objective.trim()} onClick={() => void submit({ kind: "parallel_task", input: objective, processor: "lite", outputSchema: { type: "object", properties: { answer: { type: "string" } }, required: ["answer"] } })}>Research with citations</button>

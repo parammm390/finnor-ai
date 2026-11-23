@@ -1,0 +1,36 @@
+{
+  "schema": "finnor.postz.w1.read-http-development-verification.v2",
+  "state": "REGISTERED_BEFORE_ADVERSE_HTTP_PROBE_AND_REPAIRS",
+  "preserves": "read-http-verification-v1.json and all twelve original observations",
+  "originalOracle": "direct-read-contract.md; separately seeded SQL/S1 source statements, not reader-produced expectations",
+  "command": "node --import=./scripts/postz-w1/read-network-guard.mjs --import=tsx scripts/postz-w1/run-economic-reads-native.mts",
+  "artifactAcceptance": "node --import=tsx scripts/postz-w1/verify-read-artifact.mts <EXACT_EVIDENCE_DIRECTORY>",
+  "limits": { "wallSecondsPerRun": 1200, "paidRuntimeCalls": 0, "nonloopbackNetworkCalls": 0, "cloudChanges": 0, "liveProtectedGrants": 0 },
+  "registered": [
+    "SOURCE_REVENUE", "SOURCE_BASIS_MISMATCH", "SOURCE_CURRENCY_MISMATCH", "SOURCE_QUOTE",
+    "TYPED_API_REVENUE", "TYPED_API_QUOTE_CURRENT", "TYPED_API_REVENUE_DUPLICATE",
+    "NATURAL_AND_DUPLICATE", "CORE_PRIOR_CLASSIFICATION", "CORE_DUPLICATE",
+    "NAMED_COMPANY_NO_SUBSTITUTION", "MIXED_NEGATION_EFFECT_PRESERVED",
+    "AUTHENTICATION", "FOREIGN_TENANT", "MISSING_REPORTING_CALENDAR", "PROVISIONAL_CASH_FISCAL_REVENUE",
+    "SOURCE_DELAYED", "SOURCE_STALE", "TYPED_API_STALE_QUOTE", "TYPED_API_UNAVAILABLE_QUOTE",
+    "SOURCE_RIGHTS_REVOKED", "TYPED_API_QUOTE_REPLAY_REVOKED", "UNAVAILABLE_REPLAY_CURRENTNESS"
+  ],
+  "additionalOriginalFacts": {
+    "foreignOwnerRecordedRevenue": "41.75",
+    "foreignCurrency": "EUR",
+    "foreignBasis": "CASH",
+    "foreignReportingStatus": "PROVISIONAL",
+    "foreignCalendar": "owner-recorded-fiscal-15-utc",
+    "unlicensedMsftPriceMustNotBeDisplayed": "200.875"
+  },
+  "adverseOracles": {
+    "directCoreDuplicate": "Same exact original economic outcome and one original query receipt",
+    "wrongNamedCompany": "UNAVAILABLE, never substitute tenant default 950.25",
+    "separatePositiveEffect": "503 worker_fleet_unavailable with no economic answer; preserve the existing effect lane, do not execute it",
+    "revokedReplay": "404 and no original price, for both stale-fact and unavailable cached read with unchanged source bytes",
+    "authentication": "A correctly shaped token with a wrong signature is refused by the actual loopback bearer verifier"
+  },
+  "acceptance": "All twenty-three original registered predicates pass with all eight actual activation counters unchanged and no external network attempt",
+  "qualification": "Development-only synthetic, disposable local sources and identity provider; not field, live feed, protected admission, full W001-W060 or comparative qualification",
+  "fullSoftwareGate": "NOT_ESTABLISHED"
+}

@@ -1,0 +1,64 @@
+{
+  "schema": "finnor.z5.finite-boundary-process-e2e.v1",
+  "state": "PASSED",
+  "source": {
+    "finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/kernel.ts": "ed39a555640a3512dd891b19f0fba57a2e34357d60e4fe0a5a730cb3befd6070",
+    "finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/checker.py": "10cce4a1c39d3cb0358b331721c946912d384e70878d82f8f84a9e69aa836d4f",
+    "finnor-os/scripts/project-z/z5/finite-boundary-e2e.mjs": "d36f4f958ae9bed9a882c7cce6f7e6564715308cc66ad377842827ccdcdfba6a",
+    "finnor-os/scripts/project-z/z5/e2e-tools.mjs": "2d9c171c1618954faba5b1bd25c9d8db9b21a09178cb3e0b09d1bc9db5aab723",
+    "scope-z/phase-evidence/z5/finite-boundary-failure-model-01.md": "b6ff91699ae233986648303fbd559acdc53d2abab4f9080ae70c695e3e1068cf"
+  },
+  "changedSources": [],
+  "node": "v22.23.4",
+  "contractDigest": "e756fd31451dabd2f6d3ac76da15ea34f3af45db6fccc9d4c6cc28660f3c5852",
+  "cases": [
+    {
+      "id": "initial-exact-limit",
+      "passed": true
+    },
+    {
+      "id": "initial-overflow",
+      "passed": true
+    },
+    {
+      "id": "duplicate-initial-tuples",
+      "passed": true
+    },
+    {
+      "id": "large-shared-domain-row-overflow",
+      "passed": true
+    },
+    {
+      "id": "translation-exact-limit",
+      "passed": true
+    },
+    {
+      "id": "translation-one-row-overflow",
+      "passed": true
+    },
+    {
+      "id": "rebound-over-budget-positive",
+      "passed": true
+    }
+  ],
+  "failures": [],
+  "producerExecutions": 6,
+  "checkerExecutions": 7,
+  "databaseActions": 0,
+  "authActions": 0,
+  "listeners": 0,
+  "nativeProof": "NOT_RUN",
+  "structuralFamilyQualification": "NOT_ESTABLISHED",
+  "protectedAdmission": false,
+  "costs": {
+    "wallMs": 1034.725068,
+    "parentCpuUserMicros": 29860,
+    "parentCpuSystemMicros": 21204,
+    "parentPeakRssBytes": 85803008,
+    "childCpuAndPeakRss": "UNKNOWN_HERE",
+    "money": null,
+    "human": null,
+    "provider": null,
+    "scope": "PARENT_PROCESS_ONLY_NOT_COMBINED_PEAK_OR_EQUIPPED_RESULT"
+  }
+}

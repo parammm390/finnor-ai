@@ -1,0 +1,20 @@
+{
+  "schema": "finnor.z5.retained-commit-denial.v1",
+  "state": "BLOCKED_BY_DROID_SHIELD_REVIEW",
+  "toolCallId": "call_EUG0HvzAPutg5GyBQ5RiyU63",
+  "action": "Selected-path local git commit",
+  "actualExit": null,
+  "result": "EXECUTION_DENIED_BY_DROID_SHIELD_NO_COMMIT_CREATED",
+  "reportedPotentialSecretLocations": 1,
+  "affectedFiles": [
+    "scope-z/phase-evidence/z5/recovery-e2e-01/journal.json"
+  ],
+  "flaggedContentIncluded": false,
+  "sourceHeadAfterAttempt": "9f3edfd3b4c6758832c53139da0773218062191e",
+  "computedBlockedIndexTree": "0c96857122aee354f07073c00c67da91609a64e4",
+  "commitRetried": false,
+  "shieldBypassed": false,
+  "flaggedFileChanged": false,
+  "flaggedFileExcludedToEvadeCheck": false,
+  "nextAuthority": "User review or explicit request to fix the flagged file before any commit retry"
+}

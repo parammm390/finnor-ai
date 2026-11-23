@@ -1,0 +1,11 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "../../../packages/epistemic-runtime/src/project-z/z2-coalitions/**/*.ts",
+    "../../../packages/private-equity/src/project-z/z2-coalitions/**/*.ts",
+    "../../../packages/orchestration/src/project-z/z2-coalitions/**/*.ts"
+  ]
+}

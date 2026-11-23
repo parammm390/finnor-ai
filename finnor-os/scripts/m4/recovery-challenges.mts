@@ -146,7 +146,8 @@ export async function recoveryChallenges(e:any){
         assert(schedule.run_at.getTime()<retained.deadline_at.getTime(),'Canonical recovery deferred beyond the one parent deadline');
         const old:JobExecutionContext={jobId:claim.id,tenantId:f.tenant,deliveryAttemptId:claim.delivery_id,
           claimToken:claim.claim_token,claimFence:Number(claim.claim_fence),workerId:claim.lease_owner,
-          protocolVersion:1,retrySafety:'locally_idempotent',registerHeartbeat:()=>undefined};
+          protocolVersion:1,retrySafety:'locally_idempotent',leaseSeconds:recovering.leaseSeconds,
+          registerHeartbeat:()=>{throw Error('STALE_CLAIM_REACHED_HEARTBEAT');}};
         await assert.rejects(tx(f.ctx,c=>fence(f.ctx,retained,old,c)),(error:any)=>error.code==='CANCELLED');
         await recovering.tick();
         const after=ok(await api(f,'counterexample-ledger',{searchId:sent.searchId}));

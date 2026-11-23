@@ -3,7 +3,9 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import type { DurableObligation, ExperimentRef, GovernedRequestIR, GovernedRequestBinding } from '@finnor/shared-types';
-import { epistemicHash, immutableControl, AllocationContractError } from '@finnor/epistemic-runtime';
+import { epistemicHash } from '../../epistemic-runtime/src/source-precedence';
+import { immutableControl } from '../../epistemic-runtime/src/control-contracts';
+import { AllocationContractError } from '../../epistemic-runtime/src/allocation-contracts';
 
 export async function compileGovernedRequestProposal(obligation: DurableObligation, bindings: GovernedRequestBinding[]) {
   const channels = obligation.intervention.channels;

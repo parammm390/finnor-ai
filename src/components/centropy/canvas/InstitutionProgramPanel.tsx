@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { centropyPost } from "../lib/api"
+import { centropyPost, centropyPostRead } from "../lib/api"
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
 import { InstitutionInputForm } from "./InstitutionInputForm"
 
@@ -49,10 +49,13 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
   const { key: scopeKey, isCurrent, allowed } = usePrivateRequestScope(workId)
   const [sources, setSources] = useState<{ key: string; value: Sources } | null>(null)
   const [reading, setReading] = useState<{ key: string; value: Read } | null>(null)
+  const [readFailureScope, setReadFailureScope] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [configure, setConfigure] = useState(false)
+  const [refreshingScope, setRefreshingScope] = useState<string | null>(null)
   const refreshGeneration = useRef(0)
+  const pendingRefresh = useRef<{ key: string; generation: number; controller: AbortController; task: Promise<void> } | null>(null)
   const head = useRef<{ key: string; inputId: string | null; revision: number; requestId: string } | null>(null)
   if (head.current?.key !== scopeKey) head.current = null
   const visibleSources = allowed && sources?.key === scopeKey ? sources.value : null
@@ -60,51 +63,72 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
     && reading.value.workRevision === visibleSources?.workInputId
     && reading.value.requestId === visibleSources?.request?.id
     && reading.value.revision === visibleSources?.request?.revision ? reading.value : null
-  const refresh = useCallback(async () => {
-    const key = scopeKey, generation = ++refreshGeneration.current
-    const current = () => isCurrent(key) && refreshGeneration.current === generation
-    if (!allowed) return
-    try {
-      const next = await centropyPost<Sources>("company-brain/institution-sources", { workId })
-      if (!current()) return
-      if (next.workId !== workId) throw Error("Responsibility sources returned another Work")
-      const prior = head.current
-      if (prior?.key === key && prior.inputId === next.workInputId
-          && (!next.request || next.request.revision < prior.revision
-            || next.request.revision === prior.revision && next.request.id !== prior.requestId)) return
-      head.current = next.request ? { key, inputId: next.workInputId,
-        revision: next.request.revision, requestId: next.request.id } : null
-      setSources({ key, value: next })
-      if (next.request) {
-        const result = await centropyPost<Read>("company-brain/institution-read", { requestId: next.request.id })
+  const phase = visibleSources && (!visibleSources.request || visible) ? "settled"
+    : readFailureScope === scopeKey ? "unavailable" : "reading"
+  const refresh = useCallback(async (afterMutation = false) => {
+    const key = scopeKey
+    if (!allowed || !isCurrent(key)) return
+    const pending = pendingRefresh.current
+    if (!afterMutation && pending?.key === key && pending.generation === refreshGeneration.current
+        && !pending.controller.signal.aborted) return pending.task
+    pending?.controller.abort()
+    const controller = new AbortController()
+    const generation = ++refreshGeneration.current
+    const current = () => !controller.signal.aborted && isCurrent(key) && refreshGeneration.current === generation
+    setRefreshingScope(key)
+    const task = (async () => {
+      try {
+        const { sources: next, programme: result } = await centropyPostRead<{ sources: Sources; programme: Read | null }>(
+          "company-brain/institution-read", {
+            workId, purpose: "WORK_OBSERVATION",
+          }, { signal: controller.signal, isCurrent: current })
         if (!current()) return
-        if (result.workId !== workId || result.workRevision !== next.workInputId
-          || result.requestId !== next.request.id || result.revision !== next.request.revision)
+        if (next.workId !== workId) throw Error("Responsibility sources returned another Work")
+        const prior = head.current
+        if (prior?.key === key && prior.inputId === next.workInputId
+            && (!next.request || next.request.revision < prior.revision
+              || next.request.revision === prior.revision && next.request.id !== prior.requestId)) return
+        const request = next.request
+        if (request ? !result || result.workId !== workId || result.workRevision !== next.workInputId
+            || result.requestId !== request.id || result.revision !== request.revision : result !== null)
           throw Error("Responsibility returned a different Work input or programme revision")
-        setReading({ key, value: result })
-      } else setReading(null)
-      setMessage(null)
-    } catch (error) {
-      if (!current()) return
-      setSources(null); setReading(null)
-      setMessage(error instanceof Error ? error.message : "Responsibility is unavailable in this scope")
-    }
+        head.current = request ? { key, inputId: next.workInputId, revision: request.revision, requestId: request.id } : null
+        setSources({ key, value: next })
+        setReading(result ? { key, value: result } : null)
+        setMessage(null)
+        setReadFailureScope(null)
+      } catch (error) {
+        if (!current()) return
+        setSources(null); setReading(null)
+        setMessage(error instanceof Error ? error.message : "Responsibility is unavailable in this scope")
+        setReadFailureScope(key)
+      } finally {
+        if (pendingRefresh.current?.generation === generation) {
+          pendingRefresh.current = null
+          if (isCurrent(key)) setRefreshingScope(null)
+        }
+      }
+    })()
+    pendingRefresh.current = { key, generation, controller, task }
+    return task
   }, [allowed, isCurrent, scopeKey, workId])
   useEffect(() => {
     setSources(null); setReading(null); setMessage(null); setBusy(false); setConfigure(false)
     void refresh()
+    return () => { pendingRefresh.current?.controller.abort() }
   }, [refresh])
   useEffect(() => {
-    if (!visibleSources?.request || visible?.status === "CANCELLED") return
+    if (busy || refreshingScope === scopeKey || !visibleSources?.request || visible?.status === "CANCELLED") return
     const active = ["QUEUED", "RUNNING", "WAITING"].includes(visible?.status ?? "")
     const timer = window.setTimeout(() => void refresh(), active ? 3000 : 15000)
     return () => window.clearTimeout(timer)
-  }, [refresh, visible, visibleSources])
+  }, [busy, refreshingScope, scopeKey, refresh, visible, visibleSources])
 
   async function compile() {
     const key = scopeKey, metadata = visibleSources
     if (!metadata?.workInputId || !metadata.grants.length || metadata.grants.length > 16 || busy) return
     refreshGeneration.current += 1
+    pendingRefresh.current?.controller.abort()
     setSources(null); setReading(null)
     setBusy(true); setMessage("Reconstructing authorized sources against the standing responsibility…")
     try {
@@ -122,6 +146,7 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
     const key = scopeKey, requestId = visible?.requestId
     if (!requestId || busy) return
     refreshGeneration.current += 1
+    pendingRefresh.current?.controller.abort()
     setSources(null); setReading(null)
     setBusy(true)
     try {
@@ -134,12 +159,13 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
   if (!allowed) return null
   const artifact = visible?.artifact, program = visible?.programme?.program
   const observed = new Map(program?.observedPostconditions.map(p => [p.stableIdentity, p]) ?? [])
-  return <section className="ct-canvas-block ct-institution" aria-label="Institution responsibility">
+  return <section className="ct-canvas-block ct-institution" aria-label="Institution responsibility"
+    aria-busy={busy || phase === "reading"} data-institution-read-state={phase} data-institution-work={workId}>
     <header><div><span className="ct-eyebrow">STANDING RESPONSIBILITY</span><h3>Institution programme</h3></div>
       <button type="button" onClick={() => void refresh()} disabled={busy}>Refresh current owners</button></header>
     <p>Compile this Work’s authorized sources into checked responsibilities and continue the permitted operations.</p>
     <button type="button" onClick={() => setConfigure(value => !value)} disabled={busy}>{configure ? "Close input configuration" : "Configure responsibility inputs"}</button>
-    {configure ? <InstitutionInputForm key={scopeKey} workId={workId} onSaved={async () => { if (isCurrent(scopeKey)) await refresh() }} /> : null}
+    {configure ? <InstitutionInputForm key={scopeKey} workId={workId} onSaved={async () => { if (isCurrent(scopeKey)) await refresh(true) }} /> : null}
     <div className="ct-evidence__actions"><button type="button" disabled={busy || !visibleSources?.workInputId
       || !visibleSources.grants.length || visibleSources.grants.length > 16
       || ["QUEUED", "RUNNING", "CANCELLED"].includes(visible?.status ?? "")}
@@ -147,8 +173,9 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
       {visible?.canResume ? <button type="button" disabled={busy} onClick={() => void control("resume")}>Resume retained continuation</button> : null}
       {visible && visible.status !== "CANCELLED"
         ? <button type="button" disabled={busy} onClick={() => void control("cancel")}>Cancel future continuation</button> : null}</div>
-    <p role="status" aria-live="polite">{message ?? (visible ? `Revision ${visible.revision} · ${visible.status.toLowerCase()}`
-      : visibleSources?.grants.length ? `${visibleSources.grants.length} current source bindings` : "Attach authorized sources and a standing responsibility to this Work.")}</p>
+    <p role="status" aria-live="polite">{phase === "reading" && !visible && !busy ? "Reading standing responsibility…"
+      : message ?? (visible ? `Revision ${visible.revision} · ${visible.status.toLowerCase()}`
+        : visibleSources?.grants.length ? `${visibleSources.grants.length} current source bindings` : "Attach authorized sources and a standing responsibility to this Work.")}</p>
     {visible?.status === "INVALIDATED" ? <p role="alert">The previous assumptions are invalid. Current readiness has been withdrawn; prior effects and costs remain retained.</p> : null}
     {visible?.reason ? <p>{intervention(visible.reason)}</p> : null}
     {artifact ? <>

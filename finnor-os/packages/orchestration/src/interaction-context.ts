@@ -180,6 +180,11 @@ export function interactionAwareOperationalDecision(
   context: OperatingInteractionContext | undefined,
   instruction?: string,
 ): OperationalQueryDecision {
+  // These selectors are already complete. A canvas selection neither changes
+  // "our company" into a selected Deal nor changes an explicit quote issuer.
+  // Context tenant identity is validated by resolveOperatingInteractionContext;
+  // the economic owner authorizes its own resolved financial resource.
+  if (decision.route === "fast_read" && (decision.request.intent === "company_revenue" || decision.request.intent === "stock_quote")) return decision;
   if (!context) return decision;
   const targets = effectiveInteractionTargets(context);
   const root = interactionBusinessRoot(context);

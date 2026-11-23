@@ -12,11 +12,14 @@ import {Rational,q} from './exact';
 import {PROFILE_DIGEST,digest,fail} from './contracts';
 import {LIMITS,same,reference,type ProtocolRow,type SubmitRequest,type InteractionJob,type SourceBinding} from './product-contracts';
 import {productRuntimeIdentity} from './product-runtime';
+import {coalitionChangesTx,assertCoalitionCurrentTx} from '../project-z/z2-coalitions/guard';
 
 export {principal,workCutTx};
 export function developmentOnly(){
- if(process.env.FINNOR_Y3_PROFILE!=='ordinary_disposable'||process.env.FINNOR_ENVIRONMENT!=='ordinary_disposable'||
-  Reflect.get(process.env,'NODE_ENV')==='production')fail('Y3_DISPOSABLE_DEVELOPMENT_ONLY',403);
+ const convergedStaging=process.env.FINNOR_ENVIRONMENT==='staging'&&process.env.FINNOR_Z2_CONVERGED_DEVELOPMENT==='1';
+ if(process.env.FINNOR_Y3_PROFILE!=='ordinary_disposable'||
+  process.env.FINNOR_ENVIRONMENT!=='ordinary_disposable'&&!convergedStaging||
+  Reflect.get(process.env,'NODE_ENV')==='production'||process.env.VERCEL_ENV==='production')fail('Y3_DISPOSABLE_DEVELOPMENT_ONLY',403);
  y1DevelopmentOnly();
 }
 export async function eventTx(c:PoolClient,row:Pick<ProtocolRow,'tenant_id'|'id'|'episode_id'|'principal_id'>,kind:string,key:string,body:unknown){
@@ -93,7 +96,7 @@ export async function fixedMeaningsTx(ctx:PeMutationContext,c:PoolClient,request
  const {row,admission}=await currentEconomicTheoryAdmissionTx(ctx,c,request.lowering.theoryId);
  if(row.work_id!==request.workId||!same(row.root,request.root)||!same(row.artifact!.envelope.contentRef,request.lowering.theoryRef)||
   !same(request.problem.fixedOperatorRefs,[request.lowering.theoryRef]))fail('Y3_FIXED_Y1_MEANING_SCOPE');
- if(request.problem.participants[0].principalId!==principal(ctx))fail('Y3_RESPONSIBLE_PARTICIPANT_REQUIRED',403);
+ if(request.problem.participants[0]?.principalId!==principal(ctx))fail('Y3_RESPONSIBLE_PARTICIPANT_REQUIRED',403);
  const seen=new Set<string>();
  for(const outcome of request.lowering.outcomes){
   const model=request.problem.models.find(m=>m.id===outcome.modelId),node=model?.nodes.find(n=>n.id===outcome.terminalNodeId),
@@ -128,6 +131,7 @@ export async function currentChangesTx(ctx:PeMutationContext,c:PoolClient,row:Pr
  if(runtime.semanticDigest!==row.runtime.semanticDigest)changes.push('runtime');
  try{await fixedMeaningsTx(ctx,c,row.request);}catch{changes.push('y1');}
  if(Date.now()>=row.deadline_at.getTime())changes.push('deadline');
+ changes.push(...await coalitionChangesTx(c,row));
  return [...new Set(changes)];
 }
 export function dependencyGraph(request:SubmitRequest){
@@ -162,6 +166,7 @@ export async function checkedProtocolTx(ctx:PeMutationContext,c:PoolClient,id:st
   check.informationValid!==true||check.participationValid!==true||check.executionAuthorityGranted!==false||
   check.protectedQualification!==false)fail('Y3_INDEPENDENT_CHECK_BINDING');
  if((await currentChangesTx(ctx,c,row)).length)fail('Y3_PROTOCOL_DEPENDENCIES_CHANGED');
+ await assertCoalitionCurrentTx(c,row);
  return row;
 }
 export async function fallbackTx(ctx:PeMutationContext,c:PoolClient,request:SubmitRequest){

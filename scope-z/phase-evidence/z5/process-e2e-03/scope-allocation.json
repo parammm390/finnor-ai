@@ -1,0 +1,6 @@
+{
+  "id": "scope-allocation",
+  "passed": true,
+  "boundary": "SHARED_NATIVE_PREDICATE_LOCAL_FILE_FACTS_ONLY",
+  "expected": "NO_USE"
+}

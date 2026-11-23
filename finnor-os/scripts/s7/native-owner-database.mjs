@@ -11,7 +11,7 @@ export async function createNativeOwnerDatabase() {
     const server = createServer(); server.once('error', reject);
     server.listen(0, '127.0.0.1', () => { const address = server.address(); server.close(() => resolve(address.port)); });
   });
-  const postgres = new EmbeddedPostgres({ databaseDir: directory, user: 'finnor', password: 'finnor', port, persistent: false, onLog() {} });
+  const postgres = new EmbeddedPostgres({ databaseDir: directory, user: 'finnor', password: 'finnor', port, persistent: false, postgresFlags: ['-c', 'unix_socket_directories=', '-c', 'listen_addresses=127.0.0.1', '-c', 'track_commit_timestamp=on'], onLog() {} });
   let admin, db;
   try {
     await postgres.initialise(); await postgres.start(); await postgres.createDatabase('finnor');

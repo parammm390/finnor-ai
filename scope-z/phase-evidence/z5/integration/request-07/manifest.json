@@ -1,0 +1,132 @@
+{
+  "schema": "finnor.z5.exact-shared-integration-request.v1",
+  "phase": "Z5",
+  "productLock": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf",
+  "sourceRepositoryReadOnly": "/home/factory-user/repos/finnor-z5",
+  "sourceHead": "9f3edfd3b4c6758832c53139da0773218062191e",
+  "patchSha256": "793cd28d935908cc50d3eebee513f0deda0e2f39e7f9e3e12d90a340a6794ef7",
+  "files": [
+    {
+      "path": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "preimageSha256": "0dec46803a98af52700832e83d01e138d643558a0717afbd185839810c6da9b8",
+      "postimageSha256": "3e442f7300f7379bb404126da31573d9b4d9163236d9fa3facaeaee33dac6f7b",
+      "postimage": "scope-z/phase-evidence/z5/integration/request-07/postimages/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "preimage": "scope-z/phase-evidence/z5/integration/request-07/preimages/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "mode": "100644"
+    },
+    {
+      "path": "finnor-os/apps/api/app/api/policies/[operation]/route.ts",
+      "preimageSha256": "214d680b4504079c41f71618664a2dcb2ebf802e2d28679e9623e7409d6eadc7",
+      "postimageSha256": "483812f822e748d4628a764c95d778be2a7fa4756245bf062dfb97835d665109",
+      "postimage": "scope-z/phase-evidence/z5/integration/request-07/postimages/finnor-os/apps/api/app/api/policies/[operation]/route.ts",
+      "preimage": "scope-z/phase-evidence/z5/integration/request-07/preimages/finnor-os/apps/api/app/api/policies/[operation]/route.ts",
+      "mode": "100644"
+    },
+    {
+      "path": "finnor-os/apps/api/next.config.mjs",
+      "preimageSha256": "e862207e53d1e67ebf3df8e8f6c29304a5c60179600cb5c671239e09414cf189",
+      "postimageSha256": "837299b02ed26e4b1f185e0fe1335c83a799bcdb19a041fce673318fe6aecccb",
+      "postimage": "scope-z/phase-evidence/z5/integration/request-07/postimages/finnor-os/apps/api/next.config.mjs",
+      "preimage": "scope-z/phase-evidence/z5/integration/request-07/preimages/finnor-os/apps/api/next.config.mjs",
+      "mode": "100644"
+    },
+    {
+      "path": "finnor-os/apps/worker/src/index.ts",
+      "preimageSha256": "5cffd9239ccd0bcb7abd4f301cc52fe28ab2adc2d33e218248524290f7865cb9",
+      "postimageSha256": "6011dad2da477b05927d3a28db4381757321cfbab8f8be3a4c9af2f82f361c6b",
+      "postimage": "scope-z/phase-evidence/z5/integration/request-07/postimages/finnor-os/apps/worker/src/index.ts",
+      "preimage": "scope-z/phase-evidence/z5/integration/request-07/preimages/finnor-os/apps/worker/src/index.ts",
+      "mode": "100644"
+    },
+    {
+      "path": "finnor-os/packages/capability-evolution/src/lifecycle.ts",
+      "preimageSha256": "5be80e1adfa07789a43153affdcc93cc5d701db1decd987522c5b4fdaac648af",
+      "postimageSha256": "d7009ef78ade69b4de837e6b075371479a10cbfb088613db737ac1492affff2e",
+      "postimage": "scope-z/phase-evidence/z5/integration/request-07/postimages/finnor-os/packages/capability-evolution/src/lifecycle.ts",
+      "preimage": "scope-z/phase-evidence/z5/integration/request-07/preimages/finnor-os/packages/capability-evolution/src/lifecycle.ts",
+      "mode": "100644"
+    },
+    {
+      "path": "finnor-os/packages/db/compute-contract.ts",
+      "preimageSha256": "d8783ff65e9ed0489a93077e2766ae5f395c32eb1fecda163c5d941a23e20814",
+      "postimageSha256": "b963fbb4dbee6bfe6d14c3c9d4444a6c34682af1c30a3366c8cafb334f8ce78b",
+      "postimage": "scope-z/phase-evidence/z5/integration/request-07/postimages/finnor-os/packages/db/compute-contract.ts",
+      "preimage": "scope-z/phase-evidence/z5/integration/request-07/preimages/finnor-os/packages/db/compute-contract.ts",
+      "mode": "100644"
+    },
+    {
+      "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "preimageSha256": "aa33dcf657cdcb4ef85a059b51b52b646a93a11aabd9801e2436511b22d7ce43",
+      "postimageSha256": "7a1769c8de7d4719f93c8193b1dd9c5859e17970d76f2419e089f018ae964fda",
+      "postimage": "scope-z/phase-evidence/z5/integration/request-07/postimages/finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "preimage": "scope-z/phase-evidence/z5/integration/request-07/preimages/finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "mode": "100644"
+    },
+    {
+      "path": "finnor-os/scripts/generate-openapi.ts",
+      "preimageSha256": "18aac0a3c1b94837b2e917fd2b50ec2040ef89da0dde6b5e926773901d21cf9e",
+      "postimageSha256": "8f51f07bc0ee423409bca86e2cba6972364777f8eb48f0da7b9c0fc6c43ea15e",
+      "postimage": "scope-z/phase-evidence/z5/integration/request-07/postimages/finnor-os/scripts/generate-openapi.ts",
+      "preimage": "scope-z/phase-evidence/z5/integration/request-07/preimages/finnor-os/scripts/generate-openapi.ts",
+      "mode": "100644"
+    },
+    {
+      "path": "scripts/centropy/generate-capability-manifest.mjs",
+      "preimageSha256": "68b98dcc2ca6f4c48a355741e986a7bdb658ed2b8fe14db31aca12ebf6228e49",
+      "postimageSha256": "fde83667577c7dd1cba755c50b3ddae5146c905eb1d140df8c45b29da0e9f738",
+      "postimage": "scope-z/phase-evidence/z5/integration/request-07/postimages/scripts/centropy/generate-capability-manifest.mjs",
+      "preimage": "scope-z/phase-evidence/z5/integration/request-07/preimages/scripts/centropy/generate-capability-manifest.mjs",
+      "mode": "100644"
+    },
+    {
+      "path": "src/components/centropy/world/InstitutionCompositionPanel.tsx",
+      "preimageSha256": null,
+      "postimageSha256": "d0f477e20e19d826a5c3e1ce2232ee1672a40b6b76fbc9d0415b22114967a88c",
+      "postimage": "scope-z/phase-evidence/z5/integration/request-07/postimages/src/components/centropy/world/InstitutionCompositionPanel.tsx",
+      "preimage": null,
+      "mode": "100644"
+    },
+    {
+      "path": "src/components/centropy/world/WorldWorkRecord.tsx",
+      "preimageSha256": "06b7adb4a5ed940105c8af088e649da459dcde6fe0d48e0173896e0e841f6da5",
+      "postimageSha256": "2dd89e814154efb248c9efb8650b874cce1f8dc1c601ff3193087242f5c28b0e",
+      "postimage": "scope-z/phase-evidence/z5/integration/request-07/postimages/src/components/centropy/world/WorldWorkRecord.tsx",
+      "preimage": "scope-z/phase-evidence/z5/integration/request-07/preimages/src/components/centropy/world/WorldWorkRecord.tsx",
+      "mode": "100644"
+    }
+  ],
+  "applied": false,
+  "coordinatorOwned": true,
+  "requiresAllExactPreimagesBeforeAnyWrite": true,
+  "newSymbols": [
+    "Z5_OPERATIONS/v1",
+    "link_institution_components_v1/protocol1",
+    "prepareEnterpriseInstitutionCompositionPlan/v1",
+    "readEnterpriseInstitutionCompositionPlanByRef/v1",
+    "Z5_COMPOSITION_ADMIT/v1",
+    "Z5_COMPOSITION_CURRENT/v1",
+    "InstitutionCompositionPanel/v1"
+  ],
+  "compatibility": "Absent ordinary Z5 profile/head preserves old S4 behavior; existing immutable preparations remain readable. No authority broadening or retroactive discharge.",
+  "failureModel": "scope-z/phase-evidence/z5/failure-model.md",
+  "migration": {
+    "body": "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/schema.sql",
+    "sha256": "b461945e729aeee02c90eec947c9b45db1fc5b7fdebb2d808587dcfd151fd71c",
+    "assignedMigrationName": null,
+    "sqlExecuted": false,
+    "coordinatorMustAssignOrderHeadAndRegenerateBundle": true,
+    "currentPreimages": {
+      "finnor-os/packages/db/migrate.ts": "da1b30e000be4ed00b9bfbc6cb24a08eb81dd9c0164601d706c829440ee3084a",
+      "finnor-os/packages/db/migration-head.ts": "a77a030c1cb2505d73be3a4b7ac1c4ce2b5f2dbc5bc500d79b1a914bff8a889c",
+      "finnor-os/packages/db/migrations-bundle.ts": "0fc4f9ef10acf5d44e9f6f9f26cf329ee20075debe53657d152b4fd03b5a1263"
+    }
+  },
+  "remainingObligations": [
+    "COORDINATOR_ACCEPT_OR_EXACTLY_REBASE_SHARED_FILES",
+    "ASSIGN_REAL_MIGRATION_NAME_HEAD_AND_BUNDLE_ONLY_WITH_AUTHORITY",
+    "REGENERATE_CANONICAL_OPENAPI_MANIFEST_CLIENT_FORMS_COVERAGE_IN_COMBINED_SOURCE",
+    "RUN_COMBINED_SOURCE_FULL_GRAPHS_BUILD_AND_GUARDED_NATIVE_E2E_WHEN_SEPARATELY_AUTHORIZED"
+  ],
+  "externalAuthorityCreated": false,
+  "productionActivated": false
+}

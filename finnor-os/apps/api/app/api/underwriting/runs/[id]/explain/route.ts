@@ -1,4 +1,4 @@
-import { explainUnderwritingOutput } from "@finnor/private-equity";
+import { explainUnderwritingOutput } from "../../../../../../../../packages/private-equity/src/underwriting-repository";
 import { requireContext } from "../../../../../../lib/auth";
 import {
   UnderwritingUuidSchema,

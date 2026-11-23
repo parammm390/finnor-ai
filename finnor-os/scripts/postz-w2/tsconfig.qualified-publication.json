@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.native.json",
+  "files": [
+    "./qualified-fixture-custody.mts",
+    "./qualified-ordinary-queue-fixture.mts",
+    "./qualified-publication-role-protocol.mts",
+    "./qualified-publication-role-e2e.mts",
+    "./qualified-publication-fixture.mts",
+    "./qualified-publication-e2e.mts"
+  ]
+}

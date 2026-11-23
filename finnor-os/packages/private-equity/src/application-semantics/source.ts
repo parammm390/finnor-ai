@@ -354,9 +354,6 @@ export class ApplicationSourceSession {
   private fieldContract: ApplicationField[] | null = null;
   private readonly latestObservations = new Map<string, string>();
   private readonly prepared = new WeakMap<PreparedApplicationWire, PreparedRecord>();
-  private readonly requestRecords = new Map<string, {
-    identity: NativeApplicationRequestIdentity; target: ScopedApplicationIdentity; context: ObjectValue;
-  }>();
   private readonly unsupportedKeys = new Set<string>();
   private schemas: DocumentSchema[] = [];
   private observerRef: ExperimentRef | null = null;
@@ -1455,33 +1452,38 @@ export class ApplicationSourceSession {
       if (capture.document && capture.document !== entry) await this.computer.releaseDocument(capture.document);
     }
     const result = await this.computer.execute(wire, fence);
-    if (result.possibleEgress) this.requestRecords.set(wire.identity.requestId, {
-      identity: structuredClone(wire.identity), target: prepared.target, context: structuredClone(wire.context),
-    });
     this.noCredentials(result.body);
     return result;
   }
   /** Alias for the follow-up callable surface. */
   async execute(wire: PreparedApplicationWire, fence: ApplicationPhysicalEgressFence) { return await this.dispatch(wire, fence); }
 
-  async observeRequest(identity: NativeApplicationRequestIdentity): Promise<{
+  async observeRequest(
+    { identity, context }: Pick<PreparedApplicationWire, "identity" | "context">,
+    target: ScopedApplicationIdentity,
+  ): Promise<{
     body: ObjectValue | null; sourceRef: ExperimentRef | null; available: boolean;
   }> {
     this.assertOpen();
-    const original = this.requestRecords.get(identity.requestId);
-    if (original && x2Digest(identity) !== x2Digest(original.identity) || !this.profile.requestPathTemplate) {
+    if (!this.profile.requestPathTemplate) {
       return { body: null, sourceRef: null, available: false };
     }
     if (Object.keys(identity).length !== requestKeys.length || requestKeys.some((key) =>
       typeof identity[key] !== "string" || !identity[key] || identity[key].length > 256)
       || !Number.isFinite(Date.parse(identity.deadline))) applicationProviderFault("X2_INVALID_NATIVE_REQUEST_IDENTITY");
-    this.computer.assertCurrent(original?.target);
-    let source: ApplicationPublicSource | null;
-    try { source = await this.computer.requestSource(identity); }
-    catch (error) {
-      if (!(error instanceof ApplicationProviderFault)) throw error;
-      return { body: null, sourceRef: null, available: false };
-    }
+    this.computer.assertCurrent(target);
+    const read = async () => {
+      try {
+        const source = await this.computer.requestSource(identity);
+        return { source, interrupted: source !== null && [502, 503, 504].includes(source.status) };
+      } catch (error) {
+        if (!(error instanceof ApplicationProviderFault)) throw error;
+        return { source: null, interrupted: error.code === "X2_RESPONSE_LOST" };
+      }
+    };
+    // Readback uses the retained request's original fences and charges.
+    const first = await read();
+    let { source } = first.interrupted ? await read() : first;
     if (!source || source.status !== 200) return { body: null, sourceRef: source?.ref ?? null, available: false };
     let body: ObjectValue;
     if (source.contentType?.includes("json")) body = object(json(source.text));
@@ -1497,10 +1499,9 @@ export class ApplicationSourceSession {
     } else return { body: null, sourceRef: source.ref, available: false };
     this.noCredentials(body);
     if (body.applicationId !== this.profile.application || body.accountId !== this.profile.account
-      || typeof body.recordId !== "string" || !this.profile.allowedTargets.includes(body.recordId)
-      || original && body.recordId !== original.target.id || body.principalId !== this.profile.actingPrincipal
+      || body.recordId !== target.id || body.principalId !== this.profile.actingPrincipal
       || !hasKeys(body.request, requestKeys) || x2Digest(body.request) !== x2Digest(identity)
-      || original && ["applicationVersion", "schemaRevision", "semanticRevision"].some((key) => body[key] !== original.context[key])
+      || ["applicationVersion", "schemaRevision", "semanticRevision"].some((key) => body[key] !== context[key])
       || typeof body.operation !== "string" || !body.operation || body.operation.length > 256
       || typeof body.status !== "string" || !body.status || body.status.length > 256
       || typeof body.applicationVersion !== "string" || typeof body.schemaRevision !== "string"

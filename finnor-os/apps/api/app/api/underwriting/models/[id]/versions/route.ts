@@ -1,4 +1,4 @@
-import { createUnderwritingModelVersion } from "@finnor/private-equity";
+import { createUnderwritingModelVersion } from "../../../../../../../../packages/private-equity/src/underwriting-repository";
 import type { UnderwritingModelIR } from "@finnor/underwriting";
 import { requireContext } from "../../../../../../lib/auth";
 import {

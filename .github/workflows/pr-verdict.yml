@@ -1,4 +1,4 @@
-name: universal-pr-verdict
+name: "PR - Code, build, tests and security"
 
 on:
   pull_request:
@@ -14,14 +14,15 @@ concurrency:
 
 jobs:
   classify:
-    name: classify-required-scope
+    name: "Select checks for this change"
     runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
       backend: ${{ steps.scope.outputs.backend }}
       root: ${{ steps.scope.outputs.root }}
       dependencies: ${{ steps.scope.outputs.dependencies }}
-      files_b64: ${{ steps.scope.outputs.files_b64 }}
+      manifest_sha256: ${{ steps.scope.outputs.manifest_sha256 }}
+      artifact_name: ${{ steps.scope.outputs.artifact_name }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -37,16 +38,28 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           node --input-type=module <<'NODE'
-          const { appendFileSync } = await import("node:fs")
-          const { changedPullRequestFiles, classifyPullRequestFiles, encodeChangedFiles } = await import("./scripts/release/pr-verdict-policy.mjs")
+          const { appendFileSync, mkdirSync, copyFileSync } = await import("node:fs")
+          const { join } = await import("node:path")
+          const { changedPullRequestFiles, classifyPullRequestFiles, writeChangedFilesEvidence } = await import("./scripts/release/pr-verdict-policy.mjs")
           const files = changedPullRequestFiles({ base: process.env.BASE_SHA, head: process.env.HEAD_SHA })
           const { backend, root, dependencies } = classifyPullRequestFiles(files)
+          const directory = join(process.env.RUNNER_TEMP, "pr-verdict-input")
+          mkdirSync(directory)
+          const digest = writeChangedFilesEvidence({ path: join(directory, "changed-files.json"), files, head: process.env.HEAD_SHA, base: process.env.BASE_SHA })
+          for (const name of ["pr-verdict-policy.mjs", "worktree-state.mjs"]) copyFileSync(join("scripts/release", name), join(directory, name))
           const output = process.env.GITHUB_OUTPUT
-          appendFileSync(output, `backend=${backend}\nroot=${root}\ndependencies=${dependencies}\nfiles_b64=${encodeChangedFiles(files)}\n`)
+          appendFileSync(output, `backend=${backend}\nroot=${root}\ndependencies=${dependencies}\nmanifest_sha256=${digest}\nartifact_name=pr-verdict-input-${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT}\n`)
           NODE
+      - name: Retain complete SHA-bound changed-file evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: ${{ steps.scope.outputs.artifact_name }}
+          path: ${{ runner.temp }}/pr-verdict-input/
+          if-no-files-found: error
+          retention-days: 7
 
   source:
-    name: early-source-gates
+    name: "Source and CI rules"
     needs: classify
     if: ${{ needs.classify.outputs.backend == 'true' || needs.classify.outputs.root == 'true' }}
     uses: ./.github/workflows/source-checks.yml
@@ -55,19 +68,19 @@ jobs:
       root: ${{ needs.classify.outputs.root == 'true' }}
 
   backend:
-    name: applicable-backend-gates
+    name: "Backend and Z compiler checks"
     needs: [classify, source]
     if: ${{ needs.classify.outputs.backend == 'true' }}
     uses: ./.github/workflows/ci.yml
 
   root:
-    name: applicable-root-gates
+    name: "Frontend checks"
     needs: [classify, source]
     if: ${{ needs.classify.outputs.root == 'true' }}
     uses: ./.github/workflows/marketing-ci.yml
 
   security:
-    name: universal-security-gates
+    name: "Secret and dependency security"
     needs: classify
     permissions:
       actions: read
@@ -78,7 +91,7 @@ jobs:
       run_dependency_scan: ${{ needs.classify.outputs.dependencies == 'true' }}
 
   replay:
-    name: applicable-dealer-zero
+    name: "Business receipt replay"
     needs: [classify, source]
     if: ${{ needs.classify.outputs.backend == 'true' }}
     uses: ./.github/workflows/dealer-zero-replay.yml
@@ -87,10 +100,26 @@ jobs:
       DEALER_ZERO_REPLAY_CANDIDATE: ${{ secrets.DEALER_ZERO_REPLAY_CANDIDATE }}
 
   readiness:
-    name: applicable-release-readiness
+    name: "Release readiness checks"
     needs: [classify, source]
     if: ${{ needs.classify.outputs.backend == 'true' }}
     uses: ./.github/workflows/release-readiness.yml
+
+  completion-receipt:
+    name: "Report completed PR checks"
+    needs: verdict
+    if: ${{ always() && github.event.pull_request.number == 187 }}
+    permissions:
+      actions: read
+      contents: read
+      issues: read
+      pull-requests: write
+    uses: ./.github/workflows/ci-completion.yml
+    with:
+      pr_number: 187
+      head_sha: ${{ github.event.pull_request.head.sha }}
+      gate: required-pr-verdict
+      result: ${{ needs.verdict.result }}
 
   verdict:
     name: required-pr-verdict
@@ -109,17 +138,23 @@ jobs:
       SECURITY_RESULT: ${{ needs.security.result }}
       REPLAY_RESULT: ${{ needs.replay.result }}
       READINESS_RESULT: ${{ needs.readiness.result }}
-      FILES_B64: ${{ needs.classify.outputs.files_b64 }}
+      CHANGED_FILES_SHA256: ${{ needs.classify.outputs.manifest_sha256 }}
+      PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Read the completed scope manifest without a checkout
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ${{ needs.classify.outputs.artifact_name }}
+          path: .ci-verdict
       - name: Emit the stable required verdict
         run: |
           node --input-type=module <<'NODE'
           import { appendFileSync } from "node:fs"
-          import { decodeChangedFiles, evaluateRequiredPrVerdict } from "./scripts/release/pr-verdict-policy.mjs"
+          import { readChangedFilesEvidence, evaluateRequiredPrVerdict } from "./.ci-verdict/pr-verdict-policy.mjs"
           const applicable = (value) => value === "true"
           const { verdict, failures } = evaluateRequiredPrVerdict({
-            files: decodeChangedFiles(process.env.FILES_B64),
+            files: readChangedFilesEvidence({ path: ".ci-verdict/changed-files.json", expectedSha256: process.env.CHANGED_FILES_SHA256, head: process.env.PR_HEAD_SHA, base: process.env.PR_BASE_SHA }),
             classifyResult: process.env.CLASSIFY_RESULT,
             sourceResult: process.env.SOURCE_RESULT,
             backendApplicable: applicable(process.env.BACKEND_APPLICABLE),

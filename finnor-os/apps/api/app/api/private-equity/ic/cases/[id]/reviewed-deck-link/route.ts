@@ -1,5 +1,10 @@
 import { artifactContext, ArtifactError, getArtifact } from "@finnor/artifacts";
-import { attachCanonicalDocument, getIcWorkspace, groundIcMemoDocumentVersion, PeDomainError } from "@finnor/private-equity";
+import { attachCanonicalDocument } from "../../../../../../../../../packages/private-equity/src/repository";
+import {
+  getIcWorkspace,
+  groundIcMemoDocumentVersion,
+} from "../../../../../../../../../packages/private-equity/src/ic-repository";
+import { PeDomainError } from "../../../../../../../../../packages/private-equity/src/types";
 import { artifactActor, artifactErrorResponse } from "../../../../../../../lib/artifacts";
 import { requireContext } from "../../../../../../../lib/auth";
 import { icContext, icErrorResponse, icJson, IcReviewedDeckLinkSchema, IcUuidSchema, parseIcBody } from "../../../../../../../lib/ic";

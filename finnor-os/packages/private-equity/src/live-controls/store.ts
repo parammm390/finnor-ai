@@ -2,7 +2,7 @@ import type { PoolClient } from 'pg';
 import type { AuthorityRequest, TenantContext } from '@finnor/shared-types';
 import { canExerciseAuthorityTx, employeeAuthoritySnapshotTx, lockCurrentAuthorityTx } from '@finnor/authority';
 import { assertDeliverySessionTx } from '@finnor/security';
-import { epistemicHash } from '@finnor/epistemic-runtime';
+import { epistemicHash } from '../../../epistemic-runtime/src/source-precedence';
 import { peClientTransaction } from '../repository';
 import { PeDomainError, type PeMutationContext, type PeWorldRootRef } from '../types';
 import { authorizeBeliefSourceScopes } from '../enterprise-beliefs';

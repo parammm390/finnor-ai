@@ -1,12 +1,6 @@
-import {
-  IC_CONDITION_TYPES,
-  IC_RECOMMENDATION_OUTCOMES,
-  IC_VOTE_CHOICES,
-  PE_ENTITY_TYPES,
-  PeDomainError,
-  type IcSourceLinkInput,
-  type PeMutationContext,
-} from "@finnor/private-equity";
+import { IC_CONDITION_TYPES, IC_RECOMMENDATION_OUTCOMES, IC_VOTE_CHOICES } from "../../../packages/private-equity/src/ic-types";
+import { PE_ENTITY_TYPES, PeDomainError, type PeMutationContext } from "../../../packages/private-equity/src/types";
+import { type IcSourceLinkInput } from "../../../packages/private-equity/src/ic-repository";
 import type { TenantContext } from "@finnor/shared-types";
 import { z } from "zod";
 import { boundedJson } from "./artifacts";

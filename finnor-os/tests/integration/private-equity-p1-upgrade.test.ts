@@ -104,9 +104,13 @@ describe.skipIf(!available)("P1 populated PE database upgrade", () => {
     // forward migrations. Prove both P1 migrations ran, and that the complete
     // pending migration sequence was applied without gaps or reordering.
     expect(applied.slice(0, 2)).toEqual(["0110_canonical_temporal_truth.sql", "0111_pe_world_truth.sql"]);
-    expect(applied).toEqual(MIGRATIONS
+    expect([...applied].sort()).toEqual(MIGRATIONS
       .filter(({ name }) => name >= "0110_canonical_temporal_truth.sql")
       .map(({ name }) => name).sort());
+    expect(applied.indexOf("0204_postz_w2_specialist_publication_authority.sql"))
+      .toBeGreaterThan(applied.indexOf("postz_w2_zz_participant_legacy_authority.sql"));
+    expect(applied.indexOf("0205_postz_w5_organization_transformation_query_history.sql"))
+      .toBeGreaterThan(applied.indexOf("0204_postz_w2_specialist_publication_authority.sql"));
     baselineAt = (await client.query<{ at: Date }>(
       "SELECT coverage_started_at at FROM finnor_os.canonical_history_coverage WHERE entity_type='pe_deal'",
     )).rows[0]!.at;

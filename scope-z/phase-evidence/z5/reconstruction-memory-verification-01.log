@@ -1,0 +1,7 @@
+{
+  "actualExit": 1,
+  "error": "BOUNDARY_GRANTED_AUTHORITY",
+  "errorType": "RuntimeError",
+  "schema": "finnor.z5.reconstruction-memory-source-verification.v1",
+  "wallMs": 1265.7413919951068
+}

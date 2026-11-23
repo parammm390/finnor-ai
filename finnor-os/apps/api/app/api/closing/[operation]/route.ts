@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { ClosingError, handleClosingOperation, PeDomainError } from "@finnor/private-equity";
+import { ClosingError } from "../../../../../../packages/private-equity/src/closing/contracts";
+import { handleClosingOperation } from "../../../../../../packages/private-equity/src/closing/api";
+import { PeDomainError } from "../../../../../../packages/private-equity/src/types";
 import { errorResponse, requireContext } from "../../../../lib/auth";
 
 export const runtime = "nodejs";

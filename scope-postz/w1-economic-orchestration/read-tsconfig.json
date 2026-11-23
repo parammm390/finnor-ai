@@ -1,0 +1,26 @@
+{
+  "extends": "../../finnor-os/tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "types": ["node"],
+    "typeRoots": ["../../finnor-os/node_modules/@types"]
+  },
+  "files": [
+    "../../finnor-os/packages/private-equity/src/economic-reads/reader.ts",
+    "../../finnor-os/packages/orchestration/src/economic-read-intake.ts",
+    "../../finnor-os/packages/private-equity/src/economic-reads/operational-query.ts",
+    "../../finnor-os/packages/orchestration/src/fast-read-lane.ts",
+    "../../finnor-os/packages/orchestration/src/operational-query-runtime.ts",
+    "../../finnor-os/packages/orchestration/src/index.ts",
+    "../../finnor-os/packages/orchestration/src/authority-runtime.ts",
+    "../../finnor-os/packages/orchestration/src/economic-query-answer.ts",
+    "../../finnor-os/packages/orchestration/src/economic-read-replay.ts",
+    "../../finnor-os/apps/api/app/api/actions/route.ts",
+    "../../finnor-os/apps/api/app/api/queries/route.ts",
+    "../../finnor-os/scripts/postz-w1/run-economic-reads-native.mts",
+    "../../finnor-os/scripts/postz-w1/read-http-fixture.mts",
+    "../../finnor-os/scripts/postz-w1/verify-read-artifact.mts"
+  ],
+  "include": []
+}

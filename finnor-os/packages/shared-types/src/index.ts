@@ -9,6 +9,7 @@ export * from "./closing";
 // Every subsystem (orchestration, plugins, memory, tools, workers) compiles against these.
 
 export * from "./operational-queries";
+export * from "./economic-reads";
 export * from "./company-graph";
 export * from "./operating-context";
 export * from "./operating-interaction";
@@ -31,7 +32,7 @@ export * from "./elicitation-protocol";
 export * from "./primary-diligence";
 export * from "./bilateral-opportunities";
 
-export type Role = "owner";
+export type Role = "owner" | "participant";
 
 export interface TenantContext {
   tenantId: string;

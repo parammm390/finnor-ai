@@ -31,6 +31,9 @@ describe("distinct provider and model capacity contracts", () => {
       if (statement.includes("FROM compute_resource_leases") && statement.includes("count(*)")) {
         return { rows: [{ total: "0", tenant: "0" }] };
       }
+      if (statement.includes("INSERT INTO compute_resource_leases")) {
+        return { rows: [{ initialAcquiredUtcMicros: "1000000", initialExpiresUtcMicros: "121000000" }], rowCount: 1 };
+      }
       return { rows: [], rowCount: 1 };
     });
   });

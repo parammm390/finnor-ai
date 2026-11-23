@@ -1,4 +1,4 @@
-import { MAX_BACKGROUND_SCAN_BATCH, actionLog, domainActions, instructionSessions, workflowRuns, workflowSteps, workObjectiveLoops, works, withTenant, transitionWork } from "@finnor/db";
+import { MAX_BACKGROUND_SCAN_BATCH, canReadEmployeeInstruction, assertCurrentEmployeeWorkOwner, WorkControlAuthorizationError, actionLog, domainActions, instructionSessions, workflowRuns, workflowSteps, workObjectiveLoops, works, withTenant, transitionWork } from "@finnor/db";
 import { cancelRun } from "@finnor/workflow-runtime";
 import { and, asc, eq, gt, inArray, or } from "drizzle-orm";
 import { emitInstructionEvent, recordInstructionCancellationFence } from "@finnor/orchestration";
@@ -13,6 +13,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   try {
     const { id } = await params;
     const ctx = await requireContext(req);
+    const actorId = ctx.employeeId ?? ctx.userId;
+    if (!(await canReadEmployeeInstruction(ctx.tenantId, id, actorId))) return Response.json({ error: "Instruction not found" }, { status: 404 });
     if (!(await canApprove(ctx, "*"))) {
       return Response.json({ error: `Your role (${ctx.role}) cannot cancel business instructions` }, { status: 403 });
     }
@@ -32,6 +34,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return { ...instruction, workStatus: work?.status ?? null };
     });
     if (!instruction) return Response.json({ error: "Instruction not found" }, { status: 404 });
+    // Read access may follow an assignment, but Work cancellation belongs to
+    // the current active owner. The transaction below repeats this exact guard.
+    if (instruction.workId) await assertCurrentEmployeeWorkOwner(ctx.tenantId, instruction.workId, actorId);
     if (instruction.workStatus === "completed") {
       return Response.json({ error: "Completed Work cannot be cancelled", status: "completed" }, { status: 409 });
     }
@@ -41,7 +46,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     // Publish the cancellation fence before taking a second snapshot. A planner
     // that finishes after this point sees the marker and must reject its drafts.
-    const fenced = await recordInstructionCancellationFence({ tenantId: ctx.tenantId, instructionId: id, workId: instruction.workId, requestedBy: ctx.userId });
+    const fenced = await recordInstructionCancellationFence({ tenantId: ctx.tenantId, instructionId: id, workId: instruction.workId, requestedBy: actorId });
     if (!fenced) return Response.json({ error: "Completed Work cannot be cancelled", status: "completed" }, { status: 409 });
 
     const snapshot = await withTenant(ctx.tenantId, async (db) => {
@@ -179,6 +184,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       inFlightActions,
     });
   } catch (error) {
+    if (error instanceof WorkControlAuthorizationError) return Response.json({ error: "Instruction not found" }, { status: 404 });
     return errorResponse(error);
   }
 }

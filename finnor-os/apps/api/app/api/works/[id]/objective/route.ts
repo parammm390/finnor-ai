@@ -1,4 +1,4 @@
-import { latestWorkInput, receiveWork, WorkTransitionConflictError, workAggregate } from "@finnor/db";
+import { assertCurrentEmployeeWorkOwner, canReadEmployeeWork, latestWorkInput, receiveWork, WorkControlAuthorizationError, WorkTransitionConflictError, workAggregate } from "@finnor/db";
 import { ControlObjectiveSchema } from "@finnor/policy-schema";
 import { errorResponse, requireContext } from "../../../../../lib/auth";
 import { getOrchestrator } from "../../../../../lib/orchestrator";
@@ -8,9 +8,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   try {
     const { id } = await params;
     const ctx = await requireContext(req);
+    if (!(await canReadEmployeeWork(ctx.tenantId, id, ctx.employeeId ?? ctx.userId))) return Response.json({ error: "Work not found" }, { status: 404 });
     const aggregate = await workAggregate(ctx.tenantId, id);
     if (!aggregate?.objectiveLoop) return Response.json({ error: "Work objective not found" }, { status: 404 });
-    return Response.json({ objective: aggregate.objectiveLoop, iterations: aggregate.objectiveSteps, plannerAttempts: aggregate.objectivePlannerAttempts });
+    return Response.json({ objective: aggregate.objectiveLoop, iterations: aggregate.objectiveSteps, plannerAttempts: aggregate.objectivePlannerAttempts }, { headers: { "cache-control": "private, no-store" } });
   } catch (error) {
     return errorResponse(error);
   }
@@ -22,6 +23,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const ctx = await requireContext(req);
     const parsed = ControlObjectiveSchema.safeParse(await req.json().catch(() => ({})));
     if (!parsed.success) return Response.json({ error: parsed.error.issues.map((issue) => issue.message).join("; ") }, { status: 400 });
+    const actorId = ctx.employeeId ?? ctx.userId;
+    // Reject before an objective redirect can persist a foreign Work input.
+    await assertCurrentEmployeeWorkOwner(ctx.tenantId, id, actorId);
     if (parsed.data.command === "redirect") {
       const priorInput = await latestWorkInput(ctx.tenantId, id);
       const priorConversation = priorInput ? await loadWorkInputConversation({ ctx, workId: id, workInputId: priorInput.id }) : null;
@@ -31,8 +35,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         channel: parsed.data.channel,
         instructionId: parsed.data.instructionId,
         workId: id,
-        userId: ctx.userId,
+        userId: actorId,
         idempotencyKey: parsed.data.idempotencyKey,
+        requireCurrentEmployeeOwner: true,
         authorityContext: { employeeId: ctx.employeeId ?? null, revision: ctx.authorityRevision ?? null, roles: ctx.authorityRoles ?? [], principal: ctx.userId },
       });
       if (priorConversation) await prepareEmployeeConversationTurn({
@@ -45,7 +50,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       tenantId: ctx.tenantId,
       workId: id,
       command: parsed.data.command,
-      actorId: ctx.userId,
+      actorId,
+      requireCurrentEmployeeOwner: true,
       objective: parsed.data.command === "redirect" ? parsed.data.objective : undefined,
       successCondition: parsed.data.command === "redirect" && parsed.data.successCondition
         ? parseObjectiveSuccessCondition(parsed.data.successCondition)
@@ -54,6 +60,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     });
     return Response.json({ objective }, { status: objective.state === "continue" ? 202 : 200 });
   } catch (error) {
+    if (error instanceof WorkControlAuthorizationError) return Response.json({ error: "Work not found" }, { status: 404 });
     if (error instanceof WorkTransitionConflictError) {
       return Response.json({ error: error.message, code: "work_recovery_required" }, { status: 409 });
     }

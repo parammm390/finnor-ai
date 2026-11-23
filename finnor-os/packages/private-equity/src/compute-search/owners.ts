@@ -1,4 +1,5 @@
 import type {PeMutationContext} from '../types';
+import type {PoolClient} from 'pg';
 import {readValidatedNumericEnterpriseAllocation,validateEnterpriseAllocation} from '../enterprise-allocation';
 import {readEnterpriseContingentPolicy,validateEnterpriseContingentPolicy,deriveEnterpriseDeliberationConversion} from '../enterprise-control';
 import {stable} from '../evidence-execution/store';
@@ -10,7 +11,7 @@ import type {ComputeSearchRequest} from './contracts';
 export async function resolveSearchOwners(ctx:PeMutationContext,q:ProgramRow,r:ComputeSearchRequest) {
  await assertProgramCurrent(ctx,q);
  if(stable(q.request.ownerBindings?.policyRef)!==stable(r.policyRequest)||stable(q.request.ownerBindings?.allocationRef)!==stable(r.computeGrant))throw Error('P2_EXACT_P1_OWNER_BINDINGS_REQUIRED');
- return resolveNativeComputeGrant(ctx,r.policyRequest,r.computeGrant,!!r.deliberation);
+ return resolveNativeComputeGrant(ctx,r.policyRequest,r.computeGrant,!!(r.deliberation||r.orchestration));
 }
 
 /** Shared S5 native-attempt grant resolver. A direct native producer has no
@@ -41,16 +42,16 @@ export async function resolveNativeComputeGrant(ctx:PeMutationContext,policyRequ
 /** Current reads re-use only immutable owner preimages. S5's validator itself
  * reads and independently verifies the issued certificate and entire current
  * portfolio; this removes a duplicate certificate solve, not a currentness check. */
-export async function recheckSearchOwners(ctx:PeMutationContext,q:ProgramRow,s:any){
+export async function recheckSearchOwners(ctx:PeMutationContext,q:ProgramRow,s:any,client?:PoolClient){
  if(stable(q.request.ownerBindings?.policyRef)!==stable(s.request.policyRequest)||stable(q.request.ownerBindings?.allocationRef)!==stable(s.request.computeGrant))throw Error('P2_EXACT_P1_OWNER_BINDINGS_REQUIRED');
  const [policyRead,allocationRead]=await Promise.allSettled([
-  readEnterpriseContingentPolicy(ctx,s.request.policyRequest),
-  validateEnterpriseAllocation(ctx,s.request.computeGrant),
+  readEnterpriseContingentPolicy(ctx,s.request.policyRequest,client),
+  validateEnterpriseAllocation(ctx,s.request.computeGrant,client),
  ]);
  if(policyRead.status==='rejected')throw policyRead.reason;
  if(allocationRead.status==='rejected')throw allocationRead.reason;
  const policy=policyRead.value,state=allocationRead.value;
- if(s.request.deliberation&&stable(deriveEnterpriseDeliberationConversion(policy))!==stable(s.binding.deliberationConversion))throw Error('M2_S4_UTILITY_CONVERSION_CHANGED');
+ if((s.request.deliberation||s.request.orchestration)&&stable(deriveEnterpriseDeliberationConversion(policy))!==stable(s.binding.deliberationConversion))throw Error('M2_S4_UTILITY_CONVERSION_CHANGED');
  if(stable(policy.mandateRef)!==stable(s.binding.mandateRef)||stable(policy.mandate.utilityRef)!==stable(s.binding.utilityRef)||policy.bindings.rightsRef!==s.binding.rightsRef)throw Error('P2_OWNER_MANDATE_OR_RIGHTS_CHANGED');
  if(state.status!=='CURRENT'||stable(state.reservationRef)!==stable(s.binding.reservationRef)||Date.now()>=Date.parse(s.binding.validUntil))throw Error('P2_S5_CURRENTNESS_UNPASSED');
  const horizon=s.binding.resourceEnvelope.horizon,period=Math.floor((Date.now()-Date.parse(horizon.startAt))/horizon.periodMs);

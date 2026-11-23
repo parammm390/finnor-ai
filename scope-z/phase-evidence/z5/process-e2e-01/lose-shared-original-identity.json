@@ -1,0 +1,14 @@
+{
+  "id": "lose-shared-original-identity",
+  "passed": true,
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "{\"checked\":false,\"checker\":\"z5-original-semantics-checker-v1\",\"executionAuthorityGranted\":false,\"reason\":\"LIVE_BRIDGE_LOSES_ORIGINAL_RESERVATION_OR_UNRESOLVED_OBLIGATION\",\"schema\":\"finnor.z5.independent-check.v1\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 88.82398999999987
+  },
+  "corruptionDigest": "94c569efe5c0b70e57125da2e5ea32022f0df7204e8096b01741bb5a66434a08",
+  "expected": "INDEPENDENT_REJECTION"
+}

@@ -1,7 +1,9 @@
-import { claimWorkRecovery, WorkTransitionConflictError, workAggregate } from "@finnor/db";
+import { assertCurrentEmployeeWorkOwner, WorkControlAuthorizationError, WorkRecoveryAuthorizationError, claimWorkRecovery, WorkTransitionConflictError, WorkQueryInProgressError, workAggregate, latestWorkInput, readWorkInputResponse } from "@finnor/db";
 import { z } from "zod";
 import { errorResponse, requireContext } from "../../../../../lib/auth";
 import { getOrchestrator } from "../../../../../lib/orchestrator";
+import { economicReadForInput, storedEconomicQuery, assertEconomicReadReplyAccess, answerEconomicQuery, OperationalQueryReplayUnavailable } from "@finnor/orchestration";
+import { PeDomainError } from "@finnor/private-equity/src/types";
 
 const RetryWorkSchema = z.object({ idempotencyKey: z.string().min(1).max(200) });
 
@@ -28,6 +30,33 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (!body.success) return Response.json({ error: body.error.issues.map((issue) => issue.message).join("; ") }, { status: 400 });
     attemptKey = `retry:${body.data.idempotencyKey}`;
     const prior = await workAggregate(ctx.tenantId, id);
+    // Do not reveal a recovery lease, replay content, or Work history to a
+    // different employee. The database repeats this guard under its row lock.
+    const actorId = ctx.employeeId ?? ctx.userId;
+    const currentOwner = prior?.work && typeof prior.work === "object"
+      ? (prior.work as { currentOwnerId?: string | null; createdBy?: string | null }).currentOwnerId
+        ?? (prior.work as { createdBy?: string | null }).createdBy
+      : null;
+    if (!prior || currentOwner !== actorId) return Response.json({ error: "Work not found" }, { status: 404 });
+    const latest = await latestWorkInput(ctx.tenantId, id);
+    if (latest && (economicReadForInput(latest.instructionText)
+        || /^Typed (?:economic query v1:|operational query:\s*(?:company_revenue|stock_quote)\b)/.test(latest.instructionText))) {
+      // Original employee/input custody is checked BEFORE the tenant-wide Work
+      // recovery lease. The lease is not a grant to another employee's reply.
+      const owned = await readWorkInputResponse({ tenantId: ctx.tenantId, userId: ctx.userId, workId: id, workInputId: latest.id });
+      if (owned.response) {
+        const query = storedEconomicQuery(owned.response);
+        if (!query) throw new PeDomainError("PE_ENTITY_NOT_FOUND", "The complete original economic reply is unavailable.");
+        await assertEconomicReadReplyAccess(ctx, owned.response, { workId: id, workInputId: latest.id, instructionId: latest.instructionId });
+        const priorStatus = prior?.work && typeof prior.work === "object" ? (prior.work as { status?: unknown }).status : null;
+        if (priorStatus === "completed") return Response.json({ planned: [], query, answer: answerEconomicQuery(query),
+          workId: id, workInputId: latest.id, instructionId: latest.instructionId, recovery: true, duplicate: true },
+          { status: 200, headers: { "Cache-Control": "no-store" } });
+      } else if (!economicReadForInput(latest.instructionText) && owned.queryExecutions.length !== 1) {
+        // No request can be reconstructed from an old intent-only placeholder.
+        throw new PeDomainError("PE_ENTITY_NOT_FOUND", "The original typed request is unavailable; request a new read.");
+      }
+    }
     if (objectiveRecoveryKey(prior) === attemptKey) {
       const status = prior?.work && typeof prior.work === "object"
         ? (prior.work as { status?: unknown }).status : null;
@@ -36,7 +65,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const claim = await claimWorkRecovery({
       tenantId: ctx.tenantId,
       workId: id,
-      requestedBy: ctx.userId,
+      requestedBy: actorId,
       attemptKey,
     });
     if (!claim.claimed) return Response.json({
@@ -51,7 +80,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         tenantId: ctx.tenantId,
         workId: id,
         command: "continue",
-        actorId: ctx.userId,
+        actorId,
+        // The claim's Work lock is released before Objective control starts.
+        // A concurrent handoff must be rechecked in that Objective transaction.
+        requireCurrentEmployeeOwner: true,
         correlationId: ctx.correlationId,
       });
       return Response.json({ workId: id, instructionId: input.instructionId, recovery: true, objective }, { status: 202 });
@@ -67,12 +99,29 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return Response.json({
       planned: result.actions,
       ...(result.answer ? { answer: result.answer } : {}),
+      ...(result.query ? { query: result.query } : {}),
       workId: id,
+      workInputId: input.id,
       instructionId: input.instructionId,
       recovery: true,
-    }, { status: 201 });
+    }, { status: 201, headers: result.query ? { "Cache-Control": "no-store" } : undefined });
   } catch (err) {
+    if (err instanceof WorkRecoveryAuthorizationError || err instanceof WorkControlAuthorizationError)
+      return Response.json({ error: "Work not found" }, { status: 404 });
+    if (err instanceof PeDomainError && err.code === "PE_ENTITY_NOT_FOUND") return Response.json({
+      code: "ECONOMIC_READ_UNAVAILABLE", error: "The original economic read is unavailable under current source and permissions; request a new read.",
+    }, { status: 404, headers: { "Cache-Control": "no-store" } });
+    if (err instanceof WorkQueryInProgressError) return Response.json({ workId: err.workId, workInputId: err.workInputId,
+      duplicate: true, inProgress: true }, { status: 202, headers: { "Cache-Control": "no-store" } });
+    if (err instanceof OperationalQueryReplayUnavailable) return Response.json({ ...err.input,
+      error: err.message, retryRequired: true }, { status: 409, headers: { "Cache-Control": "no-store" } });
     if (err instanceof Error && err.name === "PlannerAttemptAlreadyClaimedError" && requestContext && workId) {
+      try {
+        await assertCurrentEmployeeWorkOwner(requestContext.tenantId, workId, requestContext.employeeId ?? requestContext.userId);
+      } catch (authError) {
+        if (authError instanceof WorkControlAuthorizationError) return Response.json({ error: "Work not found" }, { status: 404 });
+        throw authError;
+      }
       return Response.json({ work: await workAggregate(requestContext.tenantId, workId), duplicate: true }, { status: 202 });
     }
     if (err instanceof WorkTransitionConflictError) {
@@ -82,6 +131,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       if (requestContext && workId && attemptKey) {
         const aggregate = await workAggregate(requestContext.tenantId, workId);
         if (objectiveRecoveryKey(aggregate) === attemptKey) {
+          try {
+            await assertCurrentEmployeeWorkOwner(requestContext.tenantId, workId, requestContext.employeeId ?? requestContext.userId);
+          } catch (authError) {
+            if (authError instanceof WorkControlAuthorizationError) return Response.json({ error: "Work not found" }, { status: 404 });
+            throw authError;
+          }
           return Response.json({ work: aggregate, duplicate: true, activeAttemptKey: attemptKey }, { status: 200 });
         }
       }

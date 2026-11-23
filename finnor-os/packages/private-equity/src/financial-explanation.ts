@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ExperimentRational } from "@finnor/epistemic-runtime";
+import { ExperimentRational } from "../../epistemic-runtime/src/experiment-numerics";
 import type { FinancialExplanation } from "@finnor/shared-types";
 
 const Id = z.string().regex(/^[a-z][a-z0-9_]{0,63}$/);

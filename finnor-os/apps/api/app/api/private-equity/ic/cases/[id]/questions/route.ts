@@ -1,4 +1,4 @@
-import { createIcQuestion } from "@finnor/private-equity";
+import { createIcQuestion } from "../../../../../../../../../packages/private-equity/src/ic-repository";
 import { handleIcPost, IcCreateQuestionSchema, IcUuidSchema } from "../../../../../../../lib/ic";
 
 export const runtime = "nodejs";

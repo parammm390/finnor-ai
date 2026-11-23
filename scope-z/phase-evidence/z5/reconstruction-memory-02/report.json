@@ -1,0 +1,48 @@
+{
+  "actualExit": 0,
+  "archives": 0,
+  "authActions": 0,
+  "cases": [
+    {
+      "actualExit": 0,
+      "id": "memory-process",
+      "passed": true
+    },
+    {
+      "actualExit": 0,
+      "id": "memory-graph",
+      "passed": true
+    },
+    {
+      "actualExit": 1,
+      "id": "invalid-profile-refuses-child",
+      "passed": true
+    },
+    {
+      "actualExit": 0,
+      "id": "graph-dispatch-lock-held",
+      "passed": true
+    },
+    {
+      "actualExit": 0,
+      "id": "finite-boundary-through-production-wrapper",
+      "passed": true
+    },
+    {
+      "actualExit": 2,
+      "id": "native-authority-refusal-through-production-wrapper",
+      "passed": true
+    }
+  ],
+  "databaseActions": 0,
+  "extractorInstallerAndGraphTypecheckExecuted": false,
+  "failures": [],
+  "installs": 0,
+  "listeners": 0,
+  "protectedAdmission": false,
+  "realInsufficientMemoryBranch": "NOT_OBSERVED",
+  "schema": "finnor.z5.reconstruction-memory-process-e2e.v1",
+  "sourceSha256": "88796fa666e99150af354d52105938e7e1361c5ab461f23b7013a8d86d7cb79b",
+  "state": "PASSED_GUARDED_SOURCE_PROCESS_PATH",
+  "wrapperSha256": "d1368e0b505d361363f60eae11abfcde28b1d9ae7acf9de32ca7620615a6eb34"
+}

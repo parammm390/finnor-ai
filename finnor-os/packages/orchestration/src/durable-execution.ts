@@ -11,6 +11,7 @@ import {
   domainActions,
   domainPolicyRevisions,
   integrationOperations,
+  lockTenantMaterialCutTx,
   reconcileWorkStatus,
   reconciliationCases,
   transitionWork,
@@ -467,6 +468,7 @@ async function beginEffectCommit(loaded: LoadedExecution, fence?: StepFence): Pr
   return withTenant(loaded.action.tenantId, async (db) => {
     const { assertLiveControlBoundaryTx } = await import("./live-control-boundary");
     await assertLiveControlBoundaryTx(db, loaded.action.tenantId, loaded.action.id, loaded.action.initiatedBy);
+    await lockTenantMaterialCutTx(db, loaded.action.tenantId);
     const generationViolation = await orchestrationGenerationViolationTx(db, loaded.action.tenantId, loaded.action);
     if (generationViolation) throw new DurableExecutionBlocked(`Orchestration generation invalidated: ${generationViolation}`);
     const epistemicViolation = await epistemicExecutionViolationTx(db,loaded.action.tenantId,loaded.action);

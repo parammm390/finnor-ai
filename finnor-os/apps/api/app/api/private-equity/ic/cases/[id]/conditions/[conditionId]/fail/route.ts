@@ -1,4 +1,4 @@
-import { failIcCondition } from "@finnor/private-equity";
+import { failIcCondition } from "../../../../../../../../../../../packages/private-equity/src/ic-repository";
 import { handleIcPost, IcConditionTransitionSchema, IcUuidSchema } from "../../../../../../../../../lib/ic";
 
 export const runtime = "nodejs";

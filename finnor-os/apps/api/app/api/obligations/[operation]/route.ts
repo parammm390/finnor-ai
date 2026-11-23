@@ -1,10 +1,27 @@
 import {z} from 'zod';
-import {ObligationOperationSchemas,prepareEnterpriseDurableObligation,readEnterpriseDurableObligation,readEnterpriseDurableObligationCommitment,validateEnterpriseDurableObligation,compileEnterpriseDurableObligationRequest,assessEnterpriseDurableObligationDispatch,readEnterpriseDurableObligationBudgets,readEnterpriseDurableObligationExecutionHandoff,assessEnterpriseDurableObligationBudget,executeEnterpriseDurableObligationRequest,scheduleEnterpriseDurableObligationRequest,cancelEnterpriseDurableObligationDelivery,PeDomainError} from '@finnor/private-equity';
-import {AllocationContractError,ControlContractError,InterventionContractError} from '@finnor/epistemic-runtime';
+import { ObligationOperationSchemas } from '../../../../../../packages/private-equity/src/obligation-contracts';
+import {
+  prepareEnterpriseDurableObligation,
+  readEnterpriseDurableObligation,
+  readEnterpriseDurableObligationCommitment,
+  validateEnterpriseDurableObligation,
+  compileEnterpriseDurableObligationRequest,
+  assessEnterpriseDurableObligationDispatch,
+  readEnterpriseDurableObligationBudgets,
+  readEnterpriseDurableObligationExecutionHandoff,
+  assessEnterpriseDurableObligationBudget,
+  executeEnterpriseDurableObligationRequest,
+  scheduleEnterpriseDurableObligationRequest,
+  cancelEnterpriseDurableObligationDelivery,
+} from '../../../../../../packages/private-equity/src/enterprise-obligations';
+import { PeDomainError } from '../../../../../../packages/private-equity/src/types';
+import { AllocationContractError } from '../../../../../../packages/epistemic-runtime/src/allocation-contracts';
+import { ControlContractError } from '../../../../../../packages/epistemic-runtime/src/control-contracts';
+import { InterventionContractError } from '../../../../../../packages/epistemic-runtime/src/interventions';
 import {requireContext,errorResponse} from '../../../../lib/auth';
-import {LedgerFault} from '@finnor/private-equity';
-import {prepareEnterpriseElicitationHandoff} from '@finnor/private-equity';
-import {ExperimentRefSchema} from '@finnor/epistemic-runtime';
+import { LedgerFault } from '../../../../../../packages/governed-execution/src/protocol';
+import { prepareEnterpriseElicitationHandoff } from '../../../../../../packages/private-equity/src/enterprise-obligations';
+import { ExperimentRefSchema } from '../../../../../../packages/epistemic-runtime/src/experiments';
 import {prepareEnterpriseCoalitionSchedule,readEnterpriseCoalitionSchedule,recordEnterpriseCoalitionConsent,readEnterpriseCoalitionConsentHistory} from '../../../../../../packages/private-equity/src/enterprise-obligations';
 const coalitionPrepare=z.object({allocationRef:ExperimentRefSchema,consumptionRef:ExperimentRefSchema}).strict();
 const coalitionReference=z.object({scheduleRef:ExperimentRefSchema}).strict();

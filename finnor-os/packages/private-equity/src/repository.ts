@@ -168,7 +168,7 @@ async function scopedPeTransaction<T>(
           // The actual canonical mutation transaction rechecks the original
           // V5 proof. A service-level preflight cannot authorize a later effect.
           const { assertNativeControlActionTx } = await import("./live-controls/service");
-          await assertNativeControlActionTx(ctx, ctx.provenance.externalId, client);
+          await assertNativeControlActionTx(ctx, ctx.provenance.externalId, client, { acquireMaterialFence: true });
         }
         // X1 ordinary continuation is revalidated at the actual canonical
         // mutation. The same transaction holds its source/Work/mandate locks;
@@ -1070,6 +1070,29 @@ export async function declareDealClosed(ctx: PeMutationContext, input: {
     const shaped = value as { changed: boolean; idempotent: boolean; rejected?: boolean; row: SqlRow; eligibility: unknown };
     const currentEligibility = eligibilityShape(shaped.eligibility);
     if (shaped.rejected) throw new DealCloseRejectedError(currentEligibility);
+    const closingOwnerInstalled = (await client.query<{ installed: boolean }>(
+      "SELECT to_regprocedure('finnor_os.pe_v3_issue_closed_certificate(uuid,uuid,uuid,uuid)') IS NOT NULL installed",
+    )).rows[0]?.installed === true;
+    if (closingOwnerInstalled) {
+      // The native close trigger has now published its independently checked
+      // certificate inside this transaction. Materialize only W2 promises that
+      // the same current S6 receiving-owner receipt actually settles, before
+      // the CLOSED status can become observable to a separate W2 reader.
+      const published = await client.query<{ programme_id: string }>(`
+        SELECT cert.programme_id
+        FROM finnor_os.pe_closed_transaction_certificates cert
+        JOIN finnor_os.pe_closing_programmes q
+          ON q.tenant_id=cert.tenant_id AND q.id=cert.programme_id
+        WHERE cert.tenant_id=$1 AND cert.transaction_id=$2 AND q.status='CLOSED'
+        ORDER BY cert.created_at DESC,cert.id DESC LIMIT 2`,
+      [ctx.auth.tenantId, input.dealId]);
+      if (published.rows.length > 1) throw new PeDomainError(
+        "PE_CLOSING_CURRENT_CERTIFICATE_AMBIGUOUS", "Multiple current closing certificates cannot settle workforce promises");
+      if (published.rows[0]) {
+        const { recordWorkforceClosingPaymentsTx } = await import("./workforce-compensation-closing");
+        await recordWorkforceClosingPaymentsTx(ctx, client, published.rows[0].programme_id);
+      }
+    }
     return { row: shapePeRow(shaped.row), changed: shaped.changed, idempotent: shaped.idempotent, eligibility: currentEligibility };
   });
 }

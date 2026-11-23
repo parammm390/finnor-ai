@@ -75,6 +75,7 @@ export function composeApplicationActions(input: {
   originalParentRef: ExperimentRef;
   deadlineAt: string;
   authorizedRoles: string[];
+  firstOperationId?: string;
 }): CheckedApplicationComposition {
   const { model, check, initial, goal, parameters } = input;
   assertApplicationModelUse(model, check);
@@ -96,6 +97,7 @@ export function composeApplicationActions(input: {
     if (node.path.length && applicationGoalEstablished(goal, node.state)) { selected = node; break; }
     if (node.path.length >= 8) continue;
     for (const operation of model.operations) {
+      if (!node.path.length && input.firstOperationId !== undefined && operation.id !== input.firstOperationId) continue;
       if (!check.acceptedOperationIds.includes(operation.id) || !input.authorizedRoles.includes(operation.authorization.role)) continue;
       const binding = bindingFor(operation, parameters, node.state, node.pendingIdentities);
       if (!binding) continue;

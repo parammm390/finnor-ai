@@ -8,6 +8,8 @@ import {currentInteractionAdmissionTx} from '../../../capability-evolution/src/i
 import {digest,fail,type Y3Ref} from './contracts';
 import {reference,same,type ProtocolRow,type InteractionTerms,type InteractionRun,type InteractionHistory,type ProgrammeBinding} from './product-contracts';
 import {sourceClaimTx} from './store';
+import {assertCoalitionTerms} from '../project-z/z2-coalitions/guard';
+import {assertParticipantWorksTx} from '../project-z/z2-coalitions/participant-work-guard';
 
 export function responsibleContext(row:Pick<ProtocolRow,'tenant_id'|'principal_id'>):PeMutationContext{
  return {auth:{tenantId:row.tenant_id,userId:row.principal_id,employeeId:row.principal_id,role:'owner'}};
@@ -29,6 +31,7 @@ export async function termsTx(c:PoolClient,row:ProtocolRow,ref?:Y3Ref):Promise<I
   found.candidateDigest!==digest(row.candidate)||!same(found.participants,row.request.problem.participants)||
   (!row.current_terms_id||found.id!==row.current_terms_id||Date.parse(found.validUntil)<=Date.now()))
   fail('Y3_EXACT_CURRENT_TERMS_REQUIRED');
+ assertCoalitionTerms(row,found);
  return found;
 }
 export async function participantAuthorityTx(ctx:PeMutationContext,c:PoolClient,row:ProtocolRow){
@@ -57,6 +60,7 @@ export async function requireConsentsTx(c:PoolClient,row:ProtocolRow,terms:Inter
   await participantAuthorityTx(ctx,c,row);ids.push(consent.consent_id);
  }
  if(expected&&!same([...ids].sort(),[...expected].sort()))fail('Y3_ORIGINAL_CONSENT_HEADS_CHANGED');
+ await assertParticipantWorksTx(c,row,terms);
  return ids;
 }
 export async function historyTx(c:PoolClient,run:InteractionRun):Promise<InteractionHistory[]>{

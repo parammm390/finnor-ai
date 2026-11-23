@@ -1,0 +1,20 @@
+{
+  "schema": "finnor.z5.public-default-launch-failure.v1",
+  "state": "NOT_RUN_LAUNCH_FAILURE_RETAINED",
+  "actualExit": 127,
+  "toolCallId": "call_DIjWSK5vt18Tf4K0gaj7xzk8",
+  "log": "scope-z/phase-evidence/z5/public-sweep-04.log",
+  "stderr": "env: ‘/usr/bin/time’: No such file or directory\n",
+  "requestedTimingLog": "scope-z/phase-evidence/z5/public-sweep-04-timing.log",
+  "timingLogReadResult": "ENOENT",
+  "producerStarted": false,
+  "checkerStarted": false,
+  "heavyLockAcquired": false,
+  "productSourceChanged": false,
+  "registrationChanged": false,
+  "originalFailureOverwritten": false,
+  "correction": "Use existing Python 3.12.3 time/resource/subprocess standard libraries, not an unavailable external timing executable.",
+  "nextLog": "scope-z/phase-evidence/z5/public-sweep-04-run-02.log",
+  "nextTiming": "scope-z/phase-evidence/z5/public-sweep-04-timing-02.json",
+  "newAuthority": false
+}

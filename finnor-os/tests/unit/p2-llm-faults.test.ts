@@ -88,14 +88,18 @@ describe("Phase 2 deterministic LLM fault matrix", () => {
 
   it("preserves caller abort propagation instead of starting a fallback after cancellation", async () => {
     const controller = new AbortController();
+    let fetchStarted = () => {};
+    const started = new Promise<void>(resolve => { fetchStarted = resolve });
     const fetchMock = vi.fn((_url: string, init: RequestInit) => new Promise<never>((_resolve, reject) => {
       init.signal?.addEventListener("abort", () => reject(Object.assign(new Error("caller aborted"), { name: "AbortError" })), { once: true });
+      fetchStarted();
     }));
     vi.stubGlobal("fetch", fetchMock);
 
     const pending = new CompositeProvider([new MistralProvider(), new DeepSeekProvider()]).complete({
       system: "s", user: "u", purpose: "planning", channel: "voice", signal: controller.signal, deadlineMs: 2_000,
     });
+    await started;
     controller.abort(new Error("caller aborted"));
     await expect(pending).rejects.toThrow("caller aborted");
     expect(fetchMock).toHaveBeenCalledTimes(1);

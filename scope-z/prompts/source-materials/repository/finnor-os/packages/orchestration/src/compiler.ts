@@ -1,0 +1,1376 @@
+// Typed plan compiler: a structural boundary between planner output and durable
+// actions. It grounds active Core/Private Equity references and freezes effects.
+//
+//  1. Entity grounding — payload fields that name active canonical references are
+//     checked against the real table for this tenant. Unrecognized field names are
+//     reported "unverifiable", never silently assumed fine.
+//  2. Command graph tagging — whether this action_type, once approved, executes as a
+//     single plugin.execute() call or drives the durable multi-step runtime
+//     (@finnor/workflow-runtime). This is a structural TAG, not a fabricated step list:
+//     actual steps depend on runtime state and are never fabricated here.
+//
+// Explicitly NOT in scope: changing the Planner's own LLM call, or auto-executing a
+// multi-step workflow without the existing confirmation gate.
+
+import {
+  withTenant,
+  tasks,
+  works,
+  documents,
+  tenantLocations,
+  delegations,
+  internalEvents,
+  workObjectiveLoops,
+  communicationIdentities,
+  externalContacts,
+  users,
+  applicationAccounts,
+  authProfiles,
+  businessEffects,
+  messages,
+  domainActions,
+  domainPolicies,
+  decisionReceipts,
+  reconciliationCases,
+  resolveTenantVertical,
+  tenantIntegrations,
+  evidenceSources,
+  evidenceSourceVersions,
+  externalOperations,
+  type Db,
+} from "@finnor/db";
+import { and, asc, desc, eq, sql, type AnyColumn, type SQL } from "drizzle-orm";
+import { createHash, randomUUID } from "node:crypto";
+import { inputSnapshotHash } from "../../underwriting/src/snapshot";
+import { runResultHash } from "../../underwriting/src/result";
+import {
+  BUSINESS_EFFECT_SCHEMA_VERSION,
+  type BusinessEffectBinding,
+  type BusinessEffectOperationClass,
+  type BusinessEffectSet,
+  type BusinessEffectStateSnapshot,
+  type BusinessEffectTarget,
+  type BusinessEffectVerification,
+  type DomainAction,
+  type DomainPolicy,
+  type DraftAction,
+  type ExecutionResult,
+} from "@finnor/shared-types";
+import { ACTION_HARDENING_SPEC_BY_ACTION, type ActionProfile } from "../../../scripts/release/action-hardening-spec";
+import { privateEquityCreationIdentity } from "../../domain-plugins/private-equity";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Deliberately small and explicit — every case here is a field name this codebase's
+// plugins actually use for a foreign reference. Anything not listed falls through to
+// "unverifiable" rather than being guessed at. A switch over each table's own concrete
+// (already-typed) column, not a generic lookup map, so this leans on the exact same
+// query shape every other plugin in this repo already uses.
+async function lookUpKnownId(db: Db, tenantId: string | undefined, field: string, value: string): Promise<"verified" | "not_found" | "unverifiable"> {
+  const tenantFor = (condition: SQL, tableTenantId: AnyColumn) => (tenantId ? and(condition, eq(tableTenantId, tenantId)) : condition);
+  switch (field) {
+    case "taskId": {
+      const [row] = await db.select({ id: tasks.id }).from(tasks).where(tenantFor(eq(tasks.id, value), tasks.tenantId)).limit(1);
+      return row ? "verified" : "not_found";
+    }
+    case "workId": {
+      const [row] = await db.select({ id: works.id }).from(works).where(tenantFor(eq(works.id, value), works.tenantId)).limit(1);
+      return row ? "verified" : "not_found";
+    }
+    case "documentId": {
+      const [row] = await db.select({ id: documents.id }).from(documents).where(tenantFor(eq(documents.id, value), documents.tenantId)).limit(1);
+      return row ? "verified" : "not_found";
+    }
+    case "locationId": {
+      const [row] = await db.select({ id: tenantLocations.id }).from(tenantLocations).where(tenantFor(eq(tenantLocations.id, value), tenantLocations.tenantId)).limit(1);
+      return row ? "verified" : "not_found";
+    }
+    case "delegationId": {
+      const [row] = await db.select({ id: delegations.id }).from(delegations).where(tenantFor(eq(delegations.id, value), delegations.tenantId)).limit(1);
+      return row ? "verified" : "not_found";
+    }
+    case "internalEventId": {
+      const [row] = await db.select({ id: internalEvents.id }).from(internalEvents).where(tenantFor(eq(internalEvents.id, value), internalEvents.tenantId)).limit(1);
+      return row ? "verified" : "not_found";
+    }
+    case "objectiveLoopId": {
+      const [row] = await db.select({ id: workObjectiveLoops.id }).from(workObjectiveLoops).where(tenantFor(eq(workObjectiveLoops.id, value), workObjectiveLoops.tenantId)).limit(1);
+      return row ? "verified" : "not_found";
+    }
+    case "communicationIdentityId": {
+      const [row] = await db.select({ id: communicationIdentities.id }).from(communicationIdentities).where(tenantFor(eq(communicationIdentities.id, value), communicationIdentities.tenantId)).limit(1);
+      return row ? "verified" : "not_found";
+    }
+    case "evidenceSourceId": {
+      const [row] = await db.select({ id: evidenceSources.id }).from(evidenceSources).where(and(
+        eq(evidenceSources.id, value),
+        eq(evidenceSources.scope, "tenant"),
+        ...(tenantId ? [eq(evidenceSources.tenantId, tenantId)] : []),
+      )).limit(1);
+      return row ? "verified" : "not_found";
+    }
+    case "evidenceVersionId": {
+      const [row] = await db.select({ id: evidenceSourceVersions.id }).from(evidenceSourceVersions).where(and(
+        eq(evidenceSourceVersions.id, value),
+        eq(evidenceSourceVersions.scope, "tenant"),
+        ...(tenantId ? [eq(evidenceSourceVersions.tenantId, tenantId)] : []),
+      )).limit(1);
+      return row ? "verified" : "not_found";
+    }
+    case "scheduledInternalEventId": {
+      const [row] = await db.select({ id: internalEvents.id }).from(internalEvents).where(tenantFor(eq(internalEvents.id, value), internalEvents.tenantId)).limit(1);
+      return row ? "verified" : "not_found";
+    }
+    case "documentVersionId": {
+      const result = await db.execute<{ id: string }>(sql`
+        SELECT id::text FROM finnor_os.document_versions WHERE tenant_id=${tenantId}::uuid AND id=${value}::uuid LIMIT 1
+      `);
+      return result.rows[0] ? "verified" : "not_found";
+    }
+    case "templateVersionId": {
+      const result = await db.execute<{ id: string }>(sql`
+        SELECT version_id::text AS id FROM finnor_os.artifact_templates
+        WHERE tenant_id=${tenantId}::uuid AND version_id=${value}::uuid AND status='active' LIMIT 1
+      `);
+      return result.rows[0] ? "verified" : "not_found";
+    }
+    case "underwritingRunId":
+    case "primaryUnderwritingRunId": {
+      const result = await db.execute<{ id: string }>(sql`
+        SELECT id::text FROM finnor_os.underwriting_runs WHERE tenant_id=${tenantId}::uuid AND id=${value}::uuid LIMIT 1
+      `);
+      return result.rows[0] ? "verified" : "not_found";
+    }
+    case "modelVersionId": {
+      const result = await db.execute<{ id: string }>(sql`
+        SELECT id::text FROM finnor_os.underwriting_model_versions WHERE tenant_id=${tenantId}::uuid AND id=${value}::uuid LIMIT 1
+      `);
+      return result.rows[0] ? "verified" : "not_found";
+    }
+    case "scenarioId": {
+      const result = await db.execute<{ id: string }>(sql`
+        SELECT id::text FROM finnor_os.underwriting_scenarios WHERE tenant_id=${tenantId}::uuid AND id=${value}::uuid LIMIT 1
+      `);
+      return result.rows[0] ? "verified" : "not_found";
+    }
+    case "baseRunId": {
+      const result = await db.execute<{ id: string }>(sql`
+        SELECT id::text FROM finnor_os.underwriting_runs WHERE tenant_id=${tenantId}::uuid AND id=${value}::uuid LIMIT 1
+      `);
+      return result.rows[0] ? "verified" : "not_found";
+    }
+    case "committeeConfigVersionId": {
+      const result = await db.execute<{ id: string }>(sql`
+        SELECT id::text FROM finnor_os.pe_ic_committee_config_versions WHERE tenant_id=${tenantId}::uuid AND id=${value}::uuid LIMIT 1
+      `);
+      return result.rows[0] ? "verified" : "not_found";
+    }
+    default:
+      break;
+  }
+  const privateEquityTypeByField: Record<string, string> = {
+    dealId: "pe_deal", dealPartyId: "pe_deal_party", requestedFromDealPartyId: "pe_deal_party",
+    responsibleDealPartyId: "pe_deal_party", workstreamId: "pe_workstream", requestId: "pe_request",
+    deliverableId: "pe_deliverable", findingId: "pe_finding", dealRiskId: "pe_deal_risk",
+    dependencyId: "pe_dependency", milestoneId: "pe_milestone", closingConditionId: "pe_closing_condition",
+    closingItemId: "pe_closing_item", investmentCaseId: "pe_investment_case", reconsidersDecisionId: "pe_decision",
+    icCaseId: "pe_ic_case", memoId: "pe_ic_memo", memoSelectionId: "pe_ic_memo", recommendationId: "pe_ic_recommendation", questionId: "pe_ic_question",
+    conditionId: "pe_ic_condition", decisionProposalId: "pe_ic_decision_proposal", riskId: "pe_deal_risk",
+  };
+  const entityType = privateEquityTypeByField[field];
+  return entityType ? lookUpTypedRef(db, tenantId, "entity", entityType, value) : "unverifiable";
+}
+
+async function lookUpTypedRef(
+  db: Db,
+  tenantId: string | undefined,
+  kind: "party" | "entity",
+  type: string,
+  value: string,
+): Promise<"verified" | "not_found"> {
+  const result = kind === "party"
+    ? await db.execute<{ tenant_id: string | null }>(sql`
+        SELECT finnor_os.party_ref_tenant(${type},${value}::uuid)::text tenant_id
+      `)
+    : await db.execute<{ tenant_id: string | null }>(sql`
+        SELECT finnor_os.canonical_entity_tenant(${type},${value}::uuid)::text tenant_id
+      `);
+  const resolvedTenant = result.rows[0]?.tenant_id ?? null;
+  return resolvedTenant && (!tenantId || resolvedTenant === tenantId) ? "verified" : "not_found";
+}
+
+interface GroundingCandidate {
+  field: string;
+  value: string;
+  typed?: { kind: "party" | "entity"; type: string };
+}
+
+function collectGroundingCandidates(value: unknown, path = ""): GroundingCandidate[] {
+  if (Array.isArray(value)) {
+    return value.flatMap((item, index) => collectGroundingCandidates(item, `${path}[${index}]`));
+  }
+  if (!value || typeof value !== "object") return [];
+  const row = value as Record<string, unknown>;
+  const candidates: GroundingCandidate[] = [];
+  const consumed = new Set<string>();
+  if (typeof row.partyType === "string" && typeof row.partyId === "string" && UUID_RE.test(row.partyId)) {
+    candidates.push({ field: path ? `${path}.partyId` : "partyId", value: row.partyId, typed: { kind: "party", type: row.partyType } });
+    consumed.add("partyId");
+  }
+  if (typeof row.entityType === "string" && typeof row.entityId === "string" && UUID_RE.test(row.entityId)) {
+    candidates.push({ field: path ? `${path}.entityId` : "entityId", value: row.entityId, typed: { kind: "entity", type: row.entityType } });
+    consumed.add("entityId");
+  }
+  for (const [key, child] of Object.entries(row)) {
+    if (consumed.has(key)) continue;
+    const childPath = path ? `${path}.${key}` : key;
+    if (key.endsWith("Id") && typeof child === "string" && UUID_RE.test(child)) {
+      candidates.push({ field: childPath, value: child });
+    } else {
+      candidates.push(...collectGroundingCandidates(child, childPath));
+    }
+  }
+  return candidates;
+}
+
+// No active product action delegates to a legacy vertical workflow graph.
+const WORKFLOW_ACTION_TYPES = new Set<string>();
+
+export interface GroundedField {
+  field: string;
+  status: "verified" | "not_found" | "unverifiable";
+}
+
+export interface CommandGraph {
+  kind: "workflow" | "single_action";
+  commandType: string;
+  requiresConfirmation: boolean;
+  autoApprove: boolean;
+}
+
+export interface CompiledPlan {
+  groundedPayload: GroundedField[];
+  compiledGraph: CommandGraph;
+}
+
+/** Pure — no DB access. The "executable command graph" is a structural tag, not a
+ *  fabricated step list (see module header). Safe to call from inside an existing
+ *  transaction/insert batch with zero extra round trips. */
+export function buildCommandGraph(actionType: string, requiresConfirmation: boolean): CommandGraph {
+  return {
+    kind: WORKFLOW_ACTION_TYPES.has(actionType) ? "workflow" : "single_action",
+    commandType: actionType,
+    requiresConfirmation,
+    autoApprove: !requiresConfirmation,
+  };
+}
+
+/**
+ * Takes an already-open, tenant-scoped `db` handle — for callers (like the Planner)
+ * that already hold one open transaction and must not open a second, nested one just
+ * to ground entities. This is the one that actually runs the verification queries.
+ */
+export function groundEntitiesWithDb(db: Db, payload: Record<string, unknown>): Promise<GroundedField[]>;
+export function groundEntitiesWithDb(db: Db, tenantId: string, payload: Record<string, unknown>): Promise<GroundedField[]>;
+export async function groundEntitiesWithDb(db: Db, tenantOrPayload: string | Record<string, unknown>, maybePayload?: Record<string, unknown>): Promise<GroundedField[]> {
+  const tenantId = typeof tenantOrPayload === "string" ? tenantOrPayload : undefined;
+  const payload = typeof tenantOrPayload === "string" ? maybePayload! : tenantOrPayload;
+  const candidates = collectGroundingCandidates(payload);
+  if (candidates.length === 0) return [];
+  const results: GroundedField[] = [];
+  for (const candidate of candidates) {
+    const key = candidate.field.split(".").at(-1)?.replace(/^.*\]/, "") ?? candidate.field;
+    results.push({
+      field: candidate.field,
+      status: candidate.typed
+        ? await lookUpTypedRef(db, tenantId, candidate.typed.kind, candidate.typed.type, candidate.value)
+        : await lookUpKnownId(db, tenantId, key, candidate.value),
+    });
+  }
+  return results;
+}
+
+/** A canonical non-model owner may reserve the future action identity. Only the
+ * native creation contract's top-level output field is exempt from existence;
+ * nested/input references and any foreign existing output remain checked. */
+export async function groundReservedActionWithDb(db: Db, tenantId: string, actionType: string,
+  payload: Record<string, unknown>, actionIdentity: string): Promise<GroundedField[]> {
+  const output = privateEquityCreationIdentity(actionType);
+  if (!output || !UUID_RE.test(actionIdentity) || payload[output.field] !== actionIdentity)
+    return [{ field: output?.field ?? "reservedActionIdentity", status: "unverifiable" }];
+  const { [output.field]: reserved, ...inputs } = payload;
+  const fields = await groundEntitiesWithDb(db, tenantId, inputs);
+  const result = await db.execute<{ tenant_id: string | null }>(sql`
+    SELECT finnor_os.canonical_entity_tenant(${output.entityType},${reserved as string}::uuid)::text tenant_id
+  `);
+  const owner = result.rows[0]?.tenant_id ?? null;
+  return [...fields, { field: output.field, status: owner === null || owner === tenantId ? "verified" : "not_found" }];
+}
+
+/** Convenience wrapper for callers with no transaction of their own already open
+ *  (opens its own withTenant scope) — e.g. a one-off script or a future standalone
+ *  caller. The Planner itself uses groundEntitiesWithDb + buildCommandGraph directly. */
+export async function compileAction(
+  tenantId: string,
+  actionType: string,
+  payload: Record<string, unknown>,
+  requiresConfirmation: boolean,
+): Promise<CompiledPlan> {
+  const groundedPayload = await withTenant(tenantId, (db) => groundEntitiesWithDb(db, tenantId, payload));
+  return { groundedPayload, compiledGraph: buildCommandGraph(actionType, requiresConfirmation) };
+}
+
+// ---------------------------------------------------------------------------
+// Universal Business Effect compiler. This deliberately extends the existing plan
+// compiler: validated plugin drafts enter here after grounding and before authority.
+// ---------------------------------------------------------------------------
+
+const EFFECT_RESOURCE_KEYS: Record<string, string> = {
+  workId: "work", taskId: "task", documentId: "document",
+  locationId: "location", delegationId: "delegation", internalEventId: "internal_event",
+  objectiveLoopId: "objective_loop", communicationIdentityId: "communication_identity",
+  applicationAccountId: "application_account", authProfileId: "auth_profile",
+  dealId: "pe_deal", dealPartyId: "pe_deal_party", requestedFromDealPartyId: "pe_deal_party",
+  responsibleDealPartyId: "pe_deal_party", workstreamId: "pe_workstream", requestId: "pe_request",
+  deliverableId: "pe_deliverable", findingId: "pe_finding", dealRiskId: "pe_deal_risk",
+  dependencyId: "pe_dependency", milestoneId: "pe_milestone", closingConditionId: "pe_closing_condition",
+  closingItemId: "pe_closing_item", evidenceSourceId: "evidence_source", evidenceVersionId: "evidence_source_version",
+  verifierEmployeeId: "employee", investmentCaseId: "pe_investment_case", reconsidersDecisionId: "pe_decision",
+  icCaseId: "pe_ic_case", memoId: "pe_ic_memo", memoSelectionId: "pe_ic_memo", recommendationId: "pe_ic_recommendation", questionId: "pe_ic_question",
+  conditionId: "pe_ic_condition", decisionProposalId: "pe_ic_decision_proposal", riskId: "pe_deal_risk",
+  underwritingRunId: "underwriting_run", primaryUnderwritingRunId: "underwriting_run", documentVersionId: "document_version", templateVersionId: "document_version",
+  modelVersionId: "underwriting_model_version", scenarioId: "underwriting_scenario", baseRunId: "underwriting_run",
+  committeeConfigVersionId: "pe_ic_committee_config_version", scheduledInternalEventId: "internal_event",
+};
+
+const EFFECT_RECIPIENT_KEYS: Record<string, string> = {
+  contactPhone: "phone_endpoint",
+  phone: "phone_endpoint",
+  phoneNumber: "phone_endpoint",
+  toNumber: "phone_endpoint",
+  contactEmail: "email_endpoint",
+  email: "email_endpoint",
+  recipient: "recipient_endpoint",
+};
+
+const PROFILE_CLASS: Partial<Record<ActionProfile, BusinessEffectOperationClass>> = {
+  INTERNAL_DRAFT: "internal_draft",
+  INTERNAL_WRITE: "internal_write",
+  OPERATIONAL_CHANGE: "operational_change",
+  FINANCIAL_WRITE: "financial_write",
+  EXTERNAL_SIDE_EFFECT: "external_side_effect",
+  EXTERNAL_SPEND: "external_spend",
+  BATCH_EXTERNAL: "batch_external",
+  DURABLE_WORKFLOW: "durable_workflow",
+};
+
+const SECRET_KEY = /(?:secret|password|token|authorization|bearer|credential|api[_ -]?key|cookie|browser[_ -]?state|session[_ -]?(?:state|storage)|local[_ -]?storage|private[_ -]?key)/i;
+
+function secretPath(value: unknown, path = "payload"): string | null {
+  if (Array.isArray(value)) {
+    for (let index = 0; index < value.length; index += 1) {
+      const found = secretPath(value[index], `${path}[${index}]`);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (!value || typeof value !== "object") return null;
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    const childPath = `${path}.${key}`;
+    if (SECRET_KEY.test(key)) return childPath;
+    const found = secretPath(child, childPath);
+    if (found) return found;
+  }
+  return null;
+}
+
+function stable(value: unknown): string {
+  if (value === undefined) return "null";
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;
+  return `{${Object.entries(value as Record<string, unknown>)
+    .filter(([, nested]) => nested !== undefined)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, nested]) => `${JSON.stringify(key)}:${stable(nested)}`).join(",")}}`;
+}
+
+function hash(value: unknown): string {
+  return createHash("sha256").update(stable(value)).digest("hex");
+}
+
+export function semanticValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(semanticValue);
+  if (!value || typeof value !== "object") return value;
+  const result: Record<string, unknown> = {};
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    if (key === "tenantId" || key === "correlationId" || key === "idempotencyKey" || SECRET_KEY.test(key)) continue;
+    result[key] = semanticValue(child);
+  }
+  return result;
+}
+
+function collectEffectTargets(value: unknown, actionId: string, path = ""): BusinessEffectTarget[] {
+  if (Array.isArray(value)) return value.flatMap((item, index) => collectEffectTargets(item, actionId, `${path}[${index}]`));
+  if (!value || typeof value !== "object") return [];
+  const row = value as Record<string, unknown>;
+  const targets: BusinessEffectTarget[] = [];
+  const consumed = new Set<string>();
+  if (typeof row.partyType === "string" && typeof row.partyId === "string" && UUID_RE.test(row.partyId)) {
+    targets.push({ kind: "party", type: row.partyType, id: row.partyId, sourcePath: path || "party" });
+    consumed.add("partyId");
+  }
+  if (typeof row.entityType === "string" && typeof row.entityId === "string" && UUID_RE.test(row.entityId)) {
+    targets.push({ kind: "entity", type: row.entityType, id: row.entityId, sourcePath: path || "entity" });
+    consumed.add("entityId");
+  }
+  for (const [key, child] of Object.entries(row)) {
+    if (consumed.has(key)) continue;
+    const childPath = path ? `${path}.${key}` : key;
+    const type = EFFECT_RESOURCE_KEYS[key] ?? (key.endsWith("Ids") ? EFFECT_RESOURCE_KEYS[`${key.slice(0, -3)}Id`] : undefined);
+    if (type) {
+      const ids = Array.isArray(child) ? child : [child];
+      // Employees are PartyRefs, including an explicitly grounded human
+      // verifier. Preserve that kind so the compiler and DB scope boundary use
+      // the same canonical party owner and tenant checks.
+      for (const id of ids) if (typeof id === "string" && UUID_RE.test(id)) targets.push({ kind: type === "employee" ? "party" : "entity", type, id, sourcePath: childPath });
+    } else if (EFFECT_RECIPIENT_KEYS[key] && typeof child === "string" && child.trim()) {
+      targets.push({ kind: "resource", type: EFFECT_RECIPIENT_KEYS[key]!, id: child.trim(), sourcePath: childPath });
+    } else {
+      targets.push(...collectEffectTargets(child, actionId, childPath));
+    }
+  }
+  if (!path && targets.length === 0) targets.push({ kind: "resource", type: "proposed_business_change", id: actionId, sourcePath: "domainActionId" });
+  return [...new Map(targets.map((target) => [`${target.kind}:${target.type}:${target.id}`, target])).values()];
+}
+
+function iso(value: Date | null | undefined): string | null {
+  return value ? value.toISOString() : null;
+}
+
+const PE_STATE_TABLES: Partial<Record<string, string>> = {
+  pe_investment_case: "pe_investment_cases",
+  pe_decision: "pe_decisions",
+  pe_ic_case: "pe_ic_cases",
+  pe_ic_question: "pe_ic_questions",
+  pe_ic_condition: "pe_ic_conditions",
+  pe_workstream: "pe_workstreams",
+  pe_request: "pe_requests",
+  pe_deliverable: "pe_deliverables",
+  pe_finding: "pe_findings",
+  pe_deal_risk: "pe_deal_risks",
+  pe_milestone: "pe_milestones",
+  pe_closing_condition: "pe_closing_conditions",
+  pe_closing_item: "pe_closing_items",
+};
+
+async function safePrivateEquityState(db: Db, tenantId: string, type: string, id: string): Promise<Record<string, unknown> | null> {
+  if (type === "pe_deal") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,status,version,graph_version "graphVersion",actual_close_at "actualCloseAt",updated_at "updatedAt"
+      FROM finnor_os.pe_deals WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "pe_dependency") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,deal_id::text "dealId",version,removed_at "removedAt",
+             blocker_type "blockerType",blocker_id::text "blockerId",blocked_type "blockedType",blocked_id::text "blockedId",updated_at "updatedAt"
+      FROM finnor_os.pe_dependencies WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "pe_ic_memo") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,ic_case_id::text "icCaseId",revision,artifact_role "artifactRole",
+             document_version_id::text "documentVersionId",created_at "createdAt"
+        FROM finnor_os.pe_ic_memos WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "pe_ic_recommendation") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,ic_case_id::text "icCaseId",memo_id::text "memoId",
+             underwriting_run_id::text "underwritingRunId",outcome,revision,created_at "createdAt"
+      FROM finnor_os.pe_ic_recommendations WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "pe_document_link") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,deal_id::text "dealId",entity_id::text "entityId",
+             document_id::text "documentId",link_role "linkRole",version,updated_at "updatedAt"
+      FROM finnor_os.pe_document_links WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "pe_ic_decision_proposal") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,ic_case_id::text "icCaseId",case_version "caseVersion",
+             vote_set_version "voteSetVersion",process_status "processStatus",input_hash "inputHash",created_at "createdAt"
+        FROM finnor_os.pe_ic_decision_proposals WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "underwriting_run") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,investment_case_id::text "investmentCaseId",status,validity,input_hash "inputHash",
+             result_hash "resultHash",computed_at "computedAt"
+        FROM finnor_os.underwriting_runs WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "underwriting_model_version") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,investment_case_id::text "investmentCaseId",semantic_hash "semanticHash",created_at "createdAt"
+        FROM finnor_os.underwriting_model_versions WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "underwriting_scenario") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,investment_case_id::text "investmentCaseId",model_version_id::text "modelVersionId",semantic_hash "semanticHash",created_at "createdAt"
+        FROM finnor_os.underwriting_scenarios WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "document_version") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,document_id::text "documentId",created_at "createdAt"
+        FROM finnor_os.document_versions WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "pe_ic_committee_config_version") {
+    const result = await db.execute<Record<string, unknown>>(sql`
+      SELECT id::text id,config_version "configVersion",policy_revision_id::text "policyRevisionId",
+             policy_hash "policyHash",created_at "createdAt"
+        FROM finnor_os.pe_ic_committee_config_versions WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+    `);
+    return result.rows[0] ?? null;
+  }
+  if (type === "evidence_source") {
+    const [row] = await db.select({ id: evidenceSources.id, sourceKey: evidenceSources.sourceKey, sourceType: evidenceSources.sourceType, updatedAt: evidenceSources.updatedAt })
+      .from(evidenceSources).where(and(eq(evidenceSources.id, id), eq(evidenceSources.scope, "tenant"), eq(evidenceSources.tenantId, tenantId))).limit(1);
+    return row ? { ...row, updatedAt: iso(row.updatedAt) } : null;
+  }
+  if (type === "evidence_source_version") {
+    const [row] = await db.select({ id: evidenceSourceVersions.id, sourceId: evidenceSourceVersions.sourceId, contentHash: evidenceSourceVersions.contentHash, asOf: evidenceSourceVersions.asOf })
+      .from(evidenceSourceVersions).where(and(eq(evidenceSourceVersions.id, id), eq(evidenceSourceVersions.scope, "tenant"), eq(evidenceSourceVersions.tenantId, tenantId))).limit(1);
+    return row ? { ...row, asOf: iso(row.asOf) } : null;
+  }
+  const table = PE_STATE_TABLES[type];
+  if (!table) return null;
+  const result = await db.execute<Record<string, unknown>>(sql`
+    SELECT id::text id,deal_id::text "dealId",state,version,updated_at "updatedAt"
+    FROM ${sql.raw(`finnor_os.${table}`)} WHERE tenant_id=${tenantId}::uuid AND id=${id}::uuid LIMIT 1
+  `);
+  return result.rows[0] ?? null;
+}
+
+async function safeState(db: Db, tenantId: string, target: Pick<BusinessEffectTarget, "kind" | "type" | "id">): Promise<Record<string, unknown> | null> {
+  const peState = await safePrivateEquityState(db, tenantId, target.type, target.id);
+  if (peState) return peState;
+  switch (target.type) {
+    case "external_contact": {
+      const [row] = await db.select({ id: externalContacts.id, name: externalContacts.name, businessEmail: externalContacts.businessEmail }).from(externalContacts).where(and(eq(externalContacts.tenantId, tenantId), eq(externalContacts.id, target.id))).limit(1);
+      return row ?? null;
+    }
+    case "employee": {
+      const [row] = await db.select({ id: users.id, name: users.displayName, businessEmail: users.email, status: users.status }).from(users).where(and(eq(users.tenantId, tenantId), eq(users.id, target.id))).limit(1);
+      return row ?? null;
+    }
+    case "task": {
+      const [row] = await db.select({ id: tasks.id, subjectType: tasks.subjectType, subjectId: tasks.subjectId, title: tasks.title, dueAt: tasks.dueAt, assignedPartyType: tasks.assignedPartyType, assignedPartyId: tasks.assignedPartyId, status: tasks.status, priority: tasks.priority }).from(tasks).where(and(eq(tasks.tenantId, tenantId), eq(tasks.id, target.id))).limit(1);
+      return row ? { ...row, dueAt: iso(row.dueAt) } : null;
+    }
+    case "work": {
+      const [row] = await db.select({ id: works.id, status: works.status, currentOwnerId: works.currentOwnerId, assignedTo: works.assignedTo, updatedAt: works.updatedAt }).from(works).where(and(eq(works.tenantId, tenantId), eq(works.id, target.id))).limit(1);
+      return row ? { ...row, updatedAt: iso(row.updatedAt) } : null;
+    }
+    case "internal_event": {
+      const [row] = await db.select({ id: internalEvents.id, title: internalEvents.title, startsAt: internalEvents.startsAt, endsAt: internalEvents.endsAt, status: internalEvents.status, revision: internalEvents.revision, locationId: internalEvents.locationId }).from(internalEvents).where(and(eq(internalEvents.tenantId, tenantId), eq(internalEvents.id, target.id))).limit(1);
+      return row ? { ...row, startsAt: iso(row.startsAt), endsAt: iso(row.endsAt) } : null;
+    }
+    case "delegation": {
+      const [row] = await db.select({ id: delegations.id, workId: delegations.workId, taskId: delegations.taskId, targetType: delegations.targetType, targetId: delegations.targetId, status: delegations.status, acknowledgementDeadline: delegations.acknowledgementDeadline, completionDeadline: delegations.completionDeadline }).from(delegations).where(and(eq(delegations.tenantId, tenantId), eq(delegations.id, target.id))).limit(1);
+      return row ? { ...row, acknowledgementDeadline: iso(row.acknowledgementDeadline), completionDeadline: iso(row.completionDeadline) } : null;
+    }
+    case "communication_identity": {
+      const [row] = await db.select({ id: communicationIdentities.id, provider: communicationIdentities.provider, channel: communicationIdentities.channel, address: communicationIdentities.address, status: communicationIdentities.status, authProfileId: communicationIdentities.authProfileId, updatedAt: communicationIdentities.updatedAt }).from(communicationIdentities).where(and(eq(communicationIdentities.tenantId, tenantId), eq(communicationIdentities.id, target.id))).limit(1);
+      return row ? { ...row, updatedAt: iso(row.updatedAt) } : null;
+    }
+    case "application_account": {
+      const [row] = await db.select({ id: applicationAccounts.id, application: applicationAccounts.application, provider: applicationAccounts.provider, status: applicationAccounts.status, updatedAt: applicationAccounts.updatedAt }).from(applicationAccounts).where(and(eq(applicationAccounts.tenantId, tenantId), eq(applicationAccounts.id, target.id))).limit(1);
+      return row ? { ...row, updatedAt: iso(row.updatedAt) } : null;
+    }
+    case "auth_profile": {
+      const [row] = await db.select({ id: authProfiles.id, authProfileRef: authProfiles.authProfileRef, applicationAccountId: authProfiles.applicationAccountId, status: authProfiles.status, connectionStatus: authProfiles.connectionStatus, connectionRevision: authProfiles.connectionRevision, updatedAt: authProfiles.updatedAt }).from(authProfiles).where(and(eq(authProfiles.tenantId, tenantId), eq(authProfiles.id, target.id))).limit(1);
+      return row ? { ...row, updatedAt: iso(row.updatedAt) } : null;
+    }
+    default:
+      return null;
+  }
+}
+
+function preconditionSnapshot(actionType: string, target: Pick<BusinessEffectTarget, "type">, values: Record<string, unknown>): Record<string, unknown> {
+  void actionType;
+  void target;
+  return values;
+}
+
+async function resolveBindings(db: Db, tenantId: string, payload: Record<string, unknown>, external: boolean, actionType: string): Promise<{ bindings: BusinessEffectBinding[]; targets: BusinessEffectTarget[] }> {
+  const bindings: BusinessEffectBinding[] = [];
+  const targets: BusinessEffectTarget[] = [];
+  if (actionType === "execute_closing_operation") {
+    const provider = payload.closingProvider as { integrationId?: unknown } | undefined;
+    if (!external || typeof provider?.integrationId !== "string" || !UUID_RE.test(provider.integrationId)) {
+      throw new BusinessEffectBoundaryError("effect_missing", "Closing requires its exact grounded tenant integration");
+    }
+    const [integration] = await db.select({ id: tenantIntegrations.id, binding: tenantIntegrations.binding })
+      .from(tenantIntegrations).where(and(eq(tenantIntegrations.tenantId, tenantId),
+        eq(tenantIntegrations.id, provider.integrationId), eq(tenantIntegrations.binding, "finnor_closing_provider"))).limit(1);
+    if (!integration) throw new BusinessEffectBoundaryError("effect_missing", "Closing provider is not bound in this tenant");
+    bindings.push({ selection: "fixed", provider: integration.binding, tenantIntegrationId: integration.id });
+    return { bindings, targets };
+  }
+  const identityRef = payload.communicationIdentityRef && typeof payload.communicationIdentityRef === "object" ? payload.communicationIdentityRef as Record<string, unknown> : {};
+  const identityId = typeof payload.communicationIdentityId === "string" ? payload.communicationIdentityId : typeof identityRef.communicationIdentityId === "string" ? identityRef.communicationIdentityId : undefined;
+  if (identityId && UUID_RE.test(identityId)) {
+    const [identity] = await db.select({ id: communicationIdentities.id, provider: communicationIdentities.provider }).from(communicationIdentities).where(and(eq(communicationIdentities.tenantId, tenantId), eq(communicationIdentities.id, identityId))).limit(1);
+    bindings.push({ selection: "fixed", communicationIdentityId: identityId, provider: identity?.provider ?? null });
+    targets.push({ kind: "resource", type: "communication_identity", id: identityId, sourcePath: "communicationIdentityRef" });
+  }
+  const authProfileRef = typeof payload.authProfileRef === "string" ? payload.authProfileRef : undefined;
+  const application = typeof payload.application === "string" ? payload.application : undefined;
+  if (authProfileRef) {
+    const [profile] = await db.select({ id: authProfiles.id, applicationAccountId: authProfiles.applicationAccountId, provider: applicationAccounts.provider, application: applicationAccounts.application })
+      .from(authProfiles)
+      .innerJoin(applicationAccounts, and(eq(applicationAccounts.tenantId, tenantId), eq(applicationAccounts.id, authProfiles.applicationAccountId)))
+      .where(and(eq(authProfiles.tenantId, tenantId), eq(authProfiles.authProfileRef, authProfileRef), ...(application ? [eq(applicationAccounts.application, application)] : []))).limit(1);
+    bindings.push({ selection: "fixed", authProfileRef, application: application ?? profile?.application, authProfileId: profile?.id, applicationAccountId: profile?.applicationAccountId, provider: profile?.provider ?? null });
+    if (profile) {
+      targets.push({ kind: "resource", type: "auth_profile", id: profile.id, sourcePath: "authProfileRef" });
+      targets.push({ kind: "resource", type: "application_account", id: profile.applicationAccountId, sourcePath: "authProfileRef" });
+    }
+  }
+  if (bindings.length === 0 && external) {
+    const rawChannel = typeof payload.channel === "string" ? payload.channel : undefined;
+    const channel = rawChannel === "text" ? "sms" : rawChannel === "call" || rawChannel === "phone" ? "voice" : rawChannel;
+    if (channel && ["email", "sms", "voice", "chat", "calendar"].includes(channel)) {
+      const identities = await db.select({ id: communicationIdentities.id, provider: communicationIdentities.provider }).from(communicationIdentities)
+        .where(and(eq(communicationIdentities.tenantId, tenantId), eq(communicationIdentities.status, "active"), eq(communicationIdentities.channel, channel as "email" | "sms" | "voice" | "chat" | "calendar")))
+        .orderBy(asc(communicationIdentities.identityKey)).limit(2);
+      if (identities.length === 1) {
+        bindings.push({ selection: "fixed", communicationIdentityId: identities[0]!.id, provider: identities[0]!.provider });
+        targets.push({ kind: "resource", type: "communication_identity", id: identities[0]!.id, sourcePath: "resolvedBinding" });
+      }
+    }
+  }
+  if (bindings.length === 0 && external && application) {
+    const profiles = await db.select({ id: authProfiles.id, ref: authProfiles.authProfileRef, applicationAccountId: authProfiles.applicationAccountId, provider: applicationAccounts.provider })
+      .from(authProfiles).innerJoin(applicationAccounts, and(eq(applicationAccounts.tenantId, tenantId), eq(applicationAccounts.id, authProfiles.applicationAccountId)))
+      .where(and(eq(authProfiles.tenantId, tenantId), eq(authProfiles.status, "active"), eq(applicationAccounts.application, application))).orderBy(asc(authProfiles.authProfileRef)).limit(2);
+    if (profiles.length === 1) {
+      const profile = profiles[0]!;
+      bindings.push({ selection: "fixed", authProfileRef: profile.ref, application, authProfileId: profile.id, applicationAccountId: profile.applicationAccountId, provider: profile.provider });
+      targets.push({ kind: "resource", type: "auth_profile", id: profile.id, sourcePath: "resolvedBinding" });
+      targets.push({ kind: "resource", type: "application_account", id: profile.applicationAccountId, sourcePath: "resolvedBinding" });
+    }
+  }
+  if (bindings.length === 0 && external) bindings.push({ selection: "policy_resolved", ...(application ? { application } : {}) });
+  return { bindings, targets };
+}
+
+function amountExposure(payload: Record<string, unknown>): { amount: number; currency: string } | null {
+  const amounts: number[] = [];
+  const walk = (value: unknown): void => {
+    if (Array.isArray(value)) { value.forEach(walk); return; }
+    if (!value || typeof value !== "object") return;
+    for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+      if (/(?:amount|total|price|spend|budget|cost)(?:Usd)?$/i.test(key)) {
+        const number = typeof child === "number" ? child : typeof child === "string" && child.trim() ? Number(child) : NaN;
+        if (Number.isFinite(number) && number >= 0) amounts.push(number);
+      }
+      walk(child);
+    }
+  };
+  walk(payload);
+  if (amounts.length === 0) return null;
+  const currency = typeof payload.currency === "string" ? payload.currency.toUpperCase() : "USD";
+  return { amount: Math.max(...amounts), currency };
+}
+
+function expectedState(actionType: string, payload: Record<string, unknown>, before: BusinessEffectStateSnapshot[]): Record<string, unknown> | null {
+  if (["create_task", "schedule_internal_event", "delegate_objective",
+    "open_ic_case", "select_ic_memo_version", "create_ic_question", "prepare_ic_decision_proposal",
+    "open_workstream", "create_deal_request", "record_finding", "raise_deal_risk", "link_deal_dependency", "create_closing_condition", "submit_condition_evidence"].includes(actionType)) return { exists: true };
+  if (actionType === "update_task") return Object.fromEntries(["title", "dueAt", "status", "priority"].filter((key) => key in payload).map((key) => [key, payload[key]]));
+  if (actionType === "assign_task" && payload.assigneeRef && typeof payload.assigneeRef === "object") {
+    const assignee = payload.assigneeRef as Record<string, unknown>;
+    return { assignedPartyType: assignee.partyType, assignedPartyId: assignee.partyId };
+  }
+  if (actionType === "handoff_work" && payload.targetEmployeeRef && typeof payload.targetEmployeeRef === "object") return { currentOwnerId: (payload.targetEmployeeRef as Record<string, unknown>).partyId };
+  if (actionType === "cancel_delegation") return { status: "cancelled" };
+  if (actionType === "reschedule_internal_event") return { startsAt: payload.startsAt, endsAt: payload.endsAt, status: "rescheduled" };
+  if (actionType === "computer_task" && payload.authorizedEffect && typeof payload.authorizedEffect === "object") return { ...(payload.authorizedEffect as Record<string, unknown>).changes as Record<string, unknown> };
+  if (actionType === "submit_deliverable") return { state: "received" };
+  if (actionType === "begin_ic_preparation") return { state: "PREPARING" };
+  if (actionType === "select_ic_underwriting_run") return { primaryUnderwritingRunId: payload.underwritingRunId };
+  if (actionType === "attach_ic_question_evidence") return { substantiationStatus: payload.truthStatus ?? "ATTACHED" };
+  if (actionType === "request_ic_memo_review") return { state: "READY_FOR_REVIEW" };
+  if (actionType === "satisfy_ic_condition") return { state: "SATISFIED" };
+  if (actionType === "resolve_finding") return { state: "resolved" };
+  if (actionType === "resolve_deal_risk") return { state: "resolved" };
+  if (actionType === "mark_dependency_resolved") return { removedAt: { exists: true } };
+  if (actionType === "satisfy_closing_condition") return { state: "satisfied" };
+  if (actionType === "waive_closing_condition") return { state: "waived" };
+  if (actionType === "verify_closing_item") return { state: "verified" };
+  if (actionType === "declare_deal_closed") return { status: "closed", actualCloseAt: { exists: true } };
+  return null;
+}
+
+function isCreateResultTarget(actionType: string, payload: Record<string, unknown>, target: BusinessEffectTarget): boolean {
+  const resultFields: Record<string, readonly [string, string]> = {
+    open_ic_case: ["icCaseId", "pe_ic_case"],
+    select_ic_memo_version: ["memoSelectionId", "pe_ic_memo"],
+    create_ic_question: ["questionId", "pe_ic_question"],
+    prepare_ic_decision_proposal: ["decisionProposalId", "pe_ic_decision_proposal"],
+    open_workstream: ["workstreamId", "pe_workstream"],
+    create_deal_request: ["requestId", "pe_request"],
+    record_finding: ["findingId", "pe_finding"],
+    raise_deal_risk: ["dealRiskId", "pe_deal_risk"],
+    link_deal_dependency: ["dependencyId", "pe_dependency"],
+    create_closing_condition: ["closingConditionId", "pe_closing_condition"],
+  };
+  const pair = resultFields[actionType];
+  return Boolean(pair && target.type === pair[1] && target.id === payload[pair[0]]);
+}
+
+function approvalSummary(actionType: string, payload: Record<string, unknown>, targets: BusinessEffectTarget[], before: BusinessEffectStateSnapshot[], exposure: { amount: number; currency: string } | null, draftSummary: string): string {
+  const target = targets[0] ? `${targets[0].type} ${targets[0].id}` : "the governed target";
+  if (actionType === "send_message") {
+    const body = String(payload.body ?? payload.message ?? "").slice(0, 500);
+    return `Send the approved ${String(payload.channel ?? "message")} to ${target}${body ? `: “${body}”` : ""}.`;
+  }
+  if (actionType === "place_call") return `Place the approved call to ${target}: ${String(payload.objective ?? "").slice(0, 500)}.`;
+  if (actionType === "notify_group") return `Notify exactly ${target} through ${String(payload.channel ?? "the approved channel")}: “${String(payload.body ?? "").slice(0, 500)}”.`;
+  if (actionType === "reschedule_internal_event") {
+    const prior = before[0]?.values ?? {};
+    const from = prior.scheduledAt ?? prior.startsAt ?? "the recorded time";
+    const to = payload.newTime ?? payload.startsAt;
+    return `Reschedule ${target} from ${String(from)} to ${String(to)}.`;
+  }
+  if (actionType === "computer_task") {
+    const effect = payload.authorizedEffect as Record<string, unknown> | undefined;
+    return `In ${String(payload.application)}, perform only ${String(effect?.operation ?? actionType)} on ${target}.`;
+  }
+  return draftSummary || `${actionType.replaceAll("_", " ")} on ${targets.map((row) => `${row.type} ${row.id}`).join(", ") || target}${exposure ? ` with exposure ${exposure.amount} ${exposure.currency}` : ""}.`;
+}
+
+function observationKind(operationClass: BusinessEffectOperationClass, actionType: string): BusinessEffectSet["expected"]["observation"] {
+  if (actionType === "computer_task") return "computer_state";
+  if (operationClass === "durable_workflow") return "workflow_completion";
+  if (["external_side_effect", "external_spend", "batch_external"].includes(operationClass)) return "provider_delivery";
+  return "canonical_state";
+}
+
+function reversibility(operationClass: BusinessEffectOperationClass): BusinessEffectSet["reversibility"] {
+  if (["external_side_effect", "external_spend", "batch_external", "financial_write"].includes(operationClass)) return { classification: "irreversible", compensationCapability: null };
+  return { classification: "unknown_provider_dependent", compensationCapability: null };
+}
+
+export function isConsequentialAction(actionType: string, payload: Record<string, unknown>): boolean {
+  if (actionType === "computer_task" && payload.mode === "READ_ONLY") return false;
+  const profile = ACTION_HARDENING_SPEC_BY_ACTION.get(actionType)?.profile;
+  return Boolean(profile && profile !== "READ_ONLY" && profile !== "META_NO_SIDE_EFFECT");
+}
+
+export class BusinessEffectBoundaryError extends Error {
+  constructor(readonly code: "material_effect_change" | "stale_precondition" | "effect_missing" | "effect_in_progress", message: string) {
+    super(message);
+    this.name = "BusinessEffectBoundaryError";
+  }
+}
+
+async function compileBusinessEffectWithDb(params: {
+  db: Db;
+  action: DomainAction;
+  draft: DraftAction;
+  policy: DomainPolicy;
+  approval: { requiresConfirmation: boolean; typedConfirmation: boolean };
+  id?: string;
+  compensationForEffectId?: string | null;
+}): Promise<BusinessEffectSet> {
+  const spec = ACTION_HARDENING_SPEC_BY_ACTION.get(params.action.actionType);
+  const operationClass = spec && PROFILE_CLASS[spec.profile];
+  if (!operationClass) throw new BusinessEffectBoundaryError("effect_missing", `Action ${params.action.actionType} has no consequential effect classification`);
+  const forbidden = secretPath(params.draft.payload);
+  if (forbidden) throw new BusinessEffectBoundaryError("effect_missing", `${forbidden} contains secret-shaped execution data; use a governed identity or authentication profile reference`);
+  const payload = semanticValue(params.draft.payload) as Record<string, unknown>;
+  // The action's own Work is the durable causal owner, already frozen in
+  // effect.source.workId and guarded by the composite tenant boundary. Except for
+  // handoff_work, it is not the business mutation target. Including it as a state
+  // precondition would let the runtime's own executing/approval/wait transitions
+  // invalidate the exact action they coordinate. A reference to any other Work
+  // remains a normal frozen target.
+  const initialTargets = collectEffectTargets(payload, params.action.id).filter((target) => {
+    if (target.type === "work" && target.id === params.action.workId && params.action.actionType !== "handoff_work") return false;
+    // P4 Run, Scenario and ModelVersion records deliberately have no Core
+    // canonical-truth-registry entry. The BusinessEffect scope still freezes
+    // their exact IDs in delta.values, and PE grounding verifies tenant/Deal
+    // ownership. Its polymorphic target guard accepts only P1/Core entities.
+    if (params.action.actionType === "create_underwriting_run"
+      && ["underwriting_run", "underwriting_scenario", "underwriting_model_version"].includes(target.type)) return false;
+    return true;
+  });
+  const resolved = await resolveBindings(params.db, params.action.tenantId, payload, Boolean(spec?.external), params.action.actionType);
+  if (resolved.bindings.some((binding) => binding.selection === "fixed" && binding.authProfileRef && !binding.authProfileId)) {
+    throw new BusinessEffectBoundaryError("effect_missing", "The requested governed authentication profile does not exist in this tenant");
+  }
+  const targets = [...new Map([...initialTargets, ...resolved.targets].map((target) => [`${target.kind}:${target.type}:${target.id}`, target])).values()];
+  const observedAt = new Date().toISOString();
+  const [canonicalPolicy] = params.policy.version > 0
+    ? await params.db.select({ id: domainPolicies.id }).from(domainPolicies).where(and(
+        eq(domainPolicies.id, params.policy.id),
+        eq(domainPolicies.tenantId, params.action.tenantId),
+        eq(domainPolicies.actionType, params.action.actionType),
+        eq(domainPolicies.active, true),
+      )).limit(1)
+    : [];
+  const policyId = canonicalPolicy?.id ?? null;
+  const policyVersion = policyId ? params.policy.version : null;
+  const before: BusinessEffectStateSnapshot[] = [];
+  for (const target of targets) {
+    const values = await safeState(params.db, params.action.tenantId, target);
+    // Some canonical entity tables use business keys rather than UUIDs. safeState
+    // proves known rows; fall back to the polymorphic registry otherwise.
+    if (target.kind === "party" || (target.kind === "entity" && !values)) {
+      const grounded = await lookUpTypedRef(params.db, params.action.tenantId, target.kind, target.type, target.id).catch(() => "not_found" as const);
+      if (grounded !== "verified" && !isCreateResultTarget(params.action.actionType, payload, target)) {
+        throw new BusinessEffectBoundaryError("effect_missing", `${target.type} target does not exist in this tenant`);
+      }
+    } else if (["communication_identity", "auth_profile", "application_account"].includes(target.type) && !values) {
+      throw new BusinessEffectBoundaryError("effect_missing", `${target.type} binding does not exist in this tenant`);
+    }
+    if (values) {
+      const frozenValues = preconditionSnapshot(params.action.actionType, target, values);
+      before.push({ target: { kind: target.kind, type: target.type, id: target.id }, values: frozenValues, versionHash: hash(frozenValues), observedAt });
+    }
+  }
+  const exposure = amountExposure(payload);
+  const expected = expectedState(params.action.actionType, payload, before);
+  const scope = {
+    actionType: params.action.actionType,
+    operationClass,
+    targets,
+    bindings: resolved.bindings,
+    delta: { operation: params.action.actionType, values: payload },
+    exposure,
+  };
+  const scopeHash = hash(scope);
+  const id = params.id ?? randomUUID();
+  const semanticCore = {
+    source: { domainActionId: params.action.id, actionType: params.action.actionType, workId: params.action.workId ?? null, objectiveStepId: params.action.objectiveStepId ?? null },
+    ...scope,
+    before: before.map((snapshot) => ({ target: snapshot.target, versionHash: snapshot.versionHash })),
+    expected,
+    policyId,
+    policyVersion,
+    compensationForEffectId: params.compensationForEffectId ?? null,
+  };
+  const semanticHash = hash(semanticCore);
+  return {
+    id,
+    schemaVersion: BUSINESS_EFFECT_SCHEMA_VERSION,
+    semanticHash,
+    scopeHash,
+    source: semanticCore.source,
+    mode: "consequential",
+    operation: { name: params.action.actionType, class: operationClass, external: Boolean(spec?.external) },
+    targets,
+    bindings: resolved.bindings,
+    preconditions: before.map((snapshot) => ({ kind: snapshot.target.type === "communication_identity" || snapshot.target.type === "auth_profile" || snapshot.target.type === "application_account" ? "binding_version" : "state_version", target: snapshot.target, expectedHash: snapshot.versionHash, description: `${snapshot.target.type} must still match the compiled before-state` })),
+    before,
+    delta: scope.delta,
+    expected: { observation: observationKind(operationClass, params.action.actionType), state: expected },
+    exposure,
+    authority: { capability: `action:${params.action.actionType}`, risk: spec?.profile === "INTERNAL_DRAFT" || spec?.profile === "INTERNAL_WRITE" ? "medium" : "high", policyId, policyVersion },
+    approval: { required: params.approval.requiresConfirmation, typedConfirmation: params.approval.typedConfirmation, summary: approvalSummary(params.action.actionType, payload, targets, before, exposure, params.draft.summary) },
+    reversibility: reversibility(operationClass),
+    uncertainty: { unknownOutcome: "reconcile_before_retry", stalePrecondition: "block_and_recompile" },
+    provenance: { compiler: "finnor_effect_compiler", compilerVersion: 1, compiledAt: observedAt, replacementForEffectId: null, compensationForEffectId: params.compensationForEffectId ?? null },
+  };
+}
+
+export async function ensureBusinessEffect(params: {
+  action: DomainAction;
+  draft: DraftAction;
+  policy: DomainPolicy;
+  approval: { requiresConfirmation: boolean; typedConfirmation: boolean };
+}): Promise<BusinessEffectSet | undefined> {
+  if (!isConsequentialAction(params.action.actionType, params.draft.payload)) return undefined;
+  return withTenant(params.action.tenantId, async (db) => {
+    const [existing] = await db.select().from(businessEffects).where(and(eq(businessEffects.tenantId, params.action.tenantId), eq(businessEffects.domainActionId, params.action.id))).limit(1);
+    const candidate = await compileBusinessEffectWithDb({ ...params, db, id: existing?.id });
+    if (existing) {
+      if (existing.scopeHash !== candidate.scopeHash) throw new BusinessEffectBoundaryError("material_effect_change", "Execution payload would materially change the frozen authorized Business Effect");
+      const effect = existing.effect as BusinessEffectSet;
+      params.draft.businessEffect = effect;
+      params.action.businessEffectId = effect.id;
+      return effect;
+    }
+    const [created] = await db.insert(businessEffects).values({
+      id: candidate.id,
+      tenantId: params.action.tenantId,
+      domainActionId: params.action.id,
+      version: candidate.schemaVersion,
+      semanticHash: candidate.semanticHash,
+      scopeHash: candidate.scopeHash,
+      operationClass: candidate.operation.class,
+      effect: candidate,
+    }).onConflictDoNothing({ target: businessEffects.domainActionId }).returning();
+    const row = created ?? (await db.select().from(businessEffects).where(and(eq(businessEffects.tenantId, params.action.tenantId), eq(businessEffects.domainActionId, params.action.id))).limit(1))[0];
+    if (!row) throw new BusinessEffectBoundaryError("effect_missing", "Business Effect could not be persisted");
+    if (row.scopeHash !== candidate.scopeHash) throw new BusinessEffectBoundaryError("material_effect_change", "DomainAction is already bound to a materially different Business Effect");
+    const effect = row.effect as BusinessEffectSet;
+    await db.update(domainActions).set({ businessEffectId: row.id }).where(and(eq(domainActions.tenantId, params.action.tenantId), eq(domainActions.id, params.action.id), sql`${domainActions.businessEffectId} IS NULL`));
+    params.draft.businessEffect = effect;
+    params.action.businessEffectId = effect.id;
+    return effect;
+  });
+}
+
+export async function verifyBusinessEffectPreconditions(tenantId: string, effect: BusinessEffectSet): Promise<void> {
+  // Resolve the governed runtime identity before inspecting or executing any
+  // effect. A real tenant with no explicit assignment must fail closed; an
+  // absent row can never be interpreted as Core or Private Equity implicitly.
+  const vertical = await resolveTenantVertical(tenantId);
+  await withTenant(tenantId, async (db) => {
+    if (effect.operation.external) {
+      if (vertical.verticalKey === "private_equity") {
+        const binding = effect.bindings.find((candidate) => candidate.provider || candidate.applicationAccountId || candidate.tenantIntegrationId);
+        const capabilityByAction: Record<string, Array<typeof tenantIntegrations.$inferSelect["capability"]>> = {
+          send_message: ["communications"], place_call: ["communications"], notify_group: ["communications"],
+          share_document: ["documents", "communications"], computer_task: ["communications", "documents", "crm"],
+        };
+        const capabilities = capabilityByAction[effect.operation.name] ?? [];
+        const candidates = await db.select({
+          id: tenantIntegrations.id,
+          mode: tenantIntegrations.mode,
+          binding: tenantIntegrations.binding,
+          capability: tenantIntegrations.capability,
+          applicationAccountId: tenantIntegrations.applicationAccountId,
+        }).from(tenantIntegrations).where(and(
+          eq(tenantIntegrations.tenantId, tenantId),
+          ...(binding?.tenantIntegrationId ? [eq(tenantIntegrations.id, binding.tenantIntegrationId)] : []),
+          ...(binding?.provider ? [eq(tenantIntegrations.binding, binding.provider)] : []),
+          ...(binding?.applicationAccountId ? [eq(tenantIntegrations.applicationAccountId, binding.applicationAccountId)] : []),
+        ));
+        const relevant = binding?.provider || binding?.applicationAccountId || binding?.tenantIntegrationId
+          ? candidates
+          : candidates.filter((row) => capabilities.includes(row.capability));
+        if (relevant.length === 0 || relevant.some((row) => row.mode === "real")) {
+          throw new BusinessEffectBoundaryError(
+            "stale_precondition",
+            "Private Equity shadow execution requires one explicit sandbox or emulator provider binding; real or unbound egress is blocked",
+          );
+        }
+      }
+      const binding = effect.bindings.find((candidate) => candidate.provider || candidate.applicationAccountId || candidate.tenantIntegrationId);
+      if (binding?.provider) {
+        const rows = await db.select().from(tenantIntegrations).where(and(
+          eq(tenantIntegrations.tenantId, tenantId),
+          eq(tenantIntegrations.binding, binding.provider),
+          ...(binding.tenantIntegrationId ? [eq(tenantIntegrations.id, binding.tenantIntegrationId)] : []),
+          ...(binding.applicationAccountId ? [eq(tenantIntegrations.applicationAccountId, binding.applicationAccountId)] : []),
+        )).limit(2);
+        if (rows.length !== 1) {
+          throw new BusinessEffectBoundaryError("stale_precondition", `External source ${binding.provider} is not bound to one exact tenant account`);
+        }
+        const integration = rows[0]!;
+        if (integration.health === "down" || integration.syncStatus === "blocked" || integration.reconciliationStatus === "blocked") {
+          throw new BusinessEffectBoundaryError("stale_precondition", `External source ${binding.provider} is blocked or unavailable; refresh/recovery is required`);
+        }
+        const freshness = integration.freshnessPolicy && typeof integration.freshnessPolicy === "object" && !Array.isArray(integration.freshnessPolicy)
+          ? integration.freshnessPolicy as Record<string, unknown> : {};
+        const source = integration.sourcePolicy && typeof integration.sourcePolicy === "object" && !Array.isArray(integration.sourcePolicy)
+          ? integration.sourcePolicy as Record<string, unknown> : {};
+        const maxAgeSeconds = typeof freshness.maxAgeSeconds === "number" && freshness.maxAgeSeconds > 0 ? freshness.maxAgeSeconds : null;
+        const requiresFresh = freshness.requireFreshBeforeEffect === true
+          || source.requireFreshBeforeEffect === true
+          || freshness.criticality === "consequential"
+          || freshness.staleBehavior === "refresh_then_block";
+        if (requiresFresh && (!integration.syncInitializedAt || !integration.lastSuccessfulSyncAt)) {
+          throw new BusinessEffectBoundaryError("stale_precondition", `External source ${binding.provider} has not completed its required initial synchronization`);
+        }
+        if (requiresFresh && maxAgeSeconds !== null && integration.lastSuccessfulSyncAt
+            && Date.now() - integration.lastSuccessfulSyncAt.getTime() > maxAgeSeconds * 1000) {
+          await db.update(tenantIntegrations).set({ freshnessState: "stale", syncStatus: "degraded", updatedAt: new Date() }).where(and(
+            eq(tenantIntegrations.tenantId, tenantId), eq(tenantIntegrations.id, integration.id),
+          ));
+          throw new BusinessEffectBoundaryError("stale_precondition", `External source ${binding.provider} is beyond its configured freshness window; refresh/reconcile before execution`);
+        }
+      }
+    }
+    for (const precondition of effect.preconditions) {
+      if (!precondition.expectedHash) continue;
+      const current = await safeState(db, tenantId, precondition.target);
+      const compiled = effect.before.find((snapshot) => snapshot.target.kind === precondition.target.kind
+        && snapshot.target.type === precondition.target.type && snapshot.target.id === precondition.target.id);
+      const comparable = current && compiled
+        ? Object.fromEntries(Object.keys(compiled.values).map((key) => [key, current[key]]))
+        : current;
+      if (!comparable || hash(comparable) !== precondition.expectedHash) {
+        throw new BusinessEffectBoundaryError("stale_precondition", `${precondition.target.type} changed after effect compilation; recompile and renew authorization`);
+      }
+    }
+  });
+}
+
+export async function markBusinessEffectAuthorized(tenantId: string, effectId: string): Promise<void> {
+  await withTenant(tenantId, (db) => db.update(businessEffects).set({ status: "authorized", authorizedAt: new Date() }).where(and(eq(businessEffects.tenantId, tenantId), eq(businessEffects.id, effectId), eq(businessEffects.status, "compiled"))));
+}
+
+export async function markBusinessEffectExecuting(tenantId: string, effect: BusinessEffectSet): Promise<void> {
+  await verifyBusinessEffectPreconditions(tenantId, effect);
+  // A known, explicit failed attempt is safe to retry through the existing bounded
+  // reflection policy. Unknown/reconciliation-required outcomes are intentionally
+  // excluded so they can never be converted into a blind duplicate mutation.
+  const permittedStatus = effect.operation.external
+    // Provider acknowledgement/partial verification is itself an uncertain
+    // outcome. Only the observer may settle it; re-entering would risk a duplicate.
+    ? sql`${businessEffects.status} IN ('authorized','failed')`
+    : sql`${businessEffects.status} IN ('authorized','failed')`;
+  const [claimed] = await withTenant(tenantId, (db) => db.update(businessEffects).set({ status: "executing", executionStartedAt: new Date() }).where(and(eq(businessEffects.tenantId, tenantId), eq(businessEffects.id, effect.id), permittedStatus)).returning({ id: businessEffects.id }));
+  if (!claimed) {
+    const [current] = await withTenant(tenantId, (db) => db.select({ status: businessEffects.status }).from(businessEffects).where(and(eq(businessEffects.tenantId, tenantId), eq(businessEffects.id, effect.id))).limit(1));
+    if (current?.status === "executing") {
+      throw new BusinessEffectBoundaryError("effect_in_progress", "The identical Business Effect is already executing; the duplicate attempt was suppressed");
+    }
+    throw new BusinessEffectBoundaryError("material_effect_change", "Business Effect is not in a state that permits execution; reconcile or obtain renewed authorization");
+  }
+}
+
+function valuesMatch(expected: Record<string, unknown>, current: Record<string, unknown>): boolean {
+  return Object.entries(expected).every(([key, value]) => Object.hasOwn(current, key)
+    && current[key] !== undefined
+    && (value && typeof value === "object" && !Array.isArray(value)
+      && Object.keys(value).length === 1 && (value as Record<string, unknown>).exists === true
+      ? current[key] !== null : stable(current[key]) === stable(value)));
+}
+
+/** Resolve created identity from the native owner or the preallocated intent.
+ * Executor-returned IDs are hints only and cannot select an unrelated record. */
+async function observeCreatedCanonicalEffect(tenantId: string, effect: BusinessEffectSet): Promise<Record<string, unknown> | null> {
+  const payload = effect.delta.values;
+  if (effect.operation.name === "create_underwriting_run") {
+    return withTenant(tenantId, async db => {
+      const rows = await db.execute<Record<string, any>>(sql`
+        SELECT r.*,s.definition AS scenario_definition
+        FROM finnor_os.underwriting_runs r LEFT JOIN finnor_os.underwriting_scenarios s
+          ON s.tenant_id=r.tenant_id AND s.id=r.scenario_id
+        WHERE r.tenant_id=${tenantId}::uuid AND r.idempotency_key=${effect.source.domainActionId} LIMIT 2
+      `);
+      if (rows.rows.length !== 1) return null;
+      const row = rows.rows[0]!;
+      const worldAt = row.world_at instanceof Date ? row.world_at
+        : typeof row.world_at === "string" ? new Date(row.world_at) : null;
+      if (!worldAt || !Number.isFinite(worldAt.valueOf())) return null;
+      const observedWorldAt = worldAt.toISOString();
+      if (row.work_id !== effect.source.workId || row.work_id !== payload.workId
+          || row.investment_case_id !== payload.investmentCaseId || row.model_version_id !== payload.modelVersionId
+          || observedWorldAt !== payload.worldAt || row.status !== "SUCCEEDED" || row.validity !== "VALID"
+          || row.input_hash !== row.input_snapshot?.semanticHash || row.input_hash !== inputSnapshotHash(row.input_snapshot)
+          || row.result_hash !== row.result?.resultSemanticHash || row.result_hash !== runResultHash(row.result)) return null;
+      const scenario = payload.scenario as Record<string, unknown> | undefined;
+      if (scenario ? !row.scenario_definition
+          || row.scenario_definition.name !== scenario.name
+          || stable(row.scenario_definition.overrides) !== stable(scenario.overrides)
+        : row.scenario_id !== (payload.scenarioId ?? null)) return null;
+      return { id: row.id, workId: row.work_id, investmentCaseId: row.investment_case_id,
+        modelVersionId: row.model_version_id, scenarioId: row.scenario_id, worldAt: observedWorldAt,
+        status: row.status, validity: row.validity, inputHash: row.input_hash, resultHash: row.result_hash };
+    });
+  }
+  if (effect.operation.name === "create_task") {
+    return withTenant(tenantId, async db => {
+      const rows = await db.select().from(tasks).where(and(eq(tasks.tenantId, tenantId), eq(tasks.sourceDomainActionId, effect.source.domainActionId))).limit(2);
+      if (rows.length !== 1) return null;
+      const row = rows[0]!;
+      const subject = payload.subjectRef as Record<string, unknown> | undefined;
+      const assignee = payload.assigneeRef as Record<string, unknown> | undefined;
+      const work = payload.workRef as Record<string, unknown> | undefined;
+      const expected = { subjectType: subject?.entityType, subjectId: subject?.entityId, title: payload.title,
+        priority: payload.priority ?? "normal", dueAt: payload.dueAt ?? null,
+        assignedPartyType: assignee?.partyType ?? null, assignedPartyId: assignee?.partyId ?? null, workId: work?.workId ?? null };
+      const observed = { id: row.id, subjectType: row.subjectType, subjectId: row.subjectId, title: row.title,
+        priority: row.priority, dueAt: iso(row.dueAt), assignedPartyType: row.assignedPartyType, assignedPartyId: row.assignedPartyId, workId: row.workId,
+        sourceDomainActionId: row.sourceDomainActionId };
+      return valuesMatch(expected, observed) ? observed : null;
+    });
+  }
+  // These PE owners allocate concrete IDs in the immutable approved payload.
+  // The expected predicate is existence at that identity, not inferred task success.
+  const fixed = collectEffectTargets(payload, effect.source.domainActionId)
+    .filter(target => isCreateResultTarget(effect.operation.name, payload, target));
+  if (fixed.length !== 1) return null;
+  return withTenant(tenantId, db => safeState(db, tenantId, fixed[0]!));
+}
+
+function assertFrozenObservationEffect(row: Pick<typeof businessEffects.$inferSelect, 'effect'|'semanticHash'|'scopeHash'|'domainActionId'> | undefined, effect: BusinessEffectSet): void {
+  if (!row || row.semanticHash !== effect.semanticHash || row.scopeHash !== effect.scopeHash
+      || row.domainActionId !== effect.source.domainActionId || hash(row.effect) !== hash(effect)) {
+    throw new BusinessEffectBoundaryError('material_effect_change', 'Observation must use the exact persisted authorized Business Effect');
+  }
+}
+
+export async function recordBusinessEffectOutcome(tenantId: string, effect: BusinessEffectSet, result: ExecutionResult): Promise<BusinessEffectVerification> {
+  const [currentEffect, operationMembers] = await Promise.all([
+    withTenant(tenantId, (db) => db.select({
+      status: businessEffects.status,
+      verification: businessEffects.verification,
+      effect: businessEffects.effect,
+      semanticHash: businessEffects.semanticHash,
+      scopeHash: businessEffects.scopeHash,
+      domainActionId: businessEffects.domainActionId,
+    }).from(businessEffects).where(and(
+      eq(businessEffects.tenantId, tenantId),
+      eq(businessEffects.id, effect.id),
+    )).limit(1).then((rows) => rows[0])),
+    withTenant(tenantId, (db) => db.select({
+      executionState: externalOperations.executionState,
+      integrationId: externalOperations.integrationId,
+      response: externalOperations.response,
+    }).from(externalOperations).where(and(
+      eq(externalOperations.tenantId, tenantId),
+      eq(externalOperations.businessEffectId, effect.id),
+    ))),
+  ]);
+  assertFrozenObservationEffect(currentEffect, effect);
+  // Observe the owner-read preimage, so a caller cannot mutate its object while
+  // independent readback is in flight.
+  effect = currentEffect!.effect as BusinessEffectSet;
+  if (currentEffect?.status === "verified" || currentEffect?.status === "compensated") {
+    return currentEffect.verification as BusinessEffectVerification
+      ?? {
+        state: currentEffect.status === "verified" ? "verified" : "partially_verified",
+        basis: "Persisted Effect truth is monotonic",
+        checkedAt: new Date().toISOString(),
+      };
+  }
+  const memberSummary = operationMembers.reduce((summary, member) => {
+    const response = member.response && typeof member.response === "object" && !Array.isArray(member.response)
+      ? member.response as Record<string, unknown> : {};
+    if (member.executionState === "verified"
+        || (member.executionState === "reconciled" && response.reconciliationOutcome === "happened_as_intended")) summary.verified += 1;
+    else if (member.executionState === "known_failed"
+        || (member.executionState === "reconciled" && response.reconciliationOutcome === "definitely_did_not_happen")) summary.knownFailed += 1;
+    else if (member.executionState === "unknown_outcome" || member.executionState === "reconciliation_required") summary.uncertain += 1;
+    else if (member.executionState === "divergent") summary.divergent += 1;
+    else summary.incomplete += 1;
+    if (member.integrationId) summary.requiresObservation += 1;
+    return summary;
+  }, { verified: 0, knownFailed: 0, uncertain: 0, divergent: 0, incomplete: 0, requiresObservation: 0 });
+  const requiresExternalObservation = effect.operation.external
+    && memberSummary.requiresObservation > 0
+    && memberSummary.verified < operationMembers.length;
+  let verification: BusinessEffectVerification;
+  let status: typeof businessEffects.$inferSelect.status;
+  if (effect.operation.external && operationMembers.length > 0 && memberSummary.uncertain > 0) {
+    verification = {
+      state: "reconciliation_required",
+      basis: "At least one logical provider-operation member has an unknown outcome; no member may be blindly replayed",
+      checkedAt: new Date().toISOString(),
+      observed: { result: result.output, operationMembers: memberSummary },
+    };
+    status = "reconciliation_required";
+  } else if (effect.operation.external && operationMembers.length > 0 && memberSummary.divergent > 0) {
+    verification = {
+      state: "divergent",
+      basis: "At least one logical provider-operation member diverged from the authorized intent",
+      checkedAt: new Date().toISOString(),
+      observed: { result: result.output, operationMembers: memberSummary },
+    };
+    status = "divergent";
+  } else if (effect.operation.external && operationMembers.length > 0 && memberSummary.verified === operationMembers.length) {
+    verification = {
+      state: "verified",
+      basis: "Every logical provider-operation member is verified under its declared verification contract",
+      checkedAt: new Date().toISOString(),
+      observed: { result: result.output, operationMembers: memberSummary },
+    };
+    status = "verified";
+  } else if (effect.operation.external && operationMembers.length > 0
+      && memberSummary.knownFailed === operationMembers.length && result.status !== "success") {
+    verification = {
+      state: "unverified",
+      basis: "Every logical provider-operation member is known not to have produced the intended state",
+      checkedAt: new Date().toISOString(),
+      observed: { result: result.output, operationMembers: memberSummary },
+    };
+    status = "failed";
+  } else if (effect.operation.external && operationMembers.length > 0) {
+    verification = {
+      state: "partially_verified",
+      basis: "Logical provider-operation members are only partially settled; verified members remain final and are not replay candidates",
+      checkedAt: new Date().toISOString(),
+      observed: { result: result.output, operationMembers: memberSummary },
+    };
+    status = "partially_verified";
+  } else if (result.errorKind === "unknown_outcome") {
+    verification = { state: "reconciliation_required", basis: "Provider outcome is unknown; consequential retry is prohibited until reconciliation", checkedAt: new Date().toISOString(), observed: result.output };
+    status = "reconciliation_required";
+  } else if (result.status !== "success") {
+    verification = { state: "unverified", basis: result.error ?? "The effect did not produce a successful observable result", checkedAt: new Date().toISOString(), observed: result.output };
+    status = "failed";
+  } else if (effect.operation.name === "send_message") {
+    // Provider acceptance is transport evidence, not business-outcome evidence.  The
+    // The Core communication runtime projects a successful send into canonical
+    // message history. Observe only the exact action provenance.
+    const observed = await withTenant(tenantId, async (db) => {
+      const [message] = await db.select({ id: messages.id, channel: messages.channel, sentAt: messages.sentAt })
+        .from(messages)
+        .where(and(
+          eq(messages.tenantId, tenantId),
+          eq(messages.direction, "outbound"),
+          eq(messages.sourceSystem, `domain_action:${effect.source.domainActionId}`),
+        ))
+        .orderBy(desc(messages.sentAt))
+        .limit(1);
+      if (message) return { canonicalMessageId: message.id, channel: message.channel, recordedAt: message.sentAt.toISOString() };
+      return null;
+    });
+    verification = observed && !requiresExternalObservation
+      ? { state: "verified", basis: "Canonical outbound communication state was observed after execution", checkedAt: new Date().toISOString(), observed }
+      : { state: "partially_verified", basis: observed
+          ? "Canonical outbound intent is recorded, but final external delivery has not yet been observed"
+          : "The provider accepted the delivery, but no canonical or external delivery state was observed", checkedAt: new Date().toISOString(), observed: result.output };
+    status = observed && !requiresExternalObservation ? "verified" : "partially_verified";
+  } else if (effect.operation.name === "create_underwriting_run" || effect.expected.state?.exists === true) {
+    const observed = await observeCreatedCanonicalEffect(tenantId, effect);
+    verification = { state: observed ? "verified" : "divergent", basis: observed ? "Native action-bound or preallocated canonical record satisfies the exact creation predicate" : "Execution reported success but the exact authorized creation predicate was not established", checkedAt: new Date().toISOString(), ...(observed ? { observed } : {}) };
+    status = observed ? "verified" : "divergent";
+  } else if (effect.expected.state && effect.expected.observation === "canonical_state") {
+    // Effect target[0] is often the synthetic `proposed_business_change` resource.
+    // Verification must observe the real canonical entity snapshot, not depend on
+    // target ordering.
+    const candidates = [
+      ...effect.before.map((snapshot) => snapshot.target),
+      ...effect.targets.filter((target) => target.type !== "proposed_business_change"),
+    ];
+    const nativeTargets: Record<string, readonly [string, string]> = {
+      submit_deliverable: ["deliverableId", "pe_deliverable"],
+      begin_ic_preparation: ["icCaseId", "pe_ic_case"],
+      select_ic_underwriting_run: ["icCaseId", "pe_ic_case"],
+      attach_ic_question_evidence: ["questionId", "pe_ic_question"],
+      request_ic_memo_review: ["icCaseId", "pe_ic_case"],
+      satisfy_ic_condition: ["conditionId", "pe_ic_condition"],
+      resolve_finding: ["findingId", "pe_finding"],
+      resolve_deal_risk: ["dealRiskId", "pe_deal_risk"],
+      mark_dependency_resolved: ["dependencyId", "pe_dependency"],
+      satisfy_closing_condition: ["closingConditionId", "pe_closing_condition"],
+      waive_closing_condition: ["closingConditionId", "pe_closing_condition"],
+      verify_closing_item: ["closingItemId", "pe_closing_item"],
+      declare_deal_closed: ["dealId", "pe_deal"],
+    };
+    const binding = nativeTargets[effect.operation.name];
+    const exactCandidates = binding ? candidates.filter(target => target.type === binding[1]
+      && target.id === effect.delta.values[binding[0]]) : candidates;
+    let current: Record<string, unknown> | null = null;
+    for (const target of exactCandidates) {
+      current = await withTenant(tenantId, (db) => safeState(db, tenantId, target));
+      if (current) break;
+    }
+    const matched = Boolean(current && valuesMatch(effect.expected.state!, current));
+    verification = { state: matched ? "verified" : "divergent", basis: matched ? "Canonical state matches the EffectSet expected after-state" : "Canonical state does not match the EffectSet expected after-state", checkedAt: new Date().toISOString(), ...(current ? { observed: current } : {}) };
+    status = matched ? "verified" : "divergent";
+  } else if (requiresExternalObservation) {
+    verification = { state: "partially_verified", basis: "A durable provider/canonical delivery result exists, but final external business state is not fully observable", checkedAt: new Date().toISOString(), observed: result.output };
+    status = "partially_verified";
+  } else {
+    verification = { state: "unverified", basis: "Execution completed but this action has no deterministic after-state verifier", checkedAt: new Date().toISOString(), observed: result.output };
+    status = "unverified";
+  }
+  const persistedVerification = await withTenant(tenantId, async (db) => {
+    await db.execute(sql`SELECT id FROM ${businessEffects} WHERE ${businessEffects.tenantId}=${tenantId} AND ${businessEffects.id}=${effect.id}::uuid FOR UPDATE`);
+    const [locked] = await db.select({effect:businessEffects.effect,semanticHash:businessEffects.semanticHash,scopeHash:businessEffects.scopeHash,domainActionId:businessEffects.domainActionId}).from(businessEffects).where(and(eq(businessEffects.tenantId,tenantId),eq(businessEffects.id,effect.id))).limit(1);
+    assertFrozenObservationEffect(locked, effect);
+    const [updated] = await db.update(businessEffects).set({ status, observedResult: result.output, verification, observedAt: new Date() }).where(and(
+      eq(businessEffects.tenantId, tenantId),
+      eq(businessEffects.id, effect.id),
+      sql`${businessEffects.status} NOT IN ('verified','compensated')`,
+    )).returning({ verification: businessEffects.verification });
+    const finalVerification = (updated?.verification as BusinessEffectVerification | null)
+      ?? (await db.select({ verification: businessEffects.verification }).from(businessEffects).where(and(
+        eq(businessEffects.tenantId, tenantId),
+        eq(businessEffects.id, effect.id),
+      )).limit(1))[0]?.verification as BusinessEffectVerification | undefined
+      ?? verification;
+    const [receipt] = await db.select({ id: decisionReceipts.id }).from(decisionReceipts)
+      .where(and(eq(decisionReceipts.tenantId, tenantId), eq(decisionReceipts.domainActionId, effect.source.domainActionId)))
+      .orderBy(desc(decisionReceipts.createdAt)).limit(1);
+    if (receipt) await db.update(decisionReceipts).set({ businessEffectId: effect.id, executedEffectHash: effect.semanticHash, verification: finalVerification }).where(and(eq(decisionReceipts.tenantId, tenantId), eq(decisionReceipts.id, receipt.id)));
+    if (finalVerification.state === "reconciliation_required") {
+      const [existing] = await db.select({ id: reconciliationCases.id }).from(reconciliationCases).where(and(eq(reconciliationCases.tenantId, tenantId), eq(reconciliationCases.businessEffectId, effect.id), eq(reconciliationCases.status, "open"))).limit(1);
+      if (!existing) await db.insert(reconciliationCases).values({ tenantId, businessEffectId: effect.id, caseType: "unknown_delivery", details: { domainActionId: effect.source.domainActionId, businessEffectHash: effect.semanticHash, basis: finalVerification.basis } });
+    }
+    return finalVerification;
+  });
+  return persistedVerification;
+}
+
+/** Evolvable producer of native intent from exact owner-resolved S4 meaning.
+ * No provider binding, verification witness, execution authority or admission is issued. */
+export function compileContingentInterventionIntent(input:{actionId:string;effectId:string;intervention:import('@finnor/shared-types').InterventionSpecification;preparationRef:import('@finnor/shared-types').ExperimentRef;consumptionRef:import('@finnor/shared-types').ExperimentRef;compiledAt:string;workLineage?:import('@finnor/shared-types').DurableObligation['workLineage']}):BusinessEffectSet {
+ const actionType='execute_contingent_intervention';
+ const targets:BusinessEffectTarget[]=input.intervention.targets.map((r,index)=>({kind:'entity',type:r.entityType,id:r.entityId,sourcePath:`intervention.targets[${index}]`}));
+ const scope={actionType,operationClass:'operational_change',targets,bindings:[],delta:{operation:actionType,values:{intervention:input.intervention,preparationRef:input.preparationRef,consumptionRef:input.consumptionRef,...(input.workLineage?{workLineage:input.workLineage}:{})}},exposure:null};
+ const source={domainActionId:input.actionId,actionType,workId:input.workLineage?.workId??null,objectiveStepId:null};
+ const expected={observation:'provider_delivery' as const,state:null};
+ return {id:input.effectId,schemaVersion:1,semanticHash:hash({source,...scope,expected}),scopeHash:hash(scope),source,mode:'consequential',operation:{name:actionType,class:'operational_change',external:true},targets,bindings:[],preconditions:[],before:[],delta:scope.delta,expected,exposure:null,
+ authority:{capability:`action:${actionType}`,risk:'high',policyId:null,policyVersion:null},approval:{required:true,typedConfirmation:true,summary:'Exact S4 intervention intent; provider method and independent admission required before dispatch'},reversibility:{classification:'unknown_provider_dependent',compensationCapability:null},uncertainty:{unknownOutcome:'reconcile_before_retry',stalePrecondition:'block_and_recompile'},provenance:{compiler:'finnor_effect_compiler',compilerVersion:1,compiledAt:input.compiledAt,replacementForEffectId:null,compensationForEffectId:null}};
+}
+
+/** Exact application-domain intent. Provider routes, CSRF and credentials remain
+ * private lowering data. This compiler issues neither authority nor settlement. */
+export function compileApplicationOperationIntent(input: {
+  actionId: string; effectId: string; workId: string; compiledAt: string;
+  target: import("@finnor/shared-types").ScopedApplicationIdentity;
+  parameters: import("@finnor/shared-types").ApplicationState;
+  before: import("@finnor/shared-types").ApplicationSnapshot;
+  originalParentRef: import("@finnor/shared-types").ExperimentRef;
+  preparationRef: import("@finnor/shared-types").ExperimentRef;
+  consumptionRef: import("@finnor/shared-types").ExperimentRef;
+  operationRef: import("@finnor/shared-types").ExperimentRef;
+  applicationAccountId: string; authProfileId: string; authProfileRef: string;
+}): BusinessEffectSet {
+  const actionType = "execute_application_operation_v1";
+  // An external record identity is not a native canonical-entity UUID. The
+  // canonical account scopes the resource; exact record identity stays frozen
+  // in the semantic delta, predecessor and S6 obligation.
+  const target: BusinessEffectTarget = { kind: "resource", type: "application_account",
+    id: input.applicationAccountId, sourcePath: "applicationOperation.applicationAccountId" };
+  const bindings: BusinessEffectBinding[] = [{ selection: "fixed", application: input.target.application,
+    applicationAccountId: input.applicationAccountId, authProfileId: input.authProfileId, authProfileRef: input.authProfileRef }];
+  const source = { domainActionId: input.actionId, actionType, workId: input.workId, objectiveStepId: null };
+  const delta = { operation: actionType, values: { target: input.target, parameters: input.parameters,
+    originalParentRef: input.originalParentRef, preparationRef: input.preparationRef,
+    consumptionRef: input.consumptionRef, operationRef: input.operationRef } };
+  const expected = { observation: "computer_state" as const, state: null };
+  const before = [{ target: { kind: target.kind, type: target.type, id: target.id },
+    values: { target: input.target, scope: input.before.scope, state: input.before.state, recordRevision: input.before.recordRevision },
+    versionHash: hash(input.before), observedAt: input.before.observedAt }];
+  const scope = { actionType, operationClass: "operational_change", targets: [target], bindings, delta, exposure: null };
+  return { id: input.effectId, schemaVersion: 1, semanticHash: hash({ source, ...scope, before, expected }),
+    scopeHash: hash(scope), source, mode: "consequential",
+    operation: { name: actionType, class: "operational_change", external: true }, targets: [target], bindings,
+    preconditions: [{ kind: "state_version", target, expectedHash: hash(input.before),
+      description: "Exact lawful application/account/record/pre-state and current native/external authority at wire" }],
+    before, delta, expected, exposure: null,
+    authority: { capability: "action:execute_application_operation_v1", risk: "high", policyId: null, policyVersion: null },
+    approval: { required: true, typedConfirmation: true, summary: "Current native profile and independently authorized application principal required" },
+    reversibility: { classification: "unknown_provider_dependent", compensationCapability: null },
+    uncertainty: { unknownOutcome: "reconcile_before_retry", stalePrecondition: "block_and_recompile" },
+    provenance: { compiler: "finnor_effect_compiler", compilerVersion: 1, compiledAt: input.compiledAt,
+      replacementForEffectId: null, compensationForEffectId: null } };
+}

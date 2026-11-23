@@ -1,10 +1,29 @@
 import { readGit } from "./worktree-state.mjs"
+import { createHash } from "node:crypto"
+import { readFileSync, writeFileSync } from "node:fs"
+
+export function writeChangedFilesEvidence({ path, files, head, base }) {
+  const body = JSON.stringify({ schema: "finnor.pr-changed-files.v1", head, base, files }) + "\n"
+  writeFileSync(path, body, { flag: "wx" })
+  return createHash("sha256").update(body).digest("hex")
+}
+
+export function readChangedFilesEvidence({ path, expectedSha256, head, base }) {
+  const body = readFileSync(path)
+  if (!/^[a-f0-9]{64}$/.test(expectedSha256 ?? "") || createHash("sha256").update(body).digest("hex") !== expectedSha256) throw Error("changed-file evidence digest mismatch")
+  const manifest = JSON.parse(body.toString("utf8"))
+  if (manifest.schema !== "finnor.pr-changed-files.v1" || manifest.head !== head || manifest.base !== base || !/^[a-f0-9]{40}$/.test(head ?? "") || !/^[a-f0-9]{40}$/.test(base ?? "")) throw Error("changed-file evidence identity mismatch")
+  if (!Array.isArray(manifest.files) || manifest.files.some(path => typeof path !== "string")) throw Error("changed-file evidence is invalid")
+  return manifest.files
+}
 
 export function classifyPullRequestFiles(files) {
   return {
-    backend: files.some((path) => path.startsWith("finnor-os/") || path.startsWith("scripts/release/") || path.startsWith("infra/") || path.startsWith(".github/workflows/") || /^(package(?:-lock)?\.json|JARVIS-CREDENTIALS-LEDGER\.md|\.gitleaks\.toml)$/.test(path)),
+    backend: files.some((path) => path.startsWith("finnor-os/") || path.startsWith("scripts/release/") || path.startsWith("scripts/project-z/") || path.startsWith("scope-z/") || path.startsWith("docs/centropy/project-z") || path.startsWith("infra/") || path.startsWith(".github/workflows/") || /^(package(?:-lock)?\.json|JARVIS-CREDENTIALS-LEDGER\.md|\.gitleaks\.toml)$/.test(path)),
     root: files.some((path) => /^finnor-os\/(apps\/api\/app\/api\/|packages\/(shared-types|domain-plugins)\/)/.test(path) || /^(src\/|public\/|e2e\/|vendor\/|scripts\/|package(?:-lock)?\.json$|next\.config|next-env\.d\.ts$|tsconfig|(?:playwright|vitest|eslint|postcss|tailwind)\.config|instrumentation(?:-client)?\.[cm]?[jt]s$|\.eslintrc)/.test(path) || path.startsWith(".github/workflows/")),
-    dependencies: files.some((path) => /(^|\/)(package(?:-lock)?\.json|(?:[^/]+-)?requirements(?:[-_.][^/]+)?\.(?:txt|lock)|pyproject\.toml|poetry\.lock|uv\.lock|Pipfile(?:\.lock)?|Dockerfile(?:\.[^/]+)?)$/.test(path) || path.startsWith("vendor/")),
+    dependencies: files.some((path) => path === ".github/workflows/security.yml" || path === "scripts/release/verify-dependency-scan.mjs"
+      || /(^|\/)(package(?:-lock)?\.json|(?:[^/]+-)?requirements(?:[-_.][^/]+)?\.(?:txt|lock)|pyproject\.toml|poetry\.lock|uv\.lock|Pipfile(?:\.lock)?|Cargo\.(?:toml|lock)|rust-toolchain(?:\.toml)?|Dockerfile(?:\.[^/]+)?)$/.test(path)
+      || /(^|\/)\.cargo\/config(?:\.toml)?$/.test(path) || path.startsWith("vendor/")),
   }
 }
 

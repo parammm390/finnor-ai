@@ -18,6 +18,20 @@ export const API_ROOT_SOURCE_PATHS = Object.freeze([
   "src/lib/centropy/capability-manifest.generated.json",
 ])
 
+// The pinned Z4 native build leaves its compiler output, Cargo registry and
+// toolchain beside the installed binary. Only bin/ and build-identity.json are
+// runtime inputs; copying the rest gives Next's per-route include globbing
+// thousands of extra directory entries and exhausts the build heap.
+const Z4_NATIVE_BUILD_STATE = "packages/epistemic-runtime/native/z4-execution-proof"
+const Z4_NATIVE_BUILD_DIRECTORIES = Object.freeze(["target", ".cargo-home", ".cargo", ".toolchain", "vendor"])
+
+export function apiBuildContextExcludes(relativePath) {
+  const parts = relativePath.split(/[\\/]/)
+  if (parts.some(part => ["node_modules", ".next", ".vercel", ".git", "evidence"].includes(part) || /^\.env(?:\.|$)/.test(part))) return true
+  const native = Z4_NATIVE_BUILD_STATE.split("/")
+  return native.every((part, index) => parts[index] === part) && Z4_NATIVE_BUILD_DIRECTORIES.includes(parts[native.length])
+}
+
 export function apiBuildContext(repoRoot) {
   const directory = mkdtempSync(join(tmpdir(), "finnor-api-build-"))
   const cleanup = () => rmSync(directory, { recursive: true, force: true })
@@ -26,8 +40,7 @@ export function apiBuildContext(repoRoot) {
     const backend = join(repoRoot, "finnor-os")
     cpSync(backend, join(directory, "finnor-os"), {
       recursive: true,
-      filter: source => !relative(backend, source).split(/[\\/]/).some(part =>
-        ["node_modules", ".next", ".vercel", ".git", "evidence"].includes(part) || /^\.env(?:\.|$)/.test(part)),
+      filter: source => !apiBuildContextExcludes(relative(backend, source)),
     })
     for (const path of ["package.json", "package-lock.json", "infra/deployment/production.contract.json", ...API_ROOT_SOURCE_PATHS]) {
       const source = join(repoRoot, path)

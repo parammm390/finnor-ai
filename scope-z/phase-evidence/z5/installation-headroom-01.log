@@ -1,0 +1,1 @@
+{"state":"BLOCKED_INSUFFICIENT_DISK","exit":2,"requiredFreeBytes":8589934592,"actualFreeBytes":2917261312,"installedZ5Proof":false,"databaseActions":0,"listenersStarted":0,"installsStarted":0,"sourceSha256":"217ed024652cce50b1a4163036a64efe5e2cd8deddc10cc353162bcb293298cb"}

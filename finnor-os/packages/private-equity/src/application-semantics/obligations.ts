@@ -1,6 +1,8 @@
 /** Application variant of the existing S6 origin/effect/action/receipt owner.
  * No acknowledgment, candidate predicate or projection settles an effect. */
 import { randomUUID } from "node:crypto";
+import { originOf } from "../../../orchestration/src/project-z/z0-convergence/institution-origin";
+import { inheritedApplicationEffectState } from "../../../orchestration/src/project-z/z0-convergence/institution-allocation";
 import { assertNativeApplicationEffectAdapterBoundary } from "@finnor/db";
 import type { PoolClient } from "pg";
 import type {
@@ -144,11 +146,14 @@ export async function prepareApplicationObligation(ctx: PeMutationContext, sessi
       [effectId, ctx.auth.tenantId, actionId]);
     await c.query("INSERT INTO finnor_os.s6_obligation_origins(tenant_id,principal_id,obligation_id,consumption_id,effect_id,domain_action_id,input_digest,body) VALUES($1,$2,$3,$4,$5,$6,$7,$8::jsonb)",
       [ctx.auth.tenantId, principal(ctx), obligation.ref.id, consumption.ref.id, effectId, actionId, requestDigest, JSON.stringify(obligation)]);
-    await c.query("UPDATE finnor_os.s5_consumption_states SET effect_ref=$1::jsonb,revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$2 AND consumption_id=$3",
-      [JSON.stringify({ owner: "S6", id: effectId, version: "business-effect-v1", contentDigest: effect.semanticHash }), ctx.auth.tenantId, consumption.ref.id]);
-    await c.query("UPDATE finnor_os.s5_reservations SET status='CONSUMPTION_PENDING',revision=revision+1,updated_at=clock_timestamp()"
-      + " WHERE tenant_id=$1 AND reservation_id=$2 AND status='RESERVED'",
-      [ctx.auth.tenantId, session.reservation_ref.id]);
+    if (originOf(session)) await inheritedApplicationEffectState(ctx, c, obligation.ref.id, "BOUND");
+    else {
+      await c.query("UPDATE finnor_os.s5_consumption_states SET effect_ref=$1::jsonb,revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$2 AND consumption_id=$3",
+        [JSON.stringify({ owner: "S6", id: effectId, version: "business-effect-v1", contentDigest: effect.semanticHash }), ctx.auth.tenantId, consumption.ref.id]);
+      await c.query("UPDATE finnor_os.s5_reservations SET status='CONSUMPTION_PENDING',revision=revision+1,updated_at=clock_timestamp()"
+        + " WHERE tenant_id=$1 AND reservation_id=$2 AND status='RESERVED'",
+        [ctx.auth.tenantId, session.reservation_ref.id]);
+    }
     await retainApplicationArtifact(ctx, obligation.ref, body, false, c, [body.rightsRef]);
     await retainApplicationArtifact(ctx, consumption.ref, preimage(consumption), false, c, [body.rightsRef]);
     return obligation;
@@ -252,10 +257,13 @@ export async function beforeApplicationWire(ctx: PeMutationContext, session: App
       [ctx.auth.tenantId, obligation.effectRef.id]);
     await c.query("UPDATE finnor_os.domain_actions SET status='executing',execution_started_at=clock_timestamp() WHERE tenant_id=$1 AND id=$2",
       [ctx.auth.tenantId, obligation.domainActionId]);
-    await c.query("UPDATE finnor_os.s5_consumption_states SET status='UNKNOWN_OUTCOME',revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND consumption_id=$2",
-      [ctx.auth.tenantId, obligation.consumptionRef.id]);
-    await c.query("UPDATE finnor_os.s5_reservations SET status='UNKNOWN_OUTCOME',revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND reservation_id=$2",
-      [ctx.auth.tenantId, session.reservation_ref.id]);
+    if (originOf(session)) await inheritedApplicationEffectState(ctx, c, obligation.ref.id, "POSSIBLE");
+    else {
+      await c.query("UPDATE finnor_os.s5_consumption_states SET status='UNKNOWN_OUTCOME',revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND consumption_id=$2",
+        [ctx.auth.tenantId, obligation.consumptionRef.id]);
+      await c.query("UPDATE finnor_os.s5_reservations SET status='UNKNOWN_OUTCOME',revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND reservation_id=$2",
+        [ctx.auth.tenantId, session.reservation_ref.id]);
+    }
     await applicationEvent(ctx, current, "ATTEMPT_BEFORE_POSSIBLE_WIRE", {
       requestRef: request.request_ref, obligationRef: obligation.ref, effectRef: obligation.effectRef,
       jobId: execution.jobId, claimFence: execution.claimFence, deliveryAttemptId: execution.deliveryAttemptId,
@@ -311,13 +319,13 @@ export async function settleApplicationObservation(ctx: PeMutationContext, sessi
         JSON.stringify(verification), JSON.stringify(input.observation), obligation.effectRef.semanticHash]);
     await c.query("UPDATE finnor_os.domain_actions SET status=$3,execution_started_at=NULL WHERE tenant_id=$1 AND id=$2",
       [ctx.auth.tenantId, obligation.domainActionId, verified ? "completed" : denied ? "rejected" : "executing"]);
-    const state = (await c.query<{ revision: number }>(
+    const state = originOf(session) ? await inheritedApplicationEffectState(ctx, c, obligation.ref.id, "OBSERVED") : (await c.query<{ revision: number }>(
       "UPDATE finnor_os.s5_consumption_states SET status=$3,revision=revision+1,updated_at=clock_timestamp() WHERE tenant_id=$1 AND consumption_id=$2 RETURNING revision",
       [ctx.auth.tenantId, obligation.consumptionRef.id, verified || denied ? "RECONCILED" : "UNKNOWN_OUTCOME"])).rows[0]!;
     await c.query("INSERT INTO finnor_os.s5_history(tenant_id,subject_id,revision,operation,body) VALUES($1,$2,$3,'APPLICATION_S6_OBSERVATION',$4::jsonb)",
       [ctx.auth.tenantId, obligation.consumptionRef.id, state.revision, JSON.stringify({ obligationRef: obligation.ref,
         evidenceRef: evidence, verification, resourceEnvelopeRetained: true, releaseGranted: false })]);
-    if (verified || denied) await c.query(
+    if (!originOf(session) && (verified || denied)) await c.query(
       "UPDATE finnor_os.s5_reservations s SET status='PARTIALLY_RECONCILED',revision=revision+1,updated_at=clock_timestamp()"
       + " WHERE s.tenant_id=$1 AND s.reservation_id=$2 AND s.status='UNKNOWN_OUTCOME'"
       + " AND NOT EXISTS(SELECT 1 FROM finnor_os.application_semantics_requests r WHERE r.tenant_id=s.tenant_id"

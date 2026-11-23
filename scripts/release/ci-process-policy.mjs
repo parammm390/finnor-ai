@@ -30,8 +30,51 @@ export function verifyCiProcess(root) {
   const failures = []
   const require = (condition, message) => { if (!condition) failures.push(message) }
   const ci = workflows["ci.yml"] ?? ""
+  const operatingProfit = workflowJob(ci, "operating-profit")
+  require(operatingProfit.length > 0 && !/^ {4}if:/m.test(operatingProfit)
+    && operatingProfit.includes("python3 scripts/s4/run-local.py"),
+    "S4 must execute the complete original owner and replay path unconditionally")
+  require(operatingProfit.includes("ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb02acbac4c69920fe9d278f82")
+    && operatingProfit.includes('python install 3.12.13')
+    && operatingProfit.includes('venv --python 3.12.13')
+    && operatingProfit.includes('pip sync --require-hashes --only-binary :all:')
+    && operatingProfit.includes('scripts/r4/numerical-requirements.lock'),
+    "S4 requires the pinned interpreter and complete hash-locked scientific runtime")
+  require(operatingProfit.includes("assert sys.version.split()[0] == '3.12.13'")
+    && operatingProfit.includes("('2.3.3', '1.16.2', '1.8.0')")
+    && operatingProfit.includes('FINNOR_S3_PYTHON=$RUNNER_TEMP/s4-python/bin/python'),
+    "S4 must verify the actual Python, NumPy, SciPy and HiGHS identity before owner execution")
   const pr = workflows["pr-verdict.yml"] ?? ""
   const production = workflows["production-release.yml"] ?? ""
+  const projectZ = workflowJob(ci, "project-z-public")
+  const projectZ4 = workflowJob(ci, "project-z-public-z4")
+  const projectZAssets = workflowJob(ci, "project-z-native-assets")
+  const projectZOwner = workflowJob(ci, "project-z-owner-smoke")
+  require(projectZOwner.includes("node scripts/project-z/run-native-ci.mjs")
+    && projectZOwner.length > 0 && !/^ {4}if:/m.test(projectZOwner)
+    && !/AUTH_DEV_BYPASS/.test(projectZOwner),
+    "Project Z real owner transport must be required, isolated and without auth bypass")
+  require(projectZ.includes("node scripts/project-z/run-ci.mjs")
+    && projectZ.includes("phase: [z1, z2, z3]") && projectZ.includes("fail-fast: false")
+    && projectZ4.includes("node scripts/project-z/run-ci.mjs --phase=z4")
+    && projectZ4.length > 0 && !/^ {4}if:/m.test(projectZ4),
+    "Project Z must execute every declared independent public phase process")
+  require(projectZAssets.includes("ci-native.py prepare") && projectZAssets.includes("if-no-files-found: error")
+    && projectZAssets.includes("artifact_name: ${{ steps.identity.outputs.artifact_name }}")
+    && !/^ {4}if:/m.test(projectZAssets), "Z4 test assets require a fail-closed locked build producer")
+  for (const [name, job] of [["owner", projectZOwner], ["public Z4", projectZ4]]) {
+    require(job.includes("needs: project-z-native-assets")
+      && job.includes("needs.project-z-native-assets.outputs.artifact_name")
+      && job.includes("ci-native.py install") && job.includes('--expected-sha "$SOURCE_SHA"'),
+      `${name}: native consumers must verify and install the successful producer artifact`)
+  }
+  for (const job of [projectZAssets, projectZOwner, projectZ4]) {
+    require(job.includes("ref: ${{ github.event.pull_request.head.sha || github.sha }}"),
+      "Native producer and consumers must use the same exact current source")
+  }
+  require(projectZ4.includes("ci-assets-e2e.mjs"), "Native artifact corruption controls must execute")
+  require(projectZ.length > 0 && !/^ {4}if:/m.test(projectZ),
+    "Project Z required backend/release check must not be optional")
   for (const file of ["ci.yml", "security.yml", "marketing-ci.yml", "source-checks.yml", "release-readiness.yml"]) {
     require(!/^  (?:push|pull_request):/m.test(workflows[file] ?? ""), `${file}: reusable checks must have one caller, not a duplicate Git trigger`)
   }
@@ -75,5 +118,62 @@ export function verifyCiProcess(root) {
   for (const [file, text] of Object.entries(workflows)) {
     for (const [, ref] of text.matchAll(/^\s*(?:-\s*)?uses:\s*([^\s#]+)$/gm)) require(ref.startsWith("./.github/workflows/") || /@[0-9a-f]{40}$/i.test(ref), `${file}: mutable action ${ref}`)
   }
+
+  // Display names explain purpose; stable protection and receipt identities remain.
+  const stableNames = new Set(["required-pr-verdict", "w2-pair-verdict",
+    "notify-ci-completion", "post-merge-certification",
+    "original-owner (${{ matrix.mode }})"])
+  for (const [file, text] of Object.entries(workflows)) {
+    const title = text.match(/^name:\s*(.+)$/m)?.[1] ?? ""
+    require(/[A-Za-z].*\s+[A-Za-z]/.test(title),
+      file + ": workflow title must explain its purpose in plain language")
+    const jobs = text.slice(text.indexOf("\njobs:") + 1)
+    for (const [, id] of jobs.matchAll(/^  ([\w-]+):\n/gm)) {
+      const name = workflowJob(text, id).match(/^    name:\s*(.+)$/m)?.[1]?.replace(/^["']|["']$/g, "") ?? ""
+      require(stableNames.has(name) || /[A-Za-z].*\s+[A-Za-z]/.test(name),
+        file + "/" + id + ": add a descriptive job display name")
+    }
+  }
+  const w1Episode = workflows["w1-owning-episode.yml"] ?? ""
+  require(w1Episode.includes("name: Retain a finite W1 outcome")
+    && w1Episode.includes('schema: "finnor.w1.finite-outcome.v1"')
+    && w1Episode.includes("OWNER_NOT_STARTED_OR_RECEIPT_MISSING")
+    && w1Episode.includes("terminal-summary.json")
+    && w1Episode.includes("console.log(JSON.stringify(summary))"),
+    "W1 failures require a privacy-safe finite outcome with exact mode and case identities")
+  const w3Episode = workflows["w3-owning-episode.yml"] ?? ""
+  require(w3Episode.includes("node --max-old-space-size=3072 finnor-os/node_modules/typescript/bin/tsc -p finnor-os/scripts/postz/w3/tsconfig.json"),
+    "W3 complete owner compilation requires the bounded 3 GiB heap qualified for this source graph")
+  require(w3Episode.includes("name: Retain a finite W3 outcome")
+    && w3Episode.includes('schema: "finnor.w3.finite-outcome.v1"')
+    && w3Episode.includes("OWNER_NOT_STARTED_OR_RESULT_MISSING")
+    && w3Episode.includes("terminal-summary.json")
+    && w3Episode.includes("console.log(JSON.stringify(summary))")
+    && !w3Episode.includes("console.log(JSON.stringify(terminal))"),
+    "W3 failures require a privacy-safe finite outcome without printing retained private diagnostics")
+
+  for (const [file, label, required] of [
+    ["w1-owning-verification.yml", "W1 result - economic orchestration and recovery",
+      "needs: [source-checks, native-positive, owning-regressions]"],
+    ["w3-owning-verification.yml", "W3 result - fulfillment and publication",
+      "needs: [fast-owner, full-positive-and-publication, cold-installed-and-mounted]"],
+  ]) {
+    const text = workflows[file] ?? ""
+    require(text.split("\njobs:")[0].includes("codex/zw-integration-quality-20261115"),
+      file + ": existing owner verification must run on the integration branch")
+    const terminal = workflowJob(text, "verdict")
+    require(terminal.includes(required) && terminal.includes("if: ${{ always() }}")
+      && terminal.includes('Object.values(results).every(result => result === "success")'),
+      file + ": all original owner and adverse checks require a fail-closed terminal result")
+    const report = workflowJob(text, "completion-receipt")
+    require(report.includes("needs: verdict")
+      && report.includes("uses: ./.github/workflows/ci-completion.yml")
+      && report.includes('gate: "' + label + '"')
+      && report.includes("result: ${{ needs.verdict.result }}"),
+      file + ": completed results must use the existing source-bound receipt")
+    require((workflows["ci-completion.yml"] ?? "").includes('"' + label + '"'),
+      file + ": reporter must accept the declared result identity")
+  }
+
   return { workflows: Object.keys(workflows).sort(), failures }
 }

@@ -1,4 +1,7 @@
-import { createUnderwritingRun, type CreateUnderwritingRunInput } from "@finnor/private-equity";
+import {
+  createUnderwritingRun,
+  type CreateUnderwritingRunInput,
+} from "../../../../../../packages/private-equity/src/underwriting-repository";
 import { requireContext } from "../../../../lib/auth";
 import {
   UnderwritingCreateRunSchema,

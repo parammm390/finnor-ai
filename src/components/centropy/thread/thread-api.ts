@@ -1,4 +1,5 @@
 import { centropyGet, centropyPost } from "@/components/centropy/lib/api"
+import { z } from "zod"
 import {
   ConversationThreadSummarySchema,
   LoadedConversationThreadSchema,
@@ -6,9 +7,19 @@ import {
   type LoadedConversationThread,
 } from "./thread-contract"
 
+const InvestigationPageSchema = z.object({
+  threads: ConversationThreadSummarySchema.array(),
+  nextCursor: z.string().max(512).nullable(),
+})
+
+export async function listInvestigationPage(limit = 30, cursor?: string) {
+  const response = await centropyGet<unknown>("threads", { limit: String(limit), ...(cursor === undefined ? {} : { cursor }) })
+  return InvestigationPageSchema.parse(response)
+}
+
+/** Legacy first-page consumer; older Investigations use the cursor API above. */
 export async function listInvestigations(limit = 30): Promise<ConversationThreadSummary[]> {
-  const response = await centropyGet<unknown>("threads", { limit: String(limit) })
-  return ConversationThreadSummarySchema.array().parse((response as { threads?: unknown })?.threads)
+  return (await listInvestigationPage(limit)).threads
 }
 
 export async function createInvestigation(title?: string): Promise<ConversationThreadSummary> {

@@ -1,0 +1,27 @@
+{
+  "schema": "finnor.z5.guarded-native-e2e.v1",
+  "state": "NOT_RUN",
+  "currentPhaseAuthority": "NO_DB_AUTH_OR_LISTENER_AUTHORITY",
+  "actions": [],
+  "physicalInterruptions": [],
+  "databaseInitialization": 0,
+  "tenantsCreated": 0,
+  "usersCreated": 0,
+  "bypasses": 0,
+  "migrationsApplied": 0,
+  "grantsApplied": 0,
+  "listenersStarted": 0,
+  "signersCreated": 0,
+  "externalMutations": 0,
+  "productionActivation": false,
+  "protectedAdmission": false,
+  "node": "v22.23.4",
+  "sourceFiles": {
+    "file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/native-e2e.mjs": "84c10ee0ec360c5a2796a60bebedd5dae6a88b8fd00b05029104083df05e65e9",
+    "file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/native-worker.ts": "6e1c357fa7667c541b0e3fafe056a14b61da30c79d6503ec3549ba366742a306",
+    "file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/source-identity.ts": "fa2c70d4fdcce2cc6c6a3e20459a6cd61bb9e370a0cc5eb62ee9ff6380d53c13",
+    "file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/e2e-tools.mjs": "2d9c171c1618954faba5b1bd25c9d8db9b21a09178cb3e0b09d1bc9db5aab723"
+  },
+  "blocker": "EXPLICIT_CURRENT_DISPOSABLE_DATABASE_AUTH_PROCESS_AND_EXISTING_OWNER_AUTHORITY_NOT_GRANTED",
+  "exit": 2
+}

@@ -1,0 +1,45 @@
+{
+  "schema": "finnor.z5.retained-integration-patch-failure.v1",
+  "state": "FAILED_RETAINED_NOT_SUPERSEDED_IN_PLACE",
+  "command": "git -C /home/factory-user/repos/finnor-z5 apply --check --whitespace=error ABSOLUTE_REQUEST_PATCH",
+  "toolCallId": "call_GAbobpq6BvvDJzxHc8Gh3bLA",
+  "originalToolLog": "/home/factory-user/.factory/artifacts/scripts/08db35bb-8bc7-480d-be0b-f5570f53c841/call_GAbobpq6BvvDJzxHc8Gh3bLA.log",
+  "sourceHead": "9f3edfd3b4c6758832c53139da0773218062191e",
+  "stderrEach": "error: dev/null: No such file or directory\n",
+  "checks": [
+    {
+      "request": "01",
+      "patchSha256": "d8c25e2589c35fde2b1314b5c7888ffe9151bf78eec08f0829dd32dda92048c4",
+      "actualExit": 1,
+      "newFileModeHeaders": 0
+    },
+    {
+      "request": "02",
+      "patchSha256": "59be1cc1227ed37a3bb9a860931dfed1bae8b2670a78cf3ec64f0e9fec354541",
+      "actualExit": 1,
+      "newFileModeHeaders": 0
+    },
+    {
+      "request": "03",
+      "patchSha256": "18fe740b7bdc1075d5e62a1e7828c1559b1736be70181d97b800d060e48fea55",
+      "actualExit": 1,
+      "newFileModeHeaders": 0
+    },
+    {
+      "request": "04",
+      "patchSha256": "8bb5c37b3f95dcf3d71e6f061136c871a8a5b6fc3f7042d1b7becb3eabb75179",
+      "actualExit": 1,
+      "newFileModeHeaders": 0
+    },
+    {
+      "request": "05",
+      "patchSha256": "8bb5c37b3f95dcf3d71e6f061136c871a8a5b6fc3f7042d1b7becb3eabb75179",
+      "actualExit": 1,
+      "newFileModeHeaders": 0
+    }
+  ],
+  "sharedFilesWritten": 0,
+  "indexChanged": false,
+  "sqlExecuted": false,
+  "newAuthority": false
+}

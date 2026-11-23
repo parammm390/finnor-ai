@@ -2,10 +2,11 @@
  * ordinary roles, native S3/S4/S5, separate checker/broker and durable oracle.
  * No route-handler calls, test authority bypass, seeded receipts or live effects. */
 import assert from "node:assert/strict";
+import { finiteFailureObservation, finiteRequestFailure, isRetryableClosingProjection, isRetryableReadAfterOwnedWorkerRestart } from "./failure-observation";
 import { createHash, generateKeyPairSync, randomBytes, randomUUID, sign, type KeyObject } from "node:crypto";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { appendFile, copyFile, mkdir, mkdtemp, readFile, readdir, statfs, writeFile } from "node:fs/promises";
-import { constants as fsConstants } from "node:fs";
+import { constants as fsConstants, existsSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import { tmpdir, totalmem } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -19,6 +20,10 @@ import { createDeal } from "@finnor/private-equity";
 import { createEvidenceSource } from "@finnor/memory";
 import { createUpstreamFixtureSupport } from "../s5/owner-fixture.mjs";
 import { ClosingSpecSchema } from "@finnor/shared-types";
+import { compensationCases, prepareCompensationFixture, compensationReadback, compensationFunding,
+  type CompensationCase } from "../postz-w2/closing-compensation-fixture.mts";
+import { verifyClosingReaderPrivacy } from "./closing-reader-privacy.mts";
+import { withS5PortfolioTransaction } from "../../packages/private-equity/src/allocation-store";
 
 process.umask(0o077); // Includes the database library's transient password file.
 const root = resolve(import.meta.dirname, "../../.."), backend = join(root, "finnor-os");
@@ -29,7 +34,11 @@ const selected = caseArgument < 0 ? "authenticated-positive" : process.argv[case
 const continuationProof = process.env.FINNOR_V3_ORIGINAL_WORK_CONTINUATION_PROOF === "1";
 assert(selected, "Registered case name required");
 assert(["authenticated-positive", "lost-draw", "signer-professional", "settlement", "ordering-cancellation",
-  "currentness", "concurrency-isolation", "reopening", "requalification", "fallback", "cross-phase"].includes(selected), "Unsupported registered case");
+  "currentness", "concurrency-isolation", "reopening", "requalification", "fallback", "cross-phase",
+  "workforce-compensation"].includes(selected), "Unsupported registered case");
+const workforceCompensation = selected === "workforce-compensation";
+const compensationCase = (process.env.FINNOR_W2_COMPENSATION_CASE ?? "exact") as CompensationCase;
+if (workforceCompensation) assert(compensationCases.includes(compensationCase), "Registered compensation control required");
 await mkdir(output, { recursive: true });
 const privateDirectory = await mkdtemp(join(tmpdir(), "finnor-v3-runtime-private-"));
 const dbDirectory = await mkdtemp(join(tmpdir(), "finnor-v3-runtime-pg-"));
@@ -46,8 +55,24 @@ const keys = new Map<string, { publicKey: KeyObject; privateKey: KeyObject }>();
 const fixtures: Record<string, any> = {};
 const startedAt = new Date().toISOString();
 let admin: pg.Client | undefined, authServer: Server | undefined, postgresRunning = false;
+
+// The material-cut functions deliberately refuse an unset tenant. Administrative
+// diagnostics must observe the same explicit tenant/principal, then roll back.
+async function tenantDiagnostic<T>(f: { tenant: string; principal: string }, read: (client: pg.Client) => Promise<T>): Promise<T> {
+  assert(admin);
+  await admin.query('BEGIN READ ONLY');
+  try {
+    await admin.query("SELECT set_config('app.tenant_id',$1,true),set_config('app.user_id',$2,true)", [f.tenant, f.principal]);
+    return await read(admin);
+  } finally {
+    await admin.query('ROLLBACK');
+  }
+}
 let apiOrigin = "", authOrigin = "", providerOrigin = "", checkerDigest = "", worker: ChildProcess | undefined;
+let compensationWorkerEnv: NodeJS.ProcessEnv = {};
+let compensationHorizon: { startAt: string; periodMs: number; periods: number };
 let failed: any, current: any;
+const requestFailures = new WeakMap<object,ReturnType<typeof finiteRequestFailure>>();
 let resourceMonitor: NodeJS.Timeout | undefined, resourceFailure: Error | undefined;
 const resourceObservation = { profile: continuationProof ? "USER_AUTHORIZED_BOUNDED_CONTINUATION_ENGINEERING" : "ORIGINAL_DEFAULT",
   peakOwnedRssBytes: 0, minimumObservedFreeBytes: Number.MAX_SAFE_INTEGER, samples: 0 };
@@ -106,17 +131,40 @@ async function ready(service: Awaited<ReturnType<typeof launch>>, label: string)
   }
   throw Error(label + " readiness deadline");
 }
-async function request(f: any, path: string, body: unknown, actorId?: string, token?: string) {
+async function request(f: any, path: string, body?: unknown, actorId?: string, token?: string, signal = AbortSignal.timeout(90000)) {
   const began = performance.now();
-  const response = await fetch(apiOrigin + path, { method: "POST", headers: {
-    authorization: "Bearer " + (token ?? bearer(f, actorId)), "content-type": "application/json",
-  }, body: JSON.stringify(body), signal: AbortSignal.timeout(90000) });
-  const text = await response.text();
+  let response:Response,text:string;
+  const method=body===undefined?'GET':'POST';
+  try {
+    response = await fetch(apiOrigin + path, { method, headers: {
+      authorization: "Bearer " + (token ?? bearer(f, actorId)), "content-type": "application/json",
+      connection: "close",
+    }, body: JSON.stringify(body), signal });
+    text = await response.text();
+  } catch(error) {
+    if(error&&typeof error==='object') requestFailures.set(error,finiteRequestFailure(error,path,method,performance.now()-began));
+    throw error;
+  }
   let parsed: any; try { parsed = JSON.parse(text); } catch { throw Error(`Actual Next returned ${response.status}: ${text.slice(0, 1000)}`); }
   const result = { status: response.status, body: parsed, elapsedMs: performance.now() - began };
   const row = { path, tenantId: f.tenant, actorId: actorId ?? f.principal, request: body, response: result };
   calls.push({ path, tenantId: f.tenant, actorId: row.actorId, status: result.status, elapsedMs: result.elapsedMs });
   await save(`calls/${String(calls.length).padStart(4, "0")}.json`, row); return result;
+}
+async function readAfterOwnedWorkerRestart<T>(read:()=>Promise<T>):Promise<T>{
+  for(let attempt=1;;attempt++){
+    try{return await read();}
+    catch(error){
+      const failure=error&&typeof error==='object'?requestFailures.get(error):undefined;
+      if(!isRetryableReadAfterOwnedWorkerRestart(failure,attempt))throw error;
+      const restartRefused=failure!.path==='/api/workforce/execution-programs/:id'
+        &&failure!.causeCodes.every(code=>code==='ECONNREFUSED');
+      const delayMs=restartRefused?Math.min(1000*attempt,3000):250*attempt;
+      console.log(JSON.stringify({event:'W2_READ_ONLY_RECOVERY_RETRY',attempt,
+        causeCodes:failure!.causeCodes,delayMs}));
+      await sleep(delayMs);
+    }
+  }
 }
 const ok = (r: any) => { assert(r.status >= 200 && r.status < 300, JSON.stringify(r)); return r.body; };
 async function actors(f: any) {
@@ -203,7 +251,24 @@ async function approve(f: any) {
   }
 }
 const equal = (a: unknown, b: unknown) => canonical(a) === canonical(b);
-async function projection(f: any) { return ok(await request(f, "/api/closing/read", { programmeId: f.programmeId })); }
+async function projection(f: any) {
+  const body = { programmeId: f.programmeId };
+  const token = bearer(f), signal = AbortSignal.timeout(90000);
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return ok(await request(f, "/api/closing/read", body, undefined, token, signal));
+    } catch (error) {
+      const failure = error && typeof error === "object" ? requestFailures.get(error) : undefined;
+      // Next dev can restart its listener after reaching the heap threshold.
+      // Replay only this same observation, within the original request budget.
+      if (signal.aborted || processes.find(entry => entry.name === "api")?.exit !== null
+        || !isRetryableClosingProjection(failure, attempt)) throw error;
+      const delayMs = attempt * 1000;
+      console.log(JSON.stringify({ event: "CLOSING_PROJECTION_TRANSPORT_RETRY", attempt, causeCodes: failure!.causeCodes, delayMs }));
+      await sleep(delayMs);
+    }
+  }
+}
 async function waitFor(f: any, predicate: (q: any, state: any) => boolean, limitMs = 240000) {
   const deadline = Date.now() + limitMs; let last: any;
   while (Date.now() < deadline) {
@@ -274,15 +339,34 @@ async function configureClosingOwner(f: any) {
   await save(f.name + "/native-agent-profile.json", profile);
 }
 async function fixture(label: string, fault?: string) {
+  const price = workforceCompensation ? "2" : "120000000";
+  const debtAmount = workforceCompensation ? "1" : "80000000";
+  const equityAmount = workforceCompensation ? "1" : "40000000";
   const f = await support.fixture(label, 1, [
-    { id: "cash", unit: "USD", capacity: 120000000, totalLimit: 120000000, resourceClass: "CASH" },
-    { id: "debt", unit: "USD", capacity: 80000000, totalLimit: 80000000, resourceClass: "BORROWING_HEADROOM" },
-  ], { beforeFit: configureClosingOwner });
+    { id: "cash", unit: "USD", capacity: workforceCompensation ? 6 : 120000000, totalLimit: workforceCompensation ? 6 : 120000000, resourceClass: "CASH" },
+    { id: "debt", unit: "USD", capacity: Number(debtAmount), totalLimit: Number(debtAmount), resourceClass: "BORROWING_HEADROOM" },
+  ], { beforeFit: async f => {
+    await configureClosingOwner(f);
+    if (!workforceCompensation) return;
+    await actors(f);
+    current = f; f.w2WorkId = randomUUID(); f.compensationHorizon = compensationHorizon;
+    f.compensationFixture = await prepareCompensationFixture({ admin: admin! as any, f, request, save,
+      startWorker: async () => {
+        worker = (await launch("w2-original-compiler", ["--import=tsx", join(backend, "scripts/postz-w2/physical-worker.mts")],
+          compensationWorkerEnv)).cp;
+      },
+      stopWorker: async () => {
+        assert(worker);
+        const cp = worker, exited = new Promise<void>(done => cp.once("exit", () => done()));
+        const timer = setTimeout(() => process.kill(-cp.pid!, "SIGKILL"), 5000);
+        process.kill(-cp.pid!, "SIGTERM"); await exited; clearTimeout(timer); worker = undefined;
+      } }, compensationCase);
+  } });
   current = f;
-  for (const [label, spend] of [["signature", {}], ["draw", { debt: 80000000 }], ["pay", { cash: 120000000 }],
+  for (const [label, spend] of [["signature", {}], ["draw", { debt: Number(debtAmount) }], ["pay", { cash: Number(price) }],
     ["transfer", {}], ["file", {}]] as const) await support.policy(f, label, spend);
-  await support.resource(f, "cash", "USD", "STOCK", ["120000000", "120000000"]);
-  await support.resource(f, "debt", "USD", "STOCK", ["80000000", "80000000"]);
+  if (!workforceCompensation) await support.resource(f, "cash", "USD", "STOCK", ["120000000", "120000000"]);
+  await support.resource(f, "debt", "USD", "STOCK", [debtAmount, debtAmount]);
   const clearing = support.clearing(f, { signature: ["10"], draw: ["10"], pay: ["10"], transfer: ["10"], file: ["10"] });
   const cleared = ok(await ownerApi(f, "clear", clearing)); assert.equal(cleared.status, "FEASIBLE", JSON.stringify(cleared));
   assert.equal(cleared.certificate.policyBindings.length, 5, "All original operation policies must be genuinely selected");
@@ -292,7 +376,7 @@ async function fixture(label: string, fault?: string) {
     await admin!.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES($1,$2,$3,$4,'other')", [id, f.tenant, `${label}-${name.toLowerCase()}`, name]);
   const sourceId = (await createEvidenceSource(f.tenant, { sourceKey: "approved-closing-terms:" + label,
     sourceType: "independently_accepted_transaction_terms", title: "Hypothetical exact approved closing terms" })).id;
-  const terms = `Hypothetical original ${label}: buyer ${f.root.entityId}; seller ${sellerEntity}; acquired company ${f.targetEntity}; price USD120000000; debt USD80000000; settled equity USD40000000; exact approved document and parties.`;
+  const terms = `Hypothetical original ${label}: buyer ${f.root.entityId}; seller ${sellerEntity}; acquired company ${f.targetEntity}; price USD${price}; debt USD${debtAmount}; settled equity USD${equityAmount}; exact approved document and parties.`;
   const termsVersion = randomUUID();
   await admin!.query("INSERT INTO finnor_os.evidence_source_versions(id,source_id,scope,tenant_id,version_number,content_hash,content,snapshot,as_of,retrieved_at,created_at) VALUES($1,$2,'tenant',$3,1,$4,$5,'{}'::jsonb,clock_timestamp(),clock_timestamp(),clock_timestamp())", [termsVersion, sourceId, f.tenant, hash(terms), terms]);
   const documentId = randomUUID(), documentBytes = Buffer.from(`%PDF-1.4\n% Hypothetical approved exact agreement\n${terms}\n%%EOF\n`);
@@ -356,7 +440,7 @@ async function fixture(label: string, fault?: string) {
       resourceBindings: resource ? [{ resourceRef: withKind(resource.ref, "native-S5-resource"), quantity: exposure, unit: "USD" }] : [] };
   };
   const sellerActor = { principalId: roleBindings[1]!.principalId, legalEntityId: sellerEntity, roleRef: roleBindings[1]!.ref };
-  f.spec = ClosingSpecSchema.parse({
+  const specInput = {
     schema: "finnor.closing-spec.v1", transactionId: f.dealId, tenantId: f.tenant,
     approvedTermsRevision: termsVersion, approvedTermsDigest: hash(terms), profileId, environment: "DEVELOPMENT",
     originalGrant: { episodeRef: { ...withKind(f.mandate.ref, "original-native-episode"), id: f.mandate.episodeId },
@@ -369,37 +453,39 @@ async function fixture(label: string, fault?: string) {
     { key: "observable-condition", required: true, dependsOn: [], evidence: evidence("OBSERVABLE_CONDITION", "observable-condition", "counsel-authority"),
       canonicalConditionId: null, statement: "Exact hypothetical recorded condition", evidenceClass: "OBSERVABLE", professionalScope: null, waiver: null }],
     funding: [{ key: "debt", required: true, dependsOn: [], evidence: evidence("FUNDING_AVAILABLE", "debt", "receiving-authority"),
-      money: usd("80000000"), facilityDigest: debt.sourceRef.contentDigest, providerEntityId: lenderEntity,
+      money: usd(debtAmount), facilityDigest: debt.sourceRef.contentDigest, providerEntityId: lenderEntity,
       sourceClass: "DEBT_FACILITY", continuingDutyKeys: ["debt-principal"], requiredState: "EFFECTIVE_AVAILABLE", drawOperationKey: "original-debt-draw" },
     { key: "equity", required: true, dependsOn: [], evidence: evidence("FUNDING_AVAILABLE", "equity", "receiving-authority"),
-      money: usd("40000000"), facilityDigest: hash("original-settled-equity"), providerEntityId: equityEntity,
+      money: usd(equityAmount), facilityDigest: hash("original-settled-equity"), providerEntityId: equityEntity,
       sourceClass: "EQUITY_CAPITAL", continuingDutyKeys: [], requiredState: "EFFECTIVE_AVAILABLE", drawOperationKey: null }],
     beneficiaries: [{ key: "seller-beneficiary", required: true, dependsOn: [], evidence: evidence("BENEFICIARY_VALIDATED", "seller-beneficiary", "receiving-authority"),
       legalEntityId: sellerEntity, accountDigest: hash("frozen-original-seller-account:" + sellerEntity), independentValidationChannel: "disposable-contract" }],
     fundsFlows: [{ key: "purchase-price", required: true, dependsOn: ["agreement", "debt", "equity", "seller-beneficiary", "regulatory-condition"],
       evidence: evidence("RECEIVING_SETTLEMENT", "purchase-price", "receiving-authority"),
-      money: usd("120000000"), payerEntityId: f.root.entityId, receivingEntityId: sellerEntity,
+      money: usd(price), payerEntityId: f.root.entityId, receivingEntityId: sellerEntity,
       receivingAccountDigest: hash("frozen-original-seller-account:" + sellerEntity), beneficiaryRequirementKey: "seller-beneficiary",
-      fundingKeys: ["debt", "equity"], purpose: "PURCHASE_PRICE", operationKey: "original-purchase-price" }],
+      fundingKeys: ["debt", "equity"], purpose: workforceCompensation ? "FEE" : "PURCHASE_PRICE", operationKey: "original-purchase-price",
+      ...(workforceCompensation ? { workforceCompensation: f.compensationFixture.binding } : {}) }],
     rightsTransfers: [{ key: "equity-rights", required: true, dependsOn: ["purchase-price"], evidence: evidence("RIGHTS_TRANSFER", "equity-rights", "registry-authority"),
       fromEntityId: sellerEntity, toEntityId: f.root.entityId, rightsDigest: hash("exact-original-equity-rights:" + f.targetEntity), quantity: "100",
       unit: "shares", operationKey: "original-rights-transfer" }],
     legalEffectiveness: [{ key: "legal-effectiveness", required: true, dependsOn: ["equity-rights"], evidence: evidence("LEGAL_EFFECTIVENESS", "legal-effectiveness", "counsel-authority"),
       jurisdiction: "DISPOSABLE", legalBasisDigest: hash("hypothetical-original-effectiveness"), professionalScope: "legal-effectiveness", operationKey: "original-legal-filing" }],
-    continuingDuties: [{ key: "debt-principal", ownerPrincipalId: f.principal, statement: "Retain exact USD80000000 debt principal and service duties",
-      dueAt: new Date(Date.now() + 86400000).toISOString(), dependencyKeys: ["original-debt-draw"], liability: usd("80000000"), obligationRef: null },
+    continuingDuties: [{ key: "debt-principal", ownerPrincipalId: f.principal, statement: "Retain exact USD" + debtAmount + " debt principal and service duties",
+      dueAt: new Date(Date.now() + 86400000).toISOString(), dependencyKeys: ["original-debt-draw"], liability: usd(debtAmount), obligationRef: null },
     { key: "post-close-record", ownerPrincipalId: f.principal, statement: "Maintain original closing record and continuing legal duties",
       dueAt: new Date(Date.now() + 2 * 86400000).toISOString(), dependencyKeys: ["original-legal-filing"], liability: null, obligationRef: null }],
     steps: [step("request-signature", "REQUEST_SIGNATURE", "agreement", [], "signature", null),
-      step("draw-debt", "DRAW_FUNDS", "debt", ["agreement", "regulatory-condition"], "draw", "80000000", debt),
-      step("pay-seller", "PAY_FUNDS", "purchase-price", ["agreement", "regulatory-condition", "debt", "equity", "seller-beneficiary"], "pay", "120000000", cash),
-      step("transfer-rights", "TRANSFER_RIGHTS", "equity-rights", ["purchase-price"], "transfer", "120000000"),
-      step("file-effectiveness", "FILE", "legal-effectiveness", ["equity-rights"], "file", "120000000"),
+      step("draw-debt", "DRAW_FUNDS", "debt", ["agreement", "regulatory-condition"], "draw", debtAmount, debt),
+      step("pay-seller", "PAY_FUNDS", "purchase-price", ["agreement", "regulatory-condition", "debt", "equity", "seller-beneficiary"], "pay", price, cash),
+      step("transfer-rights", "TRANSFER_RIGHTS", "equity-rights", ["purchase-price"], "transfer", price),
+      step("file-effectiveness", "FILE", "legal-effectiveness", ["equity-rights"], "file", price),
       step("acquire-observable", "ACQUIRE_EVIDENCE", "observable-condition", [], null, null),
       step("request-professional", "REQUEST_PROFESSIONAL", "regulatory-condition", [], null, null)],
     dependencyKeys: ["closing-material:" + f.dealId], assumptions: ["Independent hypothetical DEVELOPMENT fixture only. No protected, live, V1/V2 or economic qualification."],
     unsupportedPredicates: [],
-  });
+  };
+  f.spec = workforceCompensation ? specInput : ClosingSpecSchema.parse(specInput);
   const legal = fact(f, { key: "closing-spec" }, "LEGAL_SPEC_ACCEPTANCE", "counsel-authority",
     { accepted: true, specDigest: hash(f.spec) }, { professionalScope: "closing-spec" });
   f.intake = { spec: f.spec, expectedSpecDigest: hash(f.spec), acceptedTermsEvidence: { sourceId, versionId: termsVersion },
@@ -455,6 +541,35 @@ async function fixture(label: string, fault?: string) {
   assert.notEqual(submitted.body.status, "BLOCKED", JSON.stringify(submitted.body));
   f.programmeId = submitted.body.programmeId; f.workId = submitted.body.workId;
   assert(f.programmeId && f.workId);
+  if (workforceCompensation && compensationCase === "exact" && process.env.FINNOR_W2_CUT_SECTION_DIAGNOSTIC === "1") {
+    // Disposable fixture only: record hashes immediately before certificate issuance.
+    // No source data, money, identity or credential values enter the report.
+    await admin!.query(`CREATE TABLE finnor_os.w2_cut_probe (
+      tenant_id uuid NOT NULL, programme_id uuid NOT NULL,
+      section text NOT NULL, digest text NOT NULL,
+      PRIMARY KEY(tenant_id,programme_id,section))`);
+    await admin!.query(`CREATE FUNCTION finnor_os.w2_test_capture_close_cut()
+      RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+      SET search_path=pg_catalog,finnor_os AS $$
+      DECLARE programme uuid;
+      BEGIN
+        SELECT q.id INTO programme FROM finnor_os.pe_closing_programmes q
+          WHERE q.tenant_id=NEW.tenant_id AND q.transaction_id=NEW.id
+          ORDER BY q.created_at DESC LIMIT 1;
+        IF programme IS NOT NULL THEN
+          INSERT INTO finnor_os.w2_cut_probe(tenant_id,programme_id,section,digest)
+          SELECT NEW.tenant_id,programme,part.key,
+            encode(sha256(convert_to(part.value::text,'UTF8')),'hex')
+          FROM jsonb_each(finnor_os.pe_closing_cut(NEW.tenant_id,programme)) part
+          ON CONFLICT(tenant_id,programme_id,section) DO NOTHING;
+        END IF;
+        RETURN NEW;
+      END $$`);
+    await admin!.query(`CREATE TRIGGER aa_w2_cut_before_certificate
+      AFTER UPDATE OF status ON finnor_os.pe_deals
+      FOR EACH ROW WHEN (NEW.status='closed' AND OLD.status IS DISTINCT FROM NEW.status)
+      EXECUTE FUNCTION finnor_os.w2_test_capture_close_cut()`);
+  }
   ok(await observe(f, f.initialDebt));
   const eq = f.spec.funding[1];
   ok(await observe(f, fact(f, eq, "FUNDING_AVAILABLE", "receiving-authority", {
@@ -472,7 +587,9 @@ async function fixture(label: string, fault?: string) {
 }
 const databasePort = await port();
 const postgres = new EmbeddedPostgres({ databaseDir: dbDirectory, user: "finnor_v3", password,
-  port: databasePort, persistent: true, onLog: () => undefined });
+  port: databasePort, persistent: true,
+  postgresFlags: ['-c', 'unix_socket_directories=', '-c', 'listen_addresses=127.0.0.1', '-c', 'track_commit_timestamp=on'],
+  onLog: () => undefined });
 try {
   let freeMemoryBytesEstimate: number, memoryProbe: string;
   if (process.platform === "linux") {
@@ -525,15 +642,26 @@ try {
     ...execFileSync("git", ["-C", root, "ls-files", "--others", "--exclude-standard", "--", ":(exclude)scope-v/**/evidence/**"], { encoding: "utf8" }).trim().split("\n"),
     "finnor-os/scripts/s5/owner-fixture.mts", "finnor-os/scripts/s3/reference.py",
     "finnor-os/apps/api/next.config.mjs", "finnor-os/apps/worker/src/queue.ts", "finnor-os/package-lock.json", "package-lock.json"];
-  const manifest = [];
+  const sourceCommit = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+  const sourceTree = execFileSync("git", ["-C", root, "rev-parse", "HEAD^{tree}"], { encoding: "utf8" }).trim();
+  const manifest = [], absentSourceFiles: string[] = [];
   for (const path of [...new Set(sourceFiles)].filter(p => p && !p.includes("/evidence/")).sort()) {
-    const bytes = await readFile(join(root, path)), target = join(output, "source-snapshot", path);
+    let bytes: Buffer;
+    try { bytes = await readFile(join(root, path)); }
+    catch (error) {
+      if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+        absentSourceFiles.push(path); continue;
+      }
+      throw error;
+    }
+    const target = join(output, "source-snapshot", path);
     await mkdir(dirname(target), { recursive: true });
     await copyFile(join(root, path), target, fsConstants.COPYFILE_EXCL | fsConstants.COPYFILE_FICLONE);
     assert.equal(hash(await readFile(target)), hash(bytes), "Source snapshot bytes changed");
     manifest.push({ path, sha256: hash(bytes) });
   }
-  await save("freeze.json", { schema: "finnor.v3.runtime-freeze.v1", startedAt, selected, node: process.version, manifest,
+  await save("freeze.json", { schema: "finnor.v3.runtime-freeze.v1", startedAt, selected, node: process.version,
+    sourceCommit, sourceTree, manifest, absentSourceFiles,
     originalFullWorkContinuationProof: continuationProof,
     resourceFloor: { freeMemoryBytesEstimate, memoryProbe, diskAvailableBytes: Number(disk[3]) * 1024,
       diskAdmissionBytes, originalDefaultDiskAdmissionBytes: 1.5 * 1024 ** 3 },
@@ -553,6 +681,7 @@ try {
   for (const role of ["finnor_app", "finnor_worker", "finnor_closing_checker", "finnor_closing_broker"])
     await admin.query(`ALTER ROLE ${role} LOGIN PASSWORD '${password}'`);
   await admin.query("SET app.test_vertical_mode='explicit'");
+  if (workforceCompensation) await verifyClosingReaderPrivacy(admin, save);
   Object.assign(process.env, baseEnv, { DATABASE_URL: databaseUrl("finnor_app") }); await closePool();
   authServer = createServer((_req, res) => {
     res.setHeader("content-type", "application/json");
@@ -585,6 +714,7 @@ try {
     FINNOR_V3_CHECKER_ORIGIN: `http://127.0.0.1:${checkerPort}`, FINNOR_V3_CHECKER_CLIENT_TOKEN_FILE: join(privateDirectory, "checker.token"),
     FINNOR_V3_BROKER_ORIGIN: `http://127.0.0.1:${brokerPort}`, FINNOR_V3_BROKER_CLIENT_TOKEN_FILE: brokerTokenFile };
   const workerEnv = { ...appEnv, DATABASE_URL: databaseUrl("finnor_worker") };
+  compensationWorkerEnv = workerEnv;
   const apiPort = await port(); apiOrigin = `http://127.0.0.1:${apiPort}`;
   const api = await launch("api", [join(backend, "node_modules/next/dist/bin/next"), "dev", "--hostname", "127.0.0.1", "--port", String(apiPort)],
     { ...appEnv, NODE_ENV: "development", NODE_OPTIONS: "--max-old-space-size=3072" }, join(backend, "apps/api"));
@@ -600,13 +730,30 @@ try {
   }
   assert(warm, "Actual Next auth route never became ready");
   const day = 86400000, begin = new Date(Math.floor(Date.now() / day) * day - 128 * day).toISOString();
+  compensationHorizon = { startAt: new Date(Date.parse(begin) + 128 * day).toISOString(), periodMs: day, periods: 1 };
   support = createUpstreamFixtureSupport({ admin: () => admin, generatedRows, begin, day, fixtures,
     api: ownerApi, artifact: save });
   await save("runtime-identities.json", { migrations, checkerDigest, publicJwk: jwk, apiOrigin, authOrigin, providerOrigin,
     database: { directory: dbDirectory, port: databasePort, name: "v3_runtime" },
     roles: (await admin.query("SELECT rolname,rolsuper,rolbypassrls FROM pg_roles WHERE rolname IN('finnor_app','finnor_worker','finnor_closing_checker','finnor_closing_broker') ORDER BY rolname")).rows,
     authentication: "REAL_RS256_JWKS_NO_AUTH_DEV_BYPASS", privateCredentialsIncluded: false });
-  const f = await fixture("registered-" + selected, selected === "lost-draw" ? "lost-draw"
+  if (workforceCompensation) {
+    const ownerSources = (await readdir(join(backend, "packages/private-equity/src")))
+      .filter(name => name.startsWith("workforce-") && name.endsWith(".ts"))
+      .map(name => "packages/private-equity/src/" + name);
+    const paths = [...ownerSources, "packages/private-equity/src/allocation-store.ts",
+      "packages/private-equity/src/closing/store.ts", "packages/orchestration/src/workforce-execution/dependencies.ts",
+      "packages/shared-types/src/closing.ts", "packages/epistemic-runtime/src/closing-checker.ts",
+      "packages/governed-execution/src/closing-provider.ts", "scripts/v3/provider-authority.mts",
+      "scripts/v3/run-closing-e2e.mts", "scripts/postz-w2/closing-compensation-fixture.mts"];
+    await save("workforce-compensation/source-preimages.json", {
+      schema: "finnor.w2.closing-compensation-sources.v1", compensationCase,
+      sources: await Promise.all(paths.sort().map(async path => ({ path,
+        sha256: createHash("sha256").update(await readFile(join(backend, path))).digest("hex") }))),
+      qualification: "EXACT_EXECUTED_DEVELOPMENT_SOURCE_NOT_INSTALLED_OR_COLD_PROOF" });
+  }
+  const f = await fixture("registered-" + selected + (workforceCompensation ? "-" + compensationCase : ""),
+    workforceCompensation && compensationCase === "exact" ? "lost-pay" : selected === "lost-draw" ? "lost-draw"
     : selected === "signer-professional" ? "wrong-signer" : selected === "settlement" ? "partial-settlement" : undefined);
   assert.equal((await request(f, "/api/closing/read", { programmeId: f.programmeId }, undefined, bearer(f, f.principal, -1))).status, 401);
   if (selected === "authenticated-positive") {
@@ -681,6 +828,8 @@ try {
   if (["lost-draw", "ordering-cancellation", "currentness"].includes(selected)) {
     await providerRequest("/__fixture/read-gate", { blocked: true });
   }
+  if (workforceCompensation && compensationCase === "exact")
+    await providerRequest("/__fixture/read-gate", { blocked: true, nodeKey: "pay-seller" });
   worker = (await launch("worker-1", ["--import=tsx", join(backend, "apps/worker/src/index.ts")], workerEnv)).cp;
   if (selected === "fallback") {
     await waitFor(f, q => q.children.some((c: any) => c.nodeKey === "request-professional"));
@@ -701,7 +850,255 @@ try {
     await providerRequest("/__fixture/read-gate", { blocked: false });
     ok(await request(f, "/api/closing/resume", { programmeId: f.programmeId }));
   }
-  if (selected === "ordering-cancellation" || selected === "currentness") {
+  if (workforceCompensation) {
+    if (compensationCase === "exact") {
+      const unknown = await waitFor(f, q => q.unresolvedEffects.some((e: any) => e.nodeKey === "pay-seller"));
+      const promise = await compensationReadback({ f, request });
+      assert.equal(promise.observations[0].status, "OPEN", "Acknowledgement or UNKNOWN paid the accepted promise");
+      assert.equal(promise.externalSettlementEstablished, false);
+      await save("workforce-compensation/unknown-original-effect.json", { unknown, promise, funding: await compensationFunding({ f }) });
+      await providerRequest("/__fixture/read-gate", { blocked: false, nodeKey: "pay-seller" });
+      ok(await request(f, "/api/closing/resume", { programmeId: f.programmeId }));
+    }
+    const completed = await waitFor(f, q => q.status === "CLOSED" && q.certificate?.currentlyValid, 480000);
+    if (compensationCase === "exact" && process.env.FINNOR_W2_CUT_SECTION_DIAGNOSTIC === "1") {
+      const cutDiff = (await tenantDiagnostic(f, client => client.query(`
+        SELECT previous.section,
+          previous.digest IS DISTINCT FROM
+            encode(sha256(convert_to(now_cut.value::text,'UTF8')),'hex') AS changed
+        FROM finnor_os.w2_cut_probe previous
+        JOIN LATERAL jsonb_each(finnor_os.pe_closing_cut($1,$2)) now_cut
+          ON now_cut.key=previous.section
+        WHERE previous.tenant_id=$1 AND previous.programme_id=$2
+        ORDER BY previous.section`, [f.tenant, f.programmeId]))).rows;
+      await save("workforce-compensation/material-cut-section-diff.json", {
+        checkedPreCertificateSections: cutDiff.length,
+        changedSections: cutDiff.filter(row => row.changed).map(row => String(row.section)),
+        unchangedSections: cutDiff.filter(row => !row.changed).length,
+        proofDomain: "DISPOSABLE_NATIVE_POSTCLOSE_DIAGNOSTIC_ONLY",
+        financialSettlementClaimed: false,
+      });
+    }
+    const nativeCompletion = await completedNativeWork(f);
+    // Diagnostic only: replay the real canonical receiving-link evaluator inside
+    // a transaction that is always rolled back. This cannot repair the owner
+    // episode, seed a payment, or turn the failing acceptance into a false pass.
+    if (compensationCase === "exact" && existsSync(join(backend, "packages/private-equity/src/workforce-compensation-closing.ts"))) {
+      const { recordWorkforceClosingPaymentsTx } = await import("../../packages/private-equity/src/workforce-compensation-closing");
+      const observed = { linkWouldInsertAfterClosed: false, rolledBack: false,
+        errorCode: null as string | null, durableLinkCount: -1, preexistingLinkCount: -1,
+        stagedJoins: null as Record<string, number> | null };
+      // Stage each canonical join using boolean/count witnesses only. Do not
+      // export source rows, identities, amounts, document contents or credentials.
+      const stagedJoins = (await tenantDiagnostic(f, client => client.query(`
+        WITH source AS (
+          SELECT l.tenant_id,l.programme_id,l.business_effect_id,l.consumption_ref,
+            o.observation,o.verification_status
+          FROM finnor_os.pe_closing_node_links l
+          JOIN finnor_os.external_operations o
+            ON o.tenant_id=l.tenant_id AND o.business_effect_id=l.business_effect_id
+          WHERE l.tenant_id=$1 AND l.programme_id=$2 AND l.node_key='pay-seller'
+            AND o.provider='finnor_closing_provider'
+        ), consumed AS (
+          SELECT s.*,co.reservation_id,co.body consumption,st.status consumption_status,
+            st.effect_ref,r.status reservation_status,ro.body financial_origin
+          FROM source s
+          JOIN finnor_os.s5_consumptions co
+            ON co.tenant_id=s.tenant_id AND co.consumption_id=s.consumption_ref->>'id'
+          JOIN finnor_os.s5_consumption_states st
+            ON st.tenant_id=co.tenant_id AND st.consumption_id=co.consumption_id
+          JOIN finnor_os.s5_reservation_origins ro
+            ON ro.tenant_id=co.tenant_id AND ro.reservation_id=co.reservation_id
+          JOIN finnor_os.s5_reservations r
+            ON r.tenant_id=ro.tenant_id AND r.reservation_id=ro.reservation_id
+        ), versioned AS (
+          SELECT c.*,v.id evidence_version_id,v.source_id,v.content_hash,v.content,v.snapshot
+          FROM consumed c
+          JOIN finnor_os.evidence_source_versions v
+            ON v.tenant_id=c.tenant_id
+            AND v.id=(c.observation->'closingEvidenceRef'->>'versionId')::uuid
+        )
+        SELECT
+          (SELECT count(*)::int FROM finnor_os.s5_history h
+            JOIN finnor_os.s5_history b ON b.tenant_id=h.tenant_id
+              AND b.subject_id=h.body->'originalReservation'->>'id'
+              AND b.operation='WORKFORCE_BUDGET'
+            WHERE h.tenant_id=$1 AND h.operation='WORKFORCE_COMPENSATION_ACCEPTANCE'
+              AND h.subject_id=$3) AS "promiseBudgetJoined",
+          (SELECT count(*)::int FROM source) AS "operationJoined",
+          (SELECT count(*)::int FROM consumed) AS "consumptionOriginJoined",
+          (SELECT count(*)::int FROM versioned) AS "evidenceVersionJoined",
+          (SELECT count(*)::int FROM versioned v
+            JOIN finnor_os.pe_closing_evidence_bindings b
+              ON b.tenant_id=v.tenant_id AND b.programme_id=v.programme_id
+                AND b.source_id=v.source_id) AS "evidenceBound",
+          (SELECT count(*)::int FROM finnor_os.pe_closing_programmes q
+            JOIN finnor_os.pe_closing_checks ch
+              ON ch.tenant_id=q.tenant_id AND ch.id=q.last_check_id
+            WHERE q.tenant_id=$1 AND q.id=$2 AND ch.valid_until>clock_timestamp()
+              AND ch.observation_cut_digest=finnor_os.pe_closing_cut_digest($1,$2)) AS "checkCutMatches",
+          (SELECT count(*)::int FROM finnor_os.pe_closed_transaction_certificates cert
+            JOIN finnor_os.pe_closing_checks ch
+              ON ch.tenant_id=cert.tenant_id AND ch.id=cert.check_id
+            WHERE cert.tenant_id=$1 AND cert.programme_id=$2
+              AND cert.body->'receiptAndCurrentness'->>'checkId'=ch.id::text) AS "certificateCheckIdentityMatches",
+          (SELECT count(*)::int FROM finnor_os.pe_closed_transaction_certificates cert
+            JOIN finnor_os.pe_closing_checks ch
+              ON ch.tenant_id=cert.tenant_id AND ch.id=cert.check_id
+            WHERE cert.tenant_id=$1 AND cert.programme_id=$2
+              AND cert.post_publication_cut_digest=ch.observation_cut_digest) AS "certificateOriginalCutMatches",
+          (SELECT count(*)::int FROM finnor_os.pe_closed_transaction_certificates cert
+            JOIN finnor_os.pe_closing_checks ch
+              ON ch.tenant_id=cert.tenant_id AND ch.id=cert.check_id
+            JOIN finnor_os.pe_deals d
+              ON d.tenant_id=cert.tenant_id AND d.id=cert.transaction_id
+            WHERE cert.tenant_id=$1 AND cert.programme_id=$2 AND d.status='closed'
+              AND cert.body->'receiptAndCurrentness'->>'checkId'=ch.id::text
+              AND cert.post_publication_cut_digest=finnor_os.pe_closing_cut_digest($1,$2)) AS "certificateCurrentCutMatches"
+      `, [f.tenant, f.programmeId, f.compensationFixture.obligation.ref.id]))).rows[0];
+      // Counts are diagnostic only; no stage claims external settlement.
+      observed.stagedJoins = Object.fromEntries(Object.entries(stagedJoins).map(([key,value]) => [key, Number(value)]));
+      observed.preexistingLinkCount = (await admin!.query(`SELECT count(*)::int n FROM finnor_os.s5_history
+        WHERE tenant_id=$1 AND operation='WORKFORCE_CLOSING_PAYMENT'`, [f.tenant])).rows[0]?.n ?? -1;
+      assert(observed.preexistingLinkCount >= 0, "Existing durable link count must be observed");
+      try {
+        await withS5PortfolioTransaction(f.ctx, async c => {
+          await c.query("SELECT pg_advisory_xact_lock(hashtextextended($1,0))", [`v3-material-cut:${f.tenant}`]);
+          await recordWorkforceClosingPaymentsTx(f.ctx, c, f.programmeId);
+          const hypothetical = (await c.query(`SELECT count(*)::int n FROM finnor_os.s5_history
+            WHERE tenant_id=$1 AND operation='WORKFORCE_CLOSING_PAYMENT'`, [f.tenant])).rows[0]?.n;
+          observed.linkWouldInsertAfterClosed = hypothetical > observed.preexistingLinkCount;
+          throw Error("W2_DIAGNOSTIC_ROLLBACK");
+        });
+      } catch (cause) {
+        if (cause instanceof Error && cause.message === "W2_DIAGNOSTIC_ROLLBACK") observed.rolledBack = true;
+        else observed.errorCode = cause instanceof Error && /^(WORKFORCE_|CLOSING_)/.test(cause.message)
+          ? cause.message : "UNCLASSIFIED_REPLAY_ERROR";
+      }
+      observed.durableLinkCount = (await admin!.query(`SELECT count(*)::int n FROM finnor_os.s5_history
+        WHERE tenant_id=$1 AND operation='WORKFORCE_CLOSING_PAYMENT'`, [f.tenant])).rows[0]?.n ?? -1;
+      await save("workforce-compensation/rollback-only-post-close-candidate.json", observed);
+      assert.equal(observed.durableLinkCount, observed.preexistingLinkCount, "Diagnostic rollback modified durable compensation state");
+    }
+    const compensation = await compensationReadback({ f, request }), funding = await compensationFunding({ f });
+    const portfolio = ok(await request(f, "/api/allocations/resources", {}));
+    const compensationJoinEvidence: Record<string, unknown> = {};
+    for (const [name, sql] of Object.entries({
+      programme: `SELECT id,principal_id,status,last_check_id,spec_digest,profile_digest,
+        finnor_os.pe_closing_cut_digest(tenant_id,id) current_cut FROM finnor_os.pe_closing_programmes WHERE tenant_id=$1 AND id=$2`,
+      payments: `SELECT h.operation,h.body FROM finnor_os.s5_history h WHERE h.tenant_id=$1
+        AND h.operation IN('WORKFORCE_CLOSING_PAYMENT','WORKFORCE_COMPENSATION_ACCEPTANCE','WORKFORCE_BUDGET')
+        AND h.body->>'programmeId'=(SELECT spec->'fundsFlows'->0->'workforceCompensation'->>'programmeId'
+          FROM finnor_os.pe_closing_programmes WHERE tenant_id=$1 AND id=$2)
+        ORDER BY h.subject_id,h.revision LIMIT 16`,
+      financial: `SELECT l.node_key,l.business_effect_id,l.consumption_ref,e.semantic_hash,o.verification_status,
+        o.observation,co.body consumption,co.principal_id consumption_principal_id,st.status consumption_status,
+        st.effect_ref,ro.body financial_origin,ro.principal_id reservation_principal_id,r.status reservation_status
+        FROM finnor_os.pe_closing_node_links l JOIN finnor_os.business_effects e ON e.tenant_id=l.tenant_id AND e.id=l.business_effect_id
+        JOIN finnor_os.external_operations o ON o.tenant_id=e.tenant_id AND o.business_effect_id=e.id
+        JOIN finnor_os.s5_consumptions co ON co.tenant_id=l.tenant_id AND co.consumption_id=l.consumption_ref->>'id'
+        JOIN finnor_os.s5_consumption_states st ON st.tenant_id=co.tenant_id AND st.consumption_id=co.consumption_id
+        JOIN finnor_os.s5_reservation_origins ro ON ro.tenant_id=co.tenant_id AND ro.reservation_id=co.reservation_id
+        JOIN finnor_os.s5_reservations r ON r.tenant_id=ro.tenant_id AND r.reservation_id=ro.reservation_id
+        WHERE l.tenant_id=$1 AND l.programme_id=$2 AND l.node_key='pay-seller' LIMIT 2`,
+      check: `SELECT ch.id,ch.body,ch.checker_digest,ch.observation_cut_digest,ch.valid_until FROM finnor_os.pe_closing_checks ch
+        JOIN finnor_os.pe_closing_programmes q ON q.tenant_id=ch.tenant_id AND q.last_check_id=ch.id
+        WHERE q.tenant_id=$1 AND q.id=$2`,
+      receipt: `SELECT v.id,v.content,v.content_hash,v.snapshot->'closingObservation' observation
+        FROM finnor_os.evidence_source_versions v JOIN finnor_os.external_operations o
+        ON o.tenant_id=v.tenant_id AND o.observation->'closingEvidenceRef'->>'versionId'=v.id::text
+        JOIN finnor_os.pe_closing_node_links l ON l.tenant_id=o.tenant_id AND l.business_effect_id=o.business_effect_id
+        WHERE l.tenant_id=$1 AND l.programme_id=$2 AND l.node_key='pay-seller' LIMIT 2`,
+      roleBindings: `SELECT p.status,p.valid_until,p.body->'roleBindings' bindings,
+        (SELECT jsonb_agg(jsonb_build_object('assignment',to_jsonb(a),'definition',to_jsonb(r)))
+        FROM finnor_os.employee_role_assignments a JOIN finnor_os.employee_roles r ON r.tenant_id=a.tenant_id AND r.id=a.role_id
+        WHERE a.tenant_id=q.tenant_id AND a.id::text IN(SELECT x->>'assignmentId' FROM jsonb_array_elements(p.body->'roleBindings') x)) roles
+        FROM finnor_os.pe_closing_profiles p JOIN finnor_os.pe_closing_programmes q ON q.tenant_id=p.tenant_id AND q.profile_id=p.id
+        WHERE q.tenant_id=$1 AND q.id=$2`,
+    })) compensationJoinEvidence[name] = (await admin!.query(sql, [f.tenant, f.programmeId])).rows;
+    await save("workforce-compensation/settled-owner-before-projection-assertion.json",
+      { completed, nativeCompletion, compensation, funding, portfolio, compensationJoinEvidence });
+    // Failure-first owner diagnostics. Counts only: no Work, actor, evidence,
+    // compensation, credential, receipt or tenant identifiers leave this run.
+    const paymentJoinProbe = (await admin!.query(`
+      SELECT
+        (SELECT count(*)::int FROM finnor_os.s5_history WHERE tenant_id=$1
+          AND operation='WORKFORCE_COMPENSATION_ACCEPTANCE') AS "acceptedPromises",
+        (SELECT count(*)::int FROM finnor_os.s5_history WHERE tenant_id=$1
+          AND operation='WORKFORCE_CLOSING_PAYMENT') AS "paymentLinks",
+        (SELECT count(*)::int FROM finnor_os.pe_closed_transaction_certificates WHERE tenant_id=$1
+          AND transaction_id=$2) AS "closedCertificates",
+        (SELECT count(*)::int FROM finnor_os.pe_closing_node_links WHERE tenant_id=$1
+          AND programme_id=$3 AND node_key='pay-seller') AS "nativePaymentLinks",
+        (SELECT count(*)::int FROM finnor_os.pe_closing_node_links l
+          JOIN finnor_os.external_operations o ON o.tenant_id=l.tenant_id AND o.business_effect_id=l.business_effect_id
+          WHERE l.tenant_id=$1 AND l.programme_id=$3 AND l.node_key='pay-seller'
+            AND o.provider='finnor_closing_provider' AND o.verification_status='verified') AS "verifiedPaymentOperations",
+        (SELECT count(*)::int FROM finnor_os.pe_closing_node_links l
+          JOIN finnor_os.s5_consumptions co ON co.tenant_id=l.tenant_id AND co.consumption_id=l.consumption_ref->>'id'
+          JOIN finnor_os.s5_consumption_states st ON st.tenant_id=co.tenant_id AND st.consumption_id=co.consumption_id
+          WHERE l.tenant_id=$1 AND l.programme_id=$3 AND l.node_key='pay-seller'
+            AND st.status='RECONCILED') AS "reconciledPaymentConsumptions",
+        (SELECT count(*)::int FROM finnor_os.pe_closing_programmes q
+          JOIN finnor_os.pe_closing_checks ch ON ch.tenant_id=q.tenant_id AND ch.id=q.last_check_id
+          WHERE q.tenant_id=$1 AND q.id=$3 AND ch.accepted
+            AND ch.valid_until>clock_timestamp()) AS "acceptedCurrentChecks"
+    `, [f.tenant, f.dealId, f.programmeId])).rows[0];
+    await save("workforce-compensation/sanitized-join-diagnostic.json", paymentJoinProbe);
+    assert.equal(JSON.stringify(compensation.records[0]), f.compensationFixture.acceptedBytes, "Immutable acceptance was rewritten");
+    assert.equal(compensation.observations[0].status, compensationCase === "exact" ? "SETTLED" : "OPEN",
+      "Exact receiving receipt join must pay only the original amount, payee and reservation");
+    assert.equal(compensation.externalSettlementEstablished, compensationCase === "exact");
+    if (compensationCase === "exact") {
+      const paid = funding.find(row => row.assignmentId === f.compensationFixture.obligation.assignmentId);
+      assert(paid);
+      const cashSpent = paid.spent.find(e => e.resourceId === "cash"), cashHeld = paid.directReserved.find(e => e.resourceId === "cash");
+      assert(cashSpent && cashHeld);
+      assert.equal(cashSpent.quantities[0], "2");
+      assert.equal(cashHeld.quantities[0], "0",
+        "Paid cash was made available again");
+      const cashCommitted = portfolio.outstanding.flatMap((row: any) => row.envelopes)
+        .filter((e: any) => e.resourceId === "cash").reduce((sum: bigint, e: any) => sum + BigInt(e.quantities[0]), 0n);
+      assert.equal(cashCommitted, 2n, "The same physical payment was charged to both original reservations");
+    }
+    const before = await snapshot(f), posts = completed.state.requests.filter((r: any) => r.specDigest === hash(f.spec));
+    assert.equal(posts.filter((r: any) => r.nodeKey === "pay-seller").length, 1, "Physical payment repeated");
+    const paidEffect = posts.find((r: any) => r.nodeKey === "pay-seller").effectId;
+    assert.equal(before.consumptions.filter((r: any) => r.effect_ref?.id === paidEffect).length, 1,
+      "The original physical financial effect must have exactly one S5 consumption");
+    const killedPid = worker!.pid;
+    process.kill(-killedPid!, "SIGKILL");
+    await new Promise<void>(done => worker!.once("exit", () => done()));
+    worker = (await launch("worker-compensation-recovery", ["--import=tsx", join(backend, "apps/worker/src/index.ts")], workerEnv)).cp;
+    const replay = await readAfterOwnedWorkerRestart(() => compensationReadback({ f, request })),
+      replayFunding = await compensationFunding({ f });
+    assert.deepEqual(replay, compensation, "Read-only recovery changed the receipt join");
+    assert.deepEqual(replayFunding, funding, "Receipt replay charged or freed cash twice");
+    assert.equal((await providerRequest("/__fixture/state")).requests.length, completed.state.requests.length,
+      "Receipt recovery performed a new physical mutation");
+    let currentness: any;
+    if (compensationCase === "exact") {
+      const originalReceipt = completed.state.programmes.find((p: any) => p.transactionId === f.dealId).effects
+        .find((effect: any) => effect.businessEffectId === paidEffect).observation;
+      const correction = fact(f, f.spec.fundsFlows[0], "RECEIVING_SETTLEMENT", "receiving-authority",
+        { ...originalReceipt.claims, receivingState: "DISPUTED" },
+        { status: "FAILED", supersedesFactIds: [originalReceipt.factId] });
+      ok(await observe(f, correction));
+      const corrected = await projection(f), retained = await compensationReadback({ f, request });
+      assert.equal(corrected.status, "REOPENED");
+      assert.equal(retained.observations[0].status, "OPEN", "A stale independent closing receipt discharged a promise");
+      assert.equal(retained.externalSettlementEstablished, false);
+      assert.equal(JSON.stringify(retained.records[0]), f.compensationFixture.acceptedBytes);
+      assert.deepEqual(await compensationFunding({ f }), funding, "A receipt correction refunded historical cash");
+      assert.equal((await providerRequest("/__fixture/state")).requests.length, completed.state.requests.length);
+      currentness = { correction, corrected, retained, physicalPaymentNotUndone: true };
+    }
+    await save("workforce-compensation/receiving-join-" + compensationCase + ".json",
+      { completed, nativeCompletion, compensation, funding, before, killedPid, replay, replayFunding, currentness,
+        realPayment: false, genuineHumanQualified: false, newFinancialTransport: false });
+    successes.push({ id: "workforce-compensation-" + compensationCase, fullNativeHttpWorkerClose: true,
+      exactReceiptDischarged: compensationCase === "exact", noReplay: true, realPayment: false, protectedAdmission: "NOT_ADMITTED" });
+  } else if (selected === "ordering-cancellation" || selected === "currentness") {
     const before = await waitFor(f, (_q, state) => state.programmes.some((p: any) => p.drawn));
     if (selected === "currentness") {
       await admin.query("UPDATE finnor_os.users SET status='suspended' WHERE tenant_id=$1 AND id=$2",
@@ -842,14 +1239,44 @@ try {
     assert(released, "Bounded mounted-browser hold expired without release");
   }
 } catch (error) {
-  failed = { message: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : null };
+  failed = { message: error instanceof Error ? error.message : String(error), stack: error instanceof Error ? error.stack : null,
+    observation:finiteFailureObservation(error,processes,error&&typeof error==='object'?requestFailures.get(error):undefined) };
   if (current?.tenant) try { await save("failed-canonical-readback.json", await snapshot(current)); } catch (e) { failed.readbackError = String(e); }
 } finally {
   if (resourceMonitor) clearInterval(resourceMonitor);
-  if (resourceFailure && !failed) failed = { message: resourceFailure.message, stack: resourceFailure.stack };
-  for (const cp of children) { try { process.kill(-cp.pid!, "SIGCONT"); process.kill(-cp.pid!, "SIGTERM"); } catch { cp.kill("SIGTERM"); } }
+  if (resourceFailure && !failed) failed = { message: resourceFailure.message, stack: resourceFailure.stack,
+    observation:finiteFailureObservation(resourceFailure,processes) };
+  // Capture the exit promises before signalling.  The baseline comparison
+  // requires observed exits for every owned child, including the closing
+  // worker; SIGKILL being sent is not evidence that Node reaped that child.
+  const ownedAtShutdown = [...children];
+  const ownedExitEvents = ownedAtShutdown.map(cp => new Promise<void>(resolve => {
+    if (cp.exitCode !== null || cp.signalCode !== null) resolve();
+    else cp.once("exit", () => resolve());
+  }));
+  for (const cp of ownedAtShutdown) {
+    try { process.kill(-cp.pid!, "SIGCONT"); process.kill(-cp.pid!, "SIGTERM"); }
+    catch { cp.kill("SIGTERM"); }
+  }
   await sleep(1200);
-  for (const cp of children) { try { process.kill(-cp.pid!, "SIGKILL"); } catch { cp.kill("SIGKILL"); } }
+  for (const cp of ownedAtShutdown) {
+    if (cp.exitCode !== null || cp.signalCode !== null) continue;
+    try { process.kill(-cp.pid!, "SIGKILL"); } catch { cp.kill("SIGKILL"); }
+  }
+  // Wait for genuine process exit notifications before freezing results.json.
+  // A child that cannot be reaped stays a failed owner, never a fabricated pass.
+  const allOwnedExited = await Promise.race([
+    Promise.all(ownedExitEvents).then(() => true),
+    sleep(10000).then(() => false),
+  ]);
+  if (!allOwnedExited) {
+    if (failed) failed.childCleanup = "OWNED_CHILD_EXIT_NOT_OBSERVED";
+    else {
+      const error = Error("OWNED_CHILD_EXIT_NOT_OBSERVED");
+      failed = { message: error.message, stack: error.stack,
+        observation: finiteFailureObservation(error, processes) };
+    }
+  }
   authServer?.closeAllConnections(); await new Promise<void>(done => authServer ? authServer.close(() => done()) : done());
   await closePool().catch(() => undefined); await admin?.end().catch(() => undefined);
   if (postgresRunning) await postgres.stop();

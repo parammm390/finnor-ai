@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "finnor.project-z.controller-replay-archive.v1",
+  "createdAt": "2026-10-24T06:54:04.470715+00:00",
+  "archive": {
+    "path": "scope-z/orchestration/evidence/controller-37-case-replay.tar.gz",
+    "bytes": 39076,
+    "sha256": "4913c09f4943f3adc421920dce9564e4046f770fa8c2e9936be4324dc6a3c870"
+  },
+  "sourceSha256": "9f174d0c8e54395a898e343af339b65c1998859346d72e282b3d067715945301",
+  "driverSha256": "57a887dcb6c1e25325697299beaa6094403280d75b1c14b93be45f77e97132a0",
+  "preImplementationDriverRecoveredFromActualSession": true,
+  "preImplementationDriverSha256": "c52849bf8296bfaba7d4eb42921ff908f8e4139be9c668780a54335064fd0549",
+  "originalFailureRetained": "scope-z/orchestration/evidence/controller-594e4ba0ccd347448b330081935c342e/report.json",
+  "currentResult": {
+    "passed": 37,
+    "planned": 37,
+    "failure": null
+  },
+  "evidenceClass": "deterministic-local-SIMULATED-platform-fixtures",
+  "productEvidence": false,
+  "remoteExecutionEvidence": false,
+  "rerun": "python3 scope-z/orchestration/e2e_controller.py",
+  "reconstructionNote": "Archive retains exact original inputs/state/commands and current source. Run the driver from a checkout containing the locked common contracts; it creates a fresh isolated fixture without remote actions."
+}

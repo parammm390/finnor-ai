@@ -1,0 +1,191 @@
+ARG FINNOR_S6_NATIVE_PLATFORM=linux/arm64
+FROM node:22.22.3-bookworm-slim@sha256:e21fc383b50d5347dc7a9f1cae45b8f4e2f0d39f7ade28e4eef7d2934522b752 AS node-runtime
+
+FROM python:3.11.15-slim-bookworm@sha256:d29f48a31a8b408ed19272ca1e7b10ebae13b240a27e862d3d4217c528e2e0c3 AS r4-scientific
+COPY finnor-os/scripts/r4/requirements.lock /tmp/r4-requirements.lock
+RUN /usr/local/bin/python3.11 -m venv --without-pip /opt/finnor/r4 \
+    && /usr/local/bin/python3.11 -m pip --python /opt/finnor/r4/bin/python install \
+       --no-cache-dir --require-hashes -r /tmp/r4-requirements.lock
+
+# Keep Python and its shared-library dependencies in the final runtime itself.
+# Debian's node-gyp build interpreter is not the supported scientific runtime.
+FROM python:3.12.13-slim-bookworm@sha256:4766d8b510c428e595d74b9cc5bbb2fae8e26316fffb4adc89908d79aacd58a2 AS scientific-runtime
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends libstdc++6 libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+RUN groupadd --gid 1000 finnor-runtime \
+    && useradd --uid 1000 --gid 1000 --create-home --shell /usr/sbin/nologin finnor-runtime
+COPY finnor-os/packages/epistemic-runtime/src/intervention-requirements.txt /opt/finnor-requirements/intervention.txt
+COPY finnor-os/packages/epistemic-runtime/src/requirements-s5.txt /opt/finnor-requirements/allocation.txt
+COPY finnor-os/scripts/r4/numerical-requirements.lock /opt/finnor-requirements/numerical.lock
+RUN python -m venv /opt/finnor-python \
+    && /opt/finnor-python/bin/python -m pip install --no-cache-dir --require-hashes \
+       -r /opt/finnor-requirements/numerical.lock \
+    && /opt/finnor-python/bin/python -I -c "import sys, numpy, scipy, statsmodels, arch; assert sys.version_info[:2] == (3, 12); assert (numpy.__version__, scipy.__version__, statsmodels.__version__, arch.__version__) == ('2.3.3', '1.16.2', '0.14.5', '8.0.0')"
+
+FROM node-runtime AS dependencies
+
+WORKDIR /app/finnor-os
+
+# Native flock must be built for the Linux image, not borrowed from a host.
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Keep every npm workspace available so the API build and worker retain the
+# canonical package graph and the embedded orchestrator/source-custody readers.
+COPY finnor-os/package.json finnor-os/package-lock.json finnor-os/tsconfig.json finnor-os/tsconfig.base.json ./
+COPY finnor-os/Dockerfile.worker ./Dockerfile.worker
+COPY finnor-os/apps ./apps
+COPY finnor-os/packages ./packages
+COPY finnor-os/scripts ./scripts
+COPY package-lock.json /app/package-lock.json
+COPY infra/deployment/production.contract.json /app/infra/deployment/production.contract.json
+COPY scripts/release/production-mutation-guard.mjs scripts/release/release-policy.mjs scripts/release/worktree-state.mjs /app/scripts/release/
+COPY src/components/centropy/canvas/ElicitationProtocolReview.tsx /app/src/components/centropy/canvas/ElicitationProtocolReview.tsx
+COPY src/components/centropy/canvas/elicitation-protocol-view.ts /app/src/components/centropy/canvas/elicitation-protocol-view.ts
+COPY src/components/centropy/canvas/CapitalProgramPanel.tsx /app/src/components/centropy/canvas/CapitalProgramPanel.tsx
+COPY src/components/centropy/canvas/CanvasDocument.tsx src/components/centropy/canvas/LearnedPolicyPanel.tsx src/components/centropy/canvas/EnterpriseApplicationPanel.tsx src/components/centropy/canvas/application-client.ts src/components/centropy/canvas/canvas-compose.ts src/components/centropy/canvas/canvas-contract.ts /app/src/components/centropy/canvas/
+COPY src/components/centropy/canvas/IdentifiedSystemPanel.tsx /app/src/components/centropy/canvas/IdentifiedSystemPanel.tsx
+COPY src/lib/centropy/capability-manifest.generated.json /app/src/lib/centropy/capability-manifest.generated.json
+COPY scope-r/r3-incentive-rule-synthesis/verification-plan.json /app/scope-r/r3-incentive-rule-synthesis/verification-plan.json
+
+RUN npm ci --no-audit --no-fund
+ARG FINNOR_BUILD_ID
+RUN FINNOR_BUILD_ID="$FINNOR_BUILD_ID" NEXT_TELEMETRY_DISABLED=1 npm run build --workspace=@finnor/api \
+    && rm -rf apps/api/.next/cache
+
+# Build the same pinned exact runtime for the image architecture. Protected R2
+# activation remains separately guarded.
+FROM node-runtime AS r2-scientific-build
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends ca-certificates python3 make m4 g++ cmake curl xz-utils bzip2 zlib1g-dev patchelf \
+    && rm -rf /var/lib/apt/lists/*
+COPY finnor-os/scripts/r2/build-native.py /opt/finnor-r2-build.py
+RUN test -s /etc/ssl/certs/ca-certificates.crt \
+    && command -v m4 \
+    && python3 /opt/finnor-r2-build.py --build-root /opt/r2-build
+
+# Compile trusted setup separately from the scientific runtime. The only file
+# capability installed in the final image is SYS_CHROOT, dropped before Node.
+FROM node-runtime AS s6-launcher-build
+RUN apt-get update && apt-get install --yes --no-install-recommends gcc libc6-dev libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+COPY finnor-os/packages/governed-execution/native/linux-launcher.c /opt/linux-launcher.c
+RUN cc -std=c11 -O2 -Wall -Wextra -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 \
+    -Wl,-z,relro,-z,now -o /opt/linux-launcher /opt/linux-launcher.c -lcrypto
+
+FROM ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb02acbac4c69920fe9d278f82 AS r3-installer
+
+# A translated x64 supervisor may run on an arm64 kernel. Its ordinary M3
+# callee must use the native syscall ABI. Scientific suppliers stay x64.
+FROM --platform=${FINNOR_S6_NATIVE_PLATFORM} node:22.22.3-bookworm-slim@sha256:e21fc383b50d5347dc7a9f1cae45b8f4e2f0d39f7ade28e4eef7d2934522b752 AS s6-native-callee
+RUN test "$(uname -m)" = aarch64 \
+    && apt-get update \
+    && apt-get install --yes --no-install-recommends bubblewrap=0.8.0-2+deb12u1 gcc libc6-dev libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+COPY finnor-os/packages/governed-execution/native/linux-launcher.c /app/finnor-os/packages/governed-execution/native/linux-launcher.c
+COPY finnor-os/scripts/r3/package-linux-jail.mjs /app/finnor-os/scripts/r3/package-linux-jail.mjs
+RUN cc -std=c11 -O2 -Wall -Wextra -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 \
+      -Wl,-z,relro,-z,now -o /opt/linux-launcher /app/finnor-os/packages/governed-execution/native/linux-launcher.c -lcrypto \
+    && node /app/finnor-os/scripts/r3/package-linux-jail.mjs /usr/local/bin/node /opt/linux-launcher /opt/finnor-s6-jail-arm64 stage
+
+FROM node-runtime AS r3-scientific
+COPY --from=r3-installer /uv /usr/local/bin/uv
+COPY finnor-os/scripts/r3/requirements.lock finnor-os/scripts/r3/upstream-requirements.lock /locks/
+ENV UV_PYTHON_INSTALL_DIR=/opt/r3-python UV_NO_CACHE=1
+RUN uv python install 3.11.15 3.12.13 \
+    && uv venv --python 3.11.15 /opt/r3-runtime \
+    && uv pip sync --require-hashes --only-binary :all: --python /opt/r3-runtime/bin/python /locks/requirements.lock \
+    && uv venv --python 3.12.13 /opt/r3-upstream-runtime \
+    && uv pip sync --require-hashes --only-binary :all: --python /opt/r3-upstream-runtime/bin/python /locks/upstream-requirements.lock \
+    && /opt/r3-upstream-runtime/bin/python -I -m compileall -q -j 3 /opt/r3-upstream-runtime
+
+FROM scientific-runtime AS runtime
+
+WORKDIR /app/finnor-os
+# Y1 pins this absolute interpreter path and its executable bytes.
+RUN test -x /usr/local/bin/python3.12 \
+    && if [ ! -e /usr/bin/python3 ]; then ln -s /usr/local/bin/python3.12 /usr/bin/python3; fi \
+    && test -x /usr/bin/python3
+# The worker keeps its exact pinned supplier libraries and the ARM64 ordinary
+# callee, while production R1/R2/R4 environments remain unchanged.
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends \
+       libexpat1 zlib1g libffi8 libsqlite3-0 libbz2-1.0 liblzma5 libgomp1 \
+       libssl3 libreadline8 libncursesw6 libuuid1 libgfortran5 procps \
+       bubblewrap=0.8.0-2+deb12u1 libcap2-bin openssl=3.0.22-1~deb12u1 libssl3=3.0.22-1~deb12u1 \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=r4-scientific /usr/local/bin/python3.11 /usr/local/bin/python3.11
+COPY --from=r4-scientific /usr/local/lib/libpython3.11.so.1.0 /usr/local/lib/libpython3.11.so.1.0
+COPY --from=r4-scientific /usr/local/lib/python3.11 /usr/local/lib/python3.11
+COPY --from=r4-scientific /opt/finnor/r4 /opt/finnor/r4
+COPY --from=node-runtime /usr/local/bin/node /usr/local/bin/node
+COPY --from=dependencies /app /app
+COPY --from=r2-scientific-build /opt/r2-build/runtime /opt/finnor-r2/runtime
+COPY --from=r3-scientific /opt/r3-python /opt/r3-python
+COPY --from=r3-scientific /opt/r3-runtime /opt/r3-runtime
+COPY --from=r3-scientific /opt/r3-upstream-runtime /opt/r3-upstream-runtime
+COPY --from=s6-native-callee /usr/local/bin/node /opt/finnor-s6-linux-native/node
+COPY --from=s6-native-callee /usr/bin/bwrap /opt/finnor-s6-linux-native/bwrap
+COPY --from=s6-native-callee /usr/bin/uname /opt/finnor-s6-linux-native/uname
+COPY --from=s6-native-callee /usr/lib/aarch64-linux-gnu /usr/lib/aarch64-linux-gnu
+COPY --from=s6-native-callee /usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1 /usr/lib/ld-linux-aarch64.so.1
+COPY --from=s6-native-callee /opt/finnor-s6-jail-arm64 /opt/finnor-s6-jail-arm64
+COPY --from=s6-launcher-build /opt/linux-launcher /opt/linux-launcher
+COPY --from=r2-scientific-build /opt/r2-build/gmp.tar.xz /opt/finnor-r2/sources/gmp.tar.xz
+COPY --from=r2-scientific-build /opt/r2-build/mpfr.tar.xz /opt/finnor-r2/sources/mpfr.tar.xz
+RUN node scripts/r3/seal-linux-callee.mjs
+RUN if [ "$(node -p process.arch)" = x64 ]; then node scripts/r3/package-linux-jail.mjs /usr/local/bin/node /opt/linux-launcher /opt/finnor-s6-jail-x64; fi \
+    && mknod -m 666 /opt/finnor-s6-jail-arm64/root/dev/null c 1 3 \
+    && mknod -m 666 /opt/finnor-s6-jail-arm64/root/dev/random c 1 8 \
+    && mknod -m 666 /opt/finnor-s6-jail-arm64/root/dev/urandom c 1 9 \
+    && setcap cap_sys_chroot=ep /opt/finnor-s6-jail-arm64/launcher
+
+ENV FINNOR_R2_RUNTIME=/opt/finnor-r2/runtime \
+    FINNOR_R2_PYTHON=/opt/finnor-python/bin/python \
+    NODE_ENV=production \
+    NODE_OPTIONS=--max-old-space-size=384 \
+    FINNOR_R4_PYTHON=/opt/finnor/r4/bin/python \
+    PORT=8090 \
+    SSE_PORT=8090 \
+    FINNOR_R1_PYTHON=/opt/finnor-python/bin/python \
+    FINNOR_S3_PYTHON=/opt/finnor-python/bin/python \
+    FINNOR_S5_PYTHON=/opt/finnor-python/bin/python \
+    FINNOR_R3_RUNTIME_MANIFEST=/opt/r3-runtime/manifest.json \
+    FINNOR_R3_UPSTREAM_PYTHON=/opt/r3-upstream-runtime/bin/python \
+    FINNOR_S3_MODEL_STORE=/tmp/finnor-models \
+    FINNOR_S4_POLICY_STORE=/tmp/finnor-policies \
+    PYTHONDONTWRITEBYTECODE=1 \
+    OPENBLAS_NUM_THREADS=1 \
+    OMP_NUM_THREADS=1
+
+RUN mkdir -p /app/.r3-scratch /tmp/finnor-models /tmp/finnor-policies /tmp/r3-runtime-seal \
+    && chown 1000:1000 /app/.r3-scratch /tmp/finnor-models /tmp/finnor-policies /tmp/r3-runtime-seal \
+    && chmod 700 /app/.r3-scratch /tmp/finnor-models /tmp/finnor-policies /tmp/r3-runtime-seal \
+    && /opt/finnor-python/bin/python -m pip freeze --all > /opt/finnor-python/installed-versions.txt
+
+RUN ldconfig \
+    && /opt/finnor/r4/bin/python -I -c \
+    "import sys,importlib.metadata as m;assert sys.version.split()[0]=='3.11.15';assert m.version('y0')=='0.2.11';from y0.algorithm.identify import identify_outcomes" \
+    && /opt/finnor-python/bin/python -I -c \
+    "import sys,numpy,scipy,statsmodels,arch;assert sys.version.split()[0]=='3.12.13';assert numpy.__version__=='2.3.3';assert scipy.__version__=='1.16.2';assert statsmodels.__version__=='0.14.5';assert arch.__version__=='8.0.0'" \
+    && /opt/finnor/r4/bin/python scripts/r4/package-runtime.py \
+       --python /opt/finnor/r4/bin/python --output /app/finnor-os/r4-runtime-inventory.json
+
+USER 1000:1000
+RUN /opt/r3-runtime/bin/python -I scripts/r3/seal-runtime.py \
+      --output /tmp/r3-runtime-seal/manifest.json --scip-license scripts/r3/licenses/scip-Apache-2.0.txt
+USER root
+RUN mv /tmp/r3-runtime-seal/manifest.json /opt/r3-runtime/manifest.json \
+    && chown root:root /opt/r3-runtime/manifest.json \
+    && chmod 444 /opt/r3-runtime/manifest.json \
+    && rmdir /tmp/r3-runtime-seal
+
+EXPOSE 8090
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:8090/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+# Preserve the current production worker role and PID 1 signal handling.
+USER 1000:1000
+CMD ["node_modules/.bin/tsx", "apps/worker/src/index.ts"]

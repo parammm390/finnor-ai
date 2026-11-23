@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PeDomainError } from "@finnor/private-equity";
+import { PeDomainError } from "../../../../../../packages/private-equity/src/types";
 import { errorResponse, requireContext } from "../../../../lib/auth";
 import { registerProfile, submit, read, cancel, consume, readWork } from "../../../../../../packages/private-equity/src/r4/api";
 import { RunSchema, ConsumeSchema } from "../../../../../../packages/private-equity/src/r4/contracts";

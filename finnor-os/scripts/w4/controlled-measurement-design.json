@@ -1,0 +1,51 @@
+{
+  "schema": "finnor.w4.controlled-measurement-design.v1",
+  "profileId": "w4-controlled-commercial-service-v1",
+  "classification": "CONTROLLED_SIMULATOR_INTERVENTIONS_NOT_FIELD_OR_NATIVE_DELIVERY",
+  "operation": "SERVICE_TRANSITION_V1",
+  "context": "controlled-commercial-record",
+  "exposureId": "price",
+  "outcomeId": "outcome",
+  "outcomeUnit": "normalized-value",
+  "outcomeRange": [-6, 6],
+  "units": {
+    "commercial_unit": ["offeredUnits", "deliveredUnits"],
+    "minor_USD": ["collectedMinor", "refundedMinor"]
+  },
+  "baselineExposure": 0,
+  "nativeTransitionDose": 1,
+  "assignment": "FIXED_ALTERNATING_ZERO_ONE_BEFORE_RESPONSES",
+  "periods": 128,
+  "trainingPeriods": 96,
+  "warmupPeriods": 3,
+  "horizonPeriods": 1,
+  "canonicalNumericScale": 12,
+  "structuralResponse": "Y=actual_record_readback+epsilon",
+  "exogenous": {
+    "seed": 20261004,
+    "drawOrder": ["latentUniform", "gaussianMeasurementError"],
+    "latentUniform": [-0.65, 0.65],
+    "gaussianMean": 0,
+    "gaussianStandardDeviation": 0.1,
+    "jointCoupling": "SAME_EXOGENOUS_REALIZATION_FOR_QUANTITY_AND_MONEY",
+    "intervention": "DO_REPLACES_EXPOSURE_ASSIGNMENT_NOT_RESPONSE_EQUATION_OR_ERROR"
+  },
+  "numerical": {"bootstrapDraws": 64, "blockLength": 4, "seed": 20261002},
+  "expectations": {
+    "trainingSupport": [0, 1],
+    "holdoutSupport": [0, 1],
+    "fullRankEveryLengthFourBlock": true,
+    "strictlyPositiveObservedContrastLowerBoundRequired": true,
+    "utilityCoefficient": 100,
+    "minimumUtility": -1000,
+    "nativeDoseAndMeasurementIdentity": "EXACT_NO_CONVERSION"
+  },
+  "limitations": [
+    "Fresh declared controlled causal world; not a reinterpretation of native007 observations.",
+    "The simulated record assignments are not S6 calls, customer contacts, real payments or accepted delivery.",
+    "Gaussian measurement error and joint coupling are unchanged; no outcome-based assignment or row selection.",
+    "Canonical numeric(38,12) is the measurement resolution, not post-hoc data clipping.",
+    "Original authority, budgets, backing, reservations and refund liabilities are not augmented.",
+    "No field, causal-method, protected-execution, monetary-cost completeness or profit qualification."
+  ]
+}

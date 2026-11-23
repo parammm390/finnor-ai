@@ -1,4 +1,4 @@
-import { compareUnderwritingRuns } from "@finnor/private-equity";
+import { compareUnderwritingRuns } from "../../../../../../../packages/private-equity/src/underwriting-repository";
 import { requireContext } from "../../../../../lib/auth";
 import {
   UnderwritingUuidSchema,

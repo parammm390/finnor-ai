@@ -1,0 +1,96 @@
+name: "W1 - Run an economic orchestration scenario"
+on:
+  workflow_call:
+    inputs:
+      mode:
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  run:
+    name: "Economic orchestration - Verify original scenario"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Prepare exact locked scientific runtime
+        run: |
+          set -euo pipefail
+          umask 077
+          w2_uv_container="$(docker create ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb02acbac4c69920fe9d278f82)"
+          trap 'docker rm "$w2_uv_container" >/dev/null' EXIT
+          docker cp "$w2_uv_container:/uv" "$RUNNER_TEMP/w1-uv"
+          "$RUNNER_TEMP/w1-uv" python install 3.12.13
+          "$RUNNER_TEMP/w1-uv" venv --python 3.12.13 "$RUNNER_TEMP/w1-scientific"
+          "$RUNNER_TEMP/w1-uv" pip sync --require-hashes --only-binary :all: --python "$RUNNER_TEMP/w1-scientific/bin/python" finnor-os/scripts/postz-w1/requirements-native.txt
+      - name: Prepare the existing fixed-root callee on this disposable runner
+        run: |
+          set -euo pipefail
+          cc -std=c11 -O2 -Wall -Wextra -Werror -fstack-protector-strong -D_FORTIFY_SOURCE=2 -Wl,-z,relro,-z,now -o "$RUNNER_TEMP/w1-linux-launcher" finnor-os/packages/governed-execution/native/linux-launcher.c -lcrypto
+          w1_node="$(command -v node)"
+          w1_arch="$(node -p process.arch)"
+          sudo "$w1_node" finnor-os/scripts/r3/package-linux-jail.mjs "$w1_node" "$RUNNER_TEMP/w1-linux-launcher" "/opt/finnor-s6-jail-$w1_arch"
+      - name: Verify the actual isolation boundary before native owners
+        working-directory: finnor-os
+        env:
+          FINNOR_S6_EXECUTOR_EVIDENCE_DIR: ${{ runner.temp }}/w1-executor
+        run: node --import=tsx scripts/s6/run-executor-e2e.mts
+      - name: Run original owning driver under its original finite bounds
+        env:
+          FINNOR_W1_EPISODE: ${{ inputs.mode }}
+          FINNOR_TEST_PYTHON: ${{ runner.temp }}/w1-scientific/bin/python
+        run: python3 finnor-os/scripts/postz-w1/run-linux-owning-episode.py --mode "$FINNOR_W1_EPISODE" --output "$RUNNER_TEMP/w1-owning"
+      - name: Retain a finite W1 outcome
+        if: ${{ always() }}
+        env:
+          W1_RECEIPT_ROOT: ${{ runner.temp }}/w1-owning/report
+          W1_MODE: ${{ inputs.mode }}
+        run: |
+          node --input-type=module <<'JS'
+          import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+          import { join } from "node:path"
+          const root = process.env.W1_RECEIPT_ROOT
+          mkdirSync(root, { recursive: true })
+          const safeLabel = value => typeof value === "string" && /^[A-Za-z0-9_.-]{1,160}$/.test(value) ? value : null
+          const read = name => existsSync(join(root, name)) ? JSON.parse(readFileSync(join(root, name), "utf8")) : null
+          const receipt = read("owning-suite-runner-receipt.json") ?? read("w1-runner-receipt.json")
+          const observations = read("owning-observations.json")
+          const failingCases = (Array.isArray(observations?.cases) ? observations.cases : [])
+            .filter(row => row?.status !== "PASS")
+            .slice(0, 64)
+            .map(row => ({ id: safeLabel(row?.id), status: ["FAIL", "NOT_RUN"].includes(row?.status) ? row.status : "UNKNOWN",
+              failureCodes: (Array.isArray(row?.failureCodes) ? row.failureCodes : []).map(safeLabel).filter(Boolean).slice(0, 16) }))
+          const summary = { schema: "finnor.w1.finite-outcome.v1",
+            sourceSha: /^[0-9a-f]{40}$/.test(process.env.GITHUB_SHA ?? "") ? process.env.GITHUB_SHA : null,
+            mode: safeLabel(process.env.W1_MODE), status: receipt === null ? "NOT_RUN"
+              : /^PASS_/.test(receipt.status ?? "") && failingCases.length === 0 ? "PASS" : "FAIL",
+            stage: receipt === null ? "OWNER_NOT_STARTED_OR_RECEIPT_MISSING" : "OWNER_COMPLETED",
+            failureType: safeLabel(receipt?.failureType),
+            failureCodes: (Array.isArray(receipt?.failureCodes) ? receipt.failureCodes : []).map(safeLabel).filter(Boolean).slice(0, 16),
+            failingCases }
+          writeFileSync(join(root, "terminal-summary.json"), JSON.stringify(summary, null, 2) + "\n", { mode: 0o600 })
+          console.log(JSON.stringify(summary))
+          JS
+      - name: Check exact source preservation
+        if: ${{ always() }}
+        run: git diff --exit-code
+      - name: Retain controlled owning receipts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: w1-owning-${{ inputs.mode }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/w1-owning/report/
+          if-no-files-found: error
+          retention-days: 7

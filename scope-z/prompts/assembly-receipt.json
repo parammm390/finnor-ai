@@ -1,0 +1,191 @@
+{
+  "actualExecutionReceipts": [],
+  "authoringPayloadDigest": "3a7c0039d1319cf35c1e2cab609c17ca25cb31271b060114f7e3068149d402c2",
+  "delivery": "NOT_DELIVERED",
+  "generatedFiles": [
+    {
+      "bytes": 132390,
+      "path": "companion-read-map.json",
+      "sha256": "8914c30683494c16130742a672607d0626c5cfc20a2bfddb097a6d85061dc61f"
+    },
+    {
+      "bytes": 46358,
+      "path": "delivery/z0.manifest.json",
+      "sha256": "63844474a2b3397806aa5f26469e2cd26257ce0aa7ef5ab36d66019c6b2cf900"
+    },
+    {
+      "bytes": 46370,
+      "path": "delivery/z1.manifest.json",
+      "sha256": "1c1e21da8ac6404a0aea277ce8069abd4a3dec6160a1007af3abee714b20c5b9"
+    },
+    {
+      "bytes": 46370,
+      "path": "delivery/z2.manifest.json",
+      "sha256": "2a4f497ada62c915edbaea526a8af176ad3f0deae8e716731ac6a1e935a64e1d"
+    },
+    {
+      "bytes": 46370,
+      "path": "delivery/z3.manifest.json",
+      "sha256": "aff6e2a7bd7967f30ac8d22eebdd600454120983b56a2f5812ac05a870df6bd2"
+    },
+    {
+      "bytes": 46370,
+      "path": "delivery/z4.manifest.json",
+      "sha256": "a14c6bf4aef6561d7be00ba68e6988514e827bb4e9e5bd845415c01e70bdc544"
+    },
+    {
+      "bytes": 46370,
+      "path": "delivery/z5.manifest.json",
+      "sha256": "8c50c1c41bd5e36752db165a03de952ec41ade2a640d53e201be77e2e61f03c1"
+    },
+    {
+      "bytes": 57058,
+      "path": "prompt-source-index.json",
+      "sha256": "5c78fc5da28a8eb92caa5cda9f13f8179597c0b8c927f78d1f0576d83939f954"
+    },
+    {
+      "bytes": 420629,
+      "path": "seeds/z0.seed.md",
+      "sha256": "3f7899558e008a006073e69ca45c46ea46021e680bac61155d06bc92cf949578"
+    },
+    {
+      "bytes": 861773,
+      "path": "seeds/z1.seed.md",
+      "sha256": "635e04fc82b8ff5769f0569d95b1185b95d195eec67d4552d1a4f999178bad7d"
+    },
+    {
+      "bytes": 852925,
+      "path": "seeds/z2.seed.md",
+      "sha256": "8c18ec1a305a1d05ac89fce3abc8e0b9f0cb69e752e2879205510f67d1f6f329"
+    },
+    {
+      "bytes": 859279,
+      "path": "seeds/z3.seed.md",
+      "sha256": "977943424d4715a06c68312866d1773d44f625ac893809ecd43e51c84064d4d1"
+    },
+    {
+      "bytes": 847625,
+      "path": "seeds/z4.seed.md",
+      "sha256": "9270b2784992630f7c6049cb689130e667bbd12dd835f5fa23e81fc2739461c4"
+    },
+    {
+      "bytes": 864473,
+      "path": "seeds/z5.seed.md",
+      "sha256": "efc68e8c35cae19e31359c20226e981855f875fa4d93615d9605dfcafa92794e"
+    }
+  ],
+  "index": {
+    "bytes": 57058,
+    "path": "prompt-source-index.json",
+    "sha256": "5c78fc5da28a8eb92caa5cda9f13f8179597c0b8c927f78d1f0576d83939f954"
+  },
+  "notClaimed": [
+    "product runtime completion",
+    "installed product proof",
+    "mathematical/security qualification",
+    "protected admission",
+    "equipped increment",
+    "operational 100x",
+    "financial 100x",
+    "production activation",
+    "coordinator execution-pack seal"
+  ],
+  "pinnedSkills": 12,
+  "productLockDigest": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf",
+  "productLockMembersVerified": 20,
+  "requiredCoordinatorActions": [
+    "Review and externally seal final index and receipt with its controller/role/reconstruction artifacts",
+    "Retain declared missing historical-source exceptions; do not change the product lock",
+    "Obtain renderer-applied dedicated Computers and actual exact-model/start receipts",
+    "Transfer complete context and obtain real delivery/read receipts",
+    "Create per-launch immutable current-source and actual-received-peer snapshots",
+    "Use the three-slot schedule; this pack launches nothing"
+  ],
+  "retainedFailures": [
+    {
+      "bytes": 332,
+      "path": "evidence/failures/ba7d5075f036f62a53a53cfe894bb3d2a411a8009dafc1b7f2452510b83b2917.json",
+      "sha256": "ba7d5075f036f62a53a53cfe894bb3d2a411a8009dafc1b7f2452510b83b2917"
+    }
+  ],
+  "schema": "finnor.project-z.prompt-assembly-receipt.v1",
+  "seeds": [
+    {
+      "bytes": 420629,
+      "path": "seeds/z0.seed.md",
+      "phase": "Z0",
+      "requiredEarlierFullSeeds": [],
+      "requiresOtherZEngine": false,
+      "sha256": "3f7899558e008a006073e69ca45c46ea46021e680bac61155d06bc92cf949578"
+    },
+    {
+      "bytes": 861773,
+      "path": "seeds/z1.seed.md",
+      "phase": "Z1",
+      "requiredEarlierFullSeeds": [
+        "Z0"
+      ],
+      "requiresOtherZEngine": false,
+      "sha256": "635e04fc82b8ff5769f0569d95b1185b95d195eec67d4552d1a4f999178bad7d"
+    },
+    {
+      "bytes": 852925,
+      "path": "seeds/z2.seed.md",
+      "phase": "Z2",
+      "requiredEarlierFullSeeds": [
+        "Z0"
+      ],
+      "requiresOtherZEngine": false,
+      "sha256": "8c18ec1a305a1d05ac89fce3abc8e0b9f0cb69e752e2879205510f67d1f6f329"
+    },
+    {
+      "bytes": 859279,
+      "path": "seeds/z3.seed.md",
+      "phase": "Z3",
+      "requiredEarlierFullSeeds": [
+        "Z0"
+      ],
+      "requiresOtherZEngine": false,
+      "sha256": "977943424d4715a06c68312866d1773d44f625ac893809ecd43e51c84064d4d1"
+    },
+    {
+      "bytes": 847625,
+      "path": "seeds/z4.seed.md",
+      "phase": "Z4",
+      "requiredEarlierFullSeeds": [
+        "Z0"
+      ],
+      "requiresOtherZEngine": false,
+      "sha256": "9270b2784992630f7c6049cb689130e667bbd12dd835f5fa23e81fc2739461c4"
+    },
+    {
+      "bytes": 864473,
+      "path": "seeds/z5.seed.md",
+      "phase": "Z5",
+      "requiredEarlierFullSeeds": [
+        "Z0"
+      ],
+      "requiresOtherZEngine": false,
+      "sha256": "efc68e8c35cae19e31359c20226e981855f875fa4d93615d9605dfcafa92794e"
+    }
+  ],
+  "sourceBase": {
+    "commit": "7bfdd2d3ab611c90f1355637858824ff1ba67f98",
+    "tree": "82caf48007bc826794650505ae76aba92d4f981b"
+  },
+  "sourceExceptions": [
+    "original full R1/reviewed future blueprint unavailable",
+    "original final approved S specification and approval bytes unavailable",
+    "full older P/M source collection unavailable"
+  ],
+  "state": "ASSEMBLED_NOT_LAUNCHED_NOT_DELIVERED_NOT_EXTERNALLY_SEALED",
+  "upstreamLicenseNotices": 4,
+  "validation": "evidence/validation-results.json",
+  "verificationSkill": {
+    "bytes": 10511,
+    "installed": "NOT_RUN",
+    "path": "skills/project-z-verification/SKILL.md",
+    "runtime": "NOT_RUN",
+    "sha256": "aeba61a3a60780bc3afb7e61f9941efe75dd96c317f02cc7a16fdfbe57cef2e0"
+  }
+}

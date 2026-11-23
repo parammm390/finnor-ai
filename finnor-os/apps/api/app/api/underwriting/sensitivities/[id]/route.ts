@@ -1,4 +1,4 @@
-import { getUnderwritingSensitivity } from "@finnor/private-equity";
+import { getUnderwritingSensitivity } from "../../../../../../../packages/private-equity/src/underwriting-repository";
 import { requireContext } from "../../../../../lib/auth";
 import { UnderwritingUuidSchema, underwritingContext, underwritingErrorResponse, underwritingJson } from "../../../../../lib/underwriting";
 

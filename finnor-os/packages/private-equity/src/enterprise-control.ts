@@ -1,6 +1,7 @@
 import {resolveExactControlSource} from './r1/source';
 import {r1SourceCut} from './r1/runtime';
-import {buildExactControlPolicy,evaluateExactContingentControl,EXACT_S4_VERSION} from '@finnor/epistemic-runtime';
+import { buildExactControlPolicy, EXACT_S4_VERSION } from '../../epistemic-runtime/src/exact-control-policy';
+import { evaluateExactContingentControl } from '../../epistemic-runtime/src/exact-continuation';
 import type {ExactControlPolicyProfile,S4ComputeInvocation} from '@finnor/shared-types';
 import { constants } from 'node:fs';
 import { mkdir, open, link, unlink, lstat,readdir } from 'node:fs/promises';
@@ -9,8 +10,31 @@ import { join, resolve } from 'node:path';
 import { withTenantTransaction } from '@finnor/db';
 import type {PoolClient} from 'pg';
 import type { InterventionModel, ContingentPolicy, ContingentChoiceHandoff, ControlDecisionInput, ControlDecision, ControlProblem, EconomicMandate, ExperimentProtocol, ExperimentRef, S4ExperienceEvent } from '@finnor/shared-types';
-import { assertContingentPolicy, AllocationContractError, ControlContractError, createInterventionControlAdapter, controlInstrumentSupports, controlSourcesCurrent, decideContingentPolicy, epistemicHash,
- ExperimentRefSchema, immutableControl, interventionSpecificationRef, parseControlDecision, parseControlProblem, parseEconomicMandate, prepareS4Experience, restoreInterventionControlAdapter, synthesizeContingentControl, checkPolicyAllocation, type InterventionControlSnapshot } from '@finnor/epistemic-runtime';
+import {
+  assertContingentPolicy,
+  ControlContractError,
+  immutableControl,
+  parseControlDecision,
+  parseControlProblem,
+  parseEconomicMandate,
+} from '../../epistemic-runtime/src/control-contracts';
+import { AllocationContractError } from '../../epistemic-runtime/src/allocation-contracts';
+import {
+  createInterventionControlAdapter,
+  restoreInterventionControlAdapter,
+  type InterventionControlSnapshot,
+} from '../../epistemic-runtime/src/intervention-control';
+import { controlInstrumentSupports } from '../../epistemic-runtime/src/control-observations';
+import {
+  controlSourcesCurrent,
+  decideContingentPolicy,
+  prepareS4Experience,
+  synthesizeContingentControl,
+  checkPolicyAllocation,
+} from '../../epistemic-runtime/src/contingent-control';
+import { epistemicHash } from '../../epistemic-runtime/src/source-precedence';
+import { ExperimentRefSchema } from '../../epistemic-runtime/src/experiments';
+import { interventionSpecificationRef } from '../../epistemic-runtime/src/interventions';
 import { readEnterpriseInterventionMetadataForObservation, resolveEnterpriseInterventionModelForControl } from './enterprise-interventions';
 import { loadEnterpriseBeliefView, validateBeliefViewPin, assertEnterpriseBeliefViewPinSourceVisibility } from './enterprise-beliefs';
 import { validateEnterpriseExperiment, projectEnterpriseExperiment, projectEnterpriseControlObservation } from './enterprise-experiments';
@@ -115,8 +139,24 @@ async function readPolicy(ctx:PeMutationContext,value:unknown):Promise<Contingen
   try{if(!(await file.stat()).isFile()||(await file.stat()).size>8*1024*1024)throw unavailable();const data:unknown=JSON.parse(await file.readFile('utf8'));assertContingentPolicy(data);policy=data;}finally{await file.close();}
   if(policy.tenantId!==ctx.auth.tenantId||policy.principalId!==actor(ctx)||epistemicHash(policy.ref)!==epistemicHash(parsed.data))throw unavailable();return policy;
  }catch{throw unavailable();}}
-async function readable(ctx:PeMutationContext,policy:ContingentPolicy):Promise<void>{for(const pin of policy.bindings.beliefPins)await loadEnterpriseBeliefView(ctx,{root:pin.root as PeWorldRootRef});await recoverPolicyExperience(ctx,policy);}
-async function current(ctx:PeMutationContext,policy:ContingentPolicy):Promise<string|null>{
+async function readable(ctx:PeMutationContext,policy:ContingentPolicy,client?:PoolClient):Promise<void>{for(const pin of policy.bindings.beliefPins)await loadEnterpriseBeliefView(ctx,{root:pin.root as PeWorldRootRef},{client});await recoverPolicyExperience(ctx,policy);}
+type BeliefPinReadOptions=Parameters<typeof validateBeliefViewPin>[3];
+function currentReadBatch(ctx:PeMutationContext,client?:PoolClient,beliefOptions?:BeliefPinReadOptions){
+ const methods=new Map<string,ReturnType<typeof controlSourcesCurrent>>();
+ const pins=new Map<string,ReturnType<typeof validateBeliefViewPin>>();
+ const models=new Map<string,ReturnType<typeof resolveEnterpriseInterventionModelForControl>>();
+ const once=<T>(cache:Map<string,Promise<T>>,value:unknown,read:()=>Promise<T>):Promise<T>=>{
+  const key=epistemicHash(value),existing=cache.get(key);if(existing)return existing;
+  const pending=read();cache.set(key,pending);return pending;
+ };
+ const pin=(value:Parameters<typeof validateBeliefViewPin>[1])=>once(pins,value,()=>validateBeliefViewPin(ctx,value,client,beliefOptions));
+ return {
+  method:(digests:Parameters<typeof controlSourcesCurrent>[0])=>once(methods,digests,()=>controlSourcesCurrent(digests)),
+  pin,
+  model:(ref:ExperimentRef)=>once(models,ref,()=>resolveEnterpriseInterventionModelForControl(ctx,ref,pin)),
+ };
+}
+async function current(ctx:PeMutationContext,policy:ContingentPolicy,client?:PoolClient,reads=currentReadBatch(ctx,client)):Promise<string|null>{
  if(policy.bindings.modelRef.version==='postx-y2-strategic-response-v1'){
   try{await (await import('./strategic-response/store')).assertStrategicPolicyCurrent(ctx,policy);return null;}
   catch{return 'Y2_STRATEGIC_MODEL_POLICY_OR_ADMISSION_NOT_CURRENT';}
@@ -132,9 +172,9 @@ async function current(ctx:PeMutationContext,policy:ContingentPolicy):Promise<st
   if(policy.exactProfile.durableRunId)await (await import('./r1/api')).assertR1PolicyPublished(ctx,policy.exactProfile.durableRunId,policy.ref);
   return null;
  }catch(error){return (error as Error).message.match(/^[A-Z][A-Z0-9_]+$/)?.[0]??'R1_CURRENT_OWNER_BINDING_UNPASSED';}}
- if(Date.now()>=Date.parse(policy.validUntil))return 'POLICY_EXPIRED';if(!await controlSourcesCurrent(policy.compute.backend.sourceDigests))return 'S4_LOADED_METHOD_CHANGED';
- for(const pin of policy.bindings.beliefPins)if((await validateBeliefViewPin(ctx,pin)).status!=='CURRENT')return 'S1_SOURCE_RIGHTS_COVERAGE_OR_INTERPRETATION_CHANGED';
- try{await resolveEnterpriseInterventionModelForControl(ctx,policy.bindings.modelRef);}catch{return 'S3_MODEL_REVISED_REVOKED_OR_UNSUPPORTED';}
+ if(Date.now()>=Date.parse(policy.validUntil))return 'POLICY_EXPIRED';if(!await reads.method(policy.compute.backend.sourceDigests))return 'S4_LOADED_METHOD_CHANGED';
+ for(const pin of policy.bindings.beliefPins)if((await reads.pin(pin)).status!=='CURRENT')return 'S1_SOURCE_RIGHTS_COVERAGE_OR_INTERPRETATION_CHANGED';
+ try{await reads.model(policy.bindings.modelRef);}catch{return 'S3_MODEL_REVISED_REVOKED_OR_UNSUPPORTED';}
  return null;
 }
 /** Existing durable effects are independently read. A caller cannot hide an
@@ -222,17 +262,33 @@ export async function synthesizeEnterpriseControl(ctx:PeMutationContext,input:{m
  return {...result,experience:events};
 }
 export interface R3ControlPolicyRead {schema:'finnor.s4.r3-policy-read.v1';policyRef:ExperimentRef}
-export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:R3ControlPolicyRead):Promise<Awaited<ReturnType<typeof import('./r3/control').readR3UsePolicy>>>;
-export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown):Promise<ContingentPolicy>;
-export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown){
+export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:R3ControlPolicyRead,client?:PoolClient):Promise<Awaited<ReturnType<typeof import('./r3/control').readR3UsePolicy>>>;
+export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown,client?:PoolClient):Promise<ContingentPolicy>;
+export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value:unknown,client?:PoolClient){
  if(value&&typeof value==='object'&&'schema' in value&&value.schema==='finnor.s4.r3-policy-read.v1')
   return (await import('./r3/control')).readR3UsePolicy(ctx,ExperimentRefSchema.parse((value as R3ControlPolicyRead).policyRef));
+ return readCurrentPolicy(ctx,value,currentReadBatch(ctx,client),client);
+}
+/** One S5 owner read shares only identical immutable dependency tuples. Each
+ * subsequent call gets fresh source, rights, model and method checks. */
+export async function readEnterpriseCurrentContingentPolicies(ctx:PeMutationContext,refs:ExperimentRef[],client?:PoolClient,
+ beliefOptions?:BeliefPinReadOptions):Promise<ContingentPolicy[]>{
+ const reads=currentReadBatch(ctx,client,beliefOptions),policies:ContingentPolicy[]=[];
+ for(let start=0;start<refs.length;start+=4){
+  const batch=await Promise.allSettled(refs.slice(start,start+4).map(ref=>readCurrentPolicy(ctx,ref,reads,client)));
+  const failure=batch.find(result=>result.status==='rejected');if(failure?.status==='rejected')throw failure.reason;
+  for(const result of batch)if(result.status==='fulfilled')policies.push(result.value);
+ }
+ return policies;
+}
+async function readCurrentPolicy(ctx:PeMutationContext,value:unknown,reads:ReturnType<typeof currentReadBatch>,client?:PoolClient){
  const policy=await readPolicy(ctx,value);
- // Exact source resolution already authorizes and validates these same S1
- // pins. Keep that canonical current read and its durable publication fence.
- if(!policy.exactProfile)await readable(ctx,policy);
- if(await current(ctx,policy)){
-  if(policy.exactProfile)await readable(ctx,policy);
+ // The canonical current predicate authorizes the S1 pins and model itself.
+ // Do not repeat that full world read or prepared-history recovery on success.
+ const strategic=policy.bindings.modelRef.version==='postx-y2-strategic-response-v1';
+ if(strategic)await readable(ctx,policy,client);
+ if(await current(ctx,policy,client,reads)){
+  if(!strategic)await readable(ctx,policy,client);
   throw unavailable();
  }
  await recoverPolicyExperience(ctx,policy);return immutableControl(policy);
@@ -304,7 +360,7 @@ export async function recordEnterpriseControlAssessment(ctx:PeMutationContext,in
  return {event,humanBudgetDemand:input.humanSeconds,protectedReceipt:null,policyChanged:false,executionAuthorityGranted:false};
 }
 export interface R3ControlChoice {schema:'finnor.s4.r3-choice-request.v1';policyRef:ExperimentRef}
-type NumericControlChoice={policyRef:unknown;decision?:unknown;allocationRef?:unknown;measurements?:Array<{protocol?:unknown;events:unknown[]}>;confidentialGuard?:unknown};
+type NumericControlChoice={policyRef:unknown;decision?:unknown;allocationRef?:unknown;measurements?:Array<{protocol?:unknown;events:unknown[]}>;confidentialGuard?:unknown;executionProofGuard?:unknown};
 export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:R3ControlChoice):Promise<Awaited<ReturnType<typeof import('./r3/control').chooseR3ControlBranch>>>;
 export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:NumericControlChoice):Promise<ReturnType<typeof decideContingentPolicy>>;
 export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:R3ControlChoice|NumericControlChoice){
@@ -312,11 +368,12 @@ export async function chooseEnterpriseControlBranch(ctx:PeMutationContext,input:
   if(await unresolvedEffects(ctx))throw Error('R3_OUTSTANDING_NATIVE_EFFECTS_REQUIRE_S6_ACCOUNTING');
   return (await import('./r3/control')).chooseR3ControlBranch(ctx,{policyRef:ExperimentRefSchema.parse(input.policyRef)});
  }
- return chooseNumericEnterpriseControlBranch(ctx,input);
+ return (await chooseNumericEnterpriseControlBranch(ctx,input)).choice;
 }
-async function chooseNumericEnterpriseControlBranch(ctx:PeMutationContext,input:NumericControlChoice):Promise<ReturnType<typeof decideContingentPolicy>>{
+export async function chooseNumericEnterpriseControlBranch(ctx:PeMutationContext,input:NumericControlChoice,{requireAllocation=false}:{requireAllocation?:boolean}={}){
  await (await import('./confidential-computation/owner-consumer')).assertConfidentialGuard(ctx,input.confidentialGuard);
- const policy=await readEnterpriseContingentPolicy(ctx,input.policyRef),decision=parseControlDecision(input.decision);
+ await (await import('./project-z/z4-execution-proof/owner-consumer')).assertExecutionProofGuard(ctx,input.executionProofGuard,'S4',input,'BEFORE');
+ const policy=await readEnterpriseContingentPolicy(ctx,input.policyRef),decision=parseControlDecision(input.decision,policy);
  if(Date.parse(decision.knowledgeAt)>Date.now())throw new ControlContractError('INVALID_REQUEST','Future knowledge time cannot supply a current branch');
  // Reference observations are accepted only through the actual S2 realization
  // projection. Its unauthenticated telemetry qualification remains visible.
@@ -333,33 +390,37 @@ async function chooseNumericEnterpriseControlBranch(ctx:PeMutationContext,input:
  if(await unresolvedEffects(ctx))throw new ControlContractError('INVALID_REQUEST','Outstanding effects require reconciliation before a new choice');
  let resolvedAllocation=null;
  if(input.allocationRef)try{resolvedAllocation=await (await import('./enterprise-allocation')).resolveEnterprisePolicyAllocation(ctx,input.allocationRef,policy,decision.knowledgeAt);}catch(error){if(!(error instanceof AllocationContractError)||!['PERMITTED_CONTEXT_UNAVAILABLE','STALE_INPUT'].includes(error.code))throw error;resolvedAllocation=null;}
+ if(requireAllocation&&!resolvedAllocation)throw new AllocationContractError('STALE_INPUT','Current owner-resolved allocation required before consumption');
  const choice=decideContingentPolicy(policy,decision,resolvedAllocation);await saveArtifact(ctx,'choices',choice.ref.contentDigest,choice);await saveEvents(ctx,[prepareS4Experience(policy.mandate,'BRANCH_CHOICE',policy.ref.id,{choice,decision,
   ...(input.confidentialGuard!==undefined?{confidentialGuard:input.confidentialGuard}:{}),
+  ...(input.executionProofGuard!==undefined?{executionProofGuard:input.executionProofGuard}:{}),
   observationQualification:'S2_REFERENCE_TELEMETRY_OR_PERMITTED_S1_TEMPORAL_COARSENING_UNVERIFIED_ERROR',referenceChoiceNotExecuted:true},[policy.ref.id],decision.knowledgeAt)]);
  if(await current(ctx,policy))throw unavailable();
  await (await import('./confidential-computation/owner-consumer')).assertConfidentialGuard(ctx,input.confidentialGuard);
- return choice;
+ await (await import('./project-z/z4-execution-proof/owner-consumer')).assertExecutionProofGuard(ctx,input.executionProofGuard,'S4',input,'AFTER');
+ return {policy,decision,choice,resolvedAllocation};
 }
 export async function prepareEnterpriseContingentHandoff(ctx:PeMutationContext,input:NumericControlChoice):Promise<ContingentChoiceHandoff>{
- const policy=await readEnterpriseContingentPolicy(ctx,input.policyRef),decision=await chooseEnterpriseControlBranch(ctx,input),allocationRef=input.allocationRef?ExperimentRefSchema.parse(input.allocationRef):null;
- // Only the S5 owner's current durable readback can supply conditional clearance.
- let resolvedAllocation=null;
- if(allocationRef)try{resolvedAllocation=await (await import('./enterprise-allocation')).resolveEnterprisePolicyAllocation(ctx,allocationRef,policy,(input.decision as ControlDecisionInput).knowledgeAt);}catch(error){if(!(error instanceof AllocationContractError)||!['PERMITTED_CONTEXT_UNAVAILABLE','STALE_INPUT'].includes(error.code))throw error;resolvedAllocation=null;}
- const allocation=checkPolicyAllocation(policy,resolvedAllocation,(input.decision as ControlDecisionInput).knowledgeAt);
- const model=policy.exactProfile?null:await resolveEnterpriseInterventionModelForControl(ctx,policy.bindings.modelRef),node=policy.nodes.find(n=>n.id===decision.nodeId),action=policy.problem.actions.find(a=>a.id===node?.actionId);
+ const {policy,decision,choice,resolvedAllocation}=await chooseNumericEnterpriseControlBranch(ctx,input);
+ const allocationRef=input.allocationRef?ExperimentRefSchema.parse(input.allocationRef):null;
+ const allocation=checkPolicyAllocation(policy,resolvedAllocation,decision.knowledgeAt);
+ const model=policy.exactProfile?null:await resolveEnterpriseInterventionModelForControl(ctx,policy.bindings.modelRef),node=policy.nodes.find(n=>n.id===choice.nodeId),action=policy.problem.actions.find(a=>a.id===node?.actionId);
  let intervention:ContingentChoiceHandoff['intervention']=null;
  if(action?.kind==='INTERVENE'&&model){
   const duration=Object.values(action.exposures)[0]!.length;intervention={schema:'finnor.intervention-specification.v1',vocabularyVersion:'s3-intervention-v1',targets:model.request.roots,context:policy.problem.context,timing:{startAt:new Date(Date.parse(policy.mandate.horizon.startAt)+node!.period*policy.mandate.horizon.periodMs).toISOString(),periodMs:policy.mandate.horizon.periodMs,durationMs:duration*policy.mandate.horizon.periodMs},channels:model.request.exposures.map(e=>({exposureId:e.id,operation:e.operation,unit:e.unit,target:e.root,doses:action.exposures[e.id]!,intendedExposure:'REGISTERED_DOSE',permittedRefinements:[]}))};interventionSpecificationRef(intervention);
  }
- const result:ContingentChoiceHandoff={schema:'finnor.s4.choice-handoff.v1',status:decision.status==='POLICY_AVAILABLE'?allocation.status:decision.status,policyRef:policy.ref,decision,allocationRef,demandDigest:policy.demand.contentDigest,consumptionRef:null,intervention,interventionRef:intervention?interventionSpecificationRef(intervention):null,inquiryRef:action?.protocolRef??null,requiredContracts:[{owner:'BUSINESS_OWNER',requirement:'Protected authorized immutable mandate/utility/rights revision'},...(policy.exactProfile?[{owner:'S3' as const,requirement:'Independent exact model adequacy and a qualified causal intervention specification; the supplied transition table alone does not issue it'}]:[]),{owner:'S5',requirement:'Owner-resolved current mutually consistent policy/demand/mandate allocation, shared commitments and reservations'},{owner:'S6',requirement:'Protected IR, source/rights/allocation/method/fence rechecks, append receipt, concrete provider binding, execution/exposure/reconciliation/settlement'},{owner:'S7',requirement:'Independent prospective assignment/exposure/outcome/cost accounting and attribution'},{owner:'S8',requirement:'Independent admission of exact policy method and validity domain'}],executionAuthorityGranted:false,effectRef:null,settlementRef:null,attributionGranted:false,protectedReceipt:null};
- const plannedConsumptionKey=allocationRef&&resolvedAllocation&&decision.status==='POLICY_AVAILABLE'?`s4-handoff:${decision.contextDigest}`:null;
+ const result:ContingentChoiceHandoff={schema:'finnor.s4.choice-handoff.v1',status:choice.status==='POLICY_AVAILABLE'?allocation.status:choice.status,policyRef:policy.ref,decision:choice,allocationRef,demandDigest:policy.demand.contentDigest,consumptionRef:null,intervention,interventionRef:intervention?interventionSpecificationRef(intervention):null,inquiryRef:action?.protocolRef??null,requiredContracts:[{owner:'BUSINESS_OWNER',requirement:'Protected authorized immutable mandate/utility/rights revision'},...(policy.exactProfile?[{owner:'S3' as const,requirement:'Independent exact model adequacy and a qualified causal intervention specification; the supplied transition table alone does not issue it'}]:[]),{owner:'S5',requirement:'Owner-resolved current mutually consistent policy/demand/mandate allocation, shared commitments and reservations'},{owner:'S6',requirement:'Protected IR, source/rights/allocation/method/fence rechecks, append receipt, concrete provider binding, execution/exposure/reconciliation/settlement'},{owner:'S7',requirement:'Independent prospective assignment/exposure/outcome/cost accounting and attribution'},{owner:'S8',requirement:'Independent admission of exact policy method and validity domain'}],executionAuthorityGranted:false,effectRef:null,settlementRef:null,attributionGranted:false,protectedReceipt:null};
+ const compositionContract=await (await import('./project-z/z5-institution-linker/consumer')).currentCompositionForHandoff(ctx,policy.ref,allocationRef??undefined);
+ const plannedConsumptionKey=allocationRef&&resolvedAllocation&&choice.status==='POLICY_AVAILABLE'?`s4-handoff:${choice.contextDigest}`:null;
  const preparation={schema:'finnor.s4.handoff-preparation.v1' as const,handoff:result,plannedConsumptionKey,qualification:'PREPARED_NOT_CONSUMED_NOT_PROTECTED' as const,
+  ...(compositionContract?{compositionContract}:{}),
   ...(input.confidentialGuard!==undefined?{confidentialGuard:input.confidentialGuard}:{})},digest=epistemicHash(preparation);
  const preparationRef:ExperimentRef={owner:'S4',id:`contingent-handoff-preparation:${digest}`,version:'s4-handoff-preparation-v1',contentDigest:digest},prepared=immutableControl({...result,preparationRef});
  // All model construction and fallible S4 persistence precede durable S5 intent.
  // The S5 consumption transaction supplies the canonical consequence event.
  await saveArtifact(ctx,'handoff-preparations',digest,preparation);
- await saveEvents(ctx,[prepareS4Experience(policy.mandate,'HANDOFF',policy.ref.id,{handoff:prepared,plannedConsumptionKey,qualification:preparation.qualification,allocationOwnerResolved:resolvedAllocation!==null},[decision.ref.id],(input.decision as ControlDecisionInput).knowledgeAt)]);
+ if(compositionContract)await (await import('./project-z/z5-institution-linker/consumer')).recordCompositionHandoffConsumed(ctx,compositionContract,preparationRef);
+ await saveEvents(ctx,[prepareS4Experience(policy.mandate,'HANDOFF',policy.ref.id,{handoff:prepared,plannedConsumptionKey,qualification:preparation.qualification,allocationOwnerResolved:resolvedAllocation!==null},[choice.ref.id],decision.knowledgeAt)]);
  if(allocationRef&&plannedConsumptionKey){
   const consumed=await (await import('./enterprise-allocation')).consumeEnterpriseAllocation(ctx,{...input,allocationRef,policyRef:policy.ref,idempotencyKey:plannedConsumptionKey});
   return immutableControl({...prepared,consumptionRef:consumed.consumption.ref});
@@ -368,13 +429,52 @@ export async function prepareEnterpriseContingentHandoff(ctx:PeMutationContext,i
 }
 
 /** S6 resolves the actual immutable producer artifact. Caller bodies are never handoffs. */
-export async function readEnterpriseContingentHandoffPreparation(ctx:PeMutationContext,value:unknown):Promise<{schema:'finnor.s4.handoff-preparation.v1';handoff:ContingentChoiceHandoff;plannedConsumptionKey:string|null;qualification:'PREPARED_NOT_CONSUMED_NOT_PROTECTED';confidentialGuard?:unknown}>{
+export async function readEnterpriseContingentHandoffPreparation(ctx:PeMutationContext,value:unknown,options:{originalBeforeComposition?:boolean}={}):Promise<{schema:'finnor.s4.handoff-preparation.v1';handoff:ContingentChoiceHandoff;plannedConsumptionKey:string|null;qualification:'PREPARED_NOT_CONSUMED_NOT_PROTECTED';confidentialGuard?:unknown;compositionContract?:unknown}>{
  const ref=ExperimentRefSchema.parse(value);if(ref.owner!=='S4'||ref.version!=='s4-handoff-preparation-v1'||ref.id!==`contingent-handoff-preparation:${ref.contentDigest}`)throw unavailable();
  const preparation=await readArtifact(ctx,'handoff-preparations',ref.contentDigest);
  if(preparation.schema!=='finnor.s4.handoff-preparation.v1'||epistemicHash(preparation)!==ref.contentDigest||preparation.qualification!=='PREPARED_NOT_CONSUMED_NOT_PROTECTED'||preparation.handoff.executionAuthorityGranted!==false||preparation.handoff.protectedReceipt!==null||preparation.handoff.consumptionRef!==null)throw unavailable();
+ if(options.originalBeforeComposition&&Object.prototype.hasOwnProperty.call(preparation,'compositionContract'))throw Error('Z5_ORIGINAL_PREPARATION_MUST_PRECEDE_COMPOSITION_SELECTION');
  await readEnterpriseContingentPolicy(ctx,preparation.handoff.policyRef);
  await (await import('./confidential-computation/owner-consumer')).assertConfidentialGuard(ctx,preparation.confidentialGuard);
+ if(preparation.compositionContract)await (await import('./project-z/z5-institution-linker/consumer')).assertCompositionHandoffCurrent(ctx,preparation.compositionContract,preparation.handoff.policyRef,preparation.handoff.allocationRef);
  return immutableControl(preparation);
+}
+
+type InstitutionCompositionPlanBody={
+ schema:'finnor.s4.institution-composition-plan.v1';tenantId:string;principalId:string;workId:string;rightsRef:string;
+ policyRef:ExperimentRef;allocationRef:ExperimentRef;compositionContract:NonNullable<Awaited<ReturnType<typeof import('./project-z/z5-institution-linker/consumer').currentCompositionForHandoff>>>;
+ planningCostRef:ExperimentRef;qualification:'EXACT_DECLARED_CONTRACT_PLANNING_ONLY_OLD_UNKNOWN_RETAINED';
+ executionAuthorityGranted:false;protectedAdmission:false;
+};
+/** Actual S4 integration/replacement planning, including while an old S6
+ * liability is UNKNOWN. This is deliberately NOT chooseBranch or a dispatch. */
+export async function prepareEnterpriseInstitutionCompositionPlan(ctx:PeMutationContext,input:{policyRef:unknown;allocationRef:unknown}){
+ const policy=await readEnterpriseContingentPolicy(ctx,input.policyRef),allocationRef=ExperimentRefSchema.parse(input.allocationRef),
+  consumer=await import('./project-z/z5-institution-linker/consumer'),
+  compositionContract=await consumer.currentCompositionForHandoff(ctx,policy.ref,allocationRef);
+ if(!compositionContract)throw unavailable();
+ const planningCostRef=await consumer.beginCompositionPlanning(ctx,compositionContract);
+ const body:InstitutionCompositionPlanBody={schema:'finnor.s4.institution-composition-plan.v1',tenantId:ctx.auth.tenantId,
+  principalId:actor(ctx),workId:compositionContract.workId,rightsRef:policy.mandate.rightsRef,policyRef:policy.ref,allocationRef,
+  compositionContract,planningCostRef,qualification:'EXACT_DECLARED_CONTRACT_PLANNING_ONLY_OLD_UNKNOWN_RETAINED',
+  executionAuthorityGranted:false,protectedAdmission:false},digest=epistemicHash(body),
+  ref:ExperimentRef={owner:'S4',id:'contingent-institution-plan:'+digest,version:'z5-s4-composition-plan-v1',contentDigest:digest},
+  plan=immutableControl({...body,ref});
+ await saveArtifact(ctx,'institution-composition-plans',digest,plan);
+ await consumer.recordCompositionPlanConsumed(ctx,compositionContract,ref);
+ return plan;
+}
+/** Immutable producer-byte reader used by S4's real consumption recording.
+ * It does not call the composition checker, avoiding recursive owner inspection. */
+export async function readEnterpriseInstitutionCompositionPlanByRef(ctx:PeMutationContext,value:unknown):Promise<InstitutionCompositionPlanBody&{ref:ExperimentRef}>{
+ const ref=ExperimentRefSchema.parse(value);
+ if(ref.owner!=='S4'||ref.version!=='z5-s4-composition-plan-v1'||ref.id!=='contingent-institution-plan:'+ref.contentDigest)throw unavailable();
+ const plan=await readArtifact(ctx,'institution-composition-plans',ref.contentDigest),{ref:stored,...body}=plan;
+ if(body.schema!=='finnor.s4.institution-composition-plan.v1'||body.tenantId!==ctx.auth.tenantId||body.principalId!==actor(ctx)
+  ||epistemicHash(body)!==ref.contentDigest||epistemicHash(stored)!==epistemicHash(ref)
+  ||body.executionAuthorityGranted!==false||body.protectedAdmission!==false)throw unavailable();
+ await readEnterpriseContingentPolicy(ctx,body.policyRef);
+ return immutableControl(plan);
 }
 
 /** Exact current owner contexts. Nothing is cached across authenticated reads. */
@@ -628,24 +728,56 @@ export async function prepareEnterpriseApplicationAcquisition(ctx:PeMutationCont
 /** S4 selects a composition from retained lawful state. P1 can invoke this seam,
  * but cannot supply a model, replace original evidence, or mint authority. */
 export async function composeEnterpriseApplicationOperations(ctx:PeMutationContext,input:{
- sessionId:string;initial:import('@finnor/shared-types').ApplicationSnapshot;
-}):Promise<import('@finnor/shared-types').CheckedApplicationComposition>{
+ sessionId:string;initial:import('@finnor/shared-types').ApplicationSnapshot;requiredFirstOperationId?:string;
+},client?:PoolClient):Promise<import('@finnor/shared-types').CheckedApplicationComposition>{
  const store=await import('./application-semantics/store'),contracts=await import('./application-semantics/contracts'),
   composition=await import('./application-semantics/composition');
- const row=await store.applicationSession(ctx,input.sessionId),request=(await import('./application-semantics/native-contracts')).ApplicationExecuteSchema.parse(row.request);
- await store.currentApplicationWork(ctx,row);
- const {model,check}=await store.currentApplicationModel(ctx,row);
+ const row=await store.applicationSession(ctx,input.sessionId,client),request=(await import('./application-semantics/native-contracts')).ApplicationExecuteSchema.parse(row.request);
+ await store.currentApplicationWork(ctx,row,client);
+ const {model,check}=await store.currentApplicationModel(ctx,row,client);
  const observedRef=contracts.x2Ref('COMPUTER','application-observation',input.initial);
- const observed=await store.applicationArtifact<import('@finnor/shared-types').ApplicationSnapshot>(ctx,observedRef);
+ const observed=await store.applicationArtifact<import('@finnor/shared-types').ApplicationSnapshot>(ctx,observedRef,client);
  if(contracts.x2Digest(observed)!==contracts.x2Digest(input.initial)||request.targetId!==observed.target.id)
   contracts.x2Fault('X2_S4_ORIGINAL_FRESH_OBSERVATION_REQUIRED');
  const profiles=await Promise.all(row.profile_ids.map(id=>store.nativeApplicationProfile(ctx,id)));
  const selected=composition.composeApplicationActions({model,check,initial:observed,goal:request.goal,parameters:request.parameters,
-  originalParentRef:row.original_parent_ref,deadlineAt:row.parent.deadlineAt,authorizedRoles:profiles.map(p=>p.profile.role)});
+  originalParentRef:row.original_parent_ref,deadlineAt:row.parent.deadlineAt,authorizedRoles:profiles.map(p=>p.profile.role),firstOperationId:input.requiredFirstOperationId});
  if(selected.disposition==='COMPOSED_WITH_REQUIRED_OBSERVATIONS')composition.assertApplicationComposition({composition:selected,model,check,initial:observed});
  const {ref,...body}=selected;
- await store.retainApplicationArtifact(ctx,ref,body,false,undefined,[row.parent.rightsRevision]);
+ await store.retainApplicationArtifact(ctx,ref,body,false,client,[row.parent.rightsRevision]);
  await store.applicationEvent(ctx,row,'S4_TYPED_OPERATION_COMPOSITION_SELECTED',{compositionRef:ref,modelRef:model.ref,checkRef:check.ref,
-  exploredNodes:selected.exploredNodes,disposition:selected.disposition,originalDeadline:row.parent.deadlineAt,executionAuthorityGranted:false});
+  exploredNodes:selected.exploredNodes,disposition:selected.disposition,originalDeadline:row.parent.deadlineAt,executionAuthorityGranted:false},client);
  return selected;
+}
+
+/** Mandatory versioned native map, not an optional caller-provided port. The
+ * owned implementation resolves every original C index to current S4 source. */
+export const Z3_GENERAL_OPERATION_BINDING='finnor.s4.z3-original-operation-binding.v2' as const;
+export async function resolveEnterpriseViabilityBindingsTx(ctx:PeMutationContext,
+ request:import('./project-z/z3-viability/general-owners').GeneralOwnerRequest,client:PoolClient){
+ return (await import('./project-z/z3-viability/general-owners')).resolveGeneralS4BindingsTx(ctx,request,client);
+}
+export async function observeEnterpriseViabilityStateTx(ctx:PeMutationContext,
+ request:import('./project-z/z3-viability/general-owners').GeneralOwnerRequest,observerId:string,
+ invocation:import('./project-z/z3-viability/general-owners').GeneralOwnerInvocation,client:PoolClient){
+ return (await import('./project-z/z3-viability/general-owners')).observeGeneralS4StateTx(ctx,request,observerId,invocation,client);
+}
+export async function dispatchEnterpriseViabilityOperationTx(ctx:PeMutationContext,
+ request:import('./project-z/z3-viability/general-owners').GeneralOwnerRequest,edgeIndex:number,
+ invocation:import('./project-z/z3-viability/general-owners').GeneralOwnerInvocation,client:PoolClient){
+ return (await import('./project-z/z3-viability/general-owners')).dispatchGeneralS4OperationTx(ctx,request,edgeIndex,invocation,client);
+}
+/** S4-owned entry for the first original-Work Z3 native profile. This is a
+ * finite observed prefix, not a verdict-only acknowledgement or effect grant. */
+export async function continueEnterpriseViabilityTx(ctx:PeMutationContext,sessionId:string,
+ claim:import('./project-z/z3-viability/contracts').ViabilityClaim,client:PoolClient,db:import('@finnor/db').Db){
+ return (await import('./project-z/z3-viability/consumer')).consumeCheckedViabilityTx(ctx,sessionId,claim,client,db);
+}
+/** Independently versioned executable-operation selection precheck. It refuses
+ * by name until the actual application owner can consume a retained selection. */
+export const Z3_EXECUTABLE_OPERATION_BINDING='finnor.s4.z3-original-executable-operation-binding.v1' as const;
+export async function selectEnterpriseViabilityExecutableOperationTx(ctx:PeMutationContext,
+ request:import('./project-z/z3-viability/general-owners').GeneralOwnerRequest,edgeIndex:number,
+ invocation:import('./project-z/z3-viability/general-owners').GeneralOwnerInvocation,client:PoolClient):Promise<never>{
+ return (await import('./project-z/z3-viability/general-owners')).selectGeneralExecutableOperationTx(ctx,request,edgeIndex,invocation,client);
 }
