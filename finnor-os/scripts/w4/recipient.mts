@@ -79,7 +79,8 @@ export async function growthRecipient(input: {
   const canonicalRightsOwners = [...new Set(["S1", "S2", "S3", ...canonicalSourceOwners])];
   const rightsForOwner = (owner: string) => {
     if (owner === "SUPPLIED") return [canonicalOwnerAuthority.rightsRef];
-    return canonicalRightsOwners.includes(owner) ? [input.rightsRef, canonicalOwnerAuthority.rightsRef] : [input.rightsRef];
+    return canonicalRightsOwners.includes(owner)
+      ? [...new Set([input.rightsRef, canonicalOwnerAuthority.rightsRef])] : [input.rightsRef];
   };
   await input.artifact("canonical-owner-authority-readback.json", { sourceOperation: "/api/company-brain/belief-view",
     canonicalOwnerAuthority, rights: { ref: view.rights.ref, revision: view.rights.revision,

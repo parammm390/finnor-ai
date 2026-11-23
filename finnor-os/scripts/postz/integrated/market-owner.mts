@@ -1,31 +1,38 @@
 /** W4's actual owner composer, on the existing canonical business. Its native
  * grammar and independently consented controlled participants are unchanged. */
 import { strict as assert } from "node:assert";
-import { randomUUID } from "node:crypto";
 import type { IntegratedOwnerPorts, NativeJourneyOutput } from "./owner-journey.mts";
 import type { NativeGrowthJourneyContext } from "../../w4/native-growth-journey.mts";
 
+export async function intakeMarketOriginal(
+  scope: Pick<IntegratedOwnerPorts, "http" | "owner" | "companyId" | "serviceWorkId">, key: string,
+) {
+  const intake = await scope.http("demand-to-business", "intake", { companyId: scope.companyId, idempotencyKey: key,
+    instruction: "On this original company, test one supported adjacent software-record transformation. Preserve the original service obligations and independently observe consent, delivery, collection and accounting. No genuine market, cash, profit or physical service is asserted.",
+  }, scope.owner);
+  assert.equal(intake.status, 200, "W049_W4_SIGNED_ORIGINAL_INTAKE_REQUIRED");
+  const { workId, workInputId } = intake.body;
+  assert(typeof workId === "string" && typeof workInputId === "string");
+  assert.notEqual(workId, scope.serviceWorkId);
+  return { workId, workInputId };
+}
+
 export async function runMarketOwner(ports: IntegratedOwnerPorts, setup: Pick<NativeGrowthJourneyContext,
-  "actors" | "native" | "recipient" | "pump">): Promise<NativeJourneyOutput> {
+  "actors" | "native" | "recipient" | "pump" | "work"> & Required<Pick<NativeGrowthJourneyContext,
+    "namespace" | "declaredMeasurements" | "originalResources" | "buyerContact">>): Promise<NativeJourneyOutput> {
   ports.checkBound();
-  const key = "w4-shared-" + randomUUID();
   await ports.artifact("integrated/w4/original.json", {
-    companyId: ports.companyId, originalServiceWorkId: ports.serviceWorkId,
+    companyId: ports.companyId, originalServiceWorkId: ports.serviceWorkId, work: setup.work,
     expected: { nativeOperations: ["OFFER", "DELIVER", "COLLECT"], originalIdentityReadback: true,
       deliveredUnits: 1, collectedMinor: "1", recognizedMinor: "1", currency: "USD",
       s7ProfitQualified: false, fieldValidated: false, completeMonetaryCost: null },
     sourceClass: "CONTROLLED_SYNTHETIC_PARTICIPANTS_NOT_GENUINE_MARKET_DEMAND",
   });
-  const intake = await ports.http("demand-to-business", "intake", { companyId: ports.companyId, idempotencyKey: key,
-    instruction: "On this original company, test one supported adjacent software-record transformation. Preserve the original service obligations and independently observe consent, delivery, collection and accounting. No genuine market, cash, profit or physical service is asserted.",
-  }, ports.owner);
-  assert.equal(intake.status, 200, JSON.stringify(intake));
-  const work = { workId: intake.body.workId as string, workInputId: intake.body.workInputId as string };
-  assert(work.workId && work.workInputId); assert.notEqual(work.workId, ports.serviceWorkId);
+  const work = setup.work;
   const { createNativeGrowthJourney } = await import("../../w4/native-growth-journey.mts");
   const journey = createNativeGrowthJourney({
-    ...setup, tenant: ports.tenant, owner: ports.owner, companyId: ports.companyId, work,
-    namespace: key, admin: ports.admin, http: ports.http,
+    ...setup, tenant: ports.tenant, owner: ports.owner, companyId: ports.companyId,
+    integratedConditionalRefund: true, admin: ports.admin, http: ports.http,
     ok: async (group, operation, body, actor = ports.owner) => {
       const response = await ports.http(group, operation, body, actor);
       assert.equal(response.status, 200, JSON.stringify(response)); return response.body;

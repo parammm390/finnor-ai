@@ -120,11 +120,11 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
-      "sha256": "0219edaef452cfafd87cb8a28a72c5af96b14375f320e97bc9a5dd8ae5ab14f0"
+      "sha256": "3e7c49b0345379ec848d7f444e9638c0e4f3e13ed24e9cd06132970a339aa7ba"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-obligations.ts",
-      "sha256": "cd76129f12922bd8996abad7a3bc860a69f057c31e9af620a4bdea3340903b78"
+      "sha256": "f6a07e68d2b505a6831525632f003a5ec4658ae00322234cac66fa3e8d19a0d0"
     },
     {
       "path": "finnor-os/packages/private-equity/src/allocation-store.ts",
@@ -2320,7 +2320,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
-      "sha256": "e6c2314b50b9b6c8f2b481fcf921755f821b52122f8aa51f3b3ca79517586464"
+      "sha256": "6b57a40c9b64698c9f6087b523fdfa0109f35cc6bd199512bbc41216485187f0"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-economic-assignments.ts",
@@ -2340,7 +2340,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-interventions.ts",
-      "sha256": "732b315aaa49b23011983ec349ca66f25a036af9a61f998fd2aeee7c6b80f0c6"
+      "sha256": "407cb160ce20446804f67f93fa8975c68c31d5beabe37fc265201f82b05dc452"
     },
     {
       "path": "finnor-os/packages/private-equity/src/epistemic.ts",
@@ -3844,7 +3844,7 @@ export default {
     },
     {
       "path": "finnor-os/scripts/s5/owner-fixture.mts",
-      "sha256": "ff3c146f322500609fe988efeef010c2456b11230e7742915ebca3bffa27d9ad"
+      "sha256": "9726fba002b0a1f53389ea5e031184b0f666609eab568811f80011bb51c15b79"
     },
     {
       "path": "finnor-os/scripts/x3/environment.mts",
@@ -5408,7 +5408,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/real-world-service/store.ts",
-      "sha256": "cc87fe9454690e47bbc86f700a2da14683b1b4ca2df01a6ed621d8ba230f47a2"
+      "sha256": "5680bcfe493b02d0e7048ab5fa9bd271f0247d361dd64bd222ebf2e0afd8d472"
     },
     {
       "path": "finnor-os/packages/private-equity/src/real-world-service/worker.ts",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "2ea6e3fc2aadb8023fbcdb72575ddcf874b12c10148734e4ce1dded8e07c46be"
+  "sourceDigest": "c9fb86251351d5379d85961371f662003ba270c74c07b6ce8c368bdacbe474ec"
 } as const;

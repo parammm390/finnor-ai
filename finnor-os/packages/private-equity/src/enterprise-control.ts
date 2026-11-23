@@ -140,7 +140,8 @@ async function readPolicy(ctx:PeMutationContext,value:unknown):Promise<Contingen
   if(policy.tenantId!==ctx.auth.tenantId||policy.principalId!==actor(ctx)||epistemicHash(policy.ref)!==epistemicHash(parsed.data))throw unavailable();return policy;
  }catch{throw unavailable();}}
 async function readable(ctx:PeMutationContext,policy:ContingentPolicy,client?:PoolClient):Promise<void>{for(const pin of policy.bindings.beliefPins)await loadEnterpriseBeliefView(ctx,{root:pin.root as PeWorldRootRef},{client});await recoverPolicyExperience(ctx,policy);}
-function currentReadBatch(ctx:PeMutationContext,client?:PoolClient){
+type BeliefPinReadOptions=Parameters<typeof validateBeliefViewPin>[3];
+function currentReadBatch(ctx:PeMutationContext,client?:PoolClient,beliefOptions?:BeliefPinReadOptions){
  const methods=new Map<string,ReturnType<typeof controlSourcesCurrent>>();
  const pins=new Map<string,ReturnType<typeof validateBeliefViewPin>>();
  const models=new Map<string,ReturnType<typeof resolveEnterpriseInterventionModelForControl>>();
@@ -148,10 +149,12 @@ function currentReadBatch(ctx:PeMutationContext,client?:PoolClient){
   const key=epistemicHash(value),existing=cache.get(key);if(existing)return existing;
   const pending=read();cache.set(key,pending);return pending;
  };
+ const pin=(value:Parameters<typeof validateBeliefViewPin>[1])=>once(pins,value,()=>validateBeliefViewPin(ctx,value,client,beliefOptions));
  return {
   method:(digests:Parameters<typeof controlSourcesCurrent>[0])=>once(methods,digests,()=>controlSourcesCurrent(digests)),
-  pin:(pin:Parameters<typeof validateBeliefViewPin>[1])=>once(pins,pin,()=>validateBeliefViewPin(ctx,pin,client)),
-  model:(ref:ExperimentRef)=>once(models,ref,()=>resolveEnterpriseInterventionModelForControl(ctx,ref)),
+  pin,
+  model:(ref:ExperimentRef)=>once(models,ref,()=>resolveEnterpriseInterventionModelForControl(ctx,ref,
+   beliefOptions?.recordExperience===false?pin:undefined)),
  };
 }
 async function current(ctx:PeMutationContext,policy:ContingentPolicy,client?:PoolClient,reads=currentReadBatch(ctx,client)):Promise<string|null>{
@@ -269,8 +272,9 @@ export async function readEnterpriseContingentPolicy(ctx:PeMutationContext,value
 }
 /** One S5 owner read shares only identical immutable dependency tuples. Each
  * subsequent call gets fresh source, rights, model and method checks. */
-export async function readEnterpriseCurrentContingentPolicies(ctx:PeMutationContext,refs:ExperimentRef[],client?:PoolClient):Promise<ContingentPolicy[]>{
- const reads=currentReadBatch(ctx,client),policies:ContingentPolicy[]=[];
+export async function readEnterpriseCurrentContingentPolicies(ctx:PeMutationContext,refs:ExperimentRef[],client?:PoolClient,
+ beliefOptions?:BeliefPinReadOptions):Promise<ContingentPolicy[]>{
+ const reads=currentReadBatch(ctx,client,beliefOptions),policies:ContingentPolicy[]=[];
  for(let start=0;start<refs.length;start+=4){
   const batch=await Promise.allSettled(refs.slice(start,start+4).map(ref=>readCurrentPolicy(ctx,ref,reads,client)));
   const failure=batch.find(result=>result.status==='rejected');if(failure?.status==='rejected')throw failure.reason;
