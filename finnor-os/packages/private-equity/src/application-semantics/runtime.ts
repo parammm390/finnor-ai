@@ -56,6 +56,7 @@ type WireResult = Awaited<ReturnType<ApplicationSourceSession["dispatch"]>>;
 const adverse = new Set(["REJECTED", "DENIED", "FAILED", "CANCELLED"]);
 const pending = new Set(["PENDING", "ACCEPTED", "QUEUED", "PROCESSING", "AWAITING_APPROVAL"]);
 const completed = new Set(["RECORDED", "COMPLETED", "SUBMITTED", "APPROVED"]);
+const reconcilableReadback = new Set(["ASYNC_ACCEPTANCE_NOT_COMPLETED", "EXACT_REQUEST_READBACK_UNAVAILABLE"]);
 const safeReason = (error: unknown) => error instanceof ApplicationProviderFault ? error.code
   : error instanceof Error && /^[A-Z][A-Z0-9_]{1,159}$/.test(error.message) ? error.message : "X2_NATIVE_PREDICATE_UNPASSED";
 function preimage(ref: ExperimentRef, value: unknown): unknown {
@@ -89,6 +90,11 @@ function requestScope(row: ApplicationRequestRow, before: ApplicationSnapshot, o
     && body.semanticRevision === row.body.wire.context.semanticRevision
     && typeof body.acceptedAt === "string" && Number.isFinite(Date.parse(body.acceptedAt));
 }
+export function applicationObservationReadbackDelay(reason: string, attempt: number, now: number, deadline: number): number | null {
+  if (!reconcilableReadback.has(reason) || !Number.isInteger(attempt) || attempt < 0 || attempt >= 5) return null;
+  const delay = 100 * (2 ** attempt);
+  return Number.isFinite(now) && Number.isFinite(deadline) && now + delay < deadline ? delay : null;
+}
 /** Separate from learner inference and from the mutation acknowledgment.
  * A bounded conditional refusal has no positive verification/release credit. */
 export function classifyNativeApplicationObservation(input: {
@@ -116,9 +122,15 @@ export function classifyNativeApplicationObservation(input: {
     return { disposition: "DENIED", transition: "REJECTED",
       reason: "ADMITTED_CONDITIONAL_NONACCEPTANCE_WITH_INDEPENDENT_UNCHANGED_EXACT_RECORD", asynchronous: false };
   }
-  if (!scoped || !body || after.unavailableFields.length
-    || !/^(0|[1-9][0-9]*)$/.test(after.recordRevision) || !/^(0|[1-9][0-9]*)$/.test(before.recordRevision)) {
-    return { disposition: "UNKNOWN", transition: "UNKNOWN", reason: "EXACT_REQUEST_IDENTITY_OR_POSTCONDITION_UNAVAILABLE", asynchronous: false };
+  if (!body || !observedRequest.available || !observedRequest.sourceRef) {
+    return { disposition: "UNKNOWN", transition: "UNKNOWN", reason: "EXACT_REQUEST_READBACK_UNAVAILABLE", asynchronous: true };
+  }
+  if (!scoped) return { disposition: "UNKNOWN", transition: "UNKNOWN", reason: "EXACT_REQUEST_SCOPE_UNPROVED", asynchronous: false };
+  if (after.unavailableFields.length) {
+    return { disposition: "UNKNOWN", transition: "UNKNOWN", reason: "EXACT_POSTCONDITION_COVERAGE_UNAVAILABLE", asynchronous: false };
+  }
+  if (!/^(0|[1-9][0-9]*)$/.test(after.recordRevision) || !/^(0|[1-9][0-9]*)$/.test(before.recordRevision)) {
+    return { disposition: "UNKNOWN", transition: "UNKNOWN", reason: "EXACT_POSTCONDITION_REVISION_INVALID", asynchronous: false };
   }
   const status = String(body.status).toUpperCase();
   if (pending.has(status)) {
@@ -388,9 +400,9 @@ export class NativeApplicationRuntime implements ApplicationLearningPort {
         classified = { disposition: "UNKNOWN", transition: "UNKNOWN", reason: safeReason(error), asynchronous: false };
         break;
       }
-      if (classified.transition !== "PENDING") break;
-      if (Date.now() + 100 >= Date.parse(this.parent.deadlineAt)) break;
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      const delay = applicationObservationReadbackDelay(classified.reason, attempt, Date.now(), Date.parse(this.parent.deadlineAt));
+      if (delay === null) break;
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
     if (classified.disposition === "VERIFIED" && after && operation) {
       try { this.assertPredictedTransition(operation, before, after, obligation.parameters); }

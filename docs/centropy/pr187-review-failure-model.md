@@ -483,3 +483,38 @@ repaired for the required PR verdict. The repair must pass the complete official
 weaken either gate or promote the successful owners to overall W1 acceptance
 until the exact repaired head completes its required verdict.
 
+## 2026-11-23 Z0 attempts 1 and 2 on current source
+
+Run `45109599182` is bound to repository `1306076635`, PR 187, branch
+`codex/zw-integration-quality-20261115` and exact source
+`7b08b7e272437501531f1a9ddfc188c9e5aa0ccb`.
+
+- Attempt 1, receipt comment `7091590062`, required job `137478676390`, failed
+  after M-00, M-04 and M-10 passed. M-01 completed several authenticated
+  institution reads and then received a same-scope HTTP 500. The mounted panel
+  discarded its authorized observation and scheduled no recovery. M-02/M-03
+  inherited the unavailable state; M-05..M-09 lacked M-01's comparison
+  reference and were cascade failures. Artifact `14789588757`, digest
+  `sha256:a7fdf98205d17dbbc1f5e8c039ef2b32daf1978c033fa97b2da1fbb3536324f9`.
+- Attempt 2, receipt comment `7102732181`, required job `137725752001`, failed
+  earlier at M-00. The scenario-owned worker completed, the launcher was READY,
+  migration/seed/owner-fixture exited zero, and no heap restart, fatal server
+  error or fixture-boundary failure was recorded. The first acquisition instead
+  ended `UNKNOWN`: its retained independent disposition was
+  `EXACT_REQUEST_IDENTITY_OR_POSTCONDITION_UNAVAILABLE`, followed by
+  `X2_EXPLORATION_RECONCILIATION_REQUIRED`. M-01..M-10 correctly remained
+  NOT_RUN. Artifact `14824045338`, digest
+  `sha256:c9f1a0f474f3e2ca348885e0f93a76d14f2e8751b0f02a1344b6638476ff457d`.
+
+The coherent correction is read-only and fail-closed. The application runtime
+now distinguishes a temporarily unavailable request readback from immutable
+scope mismatch, missing postcondition coverage and invalid revisions. It may
+repeat only the independent request/record observations, at most five delayed
+cuts inside the unchanged original deadline; it never replays the physical
+operation. A missing source-owned dispatch identity now refuses readback. The
+mounted panel similarly retries only `CentropyApiError.retryable` observations
+inside the unchanged Work/principal scope, clears all state on authentication,
+authorization, contract or scope failure, and never retries a mutation. Neither
+repair changes product assertions, authority, deadlines or phase acceptance.
+Z0 remains open until all M-00..M-10 pass on the newly published exact source.
+

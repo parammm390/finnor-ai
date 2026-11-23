@@ -1469,7 +1469,7 @@ export class ApplicationSourceSession {
   }> {
     this.assertOpen();
     const original = this.requestRecords.get(identity.requestId);
-    if (original && x2Digest(identity) !== x2Digest(original.identity) || !this.profile.requestPathTemplate) {
+    if (!original || x2Digest(identity) !== x2Digest(original.identity) || !this.profile.requestPathTemplate) {
       return { body: null, sourceRef: null, available: false };
     }
     if (Object.keys(identity).length !== requestKeys.length || requestKeys.some((key) =>

@@ -1660,7 +1660,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/application-semantics/runtime.ts",
-      "sha256": "98e823ee3d1e48139dffed4dd3d7b6437a67145435c7207b2ea3fd1d4129d294"
+      "sha256": "0e58240929a019818ddd9c5dfb9ec17bf1ad848494a198642397f579ea77c8f7"
     },
     {
       "path": "finnor-os/packages/private-equity/src/application-semantics/schema-pattern.ts",
@@ -1668,7 +1668,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/application-semantics/source.ts",
-      "sha256": "2b3ee6dcf84e21e2cb75f0587251e98ef0585fcf04e5a3639fcb5c20c904ba01"
+      "sha256": "61c6772e1d721a3db4e20e56ac9d8237af4bb44d8edde016e40aedc8d6dc58f0"
     },
     {
       "path": "finnor-os/packages/private-equity/src/application-semantics/store.ts",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "c67ee42bafe20e6a56e88374b51e7653d6bb16e062192ef16b81d66826c25f11"
+  "sourceDigest": "206c532b76aca00bfe08fb7bddf480b39ed8c255072c6a72440d9e172b059c27"
 } as const;
