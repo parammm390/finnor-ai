@@ -871,14 +871,17 @@ await runCase("M-06", ["Z0-R09-C02", "Z0-R09-C04", "Z0-R45-C04"], "Principal swi
   const back = await uiSignIn(page, ownerCreds.email, ownerCreds.password, watch);
   const mark2 = watch.mark();
   await openWork(page, threadA.id, parentA.workId, rootA);
-  await waitForPanel(page, parentA.workId);
+  const restored = await readSettledPanels(page, parentA.workId);
   await watch.settle();
-  const reads = watch.since(mark2).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId);
-  const restored = await readPanels(page);
+  const sameOwner = back.identity?.tenantId === parentA.tenantId && back.identity?.userId === parentA.ownerId;
+  const newToken = Boolean(oldBearer && back.bearer && back.bearer !== oldBearer);
+  const reads = watch.since(mark2).filter(row => row.path.endsWith("application-projection") && row.workId === parentA.workId
+    && row.status === 200 && back.bearer && watch.bearerOf(row.seq) === back.bearer);
   c.observations.reloadDifferences = referenceFieldDifferences(restored);
   c.observations.browserStage = "CHECK_RESTORED_WORK";
   check(c, "restore.fresh-read", "after the original owner signs in again the facts equal the earlier ones from a fresh read", "browser request watch + M-01 reference signature",
-    { freshReads: reads.length, signatureEqual: signature(restored) === referenceSignature, tokenDiffers: back.bearer !== oldBearer }, reads.length >= 1 && signature(restored) === referenceSignature && back.bearer !== oldBearer);
+    { freshReads: reads.length, signatureEqual: signature(restored) === referenceSignature, sameOwner, newToken },
+    reads.length >= 1 && signature(restored) === referenceSignature && sameOwner && newToken);
   mutationsOf(c, mark);
 });
 
@@ -906,14 +909,25 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
     refreshStart = { mark, time: Date.now() };
     c.observations.browserStage = "ADVANCE_REFRESH_CLOCK";
     if (await clockPage.evaluate(() => document.visibilityState) !== "visible") throw Error("Z0_BROWSER_REFRESH_PAGE_NOT_VISIBLE");
+    // The SDK's 30-second ticker rounds into the refresh window before the
+    // separate 90-second expiry check. Jump between the two to trigger one grant.
+    const browserNow = await clockPage.evaluate(() => Date.now());
+    const clockAdvance = before.expiresAt === null ? 0 : before.expiresAt * 1000 - 105000 - browserNow;
+    if (!Number.isSafeInteger(clockAdvance) || clockAdvance <= 0) throw Error("Z0_BROWSER_REFRESH_EXPIRY_UNAVAILABLE");
     const [{ firstGrant, readDeadline }] = await Promise.all([
       clockPage.waitForResponse(response => {
         const url = new URL(response.url());
         return url.origin === authOrigin && url.pathname === "/auth/v1/token"
           && url.searchParams.get("grant_type") === "refresh_token" && response.request().method() === "POST";
-      }, { timeout: 60000 }).then(response => ({ firstGrant: response, readDeadline: Date.now() + 45000 }),
+      }, { timeout: 60000 }).then(async firstGrant => {
+        const readDeadline = Date.now() + 45000;
+        // Auth issues the replacement against its own wall clock. End the
+        // simulated skew so the replacement is not already in the refresh window.
+        await clockPage.clock.setSystemTime(new Date());
+        return { firstGrant, readDeadline };
+      },
         () => { throw Error("Z0_BROWSER_REFRESH_NOT_OBSERVED"); }),
-      clockPage.clock.fastForward(3520 * 1000),
+      clockPage.clock.fastForward(clockAdvance),
     ]);
     const token = (await firstGrant.json().catch(() => null))?.access_token;
     const refreshedTag = typeof token === "string" ? sha(token).slice(0, 12) : null;
@@ -954,11 +968,11 @@ await runCase("M-07", ["Z0-R09-C03", "Z0-R45-C04"], "Token refresh (real Auth re
     c.observations.requests = summary;
     const refreshGrants = clockWatch.since(mark).filter(isRefresh);
     const otherAuthWrites = clockWatch.since(mark).filter(row => row.origin === authOrigin && row.kind !== "read" && !isRefresh(row)).length;
-    check(c, "no-mutating-requests", "at least one real refresh and every observed refresh receives 200, with zero mutating requests", "browser request watch", {
+    check(c, "no-mutating-requests", "one real refresh receives 200, with zero mutating requests", "browser request watch", {
       mutations: summary.mutations, signOut: summary.signOut, otherNonGet: summary.otherNonGet, otherAuthWrites,
       refreshGrants: refreshGrants.map(row => row.status ?? null),
     }, summary.mutations === 0 && summary.signOut === 0 && summary.otherNonGet === 0 && otherAuthWrites === 0
-      && refreshGrants.length > 0 && refreshGrants.every(row => row.status === 200 && !row.failure));
+      && refreshGrants.length === 1 && refreshGrants[0].status === 200 && !refreshGrants[0].failure);
   } finally {
     if (refreshStart) c.observations.mountedReads = mountedReadTimings(clockWatch.since(refreshStart.mark), refreshStart.time);
     await clockContext.close().catch(() => undefined);

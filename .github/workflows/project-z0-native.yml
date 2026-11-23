@@ -270,6 +270,8 @@ jobs:
               status: Number.isInteger(row.status) && row.status >= 100 && row.status <= 599 ? row.status : null,
               outcome: typedCode(row.outcome),
               elapsedMs: Number.isFinite(row.elapsed) && row.elapsed >= 0 ? Math.round(row.elapsed) : null,
+              possibleEgress: typeof row.possibleEgress === 'boolean' ? row.possibleEgress : null,
+              stickyPossibleEgress: typeof row.stickyPossibleEgress === 'boolean' ? row.stickyPossibleEgress : null,
             })),
           } : null
           const fixtureDirs = [scenario, join(state, 'z0m-private')]

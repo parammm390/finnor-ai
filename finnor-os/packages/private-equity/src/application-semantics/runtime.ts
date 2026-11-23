@@ -393,7 +393,7 @@ export class NativeApplicationRuntime implements ApplicationLearningPort {
     let classified = classifyNativeApplicationObservation({ request, before, after, observedRequest, response: result, parameters: obligation.parameters });
     for (let attempt = 0; attempt < 6; attempt++) {
       try {
-        observedRequest = await entry.source.observeRequest(request.body.wire.identity);
+        observedRequest = await entry.source.observeRequest(request.body.wire, before.target);
         after = (await entry.source.observe(before.target)).snapshot;
         classified = classifyNativeApplicationObservation({ request, before, after, observedRequest, response: result, parameters: obligation.parameters });
       } catch (error) {

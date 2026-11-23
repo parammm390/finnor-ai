@@ -650,7 +650,8 @@ export async function driveAcquisitionToModelReady(env: NativeEnvironment, paren
             'FAILED_OR_FENCED_PHYSICAL_DELIVERY','NATIVE_BEFORE_WIRE_REFUSED')
           ORDER BY created_at DESC,event_id DESC LIMIT 12`, [parent.tenantId, sessionId])).rows;
         const transport = (await sql.query(`SELECT kind,body#>>'{detail,kind}' AS resource,
-          body#>'{detail,status}' AS status,body#>>'{detail,outcome}' AS outcome,body#>'{detail,wallMs}' AS elapsed
+          body#>'{detail,status}' AS status,body#>>'{detail,outcome}' AS outcome,body#>'{detail,wallMs}' AS elapsed,
+          body#>'{detail,possibleEgress}' AS "possibleEgress",body#>'{detail,stickyPossibleEgress}' AS "stickyPossibleEgress"
           FROM finnor_os.application_semantics_events
           WHERE tenant_id=$1 AND session_id=$2 AND kind IN ('PHYSICAL_READ_FINISHED','PHYSICAL_RESPONSE_NOT_SETTLEMENT')
           ORDER BY created_at DESC,event_id DESC LIMIT 16`, [parent.tenantId, sessionId])).rows;

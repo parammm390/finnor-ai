@@ -197,21 +197,17 @@ export async function storageScan(page: any, context: any, markers: Marker[], se
   result.serviceWorkers = { count: blobs.workers };
   result.enumerationErrors = blobs.errors;
   const anySupabaseKey = areas.localStorage!.keys.some(key => /^sb-.*-auth-token$/.test(key)) || areas.cookies!.keys.some(key => /^sb-/.test(key));
-  const refreshToken = (() => {
+  const authSession = (() => {
     for (const [key, raw] of Object.entries(blobs.local) as Array<[string, string]>) {
       if (!/^sb-.*-auth-token$/.test(key)) continue;
-      try { return JSON.parse(raw)?.refresh_token ?? null; } catch { return null; }
+      try { return JSON.parse(raw); } catch { return null; }
     }
     return null;
   })();
-  const accessToken = (() => {
-    for (const [key, raw] of Object.entries(blobs.local) as Array<[string, string]>) {
-      if (!/^sb-.*-auth-token$/.test(key)) continue;
-      try { return JSON.parse(raw)?.access_token ?? null; } catch { return null; }
-    }
-    return null;
-  })();
-  return { result, supabaseSessionKeyPresent: anySupabaseKey, refreshToken: refreshToken as string | null, accessToken: accessToken as string | null,
+  return { result, supabaseSessionKeyPresent: anySupabaseKey,
+    refreshToken: typeof authSession?.refresh_token === "string" ? authSession.refresh_token as string : null,
+    accessToken: typeof authSession?.access_token === "string" ? authSession.access_token as string : null,
+    expiresAt: Number.isFinite(authSession?.expires_at) ? authSession.expires_at as number : null,
     markerHitCount: Object.values(result).reduce((sum: number, area: any) => sum + (area.markerHits?.length ?? 0), 0),
     secretHitCount: Object.values(result).reduce((sum: number, area: any) => sum + (area.secretHits?.length ?? 0), 0) };
 }

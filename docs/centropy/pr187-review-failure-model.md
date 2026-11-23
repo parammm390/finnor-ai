@@ -511,7 +511,9 @@ now distinguishes a temporarily unavailable request readback from immutable
 scope mismatch, missing postcondition coverage and invalid revisions. It may
 repeat only the independent request/record observations, at most five delayed
 cuts inside the unchanged original deadline; it never replays the physical
-operation. A missing source-owned dispatch identity now refuses readback. The
+operation. Readback is bound to the canonical S6 retained request. The same
+request identity survives a worker restart and stays subject to the native read
+fence and independent provider outcome checks. The
 mounted panel similarly retries only `CentropyApiError.retryable` observations
 inside the unchanged Work/principal scope, clears all state on authentication,
 authorization, contract or scope failure, and never retries a mutation. Neither
