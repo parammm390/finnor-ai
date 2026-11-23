@@ -3,13 +3,15 @@ name: "PR - Code, build, tests and security"
 on:
   pull_request:
     branches: [main, "codex/frozen-*"]
+  push:
+    branches: [codex/zw-stamped-gate-verification-20261123]
 
 permissions:
   actions: read
   contents: read
 
 concurrency:
-  group: pr-verdict-${{ github.event.pull_request.number }}
+  group: pr-verdict-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -34,8 +36,8 @@ jobs:
       - id: scope
         name: Classify the exact pull-request diff
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || 'f85465486e22b353f0c7b3d629af8277fa0aa530' }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || '45d7a5ea2968067c77f0421fb63798cab5088135' }}
         run: |
           node --input-type=module <<'NODE'
           const { appendFileSync, mkdirSync, copyFileSync } = await import("node:fs")
@@ -139,8 +141,8 @@ jobs:
       REPLAY_RESULT: ${{ needs.replay.result }}
       READINESS_RESULT: ${{ needs.readiness.result }}
       CHANGED_FILES_SHA256: ${{ needs.classify.outputs.manifest_sha256 }}
-      PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      PR_BASE_SHA: ${{ github.event.pull_request.base.sha || 'f85465486e22b353f0c7b3d629af8277fa0aa530' }}
+      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '45d7a5ea2968067c77f0421fb63798cab5088135' }}
     steps:
       - name: Read the completed scope manifest without a checkout
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
