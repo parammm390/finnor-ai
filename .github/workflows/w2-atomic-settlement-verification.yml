@@ -5,6 +5,7 @@ on:
       - codex/w2-atomic-closing-settlement-20261114
       - codex/w2-cut-section-diagnostics-20261114
       - codex/zw-integration-quality-20261115
+      - codex/zw-release-audit-20261123
 permissions:
   contents: read
 jobs:
