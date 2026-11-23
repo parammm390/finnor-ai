@@ -1,6 +1,8 @@
 name: Phase W shared-company actual native owners, controlled DEV only
 on:
   workflow_call:
+  push:
+    branches: [codex/zw-w5-owner-verification-20261123]
 permissions:
   contents: read
 jobs:

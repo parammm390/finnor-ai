@@ -418,7 +418,7 @@ try {
       return { originalStatus, ownerStatus, denial, restoredStatus: await confirmOwner() };
     });
   let declareRemainingResources: (() => Promise<void>) | undefined;
-  let marketAssessmentCount = 0;
+  let ownerAssessmentCount = 0;
   let slowIntegratedOwnerRequests = 0;
   const http: IntegratedOwnerPorts["http"] = async (group, operation, body, actor = owner) => {
     checkBound();
@@ -457,9 +457,9 @@ try {
         signal: AbortSignal.timeout(timeoutMs) });
       status = r.status;
       const result = { status, body: await r.json() as any };
-      if (engine === "W4" && group === "obligations" && (operation === "check-dispatch" || operation === "check-budget")
-        && ++marketAssessmentCount <= 16) {
-        console.log(JSON.stringify({ event: "PHASE_W_W4_OWNER_ASSESSMENT", operation,
+      if ((engine === "W4" || engine === "W5" || organizationOriginal) && group === "obligations"
+        && (operation === "check-dispatch" || operation === "check-budget") && ++ownerAssessmentCount <= 32) {
+        console.log(JSON.stringify({ event: "PHASE_W_OWNER_ASSESSMENT", engine: engine ?? "W5", operation,
           httpStatus: status, status: diagnosticCode(result.body?.status), code: diagnosticCode(result.body?.code),
           reasons: Array.isArray(result.body?.reasons) ? result.body.reasons.map(diagnosticCode).filter(Boolean) : [],
           elapsedMs: Math.round(performance.now() - began) }));
