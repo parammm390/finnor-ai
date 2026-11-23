@@ -1,0 +1,101 @@
+name: W2 release material-cut evidence
+"on":
+  push:
+    branches: ["codex/w2-release-diagnostic-20261124"]
+permissions:
+  contents: read
+
+jobs:
+  closing-cut:
+    name: Verify the original W2 settlement and closing evidence
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      CANDIDATE_SHA: 6594834fedc38bf15ab22a2e28927a85fd402cd2
+      CANDIDATE_TREE: 5b4fab8f3c5e3ca890584b4b7a342a5df59fbeef
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ env.CANDIDATE_SHA }}
+          persist-credentials: false
+      - name: Verify the exact candidate and original owner preimages
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$CANDIDATE_TREE"
+          python3 -B finnor-os/scripts/postz-w2/run-compensation-pair.py --check-preimages
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            finnor-os/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Prepare exact locked scientific runtime
+        run: |
+          set -euo pipefail
+          umask 077
+          w2_uv_container="$(docker create ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb02acbac4c69920fe9d278f82)"
+          trap 'docker rm "$w2_uv_container" >/dev/null' EXIT
+          docker cp "$w2_uv_container:/uv" "$RUNNER_TEMP/w2-uv"
+          "$RUNNER_TEMP/w2-uv" python install 3.12.13
+          "$RUNNER_TEMP/w2-uv" venv --python 3.12.13 "$RUNNER_TEMP/w2-scientific"
+          "$RUNNER_TEMP/w2-uv" pip sync --require-hashes --only-binary :all: --python "$RUNNER_TEMP/w2-scientific/bin/python" finnor-os/scripts/postz-w1/requirements-native.txt
+      - name: Run the original positive settlement with the material-cut probe enabled
+        id: settlement
+        env:
+          FINNOR_W2_CUT_SECTION_DIAGNOSTIC: "1"
+        run: |
+          set -euo pipefail
+          umask 077
+          python3 -B finnor-os/scripts/postz-w2/run-compensation-pair.py \
+            --episode after-exact --python "$RUNNER_TEMP/w2-scientific/bin/python" \
+            --output "$RUNNER_TEMP/w2-diagnostic" > "$RUNNER_TEMP/w2-diagnostic.private.log" 2>&1
+      - name: Require actual settlement and complete unchanged cut section evidence
+        if: ${{ always() }}
+        run: |
+          set -euo pipefail
+          umask 077
+          python3 -B - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          target = Path(os.environ["RUNNER_TEMP"])
+          original = target / "w2-diagnostic" / "report" / "receipt.json"
+          body = json.loads(original.read_text()) if original.is_file() else {}
+          cut = body.get("cutSectionDiagnostic") or {}
+          counts = (cut.get("sectionsCaptured"), cut.get("unchangedSectionCount"))
+          candidate = body.get("sourceCommit") == os.environ["CANDIDATE_SHA"] and body.get("sourceTree") == os.environ["CANDIDATE_TREE"]
+          completed = (body.get("episode") == "after-exact"
+                       and body.get("intendedOwnerObservationReached") is True
+                       and body.get("sourceRestored") is True
+                       and body.get("actualClosingOwnerStatus") == "CLOSED"
+                       and body.get("actualCompensationStatus") == "SETTLED"
+                       and body.get("status") == "PASS")
+          # The pinned pe_closing_cut in migration 0173 emits 25 top-level sections.
+          unchanged = counts == (25, 25) and cut.get("changedSections") == []
+          failure = (body.get("ownerFailure") or {}).get("code")
+          if failure not in ("OWNER_REQUEST_TIMEOUT", "OWNER_REQUEST_TRANSPORT_FAILED", "OWNER_REQUEST_FAILED",
+                             "OWNER_ASSERTION_FAILED", "OWNER_RUNTIME_FAILED", "OWNER_FAILURE_DIAGNOSTICS_UNAVAILABLE"):
+              failure = None
+          result = {"status": "PASS" if candidate and completed and unchanged else "FAIL",
+                    "candidateMatched": candidate, "settlementCompleted": completed,
+                    "unchangedCutProven": unchanged, "sectionsCaptured": counts[0], "ownerFailureCode": failure,
+                    "sourceCommit": os.environ["CANDIDATE_SHA"], "sourceTree": os.environ["CANDIDATE_TREE"],
+                    "productionActive": False}
+          (target / "w2-cut-result.json").write_text(json.dumps(result) + "\n")
+          print(json.dumps(result))
+          if result["status"] != "PASS":
+              raise SystemExit(1)
+          PY
+      - name: Retain the bounded release evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: w2-release-material-cut
+          path: ${{ runner.temp }}/w2-cut-result.json
+          if-no-files-found: error
+          retention-days: 7
