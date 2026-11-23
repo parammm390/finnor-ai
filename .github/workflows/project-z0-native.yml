@@ -264,6 +264,13 @@ jobs:
               database: diagnostic ? Object.fromEntries(['code', 'constraint', 'table', 'databaseFunction', 'routine']
                 .map(field => [field, identifier(diagnostic[field])])) : null,
             })),
+            transport: (acquisition.transport ?? []).slice(0, 16).map(row => ({
+              kind: typedCode(row.kind),
+              resource: ['documentation', 'context', 'record', 'request', 'entrypoint'].includes(row.resource) ? row.resource : null,
+              status: Number.isInteger(row.status) && row.status >= 100 && row.status <= 599 ? row.status : null,
+              outcome: typedCode(row.outcome),
+              elapsedMs: Number.isFinite(row.elapsed) && row.elapsed >= 0 ? Math.round(row.elapsed) : null,
+            })),
           } : null
           const fixtureDirs = [scenario, join(state, 'z0m-private')]
           const fixtureFailures = fixtureDirs.flatMap(dir => existsSync(dir) ? readdirSync(dir)

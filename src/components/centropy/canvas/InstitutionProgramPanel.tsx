@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { CentropyApiError, centropyPost } from "../lib/api"
+import { centropyPost, centropyPostRead } from "../lib/api"
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
 import { InstitutionInputForm } from "./InstitutionInputForm"
 
@@ -55,7 +55,7 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
   const [configure, setConfigure] = useState(false)
   const [refreshingScope, setRefreshingScope] = useState<string | null>(null)
   const refreshGeneration = useRef(0)
-  const pendingRefresh = useRef<{ key: string; generation: number; task: Promise<void> } | null>(null)
+  const pendingRefresh = useRef<{ key: string; generation: number; controller: AbortController; task: Promise<void> } | null>(null)
   const head = useRef<{ key: string; inputId: string | null; revision: number; requestId: string } | null>(null)
   if (head.current?.key !== scopeKey) head.current = null
   const visibleSources = allowed && sources?.key === scopeKey ? sources.value : null
@@ -69,26 +69,19 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
     const key = scopeKey
     if (!allowed || !isCurrent(key)) return
     const pending = pendingRefresh.current
-    if (!afterMutation && pending?.key === key && pending.generation === refreshGeneration.current) return pending.task
+    if (!afterMutation && pending?.key === key && pending.generation === refreshGeneration.current
+        && !pending.controller.signal.aborted) return pending.task
+    pending?.controller.abort()
+    const controller = new AbortController()
     const generation = ++refreshGeneration.current
-    const current = () => isCurrent(key) && refreshGeneration.current === generation
-    async function observe<T>(read: () => Promise<T>): Promise<T> {
-      try {
-        return await read()
-      } catch (error) {
-        // Observations can be replayed after a gateway failure while the same
-        // Work, principal and refresh generation still own the request.
-        if (!current() || !(error instanceof CentropyApiError) || ![502, 503, 504].includes(error.status)) throw error
-        return read()
-      }
-    }
+    const current = () => !controller.signal.aborted && isCurrent(key) && refreshGeneration.current === generation
     setRefreshingScope(key)
     const task = (async () => {
       try {
-        const { sources: next, programme: result } = await observe(() =>
-          centropyPost<{ sources: Sources; programme: Read | null }>("company-brain/institution-read", {
+        const { sources: next, programme: result } = await centropyPostRead<{ sources: Sources; programme: Read | null }>(
+          "company-brain/institution-read", {
             workId, purpose: "WORK_OBSERVATION",
-          }))
+          }, { signal: controller.signal, isCurrent: current })
         if (!current()) return
         if (next.workId !== workId) throw Error("Responsibility sources returned another Work")
         const prior = head.current
@@ -116,12 +109,13 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
         }
       }
     })()
-    pendingRefresh.current = { key, generation, task }
+    pendingRefresh.current = { key, generation, controller, task }
     return task
   }, [allowed, isCurrent, scopeKey, workId])
   useEffect(() => {
     setSources(null); setReading(null); setMessage(null); setBusy(false); setConfigure(false)
     void refresh()
+    return () => { pendingRefresh.current?.controller.abort() }
   }, [refresh])
   useEffect(() => {
     if (busy || refreshingScope === scopeKey || !visibleSources?.request || visible?.status === "CANCELLED") return
@@ -134,6 +128,7 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
     const key = scopeKey, metadata = visibleSources
     if (!metadata?.workInputId || !metadata.grants.length || metadata.grants.length > 16 || busy) return
     refreshGeneration.current += 1
+    pendingRefresh.current?.controller.abort()
     setSources(null); setReading(null)
     setBusy(true); setMessage("Reconstructing authorized sources against the standing responsibility…")
     try {
@@ -151,6 +146,7 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
     const key = scopeKey, requestId = visible?.requestId
     if (!requestId || busy) return
     refreshGeneration.current += 1
+    pendingRefresh.current?.controller.abort()
     setSources(null); setReading(null)
     setBusy(true)
     try {

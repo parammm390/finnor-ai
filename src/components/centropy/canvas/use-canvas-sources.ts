@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { CentropyApiError, centropyGet, centropyPost } from "@/components/centropy/lib/api"
+import { CentropyApiError, centropyGet, centropyPostRead } from "@/components/centropy/lib/api"
 import type { PeWorldRootRef, CompanyBrainProjection } from "@/components/centropy/pe/contracts"
 import type { IcWorkspace, UnderwritingWorkspace, WorkAggregateView } from "@/components/centropy/product/contracts"
 import { verifiedWorkDeck, verifiedWorkIcCase } from "./work-deck-model"
@@ -60,16 +60,18 @@ export function useCanvasSources(workId: string | null, root: PeWorldRootRef | n
 
   useEffect(() => {
     if (!graphEnabled || !rootType || !rootId || !rootKey) { setProjection(idle()); return }
-    let active = true
+    const controller = new AbortController()
+    const isCurrent = () => !controller.signal.aborted && isGraphCurrent(graphScopeKey)
     setProjection((previous) => ({ data: previous.key === rootKey && previous.scope === graphScopeKey ? previous.data : null, key: rootKey, scope: graphScopeKey, status: "loading", error: null }))
-    void centropyPost<CompanyBrainProjection>("company-brain/projection", { root: { entityType: rootType, entityId: rootId } }).then((result) => {
-      if (!active || !isGraphCurrent(graphScopeKey)) return
+    void centropyPostRead<CompanyBrainProjection>("company-brain/projection", { root: { entityType: rootType, entityId: rootId } },
+      { signal: controller.signal, isCurrent }).then((result) => {
+      if (!isCurrent()) return
       if (result.root?.entityType !== rootType || result.root?.entityId !== rootId || !Array.isArray(result.nodes)) throw new Error("Company Brain response did not match the selected context")
       setProjection({ data: result, status: "ready", error: null, key: rootKey, scope: graphScopeKey })
     }).catch((cause) => {
-      if (active && isGraphCurrent(graphScopeKey)) setProjection({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Company Brain unavailable", key: rootKey, scope: graphScopeKey })
+      if (isCurrent()) setProjection({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Company Brain unavailable", key: rootKey, scope: graphScopeKey })
     })
-    return () => { active = false }
+    return () => { controller.abort() }
   }, [graphEnabled, revision, rootKey, rootType, rootId, graphScopeKey, isGraphCurrent])
 
   useEffect(() => {

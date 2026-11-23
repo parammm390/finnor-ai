@@ -208,6 +208,22 @@ export async function centropyPost<T>(path: string, body: unknown, signal?: Abor
   return centropyRequest<T>("POST", path, body)
 }
 
+export async function centropyPostRead<T>(
+  path: string, body: unknown, scope: { signal: AbortSignal; isCurrent: () => boolean },
+): Promise<T> {
+  if (resolveProductRoute("POST", path.replace(/^\/+/, "").split("/"))?.classification !== "READ") {
+    throw new Error("Expected a registered read operation")
+  }
+  if (!scope.isCurrent()) throw new CentropyApiError("The authenticated Work scope changed.", 401, false)
+  const read = () => centropyRequest<T>("POST", path, body, undefined, false, scope.signal)
+  try {
+    return await read()
+  } catch (error) {
+    if (!(error instanceof CentropyApiError) || !error.retryable || scope.signal.aborted || !scope.isCurrent()) throw error
+    return read()
+  }
+}
+
 export async function centropyPut<T>(path: string, body: unknown): Promise<T> {
   return centropyRequest<T>("PUT", path, body)
 }

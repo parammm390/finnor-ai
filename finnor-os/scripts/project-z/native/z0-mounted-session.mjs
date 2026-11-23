@@ -473,6 +473,14 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
   const betweenReloads = await readOriginalBudgetLedger(q, parentA);
   ownerCuts.firstReload = await cut();
   c.observations.reloadsSettled = 1;
+  const firstReloadBudget = compareObservedBudget(jsonOf(f1.budgetJson), beforeFirstReload, betweenReloads);
+  if (!truth.disagreements.length && firstReloadBudget === "MATCH"
+      && f1.appAttributes?.work === parentA.workId && f1.appAttributes?.session === acqA.sessionId
+      && f1.appAttributes?.status === truth.session.status) {
+    referenceSignature = signature(f1);
+    referenceFacts = signatureFacts(f1);
+    referenceCore = coreSignature(f1);
+  }
   c.observations.browserStage = "SECOND_RELOAD";
   await page.reload({ waitUntil: "domcontentloaded" });
   const f2 = await readSettledPanels(page, parentA.workId);
@@ -482,9 +490,6 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
   c.observations.browserStage = "CHECK_RELOADED_PANELS";
   await shot(page, c, "after-second-reload");
   c.observations.signatures = { f0: signature(f0), f1: signature(f1), f2: signature(f2) };
-  referenceSignature = signature(f2);
-  referenceFacts = signatureFacts(f2);
-  referenceCore = coreSignature(f2);
 
   const app = f2.app?.text ?? "";
   check(c, "positive-control.markers", "the DOM detector finds the markers while signed in", "harness", { found: hits(f2.html, truth.markers) },
@@ -506,7 +511,7 @@ await runCase("M-01", ["Z0-R08-C01", "Z0-R45-C01", "Z0-R09-C01"], "Reload shows 
     { original: shownInstants.includes(orig), wall: shownInstants.includes(wall), cutoffMatchesApi: cutoff === Date.parse(apiInst?.childDeadlineAt), cutoffWithin: cutoff <= orig && cutoff <= wall, sqlSessionDeadlineEqualsCutoff: Date.parse(truth.session.deadlineAt) === cutoff },
     shownInstants.includes(orig) && shownInstants.includes(wall) && cutoff === Date.parse(apiInst?.childDeadlineAt) && cutoff <= orig && cutoff <= wall);
   const budgetCutChecks = c.observations.budgetCutChecks = {
-    firstReload: compareObservedBudget(jsonOf(f1.budgetJson), beforeFirstReload, betweenReloads),
+    firstReload: firstReloadBudget,
     secondReload: compareObservedBudget(jsonOf(f2.budgetJson), betweenReloads, afterSecondReload),
   };
   check(c, "4.remaining-resources", "remaining per resource = limit - sum(charges) of the original reservation; no new reservation, no release", "O-SQL s5_reservations + s5_governed_resource_charges",

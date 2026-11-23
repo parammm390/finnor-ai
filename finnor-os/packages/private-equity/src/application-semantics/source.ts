@@ -1476,12 +1476,18 @@ export class ApplicationSourceSession {
       typeof identity[key] !== "string" || !identity[key] || identity[key].length > 256)
       || !Number.isFinite(Date.parse(identity.deadline))) applicationProviderFault("X2_INVALID_NATIVE_REQUEST_IDENTITY");
     this.computer.assertCurrent(original?.target);
-    let source: ApplicationPublicSource | null;
-    try { source = await this.computer.requestSource(identity); }
-    catch (error) {
-      if (!(error instanceof ApplicationProviderFault)) throw error;
-      return { body: null, sourceRef: null, available: false };
-    }
+    const read = async () => {
+      try {
+        const source = await this.computer.requestSource(identity);
+        return { source, interrupted: source !== null && [502, 503, 504].includes(source.status) };
+      } catch (error) {
+        if (!(error instanceof ApplicationProviderFault)) throw error;
+        return { source: null, interrupted: error.code === "X2_RESPONSE_LOST" };
+      }
+    };
+    // Readback uses the retained request's original fences and charges.
+    const first = await read();
+    let { source } = first.interrupted ? await read() : first;
     if (!source || source.status !== 200) return { body: null, sourceRef: source?.ref ?? null, available: false };
     let body: ObjectValue;
     if (source.contentType?.includes("json")) body = object(json(source.text));

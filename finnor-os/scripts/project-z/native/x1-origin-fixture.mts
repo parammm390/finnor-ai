@@ -649,7 +649,12 @@ export async function driveAcquisitionToModelReady(env: NativeEnvironment, paren
           WHERE tenant_id=$1 AND session_id=$2 AND kind IN ('INDEPENDENT_APPLICATION_DISPOSITION',
             'FAILED_OR_FENCED_PHYSICAL_DELIVERY','NATIVE_BEFORE_WIRE_REFUSED')
           ORDER BY created_at DESC,event_id DESC LIMIT 12`, [parent.tenantId, sessionId])).rows;
-        await record("acquisition-terminal-readback", { session, dispositions });
+        const transport = (await sql.query(`SELECT kind,body#>>'{detail,kind}' AS resource,
+          body#>'{detail,status}' AS status,body#>>'{detail,outcome}' AS outcome,body#>'{detail,wallMs}' AS elapsed
+          FROM finnor_os.application_semantics_events
+          WHERE tenant_id=$1 AND session_id=$2 AND kind IN ('PHYSICAL_READ_FINISHED','PHYSICAL_RESPONSE_NOT_SETTLEMENT')
+          ORDER BY created_at DESC,event_id DESC LIMIT 16`, [parent.tenantId, sessionId])).rows;
+        await record("acquisition-terminal-readback", { session, dispositions, transport });
       } catch { /* Retain the original owner failure when diagnostics are unavailable. */ }
     }
     throw error;

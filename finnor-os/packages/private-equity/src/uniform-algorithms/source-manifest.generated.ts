@@ -288,7 +288,7 @@ export default {
     },
     {
       "path": "scripts/centropy/audit-capability-coverage.mjs",
-      "sha256": "0a5686959ae13ddfc0df939f7596adb42061905100a8531c79a98454442635a5"
+      "sha256": "550f5d2df7d638a567a725e169d0292a29a3d54d65557ba41a93fe6880e947bd"
     },
     {
       "path": "src/lib/centropy/openapi-types.ts",
@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "94a13739039dcb6853a6f985b0184b6c12d44abd80474d5d67d849d8afde4e9c"
+      "sha256": "c2bee0a2d7c3414c1c4d7cd9b7072b15e56d087592adedab0ea432d6a68d4320"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -356,7 +356,7 @@ export default {
     },
     {
       "path": "src/components/centropy/lib/api.ts",
-      "sha256": "07ac58133dce27dc2ca80f442476e4e79454c1121e94f521c36d1001acb52a73"
+      "sha256": "16ad55d6d81a46df1daf23242c92cf63de65e6938412b7b19606d4316cd224f9"
     },
     {
       "path": "src/lib/centropy/supabase-browser.ts",
@@ -1668,7 +1668,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/application-semantics/source.ts",
-      "sha256": "4c73873962303ed41be4cb0064408f0b99f0e88cc770bcd6997de364e520cc93"
+      "sha256": "2b3ee6dcf84e21e2cb75f0587251e98ef0585fcf04e5a3639fcb5c20c904ba01"
     },
     {
       "path": "finnor-os/packages/private-equity/src/application-semantics/store.ts",
@@ -4000,7 +4000,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
-      "sha256": "302cfabac4799dd61abae42acfed74a0de599ba934eeec8ab3208821723a3c45"
+      "sha256": "83660d5f9b2e9908610977925149b9654c77269db3d887ee6796ec5b88c3ef3f"
     },
     {
       "path": "src/components/centropy/canvas/InterfaceSynthesisPanel.tsx",
@@ -4604,7 +4604,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/use-canvas-sources.ts",
-      "sha256": "fc9346d6089ed52f222ec4e5d09e87ddc51123c6e248081c84eb7962e06dab95"
+      "sha256": "c674ecb207a022d4d72ba1b3ee7f57e24d5b0ef5dda8b21489d7e4e3f3232129"
     },
     {
       "path": "src/components/centropy/controls/ArtifactCreationDesk.tsx",
@@ -6059,5 +6059,5 @@ export default {
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
     }
   ],
-  "sourceDigest": "669dc02ba10f4194d09fc3151e8ed0edb0ae965fc634d0fb4b1da20186674be8"
+  "sourceDigest": "c67ee42bafe20e6a56e88374b51e7653d6bb16e062192ef16b81d66826c25f11"
 } as const;

@@ -8,8 +8,8 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-22T12:01:34.318Z",
-  "sourceBaseCommit": "b5b6cf6b4e58539325440d53e6530aefaf89543a",
+  "generatedAt": "2026-11-23T13:59:15.135Z",
+  "sourceBaseCommit": "7b08b7e272437501531f1a9ddfc188c9e5aa0ccb",
   "manifestSha256": "e68051fd74494792ebb66d7156bae1b6ac5ef64e369d60057bc4c596fb0aebe3",
   "formsSha256": "35b57673d9d86e461f2b6056aaf326cb789901dfdd4481734aefef91da8052fd",
   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -586,14 +586,14 @@
       "file": "src/components/centropy/canvas/use-canvas-sources.ts",
       "route": "investment-cases/:ref/underwriting",
       "method": "GET",
-      "line": 79,
+      "line": 81,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
       "file": "src/components/centropy/canvas/use-canvas-sources.ts",
       "route": "private-equity/ic/cases/:ref",
       "method": "GET",
-      "line": 93,
+      "line": 95,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
@@ -1082,7 +1082,7 @@
       },
       {
         "file": "src/components/centropy/lib/api.ts",
-        "sha256": "07ac58133dce27dc2ca80f442476e4e79454c1121e94f521c36d1001acb52a73"
+        "sha256": "16ad55d6d81a46df1daf23242c92cf63de65e6938412b7b19606d4316cd224f9"
       },
       {
         "file": "src/components/centropy/lib/business-invalidation.ts",
@@ -1306,7 +1306,7 @@
       },
       {
         "file": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
-        "sha256": "302cfabac4799dd61abae42acfed74a0de599ba934eeec8ab3208821723a3c45"
+        "sha256": "83660d5f9b2e9908610977925149b9654c77269db3d887ee6796ec5b88c3ef3f"
       },
       {
         "file": "src/components/centropy/canvas/InstitutionInputForm.tsx",
@@ -1526,7 +1526,7 @@
       },
       {
         "file": "src/components/centropy/canvas/use-canvas-sources.ts",
-        "sha256": "fc9346d6089ed52f222ec4e5d09e87ddc51123c6e248081c84eb7962e06dab95"
+        "sha256": "c674ecb207a022d4d72ba1b3ee7f57e24d5b0ef5dda8b21489d7e4e3f3232129"
       },
       {
         "file": "src/components/centropy/world/WorldExplorer.tsx",
@@ -4861,7 +4861,7 @@
           "file": "src/components/centropy/canvas/use-canvas-sources.ts",
           "route": "investment-cases/:ref/underwriting",
           "method": "GET",
-          "line": 79,
+          "line": 81,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -5998,7 +5998,7 @@
           "file": "src/components/centropy/canvas/use-canvas-sources.ts",
           "route": "private-equity/ic/cases/:ref",
           "method": "GET",
-          "line": 93,
+          "line": 95,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -23221,7 +23221,7 @@
           "file": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
           "route": "company-brain/institution-cancel",
           "method": "POST",
-          "line": 157,
+          "line": 153,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24009,7 +24009,7 @@
           "file": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
           "route": "company-brain/institution-read",
           "method": "POST",
-          "line": 89,
+          "line": 81,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24143,7 +24143,7 @@
           "file": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
           "route": "company-brain/institution-resume",
           "method": "POST",
-          "line": 157,
+          "line": 153,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24210,7 +24210,7 @@
           "file": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
           "route": "company-brain/institution-revise",
           "method": "POST",
-          "line": 140,
+          "line": 135,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -24391,7 +24391,7 @@
           "file": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
           "route": "company-brain/institution-submit",
           "method": "POST",
-          "line": 140,
+          "line": 135,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -29555,7 +29555,7 @@
           "file": "src/components/centropy/canvas/use-canvas-sources.ts",
           "route": "company-brain/projection",
           "method": "POST",
-          "line": 65,
+          "line": 66,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],

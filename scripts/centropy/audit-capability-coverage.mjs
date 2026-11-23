@@ -79,6 +79,7 @@ const symbolFor = (node) => {
 const methodFor = (node) => {
   const symbol = symbolFor(node)
   if (!symbol?.declarations?.some(declaration => declaration.getSourceFile().fileName === canonicalApi)) return null
+  if (symbol.name === "centropyPostRead") return "POST"
   const match = /^centropy(Get|Post|Put|Delete|Patch|Download)$/.exec(symbol.name)
   return match ? match[1] === "Download" ? "GET" : match[1].toUpperCase() : null
 }
