@@ -204,7 +204,7 @@ export async function nativeResearchStory(e: any) {
       assert.equal(race.status, 200, JSON.stringify(race));
       assert.equal(answered(race, "concentration").status, "SOURCE_CHANGED");
       assert.equal(answered(race, "concentration").value, null);
-      assert(!JSON.stringify(race.body).includes("0.99"));
+      assert(!/(?<![\d.])0\.99(?!\d)/u.test(JSON.stringify(race.body)), "W1_RESEARCH_STALE_PRIMARY_VALUE_EXPOSED");
       const corrected = await call("fresh-corrected-primary", request([requirement(0)]));
       assert.equal(corrected.status, 200, JSON.stringify(corrected));
       assert.equal(answered(corrected, "concentration").value, "0.47");
@@ -220,11 +220,19 @@ export async function nativeResearchStory(e: any) {
       originalExpected: { consentOrder: "OPEN", coverageExclusion: "EXCLUDED", litigation: "SETTLED",
         wrongCommonPremise: "0.99", independentPrimaryConcentration: "0.47" }, observations, results };
     await artifact("oracle-input.json", oracleInput);
+    const failedCase = results.find(row => row.status !== "PASS");
+    if (failedCase) {
+      const line = /native-research-stories\.mts:([1-9]\d{0,3}):\d+/.exec(failedCase.stack ?? "")?.[1];
+      throw Error("W1_PRIMARY_RESEARCH_CASE_FAILED_" + failedCase.id + (line ? "_LINE_" + line : ""));
+    }
     const oraclePath = join(e.repo, "finnor-os/scripts/postz-w1/native-research-oracle.py");
     const check = spawnSync(process.env.FINNOR_TEST_PYTHON ?? process.env.FINNOR_S3_PYTHON!, [
       oraclePath, join(directory, "oracle-input.json"), join(directory, "independent-oracle.json"),
     ], { encoding: "utf8", timeout: 30000 });
-    assert.equal(check.status, 0, check.stderr + check.stdout);
+    if (check.status !== 0) {
+      const line = /native-research-oracle\.py", line ([1-9]\d{0,3})/.exec(check.stderr ?? "")?.[1];
+      throw Error(line ? "W1_PRIMARY_RESEARCH_ORACLE_PREDICATE_LINE_" + line : "W1_PRIMARY_RESEARCH_ORACLE_PROCESS_FAILED");
+    }
     oracle = JSON.parse(await readFile(join(directory, "independent-oracle.json"), "utf8"));
     assert.equal(oracle.status, "PASS_INDEPENDENT_PRIMARY_RESEARCH_ORACLE");
   } finally {

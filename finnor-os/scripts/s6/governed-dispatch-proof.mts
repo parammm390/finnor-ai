@@ -9,6 +9,7 @@ import {tmpdir} from 'node:os';
 import {join,resolve,dirname} from 'node:path';
 import {createRequire} from 'node:module';
 import {z} from 'zod';
+import {ownerTransportRoute,type OwnerTransportRoute} from '../../packages/governed-execution/src/owner-transport.js';
 
 const canonical=(v:any):string=>v===null||typeof v!=='object'?JSON.stringify(v):Array.isArray(v)?'['+v.map(canonical).join(',')+']':'{'+Object.keys(v).sort((a,b)=>a.localeCompare(b)).map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}';
 const hash=(v:any)=>createHash('sha256').update(canonical(v)).digest('hex');
@@ -206,9 +207,30 @@ export async function proveGovernedDispatch(f:any,obligation:any,api:any,admin:a
   const request={ref:compiled.body.ref,ir:compiled.body.ir,admissions};
   const grantBody={schema:'finnor.business-owner.effect-authorization.v1',domain:'DISPOSABLE_TEST_AUTHORITY',tenantId:f.tenant,principalId:f.principal,rightsRef:obligation.rightsRef,obligationRef:ref,requestRef:request.ref,effectRef:obligation.effectRef,mandateRef:obligation.mandateRef,allocationRef:obligation.allocationRef,consumptionRef:obligation.consumptionRef,resourceEnvelope:obligation.resourceEnvelope,validAfter:new Date(Date.now()-1000).toISOString(),validUntil:releaseBody.validUntil};
   const input={request,authorization:{body:grantBody,signature:sign(null,Buffer.from(canonical(grantBody)),businessKey.privateKey).toString('base64')}};
-  const origin5=generateKeyPairSync('ed25519');await secret('s5-origin.pem',privatePem(origin5));await secret('s5.token',s5Token);await secret('control.token',controlToken);
-  const originValidAfter=new Date(Date.now()-1000).toISOString();
-  const configureTransport=async()=>{const transportPolicy={schema:'finnor.s6.owner-transport-policy.v1',domain:'DISPOSABLE_TEST_AUTHORITY',validAfter:new Date(Date.now()-1000).toISOString(),validUntil:releaseBody.validUntil,routes:['S6','S5'].map(semanticOwner=>({semanticOwner,tenantId:f.tenant,principalId:f.principal,rightsRefs:[obligation.rightsRef],originKeys:[{id:'owner-origin',publicKey:publicPem(origin5),validAfter:originValidAfter,validUntil:releaseBody.validUntil,revoked:false}],originSigner:{keyId:'owner-origin',path:pathOf('s5-origin.pem')},tokenPath:pathOf(semanticOwner==='S6'?'control.token':'s5.token'),tokenSha256:bytesHash(semanticOwner==='S6'?controlToken:s5Token),ledger:{endpoint:base,acceptedReceipts:[{signerPublicKey:publicPem(ledgerKey),releaseId:releaseBody.releaseId,verifierDigest:hash(sourceDigests),policyDigest:hash(ledgerPolicy)},...((releaseBody as any).compatibleHistory??[]).map((pin:any)=>({...pin,signerPublicKey:publicPem(ledgerKey)}))]},requestTimeoutMs:10000,leaseMs:30000}))};await secret('transport.json',JSON.stringify({policy:transportPolicy,signature:sign(null,Buffer.from(canonical(transportPolicy)),reviewer.privateKey).toString('base64')}));process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG=pathOf('transport.json');process.env.FINNOR_S6_OWNER_TRANSPORT_ROOT=publicPem(reviewer);await authenticatedFixture?.onTransportConfigured?.();};
+  const transportOwners = ['S6','S5'] as const;
+  type OriginAuthority = Pick<OwnerTransportRoute,'originKeys'|'originSigner'>;
+  let originAuthorities: OriginAuthority[];
+  // A separate disposable ledger does not change who signed the earlier
+  // S5/S6 intents. Reads must still authenticate those original envelopes.
+  if(sharedCompany&&originalEnvironment.FINNOR_S6_OWNER_TRANSPORT_CONFIG!==undefined){
+   originAuthorities=await Promise.all(transportOwners.map(async semanticOwner=>{
+    const route=await ownerTransportRoute({semanticOwner,tenantId:f.tenant,principalId:f.principal});
+    assert(route?.protectionDomain==='DISPOSABLE_TEST_AUTHORITY'&&route.originSigner&&route.rightsRefs.includes(obligation.rightsRef),
+     'S6_SHARED_ORIGINAL_OWNER_SIGNER_REQUIRED');
+    return {originKeys:route.originKeys,originSigner:route.originSigner};
+   }));
+  }else{
+   const origin=generateKeyPairSync('ed25519');
+   const path=await secret('s5-origin.pem',privatePem(origin));
+   const authority={
+    originKeys:[{id:'owner-origin',publicKey:publicPem(origin),validAfter:new Date(Date.now()-1000).toISOString(),
+     validUntil:releaseBody.validUntil,revoked:false}],
+    originSigner:{keyId:'owner-origin',path},
+   };
+   originAuthorities=transportOwners.map(()=>authority);
+  }
+  await secret('s5.token',s5Token);await secret('control.token',controlToken);
+  const configureTransport=async()=>{const transportPolicy={schema:'finnor.s6.owner-transport-policy.v1',domain:'DISPOSABLE_TEST_AUTHORITY',validAfter:new Date(Date.now()-1000).toISOString(),validUntil:releaseBody.validUntil,routes:transportOwners.map((semanticOwner,index)=>({semanticOwner,tenantId:f.tenant,principalId:f.principal,rightsRefs:[obligation.rightsRef],...originAuthorities[index]!,tokenPath:pathOf(semanticOwner==='S6'?'control.token':'s5.token'),tokenSha256:bytesHash(semanticOwner==='S6'?controlToken:s5Token),ledger:{endpoint:base,acceptedReceipts:[{signerPublicKey:publicPem(ledgerKey),releaseId:releaseBody.releaseId,verifierDigest:hash(sourceDigests),policyDigest:hash(ledgerPolicy)},...((releaseBody as any).compatibleHistory??[]).map((pin:any)=>({...pin,signerPublicKey:publicPem(ledgerKey)}))]},requestTimeoutMs:10000,leaseMs:30000}))};await secret('transport.json',JSON.stringify({policy:transportPolicy,signature:sign(null,Buffer.from(canonical(transportPolicy)),reviewer.privateKey).toString('base64')}));process.env.FINNOR_S6_OWNER_TRANSPORT_CONFIG=pathOf('transport.json');process.env.FINNOR_S6_OWNER_TRANSPORT_ROOT=publicPem(reviewer);await authenticatedFixture?.onTransportConfigured?.();};
   await configureTransport();
   if(!workflowProof&&!revokeBeforeDispatch&&!recoveryBudgetProof){
    const budgets=await api(f,'budget-status',{obligationRef:obligation.ref},POST);

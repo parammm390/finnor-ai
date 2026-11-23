@@ -19,8 +19,15 @@ import type { OwnerReadTiming } from "../../frontier5/x1/authenticated-api-fixtu
 import { NATIVE_WORKER_LIMITS } from "./worker-protocol.mts";
 import { createIntegratedEvidence } from "../integrated/evidence.mts";
 import { INTEGRATED_PROFILE } from "../integrated/profile.mts";
+import { completeSharedAllocation, declareSharedResources, readSharedCapacityBasis,
+  type ResourceDeclaration, type SharedCapacityBasis } from "../integrated/allocation-fixture.mts";
+import type { AllocationResource } from "@finnor/shared-types";
 import type { IntegratedOwnerPorts } from "../integrated/owner-journey.mts";
+import type { NativeGrowthJourneyContext } from "../../w4/native-growth-journey.mts";
+import type { createNativeWorkerClient } from "../../w4/worker-client.mts";
 import type { OrganizationLiveInput } from "../w5/live-consumer.mjs";
+
+type ReusedWorkerTick = ReturnType<typeof createNativeWorkerClient>["tick"];
 import type { NativeProspectiveUnit } from "../w5/prospective-native.mjs";
 
 const args = process.argv.slice(2), value = (name: string) => args[args.indexOf(name) + 1];
@@ -192,6 +199,11 @@ const run = async (id: string, input: unknown, expected: unknown, action: () => 
     console.log(JSON.stringify({ id, status: "PASS" })); return observed;
   } catch (error) {
     const observed = error instanceof Error ? { message: error.message, stack: error.stack } : { message: String(error) };
+    if (integratedCompany) {
+      const sqlState = error instanceof Error && "code" in error && typeof error.code === "string" &&
+        /^[0-9A-Z]{5}$/.test(error.code) ? error.code : null;
+      console.error(JSON.stringify({ event: "PHASE_W_CASE_FAILED", id, sqlState }));
+    }
     results.push({ id, status: "FAIL", observed }); await artifact("cases/" + id + "-observed.json", observed); throw error;
   }
 };
@@ -223,8 +235,19 @@ const postgres = new EmbeddedPostgres({ databaseDir: pgDirectory, user: "w3_admi
   onLog: line => { postgresStartLog = (postgresStartLog + line).slice(-8192); } });
 let admin: pg.Client | null = null, auth: any = null, recipient: any = null, activeWorker: ChildProcess | null = null;
 let closePool: (() => Promise<void>) | null = null;
+const diagnosticCode = (value: unknown) => typeof value === "string" && /^[A-Z][A-Z0-9_]{2,120}$/.test(value) ? value : null;
 let failedOwnerCall: { group: string; operation: string; status: number; code: string | null;
-  staleResourceWitness: boolean } | null = null;
+  refusedContextOwner: "S3" | "S4" | null; staleResourceWitness: boolean } | null = null;
+const retainOwnerRefusal = (group: string, operation: string, result: Awaited<ReturnType<IntegratedOwnerPorts["http"]>>) => {
+  const code: unknown = result.status === 200 ? result.body?.status : result.body?.code;
+  const refusal = result.status === 404 && code === "PE_ENTITY_NOT_FOUND" ? result.body?.error : null;
+  failedOwnerCall = { group, operation, status: result.status,
+    code: typeof code === "string" && /^[A-Z][A-Z0-9_]{2,100}$/.test(code) ? code : null,
+    refusedContextOwner: refusal === "Permitted S3 context is unavailable" ? "S3"
+      : refusal === "Permitted S4 context is unavailable" ? "S4" : null,
+    staleResourceWitness: group === "allocations" && operation === "clear" && code === "STALE_INPUT"
+      && result.body?.error === "Resource source or rights witness is no longer current" };
+};
 const workers: any[] = [];
 try {
   await postgres.initialise(); await appendFile(join(pgDirectory, "postgresql.conf"), "\ntrack_commit_timestamp=on\n");
@@ -268,6 +291,7 @@ try {
   const organizationEvaluator = organizationProfile ? randomUUID() : null;
   const integratedWorks = organizationProfile
     ? { workforce: randomUUID(), organization: randomUUID(), organizationSource: randomUUID(),
+      organizationEffect: randomUUID(),
       organizationUnitWorks: Array.from({ length: 40 }, () => randomUUID()) } : null;
   const organizationUnits: NativeProspectiveUnit[] = [];
   let organizationReadRoleId: string | null = null;
@@ -306,6 +330,11 @@ try {
         scope: { kind: "resources", resourceType: "work",
           resourceIds: [integratedWorks.organization, integratedWorks.organizationSource, ...integratedWorks.organizationUnitWorks] },
         capabilities: ["query:work"] },
+      ...(integratedCompany ? [{
+        key: "w-integrated-original-organization-effect-read", principals: [inspector, unrelated],
+        scope: { kind: "resources", resourceType: "work", resourceIds: [integratedWorks.organizationEffect] },
+        capabilities: ["query:work"],
+      }] : []),
     ];
     for (const configured of standing) {
       const roleId = randomUUID();
@@ -388,9 +417,16 @@ try {
       } finally { await setOwnerSuspended(false) }
       return { originalStatus, ownerStatus, denial, restoredStatus: await confirmOwner() };
     });
-  const http = async (group: string, operation: string, body: unknown, actor: string | null = owner) => {
+  let declareRemainingResources: (() => Promise<void>) | undefined;
+  let ownerAssessmentCount = 0;
+  let slowIntegratedOwnerRequests = 0;
+  const http: IntegratedOwnerPorts["http"] = async (group, operation, body, actor = owner) => {
     checkBound();
     const ordinal = ++httpOrdinal, began = performance.now(), wall = Date.now(), cpu = process.cpuUsage();
+    const engine = activeIntegratedOwner?.engine;
+    const timeoutMs = organizationOriginal
+      ? Math.max(1, Math.min(30000, Math.floor(300000 - (performance.now() - start))))
+      : engine === "W4" && group === "policies" && operation === "handoff" ? 60000 : 30000;
     const baseline = new Map([...sqlStatistics].map(([key, value]) => [key, { ...value }]));
     loopDelay.reset(); let status: number | null = null;
     try {
@@ -401,6 +437,16 @@ try {
         "W049_INTEGRATED_FIT_BOOTSTRAP_REQUIRES_NO_OWNER_TRANSPORT");
         checkBound();
       }
+      if (integratedCompany && group === "allocations" && operation === "clear") {
+        if (declareRemainingResources) {
+          const declare = declareRemainingResources;
+          declareRemainingResources = undefined;
+          await declare();
+        }
+        const registry = await http("allocations", "resources", {}, actor);
+        assert.equal(registry.status, 200, "W049_SIGNED_COMPLETE_RESOURCE_REGISTRY_REQUIRED");
+        body = completeSharedAllocation(body, registry.body);
+      }
       const headers: Record<string, string> = { "content-type": "application/json" };
       if (actor !== null) {
         assert(tokens.has(actor), "ACTUAL_SIGNED_ACTOR_TOKEN_REQUIRED");
@@ -408,14 +454,40 @@ try {
       }
       const r = await fetch(`${auth.origin}/api/${group}/${operation}`, { method: body === undefined ? "GET" : "POST",
         headers, ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-        signal: AbortSignal.timeout(organizationOriginal
-          ? Math.max(1, Math.min(30000, Math.floor(300000 - (performance.now() - start)))) : 30000) });
+        signal: AbortSignal.timeout(timeoutMs) });
       status = r.status;
-      return { status, body: await r.json() as any };
+      const result = { status, body: await r.json() as any };
+      if ((engine === "W4" || engine === "W5" || organizationOriginal) && group === "obligations"
+        && (operation === "check-dispatch" || operation === "check-budget") && ++ownerAssessmentCount <= 32) {
+        console.log(JSON.stringify({ event: "PHASE_W_OWNER_ASSESSMENT", engine: engine ?? "W5", operation,
+          httpStatus: status, status: diagnosticCode(result.body?.status), code: diagnosticCode(result.body?.code),
+          reasons: Array.isArray(result.body?.reasons) ? result.body.reasons.map(diagnosticCode).filter(Boolean) : [],
+          elapsedMs: Math.round(performance.now() - began) }));
+      }
+      if (integratedCompany && actor === owner &&
+        ((group === "interventions" && operation === "fit" && (status !== 200 || result.body?.status !== "FITTED")) ||
+         (group === "policies" && operation === "synthesize" && (status !== 200 || result.body?.status !== "POLICY_AVAILABLE")) ||
+         (group === "allocations" && operation === "resource" && status !== 200) ||
+         (group === "allocations" && operation === "clear" && (status !== 200 || result.body?.status !== "FEASIBLE")))) {
+        retainOwnerRefusal(group, operation, result);
+      }
+      return result;
+    } catch (error) {
+      if (engine === "W4" || engine === "W5") {
+        const name = error instanceof Error ? error.name : null;
+        console.error(JSON.stringify({ event: "PHASE_W_OWNER_REQUEST_FAILED", engine,
+          group, operation: operation.split("?", 1)[0], status, timeoutMs,
+          elapsedMs: Math.round(performance.now() - began), timedOut: name === "TimeoutError" }));
+      }
+      throw error;
     } finally {
-      const used = process.cpuUsage(cpu);
+      const used = process.cpuUsage(cpu), elapsedMs = performance.now() - began;
+      if ((engine === "W4" || engine === "W5") && elapsedMs >= 2000 && slowIntegratedOwnerRequests++ < 48) {
+        console.log(JSON.stringify({ event: "PHASE_W_SLOW_OWNER_REQUEST", engine,
+          group, operation: operation.split("?", 1)[0], status, elapsedMs: Math.round(elapsedMs) }));
+      }
       await artifact("api-phases/" + String(ordinal).padStart(4, "0") + ".json", {
-        group, operation, status, elapsedMs: performance.now() - began, wallElapsedMs: Date.now() - wall,
+        group, operation, status, elapsedMs, wallElapsedMs: Date.now() - wall,
         parentProcessCpuMicroseconds: used.user + used.system, maximumEventLoopDelayMs: loopDelay.max / 1e6,
         sql: [...sqlStatistics].map(([digest, current]) => ({ digest,
           count: current.count - (baseline.get(digest)?.count ?? 0),
@@ -427,13 +499,7 @@ try {
   };
   const ok = async (group: string, operation: string, body: unknown, actor: string = owner) => {
     const result = await http(group, operation, body, actor);
-    if (integratedCompany && result.status !== 200) {
-      const code: unknown = result.body?.code;
-      failedOwnerCall = { group, operation, status: result.status,
-        code: typeof code === "string" && /^[A-Z][A-Z0-9_]{2,100}$/.test(code) ? code : null,
-        staleResourceWitness: group === "allocations" && operation === "clear" && code === "STALE_INPUT"
-          && result.body?.error === "Resource source or rights witness is no longer current" };
-    }
+    if (integratedCompany && result.status !== 200) retainOwnerRefusal(group, operation, result);
     assert.equal(result.status, 200, JSON.stringify({ group, operation, ...result })); return result.body;
   };
   // The established port already derives GET from undefined. Keep it intact;
@@ -446,13 +512,7 @@ try {
   const source = (workId: string, body: unknown, key: string, actor: string = owner, protocolId: string | null = null) =>
     ok("real-world-services", "source", { workId, body, idempotencyKey: key, purpose: "Controlled W3 service verification", protocolId }, actor);
   let integratedPlaneObserved = false;
-  const tick = async (expectKill = false, maximumTicks = 1,
-    fault?: { mutate: () => Promise<void>; expectedRefusal?: string },
-    schedule?: () => Promise<boolean>) => {
-    checkBound();
-    assert(Number.isSafeInteger(maximumTicks) && maximumTicks >= 1 && maximumTicks <= NATIVE_WORKER_LIMITS.maximumTicks);
-    assert(!expectKill || maximumTicks === 1, "The physical payment kill remains a single tick");
-    assert(!schedule || !expectKill && !fault && !installation, "W3_SCHEDULING_IS_SOURCE_VERIFICATION_ONLY");
+  const observeIntegratedPlane = async () => {
     if (integratedCompany && !integratedPlaneObserved) {
       const plane = (await admin!.query(`SELECT state,accepted_job_epoch,minimum_claim_epoch,enforce_known_job_types,
         legacy_tenant_writes_allowed,activated_release_sha,activated_at,updated_at
@@ -474,6 +534,29 @@ try {
         "W049_ORIGINAL_PREPARING_PLANE_AND_UNCLASSED_MONOLITH_REQUIRED");
       integratedPlaneObserved = true;
     }
+  };
+  const withReusedIntegratedWorker = async <T,>(action: (tick: ReusedWorkerTick) => Promise<T>): Promise<T> => {
+    const { createNativeWorkerClient } = await import("../../w4/worker-client.mts");
+    const worker = createNativeWorkerClient({ workspace, databaseUrl: workerDatabaseUrl, checkBound, recoverWorkflowSteps: true });
+    const tick: ReusedWorkerTick = async (maximum, signal) => {
+      await observeIntegratedPlane();
+      const row = await worker.tick(maximum, signal);
+      assert(row.observations.every(entry => entry.workloadClass === null), "W049_ACTUAL_CHILD_QUEUE_MUST_REMAIN_UNCLASSED");
+      workers.push(row); await artifact("workers/" + workers.length + ".json", row);
+      return row;
+    };
+    const value = await action(tick).catch(async error => { await worker.close(); throw error; });
+    assert(await worker.close(), "W049_PHYSICAL_WORKER_DID_NOT_CLOSE_CLEANLY");
+    return value;
+  };
+  const tick = async (expectKill = false, maximumTicks = 1,
+    fault?: { mutate: () => Promise<void>; expectedRefusal?: string },
+    schedule?: () => Promise<boolean>) => {
+    checkBound();
+    assert(Number.isSafeInteger(maximumTicks) && maximumTicks >= 1 && maximumTicks <= NATIVE_WORKER_LIMITS.maximumTicks);
+    assert(!expectKill || maximumTicks === 1, "The physical payment kill remains a single tick");
+    assert(!schedule || !expectKill && !fault && !installation, "W3_SCHEDULING_IS_SOURCE_VERIFICATION_ONLY");
+    await observeIntegratedPlane();
     const workerArgs = installation ? [join(installation, installedDescriptor.entrypoints.w3Worker)]
       : ["--import=tsx", "scripts/postz/w3/worker.mts"];
     const p = spawn(process.execPath, [...workerArgs, "--maximum-ticks", String(maximumTicks),
@@ -632,26 +715,65 @@ try {
       ticks += result.ticks;
     }
   };
-  const createIntegratedPump = () => {
-    let used = 0;
+  const createMarketPump = (tick: ReusedWorkerTick, workId: string, principalId: string) => {
+    let used = 0, sequence = 0;
     const types = ["run_harness_program_v1", "run_evidence_derivation_v1", "run_compute_search_unit_v1",
       "run_workforce_execution_v1", "compile_real_world_service_v1", "advance_real_world_service_v1",
       "compile_market_operating_program_v1", "advance_market_operating_program_v1",
       "compile_organization_transformation_v1", "advance_organization_transformation_v1", "run_workflow_step_v3"];
     return async (maximum = 192) => {
       assert(integratedCompany && Number.isSafeInteger(maximum) && maximum >= 1 && maximum <= 192);
-      let invocationTicks = 0;
-      for (;;) {
-        checkBound();
-        const pending = (await admin!.query(`SELECT count(*)::int n,min(run_at) due FROM finnor_os.jobs
-          WHERE tenant_id=$1 AND status='queued' AND type=ANY($2::text[])`, [tenant, types])).rows[0];
-        if (!pending.n) return;
-        assert(used < 192 && invocationTicks < maximum, "W049_FINITE_ORIGINAL_OWNER_PUMP_BOUND");
-        const delay = Math.max(0, (pending.due as Date).getTime() - Date.now());
-        assert(delay <= 30000, "W049_NATIVE_CONTINUATION_NOT_DUE_WITHIN_BOUND");
-        if (delay) await new Promise(done => setTimeout(done, delay + 25));
-        const physical = await tick(false, Math.min(16, 192 - used, maximum - invocationTicks));
-        used += physical.ticks; invocationTicks += physical.ticks;
+      const started = performance.now(), invocation = ++sequence;
+      let invocationTicks = 0, maximumTickMs = 0, complete = false;
+      try {
+        for (;;) {
+          checkBound();
+          const pending = (await admin!.query(`SELECT count(*)::int n,min(run_at) due FROM finnor_os.jobs
+            WHERE tenant_id=$1 AND status='queued' AND type=ANY($2::text[])`, [tenant, types])).rows[0];
+          if (!pending.n) { complete = true; return; }
+          assert(used < 192 && invocationTicks < maximum, "W049_FINITE_ORIGINAL_OWNER_PUMP_BOUND");
+          const delay = Math.max(0, (pending.due as Date).getTime() - Date.now());
+          assert(delay <= 30000, "W049_NATIVE_CONTINUATION_NOT_DUE_WITHIN_BOUND");
+          if (delay) await new Promise(done => setTimeout(done, delay + 25));
+          const physical = await tick(Math.min(16, 192 - used, maximum - invocationTicks));
+          used += physical.ticks; invocationTicks += physical.ticks;
+          maximumTickMs = Math.max(maximumTickMs, ...physical.observations.map(row => row.elapsedMs));
+        }
+      } catch (error) {
+        try {
+          const state = (await admin!.query<{ status: string; execution_state: string; attempts: number;
+              reason: unknown; recovery: unknown; delivery_attempts: number | null; obligation_id: string | null }>(`SELECT s.status,s.execution_state,
+            s.attempts,s.evidence->>'reason' reason,s.evidence->>'recoveryBudget' recovery,
+            s.payload#>>'{obligationRef,id}' obligation_id,
+            (SELECT max(j.attempts) FROM finnor_os.jobs j WHERE j.tenant_id=s.tenant_id
+              AND j.type='run_workflow_step_v3' AND j.payload->>'workflowStepId'=s.id::text) delivery_attempts
+            FROM finnor_os.workflow_steps s JOIN finnor_os.workflow_runs r
+              ON r.tenant_id=s.tenant_id AND r.id=s.workflow_run_id
+            WHERE s.tenant_id=$1 AND r.work_id=$2 AND s.step_type='execute_governed_obligation'
+            ORDER BY s.updated_at DESC LIMIT 4`, [tenant, workId])).rows;
+          console.error(JSON.stringify({ event: "PHASE_W_W4_QUEUE_FAILURE", invocation,
+            steps: state.map(row => ({ status: row.status, executionState: row.execution_state,
+              attempts: row.attempts, deliveryAttempts: row.delivery_attempts,
+              reason: diagnosticCode(row.reason), recovery: diagnosticCode(row.recovery) })) }));
+          const obligationId = state.find(row => row.status !== "completed")?.obligation_id;
+          if (obligationId) {
+            const { readOwnerTransportExecutionHandoff } = await import("../../../packages/governed-execution/src/owner-transport");
+            const scope = { semanticOwner: "S6" as const, tenantId: tenant, principalId };
+            const { handoff } = await readOwnerTransportExecutionHandoff(scope, obligationId);
+            const summarize = (entry: { event: { type: string; detail?: { status?: unknown; reason?: unknown; httpStatus?: unknown } } }) => ({
+              type: diagnosticCode(entry.event.type), status: diagnosticCode(entry.event.detail?.status),
+              reason: diagnosticCode(entry.event.detail?.reason),
+              httpStatus: typeof entry.event.detail?.httpStatus === "number" ? entry.event.detail.httpStatus : null,
+            });
+            console.error(JSON.stringify({ event: "PHASE_W_W4_PROTECTED_HISTORY", invocation,
+              attempts: handoff.attempts.length, exposure: handoff.exposure.slice(-4).map(summarize),
+              observations: handoff.observations.slice(-4).map(summarize), settlements: handoff.settlements.length }));
+          }
+        } catch { console.error(JSON.stringify({ event: "PHASE_W_W4_QUEUE_FAILURE", invocation, diagnosticUnavailable: true })); }
+        throw error;
+      } finally {
+        console.log(JSON.stringify({ event: "PHASE_W_W4_QUEUE", invocation, complete, invocationTicks, totalTicks: used,
+          elapsedMs: Math.round(performance.now() - started), maximumTickMs: Math.round(maximumTickMs) }));
       }
     };
   };
@@ -659,18 +781,46 @@ try {
     cwd: workspace, input: JSON.stringify({ operation: "equivalent" }), encoding: "utf8", timeout: 30000 });
   assert.equal(generated.status, 0, generated.stderr);
   const day = 86400000, begin = new Date(Date.now() - 128 * day).toISOString();
+  const sharedAllocation = integratedCompany ? {
+    begin,
+    horizon: { startAt: new Date(Date.parse(begin) + 128 * day).toISOString(), periodMs: day, periods: 1 },
+    rightsRef: `authority:${tenant}:${String((await admin.query(
+      "SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1", [tenant])).rows[0].revision)}`,
+  } : null;
   const fixtures: Record<string, any> = {};
   const native = createUpstreamFixtureSupport({ admin: () => admin, generatedRows: JSON.parse(generated.stdout).rows,
     begin, day, fixtures, artifact, api: (f: any, op: string, body: unknown, handler = allocationPost) =>
       http(handler === policyPost ? "policies" : handler === obligationPost ? "obligations" : handler === allocationPost ? "allocations" : "interventions", op, body) });
   let intake: any = null;
   let integratedPorts: IntegratedOwnerPorts | null = null;
-  const alternateCompanyId = randomUUID();
-  const f = await native.fixture("w3-controlled-" + randomUUID().slice(0, 8), 1, [
+  const combinedOriginals: {
+    organizationEffectWork?: { workId: string; workInputId: string };
+    capacity?: SharedCapacityBasis;
+    marketWork?: NativeGrowthJourneyContext["work"];
+    marketBuyer?: NativeGrowthJourneyContext["buyerContact"];
+  } = {};
+  const marketNamespace = integratedCompany ? "w4-shared-" + randomUUID() : "";
+  const organizationEffectResources = {
+    cash: "w5-original-cash", execution: "w5-original-execution", human: "w5-original-human",
+  };
+  const organizationProgrammeResource = "w5-organization-requests", organizationProgrammeRequests = "64";
+  const serviceDimensions = [
     { id: "cash", unit: "USD", capacity: 100, totalLimit: 100 },
     { id: "execution", unit: "request", capacity: 512, totalLimit: 512, resourceClass: "COMPUTE" },
     { id: "human", unit: "seconds", capacity: 900, totalLimit: 900, resourceClass: "HUMAN_ATTENTION" },
-  ], { identity: { tenant, principal: owner }, operation: "SERVICE_TRANSITION_V1", exposureUnit: "service_transition",
+  ];
+  const originalEffectDemand = { cash: 25, execution: 128, human: 225 };
+  const marketResourceIds = { cash: "w4-cash", execution: "w4-execution", human: "w4-human" };
+  const sharedResources = new Map<string, AllocationResource>();
+  const sharedResource = (id: string) => {
+    const resource = sharedResources.get(id);
+    assert(resource, "W049_PREDECLARED_RESOURCE_NOT_RETAINED:" + id);
+    return resource;
+  };
+  const alternateCompanyId = randomUUID();
+  const f = await native.fixture("w3-controlled-" + randomUUID().slice(0, 8), 1, serviceDimensions,
+    { identity: { tenant, principal: owner }, operation: "SERVICE_TRANSITION_V1", exposureUnit: "service_transition",
+    rightsRef: sharedAllocation?.rightsRef,
     context: "controlled-service-transition-not-physical-qualification",
     beforeFit: async original => {
       await admin!.query(`INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind)
@@ -681,8 +831,9 @@ try {
       if (integratedWorks) {
         assert(organizationReadRoleId);
         const resourceScope = { kind: "resources", resourceType: "work", resourceIds: [
-          intake.workId, integratedWorks.organization, integratedWorks.organizationSource, ...integratedWorks.organizationUnitWorks] };
-        await admin!.query(`UPDATE finnor_os.employee_role_assignments SET resource_scope=$3::jsonb
+          ...(organizationOriginal ? [intake.workId] : []),
+          integratedWorks.organization, integratedWorks.organizationSource, ...integratedWorks.organizationUnitWorks] };
+        if (organizationOriginal) await admin!.query(`UPDATE finnor_os.employee_role_assignments SET resource_scope=$3::jsonb
           WHERE tenant_id=$1 AND role_id=$2`, [tenant, organizationReadRoleId, JSON.stringify(resourceScope)]);
         const { prepareOrganizationSourceWork } = await import("../integrated/organization-owner.mts");
         const originalSource = await prepareOrganizationSourceWork({ tenantId: tenant, ownerId: owner,
@@ -711,8 +862,79 @@ try {
           beforeS6Preparation: true, beforeProgrammeAcceptance: true,
           replacementUnitsOrAssignmentArmsSupplied: false, genuineHumanMeasurementsInferred: false });
       }
+      if (integratedCompany) {
+        assert(integratedWorks && sharedAllocation);
+        const work = await db.receiveWork({ tenantId: tenant, userId: owner, channel: "text",
+          workId: integratedWorks.organizationEffect, idempotencyKey: "w5-controlled-original-effect",
+          instruction: "Prepare an independent controlled service offer for the organization trial. Preserve the original Work, reservation and effect through its actual owner checks.",
+          requireExactIntake: true, entityAttachments: [{ entityType: "external_organization",
+            entityId: original.root.entityId, relationship: "about", source: "W5_CONTROLLED_ORIGINAL_EFFECT" }] });
+        assert.equal(work.workId, integratedWorks.organizationEffect);
+        assert.notEqual(work.workId, intake.workId);
+        combinedOriginals.organizationEffectWork = { workId: work.workId, workInputId: work.workInputId };
+        await artifact("integrated/w5/predeclared-controlled-original.json", {
+          effectWork: combinedOriginals.organizationEffectWork,
+          effectResourceIds: organizationEffectResources, demand: originalEffectDemand, effectCeilings: serviceDimensions,
+          programmeWorkId: integratedWorks.organization, programmeResourceId: organizationProgrammeResource,
+          programmeRequests: organizationProgrammeRequests, sharedAllocation, fieldValidated: false,
+        });
+        const { intakeMarketOriginal } = await import("../integrated/market-owner.mts");
+        const { declareNativeGrowthBuyer } = await import("../../w4/native-growth-journey.mts");
+        const companyId = original.root.entityId;
+        combinedOriginals.marketWork = await intakeMarketOriginal({ http, owner, companyId, serviceWorkId: intake.workId }, marketNamespace);
+        combinedOriginals.marketBuyer = await declareNativeGrowthBuyer({ tenant, companyId, admin: admin! }, marketNamespace);
+        const companyRoot = [{ entityType: "external_organization", entityId: original.root.entityId }];
+        const workRoot = (workId: string) => [{ entityType: "work", entityId: workId }];
+        const serviceResources = (ids: { cash: string; execution: string; human: string }): ResourceDeclaration[] => [
+          { resourceId: ids.cash, resourceClass: "CASH", unit: "USD", kind: "STOCK", capacity: "100", permittedRoots: companyRoot },
+          { resourceId: ids.execution, resourceClass: "COMPUTE", unit: "request", kind: "CUMULATIVE_EXPENDITURE",
+            capacity: "512", permittedRoots: companyRoot },
+          { resourceId: ids.human, resourceClass: "HUMAN_ATTENTION", unit: "seconds", kind: "CUMULATIVE_EXPENDITURE",
+            capacity: "900", permittedRoots: companyRoot },
+        ];
+        const declarations: ResourceDeclaration[] = [
+          ...serviceResources({ cash: "cash", execution: "execution", human: "human" }),
+          ...serviceResources(marketResourceIds), ...serviceResources(organizationEffectResources),
+          { resourceId: organizationProgrammeResource, resourceClass: "COMPUTE", unit: "request",
+            kind: "CUMULATIVE_EXPENDITURE", capacity: organizationProgrammeRequests, permittedRoots: workRoot(integratedWorks.organization) },
+        ];
+        const capacityRoot = { entityType: "external_organization" as const, entityId: randomUUID() };
+        await admin!.query(`INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind)
+          VALUES($1,$2,'w049-controlled-capacity','W049 controlled capacity custodian','other')`, [capacityRoot.entityId, tenant]);
+        const { createEvidenceSource, appendEvidenceVersion } = await import("@finnor/memory");
+        const { attachCanonicalEvidenceToWorld, createMetricSeries } = await import("@finnor/private-equity");
+        const capacitySource = await createEvidenceSource(tenant, { sourceKey: "w049-controlled-original-capacity",
+          sourceType: "pe_document_claim", title: "Original controlled capacity declarations" });
+        const capacityDeclaration = { companyId, declarations, horizon: sharedAllocation.horizon,
+          orchestration: { resourceId: "compute", unit: "native-attempt", capacity: "8" },
+          workforce: { resourceId: "integrated-workforce-" + integratedWorks.workforce, unit: "workforce-operation", capacity: "100" },
+          classification: "DECLARED_DISPOSABLE_CAPACITY" };
+        const content = JSON.stringify(capacityDeclaration);
+        const capacityVersion = await appendEvidenceVersion(tenant, capacitySource.id, { content,
+          snapshot: { worldRoot: capacityRoot, claims: [
+            { propositionId: "original-controlled-capacity", predicate: "reported", value: capacityDeclaration },
+          ] }, asOf: new Date(sharedAllocation.horizon.startAt) });
+        const capacitySeries = await createMetricSeries(original.ctx, { subjectType: capacityRoot.entityType,
+          subjectId: capacityRoot.entityId, metricKey: "capacity", name: "Controlled capacity declaration",
+          unit: "request", frequency: "daily" });
+        await attachCanonicalEvidenceToWorld(original.ctx, { worldRoot: capacityRoot,
+          entity: { entityType: "pe_metric_series", entityId: String(capacitySeries.row.id) },
+          evidenceSourceId: capacitySource.id, evidenceVersionId: capacityVersion.versionId, relationship: "supports" });
+        const capacity = await readSharedCapacityBasis(http, sharedAllocation, owner, capacityRoot,
+          { owner: "S1", id: capacityVersion.versionId, version: String(capacityVersion.versionNumber),
+            contentDigest: createHash("sha256").update(content).digest("hex") });
+        combinedOriginals.capacity = capacity;
+        declareRemainingResources = async () => {
+          const registered = await declareSharedResources(http, sharedAllocation, capacity, { tenant, owner, companyId }, declarations);
+          for (const [id, resource] of registered) sharedResources.set(id, resource);
+          await artifact("integrated/original-shared-resource-registry.json", { declarations, resources: [...registered.values()] });
+        };
+      }
+    },
+    afterSources: async original => {
       if (integratedEvidence) {
-        assert(integratedWorks);
+        const { capacity } = combinedOriginals;
+        assert(integratedWorks && sharedAllocation && capacity);
         const workforceWorkId = integratedWorks.workforce;
         integratedEvidence.bindScope({ tenantId: tenant, principalId: owner, companyId: original.root.entityId,
           originalServiceWorkId: intake.workId, originalServiceWorkInputId: intake.workInputId });
@@ -720,13 +942,24 @@ try {
           serviceWorkId: intake.workId, serviceWorkInputId: intake.workInputId, http, artifact, checkBound,
           tick: maximumTicks => tick(false, maximumTicks) };
         const ports = integratedPorts;
+        const { prepareWorkforceOriginal, runWorkforceOwner } = await import("../integrated/workforce-owner.mts");
+        const workforceResourceId = "integrated-workforce-" + workforceWorkId;
+        const workforceResources = await declareSharedResources(http, sharedAllocation, capacity, ports, [{
+          resourceId: workforceResourceId, resourceClass: "COMPUTE", unit: "workforce-operation",
+          kind: "CUMULATIVE_EXPENDITURE", capacity: "100",
+          permittedRoots: [{ entityType: "work", entityId: workforceWorkId }],
+        }]);
+        const workforceResource = workforceResources.get(workforceResourceId);
+        assert(workforceResource, "W049_ORIGINAL_WORKFORCE_CAPACITY_REQUIRED");
+        const workforceOriginal = await prepareWorkforceOriginal(ports, provider, workforceWorkId, workforceResource);
         const upstream = await observeIntegratedOwner("W1", async () => {
           const { runOrchestrationOwner } = await import("../integrated/owner-journey.mts");
-          const actual = await runOrchestrationOwner(ports); await integratedEvidence.record(actual); return actual;
+          const actual = await withReusedIntegratedWorker(tick => runOrchestrationOwner({ ...ports, tick },
+            { ...sharedAllocation, outcomeSeriesId: original.series.outcome, capacity }));
+          await integratedEvidence.record(actual); return actual;
         });
         await observeIntegratedOwner("W2", async () => {
-          const { runWorkforceOwner } = await import("../integrated/workforce-owner.mts");
-          await integratedEvidence.record(await runWorkforceOwner(ports, upstream, provider, workforceWorkId));
+          await integratedEvidence.record(await runWorkforceOwner(ports, upstream, workforceOriginal));
         });
       }
     } });
@@ -741,10 +974,13 @@ try {
         ? { cash: op === "OFFER" ? 20 : 16, execution: op === "OFFER" ? 87 : 85, human: 150 }
         : cancellationChallenge ? { cash: op === "OFFER" ? 16 : 12, execution: 64, human: op === "OFFER" ? 116 : 112 } : commitmentChallenge
         ? { cash: 20, execution: 102, human: 180 } : { cash: 25, execution: 128, human: 225 });
-  await native.resource(f, "cash", "USD", "STOCK", ["100", "100"]);
-  await native.resource(f, "execution", "request", "CUMULATIVE_EXPENDITURE", ["512", "512"], undefined, [],
-    organizationOriginal ? { permittedRoots: [f.root, { entityType: "work", entityId: integratedWorks!.organization }] } : {});
-  await native.resource(f, "human", "seconds", "CUMULATIVE_EXPENDITURE", ["900", "900"]);
+  if (integratedCompany) f.resources.push(...serviceDimensions.map(({ id }) => sharedResource(id)));
+  else {
+    await native.resource(f, "cash", "USD", "STOCK", ["100", "100"]);
+    await native.resource(f, "execution", "request", "CUMULATIVE_EXPENDITURE", ["512", "512"], undefined, [],
+      organizationOriginal ? { permittedRoots: [f.root, { entityType: "work", entityId: integratedWorks!.organization }] } : {});
+    await native.resource(f, "human", "seconds", "CUMULATIVE_EXPENDITURE", ["900", "900"]);
+  }
   const originalClearingInput = native.clearing(f,
     Object.fromEntries(Object.keys(policyByOperation).map(op => [op, ["100"]])));
   if (organizationProfile) await artifact("integrated/w5/original-shared-backing-precondition.json", {
@@ -784,59 +1020,15 @@ try {
       preparationRef: handoff.preparationRef, allocationRef: parentAllocation, consumptionRef: handoff.consumptionRef });
     assert.equal(obligations[op].workLineage.workId, intake.workId);
   }
-  if (organizationProfile) {
+  if (organizationOriginal) {
     assert(integratedWorks && organizationEvaluator);
-    const currentResources = await ok("allocations", "resources", {});
-    if (organizationOriginal) {
-      assert.equal(Object.keys(obligations).length, 1);
-      organizationDependency = obligations.OFFER;
-      const execution = f.resources.find((resource: any) => resource.resourceId === "execution");
-      assert(execution);
-      organizationResources = { resourceRefs: [execution.ref],
-        schedules: [{ resourceId: "execution",
-          quantities: Array.from({ length: execution.horizon.periods + 1 }, (_, period) => period === 0 ? "64" : "0") }] };
-    } else {
-      // Discover existing originals only. Do not create a fifth policy, Work,
-      // reservation or capacity declaration to rescue this combined profile.
-      const census = (await admin.query(`SELECT o.body,d.work_id,d.status action_status,e.status effect_status,
-        st.status consumption_status,
-        EXISTS(SELECT 1 FROM finnor_os.work_entity_links l WHERE l.tenant_id=o.tenant_id AND l.work_id=d.work_id
-          AND l.entity_type='external_organization' AND l.entity_id=$3) company_link,
-        (SELECT count(*)::int FROM finnor_os.s5_governed_resource_charges ch
-          WHERE ch.tenant_id=o.tenant_id AND ch.reservation_id=o.body#>>'{reservationRef,id}') charge_count
-        FROM finnor_os.s6_obligation_origins o LEFT JOIN finnor_os.domain_actions d
-          ON d.tenant_id=o.tenant_id AND d.id=o.domain_action_id
-        LEFT JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id
-        LEFT JOIN finnor_os.s5_consumption_states st ON st.tenant_id=o.tenant_id AND st.consumption_id=o.consumption_id
-        WHERE o.tenant_id=$1 AND o.principal_id=$2 ORDER BY o.obligation_id LIMIT 1025`,
-      [tenant, owner, f.root.entityId])).rows;
-      assert(census.length <= 1024, "W049_W5_COMPLETE_PREDECLARED_ORIGINAL_CENSUS_BOUND");
-      const serviceReservations = new Set(Object.values(obligations).map((body: any) => body.reservationRef.id));
-      const candidates = census.filter(row => row.company_link && row.work_id !== intake.workId &&
-        !serviceReservations.has(row.body.reservationRef.id) && row.body.workLineage?.workId === row.work_id &&
-        row.action_status === "draft" && row.effect_status === "compiled" &&
-        row.consumption_status === "INTENDED_PENDING_S6" && row.charge_count === 0 &&
-        census.filter(other => other.work_id === row.work_id ||
-          other.body.reservationRef.id === row.body.reservationRef.id).length === 1);
-      const resources = currentResources.resources.filter((resource: any) =>
-        resource.resourceClass === "COMPUTE" && resource.unit === "request" &&
-        resource.permittedRoots.some((root: any) => root.entityType === "work" && root.entityId === integratedWorks.organization));
-      await artifact("integrated/w5/original-dependency-precondition.json", {
-        census, currentResources, candidateRefs: candidates.map(row => row.body.ref), originalWorkRootResourceCount: resources.length,
-        originalDeclaredCeilings: { cash: 100, execution: 512, human: 900 },
-        originalFourPolicyDeclaredDemand: { cash: 100, execution: 512, human: 900 },
-        additionalW5ProgrammeRequestCeiling: 64, separateNeverDispatchedOriginalRequired: true,
-        newBackingOrReservationCreated: false, noPayOrPriorEffectReplay: true,
-        status: candidates.length === 1 && resources.length === 1 ? "REQUIRES_GENUINE_OWNER_READ_AND_S5_CHECK"
-          : "FAIL_CLOSED_ORIGINAL_DEPENDENCY_OR_BACKING_ABSENT",
-      });
-      assert(candidates.length === 1 && resources.length === 1,
-        "W049_W5_ORIGINAL_DEPENDENCY_AND_BACKING_ABSENT_NO_SHARED_ALL_POSITIVE_PASS");
-      organizationDependency = await ok("obligations", "read", { obligationRef: candidates[0].body.ref });
-      organizationResources = { resourceRefs: [resources[0].ref],
-        schedules: [{ resourceId: resources[0].resourceId,
-          quantities: Array.from({ length: resources[0].horizon.periods + 1 }, (_, period) => period === 0 ? "64" : "0") }] };
-    }
+    assert.equal(Object.keys(obligations).length, 1);
+    organizationDependency = obligations.OFFER;
+    const execution = f.resources.find((resource: any) => resource.resourceId === "execution");
+    assert(execution);
+    organizationResources = { resourceRefs: [execution.ref],
+      schedules: [{ resourceId: "execution",
+        quantities: Array.from({ length: execution.horizon.periods + 1 }, (_, period) => period === 0 ? "64" : "0") }] };
     organizationDeadline = new Date(Math.min(
       Date.parse(f.mandate.validUntil),
       Date.parse(organizationDependency!.deadline.authorityExpiresAt),
@@ -1076,28 +1268,36 @@ try {
     });
   await run("W005-authenticated-private-boundaries", { workId: intake.workId, requestId },
     { unrelatedPrincipalDenied: true, foreignTenantDenied: true, ownerCannotConsentForProvider: true,
-      ...(integratedCompany ? { unrelatedCanonicalWorkReadAllowed: false } : {}) }, async () => {
+      ...(integratedCompany ? { unrelatedCanonicalWorkReadAllowed: false, declaredOrganizationWorkReadAllowed: true } : {}) }, async () => {
       const wrong = await http("real-world-services", "read", { workId: intake.workId }, unrelated);
       const foreignResult = await http("real-world-services", "read", { workId: intake.workId }, foreign);
       const forgedConsent = await http("real-world-services", "consent", { protocolId: discover.protocolId, revoke: false });
-      assert.equal(wrong.status, 404); assert.equal(foreignResult.status, 404); assert.equal(forgedConsent.status, 404);
+      assert.equal(wrong.status, 404, "W3_UNRELATED_PRIVATE_READ_HTTP_" + wrong.status);
+      assert.equal(foreignResult.status, 404, "W3_FOREIGN_PRIVATE_READ_HTTP_" + foreignResult.status);
+      assert.equal(forgedConsent.status, 404, "W3_OTHER_PRINCIPAL_CONSENT_HTTP_" + forgedConsent.status);
       const hidden = await db.withTenantTransaction(tenant, { userId: unrelated, readOnly: true }, async (_d, c) =>
         (await c.query("SELECT content FROM finnor_os.evidence_source_versions WHERE id=$1", [outcomeRef.versionId])).rows);
       assert.equal(hidden.length, 0);
       let unrelatedCanonicalWorkReadAllowed: boolean | null = null;
+      let declaredOrganizationWorkReadAllowed: boolean | null = null;
       if (integratedCompany) {
         const { requireContext } = await import("../../../apps/api/lib/auth");
         const { canExerciseWorkforceAuthorityTx } = await import("@finnor/authority");
         const actualPrincipal = await requireContext(new Request(auth.origin + "/api/real-world-services/read",
           { headers: { authorization: "Bearer " + tokens.get(unrelated) } }));
-        unrelatedCanonicalWorkReadAllowed = await db.withTenantTransaction(tenant,
-          { userId: unrelated, readOnly: true }, async (_db, c) => canExerciseWorkforceAuthorityTx(actualPrincipal,
-            { operation: "query", capability: "query:work", workId: intake.workId,
-              resource: { type: "work", id: intake.workId }, risk: "low" }, c));
+        const original = combinedOriginals.organizationEffectWork;
+        assert(original);
+        [unrelatedCanonicalWorkReadAllowed, declaredOrganizationWorkReadAllowed] = await db.withTenantTransaction<[boolean, boolean]>(tenant,
+          { userId: unrelated }, async (_db, c) => {
+            const canRead = (workId: string) => canExerciseWorkforceAuthorityTx(actualPrincipal,
+              { operation: "query", capability: "query:work", workId, resource: { type: "work", id: workId }, risk: "low" }, c);
+            return [await canRead(intake.workId), await canRead(original.workId)];
+          });
         assert.equal(unrelatedCanonicalWorkReadAllowed, false, "W049_W5_STANDING_READ_MUST_NOT_EXPOSE_W3_WORK");
+        assert.equal(declaredOrganizationWorkReadAllowed, true, "W049_W5_EXACT_DECLARED_ORIGINAL_READ_REQUIRED");
       }
       return { wrong, foreignResult, forgedConsent, privateOriginalRows: hidden.length,
-        ...(integratedCompany ? { unrelatedCanonicalWorkReadAllowed } : {}) };
+        ...(integratedCompany ? { unrelatedCanonicalWorkReadAllowed, declaredOrganizationWorkReadAllowed } : {}) };
     });
   if (installation && !fast && invoiceChallenge === null) {
     const manifestBytes = await readFile(join(installation, installedDescriptor.compatibilityManifest.path));
@@ -2182,23 +2382,88 @@ try {
         independentProtectedCustody: false },
     });
     assert(integratedPorts && recipient && organizationEvaluator && integratedWorks);
+    const { organizationEffectWork, marketWork, marketBuyer } = combinedOriginals;
+    assert(organizationEffectWork && marketWork && marketBuyer && sharedAllocation,
+      "W049_COMBINED_ORIGINALS_MUST_BE_DECLARED_BEFORE_FIT");
     const ports: IntegratedOwnerPorts = integratedPorts;
+    const servicePendingOwnerDeliveries = async (engine: "W4" | "W5") => {
+      const countPendingS1 = async () => (await ports.admin.query<{ count: number }>(`SELECT count(*)::int count
+        FROM finnor_os.s6_owner_delivery_states WHERE tenant_id=$1 AND principal_id=$2
+        AND semantic_owner='S1' AND status<>'ACCEPTED'`, [tenant, owner])).rows[0]!.count;
+      const began = performance.now(), pendingBefore = await countPendingS1();
+      await recipient.drainNativeReferences(64);
+      console.log(JSON.stringify({ event: "PHASE_W_OWNER_DELIVERY_HANDOFF", engine, pendingBefore,
+        pendingAfter: await countPendingS1(), elapsedMs: Math.round(performance.now() - began) }));
+    };
     await observeIntegratedOwner("W4", async () => {
+      await servicePendingOwnerDeliveries("W4");
       const { runMarketOwner } = await import("../integrated/market-owner.mts");
-      const market = await runMarketOwner(ports, {
+      const { prepareNativeGrowthMeasurements } = await import("../../w4/native-growth-journey.mts");
+      const declare = await prepareNativeGrowthMeasurements({
+        tenant, owner, companyId: ports.companyId, admin: ports.admin, ok,
+        artifact: (name, body) => artifact("integrated/w4/private/" + name, body),
+      }, marketNamespace, checkBound, sharedAllocation);
+      const marketMeasurements = { units: await declare("units"), money: await declare("money") };
+      const market = await withReusedIntegratedWorker(tick => runMarketOwner(ports, {
         actors: { operator: backup, buyer: provider, observer: inspector, accountant: evaluator, unrelated, foreign },
-        native, recipient, pump: createIntegratedPump(),
-      });
+        native, recipient, pump: createMarketPump(tick, marketWork.workId, owner),
+        namespace: marketNamespace, declaredMeasurements: marketMeasurements, work: marketWork, buyerContact: marketBuyer,
+        originalResources: {
+          cash: sharedResource(marketResourceIds.cash), execution: sharedResource(marketResourceIds.execution),
+          human: sharedResource(marketResourceIds.human),
+        },
+      }));
       await integratedEvidence.record(market);
     });
     await observeIntegratedOwner("W5", async () => {
-      assert(organizationDependency && organizationDeadline, "W049_W5_NO_CURRENT_ORIGINAL_DEADLINE");
+      await servicePendingOwnerDeliveries("W5");
+      const effectFixture = { ...f, name: "w5-original-" + organizationEffectWork.workId,
+        policies: [], labels: {}, resources: Object.values(organizationEffectResources).map(sharedResource) };
+      const fitted = await ok("interventions", "fit", { request: f.model.request });
+      assert.equal(fitted.status, "FITTED", "W049_W5_ORIGINAL_MODEL_SOURCE_MUST_BE_CURRENT");
+      effectFixture.model = fitted.model;
+      const policy = await native.policy(effectFixture, "OFFER", originalEffectDemand);
+      const programmeResource = sharedResource(organizationProgrammeResource);
+      const originalClearing = native.clearing(effectFixture, { OFFER: ["100"] }, [], [],
+        effectFixture.policies, organizationEffectResources);
+      const allocation = await ok("allocations", "clear", originalClearing);
+      assert.equal(allocation.status, "FEASIBLE", "W049_W5_SEPARATE_ORIGINAL_MUST_HAVE_ACTUAL_S5_BACKING");
+      const originalAllocation = allocation.certificate.ref;
+      const effectScope = { ...scope, workId: organizationEffectWork.workId, businessAssignmentId: "w5-controlled-original-effect" };
+      const effectMandate = (await source(effectScope.workId, {
+        schema: "finnor.service-mandate.v1", scope: effectScope, authorizedByPrincipalId: owner,
+        purpose: "Controlled W5 original effect continuation", permittedOperations: ["OFFER"],
+        validFrom: f.mandate.knowledgeAt, expiresAt: f.mandate.validUntil, revoked: false,
+        originalTrigger: "EXPLICIT_OUTCOME", eventSource: null,
+      }, "w5-original-offer-mandate")).source;
+      await recipient.drainNativeReferences();
+      const handoff = await ok("policies", "handoff", { policyRef: policy.ref, allocationRef: originalAllocation,
+        decision: native.decision(effectFixture, originalAllocation) });
+      const prepared = await ok("real-world-services", "prepare-native", { workId: effectScope.workId,
+        mandateSource: effectMandate, preparationRef: handoff.preparationRef, allocationRef: originalAllocation,
+        consumptionRef: handoff.consumptionRef });
+      assert.equal(prepared.workLineage.workId, organizationEffectWork.workId);
+      assert.equal(prepared.workLineage.workInputId, organizationEffectWork.workInputId);
+      assert(Object.values(obligations).every((original: any) =>
+        original.reservationRef.id !== prepared.reservationRef.id && original.effectRef.id !== prepared.effectRef.id),
+      "W049_W5_MUST_PRESERVE_EVERY_ORIGINAL_W3_EFFECT");
+      const original = await ok("obligations", "read", { obligationRef: prepared.ref });
+      assert.deepEqual(original, prepared);
+      const originalDeadline = new Date(Math.min(Date.parse(f.mandate.validUntil),
+        Date.parse(original.deadline.authorityExpiresAt), Date.parse(original.deadline.businessPeriodEndAt))).toISOString();
+      const resources = { resourceRefs: [programmeResource.ref],
+        schedules: [{ resourceId: programmeResource.resourceId, quantities: [organizationProgrammeRequests, "0"] }] };
+      await artifact("integrated/w5/original-dependency-precondition.json", {
+        original, originalAllocation, programmeResource, resources, originalDeadline,
+        effectWork: organizationEffectWork, programmeWorkId: integratedWorks.organization,
+        qualification: "AUTHENTICATED_CONTROLLED_ORIGINAL_AND_BACKING_NOT_FIELD_OR_ADMISSION",
+      });
       const { runOrganizationOwner } = await import("../integrated/organization-owner.mts");
       await runOrganizationOwner({ ...ports, request: organizationRequest }, {
         sourceWorkId: integratedWorks.organizationSource, workId: integratedWorks.organization,
         evaluatorId: organizationEvaluator,
         roles: { support: backup, approver: inspector, digital: unrelated, provider: evaluator },
-        originalDeadline: organizationDeadline, originalS6: organizationDependency, resources: organizationResources,
+        originalDeadline, originalS6: original, resources,
         units: organizationUnits, onLivePhaseEnded: () => { organizationNativePhaseClosed = true },
         beforeTerminal: async (organization, ready) => {
           assert.equal(ready.status, "PENDING_S6_TERMINAL_NEGATIVE");
