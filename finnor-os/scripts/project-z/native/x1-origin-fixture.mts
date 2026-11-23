@@ -638,6 +638,21 @@ export async function driveAcquisitionToModelReady(env: NativeEnvironment, paren
     await sql.end();
     transferred = true;
     return result;
+  } catch (error) {
+    if (sql) {
+      try {
+        const session = (await sql.query("SELECT status,reason FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND id=$2",
+          [parent.tenantId, sessionId])).rows[0] ?? null;
+        const dispositions = (await sql.query(`SELECT kind,body->'detail'->>'disposition' disposition,
+          body->'detail'->>'reason' reason
+          FROM finnor_os.application_semantics_events
+          WHERE tenant_id=$1 AND session_id=$2 AND kind IN ('INDEPENDENT_APPLICATION_DISPOSITION',
+            'FAILED_OR_FENCED_PHYSICAL_DELIVERY','NATIVE_BEFORE_WIRE_REFUSED')
+          ORDER BY created_at DESC,event_id DESC LIMIT 12`, [parent.tenantId, sessionId])).rows;
+        await record("acquisition-terminal-readback", { session, dispositions });
+      } catch { /* Retain the original owner failure when diagnostics are unavailable. */ }
+    }
+    throw error;
   } finally {
     if (!transferred) {
       await submitted.handle.portal.stop().catch(() => undefined);

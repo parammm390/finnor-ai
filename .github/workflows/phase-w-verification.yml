@@ -121,7 +121,7 @@ jobs:
       episode: ${{ matrix.episode }}
   combined-native-owners:
     name: "Verify combined company owner journey"
-    needs: [source-checks, ci-boundary-controls, w1-owning-regressions, w2-compensation-controls, w3-native-and-publication]
+    needs: [source-checks, ci-boundary-controls]
     uses: ./.github/workflows/phase-w-native-episode.yml
   w3-only-installed-headed-cold:
     name: "Verify W3 installed browser journey"

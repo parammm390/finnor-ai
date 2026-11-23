@@ -11,6 +11,7 @@ import { submitInternalSearch } from "../../postz-w1/native-internal-support.mjs
 import { driveNativeProgram } from "../../postz-w1/native-drive.mjs";
 import { observeNativeRun } from "../../postz-w1/native-observe.mjs";
 import { nativeCapsuleSchema } from "../../../packages/private-equity/src/economic-orchestration/contracts";
+import type { SharedAllocationFixture, SharedCapacityBasis } from "./allocation-fixture.mts";
 export { INTEGRATED_PROFILE } from "./profile.mts";
 
 export interface IntegratedOwnerPorts {
@@ -18,7 +19,7 @@ export interface IntegratedOwnerPorts {
   tenant: string; owner: string; foreign: string;
   companyId: string; serviceWorkId: string; serviceWorkInputId: string;
   http(group: string, operation: string, body: unknown, actor?: string | null): Promise<{ status: number; body: any }>;
-  tick(maximumTicks: number): Promise<{
+  tick(maximumTicks: number, signal?: AbortSignal): Promise<{
     pid: number; observations: Array<{ pid: number; role: unknown; registration: string; worked: boolean }>;
   }>;
   artifact(name: string, body: unknown): Promise<unknown>;
@@ -36,7 +37,8 @@ export interface NativeJourneyOutput {
 /** Reuses W1's actual S1/S3/S4/S5/P1/P2 setup on the canonical business root.
  * The independent arithmetic expectations are literal original inputs, not
  * values obtained from the producer or its checker. */
-export async function runOrchestrationOwner(ports: IntegratedOwnerPorts): Promise<NativeJourneyOutput> {
+export async function runOrchestrationOwner(ports: IntegratedOwnerPorts,
+  sharedAllocation: SharedAllocationFixture & { outcomeSeriesId: string; capacity: SharedCapacityBasis }): Promise<NativeJourneyOutput> {
   ports.checkBound();
   const root = { entityType: "external_organization" as const, entityId: ports.companyId };
   const existingOwner = { tenant: ports.tenant, principal: ports.owner, root };
@@ -68,13 +70,14 @@ export async function runOrchestrationOwner(ports: IntegratedOwnerPorts): Promis
     ], deliverable: { kind: "analytical_draft", title: "Original company liability-complete analytical draft" } },
   });
   let lastWorker: Awaited<ReturnType<IntegratedOwnerPorts["tick"]>> | null = null;
+  const tickQueue = async (maximum: number, signal?: AbortSignal) => {
+    signal?.throwIfAborted(); ports.checkBound();
+    lastWorker = await ports.tick(maximum, signal);
+    signal?.throwIfAborted(); ports.checkBound();
+    return lastWorker.observations.some(row => row.worked);
+  };
   const queue = {
-    async tick(signal?: AbortSignal) {
-      signal?.throwIfAborted(); ports.checkBound();
-      lastWorker = await ports.tick(16);
-      signal?.throwIfAborted(); ports.checkBound();
-      return lastWorker.observations.some(row => row.worked);
-    },
+    tick: (signal?: AbortSignal) => tickQueue(16, signal),
     registeredTypes: () => ["run_harness_program_v1", "run_evidence_derivation_v1", "run_compute_search_unit_v1"],
   };
   const api = (operation: string, body: unknown, identity = { tenant: ports.tenant, actor: ports.owner }) => {
@@ -89,15 +92,18 @@ export async function runOrchestrationOwner(ports: IntegratedOwnerPorts): Promis
       const group = operation === "fit" ? "interventions" : operation === "synthesize" ? "policies" : "allocations";
       return ports.http(group, operation, body, ports.owner);
     } };
-  const fixture = await prepareNativeOwnerFixture(e, { existingOwner, beforeFit: async owner => {
+  const fixture = await prepareNativeOwnerFixture(e, { existingOwner, sharedAllocation, beforeFit: async owner => {
     assert.equal(owner.tenant, ports.tenant); assert.equal(owner.principal, ports.owner);
     assert.deepEqual(owner.root, root, "W049_ACTUAL_COMPANY_NOT_FIXTURE_LABEL_REQUIRED");
   } });
+  console.log(JSON.stringify({ event: "PHASE_W_W1_STAGE", stage: "ORIGINAL_PREPARED" }));
   const http = { call: (operation: string, body: unknown) => api(operation, body) };
-  const verifyProgram = async (programId: string, searchId: string) => {
+  const verifyProgram = async (programId: string, searchId: string, stage: "WARM" | "FOLLOW_UP") => {
+    const began = performance.now();
     try {
-      const status = await driveNativeProgram(ports.admin, queue, programId, performance.now());
+      const status = await driveNativeProgram(ports.admin, { tick: signal => tickQueue(1, signal) }, programId, began);
       assert.equal(status, "TESTED");
+      console.log(JSON.stringify({ event: "PHASE_W_W1_STAGE", stage, status, elapsedMs: Math.round(performance.now() - began) }));
     } catch (error) {
       const failure = (await ports.admin.query(`SELECT p.status,p.failure,s.status search_status,s.reason search_reason,
           q.status derivation_status, d.body->'failure' AS derivation_failure,
@@ -126,6 +132,13 @@ export async function runOrchestrationOwner(ports: IntegratedOwnerPorts): Promis
       [ports.tenant, ports.owner, programId, searchId])).rows[0];
       await ports.artifact(`integrated/w1/program-failure-${programId}.json`, { ...failure,
         driverError: error instanceof Error ? error.message : String(error) });
+      const finite = (value: unknown) => typeof value === "string" && /^[A-Z][A-Z0-9_]{2,100}$/.test(value) ? value : null;
+      console.error(JSON.stringify({ event: "PHASE_W_W1_STAGE", stage, status: "FAIL",
+        elapsedMs: Math.round(performance.now() - began), programme: finite(failure?.status),
+        search: finite(failure?.search_status), sourceDerivation: finite(failure?.derivation_status),
+        predicate: finite(error instanceof Error ? error.message : null),
+        deadline: error instanceof Error && (error.name === "TimeoutError" ||
+          error.message === "Finite native episode driver deadline") }));
       throw error;
     }
   };
@@ -133,7 +146,7 @@ export async function runOrchestrationOwner(ports: IntegratedOwnerPorts): Promis
     { root, workId: fixture.p.workId }, null);
   assert.equal(anonymous.status, 401);
   const warmSearchId = await submitInternalSearch(http, fixture);
-  await verifyProgram(fixture.p.programId, warmSearchId);
+  await verifyProgram(fixture.p.programId, warmSearchId, "WARM");
   const episode = async (id: string) => (await ports.admin.query(`SELECT e.* FROM finnor_os.p1_episodes e
     JOIN finnor_os.p1_requests p ON p.tenant_id=e.tenant_id AND p.principal_id=e.principal_id AND p.episode_id=e.id
     WHERE p.id=$1 AND p.tenant_id=$2 AND p.principal_id=$3`, [id, ports.tenant, ports.owner])).rows[0];
@@ -149,7 +162,7 @@ export async function runOrchestrationOwner(ports: IntegratedOwnerPorts): Promis
     idempotencyKey: randomUUID() });
   assert.equal(accepted.status, 202, JSON.stringify(accepted));
   const programId = accepted.body.programId as string, searchId = await submitInternalSearch(http, fixture, programId);
-  await verifyProgram(programId, searchId);
+  await verifyProgram(programId, searchId, "FOLLOW_UP");
   const after = await episode(programId);
   assert.equal(after.id, before.id); assert.equal(String(after.deadline_at), String(before.deadline_at));
   for (const key of ["max_attempts", "max_steps", "max_candidates"]) assert.equal(after[key], before[key]);

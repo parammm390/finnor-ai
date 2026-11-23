@@ -2,38 +2,22 @@
  * carries a literal W1 accepted value, not an invented capsule-provenance field. */
 import { strict as assert } from "node:assert";
 import { createHash } from "node:crypto";
-import { attachWorkEntity, transactionDb, withTenantTransaction } from "@finnor/db";
+import { attachWorkEntity, receiveWork, transactionDb, withTenantTransaction } from "@finnor/db";
 import { createEvidenceSourceTx, appendEvidenceVersionTx } from "@finnor/memory";
 import { nativeWorkforceOriginalSchema } from "../../../packages/orchestration/src/workforce-execution/contracts";
 import { workforceActorSchema, workforceExecutionProgramSchema } from "../../../packages/workforce/src/execution-program/schema";
 import { reference } from "../../../packages/orchestration/src/workforce-execution/store";
 import type { IntegratedOwnerPorts, NativeJourneyOutput } from "./owner-journey.mts";
+import type { AllocationResource } from "@finnor/shared-types";
 
-export async function runWorkforceOwner(ports: IntegratedOwnerPorts, upstream: NativeJourneyOutput,
-  executor: string, workId: string): Promise<NativeJourneyOutput> {
+export async function prepareWorkforceOriginal(ports: IntegratedOwnerPorts, executor: string,
+  workId: string, resource: AllocationResource) {
   ports.checkBound();
-  assert.equal(upstream.engine, "W1"); assert.equal(upstream.companyId, ports.companyId);
-  const acceptedValue = (await ports.admin.query(`SELECT h.body->'result'->'values'->'netEquity'->>'value' value
-    FROM finnor_os.p1_requests p JOIN finnor_os.p1_programs h
-      ON h.tenant_id=p.tenant_id AND h.principal_id=p.principal_id AND h.id=p.head_id
-    JOIN finnor_os.p2_requests s
-      ON s.tenant_id=p.tenant_id AND s.principal_id=p.principal_id AND s.program_id=p.id
-    WHERE s.tenant_id=$1 AND s.principal_id=$2 AND s.id=$3 AND p.status='TESTED'`,
-    [ports.tenant, ports.owner, upstream.requestId])).rows[0]?.value;
-  assert.equal(acceptedValue, "43", "W2_MUST_RECEIVE_ACTUAL_ACCEPTED_W1_PARENT_VALUE");
+  const expectedW1Value = "43";
   const key = "integrated-workforce-" + workId, now = Date.now();
   const iso = (offset: number) => new Date(now + offset).toISOString(), expires = iso(3600000);
   const ref = (owner: string, id: string) => ({ owner, id, version: "controlled-source-v1",
     contentDigest: createHash("sha256").update(id).digest("hex") });
-  const bridge = { kind: "ACCEPTED_VALUE_SUPPLIED_AS_LITERAL_ORIGINAL_INPUT", upstream: upstream.ref,
-    value: acceptedValue, nativeCapsuleProvenanceVerified: false,
-    limitation: "The strict W2 original has no capsule/output-reference input; no new field or native provenance claim is invented." };
-  await ports.artifact("integrated/w2/original.json", {
-    companyId: ports.companyId, workId, executor, bridge, operation: { kind: "SUM_INTEGERS", values: ["43", "-1"] },
-    expected: { independentlyVerifiedValue: "42", assignments: 1, originalWorkStatus: "completed",
-      s6Intentions: 1, s6Observations: 1, reconciledConsumptions: 2, completeMonetaryCost: null },
-    sourceClass: "CONTROLLED_ACTOR_RECORDS", genuineHumanConsentEstablished: false,
-  });
   for (const principal of [ports.owner, executor]) {
     const profile = (await ports.admin.query(`SELECT actor_kind FROM finnor_os.employee_actor_profiles
       WHERE tenant_id=$1 AND principal_id=$2`, [ports.tenant, principal])).rows[0];
@@ -75,20 +59,13 @@ export async function runWorkforceOwner(ports: IntegratedOwnerPorts, upstream: N
   }
   const revision = String((await ports.admin.query("SELECT revision FROM finnor_os.authority_states WHERE tenant_id=$1",
     [ports.tenant])).rows[0].revision);
-  const horizon = { startAt: iso(-60000), periodMs: 3600000, periods: 1 };
-  const resourceResponse = await ports.http("allocations", "resource", { resource: {
-    schema: "finnor.allocation-resource.v1", resourceId: key, resourceClass: "COMPUTE", tenantId: ports.tenant,
-    ownerRef: ref("BUSINESS_OWNER", ports.owner), legalEntityRef: ref("S1", ports.companyId),
-    scopeRef: ref("BUSINESS_OWNER", key), permittedRoots: [{ entityType: "work", entityId: workId }],
-    rightsRef: `authority:${ports.tenant}:${revision}`, unit: "workforce-operation", currency: null,
-    kind: "CUMULATIVE_EXPENDITURE", horizon, sourceRef: ref("BUSINESS_OWNER", "controlled-compute-capacity:" + key),
-    asOf: iso(0), knowledgeAt: iso(0), validUntil: expires, beliefPins: [],
-    availability: [{ amount: "100", basis: "REPORTED_AVAILABLE" }, { amount: "100", basis: "REPORTED_AVAILABLE" }],
-    existingUse: ["0", "0"], safetyMargin: "0", covenants: [], revoked: false,
-    qualification: "AUTHENTICATED_OWNER_ASSERTION_UNADMITTED",
-  } }, ports.owner);
-  assert.equal(resourceResponse.status, 200, JSON.stringify(resourceResponse));
-  const resource = resourceResponse.body;
+  const { horizon, rightsRef } = resource;
+  assert.equal(rightsRef, `authority:${ports.tenant}:${revision}`, "W049_ORIGINAL_SHARED_AUTHORITY_REVISION_CHANGED");
+  assert.equal(resource.tenantId, ports.tenant);
+  assert.equal(resource.resourceId, key);
+  assert.equal(resource.unit, "workforce-operation");
+  assert.deepEqual(resource.permittedRoots, [{ entityType: "work", entityId: workId }]);
+  assert(Date.parse(resource.validUntil) >= Date.parse(expires), "W049_W2_ORIGINAL_DURATION_MUST_BE_BACKED");
   const envelope = (amount: string) => ({ resourceId: resource.resourceId, unit: resource.unit, kind: resource.kind,
     horizon, quantities: [amount, "0"], minimumQuantities: ["0", "0"] });
   const ceiling = { capabilities: ["query:work"], dataScopes: ["work:self"], purposes: ["controlled-analysis"],
@@ -108,13 +85,47 @@ export async function runWorkforceOwner(ports: IntegratedOwnerPorts, upstream: N
       dueAt: expires, slot: { startAt: iso(-60000), endAt: expires }, effortSeconds: "1", demand: [envelope("1")],
       context: { dataScopes: ["work:self"], purposes: ["controlled-analysis"], includesCredentials: false }, effectId: null,
     }] }, operations: [{ taskId: "reconcile-accepted-company-value",
-      computation: { kind: "SUM_INTEGERS", values: [acceptedValue, "-1"] } }],
+      computation: { kind: "SUM_INTEGERS", values: [expectedW1Value, "-1"] } }],
+  });
+  const work = await receiveWork({ tenantId: ports.tenant, userId: ports.owner, channel: "text", workId,
+    instruction: JSON.stringify(original), idempotencyKey: "w2-intake:" + key, requireExactIntake: true,
+    authorityContext: { authenticatedPrincipal: ports.owner, channel: "WORKFORCE_ORDINARY_INTAKE", executionAuthorityGranted: false } });
+  assert.equal(work.workId, workId);
+  assert.equal(work.created, true);
+  await attachWorkEntity(ports.tenant, workId, { entityType: "external_organization", entityId: ports.companyId,
+    relationship: "about", source: "controlled-integrated-native-owner" });
+  await ports.artifact("integrated/w2/original-before-upstream-execution.json", {
+    original, workId, workInputId: work.workInputId, expectedW1Value,
+  });
+  return { original, key, expires, sourceIds, executor, workId, workInputId: work.workInputId, expectedW1Value };
+}
+
+export async function runWorkforceOwner(ports: IntegratedOwnerPorts, upstream: NativeJourneyOutput,
+  declaration: Awaited<ReturnType<typeof prepareWorkforceOriginal>>): Promise<NativeJourneyOutput> {
+  ports.checkBound();
+  const { original, key, expires, sourceIds, executor, workId, workInputId, expectedW1Value } = declaration;
+  assert.equal(upstream.engine, "W1"); assert.equal(upstream.companyId, ports.companyId);
+  const acceptedValue = (await ports.admin.query(`SELECT h.body->'result'->'values'->'netEquity'->>'value' value
+    FROM finnor_os.p1_requests p JOIN finnor_os.p1_programs h
+      ON h.tenant_id=p.tenant_id AND h.principal_id=p.principal_id AND h.id=p.head_id
+    JOIN finnor_os.p2_requests s
+      ON s.tenant_id=p.tenant_id AND s.principal_id=p.principal_id AND s.program_id=p.id
+    WHERE s.tenant_id=$1 AND s.principal_id=$2 AND s.id=$3 AND p.status='TESTED'`,
+    [ports.tenant, ports.owner, upstream.requestId])).rows[0]?.value;
+  assert.equal(acceptedValue, expectedW1Value, "W2_MUST_RECEIVE_ACTUAL_ACCEPTED_W1_PARENT_VALUE");
+  const bridge = { kind: "ACCEPTED_VALUE_SUPPLIED_AS_LITERAL_ORIGINAL_INPUT", upstream: upstream.ref,
+    value: acceptedValue, nativeCapsuleProvenanceVerified: false,
+    limitation: "The strict W2 original has no capsule/output-reference input; no new field or native provenance claim is invented." };
+  await ports.artifact("integrated/w2/original.json", {
+    companyId: ports.companyId, workId, executor, bridge, operation: { kind: "SUM_INTEGERS", values: ["43", "-1"] },
+    expected: { independentlyVerifiedValue: "42", assignments: 1, originalWorkStatus: "completed",
+      s6Intentions: 1, s6Observations: 1, reconciledConsumptions: 2, completeMonetaryCost: null },
+    sourceClass: "CONTROLLED_ACTOR_RECORDS", genuineHumanConsentEstablished: false,
   });
   await ports.artifact("integrated/w2/original-native-intake.json", { workId, idempotencyKey: key, original, bridge });
   const intake = await ports.http("workforce", "execution-programs/intake", { workId, idempotencyKey: key, original }, ports.owner);
   assert.equal(intake.status, 202, JSON.stringify(intake));
-  await attachWorkEntity(ports.tenant, workId, { entityType: "external_organization", entityId: ports.companyId,
-    relationship: "about", source: "controlled-integrated-native-owner" });
+  assert.equal(intake.body.workInputId, workInputId, "W049_W2_MUST_CONSUME_THE_PREDECLARED_INPUT");
   const id = intake.body.id as string, began = performance.now();
   let current: any = null;
   for (let decision = 0; decision < 128; decision++) {

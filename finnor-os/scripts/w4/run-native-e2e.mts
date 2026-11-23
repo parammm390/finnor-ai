@@ -5,11 +5,11 @@ import { channel } from "node:diagnostics_channel";
 import { mkdir, writeFile, appendFile, statfs, open } from "node:fs/promises";
 import { resolve, dirname, basename, join, isAbsolute } from "node:path";
 import { createServer } from "node:net";
-import { spawn, type ChildProcess } from "node:child_process";
 import EmbeddedPostgres from "embedded-postgres";
 import pg from "pg";
 import { createNativeGrowthJourney, NATIVE_GROWTH_LIMITS } from "./native-growth-journey.mjs";
 import { growthRecipient } from "./recipient.mjs";
+import { createNativeWorkerClient } from "./worker-client.mjs";
 import { authenticatedApiFixture } from "../frontier5/x1/authenticated-api-fixture.mjs";
 import { createUpstreamFixtureSupport } from "../s5/owner-fixture.mjs";
 import { captureNumericalProcesses } from "./numerical-process-diagnostics.mjs";
@@ -117,8 +117,8 @@ const postgres = new EmbeddedPostgres({ databaseDir: pgDirectory, user: "w4_admi
   port, persistent: false, postgresFlags: ["-c", "listen_addresses=127.0.0.1", "-c", "unix_socket_directories="],
   onLog: line => { postgresStartLog = (postgresStartLog + line).slice(-8192); } });
 let admin: pg.Client | null = null, auth: Awaited<ReturnType<typeof authenticatedApiFixture>> | null = null;
-let recipient: Awaited<ReturnType<typeof growthRecipient>> | null = null, activeWorker: ChildProcess | null = null;
-let workerReady = false, workerLog = "";
+let recipient: Awaited<ReturnType<typeof growthRecipient>> | null = null;
+let worker: ReturnType<typeof createNativeWorkerClient> | undefined;
 let closePool: (() => Promise<void>) | undefined, result: unknown, failure: unknown;
 let diagnosticTenant: string | null = null;
 const numericalDiagnostics = captureNumericalProcesses(output);
@@ -264,57 +264,12 @@ try {
       checkBound(); return { employeeId: current.employeeId, revision: current.revision };
     },
     ownerCall: (op, body) => http("obligations", op, body), artifact });
+  worker = createNativeWorkerClient({ workspace, databaseUrl: workerDatabaseUrl, checkBound });
   const tick = async (maximum: number) => {
-    checkBound(); const count = Math.min(16, maximum);
-    workerLog = "";
-    if (!activeWorker) {
-      const child = spawn(process.execPath, ["--max-old-space-size=1536", "--import=tsx", "scripts/w4/worker.mts"], {
-        cwd: workspace, env: { ...process.env, DATABASE_URL: workerDatabaseUrl },
-        stdio: ["ignore", "pipe", "pipe", "ipc"] });
-      activeWorker = child;
-      const capture = (bytes: Buffer) => {
-        workerLog += bytes.toString();
-        if (workerLog.length > 4 * 1024 * 1024) child.kill("SIGKILL");
-      };
-      child.stdout!.on("data", capture);
-      child.stderr!.on("data", capture);
-      child.on("error", error => capture(Buffer.from(error.message)));
-    }
-    const p = activeWorker;
-    assert(p.connected && p.exitCode === null && p.signalCode === null, "W4_OWNED_WORKER_NOT_RUNNING");
-    const observations = await new Promise<unknown[]>((resolve, reject) => {
-      const cleanup = () => {
-        clearTimeout(timer);
-        p.off("message", message); p.off("error", failed); p.off("exit", closed);
-      };
-      const failed = (error: Error) => { cleanup(); reject(error); };
-      const closed = () => failed(Error("W4_OWNED_WORKER_EXITED"));
-      const request = () => p.send(count, error => { if (error) failed(error); });
-      const message = (result: unknown) => {
-        if (!workerReady && result === "ready") { workerReady = true; request(); }
-        else if (workerReady && Array.isArray(result)) { cleanup(); resolve(result); }
-        else failed(Error("W4_INVALID_WORKER_REPLY"));
-      };
-      const timer = setTimeout(() => {
-        p.kill("SIGKILL");
-        failed(Error("W4_WORKER_TIME_BOUND"));
-      }, 60000);
-      p.on("message", message); p.once("error", failed); p.once("exit", closed);
-      if (workerReady) request();
-    });
-    assert(observations.length >= 1 && observations.length <= count, "W4_ACTUAL_WORKER_OBSERVATIONS_REQUIRED");
-    for (const [ordinal, raw] of observations.entries()) {
-      const observed = raw as { schema: string; pid: number; tick: number; worked: boolean; registration: string;
-        role: { current_user: string; rolsuper: boolean; rolbypassrls: boolean } };
-      assert.equal(observed.schema, "finnor.w4.worker-observation.v1");
-      assert.equal(observed.pid, p.pid); assert.equal(observed.role.current_user, "finnor_worker");
-      assert.equal(observed.role.rolsuper, false); assert.equal(observed.role.rolbypassrls, false);
-      assert.equal(observed.registration, "ACTUAL_PRODUCTION_CREATE_WORKER");
-      assert.equal(observed.tick, ordinal); assert.equal(typeof observed.worked, "boolean");
-    }
-    const row = { pid: p.pid, observations, log: workerLog };
-    workers.push(row); await artifact("workers/" + workers.length + ".json", row);
-    return observations.length;
+    const { ticks, ...row } = await worker!.tick(Math.min(16, maximum));
+    workers.push(row);
+    await artifact("workers/" + workers.length + ".json", row);
+    return ticks;
   };
   const pump = async (maximum: number = NATIVE_GROWTH_LIMITS.maximumPumpTicks) => {
     assert(maximum >= 1 && maximum <= NATIVE_GROWTH_LIMITS.maximumPumpTicks);
@@ -458,23 +413,8 @@ try {
       diagnosticFlushFailed = true;
     }
   }
-  const cleanupWorker = activeWorker as ChildProcess | null;
-  let workerCleanupFailed = false;
-  if (cleanupWorker?.pid && cleanupWorker.exitCode === null && cleanupWorker.signalCode === null) {
-    const p = cleanupWorker;
-    await new Promise<void>(yes => {
-      const kill = setTimeout(() => { workerCleanupFailed = true; p.kill("SIGKILL"); }, 5000);
-      p.once("exit", (code, signal) => {
-        clearTimeout(kill);
-        workerCleanupFailed ||= code !== 0 || signal !== null;
-        yes();
-      });
-      if (p.connected) p.send("stop", error => { if (error) { workerCleanupFailed = true; p.kill("SIGKILL"); } });
-    });
-  } else if (cleanupWorker) {
-    workerCleanupFailed = cleanupWorker.exitCode !== 0 || cleanupWorker.signalCode !== null;
-  }
-  await artifact("http-and-physical-trace.json", { traffic, workers, lastWorkerLog: workerLog, workerCleanupFailed,
+  const workerCleanupFailed = worker ? !await worker.close() : false;
+  await artifact("http-and-physical-trace.json", { traffic, workers, lastWorkerLog: worker?.lastLog() ?? "", workerCleanupFailed,
     outcomeEstablished: !!result && !failure && !workerCleanupFailed, fieldValidated: false });
   if (recipient) await recipient.close();
   if (auth) await auth.close();

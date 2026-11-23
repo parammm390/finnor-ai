@@ -38,7 +38,9 @@ function rebuilt(problem:CanonicalAllocationProblem,resources:AllocationResource
   const exactEncoding=body.quantityEncoding==='DECIMAL_OR_RATIONAL_V2'||outstanding.some(row=>row.envelopes.some(e=>[...e.quantities,...e.minimumQuantities].some(q=>q.includes('/'))));
   const updated={...body,resources,outstanding,knowledgeAt,snapshotDigest:epistemicHash({resources,outstanding}),...(exactEncoding?{quantityEncoding:'DECIMAL_OR_RATIONAL_V2' as const}:{})};return {...updated,ref:allocationRef('S5','allocation-problem',updated)};
 }
-async function currentPins(ctx:PeMutationContext,resources:AllocationResource[],client?:PoolClient):Promise<void>{
+type BeliefPinReadOptions=Parameters<typeof validateBeliefViewPin>[3];
+async function currentPins(ctx:PeMutationContext,resources:AllocationResource[],client?:PoolClient,
+  beliefOptions?:BeliefPinReadOptions):Promise<void>{
   const pins=new Map<string,AllocationResource['beliefPins'][number]>();
   for(const resource of resources){
     if(resource.tenantId!==ctx.auth.tenantId)throw denied();
@@ -49,7 +51,7 @@ async function currentPins(ctx:PeMutationContext,resources:AllocationResource[],
       pins.set(epistemicHash(consumerPin),consumerPin);
     }
   }
-  for(const pin of pins.values())if((await validateBeliefViewPin(ctx,pin,client)).status!=='CURRENT')
+  for(const pin of pins.values())if((await validateBeliefViewPin(ctx,pin,client,beliefOptions)).status!=='CURRENT')
     throw new AllocationContractError('STALE_INPUT','Resource source or rights witness is no longer current');
 }
 /** Preserve distinct original cuts even when resources share an S1 root. */
@@ -272,7 +274,7 @@ export async function readEnterpriseAllocationSettlement(ctx:PeMutationContext,i
  return immutableControl({allocationRef:input.allocationRef,consumption:use,reservation:issued.reservation,obligationRef:proof.obligationRef,event:event.event,receipt:event.receipt,costs:proof.costs,
   resourceEnvelopeRetained:true,releaseGranted:false,executionAuthorityGranted:false,qualification:'NATIVE_S5_SETTLEMENT_AND_MATCHED_PROTECTED_S6_READBACK_NO_COST_OR_RELEASE_AUTHORITY'});
 }
-async function validateAllocationState(ctx:PeMutationContext,value:unknown,client?:PoolClient){
+async function validateAllocationState(ctx:PeMutationContext,value:unknown,client?:PoolClient,beliefOptions?:BeliefPinReadOptions){
   const ref=ExperimentRefSchema.parse(value),issued=client?await readNumericEnterpriseAllocation(ctx,ref,client):await readEnterpriseAllocation(ctx,ref),reasons:string[]=[];
   try{await (await import('./confidential-computation/owner-consumer')).assertConfidentialAllocationCurrent(ctx,issued.problem,client);}
   catch{reasons.push('Y4_RECIPIENT_SOURCE_CONSENT_OR_RELEASE_NOT_CURRENT_EXPOSURE_RETAINED');}
@@ -283,9 +285,9 @@ async function validateAllocationState(ctx:PeMutationContext,value:unknown,clien
   const capability=issued.certificate.compute.usage.backend.capabilityLease as CapabilityUseLease|undefined;
   if(capability&&capability.mode!=='SHADOW')try{await recheckAllocationCapability(issued.problem,capability);}catch{reasons.push('S8_CAPABILITY_REVOKED_OR_CHANGED_ACCOUNTABLE_EXPOSURE_RETAINED');}
   const current=await readAllocationSnapshot(ctx,client);if(!sameAllocationRef(current.resources,issued.problem.resources))reasons.push('RESOURCE_REVISION_OR_RIGHTS_CHANGED');
-  try{await readCurrentPolicies(ctx,issued.problem.policies.map(policy=>policy.ref),client);}
+  try{await readCurrentPolicies(ctx,issued.problem.policies.map(policy=>policy.ref),client,beliefOptions);}
   catch{reasons.push('POLICY_MODEL_SOURCE_OR_RIGHTS_CHANGED');}
-  try{await currentPins(ctx,current.resources,client);const other=current.outstanding.filter(o=>!sameAllocationRef(o.reservationRef,issued.reservation?.ref)),check=verifyCanonicalAllocation(rebuilt(issued.problem,current.resources,other,new Date().toISOString()),issued.certificate.check.selectedPolicyIds);
+  try{await currentPins(ctx,current.resources,client,beliefOptions);const other=current.outstanding.filter(o=>!sameAllocationRef(o.reservationRef,issued.reservation?.ref)),check=verifyCanonicalAllocation(rebuilt(issued.problem,current.resources,other,new Date().toISOString()),issued.certificate.check.selectedPolicyIds);
     if(!check.feasible||!sameAllocationRef(check.envelopes,issued.certificate.check.envelopes))reasons.push(...check.reasons.length?check.reasons:['CURRENT_RESERVED_ENVELOPE_CHANGED']);}
   catch(e){reasons.push(e instanceof Error?e.message:'CURRENT_RESOURCE_CHECK_UNAVAILABLE');}
   if(reasons.length)await persistAllocationExperience(ctx,[prepareS5Experience(issued.problem.mandate,'INVALIDATION',ref.id,{reasons,reservationRef:issued.reservation?.ref??null,exposureRetained:true},[ref.id])],client);
@@ -294,10 +296,10 @@ async function validateAllocationState(ctx:PeMutationContext,value:unknown,clien
 }
 /** Return the original numeric S5 owner's single complete validation/readback.
  * This internal reader supplies no admission or execution authority. */
-export async function readValidatedNumericEnterpriseAllocation(ctx:PeMutationContext,value:unknown){
+export async function readValidatedNumericEnterpriseAllocation(ctx:PeMutationContext,value:unknown,beliefOptions?:BeliefPinReadOptions){
   const ref=ExperimentRefSchema.parse(value);
   if(ref.owner!=='S5'||ref.version!==S5_VERSION)throw denied();
-  return validateAllocationState(ctx,ref);
+  return validateAllocationState(ctx,ref,undefined,beliefOptions);
 }
 export async function validateEnterpriseAllocation(ctx:PeMutationContext,value:unknown,client?:PoolClient){
   const ref=ExperimentRefSchema.parse(value);
@@ -380,8 +382,10 @@ export async function settleEnterpriseAllocation(ctx:PeMutationContext,input:{al
 
 /** S5 owns whether its retained-liability accounting revision preserves the
  * original envelope. This does not grant spending, release or effect authority. */
-export async function assessEnterpriseAllocationContinuation(ctx:PeMutationContext,obligation:DurableObligation){
- const issued=await readEnterpriseAllocation(ctx,obligation.allocationRef),r=issued.reservation,use=issued.consumptions.find(u=>sameAllocationRef(u.ref,obligation.consumptionRef));
+export async function assessEnterpriseAllocationContinuation(ctx:PeMutationContext,obligation:DurableObligation,
+ issued:Awaited<ReturnType<typeof readNumericEnterpriseAllocation>>){
+ if(!sameAllocationRef(issued.certificate.ref,obligation.allocationRef))throw denied();
+ const r=issued.reservation,use=issued.consumptions.find(u=>sameAllocationRef(u.ref,obligation.consumptionRef));
  if(!r||r.revocationReason||r.status!=='UNKNOWN_OUTCOME'||r.revision!==obligation.preconditions.reservationRevision+1||!use||!['INTENDED_PENDING_S6','UNKNOWN_OUTCOME'].includes(use.status)||!sameAllocationRef(r.ref,obligation.reservationRef)||!sameAllocationRef(r.envelopes,obligation.resourceEnvelope)||!sameAllocationRef(use.envelope,obligation.resourceEnvelope)||use.effectRef?.id!==obligation.effectRef.id||use.effectRef?.contentDigest!==obligation.effectRef.semanticHash)throw denied();
  // A protected attempt changes the joint reservation once, not only its own
  // consumption. Untouched original siblings need the same S5 transition proof.

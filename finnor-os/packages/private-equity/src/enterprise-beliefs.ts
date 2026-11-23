@@ -207,7 +207,7 @@ export function assertEnterpriseBeliefViewPinSourceVisibility(ctx: PeMutationCon
       !Number.isFinite(Date.parse(pin.validAt)) || !Number.isFinite(Date.parse(pin.knowledgeAt)) ||
       !/^[a-f0-9]{64}$/.test(pin.dependencyDigest) || typeof pin.interpretationVersion !== "string" || !pin.interpretationVersion) throw unavailable();
     const view = await loadEnterpriseBeliefView(ctx, { root: pin.root as PeWorldRootRef, validAt: pin.validAt, knowledgeAt: pin.knowledgeAt },
-      { omitAuxiliaryTasks: true });
+      { omitAuxiliaryTasks: true, recordExperience: false });
     // Prior rights/interpretation identify the immutable witness, not today's grant.
     const dependencyDigest = epistemicHash({ dependencyRefs: view.experience.event.dependencyRefs, rightsRevision: pin.rightsRevision,
       interpretation: pin.interpretationVersion, coverage: view.coverage, sourceCuts: view.sourceCuts.map(({ knownThrough: _knownThrough, ...cut }) => cut) });
