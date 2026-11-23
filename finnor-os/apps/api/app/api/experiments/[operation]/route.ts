@@ -1,5 +1,10 @@
-import { PE_WORLD_ROOT_TYPES, PeDomainError, designEnterpriseExperiments, projectEnterpriseExperiment, validateEnterpriseExperiment } from "@finnor/private-equity";
-import { ExperimentContractError } from "@finnor/epistemic-runtime";
+import { PE_WORLD_ROOT_TYPES, PeDomainError } from "../../../../../../packages/private-equity/src/types";
+import {
+  designEnterpriseExperiments,
+  projectEnterpriseExperiment,
+  validateEnterpriseExperiment,
+} from "../../../../../../packages/private-equity/src/enterprise-experiments";
+import { ExperimentContractError } from "../../../../../../packages/epistemic-runtime/src/experiments";
 import type { ExperimentRealization } from "@finnor/shared-types";
 import { z } from "zod";
 import { errorResponse, requireContext } from "../../../../lib/auth";

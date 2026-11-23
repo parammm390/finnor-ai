@@ -1,5 +1,5 @@
 import { FinancialDocumentReviewRootSchema, type EmployeeConversationContext, type MemorySnapshot, type PeWorldRootRef, type TenantContext } from "@finnor/shared-types";
-import { PeDomainError } from "@finnor/private-equity";
+import { PeDomainError } from "../../private-equity/src/types";
 import { ensureSecretsLoaded } from "@finnor/security";
 import { resolveProviderForPurpose, type LLMChannel, type LLMProvider } from "./llm";
 import type { AnswerEnvelope } from "./fast-read-lane";

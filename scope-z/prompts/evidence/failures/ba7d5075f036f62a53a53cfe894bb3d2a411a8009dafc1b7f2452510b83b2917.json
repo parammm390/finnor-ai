@@ -1,0 +1,8 @@
+{
+  "error": "PackError: Z1: missing continuation restriction",
+  "operation": "self-check",
+  "originalEvidence": "Not repaired or erased; any staged bytes remain",
+  "productLockDigest": "61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf",
+  "schema": "finnor.project-z.authoring-failure.v1",
+  "state": "FAILED"
+}

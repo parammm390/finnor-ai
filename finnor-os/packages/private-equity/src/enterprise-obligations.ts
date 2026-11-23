@@ -6,12 +6,14 @@ import {cancelRun} from '@finnor/workflow-runtime/run-controls';
 import {canExerciseAuthorityTx} from '@finnor/authority';
 import type pg from 'pg';
 import type {DurableObligation,ExperimentRef,BusinessEffectSet} from '@finnor/shared-types';
-import {epistemicHash,immutableControl,ExperimentRefSchema} from '@finnor/epistemic-runtime';
+import { epistemicHash } from '../../epistemic-runtime/src/source-precedence';
+import { immutableControl } from '../../epistemic-runtime/src/control-contracts';
+import { ExperimentRefSchema } from '../../epistemic-runtime/src/experiments';
 import {compileContingentInterventionIntent} from '../../orchestration/src/compiler';
 import {compileGovernedRequestProposal} from '../../orchestration/src/request-compiler';
 import {ObligationOperationSchemas} from './obligation-contracts';
 import {readEnterpriseContingentHandoffPreparation,readEnterpriseContingentPolicy} from './enterprise-control';
-import {readEnterpriseAllocation,validateEnterpriseAllocation,assessEnterpriseAllocationContinuation} from './enterprise-allocation';
+import {readEnterpriseAllocation,readValidatedNumericEnterpriseAllocation,validateEnterpriseAllocation,assessEnterpriseAllocationContinuation} from './enterprise-allocation';
 import {PeDomainError,type PeMutationContext} from './types';
 import {enqueueOwnerDeliveryInTransaction} from '../../governed-execution/src/owner-delivery-store';
 import {readOwnerTransportReference,dispatchOwnerTransportRequest,readOwnerTransportExecutionHandoff} from '../../governed-execution/src/owner-transport';
@@ -29,7 +31,14 @@ export async function prepareEnterpriseElicitationHandoff(ctx:PeMutationContext,
 }
 const denied=()=>new PeDomainError('PE_ENTITY_NOT_FOUND','Permitted S6 obligation context is unavailable');
 const same=(a:unknown,b:unknown)=>epistemicHash(a)===epistemicHash(b);
-const authoritySourcePaths=()=>['enterprise-obligations.ts','enterprise-allocation.ts','enterprise-control.ts','enterprise-beliefs.ts','allocation-store.ts','obligation-contracts.ts'].map(name=>fileURLToPath(new URL(name,import.meta.url))).concat(fileURLToPath(new URL('../../../apps/api/app/api/obligations/[operation]/route.ts',import.meta.url)));
+export const enterpriseObligationAuthoritySourcePaths=()=>['enterprise-obligations.ts','enterprise-allocation.ts','enterprise-control.ts','enterprise-beliefs.ts','allocation-store.ts','obligation-contracts.ts',
+ 'real-world-service/consumer.ts','real-world-service/store.ts','real-world-service/boundaries.ts',
+ 'real-world-service/contracts.ts','real-world-service/checker.ts','real-world-service/projection.ts',
+ 'real-world-service/participants.ts','real-world-service/identity.ts',
+ 'demand-to-business/consumer.ts','demand-to-business/store.ts','demand-to-business/boundaries.ts',
+ 'demand-to-business/contracts.ts','demand-to-business/checker.ts','demand-to-business/projection.ts',
+ 'demand-to-business/participants.ts','demand-to-business/identity.ts'].map(name=>fileURLToPath(new URL(name,import.meta.url))).concat(fileURLToPath(new URL('../../../apps/api/app/api/obligations/[operation]/route.ts',import.meta.url)));
+const authoritySourcePaths=enterpriseObligationAuthoritySourcePaths;
 async function signOwnerAssessment(body:Record<string,unknown>){
  const signerPath=process.env.FINNOR_S6_CURRENT_OWNER_SIGNER;if(!signerPath)throw new LedgerFault(503,'CURRENT_OWNER_SIGNER_UNAVAILABLE');const key=createPrivateKey(await brokerPrivateFile(signerPath));if(key.asymmetricKeyType!=='ed25519')throw new LedgerFault(503,'CURRENT_OWNER_SIGNER_INVALID');
  return {...body,signature:sign(null,Buffer.from(canonical(body)),key).toString('base64')};
@@ -104,7 +113,7 @@ async function prepareOwnedObligation(ctx:PeMutationContext,input:unknown,workLi
 }
 async function obligationPreparationContext(ctx:PeMutationContext,refs:ReturnType<typeof parsedInput>){
  const preparation=await readEnterpriseContingentHandoffPreparation(ctx,refs.preparationRef),handoff=preparation.handoff,policy=await readEnterpriseContingentPolicy(ctx,handoff.policyRef);
- const issued=await readEnterpriseAllocation(ctx,refs.allocationRef),validation=await validateEnterpriseAllocation(ctx,refs.allocationRef),consumption=issued.consumptions.find(c=>same(c.ref,refs.consumptionRef));
+ const {issued,validation}=await readValidatedNumericEnterpriseAllocation(ctx,refs.allocationRef),consumption=issued.consumptions.find(c=>same(c.ref,refs.consumptionRef));
  return {preparation,handoff,policy,issued,validation,consumption};
 }
 function checkedObligationPreparation(context:Awaited<ReturnType<typeof obligationPreparationContext>>,refs:ReturnType<typeof parsedInput>){
@@ -213,13 +222,38 @@ export async function assessEnterpriseDurableObligationDispatch(ctx:PeMutationCo
  if(!obligation.intervention.channels.some(channel=>parsed.memberId===`request-member:${epistemicHash([obligation.ref,channel.exposureId])}`))throw denied();
  const reasons:string[]=[];
  let reservationRevision=obligation.preconditions.reservationRevision,reservationAttemptEventId:string|null=null;
- if(parsed.delivery&&'kind' in parsed.delivery){
-  try{const issued=await readEnterpriseAllocation(ctx,obligation.allocationRef);if(issued.reservation?.revision!==reservationRevision){const retained=await assessEnterpriseAllocationContinuation(ctx,obligation);reservationRevision=retained.reservationRevision;reservationAttemptEventId=retained.attemptEventId;}}
-  catch{reasons.push('S5_RETAINED_MEMBER_CONTINUATION_NOT_CURRENT');}
- }
+ const checkReservationContinuation=async(issued:Awaited<ReturnType<typeof readEnterpriseAllocation>>)=>{
+  if(!parsed.delivery||issued.reservation?.revision===reservationRevision)return;
+  try{
+   const retained=await assessEnterpriseAllocationContinuation(ctx,obligation,issued);
+   reservationRevision=retained.reservationRevision;reservationAttemptEventId=retained.attemptEventId;
+  }catch{reasons.push('S5_RETAINED_MEMBER_CONTINUATION_NOT_CURRENT');}
+ };
  let physicalClaimExpiresAt=Number.POSITIVE_INFINITY;
- try{const policy=await readEnterpriseContingentPolicy(ctx,obligation.policyRef);if(!same(policy.mandateRef,obligation.mandateRef)||policy.bindings.rightsRef!==obligation.rightsRef)reasons.push('POLICY_MANDATE_OR_RIGHTS_CHANGED');}catch{reasons.push('POLICY_OR_S1_SOURCE_RIGHTS_CHANGED');}
- try{const validation=await validateEnterpriseAllocation(ctx,obligation.allocationRef);if(validation.status!=='CURRENT')reasons.push(...validation.reasons);}catch{reasons.push('ALLOCATION_CURRENT_CONTEXT_UNAVAILABLE');}
+ let growthOwned=false;
+ try{const growth=await (await import('./demand-to-business/consumer')).growthDispatchAssessment(ctx,obligation,parsed.requestRef);
+  growthOwned=growth.handled;reasons.push(...growth.reasons);}
+ catch{reasons.push('W4_DEPENDENCY_CURRENTNESS_UNAVAILABLE');}
+ if(!growthOwned){
+  try{reasons.push(...await (await import('./real-world-service/consumer')).serviceDispatchReasons(ctx,obligation,parsed.requestRef));}
+  catch{reasons.push('W3_DEPENDENCY_CURRENTNESS_UNAVAILABLE');}
+ }
+ if(obligation.allocationRef.version==='s5-joint-finite-v1'){
+  try{
+   // Each nonce revalidates the exact originals. The protected assessment records
+   // the result without publishing another full S1 view for each dependent owner.
+   const {issued,validation}=await readValidatedNumericEnterpriseAllocation(ctx,obligation.allocationRef,{recordExperience:false});
+   await checkReservationContinuation(issued);
+   if(validation.status!=='CURRENT')reasons.push(...validation.reasons);
+   const policy=issued.problem.policies.find(policy=>same(policy.ref,obligation.policyRef));
+   if(!policy||!same(policy.mandateRef,obligation.mandateRef)||policy.bindings.rightsRef!==obligation.rightsRef)reasons.push('POLICY_MANDATE_OR_RIGHTS_CHANGED');
+  }catch{reasons.push('ALLOCATION_CURRENT_CONTEXT_UNAVAILABLE');}
+ }else{
+  if(parsed.delivery)try{await checkReservationContinuation(await readEnterpriseAllocation(ctx,obligation.allocationRef));}
+  catch{reasons.push('S5_RETAINED_MEMBER_CONTINUATION_NOT_CURRENT');}
+  try{const policy=await readEnterpriseContingentPolicy(ctx,obligation.policyRef);if(!same(policy.mandateRef,obligation.mandateRef)||policy.bindings.rightsRef!==obligation.rightsRef)reasons.push('POLICY_MANDATE_OR_RIGHTS_CHANGED');}catch{reasons.push('POLICY_OR_S1_SOURCE_RIGHTS_CHANGED');}
+  try{const validation=await validateEnterpriseAllocation(ctx,obligation.allocationRef);if(validation.status!=='CURRENT')reasons.push(...validation.reasons);}catch{reasons.push('ALLOCATION_CURRENT_CONTEXT_UNAVAILABLE');}
+ }
  if(Date.now()<Date.parse(obligation.deadline.businessStartAt)||Date.now()>=Date.parse(obligation.deadline.businessPeriodEndAt)||Date.now()>=Date.parse(obligation.deadline.authorityExpiresAt))reasons.push('S4_TIME_OR_AUTHORITY_EXPIRED');
  await withTenantTransaction(ctx.auth.tenantId,{userId:actor(ctx)},async(_db,c)=>{
   await c.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`s5-portfolio:${ctx.auth.tenantId}`]);await authorize(ctx,c);

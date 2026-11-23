@@ -1,0 +1,154 @@
+name: W3 cold installed and headed mounted qualification
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  qualify:
+    name: "Verify cold W3 installation and browser"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 125
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+      NEXT_TELEMETRY_DISABLED: "1"
+      AUTH_DEV_BYPASS: "0"
+    steps:
+      - name: Create private declared asset boundaries
+        timeout-minutes: 1
+        run: |
+          set -euo pipefail
+          umask 077
+          home="$RUNNER_TEMP/w3-qualification-home"
+          assets="$RUNNER_TEMP/w3-qualification-assets"
+          install -d -m 700 "$home" "$assets/uv-cache" "$assets/python" "$assets/python-bin" "$assets/npm" "$assets/browsers"
+          {
+            printf 'HOME=%s\n' "$home"
+            printf 'FINNOR_W3_UV=%s\n' "$assets/uv"
+            printf 'UV_CACHE_DIR=%s\n' "$assets/uv-cache"
+            printf 'UV_PYTHON_INSTALL_DIR=%s\n' "$assets/python"
+            printf 'UV_PYTHON_BIN_DIR=%s\n' "$assets/python-bin"
+            printf 'W3_NPM_CACHE=%s\n' "$assets/npm"
+            printf 'npm_config_cache=%s\n' "$assets/npm"
+            printf 'PLAYWRIGHT_BROWSERS_PATH=%s\n' "$assets/browsers"
+            printf 'W3_DONOR_DENIALS=%s\n' "$RUNNER_TEMP/w3-qualification-donor-denials.json"
+          } >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        timeout-minutes: 5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        timeout-minutes: 5
+        with:
+          node-version: 22.22.3
+      - name: Acquire the exact root lock population and package cache
+        timeout-minutes: 5
+        run: npm ci --no-audit --no-fund
+      - name: Acquire the exact backend lock population and native packages
+        timeout-minutes: 5
+        run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Acquire both exact scientific populations for offline reconstruction
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          umask 077
+          w3_uv_container="$(docker create ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea099626a4adb02acbac4c69920fe9d278f82)"
+          trap 'docker rm "$w3_uv_container" >/dev/null' EXIT
+          docker cp "$w3_uv_container:/uv" "$FINNOR_W3_UV"
+          "$FINNOR_W3_UV" python install 3.11.15 3.12.13
+          "$FINNOR_W3_UV" venv --python 3.11.15 "$RUNNER_TEMP/w3-qualification-assets/s3"
+          "$FINNOR_W3_UV" venv --python 3.12.13 "$RUNNER_TEMP/w3-qualification-assets/s5"
+          "$FINNOR_W3_UV" pip sync --link-mode copy --only-binary :all: --python "$RUNNER_TEMP/w3-qualification-assets/s3/bin/python" finnor-os/scripts/postz/w3/requirements-s3.lock
+          "$FINNOR_W3_UV" pip sync --link-mode copy --only-binary :all: --python "$RUNNER_TEMP/w3-qualification-assets/s5/bin/python" finnor-os/packages/epistemic-runtime/src/requirements-s5.txt
+      - name: Declare existing donor roots without authentication material
+        timeout-minutes: 1
+        run: |
+          set -euo pipefail
+          umask 077
+          node - <<'NODE'
+          const { writeFileSync, realpathSync, statSync } = require("node:fs");
+          const { join } = require("node:path");
+          const donor = realpathSync(process.env.GITHUB_WORKSPACE);
+          const assets = join(process.env.RUNNER_TEMP, "w3-qualification-assets");
+          const entries = [
+            { root: donor, probe: join(donor, "README.md") },
+            { root: join(assets, "s3"), probe: join(assets, "s3/lib/python3.11/site-packages/numpy/__init__.py") },
+            { root: join(assets, "s5"), probe: join(assets, "s5/lib/python3.12/site-packages/numpy/__init__.py") },
+          ];
+          for (const entry of entries) {
+            entry.root = realpathSync(entry.root);
+            if (!statSync(entry.probe).isFile()) throw Error("W3_EXISTING_DONOR_PROBE_REQUIRED");
+          }
+          writeFileSync(process.env.W3_DONOR_DENIALS, JSON.stringify(entries, null, 2) + "\n", { flag: "wx", mode: 0o600 });
+          NODE
+      - name: Seal the exact clean committed source and finite builder preimages
+        timeout-minutes: 4
+        working-directory: finnor-os
+        run: |
+          set -euo pipefail
+          umask 077
+          timeout --signal=TERM --kill-after=30s 180s node scripts/postz/w3/seal.mjs --output "$RUNNER_TEMP/w3-qualification-packet"
+      - name: Acquire the locked headed Chromium and verify visible launch
+        timeout-minutes: 10
+        working-directory: finnor-os
+        run: |
+          set -euo pipefail
+          node node_modules/playwright/cli.js install chromium
+          probe_headed() {
+            xvfb-run -a node --input-type=module -e '
+              import { chromium } from "playwright";
+              const browser = await chromium.launch({ headless: false, timeout: 20000 });
+              await browser.close();
+            '
+          }
+          if ! command -v xvfb-run || ! probe_headed; then
+            node node_modules/playwright/cli.js install-deps chromium
+            probe_headed
+          fi
+      - name: Reconstruct offline and execute confined installed and headed mounted owners
+        timeout-minutes: 91
+        working-directory: finnor-os
+        run: |
+          set -euo pipefail
+          umask 077
+          timeout --signal=TERM --kill-after=30s 5400s node scripts/postz/w3/reconstruct.mjs --source "$RUNNER_TEMP/w3-qualification-packet" --output "$RUNNER_TEMP/w3-qualification-reconstruction"
+          node - <<'NODE'
+          const assert = require("node:assert/strict");
+          const { readFileSync } = require("node:fs");
+          const { join } = require("node:path");
+          const report = JSON.parse(readFileSync(join(process.env.RUNNER_TEMP, "w3-qualification-reconstruction/evidence/report.json"), "utf8"));
+          assert.equal(report.status, "PASS_CONTROLLED_INSTALLED_NATIVE_AND_MOUNTED_RECONSTRUCTION");
+          assert.equal(report.admitted, false);
+          assert.equal(report.productionActive, false);
+          assert.equal(report.fieldValidated, false);
+          NODE
+      - name: Check exact committed source preservation
+        if: ${{ always() }}
+        timeout-minutes: 1
+        run: |
+          set -euo pipefail
+          git diff --exit-code
+          test -z "$(git ls-files --others --exclude-standard)"
+      - name: Retain only controlled qualification identities and evidence
+        if: ${{ always() }}
+        timeout-minutes: 5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: w3-cold-installed-mounted-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/w3-qualification-packet/source.json
+            ${{ runner.temp }}/w3-qualification-reconstruction/evidence/report.json
+            ${{ runner.temp }}/w3-qualification-reconstruction/evidence/[0-9][0-9]-*.log
+            ${{ runner.temp }}/w3-qualification-reconstruction/evidence/*-typecheck/report.json
+            ${{ runner.temp }}/w3-qualification-reconstruction/evidence/confined-installed/command-result.json
+            ${{ runner.temp }}/w3-qualification-reconstruction/evidence/confined-installed/confinement/confinement.json
+            ${{ runner.temp }}/w3-qualification-reconstruction/evidence/confined-installed/native/result.json
+            ${{ runner.temp }}/w3-qualification-reconstruction/evidence/confined-installed/native/cleanup.json
+            ${{ runner.temp }}/w3-qualification-reconstruction/evidence/confined-installed/native/source-cut.json
+            ${{ runner.temp }}/w3-qualification-reconstruction/evidence/confined-installed/native/canonical-actor-roles.json
+            ${{ runner.temp }}/w3-qualification-reconstruction/evidence/confined-installed/native/terminal-failure.json
+            ${{ runner.temp }}/w3-qualification-reconstruction/evidence/confined-installed/native/cases/
+            ${{ runner.temp }}/w3-qualification-reconstruction/evidence/confined-installed/native/mounted/
+            ${{ runner.temp }}/w3-qualification-reconstruction/installation/finnor-os/w3-development-installation.json
+          if-no-files-found: error
+          retention-days: 7

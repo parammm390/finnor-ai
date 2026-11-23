@@ -25,6 +25,8 @@ const nativeRequire=createRequire(import.meta.url);
 interface Owner { tokenHash:string; owner:string; tenantId:string; principalId:string; rightsRefs:string[]; append:boolean; read:boolean; sealedAppend:boolean; sealedRead:boolean; protectedExecution?:boolean; dispatch?:boolean }
 interface Reference { id:string; owner:string; version:string; contentDigest:string; content:Json;digestEncoding?:'NATIVE_UTF8_SHA256_V1' }
 interface Receipt extends ObjectValue { schema:string; kind:'EVENT'|'REFERENCE'; identity:string; tenantId:string; principalId:string; semanticOwner:string; rightsRefs:string[]; episodeId:string|null; sequence:number; previousCheckpoint:string|null; checkpointDigest:string; signature:string; sealed:boolean; contentFile:string; storedDigest:string; requestDigest:string; references:Array<Omit<Reference,'content'>> }
+type ObligationHistory=Array<{event:ObjectValue;receipt:Receipt}>;
+const OBLIGATION_HISTORY_LIMIT=512;
 const preparedTypes:Record<string,string[]>={
  S1:['BELIEF_VIEW','BELIEF_INVALIDATION'],
  S2:['PROPOSAL','DESIGN_REJECTION','SELECTION','ALLOCATION_REFERENCE','COLLECTION','STOPPING','DEVIATION','COST','CORRECTION','INVALIDATION','COMPUTE'],
@@ -36,22 +38,40 @@ const preparedTypes:Record<string,string[]>={
 };
 interface State { receipt:Receipt }
 interface Configuration { policy:ObjectValue; release:ObjectValue; signerPath:string; protectedDirectory:string; contentDirectory:string; sealedEncryptionKeyPath?:string; dispatchConfigPath?:string }
-async function safeRead(path:string,secret=false):Promise<Buffer> {
+async function withStoredFile<T>(path:string,secret:boolean,
+ scan:(fd:FileHandle,size:number,limit:number)=>Promise<T>):Promise<T>{
  // Inspect and read the same descriptor. Ordinary content can be replaced or
  // grown concurrently; never follow a substituted symlink or allocate its size.
  const fd=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW|constants.O_NONBLOCK);
  try{
   const f=await fd.stat(),limit=path.endsWith('commitments.jsonl')?256*1024*1024:8*1024*1024;
   if(f.size>limit)deny(503,'STORED_BYTE_LIMIT');if(!f.isFile()||(secret&&((f.mode&0o077)!==0||f.uid!==process.getuid?.())))deny(503,'UNSAFE_PROTECTED_FILE');
+  return await scan(fd,f.size,limit);
+ }finally{await fd.close();}
+}
+async function safeRead(path:string,secret=false):Promise<Buffer>{
+ return withStoredFile(path,secret,async(fd,size,limit)=>{
   const chunks:Buffer[]=[];let total=0;
   for(;;){
-   // The initial size only sizes buffers, never establishes EOF. Still read
-   // growth through the original byte bound, then require an actual EOF read.
-   const remaining=f.size-total,chunk=Buffer.allocUnsafe(Math.min(65536,remaining>=0?remaining+1:65536,limit+1-total));
-   const read=await fd.read(chunk,0,chunk.length,null);if(!read.bytesRead)break;total+=read.bytesRead;if(total>limit)deny(503,'STORED_BYTE_LIMIT');chunks.push(chunk.subarray(0,read.bytesRead));
+   // The initial size only sizes buffers, never establishes EOF.
+   const remaining=size-total,chunk=Buffer.allocUnsafe(Math.min(65536,remaining>=0?remaining+1:65536,limit+1-total));
+   const {bytesRead}=await fd.read(chunk,0,chunk.length,null);
+   if(!bytesRead)return Buffer.concat(chunks,total);
+   total+=bytesRead;if(total>limit)deny(503,'STORED_BYTE_LIMIT');
+   chunks.push(chunk.subarray(0,bytesRead));
   }
-  return Buffer.concat(chunks,total);
- }finally{await fd.close();}
+ });
+}
+async function storedDigest(path:string,buffer:Buffer):Promise<string>{
+ return withStoredFile(path,false,async(fd,_size,limit)=>{
+  const digest=createHash('sha256');let total=0;
+  for(;;){
+   const {bytesRead}=await fd.read(buffer,0,Math.min(buffer.length,limit+1-total),null);
+   if(!bytesRead)return digest.digest('hex');
+   total+=bytesRead;if(total>limit)deny(503,'STORED_BYTE_LIMIT');
+   digest.update(buffer.subarray(0,bytesRead));
+  }
+ });
 }
 async function artifactDigest(path:string){
  const fd=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW|constants.O_NONBLOCK);
@@ -170,10 +190,17 @@ export class ExperienceLedger {
  private signed<T extends ObjectValue>(body:T):T&{signature:string}{return {...body,signature:sign(null,Buffer.from(canonical(body)),this.privateKey).toString('base64')};}
  private verifiedSignature(value:ObjectValue){const {signature,...body}=value;if(!verify(null,Buffer.from(canonical(body)),this.publicKey,Buffer.from(text(signature),'base64')))deny(503,'COMMITMENT_SIGNATURE_INVALID');return body;}
  private async persistAnchor(){this.anchor=this.signed({schema:'finnor.s6.ledger-head.v1',sequence:this.last?.sequence??0,checkpointDigest:this.last?.checkpointDigest??null});await atomic(this.anchorPath,canonical(this.anchor));}
- private async verifiedContentBytes(receipt:Receipt):Promise<Buffer>{
+ private committedContentPath(receipt:Receipt):string{
   if(receipt.contentFile!==bytesHash(canonical([receipt.kind,receipt.tenantId,receipt.identity]))+'.json')deny(503,'CONTENT_PATH_INVALID');
-  const bytes=await safeRead(join(this.config.contentDirectory,receipt.contentFile));if(bytesHash(bytes)!==receipt.storedDigest)deny(503,'COMMITTED_CONTENT_CHANGED');
+  return join(this.config.contentDirectory,receipt.contentFile);
+ }
+ private async verifiedContentBytes(receipt:Receipt):Promise<Buffer>{
+  const bytes=await safeRead(this.committedContentPath(receipt));
+  if(bytesHash(bytes)!==receipt.storedDigest)deny(503,'COMMITTED_CONTENT_CHANGED');
   return bytes;
+ }
+ private async verifyContentDigest(receipt:Receipt,buffer:Buffer):Promise<void>{
+  if(await storedDigest(this.committedContentPath(receipt),buffer)!==receipt.storedDigest)deny(503,'COMMITTED_CONTENT_CHANGED');
  }
  private async loadContent(receipt:Receipt):Promise<ObjectValue>{
   const bytes=await this.verifiedContentBytes(receipt);
@@ -240,8 +267,10 @@ export class ExperienceLedger {
   // Identical SHA256-bound bytes retain that verified preimage; decoding all
   // historical requests again adds no acceptance condition. Reads decode again.
   const states=[...this.states.values()];
-  for(let offset=0;offset<states.length;offset+=8){
-   const checked=await Promise.allSettled(states.slice(offset,offset+8).map(state=>this.verifiedContentBytes(state.receipt)));
+  const buffers=Array.from({length:Math.min(states.length,8)},()=>Buffer.allocUnsafe(1024*1024));
+  for(let offset=0;offset<states.length;offset+=buffers.length){
+   const checked=await Promise.allSettled(states.slice(offset,offset+buffers.length)
+    .map((state,index)=>this.verifyContentDigest(state.receipt,buffers[index]!)));
    for(const result of checked)if(result.status==='rejected')throw result.reason;
   }
   await this.ensureWitness();}
@@ -333,14 +362,23 @@ export class ExperienceLedger {
   });
  }
  releaseIdentity(){return {releaseId:this.config.release.releaseId,verifierDigest:this.verifierDigest,policyDigest:this.policyDigest,sourceDigests:this.config.release.sourceDigests,runtime:this.config.release.runtime,domain:this.config.policy.domain};}
- private async collectObligationHistory(owner:Owner,obligationId:string){
-   const result:Array<{event:ObjectValue;receipt:Receipt}>=[];
+ private async collectObligationHistories(owner:Owner,obligationIds:readonly string[]){
+   const histories=new Map<string,ObligationHistory>(obligationIds.map(id=>[id,[]]));
+   let pending=histories.size;
    for(const state of this.states.values()){
     const receipt=state.receipt;if(receipt.kind!=='EVENT'||receipt.tenantId!==owner.tenantId||receipt.principalId!==owner.principalId||receipt.semanticOwner!=='S6'||receipt.protectedExecution!==true||receipt.sealed&&!owner.sealedRead||receipt.rightsRefs.some(r=>!owner.rightsRefs.includes(r)))continue;
     const event=object((await this.loadContent(receipt)).event);
-    if(event.detail?.schema!=='finnor.s6.protected-execution.v1'||event.detail.obligationRef?.id!==obligationId)continue;
-    result.push({event,receipt});if(result.length>512)deny(429,'OBLIGATION_HISTORY_BOUND');
+    if(event.detail?.schema!=='finnor.s6.protected-execution.v1')continue;
+    const history=histories.get(event.detail.obligationRef?.id);
+    if(!history||history.length>OBLIGATION_HISTORY_LIMIT)continue;
+    history.push({event,receipt});
+    if(history.length>OBLIGATION_HISTORY_LIMIT&&--pending===0)break;
    }
+   return histories;
+ }
+ private async collectObligationHistory(owner:Owner,obligationId:string,collection=this.collectObligationHistories(owner,[obligationId])){
+   const result=(await collection).get(obligationId)??deny(503,'OBLIGATION_HISTORY_UNAVAILABLE');
+   if(result.length>OBLIGATION_HISTORY_LIMIT)deny(429,'OBLIGATION_HISTORY_BOUND');
    return result.sort((a,b)=>a.receipt.sequence-b.receipt.sequence);
  }
  /** Projection over authenticated accepted history, not an additional effect ledger. */
@@ -350,17 +388,40 @@ export class ExperienceLedger {
  }
  /** Read-only S6-owned contract for future semantic consumers. Its signature
   * authenticates accepted bytes and access qualification, never attribution. */
+ private assertHandoffReader(owner:Owner){
+  if(!owner.read||!['S6','S7','S8'].includes(owner.owner)||owner.owner!=='S6'&&(owner.append||owner.protectedExecution||owner.dispatch||owner.sealedAppend))deny(403,'CONSUMER_HANDOFF_REQUIRES_ATTENUATED_READER');
+ }
  async readExecutionHandoff(owner:Owner,obligationId:string){
-  if(!owner.read||!['S6','S7','S8'].includes(owner.owner)||owner.owner!=='S6'&&(owner.append||owner.protectedExecution||owner.dispatch||owner.sealedAppend))deny(403,'CONSUMER_HANDOFF_REQUIRES_ATTENUATED_READER');text(obligationId);
+  this.assertHandoffReader(owner);text(obligationId);
+  return this.serialized(async()=>{await this.integrity();return this.executionHandoffAtHead(owner,obligationId);});
+ }
+ async readExecutionHandoffs(owner:Owner,input:unknown){
+  this.assertHandoffReader(owner);
+  const request=object(input);exactKeys(request,['obligationIds']);
+  const ids=list(request.obligationIds,8).map(text);
+  if(!ids.length||new Set(ids).size!==ids.length)deny(400,'HANDOFF_BATCH_IDENTITIES_INVALID');
   return this.serialized(async()=>{
-   await this.integrity();const accepted=this.refs.get(refKey(owner.tenantId,obligationId));
+   await this.integrity();
+   let collection:ReturnType<ExperienceLedger['collectObligationHistories']>|undefined;
+   const readHistory=(id:string)=>this.collectObligationHistory(owner,id,collection??=this.collectObligationHistories(owner,ids));
+   const results=[];
+   for(const id of ids){
+    try{results.push({id,...await this.executionHandoffAtHead(owner,id,readHistory)});}
+    catch(error){if(!(error instanceof LedgerFault)||error.status>=500)throw error;results.push({id,error:error.code});}
+   }
+   if(Buffer.byteLength(JSON.stringify({results}))>8*1024*1024)deny(413,'HANDOFF_BATCH_BYTE_BOUND');
+   return {results};
+  });
+ }
+ private async executionHandoffAtHead(owner:Owner,obligationId:string,readHistory=(id:string)=>this.collectObligationHistory(owner,id)){
+   const accepted=this.refs.get(refKey(owner.tenantId,obligationId));
    if(!accepted||accepted.reference.owner!=='S6'||accepted.receipt.principalId!==owner.principalId)deny(404,'OBLIGATION_HANDOFF_NOT_FOUND');
    if(accepted.receipt.sealed&&!owner.sealedRead||accepted.receipt.rightsRefs.some(r=>!owner.rightsRefs.includes(r)))deny(403,'EVALUATOR_OR_RIGHTS_NOT_AUTHORIZED');
    const content=await this.loadContent(accepted.receipt),reference=[content.reference,...list(content.relatedReferences??[],255)].find(r=>r?.id===obligationId);
    if(!reference||referencePreimageDigest(reference)!==accepted.reference.contentDigest)deny(503,'OBLIGATION_HANDOFF_PREIMAGE_INVALID');
    const obligation={...reference.content,ref:accepted.reference};delete obligation.ref.content;
    if(obligation.tenantId!==owner.tenantId||obligation.principalId!==owner.principalId||!owner.rightsRefs.includes(obligation.rightsRef))deny(403,'HANDOFF_OBLIGATION_SCOPE_INVALID');
-   const history=await this.collectObligationHistory(owner,obligationId),intent=history.find(row=>row.event.type==='INTENT');
+   const history=await readHistory(obligationId),intent=history.find(row=>row.event.type==='INTENT');
    const refs=[obligation.ref,obligation.mandateRef,obligation.policyRef,obligation.decisionRef,obligation.allocationRef,obligation.reservationRef,obligation.consumptionRef,obligation.interventionRef,intent?.event.detail.requestRef].filter(Boolean).map(ref=>{
     const original=this.refs.get(refKey(owner.tenantId,ref.id));
     return original&&!original.receipt.sealed&&original.receipt.rightsRefs.every(r=>owner.rightsRefs.includes(r))?{reference:original.reference,receipt:original.receipt}:{reference:ref,receipt:null,qualification:'OWNER_PREIMAGE_OR_AUTHORIZED_ACCESS_PENDING'};
@@ -368,6 +429,5 @@ export class ExperienceLedger {
    const handoff={schema:'finnor.s6.consumer-handoff.v1',semanticOwner:'S6',version:'s6-consumer-handoff-v1',consumer:{semanticOwner:owner.owner,tenantId:owner.tenantId,principalId:owner.principalId,rightsRefs:owner.rightsRefs,sealedRead:owner.sealedRead,appendAuthorityGranted:false},obligation,obligationReceipt:accepted.receipt,request:intent?.event.detail.request??null,methodAdmissions:intent?.event.detail.request?.admissions??[],executorContract:s6AdapterContract('CONDITIONAL_JSON_RECORD_V1'),history,attempts:history.filter(row=>row.event.type==='ATTEMPT'),exposure:history.filter(row=>['ATTEMPT','ACKNOWLEDGMENT'].includes(row.event.type)),observations:history.filter(row=>row.event.type==='OBSERVATION'),settlements:history.filter(row=>row.event.type==='VERIFICATION'),costs:history.map(row=>({eventId:row.event.eventId,costs:row.event.detail.costs,funding:row.event.detail.funding??null})),references:refs,checkpoint:{sequence:this.last?.sequence??0,checkpointDigest:this.last?.checkpointDigest??null},release:this.releaseIdentity(),witness:this.witnessedHead??null,evaluatorAccess:{sealedContentIncluded:owner.sealedRead,independentReleaseEstablished:false},horizons:{accepted:history.map(row=>({eventId:row.event.eventId,horizon:row.event.horizon})),futureH1H2Attribution:'NOT_ESTABLISHED_BY_S6_TRANSPORT'},attributionGranted:false,resourceReleaseGranted:false,executionAuthorityGranted:false,knowledgeAt:new Date().toISOString()};
    if(Buffer.byteLength(canonical(handoff))>8*1024*1024)deny(413,'CONSUMER_HANDOFF_BYTE_BOUND');
    return {handoff,signature:this.signed(handoff).signature};
-  });
  }
 }

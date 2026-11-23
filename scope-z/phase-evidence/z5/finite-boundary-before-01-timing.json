@@ -1,0 +1,46 @@
+{
+  "actualExit": 1,
+  "authActions": 0,
+  "command": [
+    "/usr/bin/flock",
+    "-w",
+    "240",
+    "/home/factory-user/repos/finnor-z-shared-heavy.lock",
+    "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+    "--experimental-strip-types",
+    "--max-old-space-size=384",
+    "/home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/finite-boundary-e2e.mjs",
+    "/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/finite-boundary-before-01"
+  ],
+  "commitAttempts": 0,
+  "databaseActions": 0,
+  "driverSha256": "d36f4f958ae9bed9a882c7cce6f7e6564715308cc66ad377842827ccdcdfba6a",
+  "failureModelSha256": "b6ff91699ae233986648303fbd559acdc53d2abab4f9080ae70c695e3e1068cf",
+  "human": null,
+  "listeners": 0,
+  "log": "/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/finite-boundary-before-01.log",
+  "logSha256": "46f0b0978df13ebb604ca14fd8f271737fda85d3a69724fcc01dac748b86cec8",
+  "maxSingleWaitedDescendantRssBytesNotCombinedPeak": 523390976,
+  "money": null,
+  "originalGuards": {
+    "availableMemoryBeforeLockBytes": 6649589760,
+    "graphAndInstallationNotInvoked": true,
+    "graphMemoryFloorBytes": 6442450944,
+    "guardsLowered": false,
+    "installFreeSpaceFloorBytes": 8589934592,
+    "processMemoryFloorBytes": 4294967296
+  },
+  "preEditPins": {
+    "finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/checker.py": "f30a37f198cda1cb72fecab5b1a17846900e3db623326953a6865b21debc6887",
+    "finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/kernel.ts": "d663a2505f06c338922a1018c7026152fd74ee392eb3a903c19bf7346b9b4de5",
+    "scope-z/phase-evidence/z5/recovery-e2e-01/journal.json": "35b1edeff9cb49f95e2994f28f55866f3bd9422b865b9dbc458b8276f534ae0f"
+  },
+  "provider": null,
+  "reviewedIndexRowsSha256": "aa9065d56dc1a823daa319e5c3e7315283be2078014e3a2490c3b468fb46ea07",
+  "scope": "PRE_CORRECTION_ACTUAL_PROCESS_REPLAY",
+  "sourceHead": "9f3edfd3b4c6758832c53139da0773218062191e",
+  "timedOut": false,
+  "waitedDescendantSystemSeconds": 0.612262,
+  "waitedDescendantUserSeconds": 1.6656149999999998,
+  "wallMsIncludingLock": 53570.726821999415
+}

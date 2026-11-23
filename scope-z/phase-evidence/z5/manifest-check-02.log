@@ -1,0 +1,103 @@
+{"schema":"finnor.z5.explicit-engineering-tooling.v1","pools":["/home/factory-user/repos/finnor-z-coordinator","/home/factory-user/repos/finnor-z-coordinator/finnor-os"],"borrowedThirdPartyTooling":[],"borrowedProjectSources":0,"installedZ5Proof":false}
+node:internal/errors:983
+  const err = new Error(message);
+              ^
+
+Error: Command failed: /home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node --max-old-space-size=1024 /home/factory-user/repos/finnor-z5/scripts/centropy/read-canonical-planner.mjs
+{"schema":"finnor.z5.explicit-engineering-tooling.v1","pools":["/home/factory-user/repos/finnor-z-coordinator","/home/factory-user/repos/finnor-z-coordinator/finnor-os"],"borrowedThirdPartyTooling":["@aws-sdk/client-bedrock-runtime","@aws-sdk/client-secrets-manager","@aws-sdk/client-sts","@getzep/zep-cloud","@modelcontextprotocol/sdk/client/index.js","@modelcontextprotocol/sdk/client/streamableHttp.js","@sentry/node","@supabase/supabase-js","decimal.js","drizzle-orm","drizzle-orm/node-postgres","drizzle-orm/pg-core","fs-ext","groq-sdk","ioredis","nodemailer","pg","pino","playwright-core","saxes","steel-sdk","tsx/cjs/api","typescript","zod","zod-to-json-schema"],"borrowedProjectSources":0,"installedZ5Proof":false}
+node:internal/modules/cjs/loader:1430
+  const err = new Error(message);
+              ^
+
+Error: Cannot find module 'typescript'
+Require stack:
+- /home/factory-user/repos/finnor-z5/finnor-os/packages/private-equity/src/deliberation/module.ts
+    at node:internal/modules/cjs/loader:1430:15
+    at nextResolveSimple (/home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:1006)
+    at /home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:9:4959
+    at /home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:9:4261
+    at resolveTsPaths (/home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:759)
+    at Function._resolveFilename (/home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:1199)
+    at Function.resolve (node:internal/modules/helpers:157:19)
+    at module (/home/factory-user/repos/finnor-z5/finnor-os/packages/private-equity/src/deliberation/module.ts:13:90)
+    at Object.<anonymous> (/home/factory-user/repos/finnor-z5/finnor-os/packages/private-equity/src/deliberation/module.ts:43:17)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/home/factory-user/repos/finnor-z5/finnor-os/packages/private-equity/src/deliberation/module.ts'
+  ]
+}
+
+Node.js v22.23.4
+
+    at genericNodeError (node:internal/errors:983:15)
+    at wrappedFn (node:internal/errors:537:14)
+    at checkExecSyncError (node:child_process:916:11)
+    at execFileSync (node:child_process:952:15)
+    at childProcess.execFileSync (file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/engineering-tools.mjs:40:20)
+    at readCanonicalPlanner (file:///home/factory-user/repos/finnor-z5/scripts/centropy/canonical-planner.mjs:9:18)
+    at registryEntries (file:///home/factory-user/repos/finnor-z5/scripts/centropy/generate-capability-manifest.mjs:332:20)
+    at file:///home/factory-user/repos/finnor-z5/scripts/centropy/generate-capability-manifest.mjs:357:37
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26) {
+  status: 1,
+  signal: null,
+  output: [
+    null,
+    '',
+    '{"schema":"finnor.z5.explicit-engineering-tooling.v1","pools":["/home/factory-user/repos/finnor-z-coordinator","/home/factory-user/repos/finnor-z-coordinator/finnor-os"],"borrowedThirdPartyTooling":["@aws-sdk/client-bedrock-runtime","@aws-sdk/client-secrets-manager","@aws-sdk/client-sts","@getzep/zep-cloud","@modelcontextprotocol/sdk/client/index.js","@modelcontextprotocol/sdk/client/streamableHttp.js","@sentry/node","@supabase/supabase-js","decimal.js","drizzle-orm","drizzle-orm/node-postgres","drizzle-orm/pg-core","fs-ext","groq-sdk","ioredis","nodemailer","pg","pino","playwright-core","saxes","steel-sdk","tsx/cjs/api","typescript","zod","zod-to-json-schema"],"borrowedProjectSources":0,"installedZ5Proof":false}\n' +
+      'node:internal/modules/cjs/loader:1430\n' +
+      '  const err = new Error(message);\n' +
+      '              ^\n' +
+      '\n' +
+      "Error: Cannot find module 'typescript'\n" +
+      'Require stack:\n' +
+      '- /home/factory-user/repos/finnor-z5/finnor-os/packages/private-equity/src/deliberation/module.ts\n' +
+      '    at node:internal/modules/cjs/loader:1430:15\n' +
+      '    at nextResolveSimple (/home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:1006)\n' +
+      '    at /home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:9:4959\n' +
+      '    at /home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:9:4261\n' +
+      '    at resolveTsPaths (/home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:759)\n' +
+      '    at Function._resolveFilename (/home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:1199)\n' +
+      '    at Function.resolve (node:internal/modules/helpers:157:19)\n' +
+      '    at module (/home/factory-user/repos/finnor-z5/finnor-os/packages/private-equity/src/deliberation/module.ts:13:90)\n' +
+      '    at Object.<anonymous> (/home/factory-user/repos/finnor-z5/finnor-os/packages/private-equity/src/deliberation/module.ts:43:17)\n' +
+      '    at Module._compile (node:internal/modules/cjs/loader:1781:14) {\n' +
+      "  code: 'MODULE_NOT_FOUND',\n" +
+      '  requireStack: [\n' +
+      "    '/home/factory-user/repos/finnor-z5/finnor-os/packages/private-equity/src/deliberation/module.ts'\n" +
+      '  ]\n' +
+      '}\n' +
+      '\n' +
+      'Node.js v22.23.4\n'
+  ],
+  pid: 239781,
+  stdout: '',
+  stderr: '{"schema":"finnor.z5.explicit-engineering-tooling.v1","pools":["/home/factory-user/repos/finnor-z-coordinator","/home/factory-user/repos/finnor-z-coordinator/finnor-os"],"borrowedThirdPartyTooling":["@aws-sdk/client-bedrock-runtime","@aws-sdk/client-secrets-manager","@aws-sdk/client-sts","@getzep/zep-cloud","@modelcontextprotocol/sdk/client/index.js","@modelcontextprotocol/sdk/client/streamableHttp.js","@sentry/node","@supabase/supabase-js","decimal.js","drizzle-orm","drizzle-orm/node-postgres","drizzle-orm/pg-core","fs-ext","groq-sdk","ioredis","nodemailer","pg","pino","playwright-core","saxes","steel-sdk","tsx/cjs/api","typescript","zod","zod-to-json-schema"],"borrowedProjectSources":0,"installedZ5Proof":false}\n' +
+    'node:internal/modules/cjs/loader:1430\n' +
+    '  const err = new Error(message);\n' +
+    '              ^\n' +
+    '\n' +
+    "Error: Cannot find module 'typescript'\n" +
+    'Require stack:\n' +
+    '- /home/factory-user/repos/finnor-z5/finnor-os/packages/private-equity/src/deliberation/module.ts\n' +
+    '    at node:internal/modules/cjs/loader:1430:15\n' +
+    '    at nextResolveSimple (/home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:1006)\n' +
+    '    at /home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:9:4959\n' +
+    '    at /home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:9:4261\n' +
+    '    at resolveTsPaths (/home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:759)\n' +
+    '    at Function._resolveFilename (/home/factory-user/repos/finnor-z-coordinator/finnor-os/node_modules/tsx/dist/register-OY9cqBEN.cjs:10:1199)\n' +
+    '    at Function.resolve (node:internal/modules/helpers:157:19)\n' +
+    '    at module (/home/factory-user/repos/finnor-z5/finnor-os/packages/private-equity/src/deliberation/module.ts:13:90)\n' +
+    '    at Object.<anonymous> (/home/factory-user/repos/finnor-z5/finnor-os/packages/private-equity/src/deliberation/module.ts:43:17)\n' +
+    '    at Module._compile (node:internal/modules/cjs/loader:1781:14) {\n' +
+    "  code: 'MODULE_NOT_FOUND',\n" +
+    '  requireStack: [\n' +
+    "    '/home/factory-user/repos/finnor-z5/finnor-os/packages/private-equity/src/deliberation/module.ts'\n" +
+    '  ]\n' +
+    '}\n' +
+    '\n' +
+    'Node.js v22.23.4\n'
+}
+
+Node.js v22.23.4

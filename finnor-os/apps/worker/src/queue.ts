@@ -4,7 +4,8 @@
 import { COMPUTE_CUTOVER_EPOCH, ComputeCapacityUnavailableError, classifyTrustedJobInstance, getPool, isProductionJobType, parseWorkloadClass, readProductRuntimeAuthority, resolveTenantVertical, withTenantTransaction, type WorkloadClass } from "@finnor/db";
 import { Sentry } from "../../../packages/tools/src/observability";
 import { logWithTrace } from "../../../packages/tools/src/logger";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
+import { captureActualInitialJobClaim, captureActualJobOrigin } from "../../../packages/governed-execution/src/specialist-origin-context";
 import { hostname } from "node:os";
 import type { PoolClient } from "pg";
 import { RETIRED_WATER_JOB_TYPES, RetiredVerticalError, isRetiredWaterJob } from "@finnor/shared-types";
@@ -21,7 +22,10 @@ export interface JobExecutionContext {
   protocolVersion: number;
   workerId: string;
   retrySafety: JobRetrySafety;
-  registerHeartbeat(callback: () => Promise<boolean>, lease: HeartbeatLease): () => void;
+  leaseSeconds: number;
+  /** Aborts on observed job or registered-claim renewal loss, not normal completion. */
+  readonly leaseLossSignal?: AbortSignal;
+  registerHeartbeat(callback: () => Promise<boolean>, lease?: HeartbeatLease): () => void;
 }
 
 export type JobHandler = (payload: Record<string, unknown>, context?: Readonly<JobExecutionContext>) => Promise<void>;
@@ -131,6 +135,8 @@ function boundedPositive(value: string | undefined, fallback: number, max: numbe
   return Number.isSafeInteger(parsed) && parsed >= 1 && parsed <= max ? parsed : fallback;
 }
 
+export const SCOPED_JOB_CLAIM_VERSION = "original-job-scope-v1" as const;
+
 export class JobQueue {
   private handlers = new Map<string, RegisteredHandler>();
   private authorityCheckedAt = 0;
@@ -146,7 +152,11 @@ export class JobQueue {
     readonly leaseSeconds = Math.max(process.env.NODE_ENV === "test" ? 3 : 30, Number(process.env.WORKER_JOB_LEASE_SECONDS ?? 300)),
     readonly workloadClass: WorkloadClass | null = process.env.FINNOR_WORKLOAD_CLASS
       ? parseWorkloadClass(process.env.FINNOR_WORKLOAD_CLASS) : null,
+    readonly claimScope?: Readonly<{tenantId:string;jobId:string}>,
   ) {
+    if(claimScope&&(process.env.FINNOR_ENVIRONMENT!=="staging"||workloadClass===null||
+      ![claimScope.tenantId,claimScope.jobId].every(id=>/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(id))))
+      throw new Error("SCOPED_REPLAY_REQUIRES_EXACT_STAGING_TENANT_JOB_AND_CLASS");
     this.tenantInflightLimit = boundedPositive(process.env.FINNOR_TENANT_INFLIGHT_LIMIT,
       workloadClass ? DEFAULT_TENANT_INFLIGHT[workloadClass] : 8, 32);
     this.priorityAgingSeconds = boundedPositive(process.env.FINNOR_PRIORITY_AGING_SECONDS,
@@ -234,8 +244,9 @@ export class JobQueue {
         `SELECT id FROM jobs
           WHERE type=ANY($1::text[]) AND status IN ('queued','running','failed','dead_letter')
             AND ($2::text IS NULL OR workload_class=$2)
+            ${this.claimScope?'AND tenant_id=$3::uuid AND id=$4::uuid':''}
           ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 100`,
-        [RETIRED_WATER_JOB_TYPES, this.workloadClass],
+        [RETIRED_WATER_JOB_TYPES, this.workloadClass,...(this.claimScope?[this.claimScope.tenantId,this.claimScope.jobId]:[])],
       );
       const retiredIds = retired.rows.map((row) => row.id);
       if (retiredIds.length) {
@@ -262,9 +273,10 @@ export class JobQueue {
           WHERE status='running'
             AND ($1::text IS NULL OR workload_class=$1)
             AND coalesce(lease_expires_at,started_at+($2::int || ' seconds')::interval)<=now()
+            ${this.claimScope?'AND tenant_id=$3::uuid AND id=$4::uuid':''}
           ORDER BY lease_expires_at NULLS LAST,id
           FOR UPDATE SKIP LOCKED LIMIT 100`,
-        [this.workloadClass, leaseSeconds],
+        [this.workloadClass, leaseSeconds,...(this.claimScope?[this.claimScope.tenantId,this.claimScope.jobId]:[])],
       );
       const ids = candidates.rows.map((row) => row.id);
       if (ids.length === 0) {
@@ -377,8 +389,10 @@ export class JobQueue {
         const compatibilityJson = JSON.stringify(compatibility);
         const { rows } = this.workloadClass
           ? await client.query(
-            CLASS_CLAIM_SQL,
-            [compatibilityJson, this.workloadClass, this.priorityAgingSeconds, this.tenantInflightLimit],
+            this.claimScope?CLASS_CLAIM_SQL.replace("WHERE eligible.workload_class=$2",
+              "WHERE eligible.tenant_id=$5::uuid AND eligible.id=$6::uuid AND eligible.workload_class=$2"):CLASS_CLAIM_SQL,
+            [compatibilityJson, this.workloadClass, this.priorityAgingSeconds, this.tenantInflightLimit,
+              ...(this.claimScope?[this.claimScope.tenantId,this.claimScope.jobId]:[])],
           )
           : await client.query(
             `SELECT id,tenant_id AS "tenantId",type,payload,attempts,
@@ -419,7 +433,9 @@ export class JobQueue {
           RETURNING id,tenant_id AS "tenantId",type,payload,attempts,
                     max_attempts AS "maxAttempts",protocol_version AS "protocolVersion",
                     retry_safety AS "retrySafety",claim_token AS "claimToken",
-                    claim_fence AS "claimFence",workload_class AS "workloadClass"`,
+                    claim_fence AS "claimFence",workload_class AS "workloadClass",
+                    (extract(epoch FROM started_at)*1000000)::bigint::text AS "originalClaimAcquiredUtcMicros",
+                    (extract(epoch FROM lease_expires_at)*1000000)::bigint::text AS "originalClaimExpiresUtcMicros"`,
           [candidate.id, this.instanceId, String(this.leaseSeconds), claimToken,
             registration.contract.retrySafety, candidate.tenantId, candidate.protocolVersion, this.workloadClass],
         );
@@ -437,7 +453,8 @@ export class JobQueue {
         }
         // PostgreSQL bigint values arrive as decimal strings. Normalize at the
         // queue boundary so every handler receives the declared numeric fence.
-        const rawClaim = claimed.rows[0] as Omit<ClaimedJob, "deliveryAttemptId" | "claimFence"> & { claimFence: number | string };
+        const rawClaim = claimed.rows[0] as Omit<ClaimedJob, "deliveryAttemptId" | "claimFence"> & { claimFence: number | string;
+          originalClaimAcquiredUtcMicros: string; originalClaimExpiresUtcMicros: string };
         const claimFence = Number(rawClaim.claimFence);
         if (!Number.isSafeInteger(claimFence) || claimFence < 1) {
           throw new Error("Durable job claim fence exceeds the supported integer range");
@@ -451,6 +468,13 @@ export class JobQueue {
             this.instanceId, claimedJob.protocolVersion, claimedJob.retrySafety],
         );
         job = { ...claimedJob, deliveryAttemptId: delivery.rows[0]!.id };
+        captureActualInitialJobClaim(job, {
+          schema: "finnor.specialist.actual-initial-job-claim.v1", jobId: job.id,
+          deliveryAttemptId: job.deliveryAttemptId, claimFence: job.claimFence, workerId: this.instanceId,
+          claimTokenDigest: createHash("sha256").update(job.claimToken).digest("hex"),
+          initialAcquiredUtcMicros: rawClaim.originalClaimAcquiredUtcMicros,
+          initialExpiresUtcMicros: rawClaim.originalClaimExpiresUtcMicros,
+        });
         // SIGTERM may arrive during a database round trip after the loop's
         // earlier check. A claim not yet committed must not become new work for
         // a draining process; the transaction rollback restores queue truth.
@@ -497,7 +521,7 @@ export class JobQueue {
       renew: async (): Promise<boolean> => {
         const result = await getPool().query(
         `WITH renewed AS (
-           UPDATE jobs SET lease_expires_at=now()+($5 || ' seconds')::interval,lease_heartbeat_at=now()
+           UPDATE jobs SET lease_expires_at=clock_timestamp()+($5 || ' seconds')::interval,lease_heartbeat_at=clock_timestamp()
             WHERE id=$1 AND status='running' AND lease_owner=$2 AND claim_token=$3 AND claim_fence=$4
               AND lease_expires_at>clock_timestamp()
             RETURNING id
@@ -518,7 +542,7 @@ export class JobQueue {
         scope.setTag("job_type", job.type);
         if (!handler) throw new Error(`No handler registered for job type ${job.type}`);
         if (signal?.aborted) throw new WorkerDrainBeforeDispatchError();
-        await handler(payload, Object.freeze({
+        const originalExecution = Object.freeze({
           jobId: job!.id,
           tenantId: job!.tenantId,
           deliveryAttemptId: job!.deliveryAttemptId,
@@ -527,8 +551,12 @@ export class JobQueue {
           protocolVersion: job!.protocolVersion,
           workerId: this.instanceId,
           retrySafety: job!.retrySafety,
+          leaseSeconds: this.leaseSeconds,
+          leaseLossSignal: heartbeat.leaseLossSignal,
           registerHeartbeat: heartbeat.register,
-        }));
+        });
+        captureActualJobOrigin(originalExecution, heartbeat, job!);
+        await handler(payload, originalExecution);
       });
       await heartbeat.stop();
       const ms = Date.now() - start;
@@ -581,16 +609,21 @@ export class JobQueue {
       // current durable unit and absence of its intent, rather than weakening
       // the retry contract for other reconcilable handlers.
       const p2Unsubmitted = capacityDeferred && job.type === "run_compute_search_unit_v1"
-        && job.retrySafety === "reconcilable" && job.protocolVersion === 1
+        && job.retrySafety === "reconcilable" && [1, 2, 3].includes(job.protocolVersion)
         && !!job.tenantId && typeof job.payload.principalId === "string"
         && await withTenantTransaction(job.tenantId!, { userId: job.payload.principalId as string, readOnly: true }, async (_db, c) => {
           const proof = await c.query(`SELECT u.id FROM finnor_os.p2_units u
             JOIN finnor_os.p2_requests s ON s.id=u.search_id AND s.tenant_id=u.tenant_id AND s.principal_id=u.principal_id
             WHERE u.tenant_id=$1 AND u.principal_id=$2 AND u.id=$3 AND s.id=$4
               AND s.generation=$5 AND u.generation=s.generation AND s.status='RUNNING' AND u.status='QUEUED'
+              AND $7::int = CASE
+                WHEN jsonb_typeof(s.request->'orchestration')='object' THEN 3
+                WHEN jsonb_typeof(s.request->'deliberation')='object' THEN 2
+                ELSE 1 END
               AND NOT EXISTS(SELECT 1 FROM finnor_os.p2_attempts a WHERE a.tenant_id=u.tenant_id
                 AND a.principal_id=u.principal_id AND a.delivery_id=$6)`,
-          [job!.tenantId,job!.payload.principalId,job!.payload.unitId,job!.payload.searchId,job!.payload.generation,job!.deliveryAttemptId]);
+          [job!.tenantId,job!.payload.principalId,job!.payload.unitId,job!.payload.searchId,
+            job!.payload.generation,job!.deliveryAttemptId,job!.protocolVersion]);
           return proof.rowCount === 1;
         }).catch(() => false);
       const x2Undispatched = capacityDeferred && job.type === "run_application_semantics_v1"

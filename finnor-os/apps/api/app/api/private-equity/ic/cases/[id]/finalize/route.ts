@@ -1,4 +1,4 @@
-import { finalizeIcDecision } from "@finnor/private-equity";
+import { finalizeIcDecision } from "../../../../../../../../../packages/private-equity/src/ic-repository";
 import { handleIcPost, IcFinalizeDecisionSchema, IcUuidSchema } from "../../../../../../../lib/ic";
 
 export const runtime = "nodejs";

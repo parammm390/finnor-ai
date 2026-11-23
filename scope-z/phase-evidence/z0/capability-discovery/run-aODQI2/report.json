@@ -1,0 +1,52 @@
+{
+  "schema": "finnor.capability-discovery-cli-contract/v1",
+  "startedAt": "2026-10-24T07:43:43.952Z",
+  "node": "v22.23.4",
+  "sourceBaseCommit": "0293c866a6e500cd0ad82f00b52db60ddb1c3a28",
+  "source": "/home/factory-user/repos/finnor-z-coordinator",
+  "snapshot": "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-aODQI2/checkout",
+  "qualification": "Real generator/auditor CLI source-contract E2E only. Borrowed installed third-party dependencies and parent Git metadata, not a cold install, HTTP flow, product qualification or phase completion.",
+  "rerun": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node /home/factory-user/repos/finnor-z-coordinator/scripts/centropy/verify-capability-discovery.mjs --evidence-dir /home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery",
+  "environment": {
+    "inheritedNames": [
+      "PATH"
+    ],
+    "syntheticNames": [
+      "NODE_ENV",
+      "NODE_OPTIONS",
+      "TSX_DISABLE_CACHE"
+    ]
+  },
+  "cases": [
+    {
+      "name": "production canonical denominator and complete metadata",
+      "result": "FAIL",
+      "error": "direct canonical registry (production): /home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-aODQI2/oracle.cjs:30\nif (attempts.length || actionCalls) throw new Error(\"Oracle observed forbidden effect attempts\");\n                                    ^\n\nError: Oracle observed forbidden effect attempts\n    at Object.<anonymous> (/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-aODQI2/oracle.cjs:30:43)\n    at Module._compile (node:internal/modules/cjs/loader:1781:14)\n    at Object.<anonymous> (node:internal/modules/cjs/loader:1913:10)\n    at Module.load (node:internal/modules/cjs/loader:1505:32)\n    at Function._load (node:internal/modules/cjs/loader:1309:12)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49\n\nNode.js v22.23.4\n\n\n1 !== 0\n"
+    },
+    {
+      "name": "contract setup or execution",
+      "result": "FAIL",
+      "error": "Production setup did not reach the manifest boundary"
+    }
+  ],
+  "commands": [
+    {
+      "label": "direct canonical registry (production)",
+      "executable": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/node/bin/node",
+      "arguments": [
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/phase-evidence/z0/capability-discovery/run-aODQI2/oracle.cjs"
+      ],
+      "mode": "production",
+      "status": 1,
+      "signal": null,
+      "error": null,
+      "stdout": "commands/0.stdout.log",
+      "stderr": "commands/0.stderr.log"
+    }
+  ],
+  "result": "FAIL",
+  "sourceInventorySha256": "6e2981fc96d851107facc29381ac0e4c0858ae2766f62e3f52ce2fd44cbbafe6",
+  "completedAt": "2026-10-24T07:43:49.533Z",
+  "passed": 0,
+  "failed": 2
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "actualExit": 0,
+    "kind": "worktree",
+    "logSha256": "3cadabec897fd961a14ae0f164fbcc2d872da835fd7c259079ac6fab44594c72",
+    "rawRendered": false,
+    "stderrBytes": 0,
+    "stderrLines": 0,
+    "stdoutBytes": 0,
+    "stdoutLines": 0,
+    "warningLines": 0,
+    "whitespaceDiagnosticLines": 0
+  },
+  {
+    "actualExit": 2,
+    "kind": "cached",
+    "logSha256": "3f70f46991c71bf89fa4b8c47ede330ae97e977eb7a68c558767158ed136a600",
+    "rawRendered": false,
+    "stderrBytes": 0,
+    "stderrLines": 0,
+    "stdoutBytes": 9840,
+    "stdoutLines": 226,
+    "warningLines": 0,
+    "whitespaceDiagnosticLines": 113
+  }
+]

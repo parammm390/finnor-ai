@@ -1,0 +1,77 @@
+{
+  "schema": "finnor.w2.qualification-campaign-profiles.v1",
+  "qualification": "CONTROLLED_ENGINEERING_NOT_HUMAN_PROTECTED_FIELD_COMPARATIVE_OR_ECONOMIC",
+  "profiles": {
+    "supervision": { "wallSeconds": 45, "heapMiB": 128, "heavy": false, "report": "report.json", "required": ["frozen-controls.json", "report.json"] },
+    "domain": { "wallSeconds": 120, "heapMiB": 1536, "heavy": true, "report": "domain-run-*.json", "minimumCases": 221, "required": [] },
+    "dynamic": { "wallSeconds": 120, "heapMiB": 1536, "heavy": true, "report": "dynamic-domain-*.json", "minimumCases": 40, "required": [] },
+    "structural": { "wallSeconds": 300, "heapMiB": 1536, "heavy": true, "maximumOutputBytes": 67108864, "report": "report.json", "required": ["frozen-contract-and-sources.json", "report.json"] },
+    "native": {
+      "wallSeconds": 1200, "heapMiB": 1536, "heavy": true, "minimumStartDiskBytes": 2147483648,
+      "report": "report.json",
+      "required": [
+        "freeze.json", "report.json", "cleanup.json", "traffic-without-credentials.json", "migrations-and-restricted-roles.json",
+        "inputs-and-literal-expectations.json", "participant-retired-role-original.json", "participant-retired-role-result.json",
+        "participant-capability-owner-boundary.json", "actual-nonowner-same-canonical-grants-without-owner-promotion.json",
+        "external-existing-contact-binding-and-actual-principal-consent.json", "actual-calendar-window-and-scheduled-queue-wakeup.json",
+        "positive-original-owner-chain.json", "native-matching-checking-and-delivery-verification-meters.json",
+        "s1-s8-nonadmitted-observed-task-experience.json", "authenticated-minimal-independent-checker-channel.json",
+        "revised-terms-and-actual-original-root-fallback.json", "native-nested-subdelegation-and-reciprocal-return-edge.json",
+        "native-exact-rational-codec-crossing.json", "lawful-dynamic-subdelegation-reciprocal-return-and-spent-frontier.json",
+        "interruption-original-offer-and-actual-recipient.json", "physical-interruption-and-original-read-only-recovery.json",
+        "physical-unknown-use-cannot-finance-dynamic-refinement.json", "revocation-and-retained-responsibility.json"
+      ]
+    },
+    "bound": {
+      "wallSeconds": 1200, "heapMiB": 1536, "heavy": true, "minimumStartDiskBytes": 3221225472,
+      "report": "report.json",
+      "required": ["frozen-contract.json", "source-cut.json", "report.json", "cleanup.json", "migrations-and-restricted-roles.json",
+        "traffic-without-credentials.json", "actual-physical-worker.log.json", "cleanup-ledger.log",
+        "exact-existing-provider-enrollment-not-assignment-acceptance.json", "canonical-authority-population-equivalence.json",
+        "whole-profile-original-input.json", "whole-128-512-depth8-and-every-native-leaf.json", "four-controlled-actor-pairings.json",
+        "129-actors-no-intake-or-truncation.json", "513-assignments-explicit-native-refusal.json", "depth-nine-explicit-native-refusal.json",
+        "actual-nonowner-external-recipient-and-independent-verification.json", "actual-changed-source-smallest-p7-closure.json",
+        "unaffected-authenticated-progress-keeps-original-fenced-neighbor.json", "final-native-job-frontier.json",
+        "postgres-error-statements.json", "postgres-branch-sessions.json"]
+    },
+    "recovery": {
+      "wallSeconds": 900, "heapMiB": 1536, "heavy": true, "minimumStartDiskBytes": 3221225472, "maximumOutputBytes": 67108864,
+      "report": "report.json",
+      "required": ["frozen-contract.json", "source-cut.json", "owned-local-resources.json", "report.json", "cleanup.json",
+        "migrations-and-restricted-roles.json", "existing-provider-enrollment.json", "traffic-without-credentials.json",
+        "actual-physical-worker.log.json", "cleanup-ledger.log", "original-input-0.json", "original-input-1.json",
+        "original-input-2.json", "original-input-3.json", "original-input-4.json", "known-original-ledger-and-retired-spend.json",
+        "original-compensation-obligation-before-payment-boundary.json", "participant-expiry-both-native-boundaries.json",
+        "final-owning-ledger-observation.json", "known-spend-lawful-original-replacement.json",
+        "respond-revoked-after-start-smallest-closure.json", "compensated-child-canonical-s5-obligation.json",
+        "protected-delegated-child-unadmitted.json", "allocation-right-revoked-with-held-reservation.json",
+        "participant-natural-expiry-and-fresh-exact-consent.json", "paid-local-computation-preserves-original-payable.json"]
+    },
+    "types": { "wallSeconds": 120, "heapMiB": 2048, "heavy": true, "required": [] },
+    "backend-build": { "wallSeconds": 900, "heapMiB": 1536, "heavy": true, "minimumStartDiskBytes": 3221225472,
+      "report": "finnor-os/w2-development-installation.json", "required": ["finnor-os/w2-development-installation.json"] },
+    "frontend-build": { "wallSeconds": 900, "heapMiB": 1536, "heavy": true, "minimumStartDiskBytes": 3221225472,
+      "report": "w2-frontend-installation.json", "required": ["w2-frontend-installation.json", "build-resources.json"] },
+    "cold-seal": { "wallSeconds": 300, "heapMiB": 128, "heavy": true, "minimumStartDiskBytes": 3221225472, "requiresForecast": true,
+      "report": "cold-packet.json", "required": ["cold-packet.json", "source.tar.gz", "source-objects.pack"] },
+    "cold-prepare": { "wallSeconds": 300, "heapMiB": 128, "heavy": true, "minimumStartDiskBytes": 3221225472, "requiresForecast": true,
+      "report": "preparation.json", "required": ["preparation.json"] },
+    "cold-root-install": { "wallSeconds": 900, "heapMiB": 1536, "heavy": true, "minimumStartDiskBytes": 3221225472, "requiresForecast": true,
+      "report": "install.json", "required": ["install.json"] },
+    "cold-backend-install": { "wallSeconds": 900, "heapMiB": 1536, "heavy": true, "minimumStartDiskBytes": 3221225472, "requiresForecast": true,
+      "report": "install.json", "required": ["install.json"] },
+    "cold-compatibility": { "wallSeconds": 120, "heapMiB": 512, "heavy": true, "minimumStartDiskBytes": 3221225472,
+      "report": "compatibility.json", "required": ["compatibility.json"] },
+    "mounted": { "wallSeconds": 1200, "heapMiB": 1536, "heavy": true, "minimumStartDiskBytes": 3221225472,
+      "report": "mounted-browser-report.json",
+      "required": ["freeze.json", "report.json", "cleanup.json", "mounted-public-route-preparation.json", "mounted-ready.json", "mounted-expiry-inputs.json",
+        "mounted-expiry-owning-readback.json", "mounted-native-completion.json", "mounted-canonical-owner-revocation.json",
+        "mounted-browser-report.json", "mounted-frontend.log", "cleanup-ledger.log", "mounted-nonowner-own-contracts.png",
+        "mounted-participant-natural-expiry-and-fresh-consent.png", "mounted-original-positive.png", "mounted-work-switch-withdrawal.png",
+        "mounted-same-tenant-principal-withdrawal.png", "mounted-foreign-tenant-withdrawal.png", "mounted-offline-private-withdrawal.png",
+        "mounted-delayed-revoked-response-withdrawal.png", "mounted-revoked-current-auth-after-independent-reload.png"]
+    }
+  },
+  "privateExclusions": [".job-owner.json", ".campaign-owner.json", ".owner.json", ".process-group.json", "mounted-private-fixture.json", "driver.log", "owned-runtime", "owned-postgres", "home", "auth-vault", "browser-profile"],
+  "separateGates": ["GENUINE_HUMAN", "PROTECTED_ADMISSION", "FIELD_ACTIVATION", "QUALIFIED_Z_COMPARISON", "ECONOMICS"]
+}

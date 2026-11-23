@@ -1293,6 +1293,156 @@
                     "operationKey": {
                       "type": "string",
                       "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]{0,159}$"
+                    },
+                    "workforceCompensation": {
+                      "type": "object",
+                      "properties": {
+                        "schema": {
+                          "type": "string",
+                          "const": "finnor.s6.closing-workforce-compensation.v1"
+                        },
+                        "obligationRef": {
+                          "type": "object",
+                          "properties": {
+                            "owner": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 512
+                            },
+                            "version": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "contentDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "required": [
+                            "owner",
+                            "id",
+                            "version",
+                            "contentDigest"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "programmeId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "workId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "originalRoot": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "assignmentId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 256
+                        },
+                        "originalBudget": {
+                          "type": "object",
+                          "properties": {
+                            "owner": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 512
+                            },
+                            "version": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "contentDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "required": [
+                            "owner",
+                            "id",
+                            "version",
+                            "contentDigest"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "originalReservation": {
+                          "type": "object",
+                          "properties": {
+                            "owner": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 512
+                            },
+                            "version": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 128
+                            },
+                            "contentDigest": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            }
+                          },
+                          "required": [
+                            "owner",
+                            "id",
+                            "version",
+                            "contentDigest"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "termsDigest": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        },
+                        "payerPrincipalId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "payeePrincipalId": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        }
+                      },
+                      "required": [
+                        "schema",
+                        "obligationRef",
+                        "programmeId",
+                        "workId",
+                        "originalRoot",
+                        "assignmentId",
+                        "originalBudget",
+                        "originalReservation",
+                        "termsDigest",
+                        "payerPrincipalId",
+                        "payeePrincipalId"
+                      ],
+                      "additionalProperties": false
                     }
                   },
                   "required": [
@@ -2610,6 +2760,2383 @@
       "generatedFrom": "finnor-os/openapi.json#paths//api/closing/submit/post"
     },
     {
+      "id": "http.post.company-brain.execution-proof-audit",
+      "capabilityId": "http.post.company-brain.execution-proof-audit",
+      "group": "execution-proofs",
+      "title": "Company brain execution proof audit",
+      "method": "POST",
+      "routePattern": "company-brain/execution-proof-audit",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/private-equity",
+      "humanOnly": false,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "sessionId"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/company-brain/execution-proof-audit/post"
+    },
+    {
+      "id": "http.post.company-brain.execution-proof-cancel",
+      "capabilityId": "http.post.company-brain.execution-proof-cancel",
+      "group": "execution-proofs",
+      "title": "Company brain execution proof cancel",
+      "method": "POST",
+      "routePattern": "company-brain/execution-proof-cancel",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/private-equity",
+      "humanOnly": false,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "required": [
+          "sessionId"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/company-brain/execution-proof-cancel/post"
+    },
+    {
+      "id": "http.post.company-brain.execution-proof-consume",
+      "capabilityId": "http.post.company-brain.execution-proof-consume",
+      "group": "execution-proofs",
+      "title": "Company brain execution proof consume",
+      "method": "POST",
+      "routePattern": "company-brain/execution-proof-consume",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/private-equity",
+      "humanOnly": false,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "capsuleDigest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "sessionId",
+          "capsuleDigest",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/company-brain/execution-proof-consume/post"
+    },
+    {
+      "id": "http.post.company-brain.execution-proof-intake",
+      "capabilityId": "http.post.company-brain.execution-proof-intake",
+      "group": "execution-proofs",
+      "title": "Company brain execution proof intake",
+      "method": "POST",
+      "routePattern": "company-brain/execution-proof-intake",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/private-equity",
+      "humanOnly": false,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "finnor.z4.submit.v1"
+          },
+          "mode": {
+            "type": "string",
+            "const": "ordinary_disposable"
+          },
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "program": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.z4.integer-program.v1"
+              },
+              "inputCount": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 8
+              },
+              "registers": {
+                "minItems": 1,
+                "maxItems": 8,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "i64",
+                        "bool"
+                      ]
+                    },
+                    "unit": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9_:/.-]{1,64}$"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "unit"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "inputUnits": {
+                "minItems": 1,
+                "maxItems": 8,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_:/.-]{1,64}$"
+                }
+              },
+              "rounding": {
+                "type": "string",
+                "const": "EXACT_NO_CONVERSION"
+              },
+              "instructions": {
+                "minItems": 1,
+                "maxItems": 16,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "enum": [
+                        "add",
+                        "sub",
+                        "mul",
+                        "lt",
+                        "eq",
+                        "select"
+                      ]
+                    },
+                    "dst": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 7
+                    },
+                    "a": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reg": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "reg"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "input": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "input"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "const": {
+                              "type": "string",
+                              "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                            }
+                          },
+                          "required": [
+                            "const"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "b": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reg": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "reg"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "input": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "input"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "const": {
+                              "type": "string",
+                              "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                            }
+                          },
+                          "required": [
+                            "const"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "c": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reg": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "reg"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "input": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "input"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "const": {
+                              "type": "string",
+                              "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                            }
+                          },
+                          "required": [
+                            "const"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "dst",
+                    "a",
+                    "b"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "schema",
+              "inputCount",
+              "registers",
+              "inputUnits",
+              "rounding",
+              "instructions"
+            ],
+            "additionalProperties": false
+          },
+          "initial": {
+            "minItems": 1,
+            "maxItems": 8,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+            }
+          },
+          "ownerContract": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "modelRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "periods": {
+                    "minItems": 1,
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535
+                    }
+                  },
+                  "columns": {
+                    "minItems": 1,
+                    "maxItems": 8,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "STATE",
+                            "EXPOSURE"
+                          ]
+                        },
+                        "variableId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "unit": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 64
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "variableId",
+                        "unit"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "owner": {
+                    "type": "string",
+                    "const": "S3"
+                  },
+                  "query": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "guard": {
+                    "type": "object",
+                    "properties": {
+                      "register": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 7
+                      },
+                      "unit": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "minimum": {
+                        "type": "string",
+                        "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                      },
+                      "maximum": {
+                        "type": "string",
+                        "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                      }
+                    },
+                    "required": [
+                      "register",
+                      "unit",
+                      "minimum",
+                      "maximum"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "modelRef",
+                  "periods",
+                  "columns",
+                  "owner",
+                  "query",
+                  "guard"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "modelRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "periods": {
+                    "minItems": 1,
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535
+                    }
+                  },
+                  "columns": {
+                    "minItems": 1,
+                    "maxItems": 8,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "STATE",
+                            "EXPOSURE"
+                          ]
+                        },
+                        "variableId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "unit": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 64
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "variableId",
+                        "unit"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "owner": {
+                    "type": "string",
+                    "const": "S4"
+                  },
+                  "policyRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "decision": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "allocationRef": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "owner",
+                          "id",
+                          "version",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "guard": {
+                    "type": "object",
+                    "properties": {
+                      "register": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 7
+                      },
+                      "unit": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "minimum": {
+                        "type": "string",
+                        "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                      },
+                      "maximum": {
+                        "type": "string",
+                        "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                      }
+                    },
+                    "required": [
+                      "register",
+                      "unit",
+                      "minimum",
+                      "maximum"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "modelRef",
+                  "periods",
+                  "columns",
+                  "owner",
+                  "policyRef",
+                  "decision",
+                  "allocationRef",
+                  "guard"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "deadlineAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          },
+          "resourceDemand": {
+            "minItems": 1,
+            "maxItems": 2,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "resourceId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "request",
+                    "seconds"
+                  ]
+                },
+                "amount": {
+                  "type": "string",
+                  "pattern": "^(?:0|[1-9][0-9]{0,3})$"
+                }
+              },
+              "required": [
+                "resourceId",
+                "unit",
+                "amount"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "maxMemoryBytes": {
+            "type": "integer",
+            "minimum": 134217728,
+            "maximum": 2147483648
+          },
+          "maxCpuSeconds": {
+            "type": "integer",
+            "minimum": 30,
+            "maximum": 3600
+          },
+          "maxAttempts": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "maxRetainedBytes": {
+            "type": "integer",
+            "minimum": 1048576,
+            "maximum": 67108864
+          },
+          "qualification": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.z4.public-qualification.v1"
+              },
+              "registrationSha256": {
+                "type": "string",
+                "const": "4479bce31a46945067d88b262bcb549040c20d91b2dc57e788e6b335bda4f163"
+              },
+              "caseId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "compilerFrozenAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              }
+            },
+            "required": [
+              "schema",
+              "registrationSha256",
+              "caseId",
+              "compilerFrozenAt"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "schema",
+          "mode",
+          "root",
+          "idempotencyKey",
+          "purpose",
+          "program",
+          "initial",
+          "ownerContract",
+          "deadlineAt",
+          "resourceDemand",
+          "maxMemoryBytes",
+          "maxCpuSeconds",
+          "maxAttempts",
+          "maxRetainedBytes"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/company-brain/execution-proof-intake/post"
+    },
+    {
+      "id": "http.post.company-brain.execution-proof-plan",
+      "capabilityId": "http.post.company-brain.execution-proof-plan",
+      "group": "execution-proofs",
+      "title": "Company brain execution proof plan",
+      "method": "POST",
+      "routePattern": "company-brain/execution-proof-plan",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/private-equity",
+      "humanOnly": false,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "finnor.z4.submit.v1"
+          },
+          "mode": {
+            "type": "string",
+            "const": "ordinary_disposable"
+          },
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "workInputId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "program": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.z4.integer-program.v1"
+              },
+              "inputCount": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 8
+              },
+              "registers": {
+                "minItems": 1,
+                "maxItems": 8,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "i64",
+                        "bool"
+                      ]
+                    },
+                    "unit": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9_:/.-]{1,64}$"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "unit"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "inputUnits": {
+                "minItems": 1,
+                "maxItems": 8,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_:/.-]{1,64}$"
+                }
+              },
+              "rounding": {
+                "type": "string",
+                "const": "EXACT_NO_CONVERSION"
+              },
+              "instructions": {
+                "minItems": 1,
+                "maxItems": 16,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "enum": [
+                        "add",
+                        "sub",
+                        "mul",
+                        "lt",
+                        "eq",
+                        "select"
+                      ]
+                    },
+                    "dst": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 7
+                    },
+                    "a": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reg": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "reg"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "input": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "input"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "const": {
+                              "type": "string",
+                              "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                            }
+                          },
+                          "required": [
+                            "const"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "b": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reg": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "reg"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "input": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "input"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "const": {
+                              "type": "string",
+                              "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                            }
+                          },
+                          "required": [
+                            "const"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "c": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reg": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "reg"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "input": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "input"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "const": {
+                              "type": "string",
+                              "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                            }
+                          },
+                          "required": [
+                            "const"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "dst",
+                    "a",
+                    "b"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "schema",
+              "inputCount",
+              "registers",
+              "inputUnits",
+              "rounding",
+              "instructions"
+            ],
+            "additionalProperties": false
+          },
+          "initial": {
+            "minItems": 1,
+            "maxItems": 8,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+            }
+          },
+          "ownerContract": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "modelRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "periods": {
+                    "minItems": 1,
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535
+                    }
+                  },
+                  "columns": {
+                    "minItems": 1,
+                    "maxItems": 8,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "STATE",
+                            "EXPOSURE"
+                          ]
+                        },
+                        "variableId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "unit": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 64
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "variableId",
+                        "unit"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "owner": {
+                    "type": "string",
+                    "const": "S3"
+                  },
+                  "query": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "guard": {
+                    "type": "object",
+                    "properties": {
+                      "register": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 7
+                      },
+                      "unit": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "minimum": {
+                        "type": "string",
+                        "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                      },
+                      "maximum": {
+                        "type": "string",
+                        "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                      }
+                    },
+                    "required": [
+                      "register",
+                      "unit",
+                      "minimum",
+                      "maximum"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "modelRef",
+                  "periods",
+                  "columns",
+                  "owner",
+                  "query",
+                  "guard"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "modelRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "periods": {
+                    "minItems": 1,
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535
+                    }
+                  },
+                  "columns": {
+                    "minItems": 1,
+                    "maxItems": 8,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "STATE",
+                            "EXPOSURE"
+                          ]
+                        },
+                        "variableId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "unit": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 64
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "variableId",
+                        "unit"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "owner": {
+                    "type": "string",
+                    "const": "S4"
+                  },
+                  "policyRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "decision": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "allocationRef": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "owner",
+                          "id",
+                          "version",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "guard": {
+                    "type": "object",
+                    "properties": {
+                      "register": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 7
+                      },
+                      "unit": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "minimum": {
+                        "type": "string",
+                        "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                      },
+                      "maximum": {
+                        "type": "string",
+                        "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                      }
+                    },
+                    "required": [
+                      "register",
+                      "unit",
+                      "minimum",
+                      "maximum"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "modelRef",
+                  "periods",
+                  "columns",
+                  "owner",
+                  "policyRef",
+                  "decision",
+                  "allocationRef",
+                  "guard"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "deadlineAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          },
+          "resourceDemand": {
+            "minItems": 1,
+            "maxItems": 2,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "resourceId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "request",
+                    "seconds"
+                  ]
+                },
+                "amount": {
+                  "type": "string",
+                  "pattern": "^(?:0|[1-9][0-9]{0,3})$"
+                }
+              },
+              "required": [
+                "resourceId",
+                "unit",
+                "amount"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "maxMemoryBytes": {
+            "type": "integer",
+            "minimum": 134217728,
+            "maximum": 2147483648
+          },
+          "maxCpuSeconds": {
+            "type": "integer",
+            "minimum": 30,
+            "maximum": 3600
+          },
+          "maxAttempts": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "maxRetainedBytes": {
+            "type": "integer",
+            "minimum": 1048576,
+            "maximum": 67108864
+          },
+          "qualification": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.z4.public-qualification.v1"
+              },
+              "registrationSha256": {
+                "type": "string",
+                "const": "4479bce31a46945067d88b262bcb549040c20d91b2dc57e788e6b335bda4f163"
+              },
+              "caseId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "compilerFrozenAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              }
+            },
+            "required": [
+              "schema",
+              "registrationSha256",
+              "caseId",
+              "compilerFrozenAt"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "schema",
+          "mode",
+          "root",
+          "workId",
+          "workInputId",
+          "idempotencyKey",
+          "purpose",
+          "program",
+          "initial",
+          "ownerContract",
+          "deadlineAt",
+          "resourceDemand",
+          "maxMemoryBytes",
+          "maxCpuSeconds",
+          "maxAttempts",
+          "maxRetainedBytes"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/company-brain/execution-proof-plan/post"
+    },
+    {
+      "id": "http.post.company-brain.execution-proof-submit",
+      "capabilityId": "http.post.company-brain.execution-proof-submit",
+      "group": "execution-proofs",
+      "title": "Company brain execution proof submit",
+      "method": "POST",
+      "routePattern": "company-brain/execution-proof-submit",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/private-equity",
+      "humanOnly": false,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "const": "finnor.z4.submit.v1"
+          },
+          "mode": {
+            "type": "string",
+            "const": "ordinary_disposable"
+          },
+          "root": {
+            "type": "object",
+            "properties": {
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "pe_strategy",
+                  "pe_opportunity",
+                  "pe_deal",
+                  "pe_fund",
+                  "pe_vehicle",
+                  "external_organization",
+                  "pe_portfolio_holding"
+                ]
+              },
+              "entityId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            },
+            "required": [
+              "entityType",
+              "entityId"
+            ],
+            "additionalProperties": false
+          },
+          "workId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "workInputId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "workRevisionRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "program": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.z4.integer-program.v1"
+              },
+              "inputCount": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 8
+              },
+              "registers": {
+                "minItems": 1,
+                "maxItems": 8,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "i64",
+                        "bool"
+                      ]
+                    },
+                    "unit": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9_:/.-]{1,64}$"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "unit"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "inputUnits": {
+                "minItems": 1,
+                "maxItems": 8,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_:/.-]{1,64}$"
+                }
+              },
+              "rounding": {
+                "type": "string",
+                "const": "EXACT_NO_CONVERSION"
+              },
+              "instructions": {
+                "minItems": 1,
+                "maxItems": 16,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "op": {
+                      "type": "string",
+                      "enum": [
+                        "add",
+                        "sub",
+                        "mul",
+                        "lt",
+                        "eq",
+                        "select"
+                      ]
+                    },
+                    "dst": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 7
+                    },
+                    "a": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reg": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "reg"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "input": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "input"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "const": {
+                              "type": "string",
+                              "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                            }
+                          },
+                          "required": [
+                            "const"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "b": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reg": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "reg"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "input": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "input"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "const": {
+                              "type": "string",
+                              "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                            }
+                          },
+                          "required": [
+                            "const"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    "c": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reg": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "reg"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "input": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 7
+                            }
+                          },
+                          "required": [
+                            "input"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "const": {
+                              "type": "string",
+                              "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                            }
+                          },
+                          "required": [
+                            "const"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "op",
+                    "dst",
+                    "a",
+                    "b"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "schema",
+              "inputCount",
+              "registers",
+              "inputUnits",
+              "rounding",
+              "instructions"
+            ],
+            "additionalProperties": false
+          },
+          "initial": {
+            "minItems": 1,
+            "maxItems": 8,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+            }
+          },
+          "ownerContract": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "modelRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "periods": {
+                    "minItems": 1,
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535
+                    }
+                  },
+                  "columns": {
+                    "minItems": 1,
+                    "maxItems": 8,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "STATE",
+                            "EXPOSURE"
+                          ]
+                        },
+                        "variableId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "unit": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 64
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "variableId",
+                        "unit"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "owner": {
+                    "type": "string",
+                    "const": "S3"
+                  },
+                  "query": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "guard": {
+                    "type": "object",
+                    "properties": {
+                      "register": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 7
+                      },
+                      "unit": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "minimum": {
+                        "type": "string",
+                        "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                      },
+                      "maximum": {
+                        "type": "string",
+                        "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                      }
+                    },
+                    "required": [
+                      "register",
+                      "unit",
+                      "minimum",
+                      "maximum"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "modelRef",
+                  "periods",
+                  "columns",
+                  "owner",
+                  "query",
+                  "guard"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "modelRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "periods": {
+                    "minItems": 1,
+                    "maxItems": 256,
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 65535
+                    }
+                  },
+                  "columns": {
+                    "minItems": 1,
+                    "maxItems": 8,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "STATE",
+                            "EXPOSURE"
+                          ]
+                        },
+                        "variableId": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 128
+                        },
+                        "unit": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 64
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "variableId",
+                        "unit"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "owner": {
+                    "type": "string",
+                    "const": "S4"
+                  },
+                  "policyRef": {
+                    "type": "object",
+                    "properties": {
+                      "owner": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "version": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "contentDigest": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "owner",
+                      "id",
+                      "version",
+                      "contentDigest"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "decision": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {}
+                  },
+                  "allocationRef": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "id": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "version": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "contentDigest": {
+                            "type": "string",
+                            "pattern": "^[a-f0-9]{64}$"
+                          }
+                        },
+                        "required": [
+                          "owner",
+                          "id",
+                          "version",
+                          "contentDigest"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "guard": {
+                    "type": "object",
+                    "properties": {
+                      "register": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 7
+                      },
+                      "unit": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                      },
+                      "minimum": {
+                        "type": "string",
+                        "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                      },
+                      "maximum": {
+                        "type": "string",
+                        "pattern": "^(?:0|[1-9][0-9]{0,19}|-[1-9][0-9]{0,19})$"
+                      }
+                    },
+                    "required": [
+                      "register",
+                      "unit",
+                      "minimum",
+                      "maximum"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "modelRef",
+                  "periods",
+                  "columns",
+                  "owner",
+                  "policyRef",
+                  "decision",
+                  "allocationRef",
+                  "guard"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "deadlineAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          },
+          "resourceDemand": {
+            "minItems": 1,
+            "maxItems": 2,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "resourceId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "request",
+                    "seconds"
+                  ]
+                },
+                "amount": {
+                  "type": "string",
+                  "pattern": "^(?:0|[1-9][0-9]{0,3})$"
+                }
+              },
+              "required": [
+                "resourceId",
+                "unit",
+                "amount"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "maxMemoryBytes": {
+            "type": "integer",
+            "minimum": 134217728,
+            "maximum": 2147483648
+          },
+          "maxCpuSeconds": {
+            "type": "integer",
+            "minimum": 30,
+            "maximum": 3600
+          },
+          "maxAttempts": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "maxRetainedBytes": {
+            "type": "integer",
+            "minimum": 1048576,
+            "maximum": 67108864
+          },
+          "qualification": {
+            "type": "object",
+            "properties": {
+              "schema": {
+                "type": "string",
+                "const": "finnor.z4.public-qualification.v1"
+              },
+              "registrationSha256": {
+                "type": "string",
+                "const": "4479bce31a46945067d88b262bcb549040c20d91b2dc57e788e6b335bda4f163"
+              },
+              "caseId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "compilerFrozenAt": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              }
+            },
+            "required": [
+              "schema",
+              "registrationSha256",
+              "caseId",
+              "compilerFrozenAt"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "schema",
+          "mode",
+          "root",
+          "workId",
+          "workInputId",
+          "workRevisionRef",
+          "idempotencyKey",
+          "purpose",
+          "program",
+          "initial",
+          "ownerContract",
+          "deadlineAt",
+          "resourceDemand",
+          "maxMemoryBytes",
+          "maxCpuSeconds",
+          "maxAttempts",
+          "maxRetainedBytes"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/company-brain/execution-proof-submit/post"
+    },
+    {
       "id": "http.post.computer.runs.$id.cancel",
       "capabilityId": "http.post.computer.runs.$id.cancel",
       "group": "computer-controls",
@@ -2849,6 +5376,198 @@
       },
       "source": "finnor-os/apps/api/app/api/corrections/route.ts",
       "generatedFrom": "finnor-os/openapi.json#paths//api/corrections/post"
+    },
+    {
+      "id": "http.post.demand-to-business.intake",
+      "capabilityId": "http.post.demand-to-business.intake",
+      "group": "growth-intake",
+      "title": "Demand to business intake",
+      "method": "POST",
+      "routePattern": "demand-to-business/intake",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/private-equity",
+      "humanOnly": true,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "companyId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "instruction": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8000
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "companyId",
+          "instruction",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/demand-to-business/[operation]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/demand-to-business/intake/post"
+    },
+    {
+      "id": "http.post.demand-to-business.prepare-native",
+      "capabilityId": "http.post.demand-to-business.prepare-native",
+      "group": "growth-native-preparation",
+      "title": "Demand to business prepare native",
+      "method": "POST",
+      "routePattern": "demand-to-business/prepare-native",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/private-equity",
+      "humanOnly": true,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "workId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "mandateSource": {
+            "type": "object",
+            "properties": {
+              "sourceId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "versionId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "sourceId",
+              "versionId",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          },
+          "preparationRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          },
+          "allocationRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          },
+          "consumptionRef": {
+            "type": "object",
+            "properties": {
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "contentDigest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "owner",
+              "id",
+              "version",
+              "contentDigest"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "workId",
+          "mandateSource",
+          "preparationRef",
+          "allocationRef",
+          "consumptionRef"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/demand-to-business/[operation]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/demand-to-business/prepare-native/post"
     },
     {
       "id": "http.post.documents.$id.artifact.bindings",
@@ -9189,6 +11908,109 @@
       },
       "source": "finnor-os/apps/api/app/api/workflows/steps/[id]/compensate/route.ts",
       "generatedFrom": "finnor-os/openapi.json#paths//api/workflows/steps/{id}/compensate/post"
+    },
+    {
+      "id": "http.post.workforce.participants",
+      "capabilityId": "http.post.workforce.participants",
+      "group": "workforce",
+      "title": "Workforce participants",
+      "method": "POST",
+      "routePattern": "workforce/participants",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/workforce",
+      "humanOnly": false,
+      "pathFields": [],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "contactId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "recipientPrincipalId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "contactId",
+          "recipientPrincipalId",
+          "purpose",
+          "validUntil",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/workforce/participants/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/workforce/participants/post"
+    },
+    {
+      "id": "http.post.workforce.participants.$id",
+      "capabilityId": "http.post.workforce.participants.$id",
+      "group": "workforce",
+      "title": "Workforce participants",
+      "method": "POST",
+      "routePattern": "workforce/participants/:id",
+      "operation": null,
+      "readOnly": false,
+      "owner": "@finnor/workforce",
+      "humanOnly": false,
+      "pathFields": [
+        "id"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "CONFIRM",
+              "REVOKE"
+            ]
+          },
+          "proposalDigest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "expectedRevision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "idempotencyKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          }
+        },
+        "required": [
+          "action",
+          "proposalDigest",
+          "expectedRevision",
+          "idempotencyKey"
+        ],
+        "additionalProperties": false
+      },
+      "source": "finnor-os/apps/api/app/api/workforce/participants/[id]/route.ts",
+      "generatedFrom": "finnor-os/openapi.json#paths//api/workforce/participants/{id}/post"
     },
     {
       "id": "http.post.workforce.profiles",

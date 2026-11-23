@@ -11,9 +11,9 @@
 // apps/api/lib/auth.ts's requireContext(). Moved here rather than duplicated, which is
 // what "Read: packages/security (JWT verify)" implied should already be true.
 
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { AuthUnknownError, createClient, isAuthRetryableFetchError, type SupabaseClient } from "@supabase/supabase-js";
 import { getPool, queryWithExecutionDeadline, executionDeadlineMilliseconds } from "@finnor/db";
-import type { TenantContext, Role } from "@finnor/shared-types";
+import type { TenantContext } from "@finnor/shared-types";
 
 import { verifyWorkOSIdentity } from "./workos-auth";
 
@@ -75,6 +75,10 @@ export async function verifyBearerToken(token: string): Promise<VerifiedIdentity
   // it still falls back to the Auth server for symmetric signing. Either path
   // cryptographically validates expiry/signature—this is not decode-and-trust.
   const { data, error } = await supabase.auth.getClaims(token);
+  if (error && (isAuthRetryableFetchError(error) || error instanceof AuthUnknownError
+    || error.status === 408 || error.status === 429 || (error.status ?? 0) >= 500)) {
+    throw new AuthVerificationError("Authentication verification temporarily unavailable", 503);
+  }
   const email = data?.claims.email;
   if (error || typeof email !== "string" || !email) throw new AuthVerificationError("Invalid or expired token", 401);
   const claims = data!.claims;
@@ -104,11 +108,13 @@ export async function resolveTenantContextByEmail(email: string): Promise<Identi
   const row = rows[0];
   if (!row) return null;
   if (row.employee_status !== "active") throw new AuthVerificationError("Employee access is suspended", 403);
+  if (row.role !== "owner" && row.role !== "participant")
+    throw new AuthVerificationError("Product identity is unavailable", 403);
   return {
     userId: row.id,
     employeeId: row.id,
     tenantId: row.tenant_id,
-    role: row.role as Role,
+    role: row.role,
     authorityRevision: Number(row.authority_revision ?? 1),
   };
 }

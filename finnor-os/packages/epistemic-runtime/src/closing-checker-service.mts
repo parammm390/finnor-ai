@@ -44,6 +44,9 @@ function failureDiagnostic(error: unknown) {
     "Canonical signed observation bytes changed", "Canonical original-operation observation bytes changed",
     "Request bound",
   ];
+  const permission = fields?.code === "42501" && value
+    ? /^permission denied for (function|table|schema|sequence|database|relation) ([a-zA-Z_][a-zA-Z0-9_.]{0,127})$/.exec(value.message)
+    : null;
   return {
     event: "INDEPENDENT_CLOSING_CHECK_FAILED",
     errorType: value && ["Error", "TypeError", "RangeError", "SyntaxError", "ZodError", "DatabaseError"].includes(value.name)
@@ -51,6 +54,7 @@ function failureDiagnostic(error: unknown) {
     predicate: value && predicates.includes(value.message) ? value.message : undefined,
     sqlCode: typeof fields?.code === "string" && /^[0-9A-Z]{5}$/.test(fields.code) ? fields.code : undefined,
     table: identifier(fields?.table), column: identifier(fields?.column), constraint: identifier(fields?.constraint),
+    permissionObject: permission ? { kind: permission[1], identifier: permission[2] } : undefined,
     issues: error instanceof z.ZodError ? error.issues.slice(0, 8).map(issue => ({
       code: issue.code, path: issue.path.slice(0, 8).map(part => typeof part === "number" ? part : identifier(part) ?? "[field]"),
     })) : undefined,

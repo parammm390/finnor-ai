@@ -1,0 +1,15 @@
+{
+  "id": "rebound-over-budget-positive",
+  "inputDigest": "2ff93b511a14fd791b9a842e8c2da973a1bdbd29ffe82b3cd2605f21d07604c8",
+  "corruptionDigest": "bbc9495d03b6dafcc8e4762de48d63e1fdf793663a649efd2b6476fdc4b7957b",
+  "expected": "INDEPENDENT_REJECTION_OF_REBOUND_POSITIVE",
+  "passed": true,
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "{\"checked\":false,\"checker\":\"z5-original-semantics-checker-v1\",\"executionAuthorityGranted\":false,\"reason\":\"REFUSAL_CANNOT_CARRY_POSITIVE_PROOF\",\"schema\":\"finnor.z5.independent-check.v1\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 42.919431999999915
+  }
+}

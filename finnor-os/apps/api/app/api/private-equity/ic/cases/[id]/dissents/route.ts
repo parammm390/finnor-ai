@@ -1,4 +1,4 @@
-import { recordIcDissent } from "@finnor/private-equity";
+import { recordIcDissent } from "../../../../../../../../../packages/private-equity/src/ic-repository";
 import { handleIcPost, IcDissentSchema, IcUuidSchema } from "../../../../../../../lib/ic";
 
 export const runtime = "nodejs";

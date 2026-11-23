@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
+import { EconomicReadRequestSchema, isEconomicReadIntent, isEconomicReadMetadataAssertion } from "@finnor/shared-types";
+import { economicObjectiveQueryObservation } from "./objective-economic-reads";
 import type {
   BusinessEffectSet,
   BusinessEffectVerification,
@@ -25,6 +27,7 @@ import {
   withTenant,
   workEventWaits,
   workObjectiveLoops,
+  workPlanRevisions,
   workInputs,
   workEntityLinks,
   works,
@@ -544,19 +547,42 @@ async function privateEquityIcDeckCriterion(params: { tenantId: string; workId: 
   return { satisfied: false, basis: "No verified Work-created IC presentation has populated, bound source content and its finalized receipt.", evidenceRefs: [], observed: { candidateCount: rows.length } };
 }
 
-async function queryCriterion(params: {
+export async function evaluateObjectiveQueryCriterion(params: {
   tenantId: string;
   workId: string;
   request: OperationalQueryRequest;
   assertion: ObjectiveSuccessAssertion;
   executionKey: string;
   loopId:string;
+  criterionIndex?: number;
 }): Promise<{ satisfied: boolean; basis: string; evidenceRefs: Array<{ type: string; id: string }>; observed: unknown; queryExecutionId?: string }> {
-  const identity: { userId?: string; employeeId?: string; workInputId?: string } | null = params.request.intent === "economic_programme_v1" || params.request.intent === "harness_program_v1" || params.request.intent === "confidential_economic_computation_v1" || params.request.intent === "closing_readiness" || params.request.intent === "pe_world_state" ? await withTenant(params.tenantId,async db=>{
+  if (isEconomicReadIntent(params.request.intent)) {
+    if (!isEconomicReadMetadataAssertion(params.assertion) || params.criterionIndex === undefined) return { satisfied: false,
+      basis: "Private financial facts are not a supported shared Objective assertion; the accepted condition was not weakened.",
+      evidenceRefs: [], observed: { predicate: "PRIVATE_ECONOMIC_ASSERTION_UNSUPPORTED" } };
+    try {
+      const observation = await economicObjectiveQueryObservation({ tenantId: params.tenantId, workId: params.workId,
+        loopId: params.loopId, request: EconomicReadRequestSchema.parse(params.request), criterionIndex: params.criterionIndex });
+      const assertion = evaluateObjectiveAssertion(observation, params.assertion);
+      return { satisfied: assertion.satisfied, basis: "The original native query receipt and current private use rights were independently checked.",
+        evidenceRefs: [{ type: "work_query_execution", id: observation.execution.id }],
+        observed: { path: params.assertion.path, operator: "eq", expected: params.assertion.expected, actual: assertion.actual },
+        queryExecutionId: observation.execution.id };
+    } catch { return { satisfied: false, basis: "The original native private query is unavailable under current custody or source rights.",
+      evidenceRefs: [], observed: { predicate: "PRIVATE_ECONOMIC_QUERY_UNAVAILABLE" } }; }
+  }
+  const identity: { userId?: string; employeeId?: string; workInputId?: string } | null = params.request.intent === "economic_programme_v1" || params.request.intent === "harness_program_v1" || params.request.intent === "confidential_economic_computation_v1" || params.request.intent === "execution_proof_capsule_v1" || params.request.intent === "organization_transformation_v1" || params.request.intent === "closing_readiness" || params.request.intent === "pe_world_state" ? await withTenant(params.tenantId,async db=>{
     const [loop]=await db.select({createdBy:workObjectiveLoops.createdBy}).from(workObjectiveLoops).where(and(eq(workObjectiveLoops.tenantId,params.tenantId),eq(workObjectiveLoops.workId,params.workId),eq(workObjectiveLoops.id,params.loopId))).limit(1);
     const [input]=await db.select({id:workInputs.id}).from(workInputs).where(and(eq(workInputs.tenantId,params.tenantId),eq(workInputs.workId,params.workId))).orderBy(sql`${workInputs.createdAt} DESC`,sql`${workInputs.id} DESC`).limit(1);
     if(!loop?.createdBy||!input)return null;
-    return {userId:loop.createdBy,employeeId:loop.createdBy,...(["harness_program_v1","economic_programme_v1","confidential_economic_computation_v1"].includes(params.request.intent)?{workInputId:input.id}:{})};
+    if (params.request.intent === "organization_transformation_v1") {
+      const [plan] = await db.select({ workInputId: workPlanRevisions.workInputId }).from(workPlanRevisions).where(and(
+        eq(workPlanRevisions.tenantId, params.tenantId), eq(workPlanRevisions.workId, params.workId),
+        eq(workPlanRevisions.objectiveLoopId, params.loopId), eq(workPlanRevisions.status, "active"),
+      )).limit(1);
+      if (!plan || plan.workInputId !== input.id) return null;
+    }
+    return {userId:loop.createdBy,employeeId:loop.createdBy,...(["harness_program_v1","economic_programme_v1","confidential_economic_computation_v1","execution_proof_capsule_v1","organization_transformation_v1"].includes(params.request.intent)?{workInputId:input.id}:{})};
   }):{};
   if (!identity) return { satisfied: false, basis: "Native verification requires the persisted current principal and Work input; no substitute identity was used.", evidenceRefs: [], observed: { predicate: "NATIVE_VERIFIER_PRINCIPAL_INPUT_REQUIRED" } };
   const result = await executeTenantOperationalQuery(params.tenantId, params.request as CanonicalOperationalQueryRequest, { workId: params.workId, executionKey: params.executionKey,...identity });
@@ -834,7 +860,7 @@ export async function evaluateObjectiveSuccessCondition(params: {
 
   const validateEvidence = async (item: ObjectiveCompletionEvidence, index: number): Promise<ObjectiveSuccessCriterionResult> => {
     if (item.kind === "canonical_query") {
-      const result = await queryCriterion({ tenantId: params.tenantId, workId: params.workId, request: item.request, assertion: item.assertion, loopId:params.loopId, executionKey: `objective:${params.loopId}:step:${params.stepNumber}:success:evidence:${index}` });
+      const result = await evaluateObjectiveQueryCriterion({ tenantId: params.tenantId, workId: params.workId, request: item.request, assertion: item.assertion, loopId:params.loopId, executionKey: `objective:${params.loopId}:step:${params.stepNumber}:success:evidence:${index}` });
       if (result.queryExecutionId) queryExecutionIds.push(result.queryExecutionId);
       return { index, kind: "decision_evidence", satisfied: result.satisfied, basis: result.basis, evidenceRefs: result.evidenceRefs, observed: result.observed };
     }
@@ -871,7 +897,8 @@ export async function evaluateObjectiveSuccessCondition(params: {
       const satisfied = effects.length >= criterion.minimumCount && effects.every(verifiedEffect);
       add(index, criterion, { satisfied, basis: satisfied ? `All ${effects.length} objective Business Effects are verified.` : `Only ${effects.filter(verifiedEffect).length} of ${effects.length} objective Business Effects are verified; minimum ${criterion.minimumCount}.`, evidenceRefs: effects.map((row) => ({ type: "business_effect", id: row.id })), observed: effects.map((row) => ({ id: row.id, status: row.status, verification: row.verification?.state ?? null })) });
     } else if (criterion.kind === "canonical_query") {
-      const result = await queryCriterion({ tenantId: params.tenantId, workId: params.workId, request: criterion.request, assertion: criterion.assertion, loopId:params.loopId, executionKey: `objective:${params.loopId}:step:${params.stepNumber}:success:criterion:${index}` });
+      const result = await evaluateObjectiveQueryCriterion({ tenantId: params.tenantId, workId: params.workId, request: criterion.request, assertion: criterion.assertion,
+        loopId: params.loopId, criterionIndex: index, executionKey: `objective:${params.loopId}:step:${params.stepNumber}:success:criterion:${index}` });
       if (result.queryExecutionId) queryExecutionIds.push(result.queryExecutionId);
       add(index, criterion, result);
     } else if (criterion.kind === "private_equity_truth") {

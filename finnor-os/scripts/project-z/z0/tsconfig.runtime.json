@@ -1,0 +1,9 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["../../../packages/orchestration/src/project-z/z0-convergence/**/*.ts"],
+  "exclude": ["../../../node_modules", "../../../**/node_modules", "../../../**/.next"]
+}

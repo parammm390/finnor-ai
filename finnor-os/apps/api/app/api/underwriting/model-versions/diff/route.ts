@@ -1,4 +1,4 @@
-import { compareUnderwritingModelVersions } from "@finnor/private-equity";
+import { compareUnderwritingModelVersions } from "../../../../../../../packages/private-equity/src/underwriting-repository";
 import { requireContext } from "../../../../../lib/auth";
 import {
   UnderwritingUuidSchema,

@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { randomUUID } from "node:crypto";
 import type { PeMutationContext } from "../types";
-import { persistEconomicRecord, listStoredWorkCompute,listStoredWorkPreparationCompute } from "../economic-store";
+import { persistEconomicRecord, listStoredWorkCompute, listStoredWorkComputeTx, listStoredWorkPreparationCompute } from "../economic-store";
 import { sha, tx, principal } from "../evidence-execution/store";
 import {chargeInstitutionDemand} from '../allocation-store';
 import {AllocationContractError} from '../../../epistemic-runtime/src/allocation-contracts';
@@ -72,26 +72,50 @@ export async function persistInstitutionCompute(ctx: PeMutationContext, input: {
       businessWorkCredit: 0, qualification: "COMPUTE_ATTRIBUTION_NOT_FINANCIAL_VALUE_OR_CAPACITY_PROOF" } });
 }
 
-export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId: string, compilerEpisodeId: string) {
-  const native = await tx(ctx, async c => (await c.query<{ id: string }>(`SELECT id::text
-    FROM finnor_os.p1_episodes WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3`,
-  [ctx.auth.tenantId, principal(ctx), workId])).rows[0], true);
-  const episodeIds = [...new Set([compilerEpisodeId, ...(native ? [native.id] : [])])];
-  const history = await listStoredWorkCompute(ctx, { workId, episodeIds, schema: "finnor.x1.native-compute.v1" });
-  const apiHistory=await listStoredWorkCompute(ctx,{workId,episodeIds:[compilerEpisodeId],schema:'finnor.x1.api-compute.v1'});
-  const preparationHistory=await listStoredWorkPreparationCompute(ctx,workId);
-  const originalParent=await tx(ctx,async c=>(await c.query<{parent_reservation:unknown}>(`SELECT parent_reservation
-    FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND id=$4`,
-    [ctx.auth.tenantId,principal(ctx),workId,compilerEpisodeId])).rows[0]?.parent_reservation??null,true);
-  const preparationAllocations=await tx(ctx,async c=>(await c.query<{record_id:string;payload:any}>(`
-    SELECT record_id,body->'payload' payload FROM finnor_os.s7_economic_records
-    WHERE tenant_id=$1 AND principal_id=$2 AND kind='COST'
-      AND body->'payload'->>'schema'='finnor.x1.preparation-allocation.v1'
-      AND body->'payload'->>'workId'=$3 AND body->'payload'->>'episodeId'=$4
-    ORDER BY knowledge_at,record_id LIMIT 1025`,[ctx.auth.tenantId,principal(ctx),workId,compilerEpisodeId])).rows,true);
-  const physicalCharges=await tx(ctx,async c=>(await c.query<{body:any}>(`SELECT body FROM finnor_os.s5_governed_resource_charges
-    WHERE tenant_id=$1 AND principal_id=$2 AND reservation_id=$3 AND phase='PREPARATION' LIMIT 1025`,
-    [ctx.auth.tenantId,principal(ctx),(originalParent as ParentRef|null)?.id??''])).rows.map(row=>row.body),true);
+export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId: string, compilerEpisodeId: string,
+  options?: { excludeWorkObservations: boolean }) {
+  const { episodeIds, history, apiHistory, preparationHistory, originalParent, preparationAllocations,
+    physicalCharges, meterGaps, lifecycle, lifecycleCharges } = await tx(ctx, async c => {
+    const native = (await c.query<{ id: string }>(`SELECT id::text
+      FROM finnor_os.p1_episodes WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3`,
+    [ctx.auth.tenantId, principal(ctx), workId])).rows[0];
+    const episodeIds = [...new Set([compilerEpisodeId, ...(native ? [native.id] : [])])];
+    const history = await listStoredWorkComputeTx(ctx, { workId, episodeIds, schema: "finnor.x1.native-compute.v1" }, c);
+    // The mounted execution view must not change as a side effect of reading it.
+    // Platform observations remain in the economic ledger and the full cost read.
+    const apiHistory = await listStoredWorkComputeTx(ctx, { workId, episodeIds: [compilerEpisodeId], schema: 'finnor.x1.api-compute.v1',
+      excludeWorkObservations: options?.excludeWorkObservations }, c);
+    const preparationHistory = await listStoredWorkPreparationCompute(ctx, workId, options, c);
+    const originalParent = (await c.query<{ parent_reservation: ParentRef | null }>(`SELECT parent_reservation
+      FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND id=$4`,
+      [ctx.auth.tenantId,principal(ctx),workId,compilerEpisodeId])).rows[0]?.parent_reservation ?? null;
+    const preparationAllocations = (await c.query<{record_id:string;payload:any}>(`
+      SELECT record_id,body->'payload' payload FROM finnor_os.s7_economic_records
+      WHERE tenant_id=$1 AND principal_id=$2 AND kind='COST'
+        AND body->'payload'->>'schema'='finnor.x1.preparation-allocation.v1'
+        AND body->'payload'->>'workId'=$3 AND body->'payload'->>'episodeId'=$4
+      ORDER BY knowledge_at,record_id LIMIT 1025`,[ctx.auth.tenantId,principal(ctx),workId,compilerEpisodeId])).rows;
+    const physicalCharges = (await c.query<{body:any}>(`SELECT body FROM finnor_os.s5_governed_resource_charges
+      WHERE tenant_id=$1 AND principal_id=$2 AND reservation_id=$3 AND phase='PREPARATION' LIMIT 1025`,
+      [ctx.auth.tenantId, principal(ctx), originalParent?.id ?? ''])).rows.map(row => row.body);
+    const meterGaps = (await c.query<{ kind: string; body: unknown }>(`
+      SELECT e.kind,e.body FROM finnor_os.x1_compiler_events e
+        JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=e.tenant_id AND r.id=e.request_id
+        WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.work_id=$3 AND r.episode_id=$4
+          AND e.kind LIKE '%METER_GAP'
+      UNION ALL
+      SELECT e.kind,e.body FROM finnor_os.p1_events e
+        JOIN finnor_os.p1_requests r ON r.tenant_id=e.tenant_id AND r.id=e.request_id
+        WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.work_id=$3 AND r.episode_id::text=ANY($5::text[])
+          AND e.kind LIKE '%METER_GAP' LIMIT 1025`,
+    [ctx.auth.tenantId, principal(ctx), workId, compilerEpisodeId, episodeIds])).rows;
+    const lifecycle = await listStoredWorkComputeTx(ctx, { workId, episodeIds: [compilerEpisodeId], schema: 'finnor.x1.lifecycle-compute.v1' }, c);
+    const lifecycleCharges = (await c.query<{body:any}>(`SELECT body FROM finnor_os.s5_governed_resource_charges
+      WHERE tenant_id=$1 AND principal_id=$2 AND reservation_id=$3 AND phase='LIFECYCLE' LIMIT 1025`,
+      [ctx.auth.tenantId, principal(ctx), originalParent?.id ?? ''])).rows.map(row => row.body);
+    return { episodeIds, history, apiHistory, preparationHistory, originalParent, preparationAllocations,
+      physicalCharges, meterGaps, lifecycle, lifecycleCharges };
+  }, true);
   const seen = new Set<string>(), gaps: string[] = [], phases = new Map<string, { deliveries: number; attributedElapsedMs: number }>();
   const refs: Array<{ owner: "S7"; id: string; version: string; contentDigest: string }> = [];
   let attributedElapsedMs = 0, sampledProcessRssBytes = 0, rssSamples = 0;
@@ -128,17 +152,6 @@ export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId
       sampledProcessRssBytes = Math.max(sampledProcessRssBytes, rss);
     }
   }
-  const meterGaps = await tx(ctx, async c => (await c.query<{ kind: string; body: unknown }>(`
-    SELECT e.kind,e.body FROM finnor_os.x1_compiler_events e
-      JOIN finnor_os.x1_compiler_requests r ON r.tenant_id=e.tenant_id AND r.id=e.request_id
-      WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.work_id=$3 AND r.episode_id=$4
-        AND e.kind LIKE '%METER_GAP'
-    UNION ALL
-    SELECT e.kind,e.body FROM finnor_os.p1_events e
-      JOIN finnor_os.p1_requests r ON r.tenant_id=e.tenant_id AND r.id=e.request_id
-      WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.work_id=$3 AND r.episode_id::text=ANY($5::text[])
-        AND e.kind LIKE '%METER_GAP' LIMIT 1025`,
-  [ctx.auth.tenantId, principal(ctx), workId, compilerEpisodeId, episodeIds])).rows, true);
   if (!history.complete) gaps.push(history.reason!);
   const apiIdentities=new Set<string>();let apiElapsedMs=0;
   for(const record of apiHistory.records){
@@ -166,8 +179,9 @@ export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId
     preparationIdentities.add(String(p.invocationId));preparationElapsedMs+=p.elapsedMs;
   }
   if(!preparationHistory.complete)gaps.push(preparationHistory.reason!);
+  const attributablePreparation = preparationHistory.records.filter(record => record.payload.purpose !== "WORK_OBSERVATION");
   const allocated=new Set<string>();
-  for(const record of preparationHistory.records){
+  for(const record of attributablePreparation){
     const entries=preparationAllocations.filter(a=>a.payload.originalRecordRef?.id===record.ref.id);
     const entry=entries[0]?.payload;
     const actual=entry&&physicalCharges.filter(charge=>charge.physicalInvocationId===record.payload.invocationId
@@ -180,10 +194,6 @@ export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId
   if(preparationIdentities.size)phases.set('AUTHENTICATED_WORK_PREPARATION',{
     deliveries:preparationIdentities.size,attributedElapsedMs:preparationElapsedMs});
   if (meterGaps.length > 1024) gaps.push("X1_COMPUTE_METER_GAP_HISTORY_BOUND");
-  const lifecycle=await listStoredWorkCompute(ctx,{workId,episodeIds:[compilerEpisodeId],schema:'finnor.x1.lifecycle-compute.v1'});
-  const lifecycleCharges=await tx(ctx,async c=>(await c.query<{body:any}>(`SELECT body FROM finnor_os.s5_governed_resource_charges
-    WHERE tenant_id=$1 AND principal_id=$2 AND reservation_id=$3 AND phase='LIFECYCLE' LIMIT 1025`,
-    [ctx.auth.tenantId,principal(ctx),(originalParent as ParentRef|null)?.id??''])).rows.map(r=>r.body),true);
   const lifecycleIds=new Set<string>();
   const lifecycleAllocations:Array<{invocationId:string;status:string;reason:string|null}>=[];
   for(const record of lifecycle.records){
@@ -211,10 +221,10 @@ export async function readInstitutionComputeCosts(ctx: PeMutationContext, workId
     attributedElapsedMs:attributedElapsedMs+apiElapsedMs+preparationElapsedMs, phases: Object.fromEntries(phases),
     preparationAllocation:{basis:'ALL_OWNED_WORK_PREPARATION_ONCE_TO_ITS_ORIGINAL_WORK_EPISODE',
       originalEpisodeId:compilerEpisodeId,parentReservation:originalParent,
-      recordRefs:preparationHistory.records.map(record=>record.ref),
+      recordRefs:attributablePreparation.map(record=>record.ref),
       allocationRecordIds:preparationAllocations.map(record=>record.record_id),
-      originalMeasurementsRewritten:false,resourceConsumptionClaimed:preparationHistory.records.length>0
-        &&allocated.size===preparationHistory.records.length,
+      originalMeasurementsRewritten:false,resourceConsumptionClaimed:attributablePreparation.length>0
+        &&allocated.size===attributablePreparation.length,
       monetaryConversion:'UNKNOWN_REQUIRES_NATIVE_PRICES'},
     sampledProcessRssBytes: rssSamples ? sampledProcessRssBytes : null,
     physicalComponents:{includedWithin:'COMPILE',additionalElapsedCredit:0,sourceObservations:sources.length,
@@ -267,7 +277,7 @@ export async function persistInstitutionLifecycleCompute(ctx:PeMutationContext,i
 /** Physical preparation is observable before an episode/reservation exists.
  * Work ownership is checked by the API and again by the economic owner reader. */
 export async function persistInstitutionWorkPreparationCompute(ctx:PeMutationContext,input:{workId:string;
-  rightsRevision:string;operation:string;statusCode:number;startedAt:string;elapsedMs:number}){
+  rightsRevision:string;operation:string;statusCode:number;startedAt:string;elapsedMs:number;purpose?:"WORK_OBSERVATION"}){
   const invocationId=randomUUID();
   if(!physicalUuid.test(input.workId)||input.operation.length>128||!Number.isInteger(input.statusCode)
     ||input.statusCode<100||input.statusCode>599||!Number.isFinite(input.elapsedMs)||input.elapsedMs<0)
@@ -284,7 +294,8 @@ export async function persistInstitutionWorkPreparationCompute(ctx:PeMutationCon
       process:{pid:process.pid,node:process.version,rssBytesAtObservation:process.memoryUsage().rss},
       money:null,humanSeconds:null,aggregatePeakMemoryBytes:null,businessWorkCredit:0,
       meterWriterLatency:'UNOBSERVED_REQUIRES_EXTERNAL_LIFECYCLE_COLLECTOR',
-      costAllocation:'ONCE_PER_PHYSICAL_OWNED_WORK_PREPARATION_INVOCATION',
+      costAllocation:input.purpose === "WORK_OBSERVATION"
+        ? "PLATFORM_OBSERVATION" : "ONCE_PER_PHYSICAL_OWNED_WORK_PREPARATION_INVOCATION",
       qualification:'COMPUTE_ATTRIBUTION_NOT_RESOURCE_CONSUMPTION_FINANCIAL_VALUE_OR_CAPACITY_PROOF'}});
 }
 
@@ -292,13 +303,19 @@ export async function persistInstitutionWorkPreparationCompute(ctx:PeMutationCon
  * supplies an invocation identity and cannot reset the original compiler parent. */
 export async function persistInstitutionApiCompute(ctx:PeMutationContext,input:{workId:string;
   requestId:string;episodeId:string;parentReservation:{owner:string;id:string;version:string;contentDigest:string}|null;
-  rightsRevision:string;operation:string;statusCode:number;startedAt:string;elapsedMs:number}){
+  rightsRevision:string;operation:string;statusCode:number;startedAt:string;elapsedMs:number;purpose?:"WORK_OBSERVATION"}){
   const invocationId=randomUUID();
   if(!physicalUuid.test(input.workId)||!physicalUuid.test(input.requestId)||!physicalUuid.test(input.episodeId)
     ||input.operation.length>128||!Number.isInteger(input.statusCode)||input.statusCode<100||input.statusCode>599
     ||!Number.isFinite(input.elapsedMs)||input.elapsedMs<0)throw Error('X1_ACTUAL_API_MEASUREMENT_REQUIRED');
-  const consumption=await physicalResourceCharge(ctx,input.parentReservation,{
-    responsibilityIdentity:'x1-compiler-episode:'+input.episodeId,phase:'CONTROL',ordinal:1,units:1,physicalInvocationId:invocationId});
+  const observing = input.purpose === "WORK_OBSERVATION";
+  // Opening and polling Work is platform observation. Preserve its measured cost
+  // in S7 without spending a request unit from the original execution allowance.
+  const consumption = observing
+    ? { charge: null, resourceAllocation: { status: "WORK_OBSERVATION", reason: null,
+      resourceConsumptionConfirmed: false, executionAuthorityGranted: false } }
+    : await physicalResourceCharge(ctx,input.parentReservation,{
+      responsibilityIdentity:'x1-compiler-episode:'+input.episodeId,phase:'CONTROL',ordinal:1,units:1,physicalInvocationId:invocationId});
   const result=await persistEconomicRecord(ctx,{kind:'COMPUTE',rightsRef:`authority:${ctx.auth.tenantId}:${input.rightsRevision}`,
     idempotencyKey:'x1-api-compute:'+invocationId,semanticRequestDigest:sha(['x1-api-compute-v1',invocationId,input]),
     validAt:input.startedAt,horizon:'H0',uncertainty:'Measured API work; prices, meter-writer, aggregate memory and human supervision incomplete',
@@ -307,9 +324,10 @@ export async function persistInstitutionApiCompute(ctx:PeMutationContext,input:{
       phase:'AUTHENTICATED_API',process:{pid:process.pid,node:process.version,
         rssBytesAtObservation:process.memoryUsage().rss},money:null,humanSeconds:null,aggregatePeakMemoryBytes:null,
       meterWriterLatency:'UNOBSERVED_REQUIRES_EXTERNAL_LIFECYCLE_COLLECTOR',
-      businessWorkCredit:0,costAllocation:'ONCE_PER_PHYSICAL_API_INVOCATION_UNDER_ORIGINAL_WORK_PARENT',
+      businessWorkCredit:0,costAllocation:observing
+        ? "PLATFORM_OBSERVATION" : "ONCE_PER_PHYSICAL_API_INVOCATION_UNDER_ORIGINAL_WORK_PARENT",
       qualification:'COMPUTE_ATTRIBUTION_NOT_FINANCIAL_VALUE_OR_CAPACITY_PROOF'}});
-  if(!input.parentReservation){
+  if(!observing&&!input.parentReservation){
     const parent=await tx(ctx,async c=>(await c.query<{parent_reservation:ParentRef|null}>(`SELECT parent_reservation
       FROM finnor_os.x1_compiler_episodes WHERE tenant_id=$1 AND principal_id=$2 AND id=$3`,
       [ctx.auth.tenantId,principal(ctx),input.episodeId])).rows[0]?.parent_reservation??null,true);
@@ -322,10 +340,12 @@ export async function persistInstitutionApiCompute(ctx:PeMutationContext,input:{
  * each physical UUID once; past null-parent S7 preimages are never rewritten. */
 export async function allocateInstitutionPreparation(ctx:PeMutationContext,input:{workId:string;episodeId:string;
   parentReservation:ParentRef;rightsRevision:string}){
-  const preparation=await listStoredWorkPreparationCompute(ctx,input.workId);
-  const controls=await listStoredWorkCompute(ctx,{workId:input.workId,episodeIds:[input.episodeId],schema:'finnor.x1.api-compute.v1'});
+  const preparation=await listStoredWorkPreparationCompute(ctx,input.workId,{excludeWorkObservations:true});
+  const controls=await listStoredWorkCompute(ctx,{workId:input.workId,episodeIds:[input.episodeId],
+    schema:'finnor.x1.api-compute.v1',excludeWorkObservations:true});
   if(!preparation.complete||!controls.complete)throw Error('X1_PREPARATION_ALLOCATION_HISTORY_INCOMPLETE');
-  for(const record of [...preparation.records,...controls.records.filter(r=>r.payload.parentReservation===null)]){
+  const unallocated = [...preparation.records, ...controls.records.filter(record => record.payload.parentReservation === null)];
+  for(const record of unallocated){
     const physicalInvocationId=String(record.payload.invocationId);
     if(!physicalUuid.test(physicalInvocationId))throw Error('X1_PREPARATION_PHYSICAL_IDENTITY_REQUIRED');
     const consumption=await chargeInstitutionDemand(ctx,input.parentReservation,{

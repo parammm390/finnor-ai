@@ -74,36 +74,47 @@ export async function readStoredEconomicRecord(ctx: PeMutationContext, id: strin
         return decode(row);
     });
 }
-/** Bounded immutable compute history for one owned Work. The economic owner
- * validates every preimage; consumers cannot read raw unverified cost bodies. */
-export async function listStoredWorkCompute(ctx: PeMutationContext, input: {
+interface StoredWorkComputeInput {
     workId: string; episodeIds: string[]; schema: string;
-}) {
+    excludeWorkObservations?: boolean;
+}
+function validateStoredWorkComputeInput(input: StoredWorkComputeInput) {
     if (!input.workId || !input.schema || input.episodeIds.length < 1 || input.episodeIds.length > 2
         || new Set(input.episodeIds).size !== input.episodeIds.length)
         denied();
-    return withTenantTransaction(ctx.auth.tenantId, { userId: economicActor(ctx), readOnly: true }, async (_db, c) => {
-        await authorizeEconomicActor(ctx, c, false);
-        if (!(await c.query(`SELECT id FROM finnor_os.works
+}
+/** Bounded immutable compute history for one owned Work. The economic owner
+ * validates every preimage; consumers cannot read raw unverified cost bodies. */
+export async function listStoredWorkCompute(ctx: PeMutationContext, input: StoredWorkComputeInput) {
+    validateStoredWorkComputeInput(input);
+    return withTenantTransaction(ctx.auth.tenantId, { userId: economicActor(ctx), readOnly: true },
+        async (_db, c) => listStoredWorkComputeTx(ctx, input, c));
+}
+/** Use only an existing authenticated tenant transaction; do not acquire,
+ * commit or release another connection while its caller holds the pool slot. */
+export async function listStoredWorkComputeTx(ctx: PeMutationContext, input: StoredWorkComputeInput, c: pg.PoolClient) {
+    validateStoredWorkComputeInput(input);
+    await authorizeEconomicActor(ctx, c, false);
+    if (!(await c.query(`SELECT id FROM finnor_os.works
             WHERE tenant_id=$1 AND id=$2 AND created_by=$3`,
         [ctx.auth.tenantId, input.workId, economicActor(ctx)])).rows[0]) denied();
-        const rows = (await c.query(`SELECT * FROM finnor_os.s7_economic_records
+    const rows = (await c.query(`SELECT * FROM finnor_os.s7_economic_records
             WHERE tenant_id=$1 AND principal_id=$2 AND kind='COMPUTE'
               AND body->'payload'->>'schema'=$3 AND body->'payload'->>'workId'=$4
               AND body->'payload'->>'episodeId'=ANY($5::text[])
+              AND (NOT $6::boolean OR body->'payload'->>'purpose' IS DISTINCT FROM 'WORK_OBSERVATION')
             ORDER BY knowledge_at,record_id LIMIT 1025`,
-        [ctx.auth.tenantId, economicActor(ctx), input.schema, input.workId, input.episodeIds])).rows;
-        return { records: rows.slice(0, 1024).map(decode), complete: rows.length <= 1024,
-            ...(rows.length > 1024 ? { reason: 'ECONOMIC_WORK_COMPUTE_HISTORY_BOUND' } : {}),
-            executionAuthorityGranted: false as const };
-    });
+        [ctx.auth.tenantId, economicActor(ctx), input.schema, input.workId, input.episodeIds, input.excludeWorkObservations ?? false])).rows;
+    return { records: rows.slice(0, 1024).map(decode), complete: rows.length <= 1024,
+        ...(rows.length > 1024 ? { reason: 'ECONOMIC_WORK_COMPUTE_HISTORY_BOUND' } : {}),
+        executionAuthorityGranted: false as const };
 }
 /** Work preparation precedes the first compiler episode. These immutable
  * measurements retain their observed null episode; the X1 consumer binds the
  * owned Work to its actual original parent without rewriting those records. */
-export async function listStoredWorkPreparationCompute(ctx:PeMutationContext,workId:string){
+export async function listStoredWorkPreparationCompute(ctx:PeMutationContext,workId:string,options?:{excludeWorkObservations?:boolean}, client?: pg.PoolClient){
     if(!/^[a-f0-9-]{36}$/i.test(workId))denied();
-    return withTenantTransaction(ctx.auth.tenantId,{userId:economicActor(ctx),readOnly:true},async(_db,c)=>{
+    const read = async (c: pg.PoolClient) => {
         await authorizeEconomicActor(ctx,c,false);
         if(!(await c.query('SELECT id FROM finnor_os.works WHERE tenant_id=$1 AND id=$2 AND created_by=$3',
             [ctx.auth.tenantId,workId,economicActor(ctx)])).rows[0])denied();
@@ -111,10 +122,13 @@ export async function listStoredWorkPreparationCompute(ctx:PeMutationContext,wor
             WHERE tenant_id=$1 AND principal_id=$2 AND kind='COMPUTE'
               AND body->'payload'->>'schema'='finnor.x1.api-preparation-compute.v1'
               AND body->'payload'->>'workId'=$3 AND body->'payload'->'episodeId'='null'::jsonb
-            ORDER BY knowledge_at,record_id LIMIT 1025`,[ctx.auth.tenantId,economicActor(ctx),workId])).rows;
+              AND (NOT $4::boolean OR body->'payload'->>'purpose' IS DISTINCT FROM 'WORK_OBSERVATION')
+            ORDER BY knowledge_at,record_id LIMIT 1025`,[ctx.auth.tenantId,economicActor(ctx),workId,options?.excludeWorkObservations ?? false])).rows;
         return {records:rows.slice(0,1024).map(decode),complete:rows.length<=1024,
             ...(rows.length>1024?{reason:'ECONOMIC_WORK_PREPARATION_HISTORY_BOUND'}:{}),executionAuthorityGranted:false as const};
-    });
+    };
+    return client ? read(client) : withTenantTransaction(ctx.auth.tenantId,
+        { userId: economicActor(ctx), readOnly: true }, (_db, c) => read(c));
 }
 export async function listStoredEconomicHistory(ctx: PeMutationContext, estimandId: string, knowledgeAt?: string) {
     const cut = knowledgeAt ?? new Date().toISOString();

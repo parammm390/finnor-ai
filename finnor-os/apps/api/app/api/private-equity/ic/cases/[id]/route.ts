@@ -1,4 +1,4 @@
-import { getIcWorkspace } from "@finnor/private-equity";
+import { getIcWorkspace } from "../../../../../../../../packages/private-equity/src/ic-repository";
 import { handleIcGet, IcUuidSchema } from "../../../../../../lib/ic";
 
 export const runtime = "nodejs";

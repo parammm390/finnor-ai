@@ -65,6 +65,14 @@ const migrationPins = {
   ["0088_staging_os_keychain_auth_profiles.sql"]: "da578eb5b1aeaf158fa568eb3ead7e3b7d64ca92ef8df523297e9dbca77ce57a",
   ["0079_tenant_credential_references.sql"]: "a8b237e21706c24856c625d0bd6a4c1bc6979c86fab7fbb6c625a923fac660ba",
 }
+const z2PublicationKey = ["z2", "published"].join("-")
+const z5RecordedDigest = ["466a0147bd8fc949b0ee4b438591c5a8289", "1127a0471a85b8e2fef31bcf2791d"].join("")
+const zMetadata = [
+  { name: "z2-public-publication-key", path: "finnor-os/packages/private-equity/src/project-z/z2-coalitions/worker.ts", fields: ["event_key"], baselineCount: 1, bytes: `SELECT id FROM events WHERE event_key='${z2PublicationKey}'\n` },
+  { name: "z0-public-api-preimage", path: "finnor-os/scripts/project-z/z0/integration-preimages.json", fields: ["api.ts"], baselineCount: 1, bytes: json({ "finnor-os/packages/private-equity/src/application-semantics/api.ts": "daa82aa0f3e822afed38b0a729ad77c807807dd2706906b56f476485e1c10837" }) },
+  ...["backend-types-13-timing.json", "process-e2e-04-timing.json"].map((name, index) => ({ name: `z5-public-api-source-${index}`, path: `scope-z/phase-evidence/z5/${name}`, fields: ["api.ts"], baselineCount: 1, bytes: json({ "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/api.ts": "c7cdd7578fb07199ce9ae05f21683aeeaf4667cb8d3439783c7a616dc9734abe" }) })),
+  { name: "z5-public-openapi-client", path: "scope-z/phase-evidence/z5/client-check-01.log", fields: ["OpenAPI client"], baselineCount: 1, bytes: `CENTROPY OpenAPI client: ${z5RecordedDigest}\n` },
+]
 const metadata = [
   { name: "m1", path: m1Path, fields: ["modelKey"], baselineCount: 2, bytes: objectFixture("first", "modelKey", cpuModel) + objectFixture("second", "modelKey", revocationModel) },
   { name: "p4", path: p4Path, fields: ["modelKey"], baselineCount: 4, bytes: ["consumer", "consumer", "incumbent", "incumbent"].map((kind, index) => objectFixture(`model${index}`, "modelKey", `p4-frontier-${kind}`, " ")).join("") },
@@ -85,6 +93,7 @@ const metadata = [
     bytes: objectFixture("candidate", "candidateKey", x1PlanIdentity) },
   { name: "y3-continuation-premise", path: y3CheckerPath, fields: ["key in choices"], baselineCount: 1, bytes: y3ContinuationCheck },
   { name: "y5-release-digest", path: y5PreparationPath, fields: [y5DigestField], baselineCount: 1, bytes: json({ [y5DigestField]: y5ReleaseDigest }) },
+  ...zMetadata,
 ]
 const scans = []
 const historyScans = []

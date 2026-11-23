@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "finnor.project-z.cold-context-e2e.v1",
+  "startedAt": "2026-10-24T07:30:22.561751+00:00",
+  "evidenceClass": "offline-context-and-local-controller-only",
+  "sourceBase": "7bfdd2d3ab611c90f1355637858824ff1ba67f98",
+  "executionPackSha256": "4419731d2544d1c07fe275ec8071d5d783273942ca9947eda2ff6b4e2dffb9db",
+  "archiveSha256": "c6c5868a077346e61f50dea1d4fe77682a8c6e70a658a8e863752fb59cd52703",
+  "bootstrapArchive": null,
+  "gitCloneMode": "--no-local --no-checkout",
+  "dependenciesInstalled": false,
+  "nodeModulesBorrowed": false,
+  "remoteDeliveryProven": false,
+  "productInstalledRuntimeProven": false,
+  "steps": [
+    {
+      "name": "independent-source-copy",
+      "argv": [
+        "git",
+        "clone",
+        "--no-local",
+        "--no-checkout",
+        "--single-branch",
+        "--branch",
+        "factory/project-z-contracts",
+        "/home/factory-user/repos/finnor-z-coordinator",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/cold-reconstruction-97a0feffbcd84d2baad9b6e6e63d5224/checkout"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "Cloning into '/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/cold-reconstruction-97a0feffbcd84d2baad9b6e6e63d5224/checkout'...\n"
+    },
+    {
+      "name": "pinned-source-checkout",
+      "argv": [
+        "git",
+        "checkout",
+        "--detach",
+        "7bfdd2d3ab611c90f1355637858824ff1ba67f98"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/cold-reconstruction-97a0feffbcd84d2baad9b6e6e63d5224/checkout",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "HEAD is now at 7bfdd2d Merge pull request #152 from parammm390/factory/postx-y4-confidential-economic-compiler\n"
+    },
+    {
+      "name": "actual-prompt-assembler-check",
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/cold-reconstruction-97a0feffbcd84d2baad9b6e6e63d5224/checkout/scope-z/prompts/assemble.py",
+        "check"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/cold-reconstruction-97a0feffbcd84d2baad9b6e6e63d5224/checkout",
+      "exitCode": 1,
+      "stdout": "",
+      "stderr": "FAILED: FileNotFoundError: [Errno 2] No such file or directory: 'reusable-blueprint.draft.md'; evidence: evidence/failures/9f882ce46bb85ace50fb1291d74bdbbe32e7a25f2695898a10bdefd8e8f683c7.json\n"
+    }
+  ],
+  "result": "FAILED",
+  "failure": "RuntimeError: actual-prompt-assembler-check failed; target and original failure retained",
+  "finishedAt": "2026-10-24T07:30:25.604187+00:00"
+}

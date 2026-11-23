@@ -1,0 +1,40 @@
+{
+  "schema": "finnor.z5.pre-code-process-contract.v1",
+  "writtenBeforeProductCode": true,
+  "offline": [
+    "immutable source/fixture digests before producer",
+    "real Node producer process outputs a candidate",
+    "separate isolated Python checker reconstructs original semantics",
+    "remove original transition, add unreachable context, change must, atomicity, shared identity, rank, simulation and bridge: reject each",
+    "wrong tenant/principal/root/Work/parent/deadline/right/currentness at each owner stage: no use",
+    "same idempotency key with different request: conflict",
+    "physical SIGKILL after claim, after immutable certificate, after replacement before delayed callback: preserve old liability and original journal debit",
+    "restart process with higher fence; old owner cannot persist or acknowledge",
+    "cancel/timeout/exhaustion returns no fresh grant; UNKNOWN remains",
+    "separate source-only archive reconstructs with no peer modules or source fallback",
+    "native guard exits 2 before credentials, DB import, listeners or actions"
+  ],
+  "nativeGuarded": [
+    "explicit separately authorized isolated target, actual owner authentication, no bypass",
+    "canonical existing Work/root/input/mandate/assignment/S5 original parent and existing admitted fixed revisions",
+    "submit through existing Company Brain native intake",
+    "observe actual registered job delivery attempt and current fence",
+    "produce, independently check, persist and reload exact immutable artifact",
+    "ordinary S8 declared-contract admission and S4 planning use",
+    "present S5 resources and unchanged S6 original obligations/UNKNOWN",
+    "actual S7 assignment cost record with material gaps",
+    "three owned worker interruption points and read-only same-ID recovery",
+    "authenticated mounted Work reload and session/root/principal switch",
+    "installed source/build identity separate from source replay"
+  ],
+  "authorityHere": {
+    "database": false,
+    "auth": false,
+    "migrations": false,
+    "seeding": false,
+    "listeners": false,
+    "signers": false,
+    "externalEffects": false,
+    "nativeExpectedExit": 2
+  }
+}

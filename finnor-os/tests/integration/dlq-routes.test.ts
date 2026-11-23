@@ -139,8 +139,10 @@ describe.skipIf(!available)("governed DLQ routes", () => {
 
   it("requires owner authority and tenant-scopes list/inspect", async () => {
     const target = await makeStepDeadLetter();
-    const forbidden = await listDlq(request("/api/dlq", { role: "analyst" }));
-    expect(forbidden.status).toBe(403);
+    for (const role of ["analyst", "participant"]) {
+      const forbidden = await listDlq(request("/api/dlq", { role }));
+      expect(forbidden.status).toBe(403);
+    }
 
     const listed = await listDlq(request("/api/dlq"));
     expect(listed.status).toBe(200);

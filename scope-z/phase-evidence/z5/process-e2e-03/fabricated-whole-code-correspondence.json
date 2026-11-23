@@ -1,0 +1,14 @@
+{
+  "id": "fabricated-whole-code-correspondence",
+  "passed": true,
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "{\"checked\":false,\"checker\":\"z5-original-semantics-checker-v1\",\"executionAuthorityGranted\":false,\"reason\":\"CERTIFICATE_ENVELOPE_BINDING\",\"schema\":\"finnor.z5.independent-check.v1\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 50.9447110000001
+  },
+  "corruptionDigest": "1b93a6380a26c9736f54dcd96e109001794894cbcc9d9272cfb46611ded17358",
+  "expected": "INDEPENDENT_REJECTION"
+}

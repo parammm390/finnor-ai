@@ -1,7 +1,7 @@
 import { StartOutcomePackSchema } from "@finnor/policy-schema";
 import { OUTCOME_PACK_IDS, type OutcomePackId } from "@finnor/shared-types";
 import { OUTCOME_PACK_DEFINITIONS, bindOutcomePack, evaluateOutcomeAutonomyReadiness, linkEmployeeConversationTurnToWork, outcomePackFingerprint, persistEmployeeAssistantTurn, prepareEmployeeConversationTurn, resolveCanonicalHumanPrincipal, startOutcomePack } from "@finnor/orchestration";
-import { loadEmployeeConversationThread, outcomePackCertifications, tenantOutcomePackSettings, withTenant, workInputs } from "@finnor/db";
+import { loadEmployeeConversationThread, outcomePackCertifications, tenantOutcomePackSettings, withTenant, workInputs, WorkControlAuthorizationError } from "@finnor/db";
 import { and, eq } from "drizzle-orm";
 import { errorResponse, requireContext } from "../../../lib/auth";
 
@@ -137,6 +137,7 @@ export async function POST(req: Request): Promise<Response> {
             instructionId: started.instructionId,
             channel: parsed.data.channel,
             text: `I started ${binding.objective}. Progress and completion depend on the recorded Work and verification evidence.`,
+            referenceText: `Started outcome pack ${started.pack.packId} (${started.pack.mode}); detail is available after a current authorization check.`,
             workId: started.workId,
             workInputId: started.workInputId,
             outcomeRefs: [
@@ -150,6 +151,7 @@ export async function POST(req: Request): Promise<Response> {
     }
     return Response.json({ outcomePack: started, ...(parsed.data.threadId ? { threadId: parsed.data.threadId } : {}), projectionWarnings }, { status: started.duplicate ? 200 : 202 });
   } catch (error) {
+    if (error instanceof WorkControlAuthorizationError) return Response.json({ error: "Work not found" }, { status: 404, headers: { "Cache-Control": "no-store" } });
     return errorResponse(error);
   }
 }

@@ -1,4 +1,4 @@
-import { createIcCommitteeConfiguration } from "@finnor/private-equity";
+import { createIcCommitteeConfiguration } from "../../../../../../../packages/private-equity/src/ic-repository";
 import { handleIcPost, IcCommitteeConfigurationSchema } from "../../../../../lib/ic";
 
 export const runtime = "nodejs";

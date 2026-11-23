@@ -1,0 +1,14 @@
+{
+  "id": "false-nonblocking-rank",
+  "passed": true,
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "{\"checked\":false,\"checker\":\"z5-original-semantics-checker-v1\",\"executionAuthorityGranted\":false,\"reason\":\"NONBLOCKING_RANK_HAS_NO_ORIGINAL_COMPLETION_PATH\",\"schema\":\"finnor.z5.independent-check.v1\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 62.82725800000003
+  },
+  "corruptionDigest": "bc987ca47476feb1585befe7097788b36d4af572e664ca6acb890ee6d4a69fc6",
+  "expected": "INDEPENDENT_REJECTION"
+}

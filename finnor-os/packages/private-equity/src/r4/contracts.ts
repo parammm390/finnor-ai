@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { BeliefViewPin, ExperimentRef } from "@finnor/shared-types";
-import { ExperimentRefSchema } from "@finnor/epistemic-runtime";
+import { ExperimentRefSchema } from "../../../epistemic-runtime/src/experiments";
 import { IdentificationProblemSchema, type IdentificationProblem } from "../../../shared-types/src/identification-plan";
 import { PE_WORLD_ROOT_TYPES, type PeWorldRootRef } from "../types";
 

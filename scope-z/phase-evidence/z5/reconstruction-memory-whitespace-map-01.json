@@ -1,0 +1,581 @@
+{
+  "cachedActualExit": 2,
+  "currentImplementationIssues": [],
+  "diagnosticCount": 113,
+  "diagnostics": [
+    {
+      "kind": "trailing whitespace",
+      "line": 42,
+      "path": "scope-z/phase-evidence/z5/commit-review-01/implementation-index-delta.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 603,
+      "path": "scope-z/phase-evidence/z5/commit-review-01/implementation-index-delta.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 774,
+      "path": "scope-z/phase-evidence/z5/commit-review-01/implementation-index-delta.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 7,
+      "path": "scope-z/phase-evidence/z5/integration/request-01/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 11,
+      "path": "scope-z/phase-evidence/z5/integration/request-01/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 14,
+      "path": "scope-z/phase-evidence/z5/integration/request-01/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 40,
+      "path": "scope-z/phase-evidence/z5/integration/request-01/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 71,
+      "path": "scope-z/phase-evidence/z5/integration/request-01/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 120,
+      "path": "scope-z/phase-evidence/z5/integration/request-01/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 149,
+      "path": "scope-z/phase-evidence/z5/integration/request-01/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 198,
+      "path": "scope-z/phase-evidence/z5/integration/request-01/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 230,
+      "path": "scope-z/phase-evidence/z5/integration/request-01/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 412,
+      "path": "scope-z/phase-evidence/z5/integration/request-01/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 7,
+      "path": "scope-z/phase-evidence/z5/integration/request-02/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 11,
+      "path": "scope-z/phase-evidence/z5/integration/request-02/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 14,
+      "path": "scope-z/phase-evidence/z5/integration/request-02/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 40,
+      "path": "scope-z/phase-evidence/z5/integration/request-02/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 71,
+      "path": "scope-z/phase-evidence/z5/integration/request-02/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 120,
+      "path": "scope-z/phase-evidence/z5/integration/request-02/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 149,
+      "path": "scope-z/phase-evidence/z5/integration/request-02/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 198,
+      "path": "scope-z/phase-evidence/z5/integration/request-02/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 230,
+      "path": "scope-z/phase-evidence/z5/integration/request-02/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 431,
+      "path": "scope-z/phase-evidence/z5/integration/request-02/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 7,
+      "path": "scope-z/phase-evidence/z5/integration/request-03/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 11,
+      "path": "scope-z/phase-evidence/z5/integration/request-03/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 14,
+      "path": "scope-z/phase-evidence/z5/integration/request-03/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 40,
+      "path": "scope-z/phase-evidence/z5/integration/request-03/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 71,
+      "path": "scope-z/phase-evidence/z5/integration/request-03/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 120,
+      "path": "scope-z/phase-evidence/z5/integration/request-03/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 149,
+      "path": "scope-z/phase-evidence/z5/integration/request-03/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 198,
+      "path": "scope-z/phase-evidence/z5/integration/request-03/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 230,
+      "path": "scope-z/phase-evidence/z5/integration/request-03/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 440,
+      "path": "scope-z/phase-evidence/z5/integration/request-03/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 7,
+      "path": "scope-z/phase-evidence/z5/integration/request-04/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 11,
+      "path": "scope-z/phase-evidence/z5/integration/request-04/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 14,
+      "path": "scope-z/phase-evidence/z5/integration/request-04/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 40,
+      "path": "scope-z/phase-evidence/z5/integration/request-04/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 71,
+      "path": "scope-z/phase-evidence/z5/integration/request-04/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 120,
+      "path": "scope-z/phase-evidence/z5/integration/request-04/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 149,
+      "path": "scope-z/phase-evidence/z5/integration/request-04/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 199,
+      "path": "scope-z/phase-evidence/z5/integration/request-04/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 231,
+      "path": "scope-z/phase-evidence/z5/integration/request-04/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 441,
+      "path": "scope-z/phase-evidence/z5/integration/request-04/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 7,
+      "path": "scope-z/phase-evidence/z5/integration/request-05/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 11,
+      "path": "scope-z/phase-evidence/z5/integration/request-05/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 14,
+      "path": "scope-z/phase-evidence/z5/integration/request-05/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 40,
+      "path": "scope-z/phase-evidence/z5/integration/request-05/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 71,
+      "path": "scope-z/phase-evidence/z5/integration/request-05/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 120,
+      "path": "scope-z/phase-evidence/z5/integration/request-05/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 149,
+      "path": "scope-z/phase-evidence/z5/integration/request-05/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 199,
+      "path": "scope-z/phase-evidence/z5/integration/request-05/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 231,
+      "path": "scope-z/phase-evidence/z5/integration/request-05/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 441,
+      "path": "scope-z/phase-evidence/z5/integration/request-05/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 7,
+      "path": "scope-z/phase-evidence/z5/integration/request-06/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 11,
+      "path": "scope-z/phase-evidence/z5/integration/request-06/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 14,
+      "path": "scope-z/phase-evidence/z5/integration/request-06/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 40,
+      "path": "scope-z/phase-evidence/z5/integration/request-06/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 71,
+      "path": "scope-z/phase-evidence/z5/integration/request-06/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 120,
+      "path": "scope-z/phase-evidence/z5/integration/request-06/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 149,
+      "path": "scope-z/phase-evidence/z5/integration/request-06/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 199,
+      "path": "scope-z/phase-evidence/z5/integration/request-06/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 231,
+      "path": "scope-z/phase-evidence/z5/integration/request-06/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 442,
+      "path": "scope-z/phase-evidence/z5/integration/request-06/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 7,
+      "path": "scope-z/phase-evidence/z5/integration/request-07/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 11,
+      "path": "scope-z/phase-evidence/z5/integration/request-07/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 14,
+      "path": "scope-z/phase-evidence/z5/integration/request-07/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 40,
+      "path": "scope-z/phase-evidence/z5/integration/request-07/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 79,
+      "path": "scope-z/phase-evidence/z5/integration/request-07/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 128,
+      "path": "scope-z/phase-evidence/z5/integration/request-07/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 157,
+      "path": "scope-z/phase-evidence/z5/integration/request-07/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 207,
+      "path": "scope-z/phase-evidence/z5/integration/request-07/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 239,
+      "path": "scope-z/phase-evidence/z5/integration/request-07/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 450,
+      "path": "scope-z/phase-evidence/z5/integration/request-07/shared.patch"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 6,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 8,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 10,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 12,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 14,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 16,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 18,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 20,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 22,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 24,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 26,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 28,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 30,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 32,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 34,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 36,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 38,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 40,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 42,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 44,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 46,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 48,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 50,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 52,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 54,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 56,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 58,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 60,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 62,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 64,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 66,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 68,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 70,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 72,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 74,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 76,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 78,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 80,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 82,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    },
+    {
+      "kind": "trailing whitespace",
+      "line": 84,
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log"
+    }
+  ],
+  "indexModified": false,
+  "integrationEvidenceDiagnostics": 70,
+  "kinds": {
+    "trailing whitespace": 113
+  },
+  "rawPayloadRendered": false,
+  "schema": "finnor.z5.immutable-reviewed-index-whitespace-map.v1",
+  "sourceModified": false,
+  "stagedImplementationDiagnostics": []
+}

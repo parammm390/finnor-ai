@@ -1,0 +1,54 @@
+{
+  "binding": {
+    "catalogueRef": "f20305b8-977a-5e07-aedc-72ded08ed507",
+    "checkerRef": "91dbdac8-845d-5035-a391-431d34c3b9ed",
+    "deadline": "2099-01-01T00:00:00.000Z",
+    "mandateRef": "ad3db31a-ad48-57b2-9290-89f5a9c2b46f",
+    "modelRef": "f052c104-bfc1-5cae-8009-76048e2e4e3f",
+    "outcomeRef": "93573864-6df2-5893-b70d-063990a1d0c7",
+    "parentGrantRef": "09d7a1fc-4e65-5911-b39e-6911f43a1426",
+    "priceRef": "ff945ff9-5ff1-5b2b-9d51-c7d5498fa036",
+    "principalId": "9353528f-774a-5321-8120-72f2ad99b4bd",
+    "responseRef": "ddb226dd-ae9b-5abc-9c15-75a02609b80b",
+    "rightsRef": "e2c93427-a0cc-5aa3-a1b1-6a18e19229aa",
+    "runtimeRef": "c653f30a-bd1e-5eec-bf52-0eec12f7626b",
+    "sourceRef": "b44f0e74-5f85-5d93-9b65-9dfca653b7a4",
+    "tenantId": "45aa1f66-e9ac-5124-956f-9c14fdf09ac8",
+    "workId": "852ba2e7-25bc-5ef0-9b54-7a16774ff420"
+  },
+  "id": "direct-accepted-stop-08:public-development-W1-20261029-structural-v1-c73e957c",
+  "maxDecisions": 0,
+  "rootStateId": "root",
+  "schema": "finnor.metalevel-model.v1",
+  "states": [
+    {
+      "acceptanceRef": "original-model-acceptance:root",
+      "choices": [
+        {
+          "disposition": "ACCEPTED",
+          "id": "stop",
+          "kind": "STOP",
+          "resultRef": "original-result:root",
+          "utility": "57"
+        }
+      ],
+      "completedChecks": [
+        "original-check"
+      ],
+      "decisionIndex": 0,
+      "history": [],
+      "id": "root",
+      "obligations": [],
+      "remaining": {
+        "computeUnits": "0"
+      },
+      "requiredChecks": [
+        "original-check"
+      ]
+    }
+  ],
+  "tieOrder": [
+    "stop"
+  ],
+  "utilityUnit": "synthetic-utility"
+}

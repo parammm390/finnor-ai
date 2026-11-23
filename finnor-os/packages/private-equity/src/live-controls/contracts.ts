@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { EvidenceRootSchema, FinancialSemanticsSchema, type AllocationClearingInput } from '@finnor/shared-types';
-import { AllocationOperationSchemas } from '@finnor/epistemic-runtime';
+import { AllocationOperationSchemas } from '../../../epistemic-runtime/src/allocation-contracts';
 import { PE_ENTITY_TYPES } from '../types';
 import { ObligationOperationSchemas, GovernedRequestBindingSchema } from '../obligation-contracts';
 

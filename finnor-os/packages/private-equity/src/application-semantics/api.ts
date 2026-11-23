@@ -1,11 +1,14 @@
 import { randomUUID } from "node:crypto";
+import { originOf, prepareInstitutionApplicationOrigin } from "../../../orchestration/src/project-z/z0-convergence/institution-origin";
+import { returnInstitutionApplicationToOriginal } from "../../../orchestration/src/project-z/z0-convergence/institution-consumer";
+import { projectInstitutionApplication } from "../../../orchestration/src/project-z/z0-convergence/projection";
 import { transitionWorkTx } from "@finnor/db";
 import type { ApplicationFreshAuthorityView, ExperimentRef } from "@finnor/shared-types";
 import type { PeMutationContext } from "../types";
 import { authorize, principal, schemaIdentity, tx, unavailable } from "../evidence-execution/store";
 import type { OriginalApplicationParent } from "./ports";
 import {
-  ApplicationAcquireSchema, ApplicationExecuteSchema, ApplicationProjectionSchema,
+  ApplicationAcquireSchema, ApplicationExecuteSchema, ApplicationProjectionReadSchema, ApplicationProjectionSchema,
   type ApplicationAcquireRequest,
 } from "./native-contracts";
 import { reserveApplicationParent, applicationParentCharges } from "./allocation";
@@ -42,6 +45,7 @@ export async function registerNativeApplicationAcquisition(ctx: PeMutationContex
     if (prior.request_digest !== requestDigest) x2Fault("X2_ACQUISITION_IDEMPOTENCY_CONFLICT");
     return { sessionId: prior.id, status: (await applicationSession(ctx, prior.id)).status, semanticReplay: true };
   }
+  const institutionalOrigin = await prepareInstitutionApplicationOrigin(ctx, request);
   if (new Set(request.profileIds).size !== request.profileIds.length || new Set(request.targets.map((target) => target.id)).size !== request.targets.length) {
     x2Fault("X2_ORIGINAL_DISTINCT_PROFILE_AND_TARGET_BINDINGS");
   }
@@ -62,12 +66,15 @@ export async function registerNativeApplicationAcquisition(ctx: PeMutationContex
     x2Fault("X2_ORIGINAL_AUTHORIZED_DEADLINE_REQUIRED");
   }
   const inputRow = await workInput(ctx, request.workId), code = await pinnedApplicationCode(), catalog = await schemaIdentity(ctx);
+  if (institutionalOrigin && (institutionalOrigin.body.workInputId !== inputRow.id
+    || institutionalOrigin.body.workInputDigest !== x2Digest(inputRow.body))) x2Fault("Z0_EXACT_ORIGINAL_X1_INPUT_REQUIRED");
   const sessionId = randomUUID(), validAfter = new Date().toISOString();
   const rightsRef = `S1:employee:${principal(ctx)}:revision:${rights.revision}`;
   const originalBody = { schema: "finnor.s4.application-original-parent.v1", sessionId,
     tenantId: ctx.auth.tenantId, principalId: principal(ctx), root: request.root, workId: request.workId,
     workInputId: inputRow.id, workInputDigest: x2Digest(inputRow.body), rightsRef,
     requestDigest, deadlineAt: request.deadlineAt, registeredResourceDemand: request.resourceDemand,
+    institutionalOriginRef: institutionalOrigin?.ref ?? null,
     profileGrants: profiles.map((item) => item.profile.grantRef), sourceCut: code.digest, schemaDigest: catalog,
     dependencyLockDigest: code.lockDigest, runtimeDigest: code.runtimeDigest, validAfter,
     protectionDomain: "DISPOSABLE_TEST_AUTHORITY", protectedAdmission: false, executionAuthorityGranted: false };
@@ -107,6 +114,7 @@ export async function registerNativeApplicationAcquisition(ctx: PeMutationContex
   const allocated = await reserveApplicationParent(ctx, {
     originalParentRef: originalRef, preparationRef, workId: request.workId, root: request.root, rightsRef,
     deadlineAt: request.deadlineAt, idempotencyKey: key, requestDigest, demand: request.resourceDemand,
+    institutionalOrigin, institutionalRequest: request,
     onReserved: async (c, allocation) => {
       const currentRights = await authorize(ctx, request.root, [{ type: "work", id: request.workId }]);
       const latest = (await c.query<{ id: string; body: unknown }>(
@@ -115,7 +123,9 @@ export async function registerNativeApplicationAcquisition(ctx: PeMutationContex
       if (currentRights.revision !== rights.revision || latest?.id !== inputRow.id
         || x2Digest(latest.body) !== x2Digest(inputRow.body) || end <= Date.now()) x2Fault("X2_ORIGINAL_PREPARATION_BECAME_STALE");
       const parent: OriginalApplicationParent = {
-        originalParentRef: originalRef, tenantRef: refs.tenant, workRef: refs.work, institutionalProgramRef: null,
+        originalParentRef: originalRef, tenantRef: refs.tenant, workRef: refs.work,
+        institutionalProgramRef: institutionalOrigin?.body.institutionalProgramRef ?? null,
+        ...(institutionalOrigin ? { institutionalOriginRef: institutionalOrigin.ref } : {}),
         authorityGrantRef: refs.authority, resourceGrantRef: allocation.reservation.ref,
         baselineManifestRef: refs.baseline, rightsRevision: rightsRef, deadlineAt: request.deadlineAt, validAfter,
         dependencyLockDigest: code.lockDigest, runtimeDigest: code.runtimeDigest, schemaDigest: catalog,
@@ -160,6 +170,7 @@ export async function requestApplicationAcquisition(ctx: PeMutationContext, inpu
 export async function requestApplicationExecution(ctx: PeMutationContext, input: unknown) {
   const request = ApplicationExecuteSchema.parse(input);
   const parent = await applicationSession(ctx, request.sessionId);
+  if (originOf(parent)) x2Fault("Z0_INSTITUTION_LEARNING_IS_NOT_FRESH_BUSINESS_AUTHORITY", 403);
   if (parent.id !== parent.parent_id || parent.status !== "MODEL_READY") x2Fault("X2_FROZEN_NATIVE_MODEL_REQUIRED_BEFORE_FRESH_OBJECTIVE");
   await currentApplicationWork(ctx, parent);
   await authorize(ctx, request.root, [{ type: "work", id: request.workId }]);
@@ -208,43 +219,60 @@ export async function requestApplicationExecution(ctx: PeMutationContext, input:
     originalDeadline: parent.parent.deadlineAt, newAllowance: false };
 }
 export async function projectApplicationSemantics(ctx: PeMutationContext, input: unknown) {
-  const request = ApplicationProjectionSchema.parse(input);
-  await authorize(ctx, request.root, [{ type: "work", id: request.workId }]);
-  const rows = await tx(ctx, async (c) => (await c.query<ApplicationSessionRow>(
-    "SELECT * FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND root=$4::jsonb ORDER BY created_at DESC,id DESC LIMIT 17",
-    [ctx.auth.tenantId, principal(ctx), request.workId, JSON.stringify(request.root)])).rows, true);
-  if (rows.length > 16) x2Fault("X2_SESSION_PROJECTION_REQUIRES_PAGINATION");
+  const request = ApplicationProjectionReadSchema.parse(input);
+  const projections = await tx(ctx, async c => {
+    await authorize(ctx, request.root, [{ type: "work", id: request.workId }], [], c);
+    const work = await c.query("SELECT 1 FROM finnor_os.works WHERE tenant_id=$1 AND id=$2",
+      [ctx.auth.tenantId, request.workId]);
+    if (!work.rowCount) throw unavailable();
+    const rows = (await c.query<ApplicationSessionRow>(
+      "SELECT * FROM finnor_os.application_semantics_sessions WHERE tenant_id=$1 AND principal_id=$2 AND work_id=$3 AND root=$4::jsonb ORDER BY created_at DESC,id DESC LIMIT 17",
+      [ctx.auth.tenantId, principal(ctx), request.workId, JSON.stringify(request.root)])).rows;
+    if (rows.length > 16) x2Fault("X2_SESSION_PROJECTION_REQUIRES_PAGINATION");
+    const observations = [];
+    for (const row of rows) {
+      const { model, check } = row.model_ref && row.check_ref ? await currentApplicationModel(ctx, row, c) : { model: null, check: null };
+      const composition = row.composition_ref ? await applicationArtifact<Record<string, unknown>>(ctx, row.composition_ref, c) : null;
+      const authority = row.id !== row.parent_id ? await currentFreshApplicationAuthority(ctx, row, c) : null;
+      const freshAuthority: ApplicationFreshAuthorityView | null = authority ? {
+        schema: "finnor.x2.application-fresh-authority-view.v1",
+        ref: x2Ref("S4", "application-fresh-authority", authority),
+        sessionId: authority.sessionId, parentId: authority.parentId,
+        tenantId: authority.tenantId, principalId: authority.principalId, workId: authority.workId,
+        originalParentRef: authority.originalParentRef, modelRef: authority.modelRef, checkRef: authority.checkRef,
+        rightsRef: authority.rightsRef, target: authority.target, deadlineAt: authority.deadlineAt,
+        bindings: authority.bindings.map(({ profileId, role, applicationAccountId, originalGrantRef, currentGrantRef, operationIds }) =>
+          ({ profileId, role, applicationAccountId, originalGrantRef, currentGrantRef, operationIds })),
+        qualification: "AUTHENTICATED_CANONICAL_S4_PROJECTION_NOT_AN_AUTHORITY_GRANT",
+        protectionDomain: "DISPOSABLE_TEST_AUTHORITY", protectedAdmission: false, executionAuthorityGranted: false,
+      } : null;
+      const effects = (await c.query(
+        "SELECT r.id request_id,r.status,r.possible_egress,r.observation_ref,o.body->'ref' obligation_ref,o.effect_id,e.status effect_status,e.verification,d.status action_status"
+        + " FROM finnor_os.application_semantics_requests r JOIN finnor_os.s6_obligation_origins o ON o.tenant_id=r.tenant_id AND o.obligation_id=r.obligation_id"
+        + " JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id"
+        + " JOIN finnor_os.domain_actions d ON d.tenant_id=o.tenant_id AND d.id=o.domain_action_id"
+        + " WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.session_id=$3 ORDER BY r.created_at,r.id LIMIT 65",
+        [ctx.auth.tenantId, principal(ctx), row.id])).rows;
+      if (effects.length > 64) x2Fault("X2_EFFECT_PROJECTION_REQUIRES_PAGINATION");
+      const acquisition = request.includeAcquisition && row.id === row.parent_id
+        ? ApplicationAcquireSchema.safeParse(row.request) : null;
+      observations.push({ row, session: { id: row.id, parentId: row.parent_id, status: row.status, reason: row.reason,
+        generation: row.generation, deadlineAt: row.parent.deadlineAt, originalParentRef: row.original_parent_ref,
+        ...(request.includeAcquisition ? { acquisition: acquisition?.success ? {
+          targetIds: acquisition.data.targets.map(target => target.id),
+          resourceDemand: acquisition.data.resourceDemand, deadlineAt: acquisition.data.deadlineAt,
+        } : null } : {}),
+        model, check, freshAuthority, composition: composition && row.composition_ref ? { ...composition, ref: row.composition_ref } : null,
+        effects, charges: await applicationParentCharges(ctx, row.allocation_ref, c), billing: "UNKNOWN",
+        resourceReleaseGranted: false, protectedAdmission: false, cancelledAt: row.cancel_requested_at?.toISOString() ?? null } });
+    }
+    return observations;
+  }, true);
   const sessions = [];
-  for (const row of rows) {
-    const { model, check } = row.model_ref && row.check_ref ? await currentApplicationModel(ctx, row) : { model: null, check: null };
-    const composition = row.composition_ref ? await applicationArtifact<Record<string, unknown>>(ctx, row.composition_ref) : null;
-    const authority = row.id !== row.parent_id ? await currentFreshApplicationAuthority(ctx, row) : null;
-    const freshAuthority: ApplicationFreshAuthorityView | null = authority ? {
-      schema: "finnor.x2.application-fresh-authority-view.v1",
-      ref: x2Ref("S4", "application-fresh-authority", authority),
-      sessionId: authority.sessionId, parentId: authority.parentId,
-      tenantId: authority.tenantId, principalId: authority.principalId, workId: authority.workId,
-      originalParentRef: authority.originalParentRef, modelRef: authority.modelRef, checkRef: authority.checkRef,
-      rightsRef: authority.rightsRef, target: authority.target, deadlineAt: authority.deadlineAt,
-      bindings: authority.bindings.map(({ profileId, role, applicationAccountId, originalGrantRef, currentGrantRef, operationIds }) =>
-        ({ profileId, role, applicationAccountId, originalGrantRef, currentGrantRef, operationIds })),
-      qualification: "AUTHENTICATED_CANONICAL_S4_PROJECTION_NOT_AN_AUTHORITY_GRANT",
-      protectionDomain: "DISPOSABLE_TEST_AUTHORITY", protectedAdmission: false, executionAuthorityGranted: false,
-    } : null;
-    const effects = await tx(ctx, async (c) => (await c.query(
-      "SELECT r.id request_id,r.status,r.possible_egress,r.observation_ref,o.body->'ref' obligation_ref,o.effect_id,e.status effect_status,e.verification,d.status action_status"
-      + " FROM finnor_os.application_semantics_requests r JOIN finnor_os.s6_obligation_origins o ON o.tenant_id=r.tenant_id AND o.obligation_id=r.obligation_id"
-      + " JOIN finnor_os.business_effects e ON e.tenant_id=o.tenant_id AND e.id=o.effect_id"
-      + " JOIN finnor_os.domain_actions d ON d.tenant_id=o.tenant_id AND d.id=o.domain_action_id"
-      + " WHERE r.tenant_id=$1 AND r.principal_id=$2 AND r.session_id=$3 ORDER BY r.created_at,r.id LIMIT 65",
-      [ctx.auth.tenantId, principal(ctx), row.id])).rows, true);
-    if (effects.length > 64) x2Fault("X2_EFFECT_PROJECTION_REQUIRES_PAGINATION");
-    sessions.push({ id: row.id, parentId: row.parent_id, status: row.status, reason: row.reason,
-      generation: row.generation, deadlineAt: row.parent.deadlineAt, originalParentRef: row.original_parent_ref,
-      model, check, freshAuthority, composition: composition && row.composition_ref ? { ...composition, ref: row.composition_ref } : null,
-      effects, charges: await applicationParentCharges(ctx, row.allocation_ref), billing: "UNKNOWN",
-      resourceReleaseGranted: false, protectedAdmission: false, cancelledAt: row.cancel_requested_at?.toISOString() ?? null });
-  }
+  // The inherited S5 budget reader owns its portfolio transaction. Release
+  // the application read connection before calling it.
+  for (const { row, session } of projections)
+    sessions.push({ ...session, institutional: await projectInstitutionApplication(ctx, row) });
   return { schema: "finnor.x2.work-projection.v1", tenantId: ctx.auth.tenantId, principalId: principal(ctx),
     root: request.root, workId: request.workId, sessions };
 }
@@ -267,8 +295,9 @@ export async function cancelApplicationSemantics(ctx: PeMutationContext, input: 
       await applicationEvent(ctx, updated, "CANCELLED_POSSIBLE_EFFECTS_AND_ORIGINAL_OCCUPATION_RETAINED",
         { originalParentRef: row.original_parent_ref, externalRollbackClaimed: false }, c);
       await enqueueApplicationSession(ctx, updated, "cancellation-observation", c);
+      await returnInstitutionApplicationToOriginal(ctx, updated, c);
     }
-    const current = rows[0];
+    const current = rows.find(row => !originOf(row));
     if (current) {
       const work = (await c.query<{ status: string }>("SELECT status FROM finnor_os.works WHERE tenant_id=$1 AND id=$2",
         [ctx.auth.tenantId, request.workId])).rows[0]!;
@@ -286,7 +315,7 @@ export const APPLICATION_OPERATIONS = ["application-acquire", "application-execu
 export const APPLICATION_OPERATION_SCHEMAS = {
   "application-acquire": ApplicationAcquireSchema,
   "application-execute": ApplicationExecuteSchema,
-  "application-projection": ApplicationProjectionSchema,
+  "application-projection": ApplicationProjectionReadSchema,
   "application-cancel": ApplicationProjectionSchema,
   "application-resume": ApplicationProjectionSchema.extend({ sessionId: ApplicationExecuteSchema.shape.sessionId }).strict(),
 } as const;

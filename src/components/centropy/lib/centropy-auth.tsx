@@ -11,10 +11,10 @@ import { readWorkOSSession, type BrowserSession as Session } from "@/lib/auth/br
 import { getSupabaseBrowser } from "@/lib/centropy/supabase-browser"
 import { centropyGet } from "./api"
 
-// Workspace V3 exposes one active product role. Backend Authority remains the
-// mutation boundary; this browser union only prevents a retired role-specific UI
-// from being selected as a presentation fallback.
-export type CentropyRole = "owner"
+// The institutional shell remains owner-only. Existing non-owner canonical
+// roles may open the separate, recipient-scoped workforce workspace; this union
+// grants no backend capability and never falls back to the owner presentation.
+export type CentropyRole = "owner" | "participant"
 
 // Mirrors the old getCentropyKey() shape: a synchronous getter usable outside React
 // (api.ts isn't a component) that always reflects the latest session from the one
@@ -23,11 +23,15 @@ let currentSession: Session | null = null
 let locallySignedOut = false
 let rejectedCredential: string | null = null
 let accessGeneration = 0
+let verifiedIdentity: { sessionKey: string; value: unknown } | null = null
+let pendingSignOut: Promise<void> | null = null
+export function waitForCentropySignOut(): Promise<void> { return pendingSignOut ?? Promise.resolve() }
 const rejectionListeners = new Set<(reason: string) => void>()
 function adoptSession(next: Session | null): void {
   if (next?.access_token !== currentSession?.access_token || next?.user.id !== currentSession?.user.id) {
     accessGeneration++
     rejectedCredential = null
+    verifiedIdentity = null
   }
   currentSession = next
 }
@@ -37,6 +41,7 @@ export function rejectCurrentWorkspaceAccess(credential: string, expectedGenerat
     || rejectedCredential === credential) return
   rejectedCredential = credential
   accessGeneration++
+  verifiedIdentity = null
   rejectionListeners.forEach(listener => listener("Your workspace access is no longer available. Retry verification or sign in again."))
 }
 export function getCurrentAccessToken(): string | null {
@@ -47,6 +52,12 @@ export function hasActiveSession(): boolean {
 }
 export function getCurrentSessionKey(): string | null {
   return currentSession && getCurrentAccessToken() ? `${currentSession.user.id}:${accessGeneration}:${currentSession.access_token}` : null
+}
+
+/** Reuse the already authenticated /me result only for its precise session. */
+export function getVerifiedWorkspaceIdentity(sessionKey: string): unknown {
+  return verifiedIdentity?.sessionKey === sessionKey && getCurrentSessionKey() === sessionKey
+    ? verifiedIdentity.value : undefined
 }
 
 export const CENTROPY_AUTH_BOOTSTRAP_TIMEOUT_MS = 10_000
@@ -69,7 +80,7 @@ async function withTimeout<T>(promise: Promise<T>): Promise<T> {
 }
 
 function isCentropyRole(value: unknown): value is CentropyRole {
-  return value === "owner"
+  return value === "owner" || value === "participant"
 }
 
 interface CentropyAuthState {
@@ -112,6 +123,7 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     let active = true
     let unsubscribe: (() => void) | null = null
+    const bootstrapGeneration = accessGeneration
     setLoading(true)
     setAuthError(null)
     if (process.env.NEXT_PUBLIC_FINNOR_AUTH_PROVIDER === "workos") {
@@ -178,20 +190,20 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
       try {
         const supabaseBrowser = await withTimeout(getSupabaseBrowser())
         if (!active) return
-        const { data, error } = await withTimeout(supabaseBrowser.auth.getSession())
-        if (error) throw error
-        if (!active) return
-        adoptSession(data.session)
-        setSession(data.session)
         const { data: sub } = supabaseBrowser.auth.onAuthStateChange((_event, next) => {
-          if (!active) return
+          if (!active || pendingSignOut && next) return
           adoptSession(next)
           setSession((previous) => previous?.user.id === next?.user.id && previous?.access_token === next?.access_token ? previous : next)
           setAuthError(null)
         })
         unsubscribe = () => sub.subscription.unsubscribe()
+        const { data, error } = await withTimeout(supabaseBrowser.auth.getSession())
+        if (error) throw error
+        if (!active || pendingSignOut || accessGeneration !== bootstrapGeneration) return
+        adoptSession(data.session)
+        setSession(data.session)
       } catch (error) {
-        if (!active) return
+        if (!active || pendingSignOut || accessGeneration !== bootstrapGeneration) return
         adoptSession(null)
         setSession(null)
         setAuthError(error instanceof Error ? error.message : "Authentication could not be restored.")
@@ -222,6 +234,7 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
     if (!sameResolvedUser) setRole(null)
     setRoleLoading(true)
     setRoleError(null)
+    const roleSessionKey = getCurrentSessionKey()
     centropyGet<{ role: CentropyRole }>("me")
       .then((r) => {
         if (!cancelled) {
@@ -230,6 +243,9 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
             setRole(null)
             setRoleError("CENTROPY returned an unknown workspace role. Retry connection or contact an administrator.")
             return
+          }
+          if (roleSessionKey && roleSessionKey === getCurrentSessionKey()) {
+            verifiedIdentity = { sessionKey: roleSessionKey, value: r }
           }
           resolvedRoleUserIdRef.current = session.user.id
           setRole(r.role)
@@ -266,16 +282,17 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
   }, [])
 
   async function signOut(): Promise<void> {
+    if (pendingSignOut) return pendingSignOut
     if (process.env.NEXT_PUBLIC_FINNOR_AUTH_PROVIDER === "workos") locallySignedOut = true
     const token = currentSession?.access_token
     // Close the local scope synchronously. A late response cannot resurrect
     // private state while provider logout or the delivery tombstone is pending.
     adoptSession(null)
     setSession(null); setRole(null); resolvedRoleUserIdRef.current = null
-    if (token) await fetch("/api/centropy/live-controls", {
+    const delivery = token ? fetch("/api/centropy/live-controls", {
       method: "POST", cache: "no-store", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-      body: JSON.stringify({ operation: "end-delivery", input: {} }), signal: AbortSignal.timeout(3000),
-    }).catch(() => undefined)
+      body: JSON.stringify({ operation: "end-delivery", input: {} }), signal: AbortSignal.timeout(3000), keepalive: true,
+    }).catch(() => undefined) : Promise.resolve()
     if (process.env.NEXT_PUBLIC_FINNOR_AUTH_PROVIDER === "workos") {
       locallySignedOut = true
       if (typeof BroadcastChannel !== "undefined") {
@@ -290,11 +307,23 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
       form.submit()
       return
     }
-    const supabaseBrowser = await getSupabaseBrowser()
-    await supabaseBrowser.auth.signOut()
+    const logout = (async () => {
+      const supabaseBrowser = await getSupabaseBrowser()
+      const { error } = await supabaseBrowser.auth.signOut()
+      await delivery
+      if (error) throw error
+    })()
+    pendingSignOut = logout
+    try { await logout }
+    finally { if (pendingSignOut === logout) pendingSignOut = null }
   }
 
-  return <CentropyAuthContext.Provider value={{ session, loading, authError, retryAuth, role, roleLoading, roleError, retryRole, signOut }}>{children}</CentropyAuthContext.Provider>
+  const sessionKey = getCurrentSessionKey()
+  // The session render can arrive one commit before its role lookup effect.
+  // Gate native reads on the current credential from that first render.
+  const verifyingRole = roleLoading || Boolean(session && !roleError
+    && (!sessionKey || verifiedIdentity?.sessionKey !== sessionKey))
+  return <CentropyAuthContext.Provider value={{ session, loading, authError, retryAuth, role, roleLoading: verifyingRole, roleError, retryRole, signOut }}>{children}</CentropyAuthContext.Provider>
 }
 
 export function useCentropyAuth(): CentropyAuthState {

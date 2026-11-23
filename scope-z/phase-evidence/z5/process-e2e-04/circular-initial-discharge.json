@@ -1,0 +1,14 @@
+{
+  "id": "circular-initial-discharge",
+  "passed": true,
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "{\"checked\":false,\"checker\":\"z5-original-semantics-checker-v1\",\"executionAuthorityGranted\":false,\"reason\":\"FALSE_INITIAL_OR_EVERY_TRANSITION_DISCHARGE\",\"schema\":\"finnor.z5.independent-check.v1\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 67.04657999999995
+  },
+  "corruptionDigest": "0f81b930e2c91949564b2aec39ff04afa0153360d46e39991ed54db132a93ca5",
+  "expected": "INDEPENDENT_REJECTION"
+}

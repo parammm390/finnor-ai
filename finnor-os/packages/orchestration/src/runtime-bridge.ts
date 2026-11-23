@@ -10,6 +10,7 @@ import {
   businessEffects,
   instructionEvents,
   instructionSessions,
+  lockTenantMaterialCutTx,
   works,
   type Db,
 } from "@finnor/db";
@@ -68,6 +69,7 @@ export async function assertActionNotCancelledTx(
     workId?: string | null;
   },
 ): Promise<void> {
+  await lockTenantMaterialCutTx(db, params.tenantId);
   if (params.instructionId) {
     await db.execute(sql`SELECT id FROM ${instructionSessions} WHERE ${instructionSessions.id} = ${params.instructionId} AND ${instructionSessions.tenantId} = ${params.tenantId} FOR UPDATE`);
     const [cancellation] = await db

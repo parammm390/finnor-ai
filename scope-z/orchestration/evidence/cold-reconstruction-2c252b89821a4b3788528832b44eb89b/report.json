@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "finnor.project-z.cold-context-e2e.v1",
+  "startedAt": "2026-10-24T07:31:34.520922+00:00",
+  "evidenceClass": "offline-context-and-local-controller-only",
+  "sourceBase": "7bfdd2d3ab611c90f1355637858824ff1ba67f98",
+  "executionPackSha256": "4419731d2544d1c07fe275ec8071d5d783273942ca9947eda2ff6b4e2dffb9db",
+  "archiveSha256": "c6c5868a077346e61f50dea1d4fe77682a8c6e70a658a8e863752fb59cd52703",
+  "bootstrapArchive": {
+    "path": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/reconstruction-bootstrap-1.0.0.tar.gz",
+    "sha256": "659a086b3ec81192d777941b51861ebac029c71f0e654c5e74929f789b3a8ff3",
+    "preimage": "scope-z/prompts/reusable-blueprint.draft.md",
+    "preimageSha256": "2bfa64f0cb40f7891d647eea962443d2883417b82731b262066895d0781a213f"
+  },
+  "gitCloneMode": "--no-local --no-checkout",
+  "dependenciesInstalled": false,
+  "nodeModulesBorrowed": false,
+  "remoteDeliveryProven": false,
+  "productInstalledRuntimeProven": false,
+  "steps": [
+    {
+      "name": "independent-source-copy",
+      "argv": [
+        "git",
+        "clone",
+        "--no-local",
+        "--no-checkout",
+        "--single-branch",
+        "--branch",
+        "factory/project-z-contracts",
+        "/home/factory-user/repos/finnor-z-coordinator",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/cold-reconstruction-2c252b89821a4b3788528832b44eb89b/checkout"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "Cloning into '/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/cold-reconstruction-2c252b89821a4b3788528832b44eb89b/checkout'...\n"
+    },
+    {
+      "name": "pinned-source-checkout",
+      "argv": [
+        "git",
+        "checkout",
+        "--detach",
+        "7bfdd2d3ab611c90f1355637858824ff1ba67f98"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/cold-reconstruction-2c252b89821a4b3788528832b44eb89b/checkout",
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": "HEAD is now at 7bfdd2d Merge pull request #152 from parammm390/factory/postx-y4-confidential-economic-compiler\n"
+    },
+    {
+      "name": "actual-prompt-assembler-check",
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/cold-reconstruction-2c252b89821a4b3788528832b44eb89b/checkout/scope-z/prompts/assemble.py",
+        "check"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/cold-reconstruction-2c252b89821a4b3788528832b44eb89b/checkout",
+      "exitCode": 0,
+      "stdout": "{\"authoringPayloadDigest\": \"3a7c0039d1319cf35c1e2cab609c17ca25cb31271b060114f7e3068149d402c2\", \"delivery\": \"NOT_DELIVERED\", \"executionsLaunched\": 0, \"indexSha256\": \"5c78fc5da28a8eb92caa5cda9f13f8179597c0b8c927f78d1f0576d83939f954\", \"operation\": \"check\", \"productLockMembersVerified\": 20, \"receiptSha256\": \"e7c53d4a8581f67209010ac159c91c29395b427ac74b1da14832d9f1a44b0084\", \"seeds\": [{\"bytes\": 420629, \"path\": \"seeds/z0.seed.md\", \"phase\": \"Z0\", \"requiredEarlierFullSeeds\": [], \"requiresOtherZEngine\": false, \"sha256\": \"3f7899558e008a006073e69ca45c46ea46021e680bac61155d06bc92cf949578\"}, {\"bytes\": 861773, \"path\": \"seeds/z1.seed.md\", \"phase\": \"Z1\", \"requiredEarlierFullSeeds\": [\"Z0\"], \"requiresOtherZEngine\": false, \"sha256\": \"635e04fc82b8ff5769f0569d95b1185b95d195eec67d4552d1a4f999178bad7d\"}, {\"bytes\": 852925, \"path\": \"seeds/z2.seed.md\", \"phase\": \"Z2\", \"requiredEarlierFullSeeds\": [\"Z0\"], \"requiresOtherZEngine\": false, \"sha256\": \"8c18ec1a305a1d05ac89fce3abc8e0b9f0cb69e752e2879205510f67d1f6f329\"}, {\"bytes\": 859279, \"path\": \"seeds/z3.seed.md\", \"phase\": \"Z3\", \"requiredEarlierFullSeeds\": [\"Z0\"], \"requiresOtherZEngine\": false, \"sha256\": \"977943424d4715a06c68312866d1773d44f625ac893809ecd43e51c84064d4d1\"}, {\"bytes\": 847625, \"path\": \"seeds/z4.seed.md\", \"phase\": \"Z4\", \"requiredEarlierFullSeeds\": [\"Z0\"], \"requiresOtherZEngine\": false, \"sha256\": \"9270b2784992630f7c6049cb689130e667bbd12dd835f5fa23e81fc2739461c4\"}, {\"bytes\": 864473, \"path\": \"seeds/z5.seed.md\", \"phase\": \"Z5\", \"requiredEarlierFullSeeds\": [\"Z0\"], \"requiresOtherZEngine\": false, \"sha256\": \"efc68e8c35cae19e31359c20226e981855f875fa4d93615d9605dfcafa92794e\"}], \"state\": \"PASSED\"}\n",
+      "stderr": ""
+    },
+    {
+      "name": "actual-execution-builder-check",
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/cold-reconstruction-2c252b89821a4b3788528832b44eb89b/checkout/scope-z/orchestration/build_execution_pack.py",
+        "--check"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/cold-reconstruction-2c252b89821a4b3788528832b44eb89b/checkout",
+      "exitCode": 0,
+      "stdout": "{\"executionPackSha256\": \"4419731d2544d1c07fe275ec8071d5d783273942ca9947eda2ff6b4e2dffb9db\", \"liveStateInitialized\": false, \"members\": 283, \"operation\": \"check\", \"remoteActions\": 0, \"roleSeeds\": [{\"bytes\": 509825, \"path\": \"scope-z/orchestration/roles/coordinator.seed.md\", \"sha256\": \"d11e6f7b6d4ee3d77538aa348edfb24427d8540423126aa33304a8784d8ee179\"}, {\"bytes\": 508652, \"path\": \"scope-z/orchestration/roles/prompt-engineer.seed.md\", \"sha256\": \"6dab845952304024675087f1ac8325ca4b68e42db77f72c5b562eacd63e7f3b5\"}], \"state\": \"PASSED\"}\n",
+      "stderr": ""
+    },
+    {
+      "name": "actual-nonfixture-controller-verify",
+      "argv": [
+        "/usr/bin/python3",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/cold-reconstruction-2c252b89821a4b3788528832b44eb89b/checkout/scope-z/orchestration/control.py",
+        "--root",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/cold-reconstruction-2c252b89821a4b3788528832b44eb89b/checkout",
+        "--state",
+        "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/cold-reconstruction-2c252b89821a4b3788528832b44eb89b/checkout/scope-z/orchestration/live-state",
+        "--execution-pack-digest",
+        "4419731d2544d1c07fe275ec8071d5d783273942ca9947eda2ff6b4e2dffb9db",
+        "verify"
+      ],
+      "cwd": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/cold-reconstruction-2c252b89821a4b3788528832b44eb89b/checkout",
+      "exitCode": 0,
+      "stdout": "{\"action\": \"verified-content-custody-only\", \"executionPackDigest\": \"4419731d2544d1c07fe275ec8071d5d783273942ca9947eda2ff6b4e2dffb9db\", \"fixtureOnly\": false, \"ok\": true, \"productLockDigest\": \"61d9881ca8059d24d057d1e00d5436ef2059de7889ccd1fd2f92a630075bcebf\", \"productQualificationConferred\": false, \"remoteActionsPerformed\": false}\n",
+      "stderr": ""
+    }
+  ],
+  "result": "PASSED",
+  "finishedAt": "2026-10-24T07:31:38.170580+00:00"
+}

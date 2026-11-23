@@ -14,7 +14,7 @@ export function canvasSectionDomId(id: string): string {
 }
 
 // Adapts Rewamp UI's morphing tab navigation to real Canvas sections and the CENTROPY palette.
-export function CanvasSectionNav({ sections }: { sections: CanvasSection[] }) {
+export function CanvasSectionNav({ sections, onSelect }: { sections: CanvasSection[]; onSelect?: (id: string) => void }) {
   const [activeId, setActiveId] = useState(sections[0]?.id ?? "")
   const activeRef = useRef<HTMLButtonElement | null>(null)
   const reducedMotion = useReducedMotion()
@@ -77,6 +77,7 @@ export function CanvasSectionNav({ sections }: { sections: CanvasSection[] }) {
           aria-current={active ? "location" : undefined}
           onClick={() => {
             setActiveId(section.id)
+            onSelect?.(section.id)
             document.getElementById(canvasSectionDomId(section.id))?.scrollIntoView({ block: "start", behavior: "instant" })
           }}
         >

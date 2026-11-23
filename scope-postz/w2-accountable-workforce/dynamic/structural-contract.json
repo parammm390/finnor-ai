@@ -1,0 +1,42 @@
+{
+  "schema": "finnor.postz.w2.structural-development-contract.v1",
+  "sourceClass": "SYNTHETIC",
+  "custody": "PUBLIC_BUILDER_DEVELOPMENT_NOT_INDEPENDENT_OR_PROTECTED",
+  "casesPerFamily": 8,
+  "requiredFamilies": 16,
+  "expectedCases": 128,
+  "wallSeconds": 300,
+  "maximumOutputBytes": 67108864,
+  "positiveControl": "Each fresh original must compile completely, authenticate explicit synthetic exact dispositions, perform each original task, independently verify its own original criterion and close every node. A rejection-only engine fails.",
+  "adverseControl": "The named semantic owner must report the preregistered exact issue and boundary. Syntax failures and unrelated earlier refusals do not pass.",
+  "freshness": "Eight independently constructed originals per family vary actual branch width 3..10, exact rational demand denominator 1..8, task/actor identities, effort, original dates and targeted branch. No repeated original or artifact identifier.",
+  "originalFloors": "No protected-family critical floor, useful-completion estimator or statistical qualification requirement is replaced or lowered by this development campaign.",
+  "families": [
+    { "id": "canonical-identity", "code": "ACTOR_IDENTITY", "boundary": "SUITABILITY", "mutation": "Revoke the actual selected canonical recipient after exact acceptance." },
+    { "id": "skill-evidence", "code": "CAPABILITY_EVIDENCE", "boundary": "SUITABILITY", "mutation": "Remove the task-specific observed skill from its actual selected producer." },
+    { "id": "competing-capacity", "code": "CAPACITY", "boundary": "SUITABILITY", "mutation": "An independently resolved competing commitment consumes the actual schedule capacity." },
+    { "id": "exact-acceptance", "code": "ACCEPTANCE_BINDING", "boundary": "ACCEPTANCE", "mutation": "The retained disposition has a different exact terms digest." },
+    { "id": "recipient-authority", "code": "CURRENT_GRANT", "boundary": "SUITABILITY", "mutation": "Revoke only the current recipient capability without changing the proposed assignment." },
+    { "id": "private-disclosure", "code": "DISCLOSURE_CEILING", "boundary": "GRAPH", "mutation": "A producer adds private task context outside the original data ceiling." },
+    { "id": "accounting-frontier", "code": "RESOURCE_LIMIT", "boundary": "ACCOUNTING", "mutation": "Direct exposure exceeds the exact canonical task envelope." },
+    { "id": "resource-ancestry", "code": "BUDGET_ANCESTRY_CYCLE", "boundary": "ACCOUNTING", "mutation": "A canonical-shaped carve is made its own budget ancestor; operational return edges do not excuse it." },
+    { "id": "independent-custody", "code": "VERIFICATION_CUSTODY", "boundary": "ACCEPTANCE", "mutation": "A retained delivery is purportedly verified by its own producer." },
+    { "id": "open-descendant", "code": "OPEN_DESCENDANT", "boundary": "GRAPH", "mutation": "An independently verified parent attempts closure while actual children remain open." },
+    { "id": "command-principal", "code": "COMMAND_ACTOR", "boundary": "LIFECYCLE", "mutation": "An otherwise current third party issues the recipient's START with exact command authority bytes." },
+    { "id": "decline-not-performance", "code": "NOT_IN_PROGRESS", "boundary": "USE", "mutation": "An explicit actual-shaped decline remains a decline and cannot become arrival or performance." },
+    { "id": "ambiguous-original-egress", "code": "POSSIBLE_EFFECT", "boundary": "USE", "mutation": "Original S6 identity changes from NOT_DISPATCHED to UNKNOWN or MAY_HAVE_LEFT without authoritative reconciliation." },
+    { "id": "cancelled-compensation", "code": "COMPENSATION_RELEASE_UNKNOWN", "boundary": "ACCOUNTING", "mutation": "Accepted paid human work is cancelled and labor released, but no compensation settlement is supplied." },
+    { "id": "smallest-currentness-closure", "code": "CANONICAL_DEPENDENCY_CHANGED", "boundary": "USE", "mutation": "Change one pinned producer dependency; retain a separately rooted authorized branch and its usable progress." },
+    { "id": "committed-history", "code": "HISTORY_ANCHOR_MISMATCH", "boundary": "LIFECYCLE", "mutation": "Change an already committed command prefix without changing the independently resolved native-style anchor." }
+  ],
+  "notEstablished": [
+    "NATIVE_POPULATION",
+    "GENUINE_HUMAN_CONSENT",
+    "REAL_PAYMENT_OR_EGRESS",
+    "INDEPENDENT_PROTECTED_CUSTODY",
+    "PROTECTED_ADAPTER_ADMISSION",
+    "FIELD_PERFORMANCE",
+    "QUALIFIED_Z_COMPARISON",
+    "ECONOMIC_IMPROVEMENT"
+  ]
+}

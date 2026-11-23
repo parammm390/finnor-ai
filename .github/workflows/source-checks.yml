@@ -1,4 +1,4 @@
-name: source-checks
+name: "Source - Workflow rules, generated inputs and types"
 on:
   workflow_call:
     inputs:
@@ -12,6 +12,7 @@ permissions:
   contents: read
 jobs:
   validate:
+    name: "CI definitions - Syntax and required checks"
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
@@ -35,6 +36,7 @@ jobs:
           retention-days: 7
 
   governance:
+    name: "CI and release rules - Regression tests"
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -52,6 +54,8 @@ jobs:
           npm run release:truth
           npm run test:release
           node --test scripts/release/ci-process.e2e.test.mjs
+          node scripts/release/project-z-ci.e2e.mjs
+          node scripts/release/supplier-canary-http.e2e.mjs
       - name: Retain governance evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
@@ -62,6 +66,7 @@ jobs:
           retention-days: 7
 
   source:
+    name: "Source consistency - Types and generated inputs"
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -80,6 +85,14 @@ jobs:
       # for a UI-only change. No dependency directories are shared between jobs.
       - run: npm ci --no-audit --no-fund
       - run: npm ci --prefix finnor-os --no-audit --no-fund
+      - name: Verify installed-owner migrations before image work
+        if: ${{ inputs.backend }}
+        working-directory: finnor-os
+        env:
+          FINNOR_R1_EVIDENCE_DIR: ${{ runner.temp }}/finnor-r1-migration-preflight
+        run: |
+          timeout --signal=TERM --kill-after=10s 90s node --import=tsx scripts/r1/run-owners.mts runtime-migrations
+          timeout --signal=TERM --kill-after=10s 90s node --import=tsx scripts/r4/run-integrated.mts --migration-only --output "$RUNNER_TEMP/finnor-r4-migration-preflight"
       - name: Verify the actual backend inventory is partitioned exactly once
         id: shards
         continue-on-error: true
@@ -98,7 +111,7 @@ jobs:
         run: |
           status=0
           npm run authz:matrix:check || status=1
-          npm run openapi || status=1
+          npm run openapi -- --check || status=1
           npm run db:bundle || status=1
           npm run typecheck || status=1
           npm run build:inputs:check || status=1
@@ -108,12 +121,15 @@ jobs:
       - name: Check all root types against the workspace
         id: types
         continue-on-error: true
-        run: npx --no-install tsc --noEmit -p tsconfig.json
+        run: |
+          npx --no-install next typegen
+          npx --no-install tsc --noEmit -p tsconfig.json
       - name: Check shared frontend inventories and retirement boundary
         id: inventory
         continue-on-error: true
         run: |
           status=0
+          npm run release:generated:check || status=1
           npm run centropy:client:check || status=1
           npm run centropy:manifest:check || status=1
           npm run centropy:forms:check || status=1

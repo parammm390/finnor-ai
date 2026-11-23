@@ -1,4 +1,4 @@
-import { createUnderwritingSensitivity } from "@finnor/private-equity";
+import { createUnderwritingSensitivity } from "../../../../../../packages/private-equity/src/underwriting-repository";
 import type { SensitivityDefinition } from "@finnor/underwriting";
 import { requireContext } from "../../../../lib/auth";
 import {

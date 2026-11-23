@@ -4,6 +4,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
+import { startJobHeartbeat } from '../../apps/worker/src/job-heartbeat';
 import { createNativeOwnerDatabase } from '../s7/native-owner-database.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -35,6 +36,21 @@ try {
   await db.admin.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status) VALUES($1,$2,$3,'owner','active')", [actor, tenant, actor + '@fixture.invalid']);
   await db.db.configureTenantVertical({ tenantId: tenant, verticalKey: 'private_equity', expectedVersion: 0, createdBy: actor, sourceSystem: 'heartbeat:fixture' });
   await db.admin.query("UPDATE finnor_os.compute_resource_policies SET lease_seconds=15 WHERE resource_key='native:r3'");
+  await check('physical-guard-inherits-physical-job-lifetime', async () => {
+    let physicalRenewals = 0, guards = 0;
+    const errors: unknown[] = [];
+    const heartbeat = startJobHeartbeat({ leaseSeconds: 0.3, renew: async () => { physicalRenewals++; return true; }, onError: error => errors.push(error) });
+    try {
+      heartbeat.register(async () => { guards++; return true; });
+      await delay(450);
+      assert(guards >= 3, `Physical guard ran only ${guards} times`);
+      assert(physicalRenewals >= guards);
+      assert.equal(heartbeat.lost, false);
+      assert.deepEqual(errors, []);
+    } finally { await heartbeat.stop(); }
+    const retired = guards; await delay(150); assert.equal(guards, retired);
+    return { physicalRenewals, guards, stoppedGuards: guards };
+  });
   await check('long-job-short-resource-through-two-expiries', async () => {
     const type = 'audit_resource_heartbeat';
     const queue = new JobQueue('heartbeat-e2e', 600, null);
@@ -123,4 +139,4 @@ try {
   });
 } finally { await db.stop(); await save(); }
 console.log(JSON.stringify({ output, results }));
-assert(results.length === 5 && results.every(row => row.status === 'PASS'), 'Job heartbeat end-to-end cases failed; inspect job-heartbeats.json');
+assert(results.length === 6 && results.every(row => row.status === 'PASS'), 'Job heartbeat end-to-end cases failed; inspect job-heartbeats.json');

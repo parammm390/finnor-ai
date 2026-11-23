@@ -1,0 +1,21 @@
+{
+  "actualExit": 0,
+  "command": [
+    "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+    "--input-type=module",
+    "-e",
+    "\nimport { spawnSync } from \"node:child_process\";\nconst [driver, profile, executable, ...args] = process.argv.slice(1);\nconst guard = spawnSync(process.execPath, [driver, \"--memory-headroom\", profile], { stdio: \"inherit\" });\nif (guard.error || guard.status !== 0) {\n  console.error(JSON.stringify({ stage: \"MEMORY_HEADROOM\", exitCode: guard.status, signal: guard.signal,\n    spawnError: guard.error?.code ?? null }));\n  // Exit 2 belongs to the real native authority guard, never this preflight.\n  process.exit(1);\n}\nconst child = spawnSync(executable, args, { stdio: \"inherit\" });\nif (child.error || child.signal) console.error(JSON.stringify({ stage: \"GUARDED_CHILD\", exitCode: child.status,\n  signal: child.signal, spawnError: child.error?.code ?? null }));\nprocess.exit(child.error ? 1 : child.status ?? 1);\n",
+    "/home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/reconstruct.mjs",
+    "process",
+    "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+    "--experimental-strip-types",
+    "--max-old-space-size=384",
+    "/home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/finite-boundary-e2e.mjs",
+    "/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/reconstruction-memory-02/finite-boundary"
+  ],
+  "expected": "EXIT_0_SAME_SEVEN_CASES",
+  "id": "finite-boundary-through-production-wrapper",
+  "stderr": "",
+  "stdout": "{\"state\":\"PASSED_MEMORY_HEADROOM_ONLY\",\"profile\":\"process\",\"exit\":0,\"requiredAvailableBytes\":4294967296,\"actualAvailableBytes\":7076032512,\"installedZ5Proof\":false,\"databaseActions\":0,\"listenersStarted\":0,\"installsStarted\":0,\"sourceSha256\":\"88796fa666e99150af354d52105938e7e1361c5ab461f23b7013a8d86d7cb79b\"}\n{\"output\":\"/home/factory-user/repos/finnor-z5/scope-z/phase-evidence/z5/reconstruction-memory-02/finite-boundary\",\"state\":\"PASSED\",\"cases\":7,\"failures\":[],\"producerExecutions\":6,\"checkerExecutions\":7}\n",
+  "wallMs": 1774.340347998077
+}

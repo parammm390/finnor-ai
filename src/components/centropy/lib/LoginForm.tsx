@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Lock } from "lucide-react"
 import { getSupabaseBrowser } from "@/lib/centropy/supabase-browser"
+import { waitForCentropySignOut } from "./centropy-auth"
 import "../centropy-theme.css"
 
 export function LoginForm() {
@@ -43,6 +44,7 @@ export function LoginForm() {
     setBusy(true)
     setError(null)
     try {
+      await waitForCentropySignOut()
       const supabaseBrowser = await getSupabaseBrowser()
       const { error: signInError } = await supabaseBrowser.auth.signInWithPassword({ email: submittedEmail, password: submittedPassword })
       if (signInError) throw signInError

@@ -1,8 +1,11 @@
 import {z} from 'zod';
 import {performance} from 'node:perf_hooks';
 import {withDatabaseExecutionDeadline,DatabaseExecutionDeadlineError} from '@finnor/db';
-import {PeDomainError,LedgerFault} from '@finnor/private-equity';
-import {AllocationContractError,ControlContractError,ExperimentContractError} from '@finnor/epistemic-runtime';
+import { PeDomainError } from '../../../../../../packages/private-equity/src/types';
+import { LedgerFault } from '../../../../../../packages/governed-execution/src/protocol';
+import { AllocationContractError } from '../../../../../../packages/epistemic-runtime/src/allocation-contracts';
+import { ControlContractError } from '../../../../../../packages/epistemic-runtime/src/control-contracts';
+import { ExperimentContractError } from '../../../../../../packages/epistemic-runtime/src/experiments';
 import {errorResponse,requireContext} from '../../../../lib/auth';
 import {UniformOwnerError,fail} from '../../../../../../packages/private-equity/src/uniform-algorithms/contracts';
 import {submitUniformDiscovery,readUniformDiscovery,listUniformDiscoveries,consumeUniformAlgorithm,cancelUniformDiscovery,invalidateUniformDiscovery} from '../../../../../../packages/private-equity/src/uniform-algorithms/service';

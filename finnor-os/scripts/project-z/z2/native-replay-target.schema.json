@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "finnor.project-z.z2.native-replay-target.v1",
+  "title": "Existing explicitly authorized Z2 disposable native replay target",
+  "description": "Description of an operator-supplied target, not authorization or a fixture initializer. The driver additionally validates source/build hashes, exact process identities and native owner contracts.",
+  "type": "object",
+  "required": ["schema", "authorization", "origin", "apiOrigin", "frontendAuthIssuer", "apiAuthIssuer", "sourceRoot", "sourceSha256", "buildReceiptPath", "buildReceiptSha256", "tenantId", "database", "worker", "processes", "actors", "cases", "preexistingNegativeCases"],
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "required": ["validationOnly"],
+      "properties": {
+        "validationOnly": {"const": true},
+        "authorization": {"properties": {
+          "explicitDisposableExecution": {"const": false},
+          "ownedWorkerKillAndSameBuildRestart": {"const": false},
+          "exclusiveNativeReplayDatabase": {"const": false},
+          "consumeOriginalRemainingConstructionBudget": {"const": false},
+          "leaveOwnedWorkerStoppedAfterReplay": {"const": false}
+        }}
+      }
+    },
+    {
+      "not": {"required": ["validationOnly"]},
+      "properties": {
+        "authorization": {"properties": {
+          "explicitDisposableExecution": {"const": true},
+          "ownedWorkerKillAndSameBuildRestart": {"const": true},
+          "exclusiveNativeReplayDatabase": {"const": true},
+          "consumeOriginalRemainingConstructionBudget": {"const": true},
+          "leaveOwnedWorkerStoppedAfterReplay": {"const": true}
+        }}
+      }
+    }
+  ],
+  "properties": {
+    "schema": {"const": "finnor.project-z.z2.native-replay-target.v1"},
+    "validationOnly": {"const": true, "description": "Inert offline binding fixture. Execution is prohibited before any source, environment, process, DB or Auth lookup; its five execution grants must be false."},
+    "authorization": {
+      "type": "object",
+      "required": ["explicitDisposableExecution", "noDatabaseInitialization", "noGrantsOrProvisioning", "noExternalOrFinancialEffects", "realAuthOnly", "ownedWorkerKillAndSameBuildRestart", "exclusiveNativeReplayDatabase", "consumeOriginalRemainingConstructionBudget", "leaveOwnedWorkerStoppedAfterReplay", "expiresAt"],
+      "additionalProperties": false,
+      "properties": {
+        "explicitDisposableExecution": {"type": "boolean"},
+        "noDatabaseInitialization": {"const": true},
+        "noGrantsOrProvisioning": {"const": true},
+        "noExternalOrFinancialEffects": {"const": true},
+        "realAuthOnly": {"const": true},
+        "ownedWorkerKillAndSameBuildRestart": {"type": "boolean"},
+        "exclusiveNativeReplayDatabase": {"type": "boolean"},
+        "consumeOriginalRemainingConstructionBudget": {"type": "boolean"},
+        "leaveOwnedWorkerStoppedAfterReplay": {"type": "boolean"},
+        "expiresAt": {"type": "string", "format": "date-time"}
+      }
+    },
+    "origin": {"type": "string", "pattern": "^http://(127\\.0\\.0\\.1|localhost|\\[::1\\]):[0-9]+$"},
+    "apiOrigin": {"type": "string", "pattern": "^http://(127\\.0\\.0\\.1|localhost|\\[::1\\]):[0-9]+$"},
+    "frontendAuthIssuer": {"type": "string", "pattern": "^https://"},
+    "apiAuthIssuer": {"type": "string", "pattern": "^https://"},
+    "sourceRoot": {"$ref": "#/$defs/absolutePath"},
+    "sourceSha256": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/sha256"}},
+    "buildReceiptPath": {"$ref": "#/$defs/absolutePath"},
+    "buildReceiptSha256": {"$ref": "#/$defs/sha256"},
+    "tenantId": {"$ref": "#/$defs/uuid"},
+    "database": {
+      "type": "object", "required": ["environmentName", "host", "port", "name"], "additionalProperties": false,
+      "properties": {
+        "environmentName": {"$ref": "#/$defs/environmentName"},
+        "host": {"enum": ["127.0.0.1", "localhost", "[::1]"]},
+        "port": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "name": {"type": "string", "minLength": 1, "not": {"const": "postgres"}}
+      }
+    },
+    "worker": {
+      "allOf": [{"$ref": "#/$defs/processIdentity"}],
+      "required": ["coupledSupervisor"],
+      "properties": {"coupledSupervisor": {"const": false}}
+    },
+    "processes": {
+      "type": "object", "required": ["api", "frontend"], "additionalProperties": false,
+      "properties": {"api": {"$ref": "#/$defs/processIdentity"}, "frontend": {"$ref": "#/$defs/processIdentity"}}
+    },
+    "actors": {
+      "type": "array", "minItems": 2, "maxItems": 4,
+      "items": {
+        "type": "object", "required": ["userId", "principalId", "emailEnvironmentName", "passwordEnvironmentName"],
+        "additionalProperties": false,
+        "properties": {
+          "userId": {"$ref": "#/$defs/uuid"}, "principalId": {"$ref": "#/$defs/uuid"},
+          "emailEnvironmentName": {"$ref": "#/$defs/environmentName"}, "passwordEnvironmentName": {"$ref": "#/$defs/environmentName"}
+        }
+      }
+    },
+    "cases": {
+      "type": "array", "minItems": 4, "maxItems": 256,
+      "items": {
+        "type": "object", "required": ["id", "recovery", "request", "originalRequestDigest", "expectedOriginalUtilitiesDigest", "expectedInternalEffectDigest", "expectedInternalEffectKind", "reservation", "actionByInformationKey", "canonicalObservations"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9-]{1,64}$"},
+          "recovery": {"enum": ["CLAIM", "CHECKPOINT", "ARTIFACT", "PARTIAL_CONSENT"]},
+          "request": {"type": "object", "description": "Exact original existing source-bound native SubmitSchema request, without parentProtocolId. The real owner validates every native field."},
+          "originalRequestDigest": {"$ref": "#/$defs/sha256"},
+          "expectedOriginalUtilitiesDigest": {"$ref": "#/$defs/sha256"},
+          "expectedInternalEffectDigest": {"$ref": "#/$defs/sha256"},
+          "expectedInternalEffectKind": {"enum": ["NO_EFFECT", "RIGHT_TRANSITION"]},
+          "reservation": {
+            "type": "object", "required": ["ref", "expectedRevision"], "additionalProperties": false,
+            "properties": {"ref": {"$ref": "#/$defs/nativeRef"}, "expectedRevision": {"type": "integer", "minimum": 1}}
+          },
+          "actionByInformationKey": {"type": "object", "additionalProperties": {"type": "string"}},
+          "canonicalObservations": {
+            "type": "array",
+            "items": {
+              "type": "object", "required": ["actorIndex", "observation"], "additionalProperties": false,
+              "properties": {
+                "actorIndex": {"type": "integer", "minimum": 0, "maximum": 3},
+                "whenStatus": {"enum": ["NEEDS_LAWFUL_OBSERVATION", "NEEDS_CANONICAL_OBSERVATION"]},
+                "observation": {
+                  "type": "object", "required": ["date", "key", "value", "classification", "source"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "date": {"type": "integer", "minimum": 0, "maximum": 2}, "key": {"type": "string"},
+                    "value": {"type": "string"}, "classification": {"const": "SOURCED_FACT"},
+                    "source": {"type": "object", "description": "The existing native SourceSchema and exact current INTERACTION_OBSERVATION claim. Never a fabricated observation."}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "preexistingNegativeCases": {
+      "type": "array", "minItems": 6,
+      "items": {
+        "type": "object", "required": ["kind", "actorIndex", "operation", "input", "httpStatuses", "expectedCodeOrStatus"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {"enum": ["STALE_SOURCE", "REVOKED_RIGHTS", "CROSS_TENANT", "RESOURCE_BOUND", "UNSUPPORTED", "INCOMPLETE"]},
+          "actorIndex": {"type": "integer", "minimum": 0, "maximum": 3},
+          "operation": {"type": "string"}, "input": {"type": "object"},
+          "httpStatuses": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 100, "maximum": 599}},
+          "expectedCodeOrStatus": {"type": "string"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "uuid": {"type": "string", "format": "uuid"},
+    "environmentName": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,127}$"},
+    "absolutePath": {"type": "string", "pattern": "^/"},
+    "processIdentity": {
+      "type": "object", "required": ["pid", "startTicks", "cmdlineSha256"],
+      "properties": {"pid": {"type": "integer", "minimum": 2}, "startTicks": {"type": "string", "pattern": "^[0-9]+$"}, "cmdlineSha256": {"$ref": "#/$defs/sha256"}}
+    },
+    "nativeRef": {
+      "type": "object", "required": ["owner", "id", "version", "contentDigest"], "additionalProperties": false,
+      "properties": {"owner": {"type": "string"}, "id": {"type": "string"}, "version": {"type": "string"}, "contentDigest": {"$ref": "#/$defs/sha256"}}
+    }
+  }
+}

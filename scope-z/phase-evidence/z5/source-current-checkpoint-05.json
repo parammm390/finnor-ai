@@ -1,0 +1,834 @@
+{
+  "actualHead": "9f3edfd3b4c6758832c53139da0773218062191e",
+  "actualHeadTree": "2dc4d5bc13d22853cf4dc9feb5f6ac7fbf6bb9c9",
+  "baseCheckpoint": {
+    "deltaRule": "Start from base members keyed by path; remove membersRemoved; replace membersChanged and insert membersAdded; sort by path. SHA256 compact sorted-key UTF8 JSON of the complete resulting row array.",
+    "immutable": true,
+    "path": "scope-z/phase-evidence/z5/source-current-checkpoint-02.json",
+    "sha256": "9c39cf41875a37631f5017b5d1af5cf44b6b4a6ad4b5b7def54e67cb239cb533"
+  },
+  "blockers": [
+    {
+      "authorityNeeded": "Explicit user request to fix the flagged file or user review; no inferred permission",
+      "file": "scope-z/phase-evidence/z5/recovery-e2e-01/journal.json",
+      "kind": "SHIELD_COMMIT_DENIAL",
+      "retryAttempted": false,
+      "unchanged": true
+    },
+    {
+      "guardLowered": false,
+      "kind": "INSTALLATION_HEADROOM",
+      "observedFreeBytes": 5856260096,
+      "requiredFreeBytes": 8589934592
+    },
+    {
+      "kind": "COORDINATOR_SHARED_INTEGRATION",
+      "migrationNameAssigned": false,
+      "request": "06",
+      "sharedWrites": 0
+    },
+    {
+      "databaseAuthOrListenerAuthority": false,
+      "kind": "NATIVE_AUTHORITY_AND_CUSTODY",
+      "positiveRuntime": "NOT_RUN",
+      "protectedOrFinancialQualification": "NOT_RUN"
+    }
+  ],
+  "branch": "factory/project-z5-institution-linker",
+  "build": {
+    "applicationBuilds": [
+      {
+        "id": null,
+        "path": ".next/BUILD_ID"
+      },
+      {
+        "id": null,
+        "path": "finnor-os/apps/api/.next/BUILD_ID"
+      }
+    ],
+    "coldExtractionReplay": "NOT_RUN",
+    "deliveryReceipt": null,
+    "installation": "NOT_RUN",
+    "installedNativeIdentity": null,
+    "sourceArchive": null
+  },
+  "changedCodeSinceDeniedIndex": [
+    "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/api.ts",
+    "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/schema.sql",
+    "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/service.ts",
+    "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/store.ts",
+    "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/worker.ts",
+    "finnor-os/scripts/project-z/z5/assemble-integration.py",
+    "finnor-os/scripts/project-z/z5/freeze-delivery.py",
+    "finnor-os/scripts/project-z/z5/native-e2e.mjs",
+    "finnor-os/scripts/project-z/z5/offline-e2e.mjs",
+    "finnor-os/scripts/project-z/z5/reconstruct.mjs"
+  ],
+  "checks": {
+    "backend11": {
+      "borrowedThirdPartyDeclarations": true,
+      "byteIdenticalPostimageRequest": "06",
+      "checkedSourceFiles": 4471,
+      "compilerSha256": "3ae902c92cc44dace175c0e69e13a4b0899f6983c6121d76b9ab8dd5795e7675",
+      "compilerVersion": "5.9.3",
+      "diagnostics": 0,
+      "exit": 0,
+      "foreignProjectSources": 0,
+      "heapMiB": 4096,
+      "installedZ5Proof": false,
+      "log": "scope-z/phase-evidence/z5/backend-types-11.log",
+      "maxRssBytes": 3416100864,
+      "ownSourceDigest": "23bc9e5d02f501d8d234dd190f74a3732379f4bd70fca6e06a61fe82255b704c",
+      "ownSourceFiles": 1485,
+      "requestAtExecution": "05",
+      "rootFiles": 1459,
+      "scriptElapsedSeconds": 63.8,
+      "sharedHeavyLock": "/home/factory-user/repos/finnor-z-shared-heavy.lock",
+      "wallMs": 63106.755385000004
+    },
+    "changedPublicRunnerSyntax": {
+      "exit": 0,
+      "node": "22.23.4",
+      "sourceSha256": "978a8b5b92b1fa68f3493827ac512b2f81c63793312a6d36623cd4a7a76c31ec",
+      "toolCallId": "call_15bGBCXPpVtraDKUTum5YhEl"
+    },
+    "changedPythonSyntax06": {
+      "bytecodeWritten": false,
+      "exit": 0,
+      "files": 2,
+      "log": "scope-z/phase-evidence/z5/syntax-check-06.log",
+      "packagerExecuted": false
+    },
+    "integrationRequest06": {
+      "assemblyExit": 0,
+      "assemblyLog": "scope-z/phase-evidence/z5/integration-request-06-assembly.log",
+      "gitCheckLog": "scope-z/phase-evidence/z5/integration-request-06-git-check.log",
+      "independentByteVerificationExit": 0,
+      "sharedFilesApplied": 0,
+      "sourcePostimagesByteIdenticalToRequest": "05",
+      "strictReadOnlyGitCheckExit": 0,
+      "toolCallIds": [
+        "call_konPqBCyds1kw878Fg1tKTaL",
+        "call_u4mDODTSoh4d1NogvbWWZEXX"
+      ],
+      "verificationLog": "scope-z/phase-evidence/z5/integration-request-06-verification.log"
+    },
+    "nativeGuard06": {
+      "actions": [],
+      "counters": {
+        "bypasses": 0,
+        "databaseInitialization": 0,
+        "externalMutations": 0,
+        "grantsApplied": 0,
+        "listenersStarted": 0,
+        "migrationsApplied": 0,
+        "signersCreated": 0,
+        "tenantsCreated": 0,
+        "usersCreated": 0
+      },
+      "credentialFreeEnvironment": true,
+      "exit": 2,
+      "expectedExit": 2,
+      "physicalInterruptions": [],
+      "positiveNativeExecution": "NOT_RUN",
+      "sourceFiles": {
+        "file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/e2e-tools.mjs": "15c65254603c562b551484a9ed3ed81bfb76ef7f50058c180ab2a8ff71616efd",
+        "file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/native-e2e.mjs": "6d34f851622c798c3d4fcb1aa3dd881e06438a97622d65fd0d15d0bbbebaae0c",
+        "file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/native-worker.ts": "6e1c357fa7667c541b0e3fafe056a14b61da30c79d6503ec3549ba366742a306",
+        "file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/source-identity.ts": "fa2c70d4fdcce2cc6c6a3e20459a6cd61bb9e370a0cc5eb62ee9ff6380d53c13"
+      },
+      "state": "NOT_RUN"
+    },
+    "publicOutputGuards01": {
+      "artifactVerificationExit": 0,
+      "escapingDestinationCreated": false,
+      "escapingOutputActualExit": 1,
+      "escapingOutputExpectedExit": 1,
+      "existingDirectoryActualExit": 1,
+      "existingDirectoryExpectedExit": 1,
+      "originalReportUnchanged": true,
+      "verificationLog": "scope-z/phase-evidence/z5/public-population-guard-verification-01.log"
+    },
+    "publicPopulationAudit01": {
+      "checkerExecutions": 0,
+      "crossLabelGroups": 9,
+      "duplicateGroups": 49,
+      "exit": 0,
+      "independentFreshness": "NOT_ESTABLISHED",
+      "labelsWithEightDifferentInputs": 2,
+      "newSemanticExecutions": 0,
+      "positiveSlots": 188,
+      "producerExecutions": 0,
+      "registeredLabels": 32,
+      "registeredSlots": 256,
+      "repeatedInputSlots": 172,
+      "report": "scope-z/phase-evidence/z5/public-population-audit-01/report.json",
+      "reportSha256": "0bffb1bea4da3f016651c34445261254f6ab2ac9be5ea09c75392e6184361ef2",
+      "state": "AUDIT_COMPLETED",
+      "structuralFamilyQualification": "NOT_ESTABLISHED",
+      "uniqueOriginalInputs": 84,
+      "uniquePositiveInputs": 50,
+      "verificationExit": 0,
+      "verificationLog": "scope-z/phase-evidence/z5/public-population-audit-verification-01.log"
+    },
+    "retainedCachedWhitespace01": {
+      "actualExit": 2,
+      "artifact": "scope-z/phase-evidence/z5/staged-whitespace-01.log",
+      "classification": "Literal one-space blank context lines in historical unified-patch data, not added-source whitespace",
+      "findings": 40,
+      "indexChanged": false,
+      "retried": false
+    },
+    "retainedIntegrationPatchFailures01": {
+      "actualExitEach": 1,
+      "correctedByFreshRequest": "06",
+      "originalFailuresPreserved": true,
+      "receipt": "scope-z/phase-evidence/z5/integration-patch-check-01.json",
+      "requests": [
+        "01",
+        "02",
+        "03",
+        "04",
+        "05"
+      ]
+    },
+    "reusedSourceBoundChecks": {
+      "affectedLint05": 0,
+      "baselineLint03": 0,
+      "checkpoint": "scope-z/phase-evidence/z5/source-current-checkpoint-02.json",
+      "currentRunnerDefaultFullSemanticModeRun": false,
+      "diagnostics01": 0,
+      "frontend05": 0,
+      "latestWorkerAndNativeGuardCheckpoint": "scope-z/phase-evidence/z5/source-current-checkpoint-04.json",
+      "localFileRecovery01": 0,
+      "nativeRuntimeCoverageOfNewCorrection": false,
+      "packCheck02": 0,
+      "processE2E02": 0,
+      "publicSweep03": 0,
+      "reason": "Only three scripts and evidence change since checkpoint 04. Native adapters, TS graphs and SQL are unchanged. All eleven request-06 source pre/postimages are independently byte-identical to 05. Public sweep 03 remains historical-runner-bound evidence for unchanged kernel/checker/input bytes, not execution of the current runner default full mode.",
+      "sqlParse02": 0,
+      "syntax05": "Reused only for unchanged files and embedded extractor; changed scripts have separate current checks.",
+      "workspaceManifestCoverageClientForms": 0
+    },
+    "whitespace": {
+      "exit": 0,
+      "scope": "Current owned source and Markdown, excluding patch/log data and flagged JSON",
+      "toolCallId": "call_BoBPL34oPpVzbfZvdJtZs5Ax"
+    }
+  },
+  "coordinatorPreliminaryReview": {
+    "boundHistoricalCheckpointSha256": "2f93c405698b212fd4a0f9a49b8519905ec8ebd577de3c63a8d8821016eea416",
+    "changedReviewedFiles": [
+      {
+        "currentSha256": "80366a38f6948bdc490effb56afa6245708bc55223980b9e50eecc9bf3a2ddb8",
+        "path": "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/worker.ts",
+        "reviewedSha256": "9d8e49e3b8b738e50dce4801bcefff3b20e509fab99622d4c7d1ce0c03694158"
+      },
+      {
+        "currentSha256": "5818c1bbb7b6e8eb4638e33e61dff42cc533922d4a3ceb18f49675fb4d8182e7",
+        "path": "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/store.ts",
+        "reviewedSha256": "1c029cc826131af06f23532dd4dfaec4b8aefa0c261b07ed8c5a4d79c8f4b92f"
+      }
+    ],
+    "kernelReading": "PARTIAL_NOT_FULL_SEMANTIC_REVIEW",
+    "ownedResponse": "scope-z/phase-evidence/z5/coordinator-review-response-01.md",
+    "ownedResponseSha256": "0cb6e4826425eb6a2143bacf7dadf34314941b7d7669d012dbaba7beb149e5c5",
+    "path": "/home/factory-user/repos/finnor-z-coordinator/scope-z/orchestration/evidence/coordinator-integration-04/z5-owner-preliminary-review-01.json",
+    "producerCheckerMathematics": "NOT_REVIEWED_IN_THIS_RECEIPT",
+    "schedulingGateWritten": false,
+    "sha256": "4ef65c9540ffa1e4daa3e63b8ce2fab8b9baa94f8d0efe266ebe3f0851858639",
+    "sourceAdopted": false,
+    "state": "PRELIMINARY_OWNER_REVIEW_NOT_ADOPTED_NOT_ACCEPTED",
+    "unchangedReviewedFiles": 8
+  },
+  "correction": {
+    "defaultFullSemanticModeRerun": false,
+    "failureModels": [
+      "scope-z/phase-evidence/z5/public-population-audit-contract-01.md",
+      "scope-z/phase-evidence/z5/integration-patch-failure-model-01.md"
+    ],
+    "nativeRuntime": "NOT_RUN",
+    "originalSemanticPopulationRegenerated": false,
+    "postCodeUnitCampaignAdded": false,
+    "scope": "Since checkpoint 04, only three scripts change: public frozen-input identity audit and physical output containment; explicit new-file Git mode serialization; packager active request 06. Native adapters, kernel, checker, all original frozen cases and eleven actual shared source postimages are unchanged."
+  },
+  "createdAt": "2026-10-25T08:37:50.161252+00:00",
+  "currentWorktreeFingerprint": {
+    "algorithm": "Git SHA1 tree algorithm, validated against actual HEAD and preserved index; full metadata membership SHA256 uses sorted-key compact JSON",
+    "algorithmValidatedAgainstActualHeadAndIndex": true,
+    "bytes": 187458847,
+    "computedTreeSha1": "324046b901171c4dbb9648aec2ded60472a5a3ba",
+    "gitObjectsWritten": false,
+    "isCommitOrArchive": false,
+    "members": 6501,
+    "membershipSha256": "b3de1fbd8025a12bb84940616e650296a2296e0f50ff7eb56e9467f54d009064",
+    "paths": "All indexed files plus regular/link files under five owned phase prefixes. Checkpoints 02/03/04 are explicit members. Excludes this derived checkpoint and unrelated untracked user launch files.",
+    "snapshotFileExcludedForSelfReference": "scope-z/phase-evidence/z5/source-current-checkpoint-05.json"
+  },
+  "deniedIndex": {
+    "commitRetryAttempted": false,
+    "computedTreeSha1": "0c96857122aee354f07073c00c67da91609a64e4",
+    "currentImplementationMatchesDeniedIndex": false,
+    "flaggedJournalMatchesIndexedBlob": true,
+    "historicalCheckpointSha256": "2f93c405698b212fd4a0f9a49b8519905ec8ebd577de3c63a8d8821016eea416",
+    "members": 6414,
+    "preserved": true,
+    "restagedSinceDenial": false,
+    "stagedOwnedAdditions": 1828
+  },
+  "finalSourceCommit": null,
+  "gate": {
+    "coordinatorGateWritten": false,
+    "engineeringHandoff": "UNACCEPTED",
+    "equippedIncrement": "NOT_RUN",
+    "financial100x": "NOT_RUN",
+    "installedNative": "NOT_RUN",
+    "internalSoftware": "IN_PROGRESS",
+    "operational100x": "NOT_RUN",
+    "productionActivation": false,
+    "protectedAdmission": "NOT_RUN",
+    "slotReleased": false
+  },
+  "integration": {
+    "applied": false,
+    "independentByteVerificationExit": 0,
+    "manifest": "scope-z/phase-evidence/z5/integration/request-06/manifest.json",
+    "manifestSha256": "c2ba6bcbeee7c8f5ccb5c2fbb3f356b8a05170ecb0e130b582852e157572a18b",
+    "migration": {
+      "assignedMigrationName": null,
+      "body": "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/schema.sql",
+      "coordinatorMustAssignOrderHeadAndRegenerateBundle": true,
+      "currentPreimages": {
+        "finnor-os/packages/db/migrate.ts": "da1b30e000be4ed00b9bfbc6cb24a08eb81dd9c0164601d706c829440ee3084a",
+        "finnor-os/packages/db/migration-head.ts": "a77a030c1cb2505d73be3a4b7ac1c4ce2b5f2dbc5bc500d79b1a914bff8a889c",
+        "finnor-os/packages/db/migrations-bundle.ts": "0fc4f9ef10acf5d44e9f6f9f26cf329ee20075debe53657d152b4fd03b5a1263"
+      },
+      "sha256": "b461945e729aeee02c90eec947c9b45db1fc5b7fdebb2d808587dcfd151fd71c",
+      "sqlExecuted": false
+    },
+    "patchSha256": "11ec9cb7d2a000d617f5fa8c42786832105da34a13cdc19ee1d9118228a4a354",
+    "serializationOnlyChange": "Exactly one new file mode 100644 header",
+    "sharedPaths": 11,
+    "sourcePostimagesByteIdenticalToRequest": "05",
+    "strictReadOnlyGitCheckExit": 0
+  },
+  "limitations": [
+    "Current metadata is not a committed source archive or cold replay.",
+    "Native quota, callback timing, queue ACK/recovery, mounted authentication and installed behavior remain NOT_RUN.",
+    "Full coupled finite product; sound context subset; nonblocking finite-path existence, not inevitability.",
+    "Builder-controlled public evidence and original failed receipts remain separately scoped.",
+    "Frozen public population has 84 different complete inputs across 256 slots and 50 different positive inputs in the unchanged 188-positive-slot denominator; structural-family qualification remains NOT_ESTABLISHED.",
+    "Current public runner audit-only mode is exercised; its default full semantic mode is not rerun.",
+    "Historical saved patch parser and patch-as-data whitespace failures remain retained; request 06 changes serialization only."
+  ],
+  "membersAdded": [
+    {
+      "bytes": 1627,
+      "gitBlob": "ac549371b3351b993e5baabba591962daace8552",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/backend-types-10.log",
+      "sha256": "eefa09e79710acd2cd6dddac0e7dc576f5a9e8a0fb454c31c645f17b884ba831"
+    },
+    {
+      "bytes": 1628,
+      "gitBlob": "bf1d95a7161f3a4c7ed040fe2b55cfee4e80e2f8",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/backend-types-11.log",
+      "sha256": "191b0a24028f5316fa2d3eee040a56a9b218903b6a7d39777ec040c81f3ff92a"
+    },
+    {
+      "bytes": 3996,
+      "gitBlob": "a8630a8c335479c595a361192e611f4532f65774",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/coordinator-review-response-01.md",
+      "sha256": "0cb6e4826425eb6a2143bacf7dadf34314941b7d7669d012dbaba7beb149e5c5"
+    },
+    {
+      "bytes": 1557,
+      "gitBlob": "2cf1aa97c2a55a2196d6e6f5a7311ac27494497e",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration-patch-check-01.json",
+      "sha256": "b44b7d065234da691afcb94df333b4a8c20d94c1f0d7f77c934a87093fd9a0c5"
+    },
+    {
+      "bytes": 3332,
+      "gitBlob": "c3a67520455db42f65354f77b637a7f25844635e",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration-patch-failure-model-01.md",
+      "sha256": "3168450e4d2f9e5163e299b2cabd63c0679c80fb362195747d30b79a99e8b119"
+    },
+    {
+      "bytes": 217,
+      "gitBlob": "caf57419aea16a6f1c30280f6dfab4346ea3cf22",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration-request-06-assembly.log",
+      "sha256": "0cb66779ede04538ab811d8e7ba1c57967e45326e9009b2c4449dd3c2521a554"
+    },
+    {
+      "bytes": 0,
+      "gitBlob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration-request-06-git-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 3623,
+      "gitBlob": "76f1bed2cc74ae3632e54fe7c91e5b5884e3decc",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration-request-06-verification.log",
+      "sha256": "605bd8fe35323d8fb9b3440f96a6c2f282dd5cd712fb8da90c78c79ee064749c"
+    },
+    {
+      "bytes": 1639,
+      "gitBlob": "5b152f530ee74f83833f0e6b66372be2a58810f4",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/README.md",
+      "sha256": "5866831c15137dd3fea6105c5b214e02705006cc16420703ab89d19ee087f79b"
+    },
+    {
+      "bytes": 8020,
+      "gitBlob": "ac5bbaf24670dd28eb8c4cc57c891a716de99837",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/manifest.json",
+      "sha256": "c2ba6bcbeee7c8f5ccb5c2fbb3f356b8a05170ecb0e130b582852e157572a18b"
+    },
+    {
+      "bytes": 27342,
+      "gitBlob": "328be3586130062d214f9b2236745f3c6839ff5d",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/postimages/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "sha256": "3e442f7300f7379bb404126da31573d9b4d9163236d9fa3facaeaee33dac6f7b"
+    },
+    {
+      "bytes": 7235,
+      "gitBlob": "02e49a6dae8e7a0165c9372d073de1150512efb2",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/postimages/finnor-os/apps/api/app/api/policies/[operation]/route.ts",
+      "sha256": "65197481d8bdd71204900c11b1217b84161e6ce2d257c35c16de4e223d51df49"
+    },
+    {
+      "bytes": 6912,
+      "gitBlob": "dd05d7dc033a9947f11c77322681efd0efa1e7d5",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/postimages/finnor-os/apps/api/next.config.mjs",
+      "sha256": "837299b02ed26e4b1f185e0fe1335c83a799bcdb19a041fce673318fe6aecccb"
+    },
+    {
+      "bytes": 22056,
+      "gitBlob": "2e378f2174d60129e3fab85afb68df07512e15f7",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/postimages/finnor-os/apps/worker/src/index.ts",
+      "sha256": "6011dad2da477b05927d3a28db4381757321cfbab8f8be3a4c9af2f82f361c6b"
+    },
+    {
+      "bytes": 89707,
+      "gitBlob": "989697a3878e412ae445b1abf6162de66213bb25",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/postimages/finnor-os/packages/capability-evolution/src/lifecycle.ts",
+      "sha256": "d7009ef78ade69b4de837e6b075371479a10cbfb088613db737ac1492affff2e"
+    },
+    {
+      "bytes": 19109,
+      "gitBlob": "7dbaf27bb1224c4a9f8d61289c7e9ac86557adb6",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/postimages/finnor-os/packages/db/compute-contract.ts",
+      "sha256": "b963fbb4dbee6bfe6d14c3c9d4444a6c34682af1c30a3366c8cafb334f8ce78b"
+    },
+    {
+      "bytes": 77984,
+      "gitBlob": "4b5ba45d5c86af1cffa88a7c0244e3286d863199",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/postimages/finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "sha256": "7a1769c8de7d4719f93c8193b1dd9c5859e17970d76f2419e089f018ae964fda"
+    },
+    {
+      "bytes": 87091,
+      "gitBlob": "5f9f6b9128468b55d935f232b8ef8b00b7599906",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/postimages/finnor-os/scripts/generate-openapi.ts",
+      "sha256": "8f51f07bc0ee423409bca86e2cba6972364777f8eb48f0da7b9c0fc6c43ea15e"
+    },
+    {
+      "bytes": 26552,
+      "gitBlob": "f9cee7a23a74a66588031d88b1f4c286d0488d2c",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/postimages/scripts/centropy/generate-capability-manifest.mjs",
+      "sha256": "fde83667577c7dd1cba755c50b3ddae5146c905eb1d140df8c45b29da0e9f738"
+    },
+    {
+      "bytes": 13955,
+      "gitBlob": "69db9bda7e8b69cf2e88d876460a49b2cfffb871",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/postimages/src/components/centropy/world/InstitutionCompositionPanel.tsx",
+      "sha256": "d0f477e20e19d826a5c3e1ce2232ee1672a40b6b76fbc9d0415b22114967a88c"
+    },
+    {
+      "bytes": 10423,
+      "gitBlob": "ba4ac8c4a596bd1345f1f01a29be6d3edc0b371a",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/postimages/src/components/centropy/world/WorldWorkRecord.tsx",
+      "sha256": "2dd89e814154efb248c9efb8650b874cce1f8dc1c601ff3193087242f5c28b0e"
+    },
+    {
+      "bytes": 26178,
+      "gitBlob": "4d6bd4d58ac0d98f0b4dfbb217a045ba35613843",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/preimages/finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
+      "sha256": "0dec46803a98af52700832e83d01e138d643558a0717afbd185839810c6da9b8"
+    },
+    {
+      "bytes": 6933,
+      "gitBlob": "28b76bd978b4417cec61a93cc237b5bbe80fc519",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/preimages/finnor-os/apps/api/app/api/policies/[operation]/route.ts",
+      "sha256": "214d680b4504079c41f71618664a2dcb2ebf802e2d28679e9623e7409d6eadc7"
+    },
+    {
+      "bytes": 6779,
+      "gitBlob": "4a6edb412aa3f7a3dc171ce3123194091a3970c8",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/preimages/finnor-os/apps/api/next.config.mjs",
+      "sha256": "e862207e53d1e67ebf3df8e8f6c29304a5c60179600cb5c671239e09414cf189"
+    },
+    {
+      "bytes": 21797,
+      "gitBlob": "5d39db6d2a064946c418323c0d83b0767b2e6e70",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/preimages/finnor-os/apps/worker/src/index.ts",
+      "sha256": "5cffd9239ccd0bcb7abd4f301cc52fe28ab2adc2d33e218248524290f7865cb9"
+    },
+    {
+      "bytes": 87968,
+      "gitBlob": "4da6e7ff08a8d140d30d8422d28b2a1ab2ae4ca8",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/preimages/finnor-os/packages/capability-evolution/src/lifecycle.ts",
+      "sha256": "5be80e1adfa07789a43153affdcc93cc5d701db1decd987522c5b4fdaac648af"
+    },
+    {
+      "bytes": 18764,
+      "gitBlob": "0898402e36bd044316b7ea4f462ea113b82ad440",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/preimages/finnor-os/packages/db/compute-contract.ts",
+      "sha256": "d8783ff65e9ed0489a93077e2766ae5f395c32eb1fecda163c5d941a23e20814"
+    },
+    {
+      "bytes": 74023,
+      "gitBlob": "4fdb3660a8cb13f06b8cb2eb0a364fca939b03f7",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/preimages/finnor-os/packages/private-equity/src/enterprise-control.ts",
+      "sha256": "aa33dcf657cdcb4ef85a059b51b52b646a93a11aabd9801e2436511b22d7ce43"
+    },
+    {
+      "bytes": 85005,
+      "gitBlob": "60ce04fe6315a842bcbd2ac4fa07fe71bf9710e3",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/preimages/finnor-os/scripts/generate-openapi.ts",
+      "sha256": "18aac0a3c1b94837b2e917fd2b50ec2040ef89da0dde6b5e926773901d21cf9e"
+    },
+    {
+      "bytes": 26425,
+      "gitBlob": "fef29d7b7889e2b2df7c762d923c41c882353815",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/preimages/scripts/centropy/generate-capability-manifest.mjs",
+      "sha256": "68b98dcc2ca6f4c48a355741e986a7bdb658ed2b8fe14db31aca12ebf6228e49"
+    },
+    {
+      "bytes": 10232,
+      "gitBlob": "516765c0aa77d2866101c15ff53736440ba4808e",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/preimages/src/components/centropy/world/WorldWorkRecord.tsx",
+      "sha256": "06b7adb4a5ed940105c8af088e649da459dcde6fe0d48e0173896e0e841f6da5"
+    },
+    {
+      "bytes": 42726,
+      "gitBlob": "9e02b8d11cf07c93d716fa9a12d3a76e8cbf4324",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/request-06/shared.patch",
+      "sha256": "11ec9cb7d2a000d617f5fa8c42786832105da34a13cdc19ee1d9118228a4a354"
+    },
+    {
+      "bytes": 1283,
+      "gitBlob": "9027defdd8d1a378e7aa51f29525d6ccf1df6e9f",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/native-guard-06/report.json",
+      "sha256": "6616c85270c0ea2105ad6694b6ecbd8372d05b122896469fe99b3c413054e9e2"
+    },
+    {
+      "bytes": 3020,
+      "gitBlob": "03813098d25e03b6c40fbbb8bcc94bee3f3e9717",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/preclaim-exhaustion-failure-model-01.md",
+      "sha256": "3c5f76f3199d5d1084fb920647544127b775dc180a26af05e29a9ad46cfdbc79"
+    },
+    {
+      "bytes": 270,
+      "gitBlob": "b794c949372ab52c395320334c950626f319d4cb",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/public-population-audit-01.log",
+      "sha256": "eff2905fdba34ff839a1a9af8bbf412bd4bc5f59c4b8687f81415fb9799904e3"
+    },
+    {
+      "bytes": 3301,
+      "gitBlob": "a7ac053f4c4440f1ba439c7b429405d5e624890c",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/public-population-audit-01/README.md",
+      "sha256": "48805e741cd4939e2e1609f01d94d9cd3eb53f548c7a09b1515d2a7489ce169d"
+    },
+    {
+      "bytes": 154314,
+      "gitBlob": "8784d8363801f89a4728fec0c1da774ad5010924",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/public-population-audit-01/report.json",
+      "sha256": "0bffb1bea4da3f016651c34445261254f6ab2ac9be5ea09c75392e6184361ef2"
+    },
+    {
+      "bytes": 3831,
+      "gitBlob": "06492accc08da0290fe0631e1a181e4d2738fc26",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/public-population-audit-contract-01.md",
+      "sha256": "5ea6f937e38fd50158e90c823cbd2d112d4feea8419f6625e18458c532ce5b51"
+    },
+    {
+      "bytes": 868,
+      "gitBlob": "266f5502bb8fe5d506701847a63fcc9dc83d407a",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/public-population-audit-verification-01.log",
+      "sha256": "0146d7f5b48327aa248002abbb4cc346098dd796eb81849a1a2e60808d083673"
+    },
+    {
+      "bytes": 219,
+      "gitBlob": "728603ed4cbc0135f8df92c21d6e1b05609bc111",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/public-population-guard-verification-01.log",
+      "sha256": "d9c1ebab04a7de762edaa72a207c3673cadc854661cfd4e6b4ec1a39fe765dc2"
+    },
+    {
+      "bytes": 333,
+      "gitBlob": "04e28a80e63b9669d1bf907a41ab283f9b8182c3",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/public-population-output-guard-01.log",
+      "sha256": "5dd1439ac2278678389e3b25fcaf2015fe20d7905e684290b7d466bba83a4c56"
+    },
+    {
+      "bytes": 544,
+      "gitBlob": "1faaed371c0bed666a4d0e0d70586ca311786292",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/public-population-overwrite-guard-01.log",
+      "sha256": "8c4dd6098b4b7b16cc731ac517f1f5492e39960643c286ab94cc4c88f4b9ece3"
+    },
+    {
+      "bytes": 1818772,
+      "gitBlob": "06c81a8213afa48c2fef17329bb211c20fe65cee",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/source-current-checkpoint-02.json",
+      "sha256": "9c39cf41875a37631f5017b5d1af5cf44b6b4a6ad4b5b7def54e67cb239cb533"
+    },
+    {
+      "bytes": 12879,
+      "gitBlob": "6dbf456820c5f5399e7629cd2aec41950cedac04",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/source-current-checkpoint-03.json",
+      "sha256": "940b3e182eb00722bde00c7d166297622048455dd4b1aee601d8c5db78feba4f"
+    },
+    {
+      "bytes": 17070,
+      "gitBlob": "78ce49126f3bb45690d0a7a40c4778e6c6b8a830",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/source-current-checkpoint-04.json",
+      "sha256": "dfd37072948a14d20f366b67773f473febaa7f712380ce82a21f0d3155695bf4"
+    },
+    {
+      "bytes": 4039,
+      "gitBlob": "89f685fab39d938534b830180394812c313620ca",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/staged-whitespace-01.log",
+      "sha256": "752bf67147201ea669a7952aa3200eee380783359a301effae90788bcb42027e"
+    },
+    {
+      "bytes": 410,
+      "gitBlob": "14efbd2b8004244997ec5195bd31a02c6c922eed",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/syntax-check-06.log",
+      "sha256": "39d64e297850578fd07cea892cc29b35c49f6a851eee910ecb573e33d093d287"
+    },
+    {
+      "bytes": 3461,
+      "gitBlob": "5c5a5db9d319591d3860cfc08888d5c5b55de2c7",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/worker-lifecycle-failure-model-01.md",
+      "sha256": "11f98e07b05d6077a81270e543862698fab19ddaf06480c0f5a5c729212f0853"
+    }
+  ],
+  "membersChanged": [
+    {
+      "bytes": 16338,
+      "gitBlob": "5b92064cb938b97986309ff673b6712e3fda1cac",
+      "mode": "100644",
+      "path": "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/worker.ts",
+      "sha256": "80366a38f6948bdc490effb56afa6245708bc55223980b9e50eecc9bf3a2ddb8"
+    },
+    {
+      "bytes": 19946,
+      "gitBlob": "e32a1d7cd34eb26d9d314ff55a123e956fa496b3",
+      "mode": "100644",
+      "path": "finnor-os/scripts/project-z/z5/assemble-integration.py",
+      "sha256": "6d0b58be3771b64ef8951ce531e15fab49ee20dde8473a52f4a339c9c0354d23"
+    },
+    {
+      "bytes": 5417,
+      "gitBlob": "93862ddc3f4036566146022eb21ac97d1bc9822f",
+      "mode": "100644",
+      "path": "finnor-os/scripts/project-z/z5/freeze-delivery.py",
+      "sha256": "1eb89df1825460309aaa3b529f117547daa8ec0f32b5a744ea8ebf5b8c467f27"
+    },
+    {
+      "bytes": 14441,
+      "gitBlob": "6d055993cd4dcbbc1098c063907e49fdb574ccc6",
+      "mode": "100644",
+      "path": "finnor-os/scripts/project-z/z5/offline-e2e.mjs",
+      "sha256": "978a8b5b92b1fa68f3493827ac512b2f81c63793312a6d36623cd4a7a76c31ec"
+    },
+    {
+      "bytes": 10984,
+      "gitBlob": "f79a48e83104916c94e79b539ea5fa4c61267015",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/BLOCKED-CHECKPOINT.md",
+      "sha256": "90f746441e348adad94b6d0c0158603468dec5ec61aea96c98d386ad239e9c65"
+    },
+    {
+      "bytes": 6734,
+      "gitBlob": "f282b9582cc676479d163a059e19da104e5ae9c6",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/costs-and-frontier.md",
+      "sha256": "f06940d6c82bab816b6e1d94c21f9efac31dbf7abf7a541d6770d2a9925e9f89"
+    },
+    {
+      "bytes": 5645,
+      "gitBlob": "628518646a200572f00e44a968c309dfc1ce2d56",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/coverage.md",
+      "sha256": "f75b8c24a122861f8ace408b634c8947abf06e9cf10908a4aa91fb541a398b0d"
+    },
+    {
+      "bytes": 13084,
+      "gitBlob": "064867b6e90fa098f212f0ac2ac44f93f92dce7c",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/engineering-handoff.md",
+      "sha256": "8211a6866277a8d614459c258f622d5d23f383cbd96ec8c303c3a4a9e9327841"
+    },
+    {
+      "bytes": 10814,
+      "gitBlob": "9659d69940761eabeea34e5f5f77133663e42c6d",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/integration/shared-request.md",
+      "sha256": "ffed5207fab372f8043cc063a3cc4abf6b253a40020ddbe8fdc114d5fca5d485"
+    },
+    {
+      "bytes": 14599,
+      "gitBlob": "bbff615e6669e34f60fedd325fc0fc4d12468ae0",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/read-audit.md",
+      "sha256": "3e9a1611d55e3f80b4acb85773205f497697b0f1ea280504ba635f88db281036"
+    },
+    {
+      "bytes": 5745,
+      "gitBlob": "083e8c4c265ca2dc8833c4e718b8de474a02ef92",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/reconstruction/README.md",
+      "sha256": "b175dc4f4e493e509d449419c33186dde0b97eeced6cfdb21676d350a7a79857"
+    },
+    {
+      "bytes": 10470,
+      "gitBlob": "55549e2a28730a3a18b9272c4cb9eef0de1b488a",
+      "mode": "100644",
+      "path": "scope-z/phase-evidence/z5/validation.md",
+      "sha256": "483e00d8f883dd482f2c6079baecc40831ebe193e8561760874ee3254ada24b9"
+    }
+  ],
+  "membersRemoved": [],
+  "phase": "Z5",
+  "phaseCodeDelta": [
+    {
+      "bytes": 16338,
+      "gitBlob": "5b92064cb938b97986309ff673b6712e3fda1cac",
+      "mode": "100644",
+      "path": "finnor-os/packages/private-equity/src/project-z/z5-institution-linker/worker.ts",
+      "sha256": "80366a38f6948bdc490effb56afa6245708bc55223980b9e50eecc9bf3a2ddb8"
+    },
+    {
+      "bytes": 19946,
+      "gitBlob": "e32a1d7cd34eb26d9d314ff55a123e956fa496b3",
+      "mode": "100644",
+      "path": "finnor-os/scripts/project-z/z5/assemble-integration.py",
+      "sha256": "6d0b58be3771b64ef8951ce531e15fab49ee20dde8473a52f4a339c9c0354d23"
+    },
+    {
+      "bytes": 5417,
+      "gitBlob": "93862ddc3f4036566146022eb21ac97d1bc9822f",
+      "mode": "100644",
+      "path": "finnor-os/scripts/project-z/z5/freeze-delivery.py",
+      "sha256": "1eb89df1825460309aaa3b529f117547daa8ec0f32b5a744ea8ebf5b8c467f27"
+    },
+    {
+      "bytes": 14441,
+      "gitBlob": "6d055993cd4dcbbc1098c063907e49fdb574ccc6",
+      "mode": "100644",
+      "path": "finnor-os/scripts/project-z/z5/offline-e2e.mjs",
+      "sha256": "978a8b5b92b1fa68f3493827ac512b2f81c63793312a6d36623cd4a7a76c31ec"
+    }
+  ],
+  "phaseCodeDigest": "d65ccefad807b1690e2d4ad2b9dcec72c76f894af771fddbeae71110e6e564f2",
+  "phaseCodeMembers": 36,
+  "phaseCodeRule": "Preserve the base's phaseCodeFiles order; replace matching paths from phaseCodeDelta; SHA256 compact sorted-key UTF8 JSON of all 36 complete rows.",
+  "previousCheckpoint": {
+    "immutable": true,
+    "path": "scope-z/phase-evidence/z5/source-current-checkpoint-04.json",
+    "sha256": "dfd37072948a14d20f366b67773f473febaa7f712380ce82a21f0d3155695bf4"
+  },
+  "retainedFailureEvidence": [
+    "scope-z/phase-evidence/z5/source-commit-shield-01.json",
+    "scope-z/phase-evidence/z5/reconstruction/blocked-source-guard-01.log",
+    "scope-z/phase-evidence/z5/process-e2e-01/report.json",
+    "scope-z/phase-evidence/z5/backend-types-01.log",
+    "scope-z/phase-evidence/z5/backend-types-03.log",
+    "scope-z/phase-evidence/z5/coverage-check-03.log",
+    "scope-z/phase-evidence/z5/integration-patch-check-01.json",
+    "scope-z/phase-evidence/z5/staged-whitespace-01.log",
+    "scope-z/phase-evidence/z5/public-population-output-guard-01.log",
+    "scope-z/phase-evidence/z5/public-population-overwrite-guard-01.log"
+  ],
+  "retainedToolFailure": {
+    "correctedAfterReading": true,
+    "kind": "INVALID_DOCUMENT_PATCH_CONTEXT",
+    "productTestResult": false,
+    "toolCallId": "call_BnPr3ngDzTlPZmvT1ra9X1rs"
+  },
+  "schema": "finnor.z5.current-source-delta-checkpoint.v1",
+  "scopeObservations": {
+    "archivesCreated": 0,
+    "flaggedContentsRendered": false,
+    "metadataOnlyNoFilePayloadArchive": true,
+    "newDatabaseActions": 0,
+    "newListeners": 0,
+    "newSigners": 0,
+    "outsideOwnedTrackedSourceChanges": [],
+    "packagerExecutedThisContinuation": false,
+    "sharedFilesApplied": 0,
+    "userLaunchFilesUntracked": [
+      "scope-z/orchestration/shared-computer-launch/execution.prompt.md",
+      "scope-z/orchestration/shared-computer-launch/runtime-settings.json"
+    ],
+    "z1IndependentArchiveReplay": "BLOCKED_BY_USER_DIRECTION_NOT_RUN"
+  },
+  "state": "UNCOMMITTED_ENGINEERING_CHECKPOINT_DELIVERY_BLOCKED",
+  "toolchain": {
+    "backendLockSha256": "4116b2a7e02a28b8e49baa4a24a378e5170c5dc66d285075c8cf50bf11b9faed",
+    "fullGraphHeapMiB": 4096,
+    "heavyLock": "/home/factory-user/repos/finnor-z-shared-heavy.lock",
+    "node": "v22.23.4",
+    "nodePath": "/home/factory-user/repos/finnor-z-toolchains/node22/node_modules/.bin/node",
+    "npm": "11.19.1",
+    "python": "3.12.3",
+    "rootLockSha256": "af1d36679eb4123ab5f2d9f4668e82e1defc952a45777a74d3dff30c6d16f117"
+  }
+}

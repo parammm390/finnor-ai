@@ -1,0 +1,188 @@
+{
+  "schema": "finnor.z5.process-e2e.v1",
+  "state": "FAILED",
+  "source": {
+    "/home/factory-user/repos/finnor-z5/finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/kernel.ts": "d663a2505f06c338922a1018c7026152fd74ee392eb3a903c19bf7346b9b4de5",
+    "/home/factory-user/repos/finnor-z5/finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/checker.py": "1d19df99313938766754ac2b8825cc23b426d84bfd773c61d172a94c1443632e",
+    "file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/process-e2e.mjs": "fa3e4b71d3558ff6d82db95b86416d4e91d980ca679c1684f0f7c1da8cdab5ac",
+    "file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/e2e-tools.mjs": "15c65254603c562b551484a9ed3ed81bfb76ef7f50058c180ab2a8ff71616efd",
+    "file:///home/factory-user/repos/finnor-z5/finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/ownership.ts": "40f8a8ccb4d3637df43eeac56ff9d751afe3613d8f893c8d99b2384d652d87d3"
+  },
+  "cases": [
+    {
+      "id": "pipeline-real-process-flow",
+      "passed": true
+    },
+    {
+      "id": "replacement-real-process-flow",
+      "passed": true
+    },
+    {
+      "id": "drop-original-component-transition",
+      "passed": true
+    },
+    {
+      "id": "unreachable-assumption-state",
+      "passed": true
+    },
+    {
+      "id": "erase-original-initial",
+      "passed": true
+    },
+    {
+      "id": "change-must-availability",
+      "passed": true
+    },
+    {
+      "id": "change-atomic-update",
+      "passed": true
+    },
+    {
+      "id": "lose-shared-original-identity",
+      "passed": true
+    },
+    {
+      "id": "false-nonblocking-rank",
+      "passed": true
+    },
+    {
+      "id": "false-simulation-relation",
+      "passed": true
+    },
+    {
+      "id": "unreachable-live-clean-reset",
+      "passed": true
+    },
+    {
+      "id": "fabricated-whole-code-correspondence",
+      "passed": false
+    },
+    {
+      "id": "false-counterexample-class",
+      "passed": false
+    },
+    {
+      "id": "false-exhaustive-translation",
+      "passed": true
+    },
+    {
+      "id": "circular-initial-discharge",
+      "passed": true
+    },
+    {
+      "id": "false-maximality",
+      "passed": true
+    },
+    {
+      "id": "false-effect-authority",
+      "passed": true
+    },
+    {
+      "id": "false-protected-admission",
+      "passed": true
+    },
+    {
+      "id": "scope-tenant",
+      "passed": true
+    },
+    {
+      "id": "scope-principal",
+      "passed": true
+    },
+    {
+      "id": "scope-work",
+      "passed": true
+    },
+    {
+      "id": "scope-input",
+      "passed": true
+    },
+    {
+      "id": "scope-root",
+      "passed": true
+    },
+    {
+      "id": "scope-inputDigest",
+      "passed": true
+    },
+    {
+      "id": "scope-sourceDigest",
+      "passed": true
+    },
+    {
+      "id": "scope-rightsRevision",
+      "passed": true
+    },
+    {
+      "id": "scope-liveDigest",
+      "passed": true
+    },
+    {
+      "id": "scope-ownerCutDigest",
+      "passed": true
+    },
+    {
+      "id": "scope-profile",
+      "passed": true
+    },
+    {
+      "id": "scope-mandate",
+      "passed": true
+    },
+    {
+      "id": "scope-assignment",
+      "passed": true
+    },
+    {
+      "id": "scope-parentReservation",
+      "passed": true
+    },
+    {
+      "id": "scope-preparation",
+      "passed": true
+    },
+    {
+      "id": "scope-policy",
+      "passed": true
+    },
+    {
+      "id": "scope-allocation",
+      "passed": true
+    },
+    {
+      "id": "scope-consumption",
+      "passed": true
+    },
+    {
+      "id": "scope-unresolvedObligations",
+      "passed": true
+    },
+    {
+      "id": "scope-originalDeadline",
+      "passed": true
+    },
+    {
+      "id": "physical-old-token",
+      "passed": true
+    },
+    {
+      "id": "physical-old-fence",
+      "passed": true
+    },
+    {
+      "id": "physical-wrong-tenant",
+      "passed": true
+    }
+  ],
+  "failures": [
+    "fabricated-whole-code-correspondence",
+    "false-counterexample-class"
+  ],
+  "mathematicalDomain": "EXACT_ORIGINAL_KERNEL",
+  "databaseActions": 0,
+  "authActions": 0,
+  "listeners": 0,
+  "nativeProof": "NOT_RUN",
+  "protectedAdmission": false,
+  "financialQualification": false
+}

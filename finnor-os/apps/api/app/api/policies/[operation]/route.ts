@@ -1,12 +1,28 @@
 import { z } from 'zod';
-import { ExactControlError, AllocationContractError, ControlContractError, ExperimentContractError, ExperimentRefSchema, InterventionContractError } from '@finnor/epistemic-runtime';
-import { PeDomainError, synthesizeEnterpriseExactControl, synthesizeEnterpriseControl, readEnterpriseContingentPolicy, replayEnterpriseContingentPolicy, validateEnterpriseContingentPolicy, recordEnterpriseControlAssessment, observeEnterpriseControl, chooseEnterpriseControlBranch, prepareEnterpriseContingentHandoff } from '@finnor/private-equity';
+import { ExactControlError } from '../../../../../../packages/epistemic-runtime/src/certified-state-reduction/exact';
+import { AllocationContractError } from '../../../../../../packages/epistemic-runtime/src/allocation-contracts';
+import { ControlContractError } from '../../../../../../packages/epistemic-runtime/src/control-contracts';
+import { ExperimentContractError, ExperimentRefSchema } from '../../../../../../packages/epistemic-runtime/src/experiments';
+import { InterventionContractError } from '../../../../../../packages/epistemic-runtime/src/interventions';
+import { PeDomainError } from '../../../../../../packages/private-equity/src/types';
+import {
+  synthesizeEnterpriseExactControl,
+  synthesizeEnterpriseControl,
+  readEnterpriseContingentPolicy,
+  replayEnterpriseContingentPolicy,
+  validateEnterpriseContingentPolicy,
+  recordEnterpriseControlAssessment,
+  observeEnterpriseControl,
+  chooseEnterpriseControlBranch,
+  prepareEnterpriseContingentHandoff,
+} from '../../../../../../packages/private-equity/src/enterprise-control';
 import { errorResponse, requireContext } from '../../../../lib/auth';
 import {R1_OPERATIONS,handleR1Operation} from '@finnor/private-equity/src/r1/api';
 import {readEnterpriseCoalitionSelection} from '@finnor/private-equity/src/enterprise-control';
 import {CapitalProgramV2Error} from '@finnor/private-equity/src/capital-program/v2-contracts';
 import { R3OwnerOperationSchemas } from '../../../../../../packages/epistemic-runtime/src/incentive-rule-synthesis/output-contracts';
 
+import {prepareEnterpriseInstitutionCompositionPlan} from '@finnor/private-equity/src/enterprise-control';
 export const runtime='nodejs';
 const synthesis=z.object({mandate:z.unknown(),problem:z.unknown(),protocols:z.array(z.unknown()).max(8),scenarios:z.object({pathsPerMechanism:z.number().int().min(1).max(64),seed:z.number().int().min(0).max(4294967295)}).strict()}).strict();
 const revision=synthesis.extend({priorPolicyRef:ExperimentRefSchema,reason:z.string().min(1).max(2048)});
@@ -31,6 +47,15 @@ export async function POST(req:Request,{params}:{params:Promise<{operation:strin
  case 'observe':return response(await observeEnterpriseControl(ctx,temporal.parse(body)));
  case 'decide':return response(await chooseEnterpriseControlBranch(ctx,branch.parse(body)));
  case 'decide-mechanism':return response(await chooseEnterpriseControlBranch(ctx,{schema:'finnor.s4.r3-choice-request.v1',policyRef:R3OwnerOperationSchemas.policies['decide-mechanism'].parse(body).policyRef}));
+ case 'composition-plan':{
+  try{return response(await prepareEnterpriseInstitutionCompositionPlan(ctx,z.object({policyRef:ExperimentRefSchema,allocationRef:ExperimentRefSchema}).strict().parse(body)));}
+  catch(error){
+   if(!(error instanceof Error)||!/^Z5_[A-Z0-9_]{1,155}$/.test(error.message))throw error;
+   const code=error.message;
+   return response({code,error:'The original permitted conditional contract is unavailable',protectedAdmission:false,
+    executionAuthorityGranted:false,oldExposureRetained:true},/IDEMPOTENCY|STALE|CURRENT|CHANGED|FENCED|EXHAUSTED/.test(code)?409:403);
+  }
+ }
  case 'handoff':return response(await prepareEnterpriseContingentHandoff(ctx,handoff.parse(body)));
  default:return response({error:'S4 operation was not found',code:'NOT_FOUND'},404);
  }}catch(e){if(e instanceof CapitalProgramV2Error)return response({error:e.message,code:e.code},e.code==='UNAVAILABLE'?404:['STALE_INPUT','CONFLICT'].includes(e.code)?409:422);if(e instanceof ExactControlError)return response({status:e.disposition,error:e.predicate,code:'EXACT_MODEL_UNSUPPORTED'},400);if(e instanceof z.ZodError)return response({error:'Invalid S4 request',code:'INVALID_REQUEST'},400);if(e instanceof AllocationContractError)return response({error:e.message,code:e.code},e.code==='LIMIT_EXCEEDED'?413:e.code==='PERMITTED_CONTEXT_UNAVAILABLE'?404:['IDEMPOTENCY_CONFLICT','STALE_INPUT'].includes(e.code)?409:e.code==='BLOCKED_AUTHORITY'?422:400);if(e instanceof ControlContractError||e instanceof InterventionContractError||e instanceof ExperimentContractError)return response({error:e.message,code:e.code},e.code==='LIMIT_EXCEEDED'?413:e.code==='PERMITTED_CONTEXT_UNAVAILABLE'?404:400);if(e instanceof PeDomainError)return response({error:e.message,code:e.code},/NOT_FOUND/.test(e.code)?404:/INVALID/.test(e.code)?400:422);if(e instanceof Error&&/^R1_[A-Z0-9_]{1,155}$/.test(e.message))return response({error:e.message,code:e.message,status:/UNAVAILABLE|UNSUPPORTED|ADMISSION|EXHAUSTED/.test(e.message)?'UNSUPPORTED':'STALE_INPUT'},/UNAVAILABLE|UNSUPPORTED|ADMISSION|EXHAUSTED/.test(e.message)?422:409);return errorResponse(e);}}

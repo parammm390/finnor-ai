@@ -10,6 +10,7 @@ import {
 import {
   getCurrentAccessToken,
   getCurrentSessionKey,
+  getVerifiedWorkspaceIdentity,
 } from "@/components/centropy/lib/centropy-auth"
 import type {
   ApplicationActionModel,
@@ -461,7 +462,43 @@ const chargeSchema = z.object({
   executionAuthorityGranted: z.literal(false),
   protectedReceipt: z.null(),
   ref: ApplicationReferenceSchema,
+  childLimit: unsignedInteger.optional(),
+  childUsedAfter: unsignedInteger.optional(),
+  recovery: z.boolean().optional(),
 }).strict()
+
+const institutionViewSchema = z.object({
+  schema: z.literal("finnor.z0.institution-application-view.v1"),
+  originRef: ApplicationReferenceSchema,
+  compilerRequestId: z.string().uuid(), programId: z.string().uuid(),
+  responsibilityIdentity: z.string().regex(/^x1-obligation:[a-f0-9]{64}$/),
+  originalWorkId: z.string().uuid(), originalWorkInputId: z.string().uuid(),
+  institutionalProgramRef: ApplicationReferenceSchema,
+  originalReservationRef: ApplicationReferenceSchema,
+  originalDeadlineAt: timestamp, wallDeadlineAt: timestamp, childDeadlineAt: timestamp,
+  programmeStatus: label, modelAcceptanceRef: ApplicationReferenceSchema.nullable(),
+  modelConsumedByOriginalP1: z.boolean(),
+  completionOwner: z.literal("ORIGINAL_P1_AND_INDEPENDENT_CANONICAL_OBSERVER"),
+  learnedModelCompletesResponsibility: z.literal(false), newAllowance: z.literal(false),
+  protectedAdmission: z.literal(false), executionAuthorityGranted: z.literal(false),
+  budget: z.object({
+    originalReservationRef: ApplicationReferenceSchema, status: label,
+    newReservation: z.literal(false), releaseGranted: z.literal(false),
+    originalDeadlineAt: timestamp, wallDeadlineAt: timestamp, childDeadlineAt: timestamp,
+    resources: z.array(z.object({
+      resourceId: label, unit: z.enum(["request", "seconds"]),
+      limit: unsignedInteger, used: unsignedInteger,
+      chargeCount: z.number().int().nonnegative().optional(),
+      remaining: z.string().max(96).regex(/^-?(?:0|[1-9][0-9]*)$/), overdrawn: z.boolean(),
+    }).strict()).min(1).max(16),
+    monetaryCost: z.null(), monetaryCostStatus: z.literal("UNKNOWN"),
+  }).strict(),
+}).strict()
+
+const resourceDemandSchema = z.array(z.object({
+  resourceId: label, unit: z.enum(["request", "seconds"]),
+  amount: z.string().regex(/^(?:0|[1-9][0-9]{0,3})$/),
+}).strict()).min(1).max(2)
 
 const sessionSchema = z.object({
   id: z.string().uuid(),
@@ -478,8 +515,12 @@ const sessionSchema = z.object({
   freshAuthority: freshAuthoritySchema.nullable(),
   originalParentRef: ApplicationReferenceSchema,
   deadlineAt: timestamp,
+  acquisition: z.object({
+    targetIds: z.array(label).min(2).max(16), resourceDemand: resourceDemandSchema, deadlineAt: timestamp,
+  }).strict().nullable().optional(),
   effects: z.array(effectSchema).max(64),
   charges: z.array(chargeSchema).max(2048),
+  institutional: institutionViewSchema.nullable().optional(),
   billing: z.literal("UNKNOWN"),
   resourceReleaseGranted: z.literal(false),
   generation: count.min(1),
@@ -560,6 +601,30 @@ export function parseApplicationProjection(value: unknown, expected: Application
 
   for (const session of data.sessions) {
     const { model, check, composition, freshAuthority } = session
+    const institution = session.institutional
+    if (session.acquisition && (session.id !== session.parentId
+      || Date.parse(session.acquisition.deadlineAt) !== Date.parse(session.deadlineAt)
+      || new Set(session.acquisition.targetIds).size !== session.acquisition.targetIds.length)) {
+      throw new ApplicationProjectionError()
+    }
+    if (institution && (institution.originalWorkId !== expected.workId
+      || session.id !== session.parentId || freshAuthority !== null
+      || institution.childDeadlineAt !== session.deadlineAt
+      || institution.budget.childDeadlineAt !== session.deadlineAt
+      || institution.budget.originalDeadlineAt !== institution.originalDeadlineAt
+      || institution.budget.wallDeadlineAt !== institution.wallDeadlineAt
+      || Date.parse(session.deadlineAt) > Date.parse(institution.originalDeadlineAt)
+      || Date.parse(session.deadlineAt) > Date.parse(institution.wallDeadlineAt)
+      || institution.modelConsumedByOriginalP1 && !institution.modelAcceptanceRef
+      || !applicationReferencesMatch(institution.originalReservationRef, institution.budget.originalReservationRef)
+      || model && (!model.envelope.institutional_program_ref
+        || !applicationReferencesMatch(model.envelope.institutional_program_ref, institution.institutionalProgramRef)
+        || !applicationReferencesMatch(model.envelope.resource_grant_ref, institution.originalReservationRef))
+      || institution.budget.resources.some(resource =>
+        BigInt(resource.limit) - BigInt(resource.used) !== BigInt(resource.remaining)
+        || resource.overdrawn !== (BigInt(resource.used) > BigInt(resource.limit))))) {
+      throw new ApplicationProjectionError()
+    }
     if (!model && (check || composition)) throw new ApplicationProjectionError()
     if (model) {
       if (model.scope.tenantId !== expected.tenantId || model.scope.principalId !== expected.principalId
@@ -639,7 +704,12 @@ export function parseApplicationProjection(value: unknown, expected: Application
         || !applicationReferencesMatch(charge.originalParentRef, session.originalParentRef)
         || (model && !applicationReferencesMatch(charge.reservationRef, model.envelope.resource_grant_ref))
         || charge.unit !== (charge.phase === "HUMAN" ? "seconds" : "request")
-        || BigInt(charge.usedAfter) > BigInt(charge.limit)) throw new ApplicationProjectionError()
+        || BigInt(charge.usedAfter) > BigInt(charge.limit)
+        || (charge.childLimit !== undefined || charge.childUsedAfter !== undefined || charge.recovery !== undefined)
+          && (!institution || charge.childLimit === undefined || charge.childUsedAfter === undefined || charge.recovery === undefined
+            || BigInt(charge.childUsedAfter) > BigInt(charge.childLimit)
+            || BigInt(charge.childLimit) > BigInt(charge.limit)
+            || charge.recovery && charge.phase !== "RECOVERY")) throw new ApplicationProjectionError()
     }
   }
   return data
@@ -675,9 +745,13 @@ const nativeIdentitySchema = z.object({
 export async function readApplicationScope(
   selection: ApplicationWorkSelection,
   currentUse: ApplicationCurrentUse,
+  reuseWorkspaceIdentity = false,
 ): Promise<ApplicationSemanticsScope> {
   assertCurrentSession(currentUse.sessionKey, currentUse.signal)
-  const parsed = nativeIdentitySchema.safeParse(await centropyGet<unknown>("me"))
+  const verified = reuseWorkspaceIdentity
+    ? nativeIdentitySchema.safeParse(getVerifiedWorkspaceIdentity(currentUse.sessionKey)) : null
+  const parsed = verified?.success ? verified
+    : nativeIdentitySchema.safeParse(await centropyGet<unknown>("me", undefined, currentUse.signal))
   assertCurrentSession(currentUse.sessionKey, currentUse.signal)
   if (!parsed.success) throw new ApplicationProjectionError()
   const identity = parsed.data
@@ -696,6 +770,30 @@ export async function readApplicationProjection(
   currentUse: ApplicationCurrentUse,
 ): Promise<ApplicationWorkProjection> {
   if (!expectedScopeSchema.safeParse(expected).success) throw new ApplicationProjectionError()
+  const value = await fetchApplicationProjection(expected, currentUse)
+  assertCurrentSession(currentUse.sessionKey, currentUse.signal)
+  return parseApplicationProjection(value, expected)
+}
+
+/** Start the independent authenticated reads together. Publish only after exact
+ * Work, root, principal and tenant validation under the same session fence. */
+export async function readApplicationSnapshot(
+  selection: ApplicationWorkSelection,
+  currentUse: ApplicationCurrentUse,
+  reuseWorkspaceIdentity = false,
+) {
+  const [scope, value] = await Promise.all([
+    readApplicationScope(selection, currentUse, reuseWorkspaceIdentity),
+    fetchApplicationProjection(selection, currentUse),
+  ])
+  assertCurrentSession(currentUse.sessionKey, currentUse.signal)
+  return { scope, data: parseApplicationProjection(value, scope) }
+}
+
+async function fetchApplicationProjection(
+  selection: ApplicationWorkSelection,
+  currentUse: ApplicationCurrentUse,
+): Promise<unknown> {
   assertCurrentSession(currentUse.sessionKey, currentUse.signal)
   const token = getCurrentAccessToken()
   const controller = new AbortController()
@@ -707,16 +805,14 @@ export async function readApplicationProjection(
     controller.abort()
   }, CENTROPY_GET_TIMEOUT_MS)
   try {
-    // api.ts currently cannot take a caller AbortSignal. This read-only transport
-    // uses its maintained proxy, token getter, no-store policy, error type and
-    // read timeout. Actual mutations stay on centropyPost below.
+    // The application read bounds and validates the complete response before use.
     const response = await fetch("/api/centropy/company-brain/application-projection", {
       method: "POST",
       cache: "no-store",
       credentials: "same-origin",
       redirect: "error",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-      body: JSON.stringify({ root: expected.root, workId: expected.workId }),
+      body: JSON.stringify({ root: selection.root, workId: selection.workId, includeAcquisition: true }),
       signal: controller.signal,
     })
     assertCurrentSession(currentUse.sessionKey, currentUse.signal)
@@ -726,13 +822,11 @@ export async function readApplicationProjection(
     const body = await response.text()
     assertCurrentSession(currentUse.sessionKey, currentUse.signal)
     if (body.length > 64 * 1024 * 1024) throw new ApplicationProjectionError()
-    let value: unknown
     try {
-      value = JSON.parse(body)
+      return JSON.parse(body)
     } catch {
       throw new ApplicationProjectionError()
     }
-    return parseApplicationProjection(value, expected)
   } catch (error) {
     if (currentUse.signal?.aborted || getCurrentSessionKey() !== currentUse.sessionKey) throw aborted()
     if (timedOut) throw new CentropyApiError("The current application projection timed out.", 504)
@@ -824,15 +918,17 @@ export function parseApplicationStateInput(json: string, kind: "Goal" | "Paramet
   return parsed.data
 }
 
+const institutionSelectorSchema = z.object({
+  compilerRequestId: z.string().uuid(), programId: z.string().uuid(),
+  responsibilityIdentity: z.string().regex(/^x1-obligation:[a-f0-9]{64}$/),
+}).strict()
 const acquisitionRequestSchema = z.object({
   root: rootSchema, workId: z.string().uuid(),
   profileIds: z.array(z.string().uuid()).min(1).max(8),
   targets: z.array(identitySchema).min(2).max(16),
-  resourceDemand: z.array(z.object({
-    resourceId: label, unit: z.enum(["request", "seconds"]),
-    amount: z.string().regex(/^(?:0|[1-9][0-9]{0,3})$/),
-  }).strict()).min(1).max(2),
+  resourceDemand: resourceDemandSchema,
   deadlineAt: timestamp, idempotencyKey: label,
+  institutionalOrigin: institutionSelectorSchema.optional(),
 }).strict()
 export type ApplicationAcquisitionRequest = z.infer<typeof acquisitionRequestSchema>
 export interface ApplicationAcquisitionDraft {
@@ -840,6 +936,7 @@ export interface ApplicationAcquisitionDraft {
   targetsJson: string
   resourceDemandJson: string
   deadlineAt: string
+  institutionalOriginJson?: string
 }
 export function buildApplicationAcquisitionRequest(
   scope: ApplicationSemanticsScope, draft: ApplicationAcquisitionDraft, idempotencyKey: string,
@@ -851,6 +948,9 @@ export function buildApplicationAcquisitionRequest(
     targets: parseApplicationJsonInput(draft.targetsJson, "Discovery targets", true),
     resourceDemand: parseApplicationJsonInput(draft.resourceDemandJson, "Original resource demand", true),
     deadlineAt: draft.deadlineAt, idempotencyKey,
+    ...(draft.institutionalOriginJson?.trim() ? {
+      institutionalOrigin: parseApplicationJsonInput(draft.institutionalOriginJson, "Original institution references"),
+    } : {}),
   })
   if (!parsed.success) throw new ApplicationInputError("Supply 1–8 profile UUIDs, 2–16 scoped targets, 1–2 exact resource demands and an ISO deadline with its offset.")
   const body = parsed.data

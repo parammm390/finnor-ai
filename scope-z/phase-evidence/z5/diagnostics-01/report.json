@@ -1,0 +1,298 @@
+{
+  "schema": "finnor.z5.alternating-public-diagnostics.v1",
+  "state": "PASSED",
+  "sourceFiles": {
+    "/home/factory-user/repos/finnor-z5/finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/kernel.ts": "d663a2505f06c338922a1018c7026152fd74ee392eb3a903c19bf7346b9b4de5",
+    "/home/factory-user/repos/finnor-z5/finnor-os/packages/epistemic-runtime/src/project-z/z5-institution-linker/checker.py": "f30a37f198cda1cb72fecab5b1a17846900e3db623326953a6865b21debc6887",
+    "file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/diagnostics.mjs": "32db6b272e9e9d0ce9670c885837fba88bd398e3b39f4e52a8d4c2586f1dfa54",
+    "file:///home/factory-user/repos/finnor-z5/finnor-os/scripts/project-z/z5/e2e-tools.mjs": "15c65254603c562b551484a9ed3ed81bfb76ef7f50058c180ab2a8ff71616efd"
+  },
+  "fixtureId": "F30-01",
+  "fixtureInputSha256": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44",
+  "repetitions": 5,
+  "rows": [
+    {
+      "repetition": 1,
+      "order": [
+        "A_PRODUCE",
+        "B_INDEPENDENT_ORIGINAL_CHECK"
+      ],
+      "fixtureId": "F30-01",
+      "producerExit": 0,
+      "checkerExit": 0,
+      "producerWallIncludingStartupMs": 210.780374,
+      "checkerWallIncludingStartupMs": 106.02548100000001,
+      "producer": {
+        "operations": 11971,
+        "wallMs": 72.164004,
+        "cpuUserMicros": 188676,
+        "cpuSystemMicros": 382,
+        "peakRssBytes": 90451968,
+        "money": null,
+        "human": null,
+        "status": "MATERIAL_COSTS_UNMETERED",
+        "gaps": [
+          "EXTRACTION_INTEGRATION_INSTALL_RECOVERY_AND_HUMAN_COSTS_NOT_MEASURED_HERE",
+          "NO_EQUIPPED_OR_FINANCIAL_RESULT"
+        ]
+      },
+      "checkerOperations": 4726,
+      "original": {
+        "states": 14,
+        "transitions": 18,
+        "initial": 1
+      },
+      "contextStates": 5,
+      "contextEdges": 4,
+      "translationRows": 2304,
+      "relationPairs": 5,
+      "certificateBytes": 6074,
+      "liveBridge": {
+        "old": "67808cf7d74cc1628e7f36bf824788fc3f991b047fa95c6c21bfe305f0f6c25a",
+        "replacement": "67808cf7d74cc1628e7f36bf824788fc3f991b047fa95c6c21bfe305f0f6c25a",
+        "carriedCellsDigest": "c8300b0e87fb3cdff962c50f2b4ad0d040cec1c24a17c98c565d54ecaf717f5d"
+      },
+      "sourceInputDigest": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44"
+    },
+    {
+      "repetition": 2,
+      "order": [
+        "A_PRODUCE",
+        "B_INDEPENDENT_ORIGINAL_CHECK"
+      ],
+      "fixtureId": "F30-01",
+      "producerExit": 0,
+      "checkerExit": 0,
+      "producerWallIncludingStartupMs": 201.54508199999998,
+      "checkerWallIncludingStartupMs": 87.88884299999995,
+      "producer": {
+        "operations": 11971,
+        "wallMs": 65.99022799999999,
+        "cpuUserMicros": 159727,
+        "cpuSystemMicros": 8699,
+        "peakRssBytes": 90071040,
+        "money": null,
+        "human": null,
+        "status": "MATERIAL_COSTS_UNMETERED",
+        "gaps": [
+          "EXTRACTION_INTEGRATION_INSTALL_RECOVERY_AND_HUMAN_COSTS_NOT_MEASURED_HERE",
+          "NO_EQUIPPED_OR_FINANCIAL_RESULT"
+        ]
+      },
+      "checkerOperations": 4726,
+      "original": {
+        "states": 14,
+        "transitions": 18,
+        "initial": 1
+      },
+      "contextStates": 5,
+      "contextEdges": 4,
+      "translationRows": 2304,
+      "relationPairs": 5,
+      "certificateBytes": 6083,
+      "liveBridge": {
+        "old": "67808cf7d74cc1628e7f36bf824788fc3f991b047fa95c6c21bfe305f0f6c25a",
+        "replacement": "67808cf7d74cc1628e7f36bf824788fc3f991b047fa95c6c21bfe305f0f6c25a",
+        "carriedCellsDigest": "c8300b0e87fb3cdff962c50f2b4ad0d040cec1c24a17c98c565d54ecaf717f5d"
+      },
+      "sourceInputDigest": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44"
+    },
+    {
+      "repetition": 3,
+      "order": [
+        "A_PRODUCE",
+        "B_INDEPENDENT_ORIGINAL_CHECK"
+      ],
+      "fixtureId": "F30-01",
+      "producerExit": 0,
+      "checkerExit": 0,
+      "producerWallIncludingStartupMs": 197.96612600000003,
+      "checkerWallIncludingStartupMs": 112.60516800000005,
+      "producer": {
+        "operations": 11971,
+        "wallMs": 70.52570600000001,
+        "cpuUserMicros": 183715,
+        "cpuSystemMicros": 5102,
+        "peakRssBytes": 91185152,
+        "money": null,
+        "human": null,
+        "status": "MATERIAL_COSTS_UNMETERED",
+        "gaps": [
+          "EXTRACTION_INTEGRATION_INSTALL_RECOVERY_AND_HUMAN_COSTS_NOT_MEASURED_HERE",
+          "NO_EQUIPPED_OR_FINANCIAL_RESULT"
+        ]
+      },
+      "checkerOperations": 4726,
+      "original": {
+        "states": 14,
+        "transitions": 18,
+        "initial": 1
+      },
+      "contextStates": 5,
+      "contextEdges": 4,
+      "translationRows": 2304,
+      "relationPairs": 5,
+      "certificateBytes": 6083,
+      "liveBridge": {
+        "old": "67808cf7d74cc1628e7f36bf824788fc3f991b047fa95c6c21bfe305f0f6c25a",
+        "replacement": "67808cf7d74cc1628e7f36bf824788fc3f991b047fa95c6c21bfe305f0f6c25a",
+        "carriedCellsDigest": "c8300b0e87fb3cdff962c50f2b4ad0d040cec1c24a17c98c565d54ecaf717f5d"
+      },
+      "sourceInputDigest": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44"
+    },
+    {
+      "repetition": 4,
+      "order": [
+        "A_PRODUCE",
+        "B_INDEPENDENT_ORIGINAL_CHECK"
+      ],
+      "fixtureId": "F30-01",
+      "producerExit": 0,
+      "checkerExit": 0,
+      "producerWallIncludingStartupMs": 200.98934000000008,
+      "checkerWallIncludingStartupMs": 89.442587,
+      "producer": {
+        "operations": 11971,
+        "wallMs": 64.850096,
+        "cpuUserMicros": 158039,
+        "cpuSystemMicros": 5835,
+        "peakRssBytes": 89878528,
+        "money": null,
+        "human": null,
+        "status": "MATERIAL_COSTS_UNMETERED",
+        "gaps": [
+          "EXTRACTION_INTEGRATION_INSTALL_RECOVERY_AND_HUMAN_COSTS_NOT_MEASURED_HERE",
+          "NO_EQUIPPED_OR_FINANCIAL_RESULT"
+        ]
+      },
+      "checkerOperations": 4726,
+      "original": {
+        "states": 14,
+        "transitions": 18,
+        "initial": 1
+      },
+      "contextStates": 5,
+      "contextEdges": 4,
+      "translationRows": 2304,
+      "relationPairs": 5,
+      "certificateBytes": 6075,
+      "liveBridge": {
+        "old": "67808cf7d74cc1628e7f36bf824788fc3f991b047fa95c6c21bfe305f0f6c25a",
+        "replacement": "67808cf7d74cc1628e7f36bf824788fc3f991b047fa95c6c21bfe305f0f6c25a",
+        "carriedCellsDigest": "c8300b0e87fb3cdff962c50f2b4ad0d040cec1c24a17c98c565d54ecaf717f5d"
+      },
+      "sourceInputDigest": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44"
+    },
+    {
+      "repetition": 5,
+      "order": [
+        "A_PRODUCE",
+        "B_INDEPENDENT_ORIGINAL_CHECK"
+      ],
+      "fixtureId": "F30-01",
+      "producerExit": 0,
+      "checkerExit": 0,
+      "producerWallIncludingStartupMs": 203.59096999999997,
+      "checkerWallIncludingStartupMs": 90.27008000000001,
+      "producer": {
+        "operations": 11971,
+        "wallMs": 65.878788,
+        "cpuUserMicros": 166054,
+        "cpuSystemMicros": 0,
+        "peakRssBytes": 90021888,
+        "money": null,
+        "human": null,
+        "status": "MATERIAL_COSTS_UNMETERED",
+        "gaps": [
+          "EXTRACTION_INTEGRATION_INSTALL_RECOVERY_AND_HUMAN_COSTS_NOT_MEASURED_HERE",
+          "NO_EQUIPPED_OR_FINANCIAL_RESULT"
+        ]
+      },
+      "checkerOperations": 4726,
+      "original": {
+        "states": 14,
+        "transitions": 18,
+        "initial": 1
+      },
+      "contextStates": 5,
+      "contextEdges": 4,
+      "translationRows": 2304,
+      "relationPairs": 5,
+      "certificateBytes": 6072,
+      "liveBridge": {
+        "old": "67808cf7d74cc1628e7f36bf824788fc3f991b047fa95c6c21bfe305f0f6c25a",
+        "replacement": "67808cf7d74cc1628e7f36bf824788fc3f991b047fa95c6c21bfe305f0f6c25a",
+        "carriedCellsDigest": "c8300b0e87fb3cdff962c50f2b4ad0d040cec1c24a17c98c565d54ecaf717f5d"
+      },
+      "sourceInputDigest": "37a7eb7dab0fbfd21dee6452d63387f90f63b89c57f0b7387e16dc516e140f44"
+    }
+  ],
+  "summary": {
+    "producerWallIncludingStartupMs": {
+      "median": 201.54508199999998,
+      "min": 197.96612600000003,
+      "max": 210.780374
+    },
+    "checkerWallIncludingStartupMs": {
+      "median": 90.27008000000001,
+      "min": 87.88884299999995,
+      "max": 112.60516800000005
+    },
+    "completeProcessPipelineWallMs": {
+      "median": 293.86105,
+      "min": 289.43392499999993,
+      "max": 316.805855
+    },
+    "certificateBytes": {
+      "median": 6075,
+      "min": 6072,
+      "max": 6083
+    },
+    "producerPeakRssBytes": {
+      "median": 90071040,
+      "min": 89878528,
+      "max": 91185152
+    }
+  },
+  "comparison": {
+    "state": "NOT_RUN",
+    "qualifiedCompletedXYRelease": null,
+    "credited": [
+      "FULL_INTENDED_XY",
+      "X2_COMPOSITION",
+      "X3_INSTALLED_INVARIANTS",
+      "Y5_CHECKED_CORRESPONDENCE",
+      "ORDINARY_MODEL_CHECKING",
+      "PACTI_OCRA_COMPATIBLE_COMPOSITION",
+      "EQUIPPED_LINKING"
+    ],
+    "reason": "A and B perform different complementary roles. Their times are not a speedup ratio or an equipped comparison.",
+    "novelIncrement": "UNESTABLISHED",
+    "compactness": "FULL_ORIGINAL_PRODUCT_EXPLORED_NO_COMPACTNESS_CLAIM"
+  },
+  "costs": {
+    "database": "NOT_RUN",
+    "originalOwnerExtraction": null,
+    "integration": null,
+    "invalidation": null,
+    "nativeReplacement": null,
+    "nativeRecovery": null,
+    "install": null,
+    "money": null,
+    "human": null,
+    "gaps": [
+      "CHECKER_CPU_RSS_NOT_METERED",
+      "NATIVE_OWNER_EXTRACTION_NOT_RUN",
+      "COMPLETE_SHARED_INTEGRATION_NOT_RUN",
+      "INSTALLED_APPLICATION_NOT_RUN",
+      "MODEL_AND_HUMAN_COST_NOT_METERED",
+      "FAILED_ATTEMPTS_RETAINED_SEPARATELY"
+    ]
+  },
+  "protectedAdmission": false,
+  "operational100x": "NOT_RUN",
+  "financial100x": "NOT_RUN",
+  "databaseActions": 0,
+  "listenersStarted": 0,
+  "sourceRepository": "/home/factory-user/repos/finnor-z5"
+}

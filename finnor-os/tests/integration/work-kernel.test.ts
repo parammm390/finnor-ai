@@ -5,12 +5,15 @@ import { migrate } from "../../packages/db/migrate";
 import {
   beginWorkPlannerAttempt,
   claimWorkRecovery,
+  WorkRecoveryAuthorizationError,
   closePool,
   domainActions,
   finishWorkPlannerAttempt,
   receiveWork,
   reconcileWorkStatus,
   tenants,
+  users,
+  works,
   transitionWork,
   WorkTransitionConflictError,
   withTenant,
@@ -18,9 +21,12 @@ import {
 } from "@finnor/db";
 import { FinnorOrchestrator } from "@finnor/orchestration";
 import { openReceipt, submitCommand } from "@finnor/workflow-runtime";
+import { eq } from "drizzle-orm";
 
 const DB_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const TENANT_ID = "00000000-0000-4000-8000-0000000092f2";
+const RECOVERY_OWNER_ID = randomUUID();
+const RECOVERY_PEER_ID = randomUUID();
 
 async function dbUp(): Promise<boolean> {
   const client = new pg.Client({ connectionString: DB_URL, connectionTimeoutMillis: 2_000 });
@@ -41,6 +47,10 @@ describe.skipIf(!available)("Upgrade 2 durable Work kernel", () => {
     process.env.SECRETS_PROVIDER = "env";
     await migrate(DB_URL);
     await withTenant(TENANT_ID, (db) => db.insert(tenants).values({ id: TENANT_ID, name: "Work Kernel Test Dealer" }).onConflictDoNothing());
+    await withTenant(TENANT_ID, (db) => db.insert(users).values([
+      { id: RECOVERY_OWNER_ID, tenantId: TENANT_ID, email: `recovery-owner-${RECOVERY_OWNER_ID}@example.test`, role: "owner" },
+      { id: RECOVERY_PEER_ID, tenantId: TENANT_ID, email: `recovery-peer-${RECOVERY_PEER_ID}@example.test`, role: "dispatcher" },
+    ]));
   });
 
   afterAll(async () => {
@@ -153,17 +163,52 @@ describe.skipIf(!available)("Upgrade 2 durable Work kernel", () => {
       instruction: "Exercise concurrent recovery claims",
       instructionId: randomUUID(),
       channel: "text",
+      userId: RECOVERY_OWNER_ID,
     });
     await transitionWork(TENANT_ID, received.workId, "failed", "planning_failed", { message: "test failure" });
 
+    // A valid tenant peer cannot read/replay or mutate the owner's recovery claim.
+    await expect(claimWorkRecovery({
+      tenantId: TENANT_ID, workId: received.workId, attemptKey: "retry:foreign",
+      requestedBy: RECOVERY_PEER_ID,
+    })).rejects.toBeInstanceOf(WorkRecoveryAuthorizationError);
+    expect((await workAggregate(TENANT_ID, received.workId))!.work).toMatchObject({ status: "failed" });
+
     const claims = await Promise.all([
-      claimWorkRecovery({ tenantId: TENANT_ID, workId: received.workId, attemptKey: "retry:one", requestedBy: "test" }),
-      claimWorkRecovery({ tenantId: TENANT_ID, workId: received.workId, attemptKey: "retry:two", requestedBy: "test" }),
+      claimWorkRecovery({ tenantId: TENANT_ID, workId: received.workId, attemptKey: "retry:one", requestedBy: RECOVERY_OWNER_ID }),
+      claimWorkRecovery({ tenantId: TENANT_ID, workId: received.workId, attemptKey: "retry:two", requestedBy: RECOVERY_OWNER_ID }),
     ]);
     expect(claims.filter((claim) => claim.claimed)).toHaveLength(1);
     expect(claims.filter((claim) => !claim.claimed)).toHaveLength(1);
     expect(new Set(claims.map((claim) => claim.activeAttemptKey)).size).toBe(1);
     expect((await workAggregate(TENANT_ID, received.workId))!.work).toMatchObject({ status: "recovery" });
+    await expect(claimWorkRecovery({
+      tenantId: TENANT_ID, workId: received.workId, attemptKey: claims[0]!.activeAttemptKey,
+      requestedBy: RECOVERY_PEER_ID,
+    })).rejects.toBeInstanceOf(WorkRecoveryAuthorizationError);
+  });
+
+  it("revokes the old owner's recovery rights when current ownership changes", async () => {
+    const received = await receiveWork({
+      tenantId: TENANT_ID,
+      instruction: "Continue Work after explicit ownership transfer",
+      instructionId: randomUUID(),
+      channel: "text",
+      userId: RECOVERY_OWNER_ID,
+    });
+    await transitionWork(TENANT_ID, received.workId, "failed", "planning_failed", { message: "test failure" });
+    // Simulates the committed current_owner_id change made by governed handoff.
+    await withTenant(TENANT_ID, db => db.update(works).set({ currentOwnerId: RECOVERY_PEER_ID })
+      .where(eq(works.id, received.workId)));
+    await expect(claimWorkRecovery({
+      tenantId: TENANT_ID, workId: received.workId, attemptKey: "retry:old-owner",
+      requestedBy: RECOVERY_OWNER_ID,
+    })).rejects.toBeInstanceOf(WorkRecoveryAuthorizationError);
+    const claim = await claimWorkRecovery({
+      tenantId: TENANT_ID, workId: received.workId, attemptKey: "retry:new-owner",
+      requestedBy: RECOVERY_PEER_ID,
+    });
+    expect(claim).toMatchObject({ claimed: true, status: "claimed" });
   });
 
   it("allows only a newer explicit input to continue cancelled Work", async () => {

@@ -1,4 +1,4 @@
-import { getUnderwritingAffectedNodes } from "@finnor/private-equity";
+import { getUnderwritingAffectedNodes } from "../../../../../../../../packages/private-equity/src/underwriting-repository";
 import { requireContext } from "../../../../../../lib/auth";
 import {
   UnderwritingUuidSchema,

@@ -1,0 +1,14 @@
+{
+  "id": "change-must-availability",
+  "passed": true,
+  "checker": {
+    "exitCode": 1,
+    "signal": null,
+    "stdout": "{\"checked\":false,\"checker\":\"z5-original-semantics-checker-v1\",\"executionAuthorityGranted\":false,\"reason\":\"FORGED_CONTEXT_TRANSITION\",\"schema\":\"finnor.z5.independent-check.v1\"}\n",
+    "stderr": "",
+    "bounded": false,
+    "wallMs": 60.352686999999946
+  },
+  "corruptionDigest": "f3eb8afbdfa07e31ee5cc8b46c7edb5847915ec2eba63122b0008a50063fa556",
+  "expected": "INDEPENDENT_REJECTION"
+}

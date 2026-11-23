@@ -1,4 +1,4 @@
-import { selectPrimaryIcUnderwritingRun } from "@finnor/private-equity";
+import { selectPrimaryIcUnderwritingRun } from "../../../../../../../../../packages/private-equity/src/ic-repository";
 import { handleIcPost, IcSelectUnderwritingRunSchema, IcUuidSchema } from "../../../../../../../lib/ic";
 
 export const runtime = "nodejs";

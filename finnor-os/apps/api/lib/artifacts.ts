@@ -1,5 +1,5 @@
 import { ArtifactError, type ArtifactActor } from "@finnor/artifacts";
-import { canReadGeneratedCommitteeMemo } from "@finnor/private-equity";
+import { canReadGeneratedCommitteeMemo } from "../../../packages/private-equity/src/ic-memo-access";
 import { MicrosoftGraphError } from "@finnor/provider-microsoft365";
 import { ProviderAuthError } from "@finnor/security";
 import type { TenantContext } from "@finnor/shared-types";

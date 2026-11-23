@@ -1,17 +1,20 @@
 import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
-import { readFileSync, lstatSync, realpathSync, readlinkSync, openSync, readSync, fstatSync, closeSync, constants } from 'node:fs';
+import { existsSync, readFileSync, lstatSync, realpathSync, readlinkSync, openSync, readSync, fstatSync, closeSync, constants } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 // Copied into the installed package beside its fixed manifest. No environment
 // variable or builder CWD can select another frontend's bytes or custody root.
-const root=realpathSync(dirname(fileURLToPath(import.meta.url))),manifestPath=join(root,'x1-frontend-installation.json');
+const root=realpathSync(dirname(fileURLToPath(import.meta.url)));
+const candidates=['x1-frontend-installation.json','w2-frontend-installation.json'].filter(path=>existsSync(join(root,path)));
+if(candidates.length!==1)throw Error('OWNED_FRONTEND_MANIFEST_AMBIGUOUS_OR_MISSING');
+const manifestPath=join(root,candidates[0]),w2=candidates[0]==='w2-frontend-installation.json';
 const manifestStat=lstatSync(manifestPath);
 if(!manifestStat.isFile()||(manifestStat.mode&0o7777)!==0o444)throw Error('X1_FRONTEND_MANIFEST_CUSTODY_REFUSED');
 const manifest=JSON.parse(readFileSync(manifestPath,'utf8'));
-if(manifest.schema!=='finnor.x1.frontend-installation.v1'||manifest.mode!=='DEVELOPMENT_ONLY'
+if(manifest.schema!==(w2?'finnor.postz.w2.frontend-installation.v1':'finnor.x1.frontend-installation.v1')||manifest.mode!=='DEVELOPMENT_ONLY'
   ||manifest.productionActive!==false||manifest.executionAuthorityGranted!==false
   ||manifest.runtime.node!==process.version||manifest.runtime.platform!==process.platform||manifest.runtime.arch!==process.arch)
   throw Error('X1_FRONTEND_INSTALLATION_CONTRACT_REFUSED');
@@ -81,7 +84,7 @@ const server=createServer(async(req,res)=>{
     res.writeHead(503,{'content-type':'application/json','cache-control':'no-store'});res.end('{"error":"frontend_unavailable"}');}
 });
 await new Promise((yes,no)=>{server.once('error',no);server.listen(Number(new URL(frontendOrigin).port),'127.0.0.1',yes);});
-console.log(JSON.stringify({event:'X1_FRONTEND_READY',frontendOrigin,compiled:true,nextPid:child.pid,
+console.log(JSON.stringify({event:w2?'W2_FRONTEND_READY':'X1_FRONTEND_READY',frontendOrigin,compiled:true,nextPid:child.pid,
   manifestDigest,source:manifest.source,authBypass:false,productionActive:false}));
 let stopping=false;
 function stop(){if(stopping)return;stopping=true;server.closeAllConnections();server.close();child.kill('SIGTERM');

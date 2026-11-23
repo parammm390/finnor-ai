@@ -1,5 +1,5 @@
 /** Authenticated ordinary S8 lifecycle; independent science/signatures stay external. */
-import { assertCapabilitySourceClosure, assertApplicationSemanticsSourceClosure } from './source-closure';
+import type { CanonicalS8JournalBoundary, CanonicalLifecycleConfiguration } from './specialist-publication-lifecycle';import { assertCapabilitySourceClosure, assertApplicationSemanticsSourceClosure } from './source-closure';
 import { assertCapabilityEconomicExperienceCurrent } from './experience';
 import { ProtectedCapabilityEvents } from './protected-events';
 import { verifyCapabilityMethod } from './protected-method';
@@ -16,6 +16,8 @@ import { readOwnerTransportReference, readOwnerTransportReferenceSnapshot, owner
 import { CapabilityJournal, privateFile, type JournalEntry } from './journal';
 import { InterfaceCapabilityPort } from './interface-port';
 import { InstitutionCapabilityPort } from './institution-port';
+import { specialistPortConfigurationSchema } from './specialist-domain';
+import type { WorkforceSpecialistCapabilityPort } from './specialist-port';
 import { ApplicationCapabilityPort } from './application-port';
 import { ApplicationCapabilityPort as ApplicationSemanticsCapabilityPort, ApplicationPortConfigurationSchema } from './application-semantics-port';
 import { LearnedPolicyCapabilityPort } from './learned-policy-port';
@@ -31,6 +33,7 @@ const PolicySchema = z.object({ schema: z.literal('finnor.s8.lifecycle-policy.v1
 const LifecyclePolicySchema=PolicySchema.extend({
     sourcePins:PolicySchema.shape.sourcePins.max(256),
     applicationSemantics:ApplicationPortConfigurationSchema.optional(),
+    specialistAnalysis:specialistPortConfigurationSchema.optional(),
     institutionCompiler:z.object({
         profileDigest:z.string().regex(/^[a-f0-9]{64}$/),
         sourcePins:z.array(z.object({path:Text,sha256:z.string().regex(/^[a-f0-9]{64}$/)}).strict()).min(1).max(64),
@@ -42,6 +45,7 @@ interface Config {
     signedPolicy: Signed<Policy>;
     directory: string;
     signerPath: string;
+    canonicalSpecialist?: CanonicalLifecycleConfiguration;
     port?: number;
 }
 interface RevisionState {
@@ -82,6 +86,8 @@ export class CapabilityEvolution {
     private uniformAlgorithms: UniformAlgorithmCapabilityPort|null=null;
     private uniformReplay: JournalEntry[]=[];
     private institutions: InstitutionCapabilityPort;
+    private specialistAnalysis: WorkforceSpecialistCapabilityPort|null=null;
+    private specialistReplay: JournalEntry[]=[];
     private states = new Map<string, RevisionState>();
     private active: string | null = null;
     private generation = 0;
@@ -95,25 +101,42 @@ export class CapabilityEvolution {
     private queue: Promise<unknown> = Promise.resolve();
     private queued = 0;
     private protectedEvents: ProtectedCapabilityEvents | null;
+    private canonicalBoundary:CanonicalS8JournalBoundary|null;
     private handedOff = false;
     private importedLeases = new Map<string, CapabilityUseLease>();
     private inheritedHandoff: any = null;
-    private constructor(readonly policy: Policy, private journal: CapabilityJournal) {
+    private constructor(readonly policy: Policy, private journal: CapabilityJournal,boundary:CanonicalS8JournalBoundary|null) {
+        this.canonicalBoundary=boundary;
         this.interfaces = new InterfaceCapabilityPort(policy);
         this.applications = new ApplicationCapabilityPort(policy);
         this.applicationSemantics = new ApplicationSemanticsCapabilityPort(policy);
         this.learnedPolicies = new LearnedPolicyCapabilityPort(policy);
         this.institutions = new InstitutionCapabilityPort(policy);
-        this.protectedEvents = policy.protectedEvents ? new ProtectedCapabilityEvents({ ...policy, protectedEvents: policy.protectedEvents }, journal.policyDigest) : null;
+        this.protectedEvents = policy.protectedEvents ? new ProtectedCapabilityEvents({ ...policy, protectedEvents: policy.protectedEvents }, journal.policyDigest,(kind,id,payload)=>this.canonicalBoundary?.beforeMutation(kind,id,payload)??Promise.resolve()) : null;
         for (const e of journal.entries)
             this.replay(e);
     }
-    static async open(path: string, root: string) {
+    static async enrollCanonicalHistory(path:string,root:string){
+        const service=await this.open(path,root,true);
+        await service.close();
+    }
+    static async open(path: string, root: string,enrollmentOnly=false) {
         const cfg = JSON.parse((await privateFile(path)).toString()) as Config;
         const policy = LifecyclePolicySchema.parse(cfg.signedPolicy.body);
         if (policy.domain === 'REVIEWED_PROTECTED_DOMAIN' && !policy.protectedEvents)
             fault('S8_PROTECTED_EVENT_CONTRACT_REQUIRED', 503);
+        if(policy.specialistAnalysis&&(policy.domain!=='REVIEWED_PROTECTED_DOMAIN'||!policy.protectedEvents))
+            fault('S8_SPECIALIST_PROTECTED_DOMAIN_UNAVAILABLE',503);
+        if(policy.specialistAnalysis&&createPublicKey(root).asymmetricKeyType!=='ed25519')
+            fault('S8_SPECIALIST_RELEASE_ROOT_KEY_TYPE_INVALID',503);
         await assertCapabilitySourceClosure(policy.sourcePins);
+        if(policy.specialistAnalysis){
+            const {assertWorkforceSpecialistSourceClosure}=await import('./specialist-source');
+            await assertWorkforceSpecialistSourceClosure(policy.specialistAnalysis.sourcePins);
+            if(policy.specialistAnalysis.sourcePins.some(pin=>!policy.sourcePins.some(outer=>
+                outer.path===pin.path&&outer.sha256===pin.sha256)))
+                fault('S8_SPECIALIST_DOMAIN_SOURCE_CLOSURE_UNBOUND',503);
+        }
         if(policy.applicationSemantics){
             await assertApplicationSemanticsSourceClosure(policy.applicationSemantics.sourcePins);
             if(policy.applicationSemantics.sourcePins.some(pin=>!policy.sourcePins.some(outer=>outer.path===pin.path&&outer.sha256===pin.sha256)))
@@ -148,20 +171,31 @@ export class CapabilityEvolution {
         if (policy.costAuthorityPrincipalIds.some(id => principals.has(id)) || policy.evaluatorKeys.some(k => principals.has(k.principalId)) || policy.promotionKeys.some(k => principals.has(k.principalId)) || policy.evaluatorKeys.some(k => policy.promotionKeys.some(p => p.publicKey === k.publicKey)))
             fault('S8_AUTHORITY_NOT_SEPARATED', 503);
         await CapabilityEvolution.sources(policy.sourcePins);
+        const boundary=policy.specialistAnalysis?await(await import('./specialist-publication-lifecycle')).CanonicalS8JournalBoundary.open(policy,root,cfg.canonicalSpecialist):null;
+        if(!enrollmentOnly)await boundary?.prepareStartup();
+        if(enrollmentOnly&&!boundary)fault('S8_ORIGINAL_SPECIALIST_ENROLLMENT_REQUIRED',503);
         let recovered: any = null;
-        const journal = await CapabilityJournal.open(cfg.directory, cfg.signerPath, policy.journalPublicKey, digest(policy), policy.maxEntries, async (tail, discarded) => {
+        let journal:CapabilityJournal;
+        try{journal = await CapabilityJournal.open(cfg.directory, cfg.signerPath, policy.journalPublicKey, digest(policy), policy.maxEntries, async (tail, discarded) => {
             await CapabilityEvolution.verifyCheckpointTail(policy, tail);
             recovered = { schema: 'finnor.s8.journal-recovery.v1', policyDigest: digest(policy), retainedSequence: tail?.sequence ?? 0, retainedDigest: tail?.digest ?? null, discardedUnacceptedTail: discarded, qualification: 'VERIFIED_PREFIX_AND_S6_CHECKPOINT_BOUNDARY_ONLY_NO_OS_ADMIN_PROTECTION' };
-        });
-        const service = new CapabilityEvolution(policy, journal);
+        },(kind,id,payload)=>boundary?.beforeMutation(kind,id,payload)??Promise.resolve(),enrollmentOnly);
+        }catch(error){await boundary?.close();throw error;}
+        const service = new CapabilityEvolution(policy, journal,boundary);
         try {
+            if(enrollmentOnly){await boundary!.enrollOriginalHistory(service.canonicalHistorySource());return service;}
+            const startup=async()=>{
             await service.ensureRuntimeContinuityAnchor();
             await service.recoverCheckpoints();
             await service.recoverConfidentialCommits();
+            await service.recoverSpecialistCommits();
             await service.importResponsibilities();
             if (recovered)
                 await service.persist({ requestId: 'journal-recovery:' + digest(recovered), requestDigest: digest(recovered), actorId: 'SIGNED_POLICY_RECOVERY', operation: 'JOURNAL_RECOVERY', body: recovered, result: await service.commitReference('capability-journal-recovery', recovered) });
             await service.recoverPendingSearch();
+            };
+            if(boundary)await boundary.startup(startup,()=>service.recoverOriginalOnly(),()=>service.canonicalHistorySource());
+            else await startup();
             return service;
         }
         catch (error) {
@@ -169,7 +203,44 @@ export class CapabilityEvolution {
             throw error;
         }
     }
-    private static async sources(pins: Array<{
+    private canonicalHistorySource(){
+        return {journal:this.journal,events:this.protectedEvents,canonicalState:()=>{
+            const specialistEntries=this.journal.entries.filter(e=>e.operation.startsWith('SPECIALIST_'));
+            const caseHolds=specialistEntries.filter(e=>e.operation==='SPECIALIST_COMMIT_INTENT'
+                &&e.body.operation==='SPECIALIST_REGISTER').flatMap(entry=>{
+                const b=entry.body,originalOwnerDigest=digest({requestId:b.requestId,
+                    requestDigest:b.originalRequestDigest,actorId:entry.actorId,ref:b.ref});
+                return b.input.body.caseCommitments.map((commitment:string)=>({commitment,originalOwnerDigest}));
+            }).sort((a,b)=>a.commitment.localeCompare(b.commitment));
+            return {schema:'finnor.s8.authenticated-canonical-specialist-history.v1',
+                policyDigest:this.journal.policyDigest,rightsRef:this.policy.rightsRef,
+                sharedJournalEntryDigests:this.journal.entries.map(e=>e.digest),specialistEntries,caseHolds,
+                specialistHandoffSupported:false};
+        }};
+    }
+    private publicRequestEntry(requestId:string){
+        return this.journal.entries.find(entry=>{
+            // Public IDs may equal an internal intent ID. Its operation and
+            // authenticated original request, not the ID namespace, define type.
+            if(entry.requestId!==requestId||entry.operation.endsWith('_COMMIT_INTENT'))return false;
+            if(entry.operation.startsWith('SPECIALIST_')&&!this.specialistCompletionKey(entry))
+                fault('S8_SPECIALIST_TERMINAL_HISTORY_CHANGED',503);
+            return true;
+        });
+    }
+    private async assertSharedSourcesCurrent(){
+        try{await CapabilityEvolution.sources(this.policy.sourcePins);}
+        catch(error){
+            if(this.canonicalBoundary)await this.canonicalBoundary.invalidate('SHARED_SOURCE_CHANGED',this.canonicalHistorySource());
+            throw error;
+        }
+    }
+    private async recoverOriginalOnly(){
+        await this.recoverCheckpoints();
+        await this.recoverConfidentialCommits();
+        await this.recoverSpecialistCommits();
+        await this.recoverPendingSearch();
+    }    private static async sources(pins: Array<{
         path: string;
         sha256: string;
     }>) {
@@ -279,12 +350,18 @@ export class CapabilityEvolution {
         return this.commitNamedReference(makeRef(kind, content), content);
     }
     private async commitNamedReference(ref: CapabilityRef, content: any) {
+        try{
+            const original=await this.protectedCurrent(ref);
+            if(!original.receipt||digest(original.reference.content)!==digest(content))fault('S8_ORIGINAL_REFERENCE_CONTENT_CHANGED',503);
+            return {ref,receipt:original.receipt};
+        }catch(error){if((error as any)?.code!=='REFERENCE_NOT_FOUND')throw error;}
         const identity = { semanticOwner: 'S8', tenantId: this.policy.tenantId, principalId: this.policy.principalId }, route = await ownerTransportRoute(identity);
         if (!route)
             fault('S8_PROTECTED_REFERENCE_AUTHORITY_UNAVAILABLE', 503);
         if (route.protectionDomain !== this.policy.domain)
             fault('S8_REFERENCE_PROTECTION_DOMAIN_MISMATCH', 503);
         const payload = { reference: { ...ref, content }, rightsRefs: [this.policy.rightsRef] }, signed = await signOwnerDeliveryOrigin(route, { ...identity, kind: 'REFERENCE', identity: ref.id, payload });
+        await this.canonicalBoundary?.beforeMutation('S6_REFERENCE',ref.id,payload);
         const answer = await deliverOwnerTransportIntent(identity, signed.envelope, signed.signature);
         return { ref, receipt: answer.receipt };
     }
@@ -322,9 +399,15 @@ export class CapabilityEvolution {
             const original = (await this.protectedCurrent(ref)).reference.content;
             if (ref.owner !== 'S8' || original.schema !== 'finnor.s8.responsibility-handoff.v1' || original.previousPolicyDigest !== digest(parent)
                 || original.successorPolicyDigest !== CapabilityEvolution.handoffTargetDigest(previous)) fault('S8_HANDOFF_ANCESTRY_SUBSTITUTION');
+            CapabilityEvolution.assertNoSpecialistHandoffLoss(parent, original);
             previous = parent;
         }
         if (previous.responsibilityHandoff || anchor.policyDigest !== digest(previous)) fault('S8_HANDOFF_ANCESTRY_SUBSTITUTION');
+    }
+    private static assertNoSpecialistHandoffLoss(prior: Policy, capsule: any) {
+        if (prior.specialistAnalysis && (capsule.specialistResponsibility?.handoffSupported !== false
+            || capsule.specialistResponsibility?.historyPresent !== false))
+            fault('S8_SPECIALIST_RESPONSIBILITY_HANDOFF_UNSUPPORTED', 503);
     }
     private async resolveResponsibilityHandoff() {
         const configured = this.policy.responsibilityHandoff;
@@ -339,6 +422,7 @@ export class CapabilityEvolution {
             || capsule.principalId !== this.policy.principalId || capsule.rightsRef !== this.policy.rightsRef || capsule.actionableActivationTransferred !== false
             || !Number.isSafeInteger(capsule.sequence) || capsule.sequence < 1 || capsule.sequence > prior.maxEntries || !Number.isSafeInteger(capsule.generation) || capsule.generation < 1)
             fault('S8_HANDOFF_TARGET_OR_IDENTITY_SUBSTITUTION');
+        CapabilityEvolution.assertNoSpecialistHandoffLoss(prior, capsule);
         const row = await readOwnerTransportReference({ semanticOwner: 'S8', tenantId: this.policy.tenantId, principalId: this.policy.principalId }, `capability-handoff-entry:${digest(prior)}:${capsule.sequence}`), entry = row.reference.content as JournalEntry;
         const { digest: originalDigest, signature, ...entryBody } = entry, actor = prior.actors.find(a => a.id === entry.actorId), key = prior.promotionKeys.find(k => k.id === entry.body?.keyId), time = Date.parse(entry.knowledgeAt);
         if (originalDigest !== digest(entryBody) || entry.policyDigest !== digest(prior) || entry.sequence !== capsule.sequence || entry.operation !== 'REVOKE'
@@ -440,6 +524,9 @@ export class CapabilityEvolution {
         return row;
     }
     private replay(entry: JournalEntry) {
+        if(entry.operation.startsWith('SPECIALIST_')){
+            this.specialistReplay.push(entry);this.specialistAnalysis?.replay(entry);return;
+        }
         if(entry.operation.startsWith('CONFIDENTIAL_')){
             this.confidentialReplay.push(entry);this.confidential?.replay(entry);return;
         }
@@ -544,6 +631,15 @@ export class CapabilityEvolution {
             use.evidenceRef = b.evidenceRef; /* Reservation totals never reset, even after rollback. */
         }
     }
+    private async specialistPort(){
+        if(!this.specialistAnalysis){
+            const {WorkforceSpecialistCapabilityPort}=await import('./specialist-port');
+            const port=new WorkforceSpecialistCapabilityPort(this.policy);
+            for(const entry of this.specialistReplay)port.replay(entry);
+            this.specialistAnalysis=port;
+        }
+        return this.specialistAnalysis;
+    }
     private async confidentialPort(){
         if(!this.confidential){
             const {ConfidentialCapabilityPort}=await import('./confidential-port');
@@ -581,6 +677,304 @@ export class CapabilityEvolution {
             completedRequests.add(b.requestId);
         }
     }
+    private specialistCompletionKey(entry:JournalEntry,originalIntent=false):string|null{
+        if(originalIntent&&entry.operation!=='SPECIALIST_COMMIT_INTENT')return null;
+        const operation=originalIntent?entry.body.operation:entry.operation;
+        if(!['SPECIALIST_PROPOSE','SPECIALIST_REGISTER','SPECIALIST_EVALUATE','SPECIALIST_ADMIT','SPECIALIST_REVOKE'].includes(operation))return null;
+        const requestId=originalIntent?entry.body.requestId:entry.requestId,
+            body=originalIntent?entry.body.input:entry.body,
+            requestDigest=originalIntent?entry.body.originalRequestDigest:entry.requestDigest,
+            canonicalRequestDigest=digest({actorId:entry.actorId,requestId,operation,body}),
+            ref=RefSchema.safeParse(originalIntent?entry.body.ref:entry.result?.ref);
+        if(requestDigest!==canonicalRequestDigest||!ref.success)return null;
+        return digest({kind:'TERMINAL_SPECIALIST_REQUEST',actorId:entry.actorId,operation,
+            requestId,requestDigest:canonicalRequestDigest,ref:ref.data});
+    }
+    private completedSpecialistRequests(){
+        return new Set(this.journal.entries.flatMap(entry=>{
+            const key=this.specialistCompletionKey(entry);
+            return key?[key]:[];
+        }));
+    }
+    private async recoverSpecialistCommits(){
+        const completedRequests=this.completedSpecialistRequests();
+        for(const entry of this.journal.entries.filter(value=>value.operation==='SPECIALIST_COMMIT_INTENT')){
+            const b=entry.body;
+            if(!['SPECIALIST_PROPOSE','SPECIALIST_REGISTER','SPECIALIST_EVALUATE','SPECIALIST_ADMIT','SPECIALIST_REVOKE'].includes(b.operation)
+                ||b.originalRequestDigest!==digest({actorId:entry.actorId,requestId:b.requestId,operation:b.operation,body:b.input})
+                ||entry.requestId!=='specialist-intent:'+digest({requestId:b.requestId,requestDigest:b.originalRequestDigest,actorId:entry.actorId})
+                ||entry.requestDigest!==digest({requestDigest:b.originalRequestDigest,ref:b.ref,content:b.content}))
+                fault('S8_SPECIALIST_COMMIT_INTENT_CHANGED');
+            const originalCompletionKey=this.specialistCompletionKey(entry,true);
+            if(!originalCompletionKey)fault('S8_SPECIALIST_COMMIT_INTENT_CHANGED');
+            if(completedRequests.has(originalCompletionKey))continue;
+            let accepted:Awaited<ReturnType<typeof readOwnerTransportReference>>;
+            try{
+                accepted=await readOwnerTransportReference({semanticOwner:'S8',tenantId:this.policy.tenantId,
+                    principalId:this.policy.principalId},b.ref.id);
+            }catch(error:any){
+                if(error.code==='REFERENCE_NOT_FOUND')continue;
+                throw error;
+            }
+            if(digest(accepted.reference)!==digest({...b.ref,content:b.content}))
+                fault('S8_SPECIALIST_ACCEPTED_REFERENCE_CHANGED');
+            const {workforceSpecialistCommitResult}=await import('./specialist-port');
+            (await this.specialistPort()).assertOriginalCommitRecovery(entry);
+            // Observe an already accepted reference. This recovery does not
+            // resubmit it, rerun a fixture, renew admission or grant current use.
+            await this.persist({requestId:b.requestId,requestDigest:b.originalRequestDigest,actorId:entry.actorId,
+                operation:b.operation,body:b.input,result:workforceSpecialistCommitResult(b.ref)});
+            completedRequests.add(originalCompletionKey);
+        }
+    }
+    /** Definite refusal only. No recovery, append, named reference, native owner
+     * call or computation may run here. Real execution repeats its own checks. */
+    private async admitCanonicalCommand(a:Actor,input:{requestId:string;operation:string;body:any}){
+        z.object({requestId:z.string().regex(/^[A-Za-z0-9:_-]{1,256}$/),
+            operation:Text,body:z.unknown()}).strict().parse(input);
+        const op=input.operation,b=input.body,hex=z.string().regex(/^[a-f0-9]{64}$/);
+        if(this.handedOff&&op!=='READ')fault('S8_RUNTIME_RESPONSIBILITY_TRANSFERRED',403);
+        if(op.startsWith('SPECIALIST_')){
+            await(await this.specialistPort()).admitCommand(a,op,b);return;
+        }
+        const six=['PROPOSE','REGISTER','EVALUATE','ADMIT','REVOKE','CURRENT'],
+            siblings=[
+                ['APPLICATION_SEMANTICS_','S8_PROTECTED_APPLICATION_DOMAIN_UNADMITTED',
+                    ['PROPOSE','REGISTER','EVALUATE','ADMIT','ACTIVATE','REVOKE','CURRENT','USE','RECHECK','RECONCILE']],
+                ['CONFIDENTIAL_','S8_PROTECTED_CONFIDENTIAL_QUALIFICATION_REQUIRED',six],
+                ['UNIFORM_ALGORITHM_','S8_PROTECTED_UNIFORM_ALGORITHM_UNADMITTED',six],
+                ['IDENTIFIED_SYSTEM_','S8_PROTECTED_IDENTIFIED_SYSTEM_UNADMITTED',six],
+                ['LEARNED_POLICY_','S8_PROTECTED_LEARNED_POLICY_DOMAIN_UNADMITTED',six],
+                ['APPLICATION_','S8_PROTECTED_APPLICATION_DOMAIN_UNADMITTED',[...six,'CATALOGUE']],
+                ['INSTITUTION_','S8_X1_DOMAIN_POLICY_UNAVAILABLE',[...six,'CATALOGUE']],
+                ['INTERFACE_','S8_PROTECTED_INTERFACE_DOMAIN_UNADMITTED',[...six,'CATALOGUE']],
+            ] as const;
+        for(const [prefix,domainError,operations]of siblings){
+            if(!op.startsWith(prefix))continue;
+            const suffix=op.slice(prefix.length);
+            if(!operations.some(value=>value===suffix))fault('S8_OPERATION_UNSUPPORTED',404);
+            // This boundary exists only in REVIEWED_PROTECTED_DOMAIN. The
+            // siblings retain their existing disposable-only admission.
+            if(prefix==='APPLICATION_SEMANTICS_')fault(domainError,403);
+            const role=suffix==='PROPOSE'?'PROPOSER':suffix==='ADMIT'||suffix==='REVOKE'
+                ?'PROMOTER':suffix==='REGISTER'||suffix==='EVALUATE'?'EVALUATOR':null;
+            if(role)this.role(a,role);
+            else if(!a.roles.some(role=>role==='READER'||role==='CONSUMER'))
+                fault('S8_OPERATION_NOT_AUTHORIZED',403);
+            fault(domainError,403);
+        }
+        const roles:Record<string,Actor['roles'][number]>={READ:'READER',PROPOSE:'PROPOSER',
+            ATTEMPT:'PROPOSER',RUN_SEARCH:'PROPOSER',REGISTER:'EVALUATOR',EVALUATE:'EVALUATOR',
+            ADMIT:'EVALUATOR',ACTIVATE:'PROMOTER',REVOKE:'PROMOTER',HANDOFF:'PROMOTER',
+            USE:'CONSUMER',RECHECK:'CONSUMER',RECONCILE:'CONSUMER'};
+        if(!Object.hasOwn(roles,op))fault('S8_OPERATION_UNSUPPORTED',404);
+        this.role(a,roles[op]!);
+        const envelope=()=>{
+            z.object({body:z.unknown(),keyId:Text,signature:z.string().min(1)}).passthrough().parse(b);
+            assertSignature(b,['ACTIVATE','REVOKE','HANDOFF'].includes(op)
+                ?this.policy.promotionKeys:this.policy.evaluatorKeys,a.principalId);
+        };
+        switch(op){
+            case 'READ':{
+                const page=z.object({offset:z.number().int().min(0).max(100000).default(0),
+                    limit:z.number().int().min(1).max(256).default(256),
+                    atSequence:z.number().int().min(0).optional()}).strict().parse(b);
+                if(page.atSequence!==undefined&&page.atSequence!==(this.journal.entries.at(-1)?.sequence??0))
+                    fault('S8_READ_SNAPSHOT_CHANGED');
+                return;
+            }
+            case 'PROPOSE':{
+                const r=parseRevision(b);this.scope(r);
+                if(r.domain.rightsRef!==this.policy.rightsRef||r.domain.strata.some(s=>!this.policy.allowedStrata.includes(s))
+                    ||Date.parse(r.proposedAt)>Date.now()||r.runtime.node!==process.version
+                    ||r.runtime.platform!==process.platform||r.runtime.architecture!==process.arch)
+                    fault('S8_REVISION_DOMAIN_RUNTIME_OR_RIGHTS');
+                if(a.principalId!==r.principalId)fault('S8_PROPOSER_PRINCIPAL_MISMATCH',403);
+                if(this.states.has(r.ref.id))fault('S8_REVISION_ALREADY_PROPOSED');
+                for(const parent of r.parents)this.current(this.state(parent));
+                if(digest(r.dependencies)!==digest(this.policy.sourcePins))fault('S8_DEPENDENCY_CLOSURE_UNADMITTED');
+                return;
+            }
+            case 'ATTEMPT':{
+                const attempt=z.object({revisionRef:RefSchema,kind:z.enum(['SEARCH','EVALUATION','RETRY','DISCARDED','FAILURE','HUMAN_CORRECTION']),
+                    status:z.enum(['PENDING','SUCCEEDED','FAILED','DISCARDED','UNKNOWN']),reservedCost:z.number().finite().min(0),
+                    actualCost:z.number().finite().min(0).nullable(),allocationRef:RefSchema,modelIdentity:z.string().nullable(),
+                    modelComputeRef:RefSchema.nullable(),outputDigest:hex.nullable(),error:z.string().max(4096).nullable()}).strict().parse(b),
+                    s=this.state(attempt.revisionRef),previous=this.attempts.filter(v=>v.revisionRef.id===s.revision.ref.id);
+                if(s.state!=='PROPOSED'||s.protocols.size>0)fault('S8_SEARCH_AFTER_ADMISSION_REGISTRATION');
+                if(previous.length>=s.revision.envelope.maxAttempts
+                    ||previous.reduce((v,a)=>v+a.reservedCost,0)+attempt.reservedCost>s.revision.envelope.maxCost
+                    ||this.totalCost+attempt.reservedCost>this.policy.maxTotalCost
+                    ||attempt.actualCost!==null&&attempt.actualCost>attempt.reservedCost)
+                    fault('S8_SEARCH_RESOURCE_ENVELOPE_EXCEEDED');
+                return;
+            }
+            case 'RUN_SEARCH':
+                z.object({revisionRef:RefSchema,allocationRef:RefSchema,problemRef:RefSchema,
+                    reservedCost:z.number().finite().min(0)}).strict().parse(b);
+                fault('S8_PROTECTED_SEARCH_ALLOCATION_UNAVAILABLE',503);
+            case 'REGISTER':{
+                const p=ProtocolSchema.parse(b?.body);envelope();this.scope(p);
+                const s=this.state(p.revisionRef),prior=[...this.states.values()]
+                    .filter(v=>v.revision.episodeId===s.revision.episodeId).flatMap(v=>[...v.protocols.values()]);
+                if(prior.length>=p.maxSubmissions*p.maxWaves||prior.some(v=>this.campaignDefinition(v)!==this.campaignDefinition(p)))
+                    fault('S8_CAMPAIGN_MULTIPLICITY_OR_DEFINITION_CHANGED');
+                if(digest([...p.strata].sort())!==digest([...s.revision.domain.strata].sort()))
+                    fault('S8_ADMISSION_DOMAIN_HAS_UNTESTED_STRATA');
+                if(new Set(p.baselines.map(v=>v.id)).size!==p.baselines.length
+                    ||new Set(p.strata).size!==p.strata.length||new Set(p.priorDomains).size!==p.priorDomains.length)
+                    fault('S8_DUPLICATE_ADMISSION_ENDPOINT');
+                if(s.state!=='PROPOSED'||s.protocols.size>=p.maxSubmissions||p.evaluatorId!==a.principalId
+                    ||Date.parse(p.registeredAt)>Date.now()||Date.parse(p.trainingCutoff)<Date.parse(s.revision.experience.knowledgeCut)
+                    ||Date.parse(p.chronologicalStart)<=Date.parse(p.trainingCutoff)||Date.parse(p.chronologicalEnd)<Date.parse(p.chronologicalStart)
+                    ||!sameRef(p.domain,s.revision.domain)||p.companies.some(c=>s.revision.experience.trainingCompanies.includes(c))
+                    ||p.dependenceGroups.some(g=>s.revision.experience.dependenceGroups.includes(g)||this.consumedGroups.has(g))
+                    ||p.caseCommitments.some(c=>this.consumedCases.has(c))||new Set(p.dependenceGroups).size!==p.dependenceGroups.length
+                    ||new Set(p.caseCommitments).size!==p.caseCommitments.length||p.dependenceGroups.length<p.minIndependentGroups
+                    ||p.strata.some(st=>!p.domain.strata.includes(st))
+                    ||!['INCUMBENT','STRONG_FIXED','INDEPENDENT_EVOLUTION'].every(k=>p.baselines.some(v=>v.kind===k)))
+                    fault('S8_PREREGISTRATION_SPLIT_OR_BASELINE_INVALID');
+                const attempts=this.attempts.filter(v=>v.episodeId===s.revision.episodeId);
+                if(!attempts.length||attempts.some(v=>v.status==='PENDING'))fault('S8_UNACCOUNTED_SEARCH_BEFORE_REGISTRATION');
+                return;
+            }
+            case 'EVALUATE':{
+                const report=EvaluationSummarySchema.parse(b?.body);envelope();
+                const s=this.state(report.revisionRef),p=s.protocols.get(report.protocolRef.id),
+                    attempts=this.attempts.filter(v=>v.episodeId===s.revision.episodeId);
+                if(!p||!sameRef(makeRef('evaluation-protocol',p),report.protocolRef)||s.state!=='PROPOSED'
+                    ||report.evaluatorId!==a.principalId||Date.parse(report.completedAt)<Date.parse(p.registeredAt)
+                    ||Date.parse(report.completedAt)>Date.now())fault('S8_EVALUATION_REGISTRATION_BINDING');
+                if(report.attemptsDigest!==digest(attempts)
+                    ||report.failedCandidates<attempts.filter(v=>['FAILED','DISCARDED','UNKNOWN'].includes(v.status)).length)
+                    fault('S8_SUPPRESSED_FAILED_SEARCH');
+                if(report.disposition==='BENEFICIAL'&&(!report.allFloorsPassed||!report.priorDomainsPassed
+                    ||!report.gain||report.gain[0]<p.materialGain
+                    ||Object.entries(report.costs).some(([k,v])=>!['costRefs','currency','basis'].includes(k)&&v===null)
+                    ||report.costs.basis==='UNKNOWN'||report.qualification==='PROSPECTIVE_H1'&&report.costs.basis!=='OBSERVED_COMPLETE'))
+                    fault('S8_FALSE_FUTURE_GAIN');
+                return;
+            }
+            case 'ADMIT':{
+                envelope();
+                z.object({revisionRef:RefSchema,evaluationRef:RefSchema,payloadDigest:hex,dependencyDigest:hex,
+                    domain:z.unknown(),executionAuthorityGranted:z.literal(false),horizon:z.literal('H1'),
+                    evaluatorId:Text}).passthrough().parse(b.body);
+                const s=this.state(RefSchema.parse(b.body.revisionRef));
+                if(s.state!=='EVALUATED'||!s.evaluation||s.evaluation.disposition!=='BENEFICIAL'
+                    ||!sameRef(b.body.evaluationRef,makeRef('capability-evaluation',s.evaluation))
+                    ||b.body.payloadDigest!==digest(s.revision.payload)||b.body.dependencyDigest!==digest(s.revision.dependencies)
+                    ||!sameRef(b.body.domain,s.revision.domain)||b.body.evaluatorId!==a.principalId)
+                    fault('S8_ADMISSION_BINDING_OR_GAIN_INVALID');
+                return;
+            }
+            case 'ACTIVATE':{
+                envelope();
+                const act=z.object({revisionRef:RefSchema,expectedGeneration:z.number().int().min(0),
+                    predecessorRef:RefSchema.nullable(),mode:z.enum(['SHADOW','CANARY','FULL']),
+                    maxDecisionLoss:z.number().finite().min(0),maxCost:z.number().finite().min(0),
+                    maxUses:z.number().int().min(1),validUntil:Instant,evidenceRefs:z.array(RefSchema).max(256),
+                    methodAdmission:AllocationMethodAdmissionSchema.optional(),canaryPlan:CanaryPlanSchema.optional()}).strict().parse(b.body);
+                const s=this.state(act.revisionRef);this.current(s);
+                if(act.expectedGeneration!==this.generation
+                    ||!sameRef(act.predecessorRef,this.active?this.states.get(this.active)!.revision.ref:null)
+                    ||act.maxDecisionLoss>s.revision.envelope.maxDecisionLoss||act.maxCost>s.revision.envelope.maxCost
+                    ||act.maxUses>s.revision.envelope.maxUses||Date.parse(act.validUntil)>Date.parse(s.revision.domain.validUntil)
+                    ||Date.parse(act.validUntil)<=Date.now()
+                    ||act.mode==='FULL'&&(s.evaluation?.qualification!=='PROSPECTIVE_H1'||!act.evidenceRefs.length)
+                    ||s.evaluation?.qualification==='GENERATIVE_H1'&&act.mode!=='SHADOW')
+                    fault('S8_ACTIVATION_ENVELOPE_OR_EVIDENCE_INVALID');
+                if(act.mode!=='SHADOW')fault('S8_NATIVE_CANARY_AUTHORITY_UNAVAILABLE',503);
+                if(this.active&&(this.active===s.revision.ref.id
+                    ||!s.revision.parents.some(parent=>sameRef(parent,this.states.get(this.active!)!.revision.ref))))
+                    fault('S8_ACTIVATION_PREDECESSOR_LINEAGE_INVALID');
+                return;
+            }
+            case 'REVOKE':{
+                envelope();
+                const body=z.object({revisionRef:RefSchema,expectedGeneration:z.number().int().min(0),
+                    predecessorRef:RefSchema.nullable(),reason:Text}).strict().parse(b.body);
+                const s=this.state(body.revisionRef);
+                if(body.predecessorRef&&(sameRef(body.predecessorRef,body.revisionRef)||this.active!==body.revisionRef.id
+                    ||!s.revision.parents.some(parent=>sameRef(parent,body.predecessorRef))))
+                    fault('S8_ROLLBACK_PREDECESSOR_LINEAGE_INVALID');
+                if(body.expectedGeneration!==this.generation||s.state==='REVOKED')fault('S8_REVOKE_GENERATION_CONFLICT');
+                if(body.predecessorRef){
+                    const previous=this.state(body.predecessorRef);this.current(previous);
+                    if(!previous.activation||Date.parse(previous.activation.validUntil)<=Date.now()
+                        ||previous.revision.domain.rightsRef!==s.revision.domain.rightsRef)
+                        fault('S8_UNQUALIFIED_ROLLBACK_PREDECESSOR');
+                }
+                return;
+            }
+            case 'HANDOFF':{
+                envelope();
+                if(this.specialistReplay.length)fault('S8_SPECIALIST_RESPONSIBILITY_HANDOFF_UNSUPPORTED',503);
+                if(this.applicationSemantics.hasHistory())fault('S8_APPLICATION_RESPONSIBILITY_HANDOFF_UNSUPPORTED',503);
+                const request=z.object({runtimeHandoff:z.literal(true),expectedGeneration:z.number().int().min(0),
+                    successorPolicyDigest:hex,successorPolicy:z.unknown(),reason:Text}).strict().parse(b.body);
+                if(request.expectedGeneration!==this.generation
+                    ||request.successorPolicyDigest===CapabilityEvolution.handoffTargetDigest(this.policy)
+                    ||request.successorPolicyDigest!==CapabilityEvolution.handoffTargetDigest(request.successorPolicy))
+                    fault('S8_HANDOFF_GENERATION_OR_TARGET_INVALID');
+                const successor=LifecyclePolicySchema.parse(request.successorPolicy);
+                if(successor.responsibilityHandoff||successor.tenantId!==this.policy.tenantId
+                    ||successor.principalId!==this.policy.principalId||successor.rightsRef!==this.policy.rightsRef
+                    ||successor.domain!==this.policy.domain||successor.maxTotalCost<this.totalCost
+                    ||successor.maxTotalLoss<this.totalLoss||successor.maxTotalUses<this.useCount
+                    ||Date.parse(successor.validUntil)<=Date.now())fault('S8_HANDOFF_SUCCESSOR_DOMAIN_OR_ENVELOPE');
+                return;
+            }
+            case 'USE':{
+                this.scope(b);
+                z.object({owner:z.literal('S5'),interface:Text,rightsRef:Text,stratum:Text,
+                    policyCount:z.number().int().min(1),periods:z.number().int().min(1),scenarios:z.number().int().min(1),
+                    maxDecisionLoss:z.number().finite().min(0),reservedCost:z.number().finite().min(0),
+                    inputDigest:hex}).passthrough().parse(b);
+                const s=this.active?this.states.get(this.active)!:fault('S8_NO_ACTIVE_CAPABILITY',403);
+                this.current(s);
+                const act=s.activation,r=s.revision,uses=[...this.uses.values()].filter(u=>u.revisionRef.id===r.ref.id);
+                if(!act||Date.parse(act.validUntil)<=Date.now()||b.interface!==r.owningInterface
+                    ||b.rightsRef!==r.domain.rightsRef||!r.domain.strata.includes(b.stratum)
+                    ||b.policyCount>r.domain.maxPolicies||b.periods>r.domain.maxPeriods||b.scenarios>r.domain.maxScenarios)
+                    fault('S8_USE_DOMAIN_OR_RIGHTS_INVALID');
+                if(this.useCount>=this.policy.maxTotalUses||uses.length>=act.maxUses
+                    ||this.totalCost+b.reservedCost>this.policy.maxTotalCost||this.totalLoss+b.maxDecisionLoss>this.policy.maxTotalLoss
+                    ||uses.reduce((v,u)=>v+u.maxDecisionLoss,0)+b.maxDecisionLoss>act.maxDecisionLoss
+                    ||uses.reduce((v,u)=>v+u.reservedCost,0)+b.reservedCost>act.maxCost
+                    ||act.mode==='SHADOW'&&b.maxDecisionLoss!==0)fault('S8_CUMULATIVE_CANARY_LOSS_OR_RESOURCE_BOUND');
+                if(act.canaryPlan){
+                    const plan=CanaryPlanSchema.parse(act.canaryPlan);
+                    if(b.reservedCost!==plan.reservedCostPerUse)fault('S8_CANARY_USE_COST_SUBSTITUTION');
+                }else if(b.canaryBinding!==undefined||act.mode==='CANARY')fault('S8_NATIVE_CANARY_PLAN_REQUIRED',503);
+                return;
+            }
+            case 'RECHECK':{
+                z.object({useId:Text,inputDigest:hex,revisionRef:RefSchema}).passthrough().parse(b);
+                const use=this.uses.get(b.useId);
+                if(!use||use.inputDigest!==b.inputDigest||!sameRef(use.revisionRef,b.revisionRef))
+                    fault('S8_USE_IDENTITY_SUBSTITUTION');
+                return;
+            }
+            case 'RECONCILE':{
+                const report=z.object({useId:Text,outcome:z.enum(['VERIFIED','UNKNOWN','FAILED','DECLINED','CENSORED']),
+                    evidenceRef:RefSchema,priorEvidenceRef:RefSchema.optional(),
+                    executionLineage:ExecutionLineageSchema.optional()}).strict().parse(b);
+                const use=this.uses.get(report.useId);
+                if(!use||(use.reconciliations?.length??0)>=64)fault('S8_USE_RECONCILIATION_INVALID');
+                if(use.evidenceRef?!report.priorEvidenceRef||!sameRef(use.evidenceRef,report.priorEvidenceRef)
+                    ||sameRef(use.evidenceRef,report.evidenceRef):report.priorEvidenceRef!==undefined)
+                    fault('S8_RECONCILIATION_PRIOR_EVIDENCE_BINDING');
+                if(report.outcome==='VERIFIED'&&!report.executionLineage)
+                    fault('S8_NATIVE_S7_USE_LINEAGE_UNAVAILABLE',503);
+                if(report.evidenceRef.owner!=='S7')fault('S8_RECONCILIATION_OWNER_REQUIRED');
+                if(!(this.importedLeases.get(use.useId)??this.journal.entries.find(entry=>
+                    entry.operation==='USE'&&entry.result.lease.useId===use.useId)?.result.lease))
+                    fault('S8_USE_IDENTITY_SUBSTITUTION');
+                return;
+            }
+        }
+    }
     async command(token: string, input: {
         requestId: string;
         operation: string;
@@ -590,21 +984,63 @@ export class CapabilityEvolution {
             fault('S8_QUEUE_BOUND', 429);
         this.queued++;
         const run = this.queue.then(async () => {
-            const a = this.actor(token);
+            let a:Actor;
+            try{a=this.actor(token);}catch(error){
+                if((error as any)?.code==='S8_POLICY_EXPIRED'&&this.canonicalBoundary)
+                    await this.canonicalBoundary.invalidate('SHARED_POLICY_WINDOW_CHANGED',this.canonicalHistorySource());
+                throw error;
+            }
+            if(!/^[A-Za-z0-9:_-]{1,256}$/.test(input.requestId))fault('S8_REQUEST_ID_INVALID',400);
+            const execute=async()=>{
             if (!/^[A-Za-z0-9:_-]{1,256}$/.test(input.requestId))
                 fault('S8_REQUEST_ID_INVALID', 400);
             await this.journal.assertIntegrity();
+            if(input.operation==='HANDOFF'&&this.specialistReplay.length){
+                this.role(a,'PROMOTER');assertSignature(input.body,this.policy.promotionKeys,a.principalId);
+                fault('S8_SPECIALIST_RESPONSIBILITY_HANDOFF_UNSUPPORTED',503);
+            }
             await this.recoverCheckpoints();
             await this.recoverConfidentialCommits();
+            await this.recoverSpecialistCommits();
             await this.recoverPendingSearch();
-            const requestDigest = digest({ actorId: a.id, requestId: input.requestId, operation: input.operation, body: input.body }), prior = this.journal.entries.find(e => e.requestId === input.requestId);
+            const requestDigest = digest({ actorId: a.id, requestId: input.requestId, operation: input.operation, body: input.body }), prior = this.publicRequestEntry(input.requestId);
+            const completedSpecialistRequests=this.completedSpecialistRequests(),
+                unresolvedOriginal=this.journal.entries.find(entry=>{
+                    if(entry.operation!=='SPECIALIST_COMMIT_INTENT'||entry.body.requestId!==input.requestId)return false;
+                    const key=this.specialistCompletionKey(entry,true);
+                    return !key||!completedSpecialistRequests.has(key);
+                });
+            if(unresolvedOriginal){
+                if(unresolvedOriginal.body.originalRequestDigest!==requestDigest)fault('S8_IDEMPOTENCY_SUBSTITUTION');
+                // recoverSpecialistCommits already did the only permitted action:
+                // exact original readback. Never resubmit an ambiguous acceptance.
+                fault('S8_SPECIALIST_COMMIT_OUTCOME_UNRESOLVED_READ_ONLY_RECOVERY_ONLY',503);
+            }
+            if(input.operation.startsWith('SPECIALIST_')&&input.operation!=='SPECIALIST_REVOKE'){
+                const revisionOf=(operation:string,value:any)=>RefSchema.safeParse(operation==='SPECIALIST_PROPOSE'
+                    ?value?.ref:operation==='SPECIALIST_CURRENT'?value?.revisionRef:value?.body?.revisionRef),
+                    revision=revisionOf(input.operation,input.body),
+                    completed=this.completedSpecialistRequests();
+                // An absent readback is not proof that an in-flight commit cannot
+                // still be accepted. Current use/new transitions wait; recovery
+                // only observes the original reference. Revocation attenuates.
+                if(revision.success&&this.journal.entries.some(entry=>{
+                    if(entry.operation!=='SPECIALIST_COMMIT_INTENT')return false;
+                    const key=this.specialistCompletionKey(entry,true);
+                    if(key&&completed.has(key))return false;
+                    const pending=revisionOf(entry.body.operation,entry.body.input);
+                    return pending.success&&sameRef(revision.data,pending.data);
+                }))fault('S8_SPECIALIST_COMMIT_OUTCOME_UNRESOLVED',503);
+            }
             if (prior) {
                 if (prior.requestDigest !== requestDigest)
                     fault('S8_IDEMPOTENCY_SUBSTITUTION');
                 // Interface current-use reads are deliberately never journaled or
                 // replayed from a cached admission. Every serve checks current use.
-                if (input.operation.startsWith('INTERFACE_') || input.operation.startsWith('APPLICATION_') || input.operation.startsWith('LEARNED_POLICY_') || input.operation.startsWith('IDENTIFIED_SYSTEM_') || input.operation.startsWith('CONFIDENTIAL_') || input.operation.startsWith('UNIFORM_ALGORITHM_'))
-                    await CapabilityEvolution.sources(this.policy.sourcePins);
+                if (input.operation.startsWith('INTERFACE_') || input.operation.startsWith('APPLICATION_') || input.operation.startsWith('LEARNED_POLICY_') || input.operation.startsWith('IDENTIFIED_SYSTEM_') || input.operation.startsWith('CONFIDENTIAL_') || input.operation.startsWith('UNIFORM_ALGORITHM_') || input.operation.startsWith('SPECIALIST_'))
+                    await this.assertSharedSourcesCurrent();
+                if(input.operation.startsWith('SPECIALIST_'))
+                    await (await this.specialistPort()).revalidateReplay(a,input.operation,input.body);
                 if (input.operation.startsWith('APPLICATION_SEMANTICS_')) {
                     await this.applicationSemantics.revalidateReplay(a, input.operation, input.body, prior.result);
                 }
@@ -616,14 +1052,67 @@ export class CapabilityEvolution {
                         fault('S8_USE_IDENTITY_SUBSTITUTION');
                     await this.currentUse(use);
                 }
+                if(input.operation==='Z5_COMPOSITION_ADMIT'){
+                    this.role(a,'CONSUMER');this.scope(input.body);
+                    if(this.policy.domain!=='DISPOSABLE_TEST_AUTHORITY')fault('S8_Z5_ORDINARY_DOMAIN_ONLY',403);
+                    await CapabilityEvolution.sources(this.policy.sourcePins);
+                    const owner=await import('../../private-equity/src/project-z/z5-institution-linker/native-s8-owner');
+                    await owner.currentInstitutionFromOriginalS8({...this.policy,lifecyclePolicyDigest:digest(this.policy)},
+                        {...input.body,physical:undefined,nativeReference:prior.result.nativeReference});
+                }
                 await this.checkpoint(prior);
                 return prior.result;
             }
-            await CapabilityEvolution.sources(this.policy.sourcePins);
+            await this.assertSharedSourcesCurrent();
             if (this.handedOff && input.operation !== 'READ') fault('S8_RUNTIME_RESPONSIBILITY_TRANSFERRED', 403);
             if (this.policy.responsibilityHandoff) await this.resolveResponsibilityHandoff();
             const b = input.body;
+            if(input.operation==='Z5_COMPOSITION_ADMIT'||input.operation==='Z5_COMPOSITION_CURRENT'){
+                this.role(a,'CONSUMER');this.scope(b);
+                if(this.policy.domain!=='DISPOSABLE_TEST_AUTHORITY')fault('S8_Z5_ORDINARY_DOMAIN_ONLY',403);
+                const owner=await import('../../private-equity/src/project-z/z5-institution-linker/native-s8-owner'),
+                    authority={...this.policy,lifecyclePolicyDigest:digest(this.policy)};
+                if(input.operation==='Z5_COMPOSITION_CURRENT')return owner.currentInstitutionFromOriginalS8(authority,b);
+                const assertion=await owner.evaluateInstitutionFromOriginalS8(authority,b),
+                    committed=await this.commitReference('z5-institution-composition-check',assertion),
+                    answer={assertion,nativeReference:committed.ref};
+                await this.persist({requestId:input.requestId,requestDigest,actorId:a.id,operation:input.operation,body:b,result:answer});
+                return answer;
+            }
             let result: any, journalOperation = input.operation;
+            if(input.operation.startsWith('SPECIALIST_')){
+                const port=await this.specialistPort();
+                const answer=await port.command(a,input.operation,b,async(ref,content)=>{
+                    const intentId='specialist-intent:'+digest({requestId:input.requestId,requestDigest,actorId:a.id}),
+                        intentDigest=digest({requestDigest,ref,content}),
+                        priorIntent=this.journal.entries.find(entry=>entry.operation==='SPECIALIST_COMMIT_INTENT'
+                            &&entry.actorId===a.id&&entry.requestId===intentId&&entry.body.requestId===input.requestId);
+                    if(priorIntent){
+                        if(priorIntent.requestDigest!==intentDigest||priorIntent.body.originalRequestDigest!==requestDigest)fault('S8_IDEMPOTENCY_SUBSTITUTION');
+                        fault('S8_SPECIALIST_ORIGINAL_COMMIT_READ_ONLY_RECOVERY_ONLY',503);
+                    }else{
+                        if(this.journal.entries.length+2>this.policy.maxEntries)fault('S8_SPECIALIST_JOURNAL_CAPACITY',503);
+                        await this.persist({requestId:intentId,requestDigest:intentDigest,actorId:a.id,
+                            operation:'SPECIALIST_COMMIT_INTENT',
+                            body:{operation:input.operation,requestId:input.requestId,input:b,originalRequestDigest:requestDigest,ref,content},
+                            result:{commitmentOnly:true,originalResponsibilityRetained:true,executionAuthorityGranted:false}});
+                    }
+                    return this.commitNamedReference(ref,content);
+                });
+                if(!answer.readOnly)
+                    await this.persist({requestId:input.requestId,requestDigest,actorId:a.id,
+                        operation:input.operation,body:b,result:answer.result});
+                if(answer.readOnly&&answer.result.current){
+                    for(const ref of [answer.result.revisionRef,answer.result.admissionRef,
+                        answer.result.evaluationRef,answer.result.protocolRef]){
+                        if(!ref)fault('S8_SPECIALIST_PROTECTED_COMMITMENT_MISSING',503);
+                        const current=await this.protectedCurrent(ref);
+                        if(digest(current.reference.content)!==ref.contentDigest)
+                            fault('S8_SPECIALIST_PROTECTED_CONTENT_CHANGED',503);
+                    }
+                }
+                return {...answer.result,protectedHistory:this.protectedEvents?.snapshot()??null};
+            }
             if(input.operation.startsWith('CONFIDENTIAL_')){
                 const port=await this.confidentialPort();
                 const answer=await port.command(a,input.operation,b,async(ref,content)=>{
@@ -962,6 +1451,7 @@ export class CapabilityEvolution {
                     this.role(a, 'PROMOTER'); assertSignature(b, this.policy.promotionKeys, a.principalId);
                     // An S5-only capsule must never discard application liabilities/history.
                     if (this.applicationSemantics.hasHistory()) fault('S8_APPLICATION_RESPONSIBILITY_HANDOFF_UNSUPPORTED', 503);
+                    if (this.specialistReplay.length) fault('S8_SPECIALIST_RESPONSIBILITY_HANDOFF_UNSUPPORTED', 503);
                     const request = z.object({ runtimeHandoff: z.literal(true), expectedGeneration: z.number().int().min(0), successorPolicyDigest: z.string().regex(/^[a-f0-9]{64}$/), successorPolicy: z.unknown(), reason: Text }).strict().parse(b.body);
                     if (request.expectedGeneration !== this.generation || request.successorPolicyDigest === CapabilityEvolution.handoffTargetDigest(this.policy) || request.successorPolicyDigest !== CapabilityEvolution.handoffTargetDigest(request.successorPolicy)) fault('S8_HANDOFF_GENERATION_OR_TARGET_INVALID');
                     const successor = LifecyclePolicySchema.parse(request.successorPolicy);
@@ -974,6 +1464,7 @@ export class CapabilityEvolution {
                     const capsule = { schema: 'finnor.s8.responsibility-handoff.v1', tenantId: this.policy.tenantId, principalId: this.policy.principalId, rightsRef: this.policy.rightsRef,
                         previousPolicyDigest: digest(this.policy), successorPolicyDigest: request.successorPolicyDigest, sequence: this.journal.entries.length + 1, generation: this.generation + 1,
                         uses: [...this.uses.values()], originalLeases, attempts: this.attempts, consumedGroups: [...this.consumedGroups], consumedCases: [...this.consumedCases], predecessorHandoffs: predecessors,
+                        specialistResponsibility: { handoffSupported: false, historyPresent: false },
                         accounting: { totalCost: this.totalCost, totalLoss: this.totalLoss, useCount: this.useCount }, actionableActivationTransferred: false, liabilityBudgetReleased: false, economicCreditGranted: false };
                     result = { ...(await this.commitReference('capability-responsibility-handoff', capsule)), runtimeHandoff: true, generation: capsule.generation, actionableActivationTransferred: false, liabilityBudgetReleased: false };
                     journalOperation = 'REVOKE'; break;
@@ -1005,7 +1496,42 @@ export class CapabilityEvolution {
             }
             await this.persist({ requestId: input.requestId, requestDigest, actorId: a.id, operation: journalOperation, body: b, result });
             return result;
-        });
+            };
+            if(!this.canonicalBoundary)return execute();
+            const publicPrior=this.publicRequestEntry(input.requestId);
+            if(input.operation==='SPECIALIST_CURRENT'||publicPrior){
+                // Fully authenticated history first: a read never repairs,
+                // resubmits, creates a new epoch, or returns a cached current bit.
+                const before=await this.canonicalBoundary.current(this.canonicalHistorySource()),
+                    answer=await execute(),
+                    after=await this.canonicalBoundary.current(this.canonicalHistorySource());
+                if(before.epoch!==after.epoch||before.historyDigest!==after.historyDigest)
+                    fault('S8_CANONICAL_CURRENTNESS_CHANGED_DURING_READ',503);
+                return input.operation==='SPECIALIST_CURRENT'?{...answer,canonicalAuthority:{
+                    enrollmentDigest:after.enrollmentDigest,epoch:after.epoch,historyDigest:after.historyDigest}}:answer;
+            }
+            const requestDigest=digest({actorId:a.id,requestId:input.requestId,operation:input.operation,body:input.body}),
+                original={schema:'finnor.s8.canonical-original-command.v1',policyDigest:this.journal.policyDigest,
+                    actorId:a.id,requestId:input.requestId,operation:input.operation,requestDigest,body:input.body},
+                holds:Array<{commitment:string;originalOwnerDigest:string}>=[];
+            if(input.operation==='SPECIALIST_REGISTER'){
+                this.role(a,'EVALUATOR');
+                assertSignature(input.body,this.policy.evaluatorKeys,a.principalId);
+                const {specialistProtocolSchema,workforceSpecialistCapabilityRef}=await import('./specialist-port'),
+                    protocol=specialistProtocolSchema.parse(input.body.body),
+                    ref=workforceSpecialistCapabilityRef('specialist_register',input.body),
+                    originalOwnerDigest=digest({requestId:input.requestId,requestDigest,actorId:a.id,ref});
+                for(const commitment of protocol.caseCommitments)holds.push({commitment,originalOwnerDigest});
+            }
+            return this.canonicalBoundary.run(original,()=>this.admitCanonicalCommand(a,input),execute,async()=>{
+                await this.recoverOriginalOnly();
+                const prior=this.publicRequestEntry(input.requestId);
+                if(!prior||prior.actorId!==a.id||prior.operation!==input.operation||prior.requestDigest!==requestDigest)
+                    fault('S8_ORIGINAL_CANONICAL_COMMAND_UNRESOLVED_READ_ONLY_RECOVERY_ONLY',503);
+                if(input.operation.startsWith('SPECIALIST_'))
+                    await(await this.specialistPort()).revalidateReplay(a,input.operation,input.body);
+                return prior.result;
+            },()=>this.canonicalHistorySource(),holds);        });
         this.queue = run.catch(() => undefined);
         try {
             return await run;
@@ -1014,5 +1540,5 @@ export class CapabilityEvolution {
             this.queued--;
         }
     }
-    async close() { await this.queue; await this.journal.close(); }
+    async close() { await this.queue; try{await this.journal.close();}finally{await this.canonicalBoundary?.close();} }
 }

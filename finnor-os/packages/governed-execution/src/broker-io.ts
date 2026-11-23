@@ -6,6 +6,10 @@ import {request as httpRequest} from 'node:http';
 import {createHash} from 'node:crypto';
 import {LedgerFault,canonical} from './protocol.js';
 
+export const GOVERNED_DISPATCH_WORK_MS=30_000;
+// Allow the protected operation to finish and return its recorded outcome.
+export const GOVERNED_DISPATCH_RESPONSE_MS=GOVERNED_DISPATCH_WORK_MS+2_000;
+
 export const brokerHash=(value:unknown)=>createHash('sha256').update(canonical(value)).digest('hex');
 export const brokerBytesHash=(value:string|Buffer)=>createHash('sha256').update(value).digest('hex');
 export async function brokerPrivateFile(path:string,expectedDigest?:string,maximumBytes=2*1024*1024){
