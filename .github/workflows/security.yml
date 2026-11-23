@@ -1,5 +1,7 @@
 name: "Security - Secrets and vulnerable dependencies"
 on:
+  push:
+    branches: [codex/zw-security-range-20261123]
   workflow_call:
     inputs:
       run_dependency_scan:
