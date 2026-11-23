@@ -128,15 +128,15 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-control.ts",
-      "sha256": "e6c2314b50b9b6c8f2b481fcf921755f821b52122f8aa51f3b3ca79517586464"
+      "sha256": "6b57a40c9b64698c9f6087b523fdfa0109f35cc6bd199512bbc41216485187f0"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-allocation.ts",
-      "sha256": "0219edaef452cfafd87cb8a28a72c5af96b14375f320e97bc9a5dd8ae5ab14f0"
+      "sha256": "3e7c49b0345379ec848d7f444e9638c0e4f3e13ed24e9cd06132970a339aa7ba"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-obligations.ts",
-      "sha256": "cd76129f12922bd8996abad7a3bc860a69f057c31e9af620a4bdea3340903b78"
+      "sha256": "f6a07e68d2b505a6831525632f003a5ec4658ae00322234cac66fa3e8d19a0d0"
     },
     {
       "path": "finnor-os/packages/capability-evolution/src/application-port.ts",
