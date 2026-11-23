@@ -14,6 +14,8 @@ interface ReservationSource { reservation_id: string; allocation_digest: string;
 interface P1Row { id: string; work_id: string; work_input_id: string; work_input_digest: string; episode_id: string;
   plan_revision_id: string; request_digest: string; request: unknown; proposed: unknown; generation: number;
   status: string; head_id: string | null; claim_fence: string | null }
+interface P1Episode { id: string; work_id: string; deadline_at: Date; max_steps: number; max_attempts: number;
+  max_candidates: number; max_depth: number; attempts_used: number; steps_used: number; candidates_used: number }
 interface P2Row { id: string; program_id: string; request: unknown; request_digest: string; binding: unknown;
   generation: number; status: string; revision: number; head_id: string | null }
 interface W2Row { id: string; work_id: string; work_input_id: string; idempotency_key: string; request_digest: string;
@@ -61,32 +63,25 @@ export async function readOrganizationResourceOwnersTx(ctx: TenantContext, works
   const p1 = await load<P1Row>("p1_requests",
     "request#>>'{ownerBindings,allocationRef,id}'=ANY($3::text[]) OR work_id=ANY($4::uuid[])",
     [certificates, works.map(work => work.id)], ["request", "proposed"], 128, "FOR UPDATE");
-  const episodes = await load<Record<string, unknown>>("p1_episodes", "id=ANY($3::uuid[])",
+  const episodes = await load<P1Episode>("p1_episodes", "id=ANY($3::uuid[])",
     [p1.map(row => row.episode_id)], [], 128);
   const p2 = await load<P2Row>("p2_requests",
     "program_id=ANY($3::uuid[]) OR request#>>'{computeGrant,id}'=ANY($4::text[])",
     [p1.map(row => row.id), certificates], ["request", "binding", "context"], 128, "FOR UPDATE");
   const w2 = await load<W2Row>("w2_programs", "budget#>>'{reservationRef,id}'=ANY($3::text[])",
     [reservations.map(row => row.reservation_id)], ["original", "budget", "program", "compile_result"], 128, "FOR UPDATE");
-  const ids = [...new Set([...p1.map(row => row.work_id), ...w2.map(row => row.work_id)])];
+  // Each owner pins its accepted input. A follow-up can leave earlier resource use outstanding.
+  const inputIds = [...new Set([...p1.map(row => row.work_input_id), ...w2.map(row => row.work_input_id)])];
   const inputBounds = (await c.query<{ id: string; bytes: string }>(`SELECT i.id,
     (octet_length(i.instruction_text)+octet_length(to_jsonb(i)::text))::bigint::text bytes
-    FROM unnest($2::uuid[]) selected(work_id) JOIN LATERAL
-      (SELECT * FROM finnor_os.work_inputs i WHERE i.tenant_id=$1 AND i.work_id=selected.work_id
-        ORDER BY i.created_at DESC,i.id DESC LIMIT 1 FOR SHARE OF i) i ON true`, [ctx.tenantId, ids])).rows;
+    FROM finnor_os.work_inputs i WHERE i.tenant_id=$1 AND i.id=ANY($2::uuid[])
+    ORDER BY i.id FOR SHARE OF i`, [ctx.tenantId, inputIds])).rows;
   const inputBytes = inputBounds.reduce((sum, row) => sum + integer(row.bytes), 0);
   if (inputBytes > bytesRemaining) orgFail("W5_COMPLETE_NATIVE_OWNER_READ_PROFILE_BOUND");
   bytesRemaining -= inputBytes;
-  const originalW2Inputs = (await c.query<{ id: string; bytes: string }>(`SELECT i.id,
-    (octet_length(i.instruction_text)+octet_length(to_jsonb(i)::text))::bigint::text bytes
-    FROM finnor_os.work_inputs i WHERE i.tenant_id=$1 AND i.id=ANY($2::uuid[]) AND NOT(i.id=ANY($3::uuid[]))
-    ORDER BY i.id FOR SHARE OF i`, [ctx.tenantId, w2.map(row => row.work_input_id), inputBounds.map(row => row.id)])).rows;
-  const originalW2Bytes = originalW2Inputs.reduce((sum, row) => sum + integer(row.bytes), 0);
-  if (originalW2Bytes > bytesRemaining) orgFail("W5_COMPLETE_NATIVE_OWNER_READ_PROFILE_BOUND");
-  bytesRemaining -= originalW2Bytes;
   const inputs = (await c.query<CoreInput>(`SELECT i.id,i.work_id,i.instruction_text,i.created_by,to_jsonb(i) body
     FROM finnor_os.work_inputs i WHERE i.tenant_id=$1 AND i.id=ANY($2::uuid[]) ORDER BY i.id FOR SHARE OF i`,
-    [ctx.tenantId, [...inputBounds, ...originalW2Inputs].map(row => row.id)])).rows;
+    [ctx.tenantId, inputBounds.map(row => row.id)])).rows;
   const p1Heads = await load<Head>("p1_programs", "id=ANY($3::uuid[])",
     [p1.flatMap(row => row.head_id ? [row.head_id] : [])], ["body"], 128, "");
   const p2Heads = await load<Head>("p2_plans", "id=ANY($3::uuid[])",
@@ -112,10 +107,9 @@ export async function readOrganizationResourceOwnersTx(ctx: TenantContext, works
       JOIN finnor_os.w2_programs p ON p.tenant_id=h.tenant_id AND p.id=h.program_id AND p.revision=h.revision
       WHERE p.tenant_id=$1 AND p.principal_id=$2 AND p.id=ANY($3::uuid[]) ORDER BY h.program_id`,
     [...base, w2.map(row => row.id)])).rows;
-  const currentWork = (workId: string, inputId: string, latestRequired = true) => {
+  const originalWork = (workId: string, inputId: string) => {
     const work = works.find(row => row.id === workId), input = inputs.find(row => row.work_id === workId && row.id === inputId);
-    if (!work || !input || latestRequired && !inputBounds.some(row => row.id === inputId))
-      orgFail("W5_CURRENT_COMPANY_LINKED_NATIVE_OWNER_WORK_INPUT_REQUIRED");
+    if (!work || !input) orgFail("W5_ORIGINAL_COMPANY_LINKED_NATIVE_OWNER_WORK_INPUT_REQUIRED");
     return { work, input };
   };
   const accept = (certificateId: string, reservationId: string | null, value: unknown) => {
@@ -140,7 +134,7 @@ export async function readOrganizationResourceOwnersTx(ctx: TenantContext, works
       const matched = reservations.filter(r => same(r.certificate?.ref, allocationRef) &&
         same(r.body?.certificateRef, allocationRef) && r.allocation_digest === allocationRef?.contentDigest);
       if (allocationRef && !matched.length) orgFail("W5_P1_EXACT_ORIGINAL_S5_CERTIFICATE_BINDING_REQUIRED");
-      const { input } = currentWork(row.work_id, row.work_input_id), proposed = record(row.proposed);
+      const { input } = originalWork(row.work_id, row.work_input_id), proposed = record(row.proposed);
       const work = record(proposed?.work), bounds = record(proposed?.bounds);
       const episode = episodes.find(e => e.id === row.episode_id);
       if (!proposed || proposed.schema !== "finnor.harness-program.v1" || !episode || proposed.id !== row.id ||
@@ -149,7 +143,8 @@ export async function readOrganizationResourceOwnersTx(ctx: TenantContext, works
           request.workId && request.workId !== row.work_id || request.workInputId && request.workInputId !== row.work_input_id ||
           work?.id !== row.work_id || work.revision !== row.work_input_id || work.inputDigest !== row.work_input_digest ||
           work.planRevisionId !== row.plan_revision_id ||
-          bounds?.episodeId !== row.episode_id || Date.parse(String(bounds.deadlineAt)) !== Date.parse(String(episode.deadline_at)))
+          bounds?.episodeId !== row.episode_id || typeof bounds.deadlineAt !== "string" ||
+          Date.parse(bounds.deadlineAt) !== episode.deadline_at.getTime())
         orgFail("W5_P1_EXACT_CANONICAL_WORK_INPUT_AND_ORIGINAL_EPISODE_REQUIRED");
       const originalLimits = { maxSteps: integer(episode.max_steps), maxAttempts: integer(episode.max_attempts),
         maxCandidates: integer(episode.max_candidates), maxDepth: integer(episode.max_depth) };
@@ -211,7 +206,7 @@ export async function readOrganizationResourceOwnersTx(ctx: TenantContext, works
     const budget = record(row.budget), reservationId = String(record(budget?.reservationRef)?.id ?? "");
     const certificateId = String(record(budget?.certificateRef)?.id ?? "");
     try {
-      const { work, input } = currentWork(row.work_id, row.work_input_id, false), original = nativeWorkforceOriginalSchema.safeParse(row.original);
+      const { work, input } = originalWork(row.work_id, row.work_input_id), original = nativeWorkforceOriginalSchema.safeParse(row.original);
       let rawOriginal: unknown;
       try { rawOriginal = JSON.parse(input.instruction_text); }
       catch { orgFail("W5_W2_EXACT_NATIVE_ORIGINAL_WORK_INPUT_REQUIRED"); }

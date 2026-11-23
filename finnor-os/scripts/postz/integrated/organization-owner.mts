@@ -13,6 +13,7 @@ import type { OrganizationFixtureInput } from "../w5/fixture.mts";
 import type { OrganizationBeforeTerminalReady, OrganizationLiveInput, OrganizationLivePorts } from "../w5/live-consumer.mjs";
 import type { NativeProspectiveUnit } from "../w5/prospective-native.mjs";
 import { runSharedOrganizationNative } from "../w5/shared-native.mjs";
+import { NATIVE_WORKER_LIMITS } from "../w3/worker-protocol.mts";
 import type { IntegratedOwnerPorts, NativeJourneyOutput } from "./owner-journey.mts";
 
 export interface OrganizationParentPorts extends IntegratedOwnerPorts {
@@ -27,6 +28,36 @@ export interface OrganizationSetup {
   beforeTerminal(output: NativeJourneyOutput, ready: Readonly<OrganizationBeforeTerminalReady>,
     receipts: Readonly<Record<string, unknown>>): Promise<void>;
   onLivePhaseEnded(): void;
+}
+
+async function advanceOrganizationQueue(ports: OrganizationParentPorts, workId: string, batchSize: number) {
+  const maximumTicks = NATIVE_WORKER_LIMITS.maximumTicks;
+  let ticks = 0;
+  for (;;) {
+    ports.checkBound();
+    const { rows: pending } = await ports.admin.query<{ status: string; run_at: Date; last_error: string | null }>(
+      `SELECT j.status,j.run_at,j.last_error FROM finnor_os.jobs j JOIN finnor_os.w5_requests q
+        ON q.tenant_id=j.tenant_id AND q.id::text=j.payload->>'requestId'
+      WHERE q.tenant_id=$1 AND q.principal_id=$2 AND q.work_id=$3
+        AND j.type IN ('compile_organization_transformation_v1','advance_organization_transformation_v1')
+        AND j.status<>'completed'
+      ORDER BY j.run_at,j.id LIMIT $4`, [ports.tenant, ports.owner, workId, maximumTicks + 1]);
+    if (!pending.length) return;
+    assert(pending.length <= maximumTicks, "W5_ORIGINAL_QUEUE_POPULATION_BOUND");
+    const refused = pending.find(job => job.status !== "queued" || job.last_error);
+    if (refused) {
+      const code = /^(?:W5|S5)_[A-Z0-9_]{3,120}(?=$|[\s:])/.exec(refused.last_error ?? "")?.[0];
+      throw Error("W5_ORIGINAL_QUEUE_DELIVERY_REFUSED:" + (code ?? refused.status));
+    }
+    const remaining = maximumTicks - ticks;
+    assert(remaining > 0, "W5_ORIGINAL_QUEUE_PROGRESS_BOUND");
+    const delay = Math.max(0, pending[0]!.run_at.getTime() - Date.now());
+    assert(delay <= 30_000, "W5_ORIGINAL_QUEUE_CONTINUATION_NOT_DUE_WITHIN_BOUND");
+    if (delay) await new Promise(resolve => setTimeout(resolve, delay + 25));
+    const physical = await ports.tick(Math.min(batchSize, remaining));
+    assert(physical.observations.length > 0, "W5_ORIGINAL_QUEUE_PHYSICAL_OBSERVATION_REQUIRED");
+    ticks += physical.observations.length;
+  }
 }
 
 export function prepareOrganizationSourceWork(input: {
@@ -220,7 +251,8 @@ export async function runOrganizationOwner(ports: OrganizationParentPorts, setup
   }
   const custody: { captured?: NativeJourneyOutput } = {};
   await runSharedOrganizationNative({
-    request: ports.request, tick: ports.tick, artifact: ports.artifact, checkBound: ports.checkBound,
+    request: ports.request, tick: maximum => advanceOrganizationQueue(ports, setup.workId, maximum),
+    artifact: ports.artifact, checkBound: ports.checkBound,
   }, {
     admin: ports.admin, onLivePhaseEnded: setup.onLivePhaseEnded,
     mapping: { field: "serviceTransition", recordPrefix: "w5-original-continuation",

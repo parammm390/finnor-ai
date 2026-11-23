@@ -89,29 +89,33 @@ async function readModel(ctx: PeMutationContext, value: unknown): Promise<Interv
     return model;
   } catch { throw unavailable(); }
 }
-async function current(ctx: PeMutationContext, model: InterventionModel): Promise<string | null> {
+type ReadCurrentPin = (pin: InterventionModel["beliefBindings"][number]["pin"]) => ReturnType<typeof validateBeliefViewPin>;
+type BeliefReadOptions = { recordExperience?: false };
+async function current(ctx: PeMutationContext, model: InterventionModel,
+  readPin: ReadCurrentPin = pin => validateBeliefViewPin(ctx, pin)): Promise<string | null> {
   const now = Date.now();
   if (Date.parse(model.request.validity.validUntil) <= now || model.beliefBindings.some(b => now-Date.parse(b.pin.knowledgeAt) > model.request.validity.maxBeliefAgeMs)) return 'MODEL_EXPIRED_OR_BELIEF_STALE';
   if (!await interventionBackendCurrent(model.compute.backend.sourceDigests)) return 'LOADED_METHOD_OR_BACKEND_SOURCE_CHANGED';
-  for (const b of model.beliefBindings) if ((await validateBeliefViewPin(ctx, b.pin)).status !== 'CURRENT') return 'S1_SOURCE_RIGHTS_COVERAGE_OR_INTERPRETATION_INVALIDATED';
+  for (const b of model.beliefBindings) if ((await readPin(b.pin)).status !== 'CURRENT') return 'S1_SOURCE_RIGHTS_COVERAGE_OR_INTERPRETATION_INVALIDATED';
   return null;
 }
-async function readableHistory(ctx: PeMutationContext, model: InterventionModel): Promise<void> {
+async function readableHistory(ctx: PeMutationContext, model: InterventionModel, options?: BeliefReadOptions): Promise<void> {
   // Revisions can be invalid while an earlier proposal is still legitimately
   // readable for a correction. Current source rights are always checked anew.
-  for (const root of model.request.roots) await loadEnterpriseBeliefView(ctx, { root: root as PeWorldRootRef });
+  for (const root of model.request.roots) await loadEnterpriseBeliefView(ctx, { root: root as PeWorldRootRef }, options);
   await recoverModelExperience(ctx,model);
 }
 /** Minimal S3-owned reference resolver for S4. Callers never submit model tensors. */
 export async function resolveEnterpriseInterventionModelForControl(ctx:PeMutationContext,value:import('./r3/model').R3FiniteModelRead):Promise<Awaited<ReturnType<typeof import('./r3/model').resolveR3FinitePreferenceModel>>>;
-export async function resolveEnterpriseInterventionModelForControl(ctx: PeMutationContext, value: unknown): Promise<InterventionModel>;
-export async function resolveEnterpriseInterventionModelForControl(ctx: PeMutationContext, value: unknown) {
+export async function resolveEnterpriseInterventionModelForControl(ctx: PeMutationContext, value: unknown, readPin?: ReadCurrentPin): Promise<InterventionModel>;
+export async function resolveEnterpriseInterventionModelForControl(ctx: PeMutationContext, value: unknown, readPin?: ReadCurrentPin) {
   if(value&&typeof value==='object'&&'schema' in value&&value.schema==='finnor.s3.r3-finite-model-read.v1'){
     const input=value as import('./r3/model').R3FiniteModelRead;
     return (await import('./r3/model')).resolveR3FinitePreferenceModel(ctx,ExperimentRefSchema.parse(input.modelRef));
   }
-  const model = await readModel(ctx, value); await readableHistory(ctx, model);
-  if (await current(ctx, model)) throw unavailable();
+  const model = await readModel(ctx, value);
+  await readableHistory(ctx, model, readPin ? { recordExperience: false } : undefined);
+  if (await current(ctx, model, readPin)) throw unavailable();
   return model;
 }
 /** Historical variable metadata is readable for an S2 observation/revision.

@@ -15,6 +15,7 @@ export async function prepareCommercialMeasurementFixtures(e: {
   namespace: string; admin: { query: (sql: string, params?: any[]) => Promise<{ rows: any[] }> };
   ok: (group: string, operation: string, body: unknown) => Promise<any>;
   artifact: (name: string, value: unknown) => Promise<unknown>; checkBound: () => void;
+  sharedAllocation?: { begin: string; rightsRef: string };
 }) {
   e.checkBound();
   const startedAt = new Date().toISOString(), started = performance.now();
@@ -49,7 +50,7 @@ export async function prepareCommercialMeasurementFixtures(e: {
   assert.equal(check.status, "CHECKED_SUPPORTED_CONTROLLED_INPUT");
   assert.equal(check.packetSha256, createHash("sha256").update(generated.stdout).digest("hex"));
   assert.equal(packet.design.profileId, "w4-controlled-commercial-service-v1");
-  const day = 86400000, begin = new Date(Date.now() - 128 * day).toISOString();
+  const day = 86400000, begin = e.sharedAllocation?.begin ?? new Date(Date.now() - 128 * day).toISOString();
   const preparation = { startedAt, elapsedMs: performance.now() - started, sourcePins,
     packetSha256: check.packetSha256, check, nativeCalls: 0, externalCalls: 0,
     cost: "ACTUAL_LOCAL_PREPARATION_UNMETERED_NOT_ZERO", fieldValidated: false,
@@ -57,19 +58,18 @@ export async function prepareCommercialMeasurementFixtures(e: {
   await e.artifact(e.namespace + "/controlled-measurement-preparation.json", preparation);
   e.checkBound();
   return {
-    fixture: async (name: string, horizon: number, dimensions: any[], options: {
+    declareMeasurements: async (name: string, options: {
       existing: { tenant: string; principal: string; root: { entityType: string; entityId: string } };
-      metricKeyPrefix: string; exposureUnit: string; operation: string; context: string; expiresAt: string;
+      metricKeyPrefix: string; exposureUnit: string; operation: string; context: string;
     }) => {
       e.checkBound();
-      assert.equal(horizon, 1); assert.equal(options.metricKeyPrefix, name);
+      assert.equal(options.metricKeyPrefix, name);
       assert(/^[a-z][a-z0-9-]{1,95}$/.test(name));
       assert.deepEqual(options.existing, { tenant: e.tenant, principal: e.principal, root: e.root });
       assert.equal(options.operation, packet.design.operation); assert.equal(options.context, packet.design.context);
       assert(Object.hasOwn(packet.channels, options.exposureUnit), "W4_ACTUAL_PRODUCER_UNIT_REQUIRED");
       const channel = packet.channels[options.exposureUnit];
       assert.equal(channel.unit, options.exposureUnit); assert.equal(channel.operation, options.operation);
-      const validUntil = options.expiresAt; assert(Date.parse(validUntil) > Date.now(), "ORIGINAL_FIXTURE_DEADLINE_EXHAUSTED");
       const current = (await e.admin.query(`SELECT 1 FROM finnor_os.users u
         JOIN finnor_os.external_organizations o ON o.tenant_id=u.tenant_id
         WHERE u.tenant_id=$1 AND u.id=$2 AND u.status='active' AND u.role='owner' AND o.id=$3 AND o.active
@@ -119,6 +119,10 @@ export async function prepareCommercialMeasurementFixtures(e: {
           [randomUUID(), e.tenant, series[id], at, new Date(Date.parse(at) + day).toISOString(), measured, source, version, e.principal]);
         }
       }
+      return async (dimensions: any[], validUntil: string) => {
+      e.checkBound();
+      assert(Date.parse(validUntil) > Date.now(), "ORIGINAL_FIXTURE_DEADLINE_EXHAUSTED");
+      const horizon = 1;
       const request = { schema: "finnor.s3.fit-request.v1", modelKey: name, episodeId: "s5-" + name, roots: [e.root],
         stateVariables: [{ id: "outcome", root: e.root, seriesId: series.outcome, unit: "normalized-value", range: [-6, 6], role: "ENTERPRISE_STATE" }],
         exposures: [{ id: "price", root: e.root, seriesId: series.price, unit: channel.unit, operation: channel.operation,
@@ -138,7 +142,7 @@ export async function prepareCommercialMeasurementFixtures(e: {
       const now = new Date(Date.now() - 1).toISOString();
       const body: any = { schema: "finnor.economic-mandate.v1", tenantId: e.tenant, principalId: e.principal,
         episodeId: request.episodeId, knowledgeAt: now, validUntil, businessOwnerRef: ref(e.principal, "BUSINESS_OWNER"),
-        rightsRef: "s5-owner-rights", utilityRef: ref("supplied-joint-net-utility", "BUSINESS_OWNER"),
+        rightsRef: e.sharedAllocation?.rightsRef ?? "s5-owner-rights", utilityRef: ref("supplied-joint-net-utility", "BUSINESS_OWNER"),
         horizon: { startAt: request.time.endAt, periodMs: day, periods: horizon },
         utility: { unit: "USD", accountingConventionRef: ref("declared-complete-cost-net-utility", "BUSINESS_OWNER"),
           periodTerms: [{ variableId: "outcome", unit: "normalized-value", coefficient: 100 }],
@@ -158,6 +162,7 @@ export async function prepareCommercialMeasurementFixtures(e: {
       await e.artifact(name + "/scientific-input.json", { request, rows: channel.rows, fitted, mandate,
         methodRef, source, version, sourceContentSha256: digest, preparation });
       e.checkBound(); return fixture;
+      };
     },
   };
 }
