@@ -655,7 +655,28 @@ export async function driveAcquisitionToModelReady(env: NativeEnvironment, paren
           FROM finnor_os.application_semantics_events
           WHERE tenant_id=$1 AND session_id=$2 AND kind IN ('PHYSICAL_READ_FINISHED','PHYSICAL_RESPONSE_NOT_SETTLEMENT')
           ORDER BY created_at DESC,event_id DESC LIMIT 16`, [parent.tenantId, sessionId])).rows;
-        await record("acquisition-terminal-readback", { session, dispositions, transport });
+        const unresolved = (await sql.query(`SELECT r.status,r.reason,r.acknowledged,r.possible_egress AS "possibleEgress",
+          r.body#>>'{wire,identity,requestId}' AS "requestId",
+          (SELECT e.body#>'{detail,wallMs}' FROM finnor_os.application_semantics_events e
+            WHERE e.tenant_id=r.tenant_id AND e.session_id=r.session_id AND e.kind='ATTEMPT_BEFORE_POSSIBLE_WIRE'
+              AND e.body#>'{detail,requestRef}'=r.request_ref ORDER BY e.created_at DESC,e.event_id DESC LIMIT 1) AS "beforeWire",
+          (SELECT jsonb_build_object('status',e.body#>'{detail,status}',
+            'possibleEgress',e.body#>'{detail,possibleEgress}','stickyPossibleEgress',e.body#>'{detail,stickyPossibleEgress}')
+            FROM finnor_os.application_semantics_events e
+            WHERE e.tenant_id=r.tenant_id AND e.session_id=r.session_id AND e.kind='PHYSICAL_RESPONSE_NOT_SETTLEMENT'
+              AND e.body#>'{detail,requestRef}'=r.request_ref ORDER BY e.created_at DESC,e.event_id DESC LIMIT 1) AS "afterWire"
+          FROM finnor_os.application_semantics_requests r
+          WHERE r.tenant_id=$1 AND r.session_id=$2 AND r.status NOT IN ('VERIFIED','DENIED')
+          ORDER BY r.created_at DESC,r.id DESC LIMIT 8`, [parent.tenantId, sessionId])).rows;
+        const provider = await import("../../x2/fixtures/store.mjs")
+          .then(store => store.snapshot(submitted.handle.portal.dir)).catch(() => null);
+        const originalRequests = unresolved.map(({ requestId, ...native }) => {
+          const attempts = provider?.state.attempts.filter((attempt: { requestId: string }) => attempt.requestId === requestId);
+          return { ...native, providerAttemptCount: attempts?.length ?? null,
+            providerAttempts: attempts?.slice(-4).map(({ operation, outcome, error }: { operation: string; outcome: string; error: string | null }) =>
+              ({ operation, outcome, error })) ?? [], providerRequestStatus: provider?.state.requests[requestId]?.status ?? null };
+        });
+        await record("acquisition-terminal-readback", { session, dispositions, transport, originalRequests });
       } catch { /* Retain the original owner failure when diagnostics are unavailable. */ }
     }
     throw error;
