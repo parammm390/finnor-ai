@@ -1,0 +1,10 @@
+name: Phase W shared-company proof
+on:
+  push:
+    branches: [codex/zw-release-verification-20261123]
+permissions:
+  contents: read
+jobs:
+  native:
+    name: Verify the shared-company original W1 through W5 journey
+    uses: ./.github/workflows/phase-w-native-episode.yml
