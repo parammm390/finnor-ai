@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import { centropyPost } from "@/components/centropy/lib/api"
 import { useCentropyAuth } from "@/components/centropy/lib/centropy-auth"
 import { onBusinessInvalidation } from "@/components/centropy/lib/business-invalidation"
+import { userMessage } from "../lib/user-message"
 import { DecisionAtlasBuildViewSchema, DecisionAtlasContextViewSchema, DecisionAtlasQueryViewSchema,
   acceptedCellView,type DecisionAtlasBuildView, type DecisionAtlasContextView, type DecisionAtlasQueryView } from "./decision-atlas-view"
 
@@ -78,7 +79,7 @@ export function DecisionAtlasReview({workId,root}:{workId:string;root:{entityTyp
     if(!allowed||writing.current)return
     writing.current=true;setBusy(true);const n=++epoch.current;setQuery(null)
     try{await fn(n)}
-    catch(error){if(valid(n)){clear();setNotice(error instanceof Error?error.message:"Current owner operation unavailable. Values cleared.")}}
+    catch(error){if(valid(n)){clear();setNotice(userMessage(error, "Current owner operation unavailable. Values cleared."))}}
     finally{if(activeScope.current===scope){writing.current=false;setBusy(false)}}
   }
   function register(event:FormEvent){

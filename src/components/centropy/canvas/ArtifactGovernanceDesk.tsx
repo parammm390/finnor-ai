@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { z } from "zod"
 import { centropyGet, centropyPost } from "@/components/centropy/lib/api"
+import { userMessage } from "../lib/user-message"
 
 const UUID = z.string().uuid()
 const RecordedRow = z.object({ id: UUID, version_id: UUID }).passthrough()
@@ -70,7 +71,7 @@ export function ArtifactGovernanceDesk({ documentId, versionId, pinnedVersionId,
       onRecorded()
     } catch (cause) {
       setUncertain(true)
-      setMessage(`${cause instanceof Error ? cause.message : "Comment status unavailable"} Refresh the recorded history before deciding whether to submit again.`)
+      setMessage(`${userMessage(cause, "Comment status unavailable")} Refresh the recorded history before deciding whether to submit again.`)
     } finally {
       setBusy(false)
     }
@@ -88,7 +89,7 @@ export function ArtifactGovernanceDesk({ documentId, versionId, pinnedVersionId,
       onRecorded()
     } catch (cause) {
       setUncertain(true)
-      setMessage(`${cause instanceof Error ? cause.message : "Review status unavailable"} Refresh the recorded history before deciding whether to submit again.`)
+      setMessage(`${userMessage(cause, "Review status unavailable")} Refresh the recorded history before deciding whether to submit again.`)
     } finally {
       setBusy(false)
     }

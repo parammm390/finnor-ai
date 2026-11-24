@@ -7,6 +7,7 @@ import { useCentropyAuth as useJarvisAuth } from "@/components/centropy/lib/cent
 import { onBusinessInvalidation } from "@/components/centropy/lib/business-invalidation"
 import { CapitalAcceptedViewSchema, type CapitalQueryView } from "./capital-program-view"
 import { OriginalChallengeAcceptedSchema, OriginalChallengeViewSchema, type OriginalChallengeView } from "./original-challenge-view"
+import { userMessage } from "../lib/user-message"
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const limits = { deadlineMs: 30000, maxTargets: 64, maxCells: 128, maxTrials: 512, maxReductions: 64, maxWitnesses: 32, maxBytes: 4194304 }
@@ -117,7 +118,7 @@ export function OriginalChallengePanel({ query, onRepair, onUnavailable }: {
     try { await run(generation) }
     catch (cause) {
       if (epoch.current === generation) {
-        clear(); setError(cause instanceof Error ? cause.message : "Original challenge refused. Values cleared."); onUnavailable()
+        clear(); setError(userMessage(cause, "Original challenge refused. Values cleared.")); onUnavailable()
       }
     } finally { if (epoch.current === generation) { writing.current = false; setBusy(false) } }
   }

@@ -16,6 +16,7 @@ import { ExactControlReview } from "./ExactControlReview"
 import { CoalitionProgrammeReview } from "./CoalitionProgrammeReview"
 import { DecisionAtlasReview } from "./DecisionAtlasReview"
 import { ElicitationProtocolReview } from "./ElicitationProtocolReview"
+import { userMessage } from "../lib/user-message"
 import "./capital-program.css"
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -170,7 +171,7 @@ export function CapitalProgramPanel({ workId, root }: {
         ? `Owner refused: ${cause.message}. No capital was reserved or effect prepared.`
         : cause instanceof JarvisApiError && [401, 403, 404].includes(cause.status)
           ? "Arrangements are unavailable in your current access scope. Values cleared."
-          : cause instanceof Error ? cause.message : "Arrangements unavailable. Values cleared.")
+          : userMessage(cause, "Arrangements unavailable. Values cleared."))
     } finally { if (writing.current === epoch) { writing.current = null; setBusy(false) } }
   }
   function loadPolicies() {

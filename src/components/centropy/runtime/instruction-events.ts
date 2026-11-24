@@ -1,6 +1,7 @@
 import { getCurrentAccessToken } from "@/components/centropy/lib/centropy-auth"
 import { centropyGet, CentropyApiError } from "@/components/centropy/lib/api"
 import { parseInstructionEventPage, type InstructionEvent } from "@/components/centropy/product/instruction-event-model"
+import { userMessage } from "../lib/user-message"
 
 const TERMINAL = new Set(["completed", "failed", "cancelled"])
 const PHASES = new Set([
@@ -150,7 +151,7 @@ export class InstructionTraceRuntime {
       } catch (cause) {
         if (!this.active) return
         failures += 1
-        this.update("connecting", cause instanceof Error ? cause.message : "Instruction stream disconnected")
+        this.update("connecting", userMessage(cause, "Instruction stream disconnected"))
         await pause(Math.min(250 * failures, 750))
       } finally {
         this.controller = null
@@ -175,7 +176,7 @@ export class InstructionTraceRuntime {
       } catch (cause) {
         if (!this.active) return
         if (!(cause instanceof CentropyApiError && cause.status === 404 && this.ledger.sequence === 0)) {
-          this.update("poll", cause instanceof Error ? cause.message : "Instruction events unavailable")
+          this.update("poll", userMessage(cause, "Instruction events unavailable"))
         }
         await pause(1500)
       }

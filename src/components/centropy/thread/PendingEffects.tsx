@@ -7,6 +7,7 @@ import { ArrowRight, ShieldCheck } from "lucide-react"
 import { centropyGet, centropyPost } from "@/components/centropy/lib/api"
 import type { WorkAggregateView } from "@/components/centropy/product/contracts"
 import { PendingEffectPageSchema, pendingEffectReview, type PendingEffect } from "./pending-effect-model"
+import { userMessage } from "../lib/user-message"
 
 type QueueState = { actions: PendingEffect[]; status: "loading" | "ready" | "error"; error: string | null; complete: boolean }
 type Decision = "confirm" | "reject" | "escalate"
@@ -60,7 +61,7 @@ export function PendingEffects({ aggregate, current, refreshKey, onChanged }: { 
       const matching = pages.flatMap((page) => page.actions).filter((action) => action.workId === workId)
       setQueue({ actions: [...new Map(matching.map((action) => [action.id, action])).values()], status: "ready", error: null, complete: pages.every((page) => page.complete) })
     }).catch((cause) => {
-      if (active) setQueue((previous) => ({ ...previous, status: "error", error: cause instanceof Error ? cause.message : "Approval queue unavailable" }))
+      if (active) setQueue((previous) => ({ ...previous, status: "error", error: userMessage(cause, "Approval queue unavailable") }))
     })
     return () => { active = false }
   }, [workId, refreshKey, reload, hasPending, hasBlocked])
@@ -95,7 +96,7 @@ export function PendingEffects({ aggregate, current, refreshKey, onChanged }: { 
       setAcknowledged(false)
       setReload((value) => value + 1)
       onChanged()
-    } catch (cause) { setMessages((previous) => ({ ...previous, [action.id]: cause instanceof Error ? cause.message : "The decision could not be confirmed." })) }
+    } catch (cause) { setMessages((previous) => ({ ...previous, [action.id]: userMessage(cause, "The decision could not be confirmed.") })) }
     finally { writeLock.current = false; setBusy(false) }
   }
 

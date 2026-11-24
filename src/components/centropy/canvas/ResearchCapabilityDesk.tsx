@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from "react"
 import { z } from "zod"
 import { centropyGet, centropyPost } from "../lib/api"
+import { userMessage } from "../lib/user-message"
 
 const Summary = z.object({ id: z.string().uuid(), kind: z.string(), status: z.string() }).passthrough()
 const Run = Summary.extend({ request: z.object({ kind: z.string() }).passthrough(), result: z.record(z.string(), z.unknown()).nullable(), failureCode: z.string().nullable() })
 const kinds = ["parallel_task", "parallel_find", "parallel_monitor"] as const
-const errorText = (cause: unknown) => cause instanceof Error ? cause.message : "The research request could not be completed."
+const errorText = (cause: unknown) => userMessage(cause, "The research request could not be completed.")
 
 export function ResearchCapabilityDesk() {
   const [objective, setObjective] = useState("")

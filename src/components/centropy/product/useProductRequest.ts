@@ -5,6 +5,7 @@ import type { ProductResource } from "./contracts"
 import { unavailableState, type ProductTruthState } from "./source-health"
 import { useCentropyAuth, getCurrentSessionKey } from "../lib/centropy-auth"
 import { CentropyApiError } from "../lib/api"
+import { userMessage } from "../lib/user-message"
 
 export function useProductRequest<T>(options: {
   enabled: boolean
@@ -56,7 +57,7 @@ export function useProductRequest<T>(options: {
       const forbidden = cause instanceof CentropyApiError && [401, 403, 404, 410].includes(cause.status)
       if (forbidden) retained.current = null
       const fallback = !forbidden && retained.current?.key === scopedKey ? retained.current.data : null
-      setData(fallback); setStatus("error"); setError(cause instanceof Error ? cause.message : "Canonical source request failed."); setErrorValue(cause); setTruthState(unavailableState(cause, Boolean(fallback)))
+      setData(fallback); setStatus("error"); setError(userMessage(cause, "Canonical source request failed.")); setErrorValue(cause); setTruthState(unavailableState(cause, Boolean(fallback)))
       if (!fallback) setLastConfirmedAt(null)
     })
     return () => { active = false }

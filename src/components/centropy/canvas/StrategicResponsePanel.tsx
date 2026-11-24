@@ -3,6 +3,7 @@ import {useCallback,useEffect,useRef,useState,type FormEvent} from 'react'
 import {z} from 'zod'
 import {useCentropyAuth} from '../lib/centropy-auth'
 import {centropyGet,centropyPost,CentropyApiError} from '../lib/api'
+import { userMessage } from "../lib/user-message"
 const paths={
  submit:'response-model-submit',list:'response-model-list',read:'response-model-read',admit:'response-model-admit',
  resume:'response-model-resume',cancel:'response-model-cancel',artifact:'response-model-artifact',compare:'response-model-compare',
@@ -143,7 +144,7 @@ export function StrategicResponsePanel({root,workId}:{root:{entityType:string;en
    if(request&&!scopeChanged&&error instanceof CentropyApiError&&error.status>=400&&error.status<500&&![401,408,429].includes(error.status)){
     if(originals.get(request.scope)===request)originals.delete(request.scope);pending.current=null
    }
-   setDisplay(null);setUse(null);setResponse(null);setMessage(error instanceof Error?error.message:'Owner response unavailable. Original server work may remain durable.')
+   setDisplay(null);setUse(null);setResponse(null);setMessage(userMessage(error, 'Owner response unavailable. Original server work may remain durable.'))
   }}finally{if(current()){busyRef.current=false;setBusy(false)}}
  }
  function form(event:FormEvent,operation:'submit'|'forecast'|'programme',text:string){

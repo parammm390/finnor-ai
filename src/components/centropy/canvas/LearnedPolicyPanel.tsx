@@ -4,6 +4,7 @@ import {z} from 'zod'
 import {useCentropyAuth} from '@/components/centropy/lib/centropy-auth'
 import {CentropyApiError,centropyGet,centropyPost} from '@/components/centropy/lib/api'
 import {applicationPost,ApplicationRecordSchema} from './application-client'
+import { userMessage } from "../lib/user-message"
 const viewSchema=z.object({
  compilationId:z.string().uuid(),workId:z.string().uuid(),root:z.object({entityType:z.string(),entityId:z.string().uuid()}),
  status:z.string(),current:z.boolean(),currentnessReason:z.string().nullable(),headReleaseId:z.string().uuid().nullable(),
@@ -97,7 +98,7 @@ export function LearnedPolicyPanel({root,workId,threadId}:{root:{entityType:stri
   }catch(error){if(current()){
    const changedSession=error instanceof CentropyApiError&&!!error.details&&typeof error.details==='object'&&'code'in error.details&&error.details.code==='AUTHENTICATED_SCOPE_CHANGED'
    if(mutation&&error instanceof CentropyApiError&&!error.retryable&&!changedSession)pending.current=null
-   setDisplay(null);setMessage(error instanceof Error?error.message:'Owner operation unavailable. Reload canonical history before retrying; uncertain requests retain their invocation identity.')
+   setDisplay(null);setMessage(userMessage(error, 'Owner operation unavailable. Reload canonical history before retrying; uncertain requests retain their invocation identity.'))
   }}
   finally{if(current()){busyRef.current=false;setBusy(false)}}
  }

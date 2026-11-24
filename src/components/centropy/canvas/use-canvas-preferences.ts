@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { z } from "zod"
 import { centropyGet, centropyPut } from "@/components/centropy/lib/api"
 import { moveCanvasBlock, reconcileCanvasOrder } from "./canvas-layout"
+import { userMessage } from "../lib/user-message"
 
 const PreferenceSchema = z.object({
   schemaVersion: z.literal(1),
@@ -98,7 +99,7 @@ export function useCanvasPreferences(threadId: string | null, canonicalOrder: st
           setDesiredOrder(null); setDesiredFocus(undefined)
           setMessage(`Canvas order saved at presentation revision ${value.state!.uiRevision}.`)
         } else {
-          setMessage(`Save was not confirmed: ${cause instanceof Error ? cause.message : "request failed"}. Review the current order before saving again.`)
+          setMessage(`Save was not confirmed: ${userMessage(cause, "request failed")}. Review the current order before saving again.`)
         }
       } catch {
         if (activeThread.current !== expectedThread) return

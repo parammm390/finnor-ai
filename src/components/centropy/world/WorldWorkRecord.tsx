@@ -22,6 +22,7 @@ import { SharedWorkPanel } from "../../../../finnor-os/packages/private-equity/s
 import { InstitutionCompositionPanel } from "./InstitutionCompositionPanel"
 import { RealWorldServicePanel } from "./RealWorldServicePanel"
 import { GrowthOperatingProgramPanel } from "./GrowthOperatingProgramPanel"
+import { userMessage } from "../lib/user-message"
 
 const label = (value: string) => value.replaceAll("_", " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase()
 const record = (value: unknown): Record<string, unknown> | null => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null
@@ -66,7 +67,7 @@ export function WorldWorkRecord({ workId, root, onChanged }: { workId: string; r
         throw new Error("The Work record did not match the selected WORLD object")
       }
       if (active && scope.isCurrent(key)) setStored({ scope: key, value: result.work })
-    }).catch((cause) => { if (active && scope.isCurrent(key)) setError(cause instanceof Error ? cause.message : "Work record unavailable") })
+    }).catch((cause) => { if (active && scope.isCurrent(key)) setError(userMessage(cause, "Work record unavailable")) })
       .finally(() => { if (active && scope.isCurrent(key)) setLoading(false) })
     return () => { active = false }
   }, [workId, revision, scope.key, scope.allowed, scope.isCurrent])

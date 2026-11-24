@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { z } from "zod"
 import { centropyPost } from "@/components/centropy/lib/api"
+import { userMessage } from "../lib/user-message"
 
 const UUID = z.string().uuid()
 const DraftSchema = z.object({ draftKey: z.string().min(1), versionId: UUID })
@@ -63,7 +64,7 @@ export function ArtifactPresentationEditor({ documentId, versionId, pinnedVersio
       if (nextVersionId === reviewed.baseVersionId) throw new Error("The patch returned the unchanged base version.")
       onVersionCreated(nextVersionId)
     } catch (cause) {
-      setError(`${cause instanceof Error ? cause.message : "Slide edit unavailable"} ${exactDraft ? "Retry uses the same draft and exact patch." : "Check recorded versions before starting another edit if the draft result is uncertain."}`)
+      setError(`${userMessage(cause, "Slide edit unavailable")} ${exactDraft ? "Retry uses the same draft and exact patch." : "Check recorded versions before starting another edit if the draft result is uncertain."}`)
     } finally {
       setBusy(false)
     }

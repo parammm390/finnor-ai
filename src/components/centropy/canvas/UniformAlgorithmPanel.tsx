@@ -4,6 +4,7 @@ import {z} from 'zod'
 import {useCentropyAuth} from '@/components/centropy/lib/centropy-auth'
 import {usePrivateRequestScope} from '@/components/centropy/lib/use-private-request-scope'
 import {centropyGet,centropyPost,CentropyApiError} from '@/components/centropy/lib/api'
+import { userMessage } from "../lib/user-message"
 const operations=['specification','record-task-episode','submit-total','consume-total','submit','read','list','consume','cancel','invalidate','assign-evaluation','evaluate','s8-propose','admission'] as const
 type Operation=typeof operations[number]
 const post=<T,>(operation:Operation,body:unknown)=>centropyPost<T>('uniform-algorithms/'+operation,body)
@@ -152,7 +153,7 @@ export function UniformAlgorithmPanel({root,workId,threadId}:{root:{entityType:s
    if(error instanceof CentropyApiError)setObservation({identity:expected,operation,value:{
     httpStatus:error.status,...(ownerError?.success?{code:ownerError.data.code}:{}),message:error.message,
    }})
-   setDisplay(null);setSpecification(null);resetForms();setMessage(error instanceof Error?error.message+(ownerError?.success?` (${ownerError.data.code})`:''):'Owner response unavailable. Original invocation identity is retained.')
+   setDisplay(null);setSpecification(null);resetForms();setMessage(userMessage(error, 'Owner response unavailable. Original invocation identity is retained.')+(ownerError?.success?` (${ownerError.data.code})`:''))
   }}finally{if(current()){busyRef.current=false;setBusy(false)}}
  }
  function submit(){
@@ -184,7 +185,7 @@ export function UniformAlgorithmPanel({root,workId,threadId}:{root:{entityType:s
    if(!view.current||view.sourceVisibility!=='AUTHORIZED'){setObservation(null);setSpecification(null);resetForms();setMessage('Current proof evidence is withheld.');return}
    setEvidence({identity:expected,view,basis:evidenceBasis(view)})
    setMessage('Proof evidence explicitly loaded from the current owner. This is not protected admission.')
-  }catch(error){if(current()){setDisplay(null);setObservation(null);setSpecification(null);resetForms();setMessage(error instanceof Error?error.message:'Proof evidence unavailable.')}}
+  }catch(error){if(current()){setDisplay(null);setObservation(null);setSpecification(null);resetForms();setMessage(userMessage(error, 'Proof evidence unavailable.'))}}
   finally{if(current()){busyRef.current=false;setBusy(false)}}
  }
  return <section className="ct-evidence ct-uniform-algorithm" aria-label="Uniform algorithm discovery" data-y5-work={workId??'none'} data-y5-id={visible?.discoveryId??'none'}>

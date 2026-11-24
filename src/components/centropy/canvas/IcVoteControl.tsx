@@ -6,6 +6,7 @@ import { z } from "zod"
 import { centropyGet, centropyPost } from "@/components/centropy/lib/api"
 import type { IcWorkspace } from "@/components/centropy/product/contracts"
 import { IC_VOTE_CHOICES, icVoteBasis, sameVoteBasis, type IcVoteBasis, type IcVoteChoice } from "./ic-vote-model"
+import { userMessage } from "../lib/user-message"
 
 const VoteResponseSchema = z.object({
   vote: z.object({ id: z.string().uuid(), icCaseId: z.string().uuid(), recommendationId: z.string().uuid(), memoId: z.string().uuid(), underwritingRunId: z.string().uuid(), votingBasisVersion: z.number().int(), choice: z.enum(IC_VOTE_CHOICES) }).passthrough(),
@@ -58,7 +59,7 @@ export function IcVoteControl({ workspace, writable, onRefresh }: { workspace: I
       setAcknowledged(false)
       onRefresh()
     } catch (cause) {
-      setError(`${cause instanceof Error ? cause.message : "The vote could not be verified."} If the request may have reached the server, refresh the case before retrying.`)
+      setError(`${userMessage(cause, "The vote could not be verified.")} If the request may have reached the server, refresh the case before retrying.`)
       onRefresh()
     } finally { setBusy(false); lock.current = false }
   }

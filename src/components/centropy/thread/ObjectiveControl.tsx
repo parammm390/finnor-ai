@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Pause, Play, RotateCcw } from "lucide-react"
 import { centropyPost } from "@/components/centropy/lib/api"
 import type { WorkAggregateView } from "../product/contracts"
+import { userMessage } from "../lib/user-message"
 
 export function ObjectiveControl({ workId, source, redirecting, onRedirectToggle, onChanged }: {
   workId: string
@@ -22,7 +23,7 @@ export function ObjectiveControl({ workId, source, redirecting, onRedirectToggle
       const response = await centropyPost<{ objective: NonNullable<WorkAggregateView["objectiveLoop"]> }>(`works/${workId}/objective`, { command })
       if (!response.objective || response.objective.workId !== workId) throw new Error("Objective control returned a different Work")
       onChanged()
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "Objective control failed") }
+    } catch (cause) { setError(userMessage(cause, "Objective control failed")) }
     finally { setBusy(false) }
   }
 

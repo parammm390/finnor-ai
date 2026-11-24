@@ -7,6 +7,7 @@ import { usePrivateRequestScope } from "../lib/use-private-request-scope"
 import { onBusinessInvalidation, type ProjectionTag } from "../lib/business-invalidation"
 import type { AttentionQueueResult, FirmDealProjectionSet, ProductResource } from "../product/contracts"
 import { unavailableState, type ProductTruthState } from "../product/source-health"
+import { userMessage } from "../lib/user-message"
 import {
   isCompanyBrainObjectRef,
   isInspectionTarget,
@@ -23,7 +24,7 @@ export type PeResourceStatus = ProductResource<unknown>["status"]
 export type PeResource<T> = ProductResource<T>
 
 function message(error: unknown): string {
-  return error instanceof Error ? error.message : "The source projection is unavailable."
+  return userMessage(error, "The source projection is unavailable.")
 }
 
 function validRootResult(value: CompanyBrainSearchResult): boolean {

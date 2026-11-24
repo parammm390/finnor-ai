@@ -3,6 +3,7 @@ import {useCallback,useEffect,useRef,useState,type FormEvent} from 'react'
 import {z} from 'zod'
 import {useCentropyAuth} from '../lib/centropy-auth'
 import {CentropyApiError,centropyGet,centropyPost} from '../lib/api'
+import { userMessage } from "../lib/user-message"
 const paths={
  submit:'company-brain/economic-theory-submit',read:'company-brain/economic-theory-read',list:'company-brain/economic-theory-list',
  admit:'company-brain/economic-theory-admit',resume:'company-brain/economic-theory-resume',cancel:'company-brain/economic-theory-cancel',
@@ -145,7 +146,7 @@ export function EconomicActionTheoryPanel({root,workId}:{root:{entityType:string
     if(original&&originalRequests.get(original.scope)===original)originalRequests.delete(original.scope)
     pending.current=null
    }
-   setDisplay(null);setProgramme(null);setMessage(error instanceof Error?error.message:'Owner response unavailable. The original server request may remain durable.')
+   setDisplay(null);setProgramme(null);setMessage(userMessage(error, 'Owner response unavailable. The original server request may remain durable.'))
   }}finally{if(current()){busyRef.current=false;setBusy(false)}}
  }
  function jsonForm(event:FormEvent,operation:Operation,text:string,extra:Record<string,unknown>){

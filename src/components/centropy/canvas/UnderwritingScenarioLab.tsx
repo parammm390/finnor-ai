@@ -9,6 +9,7 @@ import { useProductRequest } from "@/components/centropy/product/useProductReque
 import { UnderwritingSensitivityLab } from "./UnderwritingSensitivityLab"
 import { DecisionSlicePanel } from "./DecisionSlicePanel"
 import { useCentropyAuth as useJarvisAuth } from "@/components/centropy/lib/centropy-auth"
+import { userMessage } from "../lib/user-message"
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const label = (value: string) => value.replace(/^output[._]/i, "").replace(/[._]/g, " ").replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase()
@@ -99,7 +100,7 @@ export function UnderwritingScenarioLab({ workspace, writable, onRefresh, workId
       setStaged((current) => [...current.filter((item) => item.nodeId !== change.nodeId), change])
       setRaw("")
       setPendingScenarioId(null)
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "This input cannot be staged.") }
+    } catch (cause) { setError(userMessage(cause, "This input cannot be staged.")) }
   }
 
   function review(event: FormEvent) {
@@ -122,7 +123,7 @@ export function UnderwritingScenarioLab({ workspace, writable, onRefresh, workId
       if (!scenarioName || scenarioName.length > 240) throw new Error("Name this scenario in 1–240 characters.")
       if (!scenarioReason || scenarioReason.length > 1_000) throw new Error("Record the reason in 1–1,000 characters.")
       setReviewed({ signature: draftSignature, baseId: base.id, changes, name: scenarioName, reason: scenarioReason })
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "This input cannot be reviewed.") }
+    } catch (cause) { setError(userMessage(cause, "This input cannot be reviewed.")) }
   }
 
   async function runPersistedScenario(scenarioId: string, selectedBase: UnderwritingRun) {
@@ -155,7 +156,7 @@ export function UnderwritingScenarioLab({ workspace, writable, onRefresh, workId
       onRefresh()
       await runPersistedScenario(created.id, base)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The scenario could not be completed.")
+      setError(userMessage(cause, "The scenario could not be completed."))
       onRefresh()
     } finally { writeLock.current = false; setWriting("idle") }
   }
@@ -165,7 +166,7 @@ export function UnderwritingScenarioLab({ workspace, writable, onRefresh, workId
     writeLock.current = true
     setError(null)
     try { await runPersistedScenario(scenarioId, base) }
-    catch (cause) { setError(cause instanceof Error ? cause.message : "The scenario run failed."); onRefresh() }
+    catch (cause) { setError(userMessage(cause, "The scenario run failed.")); onRefresh() }
     finally { writeLock.current = false; setWriting("idle") }
   }
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { z } from "zod"
 import { centropyGet } from "../lib/api"
 import { HumanControlDesk } from "./HumanControlDesk"
+import { userMessage } from "../lib/user-message"
 
 const Run = z.object({ id: z.string().uuid(), workId: z.string().uuid().nullable().optional(), workflowType: z.string(), status: z.string(), version: z.number().int(), updatedAt: z.string(), steps: z.array(z.object({ id: z.string().uuid(), stepType: z.string(), status: z.string(), attempts: z.number(), terminalReason: z.string().nullable() })) })
 const Runs = z.object({ runs: Run.array() })
@@ -20,7 +21,7 @@ export function WorkflowRecoveryDesk() {
   useEffect(() => {
     let active = true
     setError(null)
-    void centropyGet<unknown>("workflows/runs").then((value) => { if (active) setRuns(Runs.parse(value).runs) }).catch((cause) => { if (active) { setRuns(null); setError(cause instanceof Error ? cause.message : "Workflow records unavailable") } })
+    void centropyGet<unknown>("workflows/runs").then((value) => { if (active) setRuns(Runs.parse(value).runs) }).catch((cause) => { if (active) { setRuns(null); setError(userMessage(cause, "Workflow records unavailable")) } })
     return () => { active = false }
   }, [revision])
   const run = runs?.find((item) => item.id === selected)

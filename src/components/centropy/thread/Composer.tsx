@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react"
 import { ArrowUp, CornerDownLeft, Mic, RotateCcw, X } from "lucide-react"
+import { userMessage } from "../lib/user-message"
 
 interface RecognitionResultLike { 0: { transcript: string }; isFinal: boolean }
 interface RecognitionEventLike { results: ArrayLike<RecognitionResultLike> }
@@ -78,7 +79,7 @@ export function Composer({ onSubmit, busy, contextLabel, onClearContext, redirec
     setVoiceError(null)
     setPartial("")
     setVoiceState("starting")
-    try { next.start() } catch (cause) { recognition.current = null; setVoiceState("error"); setVoiceError(cause instanceof Error ? cause.message : "Microphone could not start.") }
+    try { next.start() } catch (cause) { recognition.current = null; setVoiceState("error"); setVoiceError(userMessage(cause, "Microphone could not start.")) }
   }
 
   function interruptVoice() {

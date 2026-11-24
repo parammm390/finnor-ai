@@ -5,6 +5,7 @@ import {
   documentSourceLocation, formatDocumentAmount, type DocumentValuation,
 } from "../../../../finnor-os/packages/shared-types/src/document-financial-review"
 import type { AnswerResult } from "./answer-result"
+import { userMessage } from "../lib/user-message"
 import "./answer-canvas.css"
 
 function ValuationImpact({ valuation, onDownload }: { valuation: DocumentValuation; onDownload?: () => Promise<void> }) {
@@ -21,7 +22,7 @@ function ValuationImpact({ valuation, onDownload }: { valuation: DocumentValuati
     setDownloading(true)
     setDownloadError(null)
     try { await onDownload() }
-    catch (error) { setDownloadError(error instanceof Error ? error.message : "The diligence brief could not be downloaded.") }
+    catch (error) { setDownloadError(userMessage(error, "The diligence brief could not be downloaded.")) }
     finally { setDownloading(false) }
   }
   return <section aria-label="Valuation impact">

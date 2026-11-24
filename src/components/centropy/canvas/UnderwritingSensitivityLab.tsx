@@ -7,6 +7,7 @@ import type { UnderwritingRun, UnderwritingWorkspace } from "@/components/centro
 import { formatUnderwritingDisplayValue, formatUnderwritingValue } from "@/components/centropy/product/scenario-branch-model"
 import { parseSensitivityAxis } from "@/components/centropy/product/sensitivity-model"
 import { useProductRequest } from "@/components/centropy/product/useProductRequest"
+import { userMessage } from "../lib/user-message"
 
 const UUID = z.string().uuid()
 const ValueSchema = z.union([z.string(), z.boolean(), z.record(z.string(), z.union([z.string(), z.boolean()]))])
@@ -56,7 +57,7 @@ export function UnderwritingSensitivityLab({ workspace, base, writable, onRefres
       const rowValues = parseSensitivityAxis(row, rowRaw)
       const columnValues = column ? parseSensitivityAxis(column, columnRaw) : []
       setReviewed({ baseRunId: base.id, name: name.trim(), rowNodeId, rowValues, columnNodeId, columnValues, outputNodeId, idempotencyKey: `centropy-sensitivity:${crypto.randomUUID()}` })
-    } catch (cause) { setReviewed(null); setError(cause instanceof Error ? cause.message : "The sweep cannot be reviewed.") }
+    } catch (cause) { setReviewed(null); setError(userMessage(cause, "The sweep cannot be reviewed.")) }
   }
 
   async function run() {
@@ -76,7 +77,7 @@ export function UnderwritingSensitivityLab({ workspace, base, writable, onRefres
       setSelectedId(result.id)
       setReviewed(null)
       onRefresh()
-    } catch (cause) { setError(`${cause instanceof Error ? cause.message : "Sensitivity run unavailable"} Retry keeps the same exact sweep and idempotency key.`) }
+    } catch (cause) { setError(`${userMessage(cause, "Sensitivity run unavailable")} Retry keeps the same exact sweep and idempotency key.`) }
     finally { setBusy(false) }
   }
 

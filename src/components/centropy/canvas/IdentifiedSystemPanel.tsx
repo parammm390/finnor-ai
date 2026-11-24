@@ -3,6 +3,7 @@ import {useCallback,useEffect,useRef,useState,type FormEvent} from 'react'
 import {z} from 'zod'
 import {useCentropyAuth} from '@/components/centropy/lib/centropy-auth'
 import {CentropyApiError,centropyGet,centropyPost} from '@/components/centropy/lib/api'
+import { userMessage } from "../lib/user-message"
 
 const rootSchema=z.object({entityType:z.literal('pe_deal'),entityId:z.string().uuid()}).strict()
 const modelSchema=z.object({id:z.string().uuid(),achievedClaimClass:z.enum(['PREDICTIVE','INTERVENTION_IDENTIFIED']),requestedClaimSatisfied:z.boolean(),
@@ -113,7 +114,7 @@ export function IdentifiedSystemPanel({root,workId,threadId}:{root:{entityType:'
   }catch(error){if(current()){
    const changedScope=error instanceof CentropyApiError&&!!error.details&&typeof error.details==='object'&&'code'in error.details&&error.details.code==='AUTHENTICATED_SCOPE_CHANGED'
    if(mutation&&error instanceof CentropyApiError&&!error.retryable&&!changedScope)pending.current=null
-   setDisplay(null);setMessage(error instanceof Error?error.message:'Owner operation unavailable. Read retained history before retrying.')
+   setDisplay(null);setMessage(userMessage(error, 'Owner operation unavailable. Read retained history before retrying.'))
   }}finally{if(current()){busyRef.current=false;setBusy(false)}}
  }
  async function readHistory(before?:string){

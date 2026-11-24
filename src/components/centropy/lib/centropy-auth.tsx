@@ -10,6 +10,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { readWorkOSSession, type BrowserSession as Session } from "@/lib/auth/browser-session"
 import { getSupabaseBrowser } from "@/lib/centropy/supabase-browser"
 import { centropyGet } from "./api"
+import { userMessage } from "./user-message"
 
 // The institutional shell remains owner-only. Existing non-owner canonical
 // roles may open the separate, recipient-scoped workforce workspace; this union
@@ -153,7 +154,7 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
         } catch (cause) {
           if (!active || current !== sequence) return
           clear()
-          setAuthError(cause instanceof Error ? cause.message : "Sign-in could not be restored.")
+          setAuthError(userMessage(cause, "Sign-in could not be restored."))
         } finally {
           clearTimeout(timeout)
           if (active && current === sequence) {
@@ -206,7 +207,7 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
         if (!active || pendingSignOut || accessGeneration !== bootstrapGeneration) return
         adoptSession(null)
         setSession(null)
-        setAuthError(error instanceof Error ? error.message : "Authentication could not be restored.")
+        setAuthError(userMessage(error, "Authentication could not be restored."))
       } finally {
         if (active) setLoading(false)
       }
@@ -255,7 +256,7 @@ export function CentropyAuthProvider({ children }: { children: React.ReactNode }
         if (!cancelled) {
           resolvedRoleUserIdRef.current = null
           setRole(null)
-          setRoleError(error instanceof Error ? error.message : "CENTROPY could not load your role.")
+          setRoleError(userMessage(error, "CENTROPY could not load your role."))
         }
       })
       .finally(() => {

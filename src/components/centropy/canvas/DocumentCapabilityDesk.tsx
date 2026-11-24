@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { z } from "zod"
 import { centropyGet, centropyPost } from "@/components/centropy/lib/api"
 import { PlannerCandidateReview } from "./PlannerCandidateReview"
+import { userMessage } from "../lib/user-message"
 
 const Summary = z.object({ id: z.string().uuid(), kind: z.string(), status: z.string(), deadlineAt: z.string().datetime({ offset: true }) }).passthrough()
 const History = z.object({ runs: z.array(Summary), nextCursor: z.string().uuid().nullable() })
@@ -11,7 +12,7 @@ const Run = Summary.extend({ sources: z.array(z.object({ documentId: z.string().
 type RunSummary = z.infer<typeof Summary>
 type RunValue = z.infer<typeof Run>
 const ongoing = (status: string) => ["QUEUED", "RUNNING", "WAITING_PROVIDER"].includes(status)
-const message = (cause: unknown) => cause instanceof Error ? cause.message : "The capability request could not be read."
+const message = (cause: unknown) => userMessage(cause, "The capability request could not be read.")
 
 /** Uses the selected immutable version; no document bytes or provider credentials
  * are loaded into this component. Results always come from the authorized owner. */
