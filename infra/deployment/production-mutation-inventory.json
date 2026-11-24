@@ -321,7 +321,6 @@
         "finnor-os/scripts/postz/phase-w-ci/verify-native-evidence.mjs",
         "scope-postz/phase-w-ci/check-ci-boundaries.mjs",
         "scope-postz/phase-w-ci/failure-model.md",
-        "scope-postz/phase-w-ci/release-candidate.json",
         "scripts/release/phase-w-release-profile.mjs",
         "scripts/release/select-phase-w-release-profile.mjs",
         "infra/deployment/phase-w-candidate-world.activation-contract.md",

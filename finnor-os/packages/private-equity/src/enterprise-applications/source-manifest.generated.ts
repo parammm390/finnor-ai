@@ -176,7 +176,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/EnterpriseApplicationPanel.tsx",
-      "sha256": "c9ea5d5153e93262047c4e804f37f70c6859d06580ffd367cf115aee90cce520"
+      "sha256": "29f2d509f6e930c787672020f522564a098cadb3a82323c0a2fd6dc543d4c587"
     },
     {
       "path": "src/components/centropy/canvas/application-client.ts",
