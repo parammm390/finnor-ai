@@ -160,7 +160,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/uniform-algorithms/source-paths.ts",
-      "sha256": "deca1429b87f75dc5382473436850a3e8e1798dc9d0624295afcab6d0408201b"
+      "sha256": "15f348e5b9d6380a57a308675f7f1a4321a295964af529070b3bfe951437df04"
     },
     {
       "path": "finnor-os/packages/private-equity/src/uniform-algorithms/source-cut.ts",
@@ -336,7 +336,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
-      "sha256": "30241bb040a0b23c8964e9ef04f965f95ede6ff3ed9a9fb8b3f87a727fcf6b8c"
+      "sha256": "670ede648623d7e1ac505631ff11ac9bbaca820c7a5ad45b6c383b9011b2e68a"
     },
     {
       "path": "src/components/centropy/canvas/CanvasDocument.tsx",
@@ -344,7 +344,7 @@ export default {
     },
     {
       "path": "src/components/centropy/lib/centropy-auth.tsx",
-      "sha256": "b8c3532d70195538a8a9e1c7b1fff63a829bc9516fe1d57dd3352a68b513cb98"
+      "sha256": "22bd9af64ead03a714b1d7fb85757d2179705067de72f78e1f86d76eae69e547"
     },
     {
       "path": "src/components/centropy/lib/use-private-request-scope.ts",
@@ -2304,7 +2304,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "7e55f13e2f6395ecd2fffd1d8dde180b3fba5eeb3017b8455d765319b1696f7a"
+      "sha256": "868781fad8f7def4f314942ec166c9438eaed3830dd32125bfdfe8b838f429ff"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2748,7 +2748,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "sha256": "2a12885b1a2f8b4355307486c3ab16ce674cbcda7e5b54fca51428b3c509724b"
+      "sha256": "fc430165c03258533a7b499d7008fd94bebecdd815d03a55e8b6462fc432b7df"
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-paths.ts",
@@ -3164,7 +3164,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts",
-      "sha256": "f493d15c1ed2792fc5775cbb097625dce1c16024d8fa205fad4ee8f87b1919a0"
+      "sha256": "c4c708b2ed0de8cec7ecbcddb068c9555979df45bb5a839a66ca8f091e965021"
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-paths.ts",
@@ -3872,27 +3872,27 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/ArtifactCanvas.tsx",
-      "sha256": "2a282c0746d0c55a5166d95e062e1ca30c3bf14b0e1d7db4baced95a9d8cf178"
+      "sha256": "5fa15694b18f3ea31f9750ffa1ffbd6b1e10cb180ef36294d0ed5d072000198a"
     },
     {
       "path": "src/components/centropy/canvas/ArtifactDocumentEditor.tsx",
-      "sha256": "887a2e5de07d6d7965f8aec429befda830a5363d937aa115b5ff519943b034b1"
+      "sha256": "a8acfb74da9be6a994c211cc280817d41899e4014bc5a8d6dc70b5dd5030f9e8"
     },
     {
       "path": "src/components/centropy/canvas/ArtifactGovernanceDesk.tsx",
-      "sha256": "a2d0f87c83683772470cbf794918f7fe212a110ca5ddab5c8a326757921d1f27"
+      "sha256": "4cf1db95cd3006d57d7b2c6e283bb0b7f412cf40612afed3d6317c77b82409df"
     },
     {
       "path": "src/components/centropy/canvas/ArtifactIcHandoff.tsx",
-      "sha256": "4089aed45fd8eb43009611c79899977bf4c0ef25542ccba135c160e44bea6b5b"
+      "sha256": "2d56857837f223337fe495ff453558d39f4a7af286ff8f717e6c44e1bd35ddae"
     },
     {
       "path": "src/components/centropy/canvas/ArtifactPresentationEditor.tsx",
-      "sha256": "1458feb02f9329ece7db28b2b0a6c6e72e5a8fc55fcc93f64509a717ae5becde"
+      "sha256": "fa546dd9106e492e14e42e68c773d6c4cb7cc045971440fffb0f53af73f8d5a1"
     },
     {
       "path": "src/components/centropy/canvas/ArtifactPublicationDesk.tsx",
-      "sha256": "f0be7cc938c6e719772e73d25e26ee63d8ae997debae03d24b111fc284d1666f"
+      "sha256": "3ad3f6094466ecc355a80bbc57ceb47b360ba34cb0f4646aceb36dda7af13bd4"
     },
     {
       "path": "src/components/centropy/canvas/ArtifactRecordControls.tsx",
@@ -3900,19 +3900,19 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/ArtifactSpreadsheetEditor.tsx",
-      "sha256": "3405bfd279a3755e046c66771bb1f4c667663e2fa76b63cf689b205c82eaab15"
+      "sha256": "28194ec311cb8eec768c0ddacf5b0fcaf733775de2b67c33585785263f3ca9da"
     },
     {
       "path": "src/components/centropy/canvas/ArtifactTemplateDesk.tsx",
-      "sha256": "e63fce78fb3f2c7038da5bd8e78259cfc0b9768707e8f48efa8951e69f04652a"
+      "sha256": "911d151ca17c163adf6fe8b49e802785ebeb9400ba2067a32eb67d2c2bdbf2fe"
     },
     {
       "path": "src/components/centropy/canvas/BilateralOpportunityPanel.tsx",
-      "sha256": "71e7aea7fc6c93a26812833c3ddfd9ad17ffa2d4b1fc44b11bd9ea2988e6bafd"
+      "sha256": "9c75587856fdcb0b8d16416f58c26876aa7bebdfc70cacfa0c533c034a446aef"
     },
     {
       "path": "src/components/centropy/canvas/BranchRehearsalPanel.tsx",
-      "sha256": "562426e8fd7ea63a1ffa3e46a4af6cbf2adea2119a462571ace28908daee1339"
+      "sha256": "0d773bf84708b32ad37349d506bf951986e12c096e73a9e9fc3b4a2e9764b854"
     },
     {
       "path": "src/components/centropy/canvas/CanvasInstrument.tsx",
@@ -3924,11 +3924,11 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/CapitalFormationPanel.tsx",
-      "sha256": "ff1fa193a9162ddd34aa755614829b6282cf59f6e39987c67b1ff137695f8f88"
+      "sha256": "cd21456c1f2351af0b5cb894fb41ffb526b683fd4fcf05ce1bd0f74e252cd64d"
     },
     {
       "path": "src/components/centropy/canvas/CapitalProgramPanel.tsx",
-      "sha256": "00c1beba104bd86f2218236cea6b29332c995d407c31ede0af83212e40e1ec3f"
+      "sha256": "0837239c77838c2f77b73a4cefa502834a24914fc048775a057dc7669912543b"
     },
     {
       "path": "src/components/centropy/canvas/CoalitionProgrammeReview.tsx",
@@ -3944,11 +3944,11 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/CounterexamplePanel.tsx",
-      "sha256": "fede04012d8f05d76f5a01021842414f765aa91f89852d2ff3b90465867f39c9"
+      "sha256": "d215f1d60ae766a1f9f2660e440c517e57d4e6150fcc24ca097376387f5729ec"
     },
     {
       "path": "src/components/centropy/canvas/DecisionAtlasReview.tsx",
-      "sha256": "ee400f9a987fcc7fa3e14eb9581ce4bab405bea9f9814c015647f1468f4e3577"
+      "sha256": "b7935f41499a3d0ed9d8ee813969a2812e042710c680c6e8f15793b4aa614c56"
     },
     {
       "path": "src/components/centropy/canvas/DecisionSlicePanel.tsx",
@@ -3960,19 +3960,19 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/DocumentCapabilityDesk.tsx",
-      "sha256": "1eaecc11e5f717c5e3e1228050cf5bbd0202403453c701dc35abe8f23163ea24"
+      "sha256": "e66c550720058048b87e69a500ea55fe0fe747a8a8fe2f3ff3f9cb4bd4b3c0bb"
     },
     {
       "path": "src/components/centropy/canvas/ElicitationProtocolReview.tsx",
-      "sha256": "8443ac497d46405f95a5099d8e9a5e1095b75b094859015b00858e996a5ac33b"
+      "sha256": "15617aee01f54067c1443140aa48a015113059b1690ca4dd574442d93d08c07f"
     },
     {
       "path": "src/components/centropy/canvas/EnterpriseApplicationPanel.tsx",
-      "sha256": "c9ea5d5153e93262047c4e804f37f70c6859d06580ffd367cf115aee90cce520"
+      "sha256": "29f2d509f6e930c787672020f522564a098cadb3a82323c0a2fd6dc543d4c587"
     },
     {
       "path": "src/components/centropy/canvas/EvidenceWorkbench.tsx",
-      "sha256": "c302faa3cc1a0436f6610a9c59af485b27b87d9f083a543d3d1482c2b87dedb2"
+      "sha256": "c0c57865916c84c2b4d995737da2aa520515e98bafbff4634e527af11c53df62"
     },
     {
       "path": "src/components/centropy/canvas/ExactControlReview.tsx",
@@ -3980,11 +3980,11 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/IcCaseContinuation.tsx",
-      "sha256": "35acfdbb784d58e18de5754d8966b9777da654fd573699a78d1f8cc2856cf061"
+      "sha256": "0e5569209590837273ca0431e4f151581d816701879712b120d23008e102e131"
     },
     {
       "path": "src/components/centropy/canvas/IcVoteControl.tsx",
-      "sha256": "c790fc95df70384caf6b90dae1f9d5a08c9bb10eefb59c09f84e6db74e8a7dbc"
+      "sha256": "a4f3cd8e8232cae1296adfe42f34bf8b25b84c5e01079da622a3df9f572d3ecc"
     },
     {
       "path": "src/components/centropy/canvas/IdentificationPlanPanel.tsx",
@@ -3992,15 +3992,15 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/IdentifiedSystemPanel.tsx",
-      "sha256": "a0b6fb6609550a83cdbc103285c8c67ac1c4211780ac24b5dcad729f7a3b17d7"
+      "sha256": "70467fcbcfdf4ff8d9b946f490e8c692ca7971f5a61b5b25c5cadd2000776262"
     },
     {
       "path": "src/components/centropy/canvas/InstitutionInputForm.tsx",
-      "sha256": "a60dae730c7cdf14dde17d9dac269c15fd93e65a185a1bc24859c778d1c2aa84"
+      "sha256": "3ba382c75bcab0a8d4202b5016e7511430178f597c40e6799c38888664c2083e"
     },
     {
       "path": "src/components/centropy/canvas/InstitutionProgramPanel.tsx",
-      "sha256": "83660d5f9b2e9908610977925149b9654c77269db3d887ee6796ec5b88c3ef3f"
+      "sha256": "e379fa1a270e7989284944a26e53dc2c03066d667eb8bc4a6e170a0340ac1d8a"
     },
     {
       "path": "src/components/centropy/canvas/InterfaceSynthesisPanel.tsx",
@@ -4008,23 +4008,23 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/LearnedPolicyPanel.tsx",
-      "sha256": "5ebf3b7871dac0b289d50f326f7ce4318ff4163c330ae2e9f11069eab3a1f0ce"
+      "sha256": "4cc2e24ae4170dfbf60a14c6d5cccd514dcf14ef893b891fe8fdcd91c48e308b"
     },
     {
       "path": "src/components/centropy/canvas/NangoConnectionDesk.tsx",
-      "sha256": "e1529a271ac8e866b13494fec365a28befebea89e3d9466bf942b0c9383d79b8"
+      "sha256": "88b564a3b22d9c64adad7a72bfefb365eb6c46515f966debcb3df789c9e57002"
     },
     {
       "path": "src/components/centropy/canvas/OriginalChallengePanel.tsx",
-      "sha256": "03a7d0ee230ab4eac80f1c079c4ea35924ec900919a1eb62341cf581eb80c44d"
+      "sha256": "57870d620ab6e1c299278335c0f3a2807be62d87b9191a07a680342aae3502e1"
     },
     {
       "path": "src/components/centropy/canvas/PlannerCandidateReview.tsx",
-      "sha256": "7d002afc8459e6bc445179e7852cfc88d96252ce2556dcdf2879076e59a41411"
+      "sha256": "db2e61e091a74e6a9b458447c0e9fed6b2b066cbac6debf6630fdd40246b8ab8"
     },
     {
       "path": "src/components/centropy/canvas/PrimaryDiligencePanel.tsx",
-      "sha256": "9de72a469eda3dbdd08a11f563e1580ad9540f9618b80d214c418391b052e24f"
+      "sha256": "066da3effd352607073200a84642e8c4caea98d60f29da88099ee3397a78140e"
     },
     {
       "path": "src/components/centropy/canvas/ProcedureInductionPanel.tsx",
@@ -4032,23 +4032,23 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/ProgramSynthesisPanel.tsx",
-      "sha256": "90fd5fb03b2bb6d7d6c273259e0bec4dcc8febd8c69fa5429513fbfd93cb024d"
+      "sha256": "1f9759d4a365414224520618d3d1a7069137c4fae638e0df6b84a2610ad013a5"
     },
     {
       "path": "src/components/centropy/canvas/ResearchCapabilityDesk.tsx",
-      "sha256": "cb613ab0bdce123796b2a603da3113bf6c94fda44a16646e19c0d2630892c9b7"
+      "sha256": "4b71506255d8d65625a5f49499ef0ad4090473312d9f209cb181b260ee07b50f"
     },
     {
       "path": "src/components/centropy/canvas/SourceDiagnostics.tsx",
-      "sha256": "db042d0647628c64559b24336b963c555b79ddfcc7db584b865b59adf1323ba0"
+      "sha256": "a1a1938d0f1c35f790b318766c7d03bb840388bd7642eac16b5a21499c35e9a3"
     },
     {
       "path": "src/components/centropy/canvas/UnderwritingScenarioLab.tsx",
-      "sha256": "4d513e9caaecccc0502e6b0bda29e806aebfa9c3023da5d11a80cd97a5b93483"
+      "sha256": "f8fd84224207bfeea8822bafcf0c23d89222c8c49fae492fb72332b24a3eb19e"
     },
     {
       "path": "src/components/centropy/canvas/UnderwritingSensitivityLab.tsx",
-      "sha256": "36009a4160671d1eb30c7cff5f6cf7751356fee07e08dc92bc299e942ee7940b"
+      "sha256": "0c202a33eee42d8021131fca7fb8ffd983ed82f0ee4117eea050d0a5aae792b2"
     },
     {
       "path": "src/components/centropy/canvas/application-client.ts",
@@ -4136,7 +4136,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/use-canvas-preferences.ts",
-      "sha256": "a7dc2e8f27e938a7fdbe5fe56379072f391df41b3ce9a17ba28eeb0acef36331"
+      "sha256": "84cb8d10f6b554c6e0ce2e6b9f72f4d4b71ff0d0484a597402ebd07cfe99ce25"
     },
     {
       "path": "src/components/centropy/canvas/work-deck-model.ts",
@@ -4144,11 +4144,11 @@ export default {
     },
     {
       "path": "src/components/centropy/closing/ClosingProgrammePanel.tsx",
-      "sha256": "39c4661db007f5502a921368dbdadb22a4b1782912ff86878470e914320fb924"
+      "sha256": "deeff543ee4f4b12dc8db27f3a0c6c3e3645cca763c9726f12682decd758215b"
     },
     {
       "path": "src/components/centropy/controls/CanonicalRecordForm.tsx",
-      "sha256": "179b12afb618829594279b65e4971a69ede9293966f0829b835e7e5bead6f646"
+      "sha256": "55213d668a965b317df71c4deaf726707e8c19dbcc599eb0ace4e2c86c8def2f"
     },
     {
       "path": "src/components/centropy/controls/HumanControlDesk.tsx",
@@ -4188,7 +4188,7 @@ export default {
     },
     {
       "path": "src/components/centropy/product/useProductRequest.ts",
-      "sha256": "f5331f1d2e5e5dc49fd60d029fba330714d994dc0779e04b633dc4027371a055"
+      "sha256": "8efb7eb2277bcde28797e94eecbd02197819c15d794b7c4daf89722c5d3c79d3"
     },
     {
       "path": "src/lib/centropy/capability-manifest.ts",
@@ -4580,11 +4580,11 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/CausalReplayPanel.tsx",
-      "sha256": "99741d7d4217748af3b074f396c7defc5d899371a43679c20c39fd8d10588308"
+      "sha256": "93ddbf6bca5b73de4f6bfe8ceaf4d7c573157793c9c980fcfc4643b96ff673ec"
     },
     {
       "path": "src/components/centropy/canvas/EconomicActionTheoryPanel.tsx",
-      "sha256": "eda696ff7e9137e1d313ddf102364d3f1dcfbeaddac23edc329d8673e53c9b5c"
+      "sha256": "7162b50de5db67255e2d75b9d13599360a0ced4cf29be968dfbef10cdbc13e2d"
     },
     {
       "path": "src/components/centropy/canvas/InteractionProtocolPanel.tsx",
@@ -4592,7 +4592,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/StrategicResponsePanel.tsx",
-      "sha256": "c18bda6b82bbdca16bc4f97bde151773ace10a65bd912435397bb41cd7eeb342"
+      "sha256": "8e771e30987fab7f4544a79595b6441615272eb7a771c731a0e6119a05eecfd6"
     },
     {
       "path": "src/components/centropy/canvas/canvas-compose.ts",
@@ -4604,11 +4604,11 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/use-canvas-sources.ts",
-      "sha256": "c674ecb207a022d4d72ba1b3ee7f57e24d5b0ef5dda8b21489d7e4e3f3232129"
+      "sha256": "98c49b9b7a11c706f6a332cfa744db738c025cd99669e2bf8f6055a5fb550c36"
     },
     {
       "path": "src/components/centropy/controls/ArtifactCreationDesk.tsx",
-      "sha256": "573c57bdddef3f577768677a7998368dd6de17ffaaaab4b050231d0c7e78e6c0"
+      "sha256": "ac4a879c79bda957bbb4eab67d83b306bf893087249fbb81bd2dd940032e211c"
     },
     {
       "path": "src/components/centropy/controls/LiveInstitutionalControl.module.css",
@@ -4616,19 +4616,19 @@ export default {
     },
     {
       "path": "src/components/centropy/controls/LiveInstitutionalControl.tsx",
-      "sha256": "93e9ea5cfadc8fd29e87be7a975de07310f8384ccbd587cb9a17f46ee1e44ca2"
+      "sha256": "92c6397224f780a75d250c29be5bfbb50d49af9b83200ac360eed44020f044d2"
     },
     {
       "path": "src/components/centropy/controls/SettingsDialog.tsx",
-      "sha256": "b65af65bdb575b690ef4b15bfcbb8e4f9c4a029fed110f85f9f9df65641cd207"
+      "sha256": "464aa1253c83065bf72a3276c4c2a840337349b66fde2738cb4c53a758828691"
     },
     {
       "path": "src/components/centropy/controls/SupportingReadDesk.tsx",
-      "sha256": "5559b229a7d503799d921e65e0cb74955453c2f75f0f142c3196f44140955f9e"
+      "sha256": "1b359269bdb7c643b0075f4fdd37b1d3dd460ecef0733460cbcbd7c0d7128c10"
     },
     {
       "path": "src/components/centropy/controls/WorkflowRecoveryDesk.tsx",
-      "sha256": "f05e05ceb8929783739743cf5e32f219516fb11d3bba08f34e37070bb535e0fd"
+      "sha256": "c9207347da141c45380a047e519c8a362f5de943cc055bee937240cc701340c2"
     },
     {
       "path": "src/components/centropy/pe/context-routing.ts",
@@ -4636,7 +4636,7 @@ export default {
     },
     {
       "path": "src/components/centropy/pe/use-pe-data.ts",
-      "sha256": "d999ee5329b75ee8c79da4941487a7b3adc76f069a4b8f67aa52f58fa33c40d4"
+      "sha256": "a5aebcb07e97dfb25e2a56a43ade133c2095a61049207f644705adb83e41b607"
     },
     {
       "path": "src/components/centropy/product/approval-effect-model.ts",
@@ -4652,7 +4652,7 @@ export default {
     },
     {
       "path": "src/components/centropy/runtime/instruction-events.ts",
-      "sha256": "b75dba1cad68e3d1c9be19a624ba0c41695954292e353e505166029130170df6"
+      "sha256": "a1681a6c81535c1ab2f31ea5af6d5d470185ea4992ec63ee5fe9d54597d474f3"
     },
     {
       "path": "src/components/centropy/runtime/presence-state.ts",
@@ -4664,11 +4664,11 @@ export default {
     },
     {
       "path": "src/components/centropy/shell/CentropyWorkspace.tsx",
-      "sha256": "811b61e91f4b2266301d3f20f901344842d3712fbd6d218c85dc6b89dd377f2a"
+      "sha256": "5bdf7f0246d82386430f4d9c807bb132f678188612fa456eb9e0f5b06442c7c3"
     },
     {
       "path": "src/components/centropy/shell/HomeCanvas.tsx",
-      "sha256": "a2a1aee3dd52e143f10d7b0e31658a80f18be822f3d1107c040fa93f81e64e15"
+      "sha256": "4544cdc7c4ef8f10d0da64ffcfa217174b002e9e788cbfb138c8dd451d7da9cc"
     },
     {
       "path": "src/components/centropy/shell/centropy.css",
@@ -4676,7 +4676,7 @@ export default {
     },
     {
       "path": "src/components/centropy/thread/Composer.tsx",
-      "sha256": "dce2c0bda19d142e20e0211e1424e2a82cbf87c093b5fffbedd460049704e093"
+      "sha256": "bcc482dedb9151c0c6e07bb43be919ef15430b60ebb1ba0a09b1a80b55f6fa00"
     },
     {
       "path": "src/components/centropy/thread/ExecutionObject.tsx",
@@ -4684,15 +4684,15 @@ export default {
     },
     {
       "path": "src/components/centropy/thread/ObjectiveControl.tsx",
-      "sha256": "dd1790257ab11dbe69fb0a2224c28eeef8d1c482640455d2fb05143a9c6cd088"
+      "sha256": "9a6ad37edacdc2b553be067f3084913b819640aa67bc7d10be646c984e73b47c"
     },
     {
       "path": "src/components/centropy/thread/OutcomePacks.tsx",
-      "sha256": "0ea25ba3e1e3d19ec7e78bf1400dbd3e96fa8b604ab78359bcf20d1405e4182e"
+      "sha256": "6990a2bb5ff432482ff291de5806cafd4fe42813a35f0e7d6245661c0f826773"
     },
     {
       "path": "src/components/centropy/thread/PendingEffects.tsx",
-      "sha256": "94bc07053e942766b7e35146fef2b87df462d22c007b839ce5bf9ffbe41c444a"
+      "sha256": "466b0566b3d684509bdb0309987e6dd6790131a32b82ea77a27d99807e5f1520"
     },
     {
       "path": "src/components/centropy/thread/RecordedValue.tsx",
@@ -4708,11 +4708,11 @@ export default {
     },
     {
       "path": "src/components/centropy/thread/WorkRecovery.tsx",
-      "sha256": "2b9b03264fbd3a4b175883a09d6a1a7c3009e86c6569da446f881ced83334f80"
+      "sha256": "ba3561400381f31993698cec4f6ce86e243bbd848bcfbc2f0237ace16f2f4c2e"
     },
     {
       "path": "src/components/centropy/thread/WorkforceAssignments.tsx",
-      "sha256": "709fd5035b41181a45883b2650c3e6a1ee0166aa30bfba6a56dcab9aab96406c"
+      "sha256": "57dda7c57867889ad2910c7b17e5ce9507a900e64d2b927c5a5964d3e8ada4c7"
     },
     {
       "path": "src/components/centropy/thread/outcome-pack-model.ts",
@@ -4732,7 +4732,7 @@ export default {
     },
     {
       "path": "src/components/centropy/thread/use-investigation.ts",
-      "sha256": "4e86bf42bfc52bee3025674a64c643886b338c33274bec6dc2a3c7ca5d2ef5d8"
+      "sha256": "b61502b85477b10c06da16559509c4e34d6a7b6f591df632dea27d66e9711fbb"
     },
     {
       "path": "src/components/centropy/world/ConfidentialComputationPanel.tsx",
@@ -4740,7 +4740,7 @@ export default {
     },
     {
       "path": "src/components/centropy/world/WorldExplorer.tsx",
-      "sha256": "bc58c69946137cdce82d09a3aa4befafae8b00159d93f86d99e495a16d7e4111"
+      "sha256": "e1e27e726e9f248f669df208ee9a3e6898e5d9267d641481319f08f0e7770b75"
     },
     {
       "path": "src/components/centropy/world/WorldRelationships.tsx",
@@ -4748,7 +4748,7 @@ export default {
     },
     {
       "path": "src/components/centropy/world/WorldWorkRecord.tsx",
-      "sha256": "83cebbe8824ac9751b98567d420d0ef0672ca945d0c361f3626b203c5fb08d08"
+      "sha256": "1e3d2f4f0ab47c973e34e2829547e8c7d63f185960495ab6ba2e9ebf78c7ba63"
     },
     {
       "path": "src/components/centropy/world/world-context.ts",
@@ -4880,7 +4880,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/AnswerCanvas.tsx",
-      "sha256": "d5b3af7ae5c171e047c84fe607b4acbd54e0269852dc51c4165ec972c8777580"
+      "sha256": "5ffdba4b65ce3e426b35717cee2981863746951cdd4a1d16cde7a0b868853539"
     },
     {
       "path": "src/components/centropy/canvas/answer-canvas.css",
@@ -5484,11 +5484,11 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/OrganizationTransformationPanel.tsx",
-      "sha256": "5eb9e213924efb7b80679d48719873c0f493015936df4af009c86675462d1b2b"
+      "sha256": "d4dbcb8190af5ff78907978fcaf14c068b10d314944c79916344fced02dcfe88"
     },
     {
       "path": "src/components/centropy/canvas/WorkforceExecutionPanel.tsx",
-      "sha256": "5f3f52e363d65dada66b8984d05e41d6973109985072742d6fd041a1017a1a32"
+      "sha256": "7e2ed49af81b2f8a5bb791cb43d7059c11a15226e77b05582dea6122ae7093cb"
     },
     {
       "path": "src/components/centropy/world/GrowthOperatingProgramPanel.tsx",
@@ -6057,7 +6057,11 @@ export default {
     {
       "path": "src/lib/centropy/proxy-auth.ts",
       "sha256": "ebffcf03ca7126025b604b42f9860262be95d145cf102260f55ec141e634f3da"
+    },
+    {
+      "path": "src/components/centropy/lib/user-message.ts",
+      "sha256": "afdd55a749ac3e3800f46a4f23711a55cecd90b9b054a4cad1ddbcb607576b94"
     }
   ],
-  "sourceDigest": "4866b36790d5e19eb9adb43f3c1496a91d12853d5da5139d4f36e71287664b97"
+  "sourceDigest": "704e2003f55159e984d4d1b89dbc968c4b0a0d0bdfb72abe8f62c53056e35590"
 } as const;

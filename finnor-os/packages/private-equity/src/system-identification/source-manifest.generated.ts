@@ -140,7 +140,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "7e55f13e2f6395ecd2fffd1d8dde180b3fba5eeb3017b8455d765319b1696f7a"
+      "sha256": "868781fad8f7def4f314942ec166c9438eaed3830dd32125bfdfe8b838f429ff"
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
@@ -192,7 +192,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/LearnedPolicyPanel.tsx",
-      "sha256": "5ebf3b7871dac0b289d50f326f7ce4318ff4163c330ae2e9f11069eab3a1f0ce"
+      "sha256": "4cc2e24ae4170dfbf60a14c6d5cccd514dcf14ef893b891fe8fdcd91c48e308b"
     },
     {
       "path": "src/components/centropy/canvas/CanvasDocument.tsx",
@@ -296,7 +296,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/EnterpriseApplicationPanel.tsx",
-      "sha256": "c9ea5d5153e93262047c4e804f37f70c6859d06580ffd367cf115aee90cce520"
+      "sha256": "29f2d509f6e930c787672020f522564a098cadb3a82323c0a2fd6dc543d4c587"
     },
     {
       "path": "src/components/centropy/canvas/application-client.ts",
@@ -372,7 +372,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "sha256": "2a12885b1a2f8b4355307486c3ab16ce674cbcda7e5b54fca51428b3c509724b"
+      "sha256": "fc430165c03258533a7b499d7008fd94bebecdd815d03a55e8b6462fc432b7df"
     },
     {
       "path": "finnor-os/packages/epistemic-runtime/src/identification.ts",
@@ -440,7 +440,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/IdentifiedSystemPanel.tsx",
-      "sha256": "a0b6fb6609550a83cdbc103285c8c67ac1c4211780ac24b5dcad729f7a3b17d7"
+      "sha256": "70467fcbcfdf4ff8d9b946f490e8c692ca7971f5a61b5b25c5cadd2000776262"
     },
     {
       "path": "finnor-os/scripts/x4/stamp-source.mts",
