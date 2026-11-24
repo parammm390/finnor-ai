@@ -58,8 +58,15 @@ def main():
                            (case["boundary"] == "DISPATCH" or row["body"].get("unitId") == pause["unitId"])
                            for row in cut["p2_events"]), "W007_INTENDED_BOUNDARY_ALREADY_CROSSED"
             instant = lambda value: datetime.fromisoformat(value.replace("Z", "+00:00"))
-            assert (instant(event["created_at"]) <= instant(case["pause"]["pausedAt"]) <=
-                    instant(cut["observedAt"]) <= instant(case["revocationCut"]["observedAt"]) <=
+            # pausedAt and resumedAt are JavaScript instants truncated to the
+            # millisecond; PostgreSQL instants carry microseconds. Compare a
+            # database instant against a JavaScript one at the coarser
+            # resolution, or a pause delivered within the same millisecond as
+            # its committed event reads as preceding it.
+            floor = lambda value: value.replace(microsecond=value.microsecond // 1000 * 1000)
+            assert (floor(instant(event["created_at"])) <= instant(case["pause"]["pausedAt"]) <=
+                    instant(cut["observedAt"]) <= instant(case["revocationCut"]["observedAt"]) and
+                    floor(instant(case["revocationCut"]["observedAt"])) <=
                     instant(case["pause"]["resumedAt"])), "W007_ORIGINAL_PAUSE_REVOCATION_ORDER_REQUIRED"
             if case["boundary"] == "CLAIM":
                 assert cut["p2_attempts"] == []
