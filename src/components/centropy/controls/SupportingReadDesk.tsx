@@ -4,6 +4,7 @@ import { useId, useRef, useState } from "react"
 import { centropyGet } from "@/components/centropy/lib/api"
 import { SUPPORTING_READS } from "@/lib/centropy/supporting-reads"
 import { RecordedFields } from "./StructuredFields"
+import { userMessage } from "../lib/user-message"
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 export function SupportingReadDesk() {
@@ -23,7 +24,7 @@ export function SupportingReadDesk() {
     const query = Object.fromEntries((selected.query ?? []).map((field) => [field.key, values[field.key].trim()]))
     lock.current = true; setBusy(true); setError(null); setResult(null)
     try { const value = await centropyGet<unknown>(route, query); setResult({ route, readAt: new Date().toISOString(), value }) }
-    catch (cause) { setError(cause instanceof Error ? cause.message : "Canonical read unavailable") }
+    catch (cause) { setError(userMessage(cause, "Canonical read unavailable")) }
     finally { lock.current = false; setBusy(false) }
   }
   return <section className="ct-record-controls" aria-label="Supporting canonical records">

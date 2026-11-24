@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { getCurrentAccessToken, useCentropyAuth as useJarvisAuth } from '@/components/centropy/lib/centropy-auth'
 import { centropyPost } from '@/components/centropy/lib/api'
+import { userMessage } from "../lib/user-message"
 type CheckpointControl = 'checkpoint-revoke' | 'checkpoint-purge'
 type BranchAction = 'inspect' | 'checkpoint' | 'resume' | 'cancel' | 'continue' | CheckpointControl
 type BranchOperation = BranchAction | 'list' | 'prepare' | 'submit' | 'compare'
@@ -38,7 +39,7 @@ export function BranchRehearsalPanel({ workId, rootId }: { workId: string; rootI
         if (manual) setRecoveryRequired(false)
         if (result.branches.some((b: Branch) => b.status === 'INVALIDATED')) { setDetail(null); setNotice('Work or owner inputs changed. Previous numbers are no longer eligible.') }
       }
-    } catch (e) { if (version === generation.current) { setBranches([]); setSelected([]); setDetail(null); setNotice(e instanceof Error ? e.message : 'BRANCH_UNAVAILABLE') } }
+    } catch (e) { if (version === generation.current) { setBranches([]); setSelected([]); setDetail(null); setNotice(userMessage(e, 'BRANCH_UNAVAILABLE')) } }
   }
   useEffect(() => {
     activeWork.current = workId; activeRoot.current = rootId; generation.current++; mutation.current = null; setBranches([]); setSelected([]); setDetail(null); setPending(false); setConfirmation(null); setRecoveryRequired(false)
@@ -64,7 +65,7 @@ export function BranchRehearsalPanel({ workId, rootId }: { workId: string; rootI
       if (version !== generation.current || activeWork.current !== workId || token !== getCurrentAccessToken()) return
       const acknowledged = await request('submit', { schema: 'finnor.branch-request.v1', workId, inputId: prepared.inputId, programme: prepared.programme, mode: 'COLD_BUILD', idempotencyKey: crypto.randomUUID() })
       if (version === generation.current) { setNotice(`Acknowledged ${acknowledged.status}. Non-isolated development, no protected eligibility.`); await reload() }
-    } catch (e) { if (version === generation.current) { setBranches([]); setDetail(null); setRecoveryRequired(true); setNotice(`${e instanceof Error ? e.message : 'BRANCH_UNAVAILABLE'}. Reload current branches before another request; preparation or submission may already be recorded.`) } }
+    } catch (e) { if (version === generation.current) { setBranches([]); setDetail(null); setRecoveryRequired(true); setNotice(`${userMessage(e, 'BRANCH_UNAVAILABLE')}. Reload current branches before another request; preparation or submission may already be recorded.`) } }
     finally { if (mutation.current === version) mutation.current = null; if (version === generation.current) setPending(false) }
   }
   async function action(operation: BranchAction, branch: Branch) {
@@ -81,7 +82,7 @@ export function BranchRehearsalPanel({ workId, rootId }: { workId: string; rootI
         : operation === 'checkpoint-revoke' ? 'Checkpoint revoked. Its encrypted copy and immutable history remain recorded.'
           : operation === 'checkpoint-purge' ? `${result.purgedPayloads} eligible checkpoint payloads erased for this Work. Current checkpoints, retention holds and immutable history remain protected.`
             : `${operation} returned qualified evidence.`); await reload() }
-    } catch (e) { if (version === generation.current) { setBranches([]); setDetail(null); setRecoveryRequired(true); setNotice(`${e instanceof Error ? e.message : 'BRANCH_UNAVAILABLE'}. Reload canonical state before another control; its outcome may already be recorded.`) } }
+    } catch (e) { if (version === generation.current) { setBranches([]); setDetail(null); setRecoveryRequired(true); setNotice(`${userMessage(e, 'BRANCH_UNAVAILABLE')}. Reload canonical state before another control; its outcome may already be recorded.`) } }
     finally { if (mutation.current === version) mutation.current = null; if (version === generation.current) setPending(false) }
   }
   return <section aria-labelledby="branch-heading" className="mx-auto max-w-5xl space-y-5 rounded-xl border border-white/15 p-6 text-sm">

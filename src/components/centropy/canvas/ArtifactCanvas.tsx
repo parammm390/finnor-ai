@@ -13,6 +13,7 @@ import { ArtifactIcHandoff } from "./ArtifactIcHandoff"
 import { ArtifactPublicationDesk } from "./ArtifactPublicationDesk"
 import { ArtifactSpreadsheetEditor, type EditableCell } from "./ArtifactSpreadsheetEditor"
 import { ArtifactRecordControls } from "./ArtifactRecordControls"
+import { userMessage } from "../lib/user-message"
 
 const UUID = z.string().uuid()
 const RowSchema = z.object({ id: UUID }).passthrough()
@@ -70,7 +71,7 @@ export function ArtifactCanvas({ documentId, initialVersionId, pinnedVersionId, 
     setDownloading(true); setDownloadError(null)
     try {
       await centropyDownload(`documents/${documentId}`, `${state.meta.document.title.replace(/\.[a-z0-9]+$/i, "")}.${state.meta.semantic.kind}`, { versionId })
-    } catch (cause) { setDownloadError(cause instanceof Error ? cause.message : "Artifact download unavailable") }
+    } catch (cause) { setDownloadError(userMessage(cause, "Artifact download unavailable")) }
     finally { setDownloading(false) }
   }
 
@@ -79,15 +80,15 @@ export function ArtifactCanvas({ documentId, initialVersionId, pinnedVersionId, 
     let active = true
     setState({ meta: null, ir: null, error: null, loading: true }); setRangePage(null); setDiff(null)
     void Promise.all([
-      centropyGet<unknown>(`documents/${documentId}/artifact`, { versionId }).catch((cause) => { throw new Error(`Artifact metadata read: ${cause instanceof Error ? cause.message : "Unavailable"}`) }),
-      centropyGet<unknown>(`documents/${documentId}/artifact/ir/${versionId}`, { limit: "500" }).catch((cause) => { throw new Error(`Semantic content read: ${cause instanceof Error ? cause.message : "Unavailable"}`) }),
+      centropyGet<unknown>(`documents/${documentId}/artifact`, { versionId }).catch((cause) => { throw new Error(`Artifact metadata read: ${userMessage(cause, "Unavailable")}`) }),
+      centropyGet<unknown>(`documents/${documentId}/artifact/ir/${versionId}`, { limit: "500" }).catch((cause) => { throw new Error(`Semantic content read: ${userMessage(cause, "Unavailable")}`) }),
     ]).then(([metaValue, irValue]) => {
       if (!active) return
       const meta = ArtifactMetaSchema.parse(metaValue)
       const ir = IrPageSchema.parse(irValue)
       if (meta.documentId !== documentId || meta.document.id !== documentId || meta.version.id !== versionId || !meta.versions.some((version) => version.id === versionId) || meta.semantic.semanticHash !== ir.semanticHash || meta.semantic.kind !== ir.kind) throw new Error("Artifact metadata and semantic content did not match the pinned document version.")
       setState({ meta, ir, error: null, loading: false })
-    }).catch((cause) => { if (active) setState({ meta: null, ir: null, error: cause instanceof Error ? cause.message : "Artifact read unavailable", loading: false }) })
+    }).catch((cause) => { if (active) setState({ meta: null, ir: null, error: userMessage(cause, "Artifact read unavailable"), loading: false }) })
     return () => { active = false }
   }, [documentId, versionId, refresh])
 
@@ -120,7 +121,7 @@ export function ArtifactCanvas({ documentId, initialVersionId, pinnedVersionId, 
       const page = IrPageSchema.parse(await centropyGet<unknown>(`documents/${documentId}/artifact/ir/${versionId}`, { sheetId: activeSheet.id.replace(/^sheet:/, ""), range: range.trim().toUpperCase(), limit: "500" }))
       if (page.semanticHash !== ir.semanticHash || page.kind !== ir.kind) throw new Error("The range read did not match this document version.")
       setRangePage(page)
-    } catch (cause) { setRangeError(cause instanceof Error ? cause.message : "Range unavailable") }
+    } catch (cause) { setRangeError(userMessage(cause, "Range unavailable")) }
     finally { setRangeLoading(false) }
   }
 
@@ -131,7 +132,7 @@ export function ArtifactCanvas({ documentId, initialVersionId, pinnedVersionId, 
       const result = DiffSchema.parse(await centropyGet<unknown>(`documents/${documentId}/artifact/diff`, { left: compareId, right: versionId }))
       if (result.left !== compareId || result.right !== versionId) throw new Error("Artifact diff returned a different version pair.")
       setDiff(result)
-    } catch (cause) { setDiffError(cause instanceof Error ? cause.message : "Diff unavailable") }
+    } catch (cause) { setDiffError(userMessage(cause, "Diff unavailable")) }
     finally { setDiffLoading(false) }
   }
 

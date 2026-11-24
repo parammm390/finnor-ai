@@ -4,6 +4,7 @@ import { useRef, useState } from "react"
 import { AlertTriangle, ArrowRight, RotateCcw } from "lucide-react"
 import { centropyPost } from "@/components/centropy/lib/api"
 import type { WorkAggregateView } from "@/components/centropy/product/contracts"
+import { userMessage } from "../lib/user-message"
 
 function summary(value: unknown): string {
   if (typeof value === "string" && value.trim()) return value.trim().slice(0, 300)
@@ -72,7 +73,7 @@ export function WorkRecovery({ aggregate, current, onChanged }: { aggregate: Wor
       setReviewing(false)
       onChanged()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The retry request could not be confirmed.")
+      setError(userMessage(cause, "The retry request could not be confirmed."))
       onChanged()
     } finally { setBusy(false); lock.current = false }
   }

@@ -6,6 +6,7 @@ import { CentropyApiError, centropyGet, centropyPost } from "../lib/api"
 import { useCentropyAuth } from "../lib/centropy-auth"
 import { onBusinessInvalidation } from "../lib/business-invalidation"
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
+import { userMessage } from "../lib/user-message"
 
 const id = z.string().uuid(), key = z.string().min(1).max(240), digest = z.string().regex(/^[a-f0-9]{64}$/)
 const reference = z.object({ owner: key, id: key, version: key, contentDigest: digest })
@@ -284,7 +285,7 @@ export function OrganizationTransformationPanel({ workId, onChanged }: { workId:
       setAssessment(evaluation ? { key, value: evaluation } : null)
     } catch (error) {
       controller.abort()
-      if (current()) setMessage({ key, value: error instanceof Error ? error.message : "Current authorized organization unavailable" })
+      if (current()) setMessage({ key, value: userMessage(error, "Current authorized organization unavailable") })
     } finally {
       if (transport.current === controller) transport.current = null
       if (inFlight.current?.key === key && inFlight.current.serial === serial) {

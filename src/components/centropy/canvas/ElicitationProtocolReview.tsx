@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { centropyPost } from "@/components/centropy/lib/api"
 import { useCentropyAuth } from "@/components/centropy/lib/centropy-auth"
 import { onBusinessInvalidation } from "@/components/centropy/lib/business-invalidation"
+import { userMessage } from "../lib/user-message"
 import { ElicitationContextViewSchema, ElicitationReviewViewSchema, exactElicitationText as exact,
   type ElicitationContextView, type ElicitationReviewView, type ElicitationProgramTargetView } from "./elicitation-protocol-view"
 type Scoped<T> = { scope: string; value: T }
@@ -104,7 +105,7 @@ export function ElicitationProtocolReview({ workId, root, programTargets = [] }:
         const params = new URLSearchParams(search.toString()); params.set("elicitationRequest", result.requestId)
         router.replace(`${pathname}?${params}`, { scroll: false }); setNotice("Durable rule search queued. Partial output is provisional.")
       } else if (requestId) { await refresh(requestId, generation) }
-    } catch (error) { if (active(generation)) { clear(); setNotice(error instanceof Error ? error.message : "Owner operation unavailable. Private values cleared.") } }
+    } catch (error) { if (active(generation)) { clear(); setNotice(userMessage(error, "Owner operation unavailable. Private values cleared.")) } }
     finally { if (writing.current === generation) { writing.current = null; setBusy(false) } }
   }
   function submit() {

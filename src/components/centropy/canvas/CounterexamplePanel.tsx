@@ -5,6 +5,7 @@ import { z } from "zod"
 import { centropyPost as jarvisPost, CentropyApiError as JarvisApiError } from "@/components/centropy/lib/api"
 import { useCentropyAuth as useJarvisAuth } from "@/components/centropy/lib/centropy-auth"
 import type { DecisionSliceRef } from "./decision-slice-view"
+import { userMessage } from "../lib/user-message"
 import "./counterexample.css"
 
 const Ref = z.object({ owner: z.string(), id: z.string(), version: z.string(), contentDigest: z.string() })
@@ -125,7 +126,7 @@ export function CounterexamplePanel({ workId, sliceRef, candidateId, writable }:
     catch (cause) {
       if (epoch.current === generation) {
         if (cause instanceof JarvisApiError && [401, 403, 404].includes(cause.status)) discardPrivateView()
-        else setError(cause instanceof Error ? cause.message : "Bounded challenge refused.")
+        else setError(userMessage(cause, "Bounded challenge refused."))
       }
     }
     finally { if (epoch.current === generation) { writing.current = false; setBusy(false) } }

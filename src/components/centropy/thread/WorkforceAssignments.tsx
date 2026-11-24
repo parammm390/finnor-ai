@@ -5,6 +5,7 @@ import { RefreshCw, RotateCcw } from "lucide-react"
 import { z } from "zod"
 import { centropyGet, centropyPost } from "@/components/centropy/lib/api"
 import type { WorkAggregateView } from "@/components/centropy/product/contracts"
+import { userMessage } from "../lib/user-message"
 
 const UUID = z.string().uuid()
 const AssignmentSchema = z.object({
@@ -76,7 +77,7 @@ export function WorkforceAssignments({ workId, aggregate, onChanged }: { workId:
     let active = true
     setState((previous) => ({ data: previous.data, error: null, loading: true }))
     void readWorkforce(workId).then((data) => { if (active) setState({ data, error: null, loading: false }) })
-      .catch((cause) => { if (active) setState((previous) => ({ data: previous.data, error: cause instanceof Error ? cause.message : "Workforce status unavailable", loading: false })) })
+      .catch((cause) => { if (active) setState((previous) => ({ data: previous.data, error: userMessage(cause, "Workforce status unavailable"), loading: false })) })
     return () => { active = false }
   }, [workId, revision])
 
@@ -99,7 +100,7 @@ export function WorkforceAssignments({ workId, aggregate, onChanged }: { workId:
       setRevision((value) => value + 1)
       onChanged()
     } catch (cause) {
-      setControlError(cause instanceof Error ? cause.message : "Specialist reassignment could not be confirmed. Refresh before trying again.")
+      setControlError(userMessage(cause, "Specialist reassignment could not be confirmed. Refresh before trying again."))
     } finally { setReassigningId(null) }
   }
 

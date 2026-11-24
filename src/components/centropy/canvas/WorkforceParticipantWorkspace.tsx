@@ -10,6 +10,7 @@ import { centropyGet, centropyPost } from "../lib/api"
 import { WorkforceExecutionPanel } from "./WorkforceExecutionPanel"
 import { RealWorldServicePanel } from "../world/RealWorldServicePanel"
 import { GrowthBusinessInvitations } from "../world/GrowthOperatingProgramPanel"
+import { userMessage } from "../lib/user-message"
 import "../centropy-theme.css"
 
 const OrganizationTransformationPanel = lazy(() => import("./OrganizationTransformationPanel").then(module => ({ default: module.OrganizationTransformationPanel })))
@@ -32,7 +33,7 @@ export function WorkforceParticipantWorkspace() {
       const result = enrollments.parse(value)
       if (!cancelled && scope.isCurrent(key)) setRead({ key, data: result.data })
     }).catch(cause => {
-      if (!cancelled && scope.isCurrent(key)) setError({ key, message: cause instanceof Error ? cause.message : "Enrollment unavailable" })
+      if (!cancelled && scope.isCurrent(key)) setError({ key, message: userMessage(cause, "Enrollment unavailable") })
     })
     const withdraw = () => { setRead(null); setError(null); scope.invalidate() }
     window.addEventListener("offline", withdraw)
@@ -50,7 +51,7 @@ export function WorkforceParticipantWorkspace() {
         expectedRevision: item.revision, idempotencyKey: "workforce-enrollment-ui:" + crypto.randomUUID() })
       if (scope.isCurrent(key)) setRefresh(value => value + 1)
     } catch (cause) {
-      if (scope.isCurrent(key)) setError({ key, message: cause instanceof Error ? cause.message : "Response uncertain; refresh before retry" })
+      if (scope.isCurrent(key)) setError({ key, message: userMessage(cause, "Response uncertain; refresh before retry") })
     } finally { if (scope.isCurrent(key)) setBusy(null) }
   }
   return <main className="ct-auth-state" aria-label="Your accountable workforce contracts">

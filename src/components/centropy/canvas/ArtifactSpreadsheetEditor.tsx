@@ -4,6 +4,7 @@ import { useId, useRef, useState } from "react"
 import { z } from "zod"
 import { centropyGet, centropyPost } from "@/components/centropy/lib/api"
 import { RecordedFields } from "../controls/StructuredFields"
+import { userMessage } from "../lib/user-message"
 
 const DraftSchema = z.object({ draftKey: z.string().min(1), versionId: z.string().uuid() })
 const PatchSchema = z.union([z.object({ version: z.object({ id: z.string().uuid() }) }), z.object({ versionId: z.string().uuid() })])
@@ -64,7 +65,7 @@ export function ArtifactSpreadsheetEditor({ documentId, versionId, cells, onVers
         if (cell.data.formula != null || cell.data.value !== expected) throw new Error("The stored cell value differs from the exact reviewed change.")
       }
       onVersionCreated(nextVersionId)
-    } catch (cause) { setError(`${cause instanceof Error ? cause.message : "Workbook edit unavailable"} ${nextVersionId ? "Retry reads the same saved version." : exactDraft ? "Retry submits the same exact patch." : "Inspect the version list if the draft response was lost."}`) }
+    } catch (cause) { setError(`${userMessage(cause, "Workbook edit unavailable")} ${nextVersionId ? "Retry reads the same saved version." : exactDraft ? "Retry submits the same exact patch." : "Inspect the version list if the draft response was lost."}`) }
     finally { lock.current = false; setBusy(false) }
   }
 

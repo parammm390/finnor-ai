@@ -4,6 +4,7 @@ import { useRef, useState } from "react"
 import Link from "next/link"
 import { centropyDelete, centropyPost, centropyPut } from "@/components/centropy/lib/api"
 import { RecordedFields, StructuredFields, schemaDefaults, type FieldSchema } from "./StructuredFields"
+import { userMessage } from "../lib/user-message"
 
 export type HumanForm = { id: string; capabilityId: string; group: string; title: string; method: "POST" | "PUT" | "DELETE"; routePattern: string; pathFields: string[]; readOnly: boolean; humanOnly: boolean; operation: string | null; owner: string; schema: FieldSchema }
 type Review = { body: Record<string, unknown>; path: string; pathValues: Record<string, string> }
@@ -38,7 +39,7 @@ export function CanonicalRecordForm({ form, initialValues = {}, fixedValues = {}
       setObserved(result); setVerification("accepted")
       if (verify) { const readback = await verify(result, review.body); setObserved(readback); setVerification("verified") }
       setReview(null); setAck(false); onRecorded()
-    } catch (cause) { setError(`${cause instanceof Error ? cause.message : "The operation could not be confirmed."} Refresh its record before retrying.`); onRecorded() }
+    } catch (cause) { setError(`${userMessage(cause, "The operation could not be confirmed.")} Refresh its record before retrying.`); onRecorded() }
     finally { setBusy(false); lock.current = false }
   }
   return <section className="ct-record-form" aria-label={form.title}>

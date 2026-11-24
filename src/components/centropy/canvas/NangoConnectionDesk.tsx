@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from "react"
 import { z } from "zod"
 import { centropyGet, centropyPost } from "@/components/centropy/lib/api"
+import { userMessage } from "../lib/user-message"
 
 const Source = z.object({ integration_id: z.string().uuid(), source_scope_id: z.string().uuid(), provider_config_key: z.string(), model: z.string(), status: z.enum(["ACTIVE", "DISABLED"]), revision: z.number().int(), cache_enumeration_completed: z.boolean(), history_limited: z.boolean(), updated_at: z.string() })
 const Catalog = z.object({ sources: z.array(Source), providers: z.array(z.object({ providerConfigKey: z.string(), models: z.array(z.string()), readOnly: z.literal(true) })) })
 type CatalogValue = z.infer<typeof Catalog>
-function reason(cause: unknown) { return cause instanceof Error ? cause.message : "The connection request could not be completed." }
+function reason(cause: unknown) { return userMessage(cause, "The connection request could not be completed.") }
 
 export function NangoConnectionDesk() {
   const [catalog, setCatalog] = useState<CatalogValue | null>(null)

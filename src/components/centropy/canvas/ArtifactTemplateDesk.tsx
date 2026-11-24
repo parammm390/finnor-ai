@@ -5,6 +5,7 @@ import { ArrowRight, FileStack, RefreshCw } from "lucide-react"
 import { z } from "zod"
 import { centropyGet, centropyPost } from "@/components/centropy/lib/api"
 import type { WorkDeck } from "./work-deck-model"
+import { userMessage } from "../lib/user-message"
 
 const UUID = z.string().uuid()
 const TemplateSchema = z.object({ id: UUID, template_key: z.string().min(1), version_id: UUID, kind: z.string(), status: z.string() }).passthrough()
@@ -45,7 +46,7 @@ export function ArtifactTemplateDesk({ caseTitle, createdDeck, workDeck, onDeckC
       setLoading(false)
     }).catch((cause) => {
       if (!active) return
-      setError(cause instanceof Error ? cause.message : "Template catalog unavailable")
+      setError(userMessage(cause, "Template catalog unavailable"))
       setLoading(false)
     })
     return () => { active = false }
@@ -76,7 +77,7 @@ export function ArtifactTemplateDesk({ caseTitle, createdDeck, workDeck, onDeckC
       setNotice("Exact deck draft created and read back. Inspect its slides, make sourced edits, and review it before any IC selection or publication.")
     } catch (cause) {
       setUncertain(true)
-      setNotice(`${cause instanceof Error ? cause.message : "Deck creation status unavailable"} ${created ? "The created document ID is retained below; verify it before another creation." : "Check recorded artifacts before submitting this creation again."}`)
+      setNotice(`${userMessage(cause, "Deck creation status unavailable")} ${created ? "The created document ID is retained below; verify it before another creation." : "Check recorded artifacts before submitting this creation again."}`)
     } finally {
       setBusy(false)
     }
@@ -91,7 +92,7 @@ export function ArtifactTemplateDesk({ caseTitle, createdDeck, workDeck, onDeckC
       if (readback.documentId !== createdDeck.documentId || readback.version.id !== createdDeck.versionId || readback.document.title !== createdDeck.title) throw new Error("Exact deck readback does not match the created record.")
       onDeckCreated({ ...createdDeck, verified: true })
       setNotice("Exact deck version verified from persisted Artifact OS records.")
-    } catch (cause) { setNotice(cause instanceof Error ? cause.message : "Exact deck readback unavailable") }
+    } catch (cause) { setNotice(userMessage(cause, "Exact deck readback unavailable")) }
     finally { setBusy(false) }
   }
 

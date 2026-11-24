@@ -5,6 +5,7 @@ import { RefreshCw } from "lucide-react"
 import { centropyPost } from "@/components/centropy/lib/api"
 import { onBusinessInvalidation } from "@/components/centropy/lib/business-invalidation"
 import type { ClosingMoney, ClosingProjection } from "../../../../finnor-os/packages/shared-types/src/closing"
+import { userMessage } from "../lib/user-message"
 
 const HumanControlDesk = lazy(() => import("../controls/HumanControlDesk").then(module => ({ default: module.HumanControlDesk })))
 const words = (value: string) => value.replace(/([a-z])([A-Z])/g, "$1 $2").replaceAll("_", " ").toLowerCase()
@@ -51,7 +52,7 @@ export function ClosingProgrammePanel({ workId, transactionId, onChanged }: { wo
         throw new Error("Closing projection did not match the exact selected Work or Deal")
       }
       if (active) setProgrammes(result.programmes.map(q => currentAt(q, Date.now())))
-    }).catch(cause => { if (active) setError(cause instanceof Error ? cause.message : "Closing projection unavailable") })
+    }).catch(cause => { if (active) setError(userMessage(cause, "Closing projection unavailable")) })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [workId, transactionId, revision])

@@ -10,6 +10,7 @@ import Link from "next/link"
 import { Lock } from "lucide-react"
 import { getSupabaseBrowser } from "@/lib/centropy/supabase-browser"
 import { waitForCentropySignOut } from "./centropy-auth"
+import { userMessage } from "./user-message"
 import "../centropy-theme.css"
 
 export function LoginForm() {
@@ -50,7 +51,7 @@ export function LoginForm() {
       if (signInError) throw signInError
       router.push("/centropy")
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "CENTROPY sign-in is unavailable.")
+      setError(userMessage(cause, "CENTROPY sign-in is unavailable."))
     } finally {
       setBusy(false)
     }

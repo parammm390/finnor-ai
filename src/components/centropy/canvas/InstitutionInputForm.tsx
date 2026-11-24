@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { centropyPost } from "../lib/api"
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
+import { userMessage } from "../lib/user-message"
 
 type Rule = { id: string; triggerKind: string; operation: string; principalId: string;
   deadlineAt: string; materiality: string; [field: string]: unknown }
@@ -36,7 +37,7 @@ export function InstitutionInputForm({ workId, onSaved }: { workId: string; onSa
       setInputs(value); setInstitution(value.mandate?.institution_id ?? "")
       setExpiry((value.mandate?.expires_at ?? new Date(Date.now() + 3600000).toISOString()).slice(0, 16))
       setRules((value.mandate?.rules ?? []).map(({ postconditionRef: _postcondition, observerRef: _observer, ...rule }) => rule as Rule))
-    }).catch(error => { if (active && isCurrent(key)) setMessage(error instanceof Error ? error.message : "Inputs are unavailable") })
+    }).catch(error => { if (active && isCurrent(key)) setMessage(userMessage(error, "Inputs are unavailable")) })
     return () => { active = false }
   }, [allowed, isCurrent, key, workId])
   async function save(command: "mandate" | "source" | "consent" | "revoke-consent") {
@@ -64,7 +65,7 @@ export function InstitutionInputForm({ workId, onSaved }: { workId: string; onSa
         : command === "revoke-consent" ? "Your consent is revoked. Dependent private sources must be revalidated."
         : "Original source attached with owner-derived coverage and byte identity.")
       await onSaved()
-    } catch (error) { if (isCurrent(key)) setMessage(error instanceof Error ? error.message : "Input configuration is uncertain; refresh current owners") }
+    } catch (error) { if (isCurrent(key)) setMessage(userMessage(error, "Input configuration is uncertain; refresh current owners")) }
     finally { if (isCurrent(key)) setBusy(false) }
   }
   const update = (index: number, field: string, value: string) => setRules(current => current.map((rule, i) => i === index ? { ...rule, [field]: value } : rule))
