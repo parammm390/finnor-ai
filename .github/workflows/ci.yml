@@ -187,6 +187,10 @@ jobs:
     name: "Build - Application and worker artifacts"
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      # The API production build type-checks the whole backend, which needs more
+      # than the 2 GB default heap of a 7 GB runner.
+      NODE_OPTIONS: --max-old-space-size=4096
     defaults:
       run:
         working-directory: .
