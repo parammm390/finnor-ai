@@ -1,5 +1,5 @@
-import { users, works, withTenant, workLifecycleOutcome } from "@finnor/db";
-import { and, desc, eq, notInArray, or } from "drizzle-orm";
+import { employeeVisibleWork, works, withTenant, workLifecycleOutcome } from "@finnor/db";
+import { and, desc, eq, notInArray } from "drizzle-orm";
 import { errorResponse, requireContext } from "../../../lib/auth";
 
 const EMPLOYEE_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -16,14 +16,9 @@ export async function GET(req: Request): Promise<Response> {
     const rows = await withTenant(ctx.tenantId, (db) => db
       .select({ work: works })
       .from(works)
-      .innerJoin(users, and(
-        eq(users.id, actorId),
-        eq(users.tenantId, works.tenantId),
-        eq(users.status, "active"),
-      ))
       .where(and(
         eq(works.tenantId, ctx.tenantId),
-        or(eq(works.createdBy, actorId), eq(works.currentOwnerId, actorId), eq(works.assignedTo, actorId)),
+        employeeVisibleWork(actorId),
         ...(sessionId ? [eq(works.sessionId, sessionId)] : []),
         ...(activeOnly ? [notInArray(works.status, ["completed", "failed", "cancelled"])] : []),
       ))

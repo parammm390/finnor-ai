@@ -152,7 +152,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/index.ts",
-      "sha256": "8e36efb8c361fe5634aa1731286b53b2c92066982f3e2ee48486be00e092c298"
+      "sha256": "a59fa17ef3f15eaf844c417a2d7e87c3740bc3e01fcca16abea6d843dc4dba81"
     },
     {
       "path": "finnor-os/packages/security/src/auth.ts",
