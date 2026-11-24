@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "y5:toolchain:install": "python3 scripts/postx/y5/install-toolchain.py",
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p tsconfig.json",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",

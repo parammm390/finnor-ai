@@ -332,7 +332,7 @@ export default {
     },
     {
       "path": "finnor-os/package.json",
-      "sha256": "7ca9af52d7d4dca74cad494aedea93dd93ef45b0a76a97eee6ea9e767b21a2ad"
+      "sha256": "44f2962dd433dbb33976691786be09c0797bf911eb90ecb6a5d3edc5091683f0"
     },
     {
       "path": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
@@ -6063,5 +6063,5 @@ export default {
       "sha256": "afdd55a749ac3e3800f46a4f23711a55cecd90b9b054a4cad1ddbcb607576b94"
     }
   ],
-  "sourceDigest": "9ac88930ba7f55c9adb0e92e7baf4c01efa735489443322fd13d094fe436a020"
+  "sourceDigest": "b188037d38ddad8af65e4da1b87b8b943a490cf6db97bc856bbe8935fac6ea09"
 } as const;
