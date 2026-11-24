@@ -188,6 +188,32 @@ describe.skipIf(!available)("Upgrade 2 durable Work kernel", () => {
     })).rejects.toBeInstanceOf(WorkRecoveryAuthorizationError);
   });
 
+  it("lets only the request that still holds the recovery lease start a planner", async () => {
+    const received = await receiveWork({
+      tenantId: TENANT_ID,
+      instruction: "Take over a stalled recovery claim",
+      instructionId: randomUUID(),
+      channel: "text",
+      userId: RECOVERY_OWNER_ID,
+    });
+    await transitionWork(TENANT_ID, received.workId, "failed", "planning_failed", { message: "test failure" });
+    const stalled = await claimWorkRecovery({ tenantId: TENANT_ID, workId: received.workId, attemptKey: "retry:stalled", requestedBy: RECOVERY_OWNER_ID });
+    expect(stalled.claimed).toBe(true);
+    const [claimed] = await withTenant(TENANT_ID, db => db.select({ recovery: works.recovery }).from(works).where(eq(works.id, received.workId)));
+    await withTenant(TENANT_ID, db => db.update(works).set({
+      recovery: { ...(claimed!.recovery as Record<string, unknown>), claimedAt: new Date(Date.now() - 16 * 60_000).toISOString() },
+    }).where(eq(works.id, received.workId)));
+    const takeover = await claimWorkRecovery({ tenantId: TENANT_ID, workId: received.workId, attemptKey: "retry:takeover", requestedBy: RECOVERY_OWNER_ID });
+    expect(takeover.claimed).toBe(true);
+
+    await expect(beginWorkPlannerAttempt({ tenantId: TENANT_ID, workId: received.workId, workInputId: takeover.input!.id, attemptKey: "retry:takeover" }))
+      .resolves.toMatchObject({ claimed: true });
+    await expect(beginWorkPlannerAttempt({ tenantId: TENANT_ID, workId: received.workId, workInputId: stalled.input!.id, attemptKey: "retry:stalled" }))
+      .rejects.toBeInstanceOf(WorkTransitionConflictError);
+    const attempts = (await workAggregate(TENANT_ID, received.workId))!.plannerAttempts as Array<{ attemptKey: string }>;
+    expect(attempts.map(attempt => attempt.attemptKey)).toEqual(["retry:takeover"]);
+  });
+
   it("revokes the old owner's recovery rights when current ownership changes", async () => {
     const received = await receiveWork({
       tenantId: TENANT_ID,
