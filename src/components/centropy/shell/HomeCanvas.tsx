@@ -6,6 +6,7 @@ import { z } from "zod"
 import { centropyGet, centropyPost } from "@/components/centropy/lib/api"
 import { usePrivateRequestScope } from "@/components/centropy/lib/use-private-request-scope"
 import { ConversationThreadSummarySchema, type ConversationThreadSummary } from "../thread/thread-contract"
+import { userMessage } from "../lib/user-message"
 
 const WorkflowRecoveryDesk = lazy(() => import("../controls/WorkflowRecoveryDesk").then((module) => ({ default: module.WorkflowRecoveryDesk })))
 const ArtifactCreationDesk = lazy(() => import("../controls/ArtifactCreationDesk").then((module) => ({ default: module.ArtifactCreationDesk })))
@@ -58,7 +59,7 @@ export function HomeCanvas({ recent, recentError, recentLoading = false, onOpenI
       const parsed = z.object({ works: z.array(WorkSummarySchema) }).parse(result)
       setWorks({ data: parsed.works, error: null, status: "ready" })
     }).catch((cause) => {
-      if (active) setWorks({ data: [], error: cause instanceof Error ? cause.message : "Active Work unavailable", status: "error" })
+      if (active) setWorks({ data: [], error: userMessage(cause, "Active Work unavailable"), status: "error" })
     })
     void centropyGet<unknown>("read-models/attention", { limit: "100" }).then((result) => {
       if (!active) return
@@ -66,7 +67,7 @@ export function HomeCanvas({ recent, recentError, recentLoading = false, onOpenI
       setAttention({ data: parsed.data.items, error: null, status: "ready" })
       setAttentionCoverage(parsed.data.sourceStatus.status)
     }).catch((cause) => {
-      if (active) setAttention({ data: [], error: cause instanceof Error ? cause.message : "Attention unavailable", status: "error" })
+      if (active) setAttention({ data: [], error: userMessage(cause, "Attention unavailable"), status: "error" })
     })
     return () => { active = false }
   }, [])
@@ -80,7 +81,7 @@ export function HomeCanvas({ recent, recentError, recentLoading = false, onOpenI
       const { thread } = z.object({ thread: ConversationThreadSummarySchema }).parse(response)
       if (scope.isCurrent(key)) onOpenInvestigation(thread.id)
     } catch (cause) {
-      if (scope.isCurrent(key)) setOpenError(cause instanceof Error ? cause.message : "This Work could not be opened")
+      if (scope.isCurrent(key)) setOpenError(userMessage(cause, "This Work could not be opened"))
     } finally {
       opening.current = false
       if (scope.isCurrent(key)) setOpeningWorkId(null)

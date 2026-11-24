@@ -7,6 +7,7 @@ import { useCentropyAuth } from "@/components/centropy/lib/centropy-auth"
 import { onBusinessInvalidation } from "@/components/centropy/lib/business-invalidation"
 import { capitalFormationView, capitalDisplayDeadline, exactCapitalAmount } from "./capital-formation-view"
 import type { CapitalFormationView } from "../../../../finnor-os/packages/shared-types/src/capital-formation"
+import { userMessage } from "../lib/user-message"
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const label = (s: string) => s.replaceAll("_", " ").toLowerCase()
@@ -101,7 +102,7 @@ export function CapitalFormationPanel({ workId, root }: { workId: string; root: 
       if (!active(epoch)) return
       clear(); setError(cause instanceof CentropyApiError && [401, 403, 404].includes(cause.status)
         ? "Financing is unavailable in your current access scope. Values cleared."
-        : cause instanceof Error ? cause.message : "Current financing could not be verified. Values cleared.")
+        : userMessage(cause, "Current financing could not be verified. Values cleared."))
     } finally { if (writing.current === epoch) { writing.current = null; setBusy(false) } }
   }
   function submit(event: FormEvent) {

@@ -5,6 +5,7 @@ import { z } from "zod"
 import { centropyGet, centropyPost } from "../lib/api"
 import { onBusinessInvalidation } from "../lib/business-invalidation"
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
+import { userMessage } from "../lib/user-message"
 
 const terms = z.object({ revision: z.number().int().positive(), deliverable: z.string(),
   compensation: z.object({ value: z.string(), unit: z.string() }), subdelegation: z.boolean(), expiresAt: z.string() })
@@ -94,7 +95,7 @@ export function WorkforceExecutionPanel({ workId, participant = false }: { workI
     } catch (error) {
       if (!current()) return
       setRead(null); setMetadata(null)
-      setMessage({ key: scope, value: error instanceof Error ? error.message : "Current authorized programme unavailable" })
+      setMessage({ key: scope, value: userMessage(error, "Current authorized programme unavailable") })
     } finally {
       if (inFlight.current?.key === scope && inFlight.current.serial === serial) {
         inFlight.current = null; setReading(null)
@@ -138,8 +139,7 @@ export function WorkforceExecutionPanel({ workId, participant = false }: { workI
       }
       if (isCurrent(scope)) await refresh()
     } catch (error) {
-      if (isCurrent(scope)) setMessage({ key: scope, value: error instanceof Error ? error.message :
-        "The response is uncertain. Refresh the original programme before trying again." })
+      if (isCurrent(scope)) setMessage({ key: scope, value: userMessage(error, "The response is uncertain. Refresh the original programme before trying again.") })
     } finally { if (isCurrent(scope)) setBusy(null) }
   }
   async function act(item: z.infer<typeof assignment>, action: string) {

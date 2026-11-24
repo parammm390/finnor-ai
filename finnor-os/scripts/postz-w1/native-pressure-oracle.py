@@ -74,7 +74,7 @@ def main():
     source_miss = by_label["C_ORIGINAL_PREPRESSURE_DEADLINE_MISSED"]
     source_parent = parents[source_miss["programId"]]
     assert source_parent["request"]["limits"]["deadlineMs"] == 15000
-    assert parents[c["programId"]]["request"]["limits"]["deadlineMs"] == 60000
+    assert parents[c["programId"]]["request"]["limits"]["deadlineMs"] == 120000
     source_deadline = instant(episodes[source_parent["episode_id"]]["deadline_at"])
     prepressure = record["prepressureMiss"]["cut"]
     assert instant(prepressure["observedAt"]) > source_deadline

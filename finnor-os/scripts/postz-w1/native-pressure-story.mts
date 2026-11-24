@@ -100,7 +100,7 @@ export async function nativePressureStory(e: any) {
     await artifact("post-bootstrap-source-worker.json", { previous: previousSourceIdentity, current: sourceQueue.identity,
       registeredTypes: sourceQueue.registeredTypes(),
       qualification: "LOCAL_QUEUE_CLASS_CONFIGURATION_NOT_DEPLOYMENT_OR_S8_ADMISSION" });
-    const c = await siblingInternalProgramme(http, f, { deadlineMs: 60000 });
+    const c = await siblingInternalProgramme(http, f, { deadlineMs: 120000 });
     const cSearch = await submitInternalSearch(http, f, c.program.programId);
     const protectedSearches = [aSearch, sourceMissSearch];
     const protectedProgrammes = [f.p.programId, sourceMiss.program.programId];

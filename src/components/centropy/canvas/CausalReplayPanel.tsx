@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, ArrowRight, GitBranch, RefreshCw } from "lucide-react"
 import { centropyGet } from "@/components/centropy/lib/api"
 import { CausalReplaySchema, causalPathRows, type CausalReplay } from "./causal-replay-contract"
+import { userMessage } from "../lib/user-message"
 
 type Tab = "path" | "moments" | "gaps"
 const narrations = ["trigger", "context", "plan", "governance", "execution", "verification", "outcome"] as const
@@ -26,7 +27,7 @@ export function CausalReplayPanel({ workId, onClose, returnLabel = "Canvas" }: {
       if (parsed.work.id !== workId) throw new Error("Replay response did not match the selected Work")
       setReplay(parsed); setStatus("ready")
     }).catch((cause) => {
-      if (active) { setStatus("error"); setError(cause instanceof Error ? cause.message : "Causal replay unavailable") }
+      if (active) { setStatus("error"); setError(userMessage(cause, "Causal replay unavailable")) }
     })
     return () => { active = false }
   }, [revision, workId])

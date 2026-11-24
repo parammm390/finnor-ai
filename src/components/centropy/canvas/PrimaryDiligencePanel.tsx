@@ -4,6 +4,7 @@ import {useCallback,useEffect,useRef,useState} from "react"
 import {usePathname,useRouter,useSearchParams} from "next/navigation"
 import {centropyGet,centropyPost,CentropyApiError} from "@/components/centropy/lib/api"
 import {useCentropyAuth} from "@/components/centropy/lib/centropy-auth"
+import { userMessage } from "../lib/user-message"
 
 type Ref={owner:string;id:string;revision:string;contentDigest:string}
 type Root={entityType:string;entityId:string}
@@ -66,7 +67,7 @@ export function PrimaryDiligencePanel({root,workId,investigation,onSelectWork}:{
    if(generation!==epoch.current||identityRef.current!==identity)return
    const params=new URLSearchParams(search.toString());params.set("primaryProgramme",accepted.programmeId);router.replace(`${pathname}?${params}`,{scroll:false});setProgramme(accepted.programmeId)
    setMessage("Durable primary acquisition accepted. Pending and provisional, not verified.");if(!workId)onSelectWork?.(accepted.workId)
-  }catch(error){if(generation!==epoch.current||identityRef.current!==identity)return;clear();const details=error instanceof CentropyApiError?error.details as {predicate?:string}:null;setMessage(details?.predicate??(error instanceof Error?error.message:"Primary diligence unavailable"))}
+  }catch(error){if(generation!==epoch.current||identityRef.current!==identity)return;clear();const details=error instanceof CentropyApiError?error.details as {predicate?:string}:null;setMessage(details?.predicate??(userMessage(error, "Primary diligence unavailable")))}
   finally{if(pending.current===generation){pending.current=null;if(identityRef.current===identity)setBusy(false)}}
  }
  async function cancel(){if(!programmeId||pending.current!==null||!session)return;const generation=++epoch.current;pending.current=generation;clear();setBusy(true);try{await centropyPost("company-brain/primary-cancel",{programmeId});if(generation===epoch.current&&identityRef.current===identity)setMessage("Cancellation requested. Existing requests, charges and unknown exposure remain accountable.")}catch{if(generation===epoch.current&&identityRef.current===identity)setMessage("Cancellation is not confirmed. Private values cleared.")}finally{if(pending.current===generation){pending.current=null;if(identityRef.current===identity)setBusy(false)}}}

@@ -5,6 +5,7 @@ import { ArrowRight, RefreshCw } from "lucide-react"
 import { z } from "zod"
 import { centropyGet, centropyPost } from "@/components/centropy/lib/api"
 import type { IcWorkspace } from "@/components/centropy/product/contracts"
+import { userMessage } from "../lib/user-message"
 
 const UUID = z.string().uuid()
 const CaseSchema = z.object({ id: UUID, dealId: UUID, investmentCaseId: UUID, state: z.string(), version: z.number().int(), reconsidersDecisionId: UUID.nullable().optional() }).passthrough()
@@ -36,7 +37,7 @@ export function IcCaseContinuation({ workspace, onSelectCase }: { workspace: IcW
       if (!active) return
       setCases(ListSchema.parse(value).cases)
       setError(null)
-    }).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "IC case list unavailable") })
+    }).catch((cause) => { if (active) setError(userMessage(cause, "IC case list unavailable")) })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [revision])
@@ -66,7 +67,7 @@ export function IcCaseContinuation({ workspace, onSelectCase }: { workspace: IcW
       onSelectCase(opened.row.id)
     } catch (cause) {
       setUncertain(true)
-      setNotice(`${cause instanceof Error ? cause.message : "IC case opening could not be verified"} Refresh the case list before another opening attempt.`)
+      setNotice(`${userMessage(cause, "IC case opening could not be verified")} Refresh the case list before another opening attempt.`)
     } finally { setBusy(false) }
   }
 

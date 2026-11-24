@@ -6,6 +6,7 @@ import type { PeWorldRootRef, CompanyBrainProjection } from "@/components/centro
 import type { IcWorkspace, UnderwritingWorkspace, WorkAggregateView } from "@/components/centropy/product/contracts"
 import { verifiedWorkDeck, verifiedWorkIcCase } from "./work-deck-model"
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
+import { userMessage } from "../lib/user-message"
 
 interface SourceState<T> { data: T | null; status: "idle" | "loading" | "ready" | "error"; error: string | null; key: string | null; scope?: string }
 const idle = <T,>(): SourceState<T> => ({ data: null, status: "idle", error: null, key: null })
@@ -50,7 +51,7 @@ export function useCanvasSources(workId: string | null, root: PeWorldRootRef | n
         if (!active || !isWorkCurrent(workScopeKey)) return
         setWork(previous => ({ data: cause instanceof CentropyApiError && cause.retryable
           && previous.key === workId && previous.scope === workScopeKey ? previous.data : null,
-          status: "error", error: cause instanceof Error ? cause.message : "Work unavailable", key: workId, scope: workScopeKey }))
+          status: "error", error: userMessage(cause, "Work unavailable"), key: workId, scope: workScopeKey }))
         timer = window.setTimeout(load, 10000)
       })
     }
@@ -69,7 +70,7 @@ export function useCanvasSources(workId: string | null, root: PeWorldRootRef | n
       if (result.root?.entityType !== rootType || result.root?.entityId !== rootId || !Array.isArray(result.nodes)) throw new Error("Company Brain response did not match the selected context")
       setProjection({ data: result, status: "ready", error: null, key: rootKey, scope: graphScopeKey })
     }).catch((cause) => {
-      if (isCurrent()) setProjection({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Company Brain unavailable", key: rootKey, scope: graphScopeKey })
+      if (isCurrent()) setProjection({ data: null, status: "error", error: userMessage(cause, "Company Brain unavailable"), key: rootKey, scope: graphScopeKey })
     })
     return () => { controller.abort() }
   }, [graphEnabled, revision, rootKey, rootType, rootId, graphScopeKey, isGraphCurrent])
@@ -83,7 +84,7 @@ export function useCanvasSources(workId: string | null, root: PeWorldRootRef | n
       if (result.investmentCase?.id !== caseId || (dealId && result.investmentCase.dealId !== dealId) || result.complete !== true || !Array.isArray(result.runs) || !Array.isArray(result.models)) throw new Error("Underwriting response did not match the selected Deal and Investment Case")
       setUnderwriting({ data: result, status: "ready", error: null, key: caseId, scope: scopeKey })
     }).catch((cause) => {
-      if (active && isCurrent(scopeKey)) setUnderwriting({ data: null, status: "error", error: cause instanceof Error ? cause.message : "Underwriting unavailable", key: caseId, scope: scopeKey })
+      if (active && isCurrent(scopeKey)) setUnderwriting({ data: null, status: "error", error: userMessage(cause, "Underwriting unavailable"), key: caseId, scope: scopeKey })
     })
     return () => { active = false }
   }, [enabled, revision, underwritingRevision, caseId, dealId, scopeKey, isCurrent])
@@ -97,7 +98,7 @@ export function useCanvasSources(workId: string | null, root: PeWorldRootRef | n
       if (result.case?.id !== icCaseId || (dealId && result.case.dealId !== dealId) || !result.readiness || !Array.isArray(result.readiness.blockers) || !Array.isArray(result.questions)) throw new Error("IC response did not match the selected Deal and case")
       setIc({ data: result, status: "ready", error: null, key: icCaseId, scope: scopeKey })
     }).catch((cause) => {
-      if (active && isCurrent(scopeKey)) setIc({ data: null, status: "error", error: cause instanceof Error ? cause.message : "IC unavailable", key: icCaseId, scope: scopeKey })
+      if (active && isCurrent(scopeKey)) setIc({ data: null, status: "error", error: userMessage(cause, "IC unavailable"), key: icCaseId, scope: scopeKey })
     })
     return () => { active = false }
   }, [enabled, revision, icCaseId, dealId, scopeKey, isCurrent])

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { centropyGet } from "@/components/centropy/lib/api"
 import { HumanControlDesk } from "./HumanControlDesk"
 import { RecordedFields } from "./StructuredFields"
+import { userMessage } from "../lib/user-message"
 
 export function SettingsDialog({ onClose, onChanged }: { onClose: () => void; onChanged: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null)
@@ -18,7 +19,7 @@ export function SettingsDialog({ onClose, onChanged }: { onClose: () => void; on
   }, [])
   useEffect(() => {
     let active = true
-    void centropyGet<{ prefs: Record<string, unknown> }>("user-prefs").then((result) => { if (active) { setPreferences(result.prefs); setError(null) } }).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : "Preferences are unavailable") })
+    void centropyGet<{ prefs: Record<string, unknown> }>("user-prefs").then((result) => { if (active) { setPreferences(result.prefs); setError(null) } }).catch((cause) => { if (active) setError(userMessage(cause, "Preferences are unavailable")) })
     return () => { active = false }
   }, [revision])
   return <dialog ref={dialog} className="ct-settings" aria-labelledby="ct-settings-title" onCancel={(e) => { e.preventDefault(); onClose() }}>

@@ -5,6 +5,7 @@ import { earliestMessageSequence, mergeConversationMessages, type LoadedConversa
 import { loadInvestigation } from "./thread-api"
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
 import { CentropyApiError } from "../lib/api"
+import { userMessage } from "../lib/user-message"
 
 export interface InvestigationState {
   forThreadId: string | null
@@ -38,7 +39,7 @@ export function olderPageFailureState(
     ...previous,
     status: "ready",
     olderLoading: false,
-    olderError: cause instanceof Error ? cause.message : "Older turns unavailable",
+    olderError: userMessage(cause, "Older turns unavailable"),
   }
 }
 
@@ -56,7 +57,7 @@ export function refreshFailureState(
   if ([401, 403, 404].includes(status as number)) {
     return { ...EMPTY, forThreadId: threadId, forScope: scopeKey, status: "error", error: "Investigation access is no longer available" }
   }
-  const message = cause instanceof Error ? cause.message : "Investigation refresh unavailable"
+  const message = userMessage(cause, "Investigation refresh unavailable")
   if (previous.forThreadId === threadId && previous.forScope === scopeKey && previous.loaded?.thread.id === threadId) {
     return { ...previous, status: "ready", error: message, olderLoading: false }
   }

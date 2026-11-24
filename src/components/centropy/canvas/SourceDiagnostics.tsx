@@ -7,6 +7,7 @@ import { RefreshCw } from "lucide-react"
 import { z } from "zod"
 import { centropyGet } from "@/components/centropy/lib/api"
 import type { PeWorldRootRef } from "@/components/centropy/pe/contracts"
+import { userMessage } from "../lib/user-message"
 
 const ConnectionSchema = z.object({
   connections: z.array(z.object({
@@ -37,7 +38,7 @@ type ReadState<T> = { data: T | null; error: string | null; loading: boolean }
 const empty = <T,>(): ReadState<T> => ({ data: null, error: null, loading: true })
 const label = (value: string) => value.replaceAll("_", " ").toLowerCase()
 function dateLabel(value: string | null): string { return value && Number.isFinite(Date.parse(value)) ? new Date(value).toLocaleString() : "Not recorded" }
-function errorLabel(cause: unknown): string { return cause instanceof Error ? cause.message : "Source read unavailable" }
+function errorLabel(cause: unknown): string { return userMessage(cause, "Source read unavailable") }
 
 async function readRootCoverage(root: PeWorldRootRef): Promise<CoverageState> {
   const scopes: Scope[] = []

@@ -4,6 +4,7 @@ import {useCallback,useEffect,useRef,useState,type FormEvent} from "react"
 import {usePathname,useRouter,useSearchParams} from "next/navigation"
 import {centropyGet,centropyPost,CentropyApiError} from "@/components/centropy/lib/api"
 import {useCentropyAuth} from "@/components/centropy/lib/centropy-auth"
+import { userMessage } from "../lib/user-message"
 
 type Ref={owner:string;id:string;revision:string;contentDigest:string}
 type Root={entityType:string;entityId:string}
@@ -62,7 +63,7 @@ export function BilateralOpportunityPanel({root,workId,investigation,onSelectWor
   return()=>{active=false;clearTimeout(timer);hide();window.removeEventListener("pagehide",hide);window.removeEventListener("offline",hide);window.removeEventListener("online",resume);document.removeEventListener("visibilitychange",resume)}
  },[programmeId,session,refresh,clear])
  const current=read?.identity===identity?read.data:null,transfer=handoff?.identity===identity?handoff.data:null
- const errorText=(error:unknown)=>error instanceof CentropyApiError?(error.details as {predicate?:string})?.predicate??error.message:error instanceof Error?error.message:"Current owner predicate unpassed"
+ const errorText=(error:unknown)=>error instanceof CentropyApiError?(error.details as {predicate?:string})?.predicate??error.message:userMessage(error, "Current owner predicate unpassed")
  function finish(generation:number){if(pending.current===generation||pending.current===null){pending.current=null;if(identityRef.current===identity)setBusy(false)}}
  async function start(event:FormEvent){
   event.preventDefault();if(pending.current!==null||!session)return;const generation=++epoch.current;pending.current=generation;clear();setBusy(true);setMessage("Accepting the original Work scope. Pipeline and interest are not yet established.")

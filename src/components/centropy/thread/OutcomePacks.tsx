@@ -7,6 +7,7 @@ import { centropyGet } from "@/components/centropy/lib/api"
 import type { PeWorldRootRef } from "@/components/centropy/pe/contracts"
 import type { WorkAggregateView } from "@/components/centropy/product/contracts"
 import { buildGeneralDealMissionInput, type DealMissionCheck } from "./outcome-pack-model"
+import { userMessage } from "../lib/user-message"
 
 const PackId = z.enum([
   "deal_to_verified_closing_readiness",
@@ -69,7 +70,7 @@ export function OutcomePacks({ root, run, onStart }: {
       setCatalog(z.object({ packs: Pack.array() }).parse(result).packs)
       setError(null)
     }).catch((cause) => {
-      if (active) setError(cause instanceof Error ? cause.message : "Outcome Pack catalog unavailable")
+      if (active) setError(userMessage(cause, "Outcome Pack catalog unavailable"))
     })
     return () => { active = false }
   }, [open, reload])
@@ -92,7 +93,7 @@ export function OutcomePacks({ root, run, onStart }: {
       setSelected(null)
       setOpen(false)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The mission was not accepted")
+      setError(userMessage(cause, "The mission was not accepted"))
     } finally { setBusy(false) }
   }
 

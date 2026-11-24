@@ -140,7 +140,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "7e55f13e2f6395ecd2fffd1d8dde180b3fba5eeb3017b8455d765319b1696f7a"
+      "sha256": "868781fad8f7def4f314942ec166c9438eaed3830dd32125bfdfe8b838f429ff"
     },
     {
       "path": "finnor-os/packages/authority/src/index.ts",
@@ -180,7 +180,7 @@ export default {
     },
     {
       "path": "finnor-os/Dockerfile.worker",
-      "sha256": "1e21eeaee2440051a3a19661ab24db40674bc2c9d519067990603e7418063f38"
+      "sha256": "b75f9067f5f9fad8e61d6601360a55ea94ed7cc7cf90eab2d7473eb5846bc7da"
     },
     {
       "path": "finnor-os/package-lock.json",
@@ -192,7 +192,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/LearnedPolicyPanel.tsx",
-      "sha256": "5ebf3b7871dac0b289d50f326f7ce4318ff4163c330ae2e9f11069eab3a1f0ce"
+      "sha256": "4cc2e24ae4170dfbf60a14c6d5cccd514dcf14ef893b891fe8fdcd91c48e308b"
     },
     {
       "path": "src/components/centropy/canvas/CanvasDocument.tsx",
@@ -296,7 +296,7 @@ export default {
     },
     {
       "path": "src/components/centropy/canvas/EnterpriseApplicationPanel.tsx",
-      "sha256": "c9ea5d5153e93262047c4e804f37f70c6859d06580ffd367cf115aee90cce520"
+      "sha256": "29f2d509f6e930c787672020f522564a098cadb3a82323c0a2fd6dc543d4c587"
     },
     {
       "path": "src/components/centropy/canvas/application-client.ts",

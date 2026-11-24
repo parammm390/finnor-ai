@@ -5,6 +5,7 @@ import { useState } from "react"
 import { z } from "zod"
 import { centropyGet } from "@/components/centropy/lib/api"
 import { HumanControlDesk } from "./HumanControlDesk"
+import { userMessage } from "../lib/user-message"
 
 const CreatedSchema = z.object({ documentId: z.string().uuid(), version: z.object({ id: z.string().uuid() }) })
 const ReadbackSchema = z.object({ documentId: z.string().uuid(), document: z.object({ id: z.string().uuid(), title: z.string() }), version: z.object({ id: z.string().uuid() }), semantic: z.object({ kind: z.string() }) })
@@ -27,7 +28,7 @@ export function ArtifactCreationDesk() {
       setCreated(value)
       return await verify(value)
     }} onRecorded={() => undefined} /> : null}
-    {created?.verified ? <p><Link href={`/centropy?artifactMode=draft&artifactDocumentId=${created.documentId}&artifactVersionId=${created.version.id}`}>Open verified draft</Link></p> : created ? <><p>The API returned a draft reference. Verify that record before creating another file.</p><button type="button" onClick={() => void verify(created).catch((cause) => setError(cause instanceof Error ? cause.message : "Draft readback unavailable"))}>Retry exact draft readback</button></> : null}
+    {created?.verified ? <p><Link href={`/centropy?artifactMode=draft&artifactDocumentId=${created.documentId}&artifactVersionId=${created.version.id}`}>Open verified draft</Link></p> : created ? <><p>The API returned a draft reference. Verify that record before creating another file.</p><button type="button" onClick={() => void verify(created).catch((cause) => setError(userMessage(cause, "Draft readback unavailable")))}>Retry exact draft readback</button></> : null}
     {error ? <p role="alert">{error}</p> : null}
   </section>
 }

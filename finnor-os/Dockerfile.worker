@@ -54,7 +54,7 @@ COPY scope-r/r3-incentive-rule-synthesis/verification-plan.json /app/scope-r/r3-
 
 RUN npm ci --no-audit --no-fund
 ARG FINNOR_BUILD_ID
-RUN FINNOR_BUILD_ID="$FINNOR_BUILD_ID" NEXT_TELEMETRY_DISABLED=1 npm run build --workspace=@finnor/api \
+RUN FINNOR_BUILD_ID="$FINNOR_BUILD_ID" NEXT_TELEMETRY_DISABLED=1 NODE_OPTIONS=--max-old-space-size=4096 npm run build --workspace=@finnor/api \
     && rm -rf apps/api/.next/cache
 
 # Build the same pinned exact runtime for the image architecture. Protected R2

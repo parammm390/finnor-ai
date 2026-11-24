@@ -6,6 +6,7 @@ import { z } from "zod"
 import { centropyGet, centropyPost } from "@/components/centropy/lib/api"
 import type { IcWorkspace } from "@/components/centropy/product/contracts"
 import { IcCaseContinuation } from "./IcCaseContinuation"
+import { userMessage } from "../lib/user-message"
 
 const UUID = z.string().uuid()
 const ArtifactSchema = z.object({ documentId: UUID, version: z.object({ id: UUID }), semantic: z.object({ kind: z.string() }).passthrough() }).passthrough()
@@ -72,7 +73,7 @@ export function ArtifactIcHandoff({ documentId, versionId, format, reviews, bind
       onIcRefresh()
     } catch (cause) {
       setUncertain(true)
-      setNotice(`${cause instanceof Error ? cause.message : "The IC handoff could not be verified"} A link or selection may have committed; refresh the IC case and Artifact history before another attempt.`)
+      setNotice(`${userMessage(cause, "The IC handoff could not be verified")} A link or selection may have committed; refresh the IC case and Artifact history before another attempt.`)
       onIcRefresh()
     } finally { setBusy(false) }
   }

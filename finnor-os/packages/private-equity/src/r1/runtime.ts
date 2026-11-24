@@ -1,4 +1,4 @@
-import {readFile,readdir} from 'node:fs/promises';
+import {readFile,readdir,stat} from 'node:fs/promises';
 import {createReadStream} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
@@ -7,11 +7,24 @@ import { controlBytesDigest } from '../../../epistemic-runtime/src/certified-sta
 const root=fileURLToPath(new URL('../../../../../',import.meta.url));
 async function paths(directory:string):Promise<string[]>{const result:string[]=[];for(const e of await readdir(resolve(root,directory),{withFileTypes:true})){if(e.isDirectory())result.push(...await paths(directory+'/'+e.name));else if(/\.(?:ts|mts|py)$/.test(e.name))result.push(directory+'/'+e.name);}return result;}
 const fixed=['finnor-os/Dockerfile.worker','finnor-os/apps/api/next.config.mjs','finnor-os/packages/epistemic-runtime/src/intervention-requirements.txt','finnor-os/packages/epistemic-runtime/src/requirements-s5.txt','package-lock.json','finnor-os/package-lock.json','finnor-os/packages/epistemic-runtime/src/contingent-control.ts','finnor-os/packages/epistemic-runtime/src/exact-continuation.ts','finnor-os/packages/epistemic-runtime/src/exact-control-policy.ts','finnor-os/packages/epistemic-runtime/src/exact-allocation-adapter.ts','finnor-os/packages/epistemic-runtime/src/control-contracts.ts','finnor-os/packages/epistemic-runtime/src/operating-profit-verifier.ts','finnor-os/packages/private-equity/src/enterprise-control.ts','finnor-os/packages/private-equity/src/enterprise-interventions.ts','finnor-os/packages/private-equity/src/enterprise-beliefs.ts','finnor-os/packages/private-equity/src/compute-search/native-grant.ts','finnor-os/packages/db/compute-contract.ts','finnor-os/packages/db/compute-governor.ts','finnor-os/packages/db/execution-deadline.ts','finnor-os/packages/db/migrations/0182_r1_certified_state_reduction.sql','finnor-os/packages/db/migration-head.ts','finnor-os/packages/shared-types/src/certified-state-reduction.ts','finnor-os/packages/shared-types/src/contingent-control.ts','finnor-os/apps/worker/src/queue.ts','finnor-os/apps/worker/src/index.ts','finnor-os/apps/api/app/api/policies/[operation]/route.ts','finnor-os/apps/api/app/api/interventions/[operation]/route.ts'];
+// Every current read and every physical stage re-attests this cut. Hashing the
+// interpreter bytes again each time costs most of a second of blocked event
+// loop per call on a two-core host, which alone consumed a third of the
+// original 30 second decision deadline. The interpreter bytes are hashed in
+// full whenever the file's device, inode, size, modification or status-change
+// time differs from the last full hash; the source files are always re-read.
+const binaryDigests=new Map<string,{identity:string;sha256:string}>();
 export async function currentR1SourceCut(){
  const owning=['finnor-os/packages/security/src/secrets.ts','finnor-os/packages/db/migrations-bundle.ts','finnor-os/packages/private-equity/src/evidence-execution/store.ts','finnor-os/packages/private-equity/src/evidence-execution/backend.ts','finnor-os/packages/private-equity/src/deliberation/module.ts','finnor-os/packages/private-equity/src/enterprise-experiments.ts','finnor-os/packages/private-equity/src/enterprise-allocation.ts','finnor-os/packages/private-equity/src/allocation-store.ts','finnor-os/packages/epistemic-runtime/src/allocation-checker.ts','finnor-os/packages/epistemic-runtime/src/allocation-producer.ts','finnor-os/packages/epistemic-runtime/src/allocation-solver.py','finnor-os/packages/epistemic-runtime/src/allocation-verifier.ts','finnor-os/packages/epistemic-runtime/src/allocation-verifier-worker.mjs','finnor-os/packages/epistemic-runtime/src/allocation-contracts.ts','finnor-os/packages/shared-types/src/allocation.ts','finnor-os/packages/private-equity/src/live-recompilation/contracts.ts','finnor-os/packages/private-equity/src/live-recompilation/worker.ts'];
  const all=[...new Set([...fixed,...owning,...await paths('finnor-os/packages/private-equity/src/r1'),...await paths('finnor-os/packages/private-equity/src/program-synthesis'),...await paths('finnor-os/packages/private-equity/src/compute-search'),...await paths('finnor-os/packages/epistemic-runtime/src/certified-state-reduction')])].sort();
  const files=await Promise.all(all.map(async path=>({path,sha256:controlBytesDigest(await readFile(resolve(root,path)))})));
- const hashBinary=async(path:string)=>{const hash=createHash('sha256');for await(const bytes of createReadStream(path))hash.update(bytes);return hash.digest('hex');};
+ const hashBinary=async(path:string)=>{
+  const identity=async()=>{const s=await stat(path,{bigint:true});return [s.dev,s.ino,s.size,s.mtimeNs,s.ctimeNs].join(':');};
+  const before=await identity(),held=binaryDigests.get(path);if(held?.identity===before)return held.sha256;
+  const hash=createHash('sha256');for await(const bytes of createReadStream(path))hash.update(bytes);const sha256=hash.digest('hex');
+  if(await identity()===before)binaryDigests.set(path,{identity:before,sha256});
+  return sha256;
+ };
  const interpreter=process.env.FINNOR_R1_PYTHON??'/usr/bin/python3',runtime={node:{path:process.execPath,version:process.version,sha256:await hashBinary(process.execPath)},pythonEntrypoint:{path:interpreter,sha256:await hashBinary(interpreter)},qualification:'ACTUAL_ENTRYPOINT_BYTES; INTERPRETER_EXECUTABLE_AND_VERSION_ATTESTED_BY_EACH_CHECKER_RECEIPT; IMAGE_UNQUALIFIED'};
  return {files,runtime,codeDigest:controlBytesDigest(JSON.stringify({files,runtime})),lockDigest:controlBytesDigest(await readFile(resolve(root,'finnor-os/package-lock.json'))),baseCommit:process.env.FINNOR_COMMIT_SHA??process.env.FINNOR_BUILD_GIT_SHA??process.env.FINNOR_RELEASE_COMMIT??'UNRELEASED_LOCAL_SOURCE',nodeVersion:process.version};
 }

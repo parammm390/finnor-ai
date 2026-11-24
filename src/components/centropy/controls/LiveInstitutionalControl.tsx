@@ -5,6 +5,7 @@ import { CentropyApiError, centropyControl } from "../lib/api"
 import { getCurrentSessionKey, useCentropyAuth } from "../lib/centropy-auth"
 import type { CompanyBrainObjectRef, PeWorldRootRef } from "../pe/contracts"
 import styles from "./LiveInstitutionalControl.module.css"
+import { userMessage } from "../lib/user-message"
 
 type Json = Record<string, unknown>
 type Cut = { cut: string; basis: string }
@@ -62,7 +63,7 @@ function ControlSession({ root, focus, workId, label, onChanged, onOpened }: Pro
   }
   function report(cause: unknown) {
     if (!valid()) return
-    const message = cause instanceof Error ? cause.message : "The original owner is unavailable."
+    const message = userMessage(cause, "The original owner is unavailable.")
     if (cause instanceof CentropyApiError && [401, 403, 404].includes(cause.status)) retract(message)
     else setError(message)
   }

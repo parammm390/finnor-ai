@@ -30,6 +30,7 @@ import { VerifiedIcOutcome } from "../thread/VerifiedIcOutcome"
 import { VerifiedUnderwritingOutcome } from "../thread/VerifiedUnderwritingOutcome"
 import { HomeCanvas } from "./HomeCanvas"
 import { CentropyPresence } from "./CentropyPresence"
+import { userMessage } from "../lib/user-message"
 import "./centropy.css"
 
 const WorkRecovery = lazy(() => import("../thread/WorkRecovery").then((module) => ({ default: module.WorkRecovery })))
@@ -194,7 +195,7 @@ function CentropyWorkspaceContent() {
       }
     } catch (cause) {
       if (mutationIsCurrent(key) && recentGeneration.current === generation) {
-        setRecent([]); setRecentNextCursor(null); setRecentError(cause instanceof Error ? cause.message : "Investigations are unavailable"); setRecentLoading(false)
+        setRecent([]); setRecentNextCursor(null); setRecentError(userMessage(cause, "Investigations are unavailable")); setRecentLoading(false)
       }
     }
   }, [ready, auth.session?.user.id, mutationScopeKey, mutationIsCurrent])
@@ -217,7 +218,7 @@ function CentropyWorkspaceContent() {
       setRecentNextCursor(page.nextCursor)
     } catch (cause) {
       if (mutationIsCurrent(key) && recentGeneration.current === generation)
-        setRecentOlderError(cause instanceof Error ? cause.message : "Older Investigations unavailable")
+        setRecentOlderError(userMessage(cause, "Older Investigations unavailable"))
     } finally {
       if (mutationIsCurrent(key) && recentGeneration.current === generation) setRecentOlderLoading(false)
     }
@@ -370,7 +371,7 @@ function CentropyWorkspaceContent() {
         setTrace(null)
         setPending(null)
       } else setPending((current) => current?.instructionId === instructionId ? { ...current, failed: true } : current)
-      setSubmissionError({ scope: currentThreadId ?? noticeScope, message: cause instanceof Error ? cause.message : "Instruction submission failed" })
+      setSubmissionError({ scope: currentThreadId ?? noticeScope, message: userMessage(cause, "Instruction submission failed") })
       setRefreshToken((value) => value + 1)
       throw cause
     } finally { if (current()) setBusy(false) }
@@ -445,7 +446,7 @@ function CentropyWorkspaceContent() {
         setTrace(null)
         setPending(null)
       } else setPending((current) => current?.instructionId === instructionId ? { ...current, failed: true } : current)
-      setSubmissionError({ scope: currentThreadId ?? noticeScope, message: cause instanceof Error ? cause.message : "Outcome Pack submission failed" })
+      setSubmissionError({ scope: currentThreadId ?? noticeScope, message: userMessage(cause, "Outcome Pack submission failed") })
       throw cause
     } finally { if (current()) setBusy(false) }
   }
@@ -456,7 +457,7 @@ function CentropyWorkspaceContent() {
     setStopping(true)
     setSubmissionError(null)
     try { await centropyPost(`instructions/${visibleTrace.instructionId}/cancel`, {}); if (current()) setRefreshToken((value) => value + 1) }
-    catch (cause) { if (current()) setSubmissionError({ scope: noticeScope, message: cause instanceof Error ? cause.message : "The instruction could not be stopped" }) }
+    catch (cause) { if (current()) setSubmissionError({ scope: noticeScope, message: userMessage(cause, "The instruction could not be stopped") }) }
     finally { if (current()) setStopping(false) }
   }
 

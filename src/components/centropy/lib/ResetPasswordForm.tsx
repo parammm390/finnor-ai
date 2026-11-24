@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Lock, Mail } from "lucide-react"
 import { getSupabaseBrowser } from "@/lib/centropy/supabase-browser"
+import { userMessage } from "./user-message"
 import "../centropy-theme.css"
 
 export function ResetPasswordForm() {
@@ -26,7 +27,7 @@ export function ResetPasswordForm() {
         if (active) setRecoverySession(Boolean(data.session))
       })
       .catch((cause) => {
-        if (active) setError(cause instanceof Error ? cause.message : "Password recovery is unavailable.")
+        if (active) setError(userMessage(cause, "Password recovery is unavailable."))
       })
     return () => { active = false }
   }, [])
@@ -46,7 +47,7 @@ export function ResetPasswordForm() {
       if (resetError) throw resetError
       setMessage("If that address has a Centropy account, a password-reset link is on its way.")
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Password recovery is unavailable.")
+      setError(userMessage(cause, "Password recovery is unavailable."))
     } finally {
       setBusy(false)
     }
@@ -63,7 +64,7 @@ export function ResetPasswordForm() {
       if (updateError) throw updateError
       router.push("/centropy")
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Password recovery is unavailable.")
+      setError(userMessage(cause, "Password recovery is unavailable."))
     } finally {
       setBusy(false)
     }

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { z } from "zod"
 import { centropyGet, centropyPost } from "@/components/centropy/lib/api"
+import { userMessage } from "../lib/user-message"
 
 const Preference = z.object({ activation: z.object({ revision: z.number().int().nonnegative(), operation: z.enum(["activate", "disable"]), runId: z.string().uuid().nullable(), reviewedResultDigest: z.string().nullable() }) })
 const Qualification = z.object({ holdout: z.object({ baseline: z.number().finite(), candidate: z.number().finite(), tasks: z.number().int(), disposition: z.string() }), candidate: z.object({ instruction: z.string() }) }).passthrough()
@@ -18,7 +19,7 @@ export function PlannerCandidateReview({ runId, resultDigest, result }: { runId:
   useEffect(() => {
     let active = true; current.current = true
     void centropyGet<unknown>("capabilities/planner/activation").then(value => { const parsed = Preference.parse(value); if (active) setPreference(parsed.activation) })
-      .catch(cause => { if (active) { setPreference(null); setError(cause instanceof Error ? cause.message : "Planner preference could not be read.") } })
+      .catch(cause => { if (active) { setPreference(null); setError(userMessage(cause, "Planner preference could not be read.")) } })
     return () => { active = false; current.current = false }
   }, [refresh])
   async function change(operation: "activate" | "disable") {
@@ -32,7 +33,7 @@ export function PlannerCandidateReview({ runId, resultDigest, result }: { runId:
       if (parsed.activation.revision !== preference.revision + 1 || parsed.activation.operation !== operation || operation === "activate" && parsed.activation.runId !== runId) throw new Error("The activation receipt does not match this reviewed candidate.")
       intent.current = null
       if (current.current) { setPreference(parsed.activation); setNote("") }
-    } catch (cause) { if (current.current) setError(cause instanceof Error ? cause.message : "Planner preference could not be changed.") }
+    } catch (cause) { if (current.current) setError(userMessage(cause, "Planner preference could not be changed.")) }
     finally { if (current.current) setBusy(false) }
   }
   if (!qualification.success) return null

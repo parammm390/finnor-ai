@@ -3,6 +3,7 @@ import {useCallback,useEffect,useId,useRef,useState,type FormEvent} from 'react'
 import {useCentropyAuth} from '@/components/centropy/lib/centropy-auth'
 import {CentropyApiError,centropyGet} from '@/components/centropy/lib/api'
 import {applicationPost,readApplication,applicationSpecificationInput,ApplicationRecordSchema,type ApplicationView,type ApplicationRecord,type ApplicationEntity,type ApplicationAction} from './application-client'
+import { userMessage } from "../lib/user-message"
 
 function unknownReason(value:unknown):string|null{
  return value!==null&&typeof value==='object'&&'kind' in value&&value.kind==='UNKNOWN'&&'reason' in value&&typeof value.reason==='string'?value.reason:null
@@ -30,7 +31,7 @@ function GeneratedActionForm({entity,action,record,disabled,onRun}:{entity:Appli
     input[id]=field.encoding==='json'?JSON.parse(value):field.encoding==='boolean'?value==='true':value
    }
    await onRun(action,action.kind==='create'?null:record,input,role||undefined)
-  }catch(e){setError(e instanceof Error?e.message:'Input was not accepted')}
+  }catch(e){setError(userMessage(e, 'Input was not accepted'))}
  }
  return <form onSubmit={submit} aria-label={action.title} data-application-action={action.id}>
   <h5>{action.title}</h5>
@@ -160,7 +161,7 @@ export function EnterpriseApplicationPanel({root,workId,threadId}:{root:{entityT
    if(identityRef.current!==expected||epoch.current!==sequence)return
    if(maintenance&&visible)await mutate('maintain',{applicationId:visible.applicationId,expectedReleaseId:visible.headReleaseId,...source,changeClass:change,migration:JSON.parse(migration)})
    else await mutate('submit',{schema:'finnor.x3.application-request.v1',root,workId,...source,limits:{deadlineMs:3600000,maxBuilds:16,maxMutations:10000}})
-  }catch(error){if(identityRef.current===expected)setMessage(error instanceof Error?error.message:'Business contract is not valid JSON')}
+  }catch(error){if(identityRef.current===expected)setMessage(userMessage(error, 'Business contract is not valid JSON'))}
  }
  async function run(action:ApplicationAction,record:ApplicationRecord|null,input:Record<string,unknown>,approvalRole?:string){
   if(!visible)return

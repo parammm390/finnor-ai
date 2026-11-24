@@ -13,6 +13,7 @@ import { ConfidentialComputationPanel } from "./ConfidentialComputationPanel"
 import { ClosingProgrammePanel } from "../closing/ClosingProgrammePanel"
 import { LiveInstitutionalControl } from "../controls/LiveInstitutionalControl"
 import { capabilityForId } from "@/lib/centropy/capability-manifest"
+import { userMessage } from "../lib/user-message"
 const WorldRelationships = lazy(() => import("./WorldRelationships").then((module) => ({ default: module.WorldRelationships })))
 const HumanControlDesk = lazy(() => import("../controls/HumanControlDesk").then((module) => ({ default: module.HumanControlDesk })))
 
@@ -102,7 +103,7 @@ function WorldExplorerContent({ root, projection, projectionStatus, projectionEr
       setSearching(true)
       void centropyPost<{ results: CompanyBrainSearchResult[] }>("company-brain/search", { query: query.trim(), ...(root ? { root: { entityType: root.entityType, entityId: root.entityId } } : {}), limit: 50 })
         .then((result) => { if (active) { setSearchResults(Array.isArray(result.results) ? result.results : []); setSearchError(null) } })
-        .catch((cause) => { if (active) { setSearchResults(null); setSearchError(cause instanceof Error ? cause.message : "Search unavailable") } })
+        .catch((cause) => { if (active) { setSearchResults(null); setSearchError(userMessage(cause, "Search unavailable")) } })
         .finally(() => { if (active) setSearching(false) })
     }, 250)
     return () => { active = false; window.clearTimeout(timer) }
@@ -125,7 +126,7 @@ function WorldExplorerContent({ root, projection, projectionStatus, projectionEr
     const body = { root: { entityType: root.entityType, entityId: root.entityId }, ref: selected, ...(operation === "traverse" ? { depth: 2, direction: "both", limit: 80 } : {}), ...(operation === "history" ? { limit: 50 } : {}) }
     void centropyPost<Detail>(`company-brain/${operation}`, body)
       .then((result) => { if (active) setDetail(result) })
-      .catch((cause) => { if (active) setDetailError(cause instanceof Error ? cause.message : "Object detail unavailable") })
+      .catch((cause) => { if (active) setDetailError(userMessage(cause, "Object detail unavailable")) })
       .finally(() => { if (active) setDetailLoading(false) })
     return () => { active = false }
   }, [root, selectedKey, selectedNode, tab, selected])

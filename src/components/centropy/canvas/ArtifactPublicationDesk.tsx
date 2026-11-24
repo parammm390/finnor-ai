@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { ArrowRight, ExternalLink, RefreshCw, ShieldCheck } from "lucide-react"
 import { z } from "zod"
 import { centropyGet, centropyPost } from "@/components/centropy/lib/api"
+import { userMessage } from "../lib/user-message"
 
 const UUID = z.string().uuid()
 const ScopeSchema = z.object({
@@ -95,7 +96,7 @@ export function ArtifactPublicationDesk({ documentId, versionId, semanticHash, t
     setCatalogLoading(true)
     setCatalogError(null)
     void readScopes().then((value) => { if (active) setCatalog(value) })
-      .catch((cause) => { if (active) { setCatalog(null); setCatalogError(cause instanceof Error ? cause.message : "Destination catalog unavailable") } })
+      .catch((cause) => { if (active) { setCatalog(null); setCatalogError(userMessage(cause, "Destination catalog unavailable")) } })
       .finally(() => { if (active) setCatalogLoading(false) })
     return () => { active = false }
   }, [catalogRevision])
@@ -149,7 +150,7 @@ export function ArtifactPublicationDesk({ documentId, versionId, semanticHash, t
       }
     } catch (cause) {
       setUncertain(true)
-      setNotice(`${cause instanceof Error ? cause.message : "Publication could not be verified"} The provider action may have committed. Refresh recorded publication history before another attempt.`)
+      setNotice(`${userMessage(cause, "Publication could not be verified")} The provider action may have committed. Refresh recorded publication history before another attempt.`)
       onRecorded()
     } finally { setBusy(false) }
   }

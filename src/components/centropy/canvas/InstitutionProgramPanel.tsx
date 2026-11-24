@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { centropyPost, centropyPostRead } from "../lib/api"
 import { usePrivateRequestScope } from "../lib/use-private-request-scope"
 import { InstitutionInputForm } from "./InstitutionInputForm"
+import { userMessage } from "../lib/user-message"
 
 type Binding = { status: "known"; ref: string; revision: string; owner: string; digest: string }
   | { status: "unknown"; reason: string; requiredOwnerOrInput: string; affectedRefs: string[] }
@@ -100,7 +101,7 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
       } catch (error) {
         if (!current()) return
         setSources(null); setReading(null)
-        setMessage(error instanceof Error ? error.message : "Responsibility is unavailable in this scope")
+        setMessage(userMessage(error, "Responsibility is unavailable in this scope"))
         setReadFailureScope(key)
       } finally {
         if (pendingRefresh.current?.generation === generation) {
@@ -139,7 +140,7 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
       })
       if (isCurrent(key)) await refresh()
     } catch (error) {
-      if (isCurrent(key)) { setReading(null); setMessage(error instanceof Error ? error.message : "Responsibility submission is uncertain; refresh to reconcile it") }
+      if (isCurrent(key)) { setReading(null); setMessage(userMessage(error, "Responsibility submission is uncertain; refresh to reconcile it")) }
     } finally { if (isCurrent(key)) setBusy(false) }
   }
   async function control(command: "cancel" | "resume") {
@@ -153,7 +154,7 @@ export function InstitutionProgramPanel({ workId }: { workId: string }) {
       await centropyPost(`company-brain/institution-${command}`, { requestId })
       if (isCurrent(key)) await refresh()
     } catch (error) {
-      if (isCurrent(key)) { setReading(null); setMessage(error instanceof Error ? error.message : "Continuation is uncertain; refresh its owner state") }
+      if (isCurrent(key)) { setReading(null); setMessage(userMessage(error, "Continuation is uncertain; refresh its owner state")) }
     } finally { if (isCurrent(key)) setBusy(false) }
   }
   if (!allowed) return null
