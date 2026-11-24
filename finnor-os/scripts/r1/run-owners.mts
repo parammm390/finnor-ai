@@ -46,7 +46,13 @@ async function worker(mode='RUN'){
  return {child,exited,log,stop:async()=>{if(child.exitCode===null&&child.signalCode===null){child.send('stop');await Promise.race([exited,new Promise(yes=>setTimeout(yes,4000))]);if(child.exitCode===null&&child.signalCode===null){child.kill('SIGKILL');await exited;}}await log();}};
 }
 async function waitRun(f:any,id:string){
- for(let i=0;i<140;i++){const r=ok(await http.api(f.token,'policies','r1-read',{runId:id}));if(!['QUEUED','RUNNING'].includes(r.status))return r;await new Promise(yes=>setTimeout(yes,200));}
+ // Every current read re-attests the loaded source cut, which hashes the node
+ // binary inside the API process. Reading five times a second from the
+ // installed image starves the worker on a two-core runner until the original
+ // decision deadline expires. The observer reads once a second there; the
+ // deadline, the owner fences and the observation window are unchanged.
+ const pause=selected==='runtime'?1000:200;
+ for(let i=0;i<28000/pause;i++){const r=ok(await http.api(f.token,'policies','r1-read',{runId:id}));if(!['QUEUED','RUNNING'].includes(r.status))return r;await new Promise(yes=>setTimeout(yes,pause));}
  const rows=(await admin.query('SELECT * FROM finnor_os.r1_runs WHERE id=$1',[id])).rows;await artifact('observer-deadline-'+id+'.json',{rows});
  throw Error('Original bounded run did not reach a decisive state within the observer window');
 }
