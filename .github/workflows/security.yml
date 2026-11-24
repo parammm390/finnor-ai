@@ -157,6 +157,10 @@ jobs:
             --gh-annotations=false
             --fail-on-vuln=false
       - name: Upload complete findings to Code Scanning
+        # Publication only. Code Scanning is unavailable while the repository is
+        # private without GitHub Code Security; the enforcing step above and the
+        # retained artifact below do not depend on it.
+        continue-on-error: true
         if: ${{ !cancelled() && steps.sarif.outcome == 'success' }}
         uses: github/codeql-action/upload-sarif@cdefb33c0f6224e58673d9004f47f7cb3e328b89
         with:
