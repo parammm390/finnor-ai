@@ -128,6 +128,9 @@ jobs:
   release:
     name: "Deploy verified merged main"
     needs: [post-merge-certification]
+    # This job still deploys to Vercel (disabled) and the old AWS project. It stays
+    # off until the deployment contract targets the server that serves production.
+    if: ${{ vars.FINNOR_LEGACY_DEPLOY_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:
