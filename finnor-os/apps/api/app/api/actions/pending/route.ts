@@ -10,8 +10,8 @@
 // today per the credentials ledger, so this is real machinery that will typically
 // report null until that key exists, not a fake "pending" placeholder).
 
-import { withTenant, domainActions, businessEffects, decisionReceipts, actionLog } from "@finnor/db";
-import { inArray, desc, asc, eq, and, lt, or } from "drizzle-orm";
+import { withTenant, domainActions, businessEffects, decisionReceipts, actionLog, decodeKeysetCursor, encodeKeysetCursor, exactInstant, InvalidKeysetCursorError, olderThan, type KeysetPosition } from "@finnor/db";
+import { inArray, desc, asc, eq, and } from "drizzle-orm";
 import { requireContext, errorResponse } from "../../../../lib/auth";
 import { extractPredicted } from "../../../../lib/predicted-outcome";
 import { canExerciseAuthority, eligibleApproversForActions } from "@finnor/authority";
@@ -29,7 +29,7 @@ type ReceiptSummary = {
 
 type CriticSummary = { flagged: boolean; reason: string };
 
-type PendingCursor = { createdAt: string; id: string; filter: "pending" | "blocked" };
+type PendingFilter = "pending" | "blocked";
 
 function parseLimit(value: string | null): number | null {
   if (value === null) return 100;
@@ -37,20 +37,15 @@ function parseLimit(value: string | null): number | null {
   return Number.isInteger(limit) && limit >= 1 && limit <= 100 ? limit : null;
 }
 
-function decodeCursor(value: string | null, filter: PendingCursor["filter"]): PendingCursor | null | undefined {
+function decodeCursor(value: string | null, filter: PendingFilter): KeysetPosition | null | undefined {
   if (value === null) return null;
   try {
-    const parsed = JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as Partial<PendingCursor>;
-    if (parsed.filter !== filter || typeof parsed.id !== "string" || typeof parsed.createdAt !== "string") return undefined;
-    if (Number.isNaN(new Date(parsed.createdAt).getTime())) return undefined;
-    return parsed as PendingCursor;
-  } catch {
-    return undefined;
+    const cursor = decodeKeysetCursor(value);
+    return cursor.filter === filter ? cursor : undefined;
+  } catch (error) {
+    if (error instanceof InvalidKeysetCursorError) return undefined;
+    throw error;
   }
-}
-
-function encodeCursor(row: { createdAt: Date; id: string }, filter: PendingCursor["filter"]): string {
-  return Buffer.from(JSON.stringify({ createdAt: row.createdAt.toISOString(), id: row.id, filter } satisfies PendingCursor)).toString("base64url");
 }
 
 export async function GET(req: Request): Promise<Response> {
@@ -68,21 +63,19 @@ export async function GET(req: Request): Promise<Response> {
         : (["pending"] as const);
     const rows = await withTenant(ctx.tenantId, (db) =>
       db
-        .select()
+        .select({ action: domainActions, at: exactInstant(domainActions.createdAt) })
         .from(domainActions)
         .where(and(
           eq(domainActions.tenantId, ctx.tenantId),
           inArray(domainActions.status, [...statuses]),
-          cursor ? or(
-            lt(domainActions.createdAt, new Date(cursor.createdAt)),
-            and(eq(domainActions.createdAt, new Date(cursor.createdAt)), lt(domainActions.id, cursor.id)),
-          ) : undefined,
+          cursor ? olderThan(domainActions.createdAt, domainActions.id, cursor) : undefined,
         ))
         .orderBy(desc(domainActions.createdAt), desc(domainActions.id))
         .limit(limit + 1),
     );
     const hasMore = rows.length > limit;
-    const pageRows = hasMore ? rows.slice(0, limit) : rows;
+    const last = rows[limit - 1];
+    const pageRows = rows.slice(0, limit).map((row) => row.action);
 
     const actionIds = pageRows.map((r) => r.id);
     const effectRows = actionIds.length > 0 ? await withTenant(ctx.tenantId, (db) => db.select().from(businessEffects).where(and(eq(businessEffects.tenantId, ctx.tenantId), inArray(businessEffects.domainActionId, actionIds)))) : [];
@@ -169,14 +162,13 @@ export async function GET(req: Request): Promise<Response> {
       predicted: extractPredicted(r.predictedReceipt),
       };
     }));
-    const last = pageRows.at(-1);
     return Response.json({
       actions,
       page: {
         limit,
         hasMore,
         complete: !hasMore,
-        nextCursor: hasMore && last ? encodeCursor(last, filter) : null,
+        nextCursor: hasMore && last ? encodeKeysetCursor({ at: last.at, id: last.action.id }, { filter }) : null,
       },
     });
   } catch (err) {

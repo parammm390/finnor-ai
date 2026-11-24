@@ -495,8 +495,13 @@
     },
     {
       "file": "packages/db/index.ts",
-      "bytes": 188920,
-      "sha256": "65b01a4d2b10cb27f22f775a7b00961a2d711ab61f4d7d53e95aae22d6a1be40"
+      "bytes": 187344,
+      "sha256": "8e36efb8c361fe5634aa1731286b53b2c92066982f3e2ee48486be00e092c298"
+    },
+    {
+      "file": "packages/db/keyset.ts",
+      "bytes": 3323,
+      "sha256": "7e60735b4765a156974769a5c22f84233249ceaa0817ee9ddc7e784de2394139"
     },
     {
       "file": "packages/db/migration-head.ts",
@@ -2506,7 +2511,7 @@
     {
       "file": "packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
       "bytes": 8809,
-      "sha256": "06245ba53203b7e1192a9a658e5e76752cefb8d9db5b2b68763a11fe08d68117"
+      "sha256": "813bad8d3d03f98808728ad3c4284d8eb5151ce5ddb86bbf6c80c4b7b1bd2c0b"
     },
     {
       "file": "packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2951,7 +2956,7 @@
     {
       "file": "packages/private-equity/src/policy-learning/source-manifest.generated.ts",
       "bytes": 13772,
-      "sha256": "16323da7a03618a73f96cbf29bfc5d0506809e92aab3f3f33005bd1e116f9340"
+      "sha256": "8e3c923b5dea968e7f92e1b902831014a644020920d5ed6b9f72e1d046ddbc2e"
     },
     {
       "file": "packages/private-equity/src/policy-learning/source-paths.ts",
@@ -3501,7 +3506,7 @@
     {
       "file": "packages/private-equity/src/system-identification/source-manifest.generated.ts",
       "bytes": 19716,
-      "sha256": "de61922ee6c6f1c5863adfdbca91c60d961e49f54f081fceb60e65de37234ea6"
+      "sha256": "2499e046fc600481718f1a123d0730d1b552c8179c50ec446ea81c4087507baf"
     },
     {
       "file": "packages/private-equity/src/system-identification/source-paths.ts",
@@ -3735,8 +3740,8 @@
     },
     {
       "file": "packages/read-models/src/work-cases.ts",
-      "bytes": 67727,
-      "sha256": "5fbc42d4ed74dd2acbc5bd8436d3daee56584354b1a0b61085c6dafa5f552a2b"
+      "bytes": 67350,
+      "sha256": "16499632845f5b74b78df93259b78e06e134fec5227ede5c6508335f85858b3f"
     },
     {
       "file": "packages/read-models/src/workforce-status.ts",

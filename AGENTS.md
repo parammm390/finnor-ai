@@ -83,6 +83,7 @@ Each row is a mistake that recurred here, the check that now fails on it, and th
 | Mistake | What fails | Run it |
 |---|---|---|
 | A committed file names a path that exists on one machine: a home directory, an agent's checkout or a macOS temporary folder. 116 commits did, for example 3572187a and 4058f5ce. | `scripts/guards/machine-local-paths.mjs`, in the "Secrets - Scan complete Git history" job | `node scripts/guards/machine-local-paths.mjs origin/main HEAD` |
+| A page cursor carries a JavaScript Date, so rows inside one millisecond vanish or repeat between pages. It happened in threads (be9a9c8c, fixed twice in d83d9b9f and 7a534862), Work cases (ac75dc81), pending approvals (1493ef01), the activity feed (fa60873f) and instruction cancellation (ad0830d7). | The `ExactInstant` type in `finnor-os/packages/db/keyset.ts`, which only `exactInstant()` produces; `scripts/guards/keyset-cursors.mjs` for pages that skip the module; `finnor-os/tests/integration/keyset-pagination.test.ts` against real PostgreSQL | `node scripts/guards/keyset-cursors.mjs origin/main HEAD` and `npx vitest run tests/integration/keyset-pagination.test.ts` in `finnor-os` |
 
 <!-- BEGIN:nextjs-agent-rules -->
 
