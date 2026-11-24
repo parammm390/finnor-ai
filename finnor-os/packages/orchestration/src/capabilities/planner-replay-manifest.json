@@ -3565,13 +3565,13 @@
     },
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-manifest.generated.ts",
-      "bytes": 265574,
-      "sha256": "cfbcfc09a05711e749b4fbc1226d7d5c645114da86e14272c79cd6b17713bf12"
+      "bytes": 265719,
+      "sha256": "557f1ff927b1ca8ecb22bca2740d70f6a5051c57653e87c922840e1f191010c6"
     },
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-paths.ts",
-      "bytes": 101850,
-      "sha256": "15f348e5b9d6380a57a308675f7f1a4321a295964af529070b3bfe951437df04"
+      "bytes": 101887,
+      "sha256": "28ac4e449d07314d43f551aac84faf73fc7ec41152edd55f68f621a0e83e823a"
     },
     {
       "file": "packages/private-equity/src/uniform-algorithms/specification.ts",

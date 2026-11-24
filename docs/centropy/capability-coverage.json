@@ -8,8 +8,8 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-24T01:46:41.361Z",
-  "sourceBaseCommit": "11ca7bcf8d418d8ef9cf23c318f98227b4f5c32f",
+  "generatedAt": "2026-11-24T23:31:03.296Z",
+  "sourceBaseCommit": "cd5b57b32469d21f32fc58e2a9a806226975dac2",
   "manifestSha256": "e68051fd74494792ebb66d7156bae1b6ac5ef64e369d60057bc4c596fb0aebe3",
   "formsSha256": "35b57673d9d86e461f2b6056aaf326cb789901dfdd4481734aefef91da8052fd",
   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -2128,7 +2128,8 @@
       "tests": [
         "e2e/centropy-ic-deck-work-action.spec.ts",
         "finnor-os/tests/integration/actions-pending-cockpit-fields.test.ts",
-        "finnor-os/tests/integration/actions-pending-receipts.test.ts"
+        "finnor-os/tests/integration/actions-pending-receipts.test.ts",
+        "finnor-os/tests/integration/keyset-pagination.test.ts"
       ],
       "source": "finnor-os/apps/api/app/api/actions/pending/route.ts",
       "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
@@ -2269,6 +2270,7 @@
         "finnor-os/tests/integration/artifact-os.test.ts",
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/computer-execution-fabric.test.ts",
+        "finnor-os/tests/integration/keyset-pagination.test.ts",
         "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/phase6-plan-graph-runtime.test.ts",
         "finnor-os/tests/integration/private-equity-phase3.test.ts",
@@ -4386,7 +4388,8 @@
       "invalidationTags": [],
       "timeoutClass": "READ",
       "tests": [
-        "finnor-os/tests/integration/instructions-routes.test.ts"
+        "finnor-os/tests/integration/instructions-routes.test.ts",
+        "finnor-os/tests/integration/keyset-pagination.test.ts"
       ],
       "source": "finnor-os/apps/api/app/api/instructions/[id]/route.ts",
       "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
@@ -7104,6 +7107,7 @@
         "e2e/centropy-ic-deck-work-action.spec.ts",
         "e2e/centropy-live-host.spec.ts",
         "e2e/centropy-real-demo.spec.ts",
+        "finnor-os/tests/integration/keyset-pagination.test.ts",
         "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/phase6-conversation-context-kernel.test.ts",
         "finnor-os/tests/integration/private-equity-p4-underwriting.test.ts",
@@ -7176,6 +7180,7 @@
       "invalidationTags": [],
       "timeoutClass": "READ",
       "tests": [
+        "finnor-os/tests/integration/keyset-pagination.test.ts",
         "finnor-os/tests/integration/threads-pagination.test.ts",
         "finnor-os/tests/integration/work-investigation-http.test.ts"
       ],
@@ -8287,6 +8292,7 @@
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/economic-constructor-process.test.ts",
         "finnor-os/tests/integration/instructions-routes.test.ts",
+        "finnor-os/tests/integration/keyset-pagination.test.ts",
         "finnor-os/tests/integration/microsoft365-pe-mapping.test.ts",
         "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/pg-notify-triggers.test.ts",
@@ -8772,6 +8778,7 @@
         "finnor-os/tests/integration/clarification-request.test.ts",
         "finnor-os/tests/integration/computer-execution-fabric.test.ts",
         "finnor-os/tests/integration/intake-idempotency.test.ts",
+        "finnor-os/tests/integration/keyset-pagination.test.ts",
         "finnor-os/tests/integration/learning-digest.test.ts",
         "finnor-os/tests/integration/marketing-webhook-auth.test.ts",
         "finnor-os/tests/integration/microsoft365-pe-mapping.test.ts",
@@ -43379,6 +43386,7 @@
         "e2e/centropy-ic-deck-work-action.spec.ts",
         "e2e/centropy-live-host.spec.ts",
         "e2e/centropy-real-demo.spec.ts",
+        "finnor-os/tests/integration/keyset-pagination.test.ts",
         "finnor-os/tests/integration/pe-objective-world-scope.test.ts",
         "finnor-os/tests/integration/phase6-conversation-context-kernel.test.ts",
         "finnor-os/tests/integration/private-equity-p4-underwriting.test.ts",
@@ -52191,6 +52199,7 @@
         "finnor-os/tests/integration/critic-review.test.ts",
         "finnor-os/tests/integration/decision-receipts.test.ts",
         "finnor-os/tests/integration/intake-idempotency.test.ts",
+        "finnor-os/tests/integration/keyset-pagination.test.ts",
         "finnor-os/tests/integration/learning-digest.test.ts",
         "finnor-os/tests/integration/private-equity-phase4.test.ts",
         "finnor-os/tests/integration/tenant-isolation.test.ts",
