@@ -501,6 +501,10 @@ jobs:
           npx --no-install tsx scripts/install-vertical-fixture-seam.ts
           npm run setup:langgraph
       - name: Phase 7 governed workforce and learning certification
+        env:
+          # The nested full type check needs more than the 2 GB default heap of a
+          # 7 GB runner. Pin the heap so the result does not depend on runner size.
+          NODE_OPTIONS: --max-old-space-size=4096
         run: |
           set -euo pipefail
           npm run release:pe-p7-workforce-learning | tee "$RUNNER_TEMP/p7-certification.log"

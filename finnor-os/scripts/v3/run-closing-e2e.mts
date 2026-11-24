@@ -717,7 +717,7 @@ try {
   compensationWorkerEnv = workerEnv;
   const apiPort = await port(); apiOrigin = `http://127.0.0.1:${apiPort}`;
   const api = await launch("api", [join(backend, "node_modules/next/dist/bin/next"), "dev", "--hostname", "127.0.0.1", "--port", String(apiPort)],
-    { ...appEnv, NODE_ENV: "development", NODE_OPTIONS: "--max-old-space-size=3072" }, join(backend, "apps/api"));
+    { ...appEnv, NODE_ENV: "development", NODE_OPTIONS: "--max-old-space-size=4096" }, join(backend, "apps/api"));
   const warmUntil = Date.now() + 90000;
   let warm = false;
   while (Date.now() < warmUntil) {

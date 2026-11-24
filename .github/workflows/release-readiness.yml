@@ -53,6 +53,8 @@ jobs:
 
       - name: Rehearse historical production database upgrade
         timeout-minutes: 5
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: npx tsx scripts/release/rehearse-historical-upgrade.ts
         working-directory: finnor-os
 

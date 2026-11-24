@@ -190,7 +190,16 @@ async function main() {
   const current: MigrationFile[] = await Promise.all((await readdir(directory)).filter((name) => name.endsWith(".sql")).sort()
     .map(async (name) => ({ name, sql: await readFile(join(directory, name), "utf8") })));
   const historical = await Promise.all(HISTORICAL_PRODUCTION_MIGRATIONS.map(async ({ name, commit, sha256 }) => {
-    const response = await fetch(`https://raw.githubusercontent.com/parammm390/finnor-ai/${commit}/finnor-os/packages/db/migrations/${name}`, { signal: AbortSignal.timeout(30_000) });
+    // A private repository serves no anonymous raw files, so read the same blob
+    // through the authenticated contents API when a token is present. The digest
+    // check below pins the bytes either way.
+    const token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
+    const path = `finnor-os/packages/db/migrations/${name}`;
+    const response = token
+      ? await fetch(`https://api.github.com/repos/parammm390/finnor-ai/contents/${path}?ref=${commit}`, {
+        headers: { authorization: `Bearer ${token}`, accept: "application/vnd.github.raw+json", "x-github-api-version": "2022-11-28" },
+        signal: AbortSignal.timeout(30_000) })
+      : await fetch(`https://raw.githubusercontent.com/parammm390/finnor-ai/${commit}/${path}`, { signal: AbortSignal.timeout(30_000) });
     if (!response.ok) throw new Error(`Historical migration ${name}: HTTP ${response.status}`);
     const sql = await response.text();
     assert.equal(createHash("sha256").update(sql).digest("hex"), sha256, `Historical migration ${name} digest changed`);
