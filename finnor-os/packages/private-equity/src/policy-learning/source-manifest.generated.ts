@@ -180,7 +180,7 @@ export default {
     },
     {
       "path": "finnor-os/Dockerfile.worker",
-      "sha256": "1e21eeaee2440051a3a19661ab24db40674bc2c9d519067990603e7418063f38"
+      "sha256": "b75f9067f5f9fad8e61d6601360a55ea94ed7cc7cf90eab2d7473eb5846bc7da"
     },
     {
       "path": "finnor-os/package-lock.json",

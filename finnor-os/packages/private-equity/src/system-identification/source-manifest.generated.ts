@@ -180,7 +180,7 @@ export default {
     },
     {
       "path": "finnor-os/Dockerfile.worker",
-      "sha256": "1e21eeaee2440051a3a19661ab24db40674bc2c9d519067990603e7418063f38"
+      "sha256": "b75f9067f5f9fad8e61d6601360a55ea94ed7cc7cf90eab2d7473eb5846bc7da"
     },
     {
       "path": "finnor-os/package-lock.json",
@@ -372,7 +372,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "sha256": "fc430165c03258533a7b499d7008fd94bebecdd815d03a55e8b6462fc432b7df"
+      "sha256": "9b55c41e2ae755495a1e902da796c7fa25c07ba83faad0f54737fd9bfefc55f6"
     },
     {
       "path": "finnor-os/packages/epistemic-runtime/src/identification.ts",

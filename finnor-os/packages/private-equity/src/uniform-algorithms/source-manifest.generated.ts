@@ -2748,7 +2748,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "sha256": "fc430165c03258533a7b499d7008fd94bebecdd815d03a55e8b6462fc432b7df"
+      "sha256": "9b55c41e2ae755495a1e902da796c7fa25c07ba83faad0f54737fd9bfefc55f6"
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-paths.ts",
@@ -3164,7 +3164,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts",
-      "sha256": "c4c708b2ed0de8cec7ecbcddb068c9555979df45bb5a839a66ca8f091e965021"
+      "sha256": "9541d06f7dc89142421466a1fc9181e8b3c00d98e0cc43d06db753c14bf8175b"
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-paths.ts",
@@ -6063,5 +6063,5 @@ export default {
       "sha256": "afdd55a749ac3e3800f46a4f23711a55cecd90b9b054a4cad1ddbcb607576b94"
     }
   ],
-  "sourceDigest": "b188037d38ddad8af65e4da1b87b8b943a490cf6db97bc856bbe8935fac6ea09"
+  "sourceDigest": "9fc580be146ecbfbb6b036cbda1021be837594cf55be7420ff34e242aca656f4"
 } as const;
