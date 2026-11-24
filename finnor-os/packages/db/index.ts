@@ -125,13 +125,23 @@ export function getPool(): pg.Pool {
       : unpooledLocal
         ? undefined
         : 1_000;
+    // One session per process is right for serverless, where many instances run at
+    // once. A single long-running host is the opposite: every parallel request of a
+    // page queues behind that one session, and with a distant database the queue
+    // outlasts the 5 second connection timeout below. Such a host states how many
+    // sessions it may hold; the default stays one and the ceiling stays well under
+    // the session pooler's own limit.
+    const poolMaxOverride = Number(process.env.FINNOR_DB_POOL_MAX);
+    const poolMax = Number.isInteger(poolMaxOverride) && poolMaxOverride >= 1
+      ? Math.min(poolMaxOverride, 10)
+      : 1;
     pool = new pg.Pool({
       ...cfg,
       // Vercel can run enough API instances concurrently that even two sessions per
       // instance exhaust Supavisor's 40-session production pool (observed as
       // EMAXCONNSESSION under Bridge polling). Production functions therefore use
       // one short-lived session each; localhost/CI remains intentionally generous.
-      max: unpooledLocal ? 10 : 1,
+      max: unpooledLocal ? 10 : poolMax,
       idleTimeoutMillis,
       // CI and local test runners must fail with a real connection error when their
       // disposable database is unavailable. Leaving localhost unbounded made Vitest
