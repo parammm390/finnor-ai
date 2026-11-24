@@ -76,6 +76,14 @@ Constraints for each level:
 - Highly prefer end-to-end tests as the sole testing mechanism. Use them to verify complex features work. At the end of each end-to-end test, produce a verifiable and repeatable artifact that records the inputs, steps, observed results, and evidence needed to rerun it.
 - If you must test a system in isolation, first write down all the ways it could fail, then write the code.
 
+## Mistakes the repo rejects
+
+Each row is a mistake that recurred here, the check that now fails on it, and the command that runs that check locally and in CI. When a correction repeats, add its check and its row in the same change. Delete a row once its mistake can no longer be written.
+
+| Mistake | What fails | Run it |
+|---|---|---|
+| A committed file names a path that exists on one machine: a home directory, an agent's checkout or a macOS temporary folder. 116 commits did, for example 3572187a and 4058f5ce. | `scripts/guards/machine-local-paths.mjs`, in the "Secrets - Scan complete Git history" job | `node scripts/guards/machine-local-paths.mjs origin/main HEAD` |
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know
