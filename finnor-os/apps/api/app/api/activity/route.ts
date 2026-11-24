@@ -84,11 +84,6 @@ export async function GET(req: Request): Promise<Response> {
       return { actionLogRows, stepRows, computerStepRows, workEventRows, callRows };
     });
 
-    // D3.T1: the renderer registry (root src/) dispatches on actionType + payload —
-    // action_log rows only carry domainActionId, so a second, cheap tenant-scoped
-    // lookup joins in the 2 fields the Activity Theater's feed context actually
-    // needs to reuse the SAME renderer approvals/receipts already use, instead of
-    // the feed being permanently stuck on a generic "step" label.
     const domainActionIds = [...new Set(actionLogRows.map(({ row }) => row.domainActionId).filter((id): id is string => !!id))];
     const actionById = new Map<string, { actionType: string; payload: unknown }>();
     if (domainActionIds.length > 0) {
