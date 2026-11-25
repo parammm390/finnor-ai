@@ -144,9 +144,11 @@ function parseNamedExpressions(instruction: string) {
     `\\b${partyCue}\\s+(?:the\\s+)?${name}${boundary}`,
     "giu",
   ))) {
+    const suffix = instruction.slice(match.index + match[0].length);
+    const emailMetadata = /^email\s+(?:subject|body)$/i.test(match[0]) && /^\s*:/.test(suffix);
     const artifactToRecipient = /^(?:calculation|analysis|findings|results|memo|report|summary|document|model|update|draft|note)$/i.test(match[1] ?? "")
-      && /^\s+to\b/i.test(instruction.slice((match.index ?? 0) + match[0].length));
-    if (!artifactToRecipient && !negated(match.index)) add(match[1], undefined, "party", match.index);
+      && /^\s+to\b/i.test(suffix);
+    if (!emailMetadata && !artifactToRecipient && !negated(match.index)) add(match[1], undefined, "party", match.index);
   }
   for (const match of instruction.matchAll(new RegExp(
     `\\b(?:spoke|talked|met)\\s+(?:to|with)\\s+${name}(?:\\s+from\\s+${organization})?${boundary}`,

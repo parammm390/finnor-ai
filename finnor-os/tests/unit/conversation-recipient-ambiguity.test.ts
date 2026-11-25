@@ -114,4 +114,15 @@ describe("conversation intake recipient ambiguity", () => {
       clarificationQuestion: null,
     });
   });
+
+  it("does not treat an email subject as a second recipient", async () => {
+    const turn = await prepare("Email Terry Morgan. Email subject: Deal update.");
+
+    expect(turn.context.resolution).toMatchObject({
+      status: "resolved",
+      resolvedReferences: [{ entityType: "external_contact", entityId: contacts[1]!.id }],
+      unresolvedExpressions: [],
+      clarificationQuestion: null,
+    });
+  });
 });

@@ -1420,8 +1420,8 @@
     },
     {
       "file": "packages/orchestration/src/conversation-kernel.ts",
-      "bytes": 19761,
-      "sha256": "6c208b6ff75575a283f6a2cbfcdf6e011442ff6b0ca02f7b2876d353d92ed3d0"
+      "bytes": 20008,
+      "sha256": "342b78743038de766ca34b7ecdc0980ac764730eaa3e4c70a8f209206ec0f5e8"
     },
     {
       "file": "packages/orchestration/src/conversation-memory.ts",
@@ -3571,7 +3571,7 @@
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-manifest.generated.ts",
       "bytes": 265898,
-      "sha256": "9c92124aa90a613cbe86ec43d586f13bca6916bfff47542a0545e6c2362718b3"
+      "sha256": "061180f30ccfdce5582159d1e08389b1fc36411202dce95fd503e4ccca888fca"
     },
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-paths.ts",
