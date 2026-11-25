@@ -1,7 +1,7 @@
 import { eligibleApproversForAction } from "@finnor/authority";
-import { canReadEmployeeWork } from "@finnor/db";
 import { executionActionTypes, executionProjection } from "@finnor/read-models";
 import { canApproveReadOnly, errorResponse, requireContext } from "../../../../../lib/auth";
+import { requireVisibleWork } from "../../../../../lib/work-access";
 
 /**
  * One authenticated, tenant-scoped reconstruction of a Work's execution. This is a
@@ -12,7 +12,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   try {
     const { id } = await params;
     const ctx = await requireContext(req);
-    if (!(await canReadEmployeeWork(ctx.tenantId, id, ctx.employeeId ?? ctx.userId))) return Response.json({ error: "Work not found" }, { status: 404 });
+    await requireVisibleWork(ctx, id);
     const actions = await executionActionTypes(ctx.tenantId, id);
     const candidates = actions.filter((action) => action.status === "pending" || action.status === "needs_human_review");
     const eligible = await Promise.all(candidates.map(async (action) => ({

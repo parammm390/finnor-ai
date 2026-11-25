@@ -36,6 +36,7 @@ import {
   outcomePackRuns,
   autonomyEvaluations,
   outcomeShadowProposals,
+  employeeVisibleWork,
   exactInstant,
   olderThan,
   parseExactInstant,
@@ -768,13 +769,7 @@ export async function workCasesPage(tenantId: string, options: WorkCasesPageOpti
     // Employee endpoints have no user-owned legacy instruction records. Do not
     // allow a caller-provided legacy cursor to bypass canonical Work scoping.
     const cursor = options.employeeId && decodedCursor?.scope === "legacy_instruction" ? null : decodedCursor;
-    const employeeWorkScope = options.employeeId ? and(
-      or(eq(works.createdBy, options.employeeId), eq(works.currentOwnerId, options.employeeId), eq(works.assignedTo, options.employeeId)),
-      sql`EXISTS (SELECT 1 FROM ${users} current_employee
-         WHERE current_employee.tenant_id=${tenantId}::uuid
-           AND current_employee.id=${options.employeeId}::uuid
-           AND current_employee.status='active')`,
-    ) : undefined;
+    const employeeWorkScope = options.employeeId ? employeeVisibleWork(options.employeeId) : undefined;
     const [canonicalWork] = options.employeeId ? [] : await db.select({ id: works.id }).from(works).where(eq(works.tenantId, tenantId)).limit(1);
     const rootScope: WorkCasesPage["page"]["rootScope"] = options.employeeId ? "canonical_work"
       : cursor?.scope ?? (canonicalWork ? "canonical_work" : "legacy_instruction");

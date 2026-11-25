@@ -216,7 +216,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/db/index.ts",
-      "sha256": "8e36efb8c361fe5634aa1731286b53b2c92066982f3e2ee48486be00e092c298"
+      "sha256": "a59fa17ef3f15eaf844c417a2d7e87c3740bc3e01fcca16abea6d843dc4dba81"
     },
     {
       "path": "finnor-os/packages/db/execution-deadline.ts",
@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "975ac940ff4b383ce22cc9e209e468311a80dbc6d38e6eae93c972646ccfa114"
+      "sha256": "dcff547dc397ea29959e42be8dd4d3b61569e800cf4e9345ad45579f56343c53"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -2304,7 +2304,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "813bad8d3d03f98808728ad3c4284d8eb5151ce5ddb86bbf6c80c4b7b1bd2c0b"
+      "sha256": "067da72dc60bc1a5837dbe74c95568ebbb2725f7a8789589da63c170023f2f3d"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2748,7 +2748,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "sha256": "8e3c923b5dea968e7f92e1b902831014a644020920d5ed6b9f72e1d046ddbc2e"
+      "sha256": "651a8ca6e78f59d2617fe39ee5d722025f83ecd5ebc389b7bee74c14ada983bf"
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-paths.ts",
@@ -3164,7 +3164,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts",
-      "sha256": "2499e046fc600481718f1a123d0730d1b552c8179c50ec446ea81c4087507baf"
+      "sha256": "bfc21d06c90370b54af10d831010d9a1c2fcd6e93d4f0733dd40f9a8bf27a7c5"
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-paths.ts",
@@ -3300,7 +3300,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/read-models/src/work-cases.ts",
-      "sha256": "16499632845f5b74b78df93259b78e06e134fec5227ede5c6508335f85858b3f"
+      "sha256": "64ff08bee0ef74a63f03ae757f6c010eb993994faf1e57c2d78c00715d47a66a"
     },
     {
       "path": "finnor-os/packages/read-models/src/workforce-status.ts",
@@ -6067,5 +6067,5 @@ export default {
       "sha256": "7e60735b4765a156974769a5c22f84233249ceaa0817ee9ddc7e784de2394139"
     }
   ],
-  "sourceDigest": "2e1cf450287ec72fc9b58d654c7b35211c443338c68fcbd791a25e0173ceb64e"
+  "sourceDigest": "9d983aa591474cc902eae783efb3616e7323296d82da71e971684e8aed6e49f4"
 } as const;

@@ -495,8 +495,8 @@
     },
     {
       "file": "packages/db/index.ts",
-      "bytes": 187344,
-      "sha256": "8e36efb8c361fe5634aa1731286b53b2c92066982f3e2ee48486be00e092c298"
+      "bytes": 187066,
+      "sha256": "a59fa17ef3f15eaf844c417a2d7e87c3740bc3e01fcca16abea6d843dc4dba81"
     },
     {
       "file": "packages/db/keyset.ts",
@@ -2511,7 +2511,7 @@
     {
       "file": "packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
       "bytes": 8809,
-      "sha256": "813bad8d3d03f98808728ad3c4284d8eb5151ce5ddb86bbf6c80c4b7b1bd2c0b"
+      "sha256": "067da72dc60bc1a5837dbe74c95568ebbb2725f7a8789589da63c170023f2f3d"
     },
     {
       "file": "packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2956,7 +2956,7 @@
     {
       "file": "packages/private-equity/src/policy-learning/source-manifest.generated.ts",
       "bytes": 13772,
-      "sha256": "8e3c923b5dea968e7f92e1b902831014a644020920d5ed6b9f72e1d046ddbc2e"
+      "sha256": "651a8ca6e78f59d2617fe39ee5d722025f83ecd5ebc389b7bee74c14ada983bf"
     },
     {
       "file": "packages/private-equity/src/policy-learning/source-paths.ts",
@@ -3506,7 +3506,7 @@
     {
       "file": "packages/private-equity/src/system-identification/source-manifest.generated.ts",
       "bytes": 19716,
-      "sha256": "2499e046fc600481718f1a123d0730d1b552c8179c50ec446ea81c4087507baf"
+      "sha256": "bfc21d06c90370b54af10d831010d9a1c2fcd6e93d4f0733dd40f9a8bf27a7c5"
     },
     {
       "file": "packages/private-equity/src/system-identification/source-paths.ts",
@@ -3566,7 +3566,7 @@
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-manifest.generated.ts",
       "bytes": 265719,
-      "sha256": "557f1ff927b1ca8ecb22bca2740d70f6a5051c57653e87c922840e1f191010c6"
+      "sha256": "0a4899c264835917bb507558eb0b752ce08726dc907c43de720be6f13dc3ab9a"
     },
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-paths.ts",
@@ -3740,8 +3740,8 @@
     },
     {
       "file": "packages/read-models/src/work-cases.ts",
-      "bytes": 67350,
-      "sha256": "16499632845f5b74b78df93259b78e06e134fec5227ede5c6508335f85858b3f"
+      "bytes": 67031,
+      "sha256": "64ff08bee0ef74a63f03ae757f6c010eb993994faf1e57c2d78c00715d47a66a"
     },
     {
       "file": "packages/read-models/src/workforce-status.ts",

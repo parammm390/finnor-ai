@@ -2,6 +2,7 @@ import { handoffWork, workAggregate } from "@finnor/db";
 import { employeeAuthoritySnapshot, evaluateAuthority } from "@finnor/authority";
 import { HandoffWorkSchema } from "@finnor/policy-schema";
 import { AuthError, errorResponse, requireContext } from "../../../../../lib/auth";
+import { requireVisibleWork } from "../../../../../lib/work-access";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -13,6 +14,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   try {
     const { id } = await params;
     const ctx = await requireContext(req);
+    await requireVisibleWork(ctx, id);
     const parsed = HandoffWorkSchema.safeParse(await req.json().catch(() => ({})));
     if (!parsed.success) return Response.json({ error: parsed.error.issues.map((issue) => issue.message).join("; ") }, { status: 400 });
     const actorId = ctx.employeeId ?? (UUID.test(ctx.userId) ? ctx.userId : null);

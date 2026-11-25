@@ -1,10 +1,11 @@
-import { autonomyEvaluations, outcomePackRuns, reconcileWorkStatus, withTenant, workAggregate, canReadEmployeeWork } from "@finnor/db";
+import { autonomyEvaluations, outcomePackRuns, reconcileWorkStatus, withTenant, workAggregate } from "@finnor/db";
 import { FinancialDocumentReviewReceiptSchema, type FinancialDocumentReview } from "@finnor/shared-types";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { assertPrivateAnswerReadAccess } from "../../../../../../packages/orchestration/src/conversation-answer-read";
 import { PeDomainError } from "@finnor/private-equity/src/types";
 import { errorResponse, requireContext } from "../../../../lib/auth";
+import { requireVisibleWork } from "../../../../lib/work-access";
 
 const ReviewWork = z.object({
   status: z.literal("completed"),
@@ -21,8 +22,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   try {
     const { id } = await params;
     const ctx = await requireContext(req);
-    // Authorization must precede reconciliation: an unauthorized GET cannot mutate Work.
-    if (!(await canReadEmployeeWork(ctx.tenantId, id, ctx.employeeId ?? ctx.userId))) return Response.json({ error: "Work not found" }, { status: 404 });
+    await requireVisibleWork(ctx, id);
     await reconcileWorkStatus(ctx.tenantId, id);
     const work = await workAggregate(ctx.tenantId, id);
     if (!work) return Response.json({ error: "Work not found" }, { status: 404 });

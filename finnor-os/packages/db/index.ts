@@ -6,7 +6,7 @@
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import * as schema from "./schema";
-import { and, asc, desc, eq, gt, inArray, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, lt, or, sql, type SQL } from "drizzle-orm";
 import { createHash, randomUUID } from "node:crypto";
 import {connectWithExecutionDeadline,queryWithExecutionDeadline} from "./execution-deadline";
 import { CURRENT_MIGRATION_HEAD } from "./migration-head";
@@ -726,24 +726,24 @@ export async function assertCurrentEmployeeWorkOwner(tenantId: string, workId: s
  * current-owner and assigned-to are existing canonical relationships; this
  * query deliberately does not invent a new share or administrator exemption.
  * Internal system Work without any of those human principals fails closed.
+ * Every employee-facing Work read uses this one predicate.
  */
+export function employeeVisibleWork(employeeId: string): SQL {
+  return and(
+    or(eq(schema.works.createdBy, employeeId), eq(schema.works.currentOwnerId, employeeId), eq(schema.works.assignedTo, employeeId)),
+    sql`EXISTS (SELECT 1 FROM ${schema.users} visible_employee WHERE visible_employee.tenant_id=${schema.works.tenantId}
+      AND visible_employee.id=${employeeId}::uuid AND visible_employee.status='active')`,
+  )!;
+}
+
 export async function canReadEmployeeWork(tenantId: string, workId: string, employeeId: string): Promise<boolean> {
   if (!isUuid(employeeId) || !isUuid(workId)) return false;
   return withTenant(tenantId, async db => {
-    const [accessible] = await db.select({ id: schema.works.id }).from(schema.works)
-      .innerJoin(schema.users, and(
-        eq(schema.users.id, employeeId),
-        eq(schema.users.tenantId, schema.works.tenantId),
-        eq(schema.users.status, "active"),
-      )).where(and(
-        eq(schema.works.tenantId, tenantId),
-        eq(schema.works.id, workId),
-        or(
-          eq(schema.works.createdBy, employeeId),
-          eq(schema.works.currentOwnerId, employeeId),
-          eq(schema.works.assignedTo, employeeId),
-        ),
-      )).limit(1);
+    const [accessible] = await db.select({ id: schema.works.id }).from(schema.works).where(and(
+      eq(schema.works.tenantId, tenantId),
+      eq(schema.works.id, workId),
+      employeeVisibleWork(employeeId),
+    )).limit(1);
     return Boolean(accessible);
   }, employeeId);
 }
@@ -760,20 +760,11 @@ export async function readableEmployeeWorkIds(
   const ids = [...new Set(candidateWorkIds)].filter(isUuid).slice(0, 100);
   if (!ids.length) return [];
   return withTenant(tenantId, async db => {
-    const rows = await db.select({ id: schema.works.id }).from(schema.works)
-      .innerJoin(schema.users, and(
-        eq(schema.users.id, employeeId),
-        eq(schema.users.tenantId, schema.works.tenantId),
-        eq(schema.users.status, "active"),
-      )).where(and(
-        eq(schema.works.tenantId, tenantId),
-        inArray(schema.works.id, ids),
-        or(
-          eq(schema.works.createdBy, employeeId),
-          eq(schema.works.currentOwnerId, employeeId),
-          eq(schema.works.assignedTo, employeeId),
-        ),
-      ));
+    const rows = await db.select({ id: schema.works.id }).from(schema.works).where(and(
+      eq(schema.works.tenantId, tenantId),
+      inArray(schema.works.id, ids),
+      employeeVisibleWork(employeeId),
+    ));
     return rows.map(row => row.id);
   }, employeeId);
 }
@@ -801,9 +792,7 @@ export async function canReadEmployeeInstruction(tenantId: string, instructionId
         eq(schema.instructionSessions.id, instructionId),
         or(
           and(isNull(schema.instructionSessions.workId), eq(schema.instructionSessions.userId, employeeId)),
-          eq(schema.works.createdBy, employeeId),
-          eq(schema.works.currentOwnerId, employeeId),
-          eq(schema.works.assignedTo, employeeId),
+          employeeVisibleWork(employeeId),
         ),
       )).limit(1);
     return Boolean(visible);

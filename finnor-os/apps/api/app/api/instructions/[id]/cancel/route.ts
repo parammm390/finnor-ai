@@ -1,8 +1,9 @@
-import { MAX_BACKGROUND_SCAN_BATCH, exactInstant, newerThan, type KeysetPosition, canReadEmployeeInstruction, assertCurrentEmployeeWorkOwner, WorkControlAuthorizationError, actionLog, domainActions, instructionSessions, workflowRuns, workflowSteps, workObjectiveLoops, works, withTenant, transitionWork } from "@finnor/db";
+import { MAX_BACKGROUND_SCAN_BATCH, exactInstant, newerThan, type KeysetPosition, assertCurrentEmployeeWorkOwner, WorkControlAuthorizationError, actionLog, domainActions, instructionSessions, workflowRuns, workflowSteps, workObjectiveLoops, works, withTenant, transitionWork } from "@finnor/db";
 import { cancelRun } from "@finnor/workflow-runtime";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { emitInstructionEvent, recordInstructionCancellationFence } from "@finnor/orchestration";
 import { canApprove, errorResponse, requireContext } from "../../../../../lib/auth";
+import { requireVisibleInstruction } from "../../../../../lib/work-access";
 import { getOrchestrator } from "../../../../../lib/orchestrator";
 
 /** Cancels the durable instruction, not just its browser presentation. The
@@ -14,7 +15,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     const { id } = await params;
     const ctx = await requireContext(req);
     const actorId = ctx.employeeId ?? ctx.userId;
-    if (!(await canReadEmployeeInstruction(ctx.tenantId, id, actorId))) return Response.json({ error: "Instruction not found" }, { status: 404 });
+    await requireVisibleInstruction(ctx, id);
     if (!(await canApprove(ctx, "*"))) {
       return Response.json({ error: `Your role (${ctx.role}) cannot cancel business instructions` }, { status: 403 });
     }

@@ -1,6 +1,7 @@
-import { assertCurrentEmployeeWorkOwner, canReadEmployeeWork, latestWorkInput, receiveWork, WorkControlAuthorizationError, WorkTransitionConflictError, workAggregate } from "@finnor/db";
+import { assertCurrentEmployeeWorkOwner, latestWorkInput, receiveWork, WorkControlAuthorizationError, WorkTransitionConflictError, workAggregate } from "@finnor/db";
 import { ControlObjectiveSchema } from "@finnor/policy-schema";
 import { errorResponse, requireContext } from "../../../../../lib/auth";
+import { requireVisibleWork } from "../../../../../lib/work-access";
 import { getOrchestrator } from "../../../../../lib/orchestrator";
 import { loadWorkInputConversation, parseObjectiveSuccessCondition, prepareEmployeeConversationTurn } from "@finnor/orchestration";
 
@@ -8,7 +9,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   try {
     const { id } = await params;
     const ctx = await requireContext(req);
-    if (!(await canReadEmployeeWork(ctx.tenantId, id, ctx.employeeId ?? ctx.userId))) return Response.json({ error: "Work not found" }, { status: 404 });
+    await requireVisibleWork(ctx, id);
     const aggregate = await workAggregate(ctx.tenantId, id);
     if (!aggregate?.objectiveLoop) return Response.json({ error: "Work objective not found" }, { status: 404 });
     return Response.json({ objective: aggregate.objectiveLoop, iterations: aggregate.objectiveSteps, plannerAttempts: aggregate.objectivePlannerAttempts }, { headers: { "cache-control": "private, no-store" } });
