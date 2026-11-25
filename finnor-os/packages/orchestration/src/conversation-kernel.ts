@@ -139,15 +139,16 @@ function parseNamedExpressions(instruction: string) {
   const dash = "(?:\\s+-\\s+|\\s*[–—]\\s*)";
   const dashClause = `${dash}(?:please\\s+)?${partyCue}\\s+`;
   const joinedClause = "\\b(?:and(?:\\s+then)?|then|also|but|so)\\s+(?:please\\s+)?";
-  const correction = `(?:${dash}|\\s*,\\s*)(?:sorry\\s*,|I\\s+mean\\b\\s*,?)\\s*(?:(?:please\\s+)?${partyCue}\\s+)?`;
-  const boundary = `(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then|instead)\\b|\\s+${joinedClause}${partyCue}\\b|${dashClause}|${correction}|\\s*[\\x00,.!?;:]|\\s*$)`;
+  const correctionMarker = "\\b(?:(?:sorry|I\\s+mean|actually|rather)\\b|no\\s*,)";
+  const boundary = `(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then|instead)\\b|\\s+${joinedClause}${partyCue}\\b|${dashClause}|${dash}${correctionMarker}|\\s*[\\x00,.!?;:]|\\s*$)`;
   const addressee = `(?:the\\s+)?${name}(?:\\s+from\\s+${organization})?${boundary}`;
   const nextAddressee = new RegExp(
-    `(?:(${correction})|\\s*,\\s*(?:and\\s+)?|\\s+and\\s+)(?!(?:please|then|also|instead|${partyCue})\\b|${joinedClause}${partyCue}\\b)${addressee}`,
+    `(?:\\s*,\\s*(?:and\\s+)?|\\s+and\\s+)(?!(?:please|then|also|instead|${partyCue})\\b|${joinedClause}${partyCue}\\b|${correctionMarker})${addressee}`,
     "iyu",
   );
   const newClause = new RegExp(`(?:[.!?;:,\\r\\n–—]|\\s-\\s)\\s*(?:please\\s+)?$|${joinedClause}$`, "i");
   let previousAddresseeEnd = 0;
+  let hasAffirmativeOutreach = false;
   for (const match of command.matchAll(new RegExp(
     `\\b(?:${partyCue}|${excludedAlternative})\\s+${addressee}`,
     "giu",
@@ -155,26 +156,26 @@ function parseNamedExpressions(instruction: string) {
     const [, alternative, recipient, qualifier] = match;
     if (match.index < previousAddresseeEnd) continue;
     const excluded = Boolean(alternative) || negated(match.index);
+    if (!excluded) hasAffirmativeOutreach = true;
     if (!excluded && previousAddresseeEnd && !newClause.test(command.slice(previousAddresseeEnd, match.index))) continue;
     const end = match.index + match[0].length;
     const artifactToRecipient = /^(?:calculation|analysis|findings|results|memo|report|summary|document|model|update|draft|note)$/i.test(recipient ?? "")
       && /^\s+to\b/i.test(command.slice(end));
     if (artifactToRecipient) continue;
 
-    const addressees = [{ name: recipient, organization: qualifier, index: match.index }];
-    nextAddressee.lastIndex = end;
-    previousAddresseeEnd = end;
-    for (let next = nextAddressee.exec(command); next; next = nextAddressee.exec(command)) {
-      const [, corrected, name, organization] = next;
-      if (CONSEQUENTIAL.exec(name ?? "")?.index === 0) break;
-      const index = corrected ? addressees.pop()!.index : next.index;
-      addressees.push({ name, organization, index });
-      previousAddresseeEnd = nextAddressee.lastIndex;
-    }
-    for (const { name, organization, index } of addressees) {
+    const recordAddressee = (name: string | undefined, organization: string | undefined, index: number) => {
       if (excluded) {
         if (name && organization) negatedQualifiedNames.add(normalizePartyName(name));
       } else add(name, organization, "party", index);
+    };
+    recordAddressee(recipient, qualifier, match.index);
+    nextAddressee.lastIndex = end;
+    previousAddresseeEnd = end;
+    for (let next = nextAddressee.exec(command); next; next = nextAddressee.exec(command)) {
+      const [, name, organization] = next;
+      if (CONSEQUENTIAL.exec(name ?? "")?.index === 0) break;
+      recordAddressee(name, organization, next.index);
+      previousAddresseeEnd = nextAddressee.lastIndex;
     }
     if (!excluded && /^\s*:/.test(command.slice(previousAddresseeEnd))) {
       command = command.slice(0, previousAddresseeEnd);
@@ -188,6 +189,7 @@ function parseNamedExpressions(instruction: string) {
   return {
     expressions: results.sort((left, right) => left.index - right.index).slice(0, 5),
     negatedQualifiedNames,
+    recipientConflict: hasAffirmativeOutreach && new RegExp(correctionMarker, "i").test(command),
     command,
   };
 }
@@ -266,7 +268,8 @@ export async function prepareEmployeeConversationTurn(params: {
   if (!loaded) throw new Error("conversation_thread_not_found");
 
   const history: EmployeeConversationMessage[] = [];
-  const { expressions: named, negatedQualifiedNames, command } = parseNamedExpressions(params.instruction);
+  const { expressions, negatedQualifiedNames, recipientConflict, command } = parseNamedExpressions(params.instruction);
+  const named = recipientConflict ? [] : expressions;
   const needsRecipientClarification = (expression: NamedExpression) =>
     expression.cue === "party" && !expression.organization && negatedQualifiedNames.has(normalizePartyName(expression.name));
   for (const expression of named.filter((row) => row.cue === "history")) {
@@ -299,7 +302,7 @@ export async function prepareEmployeeConversationTurn(params: {
 
   const partyCandidates: ConversationReference[] = [];
   const resolvedParties: ConversationReference[] = [];
-  const unresolvedExpressions: string[] = [];
+  const unresolvedExpressions: string[] = recipientConflict ? ["outreach recipient"] : [];
   const trace: ConversationResolutionProvenance[] = [];
   for (const expression of named) {
     if (needsRecipientClarification(expression)) {
@@ -331,23 +334,23 @@ export async function prepareEmployeeConversationTurn(params: {
 
   const unique = <T extends ConversationReference>(rows: T[]) =>
     [...new Map(rows.map((row) => [key(row), row])).values()];
-  const selected = unique([...explicit, ...resolvedParties]);
+  const selected = recipientConflict ? [] : unique([...explicit, ...resolvedParties]);
   const candidates = unique([...explicit, ...partyCandidates, ...carried]);
   const consequential = CONSEQUENTIAL.test(command) && !isReadOnlyConversationQuestion(command.replaceAll("\0", " "));
 
-  if (PRONOUN.test(command) && explicit.length === 0) {
+  if (!recipientConflict && PRONOUN.test(command) && explicit.length === 0) {
     if (carried.length === 1) selected.push(carried[0]!);
     else if (consequential) unresolvedExpressions.push("referenced target");
   }
   const unresolved = [...new Set(unresolvedExpressions)];
-  const ambiguous = consequential && unresolved.length > 0;
+  const ambiguous = recipientConflict || (consequential && unresolved.length > 0);
   const resolution: ConversationReferenceResolution = {
     status: ambiguous ? "clarification_required" : selected.length ? "resolved" : "none",
     originalInstruction: params.instruction,
     resolvedReferences: unique(selected),
     candidates,
     unresolvedExpressions: unresolved,
-    clarificationQuestion: ambiguous
+    clarificationQuestion: recipientConflict ? "Who should receive this?" : ambiguous
       ? `Which active target do you mean for ${unresolved[0]}?`
       : null,
     consequential,
