@@ -3596,7 +3596,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/tools/src/llm.ts",
-      "sha256": "1582653efdd610d8a3e3721544b243f212f08bd37bf5ca120558f320faa735c4"
+      "sha256": "464d77b1ec9a8f1aa8364bdf495c23c9b09fbcaddcca2c774c653e98cc367b5d"
     },
     {
       "path": "finnor-os/packages/tools/src/logger.ts",
@@ -6067,5 +6067,5 @@ export default {
       "sha256": "7e60735b4765a156974769a5c22f84233249ceaa0817ee9ddc7e784de2394139"
     }
   ],
-  "sourceDigest": "c17a1d0064235faac328b431723f644a67e76b7aacafa2b59f0f3049342f360e"
+  "sourceDigest": "5cd3b2313a0de44b411af82c6271d937927f2b39426bbdb45d2c6d6bc141ff82"
 } as const;
