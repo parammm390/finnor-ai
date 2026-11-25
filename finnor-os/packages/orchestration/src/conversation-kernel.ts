@@ -13,7 +13,7 @@ import {
   withTenant,
 } from "@finnor/db";
 import { mirrorConversationMessageToZep, queryConsolidatedFacts } from "@finnor/memory";
-import { resolveParty } from "@finnor/read-models";
+import { normalizePartyName, resolveParty } from "@finnor/read-models";
 import {
   isRetiredWaterCanonicalEntity,
   partyRefToCanonicalEntityRef,
@@ -108,10 +108,6 @@ export async function resolveCanonicalHumanPrincipal(ctx: TenantContext): Promis
  */
 export function extractNamedExpressions(instruction: string): NamedExpression[] {
   return parseNamedExpressions(instruction).expressions;
-}
-
-function normalizePartyName(name: string): string {
-  return name.replace(/\s+/g, " ").trim().toLocaleLowerCase();
 }
 
 function parseNamedExpressions(instruction: string) {

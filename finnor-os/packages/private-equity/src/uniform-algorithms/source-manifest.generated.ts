@@ -1372,7 +1372,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/orchestration/src/conversation-kernel.ts",
-      "sha256": "8a30bca476793154111d2db622201e8bc8bdb62df758913aaf6a14f1e0eff1a3"
+      "sha256": "6c208b6ff75575a283f6a2cbfcdf6e011442ff6b0ca02f7b2876d353d92ed3d0"
     },
     {
       "path": "finnor-os/packages/orchestration/src/conversation-memory.ts",
@@ -3296,7 +3296,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/read-models/src/party-resolver.ts",
-      "sha256": "d1374cd67a34320a7b61fa2ca8d54fcdc9e76f99019ebb404b992a302f195e6c"
+      "sha256": "d81aeea6fd6e04207b67f4e12d76d7f59aeaedaf1e1a088600bf842c5cd8767d"
     },
     {
       "path": "finnor-os/packages/read-models/src/work-cases.ts",
@@ -6067,5 +6067,5 @@ export default {
       "sha256": "7e60735b4765a156974769a5c22f84233249ceaa0817ee9ddc7e784de2394139"
     }
   ],
-  "sourceDigest": "f1f112a8d51630fd8ff5a8bffeab5d12686aac3f58805c65b1a1dcbaee0112c5"
+  "sourceDigest": "ef7d2117c21498181acc2db08fddedd12285b3eb10adab359adbdbe19a634f2e"
 } as const;

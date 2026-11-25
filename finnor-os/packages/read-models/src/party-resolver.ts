@@ -27,7 +27,7 @@ import { and, eq } from "drizzle-orm";
 const PARTY_TYPE_SET = new Set<string>(PARTY_TYPES);
 const DIRECTORY_CAP = 200;
 
-function normalize(value: string): string {
+export function normalizePartyName(value: string): string {
   return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
     .replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
 }
@@ -106,7 +106,7 @@ async function relationshipCandidates(
   context: PartyResolverContext,
   all: PartyCandidate[],
 ): Promise<PartyCandidate[]> {
-  const normalized = normalize(query);
+  const normalized = normalizePartyName(query);
   const requester = context.requesterEmployeeId;
   if (requester && /^my (manager|backup|assistant|reports)$/.test(normalized)) {
     const relationship = normalized.slice(3);
@@ -193,11 +193,11 @@ export async function resolveParty(
 
   const relationship = await relationshipCandidates(tenantId, query, context, all);
   if (relationship.length > 0) return finish(query, "relationship", relationship);
-  if (normalize(query) === "this work" || normalize(query) === "current work") {
+  const normalized = normalizePartyName(query);
+  if (normalized === "this work" || normalized === "current work") {
     return finish(query, "work_context", await workCandidates(tenantId, context.workId, all));
   }
 
-  const normalized = normalize(query);
   const aliases = await withTenant(tenantId, async (db) =>
     db.select({ partyType: partyAliases.partyType, partyId: partyAliases.partyId })
       .from(partyAliases).where(and(
@@ -211,10 +211,10 @@ export async function resolveParty(
     .map((row) => `${row.partyType}:${row.partyId}`));
   if (activeAliasRefs.size > 0) return finish(query, "alias", all.filter((row) => activeAliasRefs.has(key(row.ref))));
 
-  const exact = all.filter((row) => normalize(row.displayName) === normalized);
+  const exact = all.filter((row) => normalizePartyName(row.displayName) === normalized);
   if (exact.length > 0) return finish(query, "exact_name", exact);
   const fuzzy = all.filter((row) => {
-    const name = normalize(row.displayName);
+    const name = normalizePartyName(row.displayName);
     return normalized.length >= 3 && (name.includes(normalized) || normalized.includes(name));
   });
   return finish(query, "fuzzy", fuzzy);
