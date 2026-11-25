@@ -160,7 +160,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/uniform-algorithms/source-paths.ts",
-      "sha256": "28ac4e449d07314d43f551aac84faf73fc7ec41152edd55f68f621a0e83e823a"
+      "sha256": "cc7831e12ae81956f136fea3603c92bb36a55d56e94d1c7d7e3389b7b1ae3e33"
     },
     {
       "path": "finnor-os/packages/private-equity/src/uniform-algorithms/source-cut.ts",
@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "3914b9673c4ba6f09f24abe0d83852ad069ecc381d07ac9c356212febf08f99f"
+      "sha256": "5b5263f86e38071755293c7f266cf75dd433031fc411e741f40a96678ba1e9b2"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -4664,15 +4664,15 @@ export default {
     },
     {
       "path": "src/components/centropy/shell/CentropyWorkspace.tsx",
-      "sha256": "5bdf7f0246d82386430f4d9c807bb132f678188612fa456eb9e0f5b06442c7c3"
+      "sha256": "a18b7d56ea651c73e2f6533acf57c02dbd5e12bbf7505e387be462b2b20d2ed5"
     },
     {
       "path": "src/components/centropy/shell/HomeCanvas.tsx",
-      "sha256": "4544cdc7c4ef8f10d0da64ffcfa217174b002e9e788cbfb138c8dd451d7da9cc"
+      "sha256": "f0af2c012b7b6ec1e8a7d21eacf31509c1efb4f088817e52398b7c78692a743a"
     },
     {
       "path": "src/components/centropy/shell/centropy.css",
-      "sha256": "7bdadaa371dd8802ae2c1b14d407dbb9ba639b33ddc50aa88267db0322f7ad1c"
+      "sha256": "fea2241ac35a287988788fd209293ea00249c95878b7591bc49f70221201c9a2"
     },
     {
       "path": "src/components/centropy/thread/Composer.tsx",
@@ -6065,7 +6065,11 @@ export default {
     {
       "path": "finnor-os/packages/db/keyset.ts",
       "sha256": "7e60735b4765a156974769a5c22f84233249ceaa0817ee9ddc7e784de2394139"
+    },
+    {
+      "path": "src/components/centropy/thread/WorkBrief.tsx",
+      "sha256": "995901693c8a1f0f89ff98c6af0e699ae5a31816d7d42978101f6a94a3f5d6f6"
     }
   ],
-  "sourceDigest": "c3706f9e2185bbc280cbe7e54b300f3c3361be9085d7d451d75647bad483218c"
+  "sourceDigest": "8f3d1f913de2b945983ec8a0bac5baacc855557e3d16ef17dc2f905d0c7f1e45"
 } as const;
