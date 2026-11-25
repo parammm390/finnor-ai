@@ -115,6 +115,7 @@ export function isReadOnlyConversationQuestion(instruction: string): boolean {
   const value = instruction.replace(/"(?:\\.|[^"\\])*"|“[^”]*”|‘[^’]*’|`[^`]*`|(?<!\w)'(?:\\.|[^'\\])*'(?!\w)/g, " ").replace(/\s+/g, " ").trim();
   if (REQUESTED_WORK.test(value)) return false;
   if (!INFORMATIONAL_QUESTION.test(value)) return false;
+  if (value.split(/(?<=[.!?;])\s+/).slice(1).some(hasRequestedBusinessEffect)) return false;
   if (/\b(?:and(?: then)?|then|also|now|please|(?:can|could|would) you)\s+(?:send|email|call|create|update|delete|approve|pay|execute|finish|complete|draft|share|assign|schedule|continue|resume)\b/i.test(value)) return false;
   if (/^(?:please\s+)?(?:what\s+(?:is\s+your\s+(?:understanding|interpretation)|do\s+you\s+(?:understand|remember))\s+(?:of|about|from)\b|(?:summarize|rephrase|translate|explain)\s+(?:this|the\s+(?:note|statement|message|passage))\b)/i.test(value)) return true;
   return /\b(?:did|have)\s+(?:i|we)\s+(?:say|tell|mention|specify|ask|discuss|establish|agree|decide)\b/i.test(value)

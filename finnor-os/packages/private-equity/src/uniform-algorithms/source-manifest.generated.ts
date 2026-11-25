@@ -1368,11 +1368,11 @@ export default {
     },
     {
       "path": "finnor-os/packages/orchestration/src/conversation-intent.ts",
-      "sha256": "b8f0441b2fd4c68e2798c3ad4021a07aa0933bbb371867cfd8e50cbe3349cea8"
+      "sha256": "a32b9a0d626f43ef640c3c98c1c2d1c60f79f413d5f70030800fc48db03f9819"
     },
     {
       "path": "finnor-os/packages/orchestration/src/conversation-kernel.ts",
-      "sha256": "20001500ce85f295dbd799c1f36d0a6067133dd6fd17e08db635552a909c84cb"
+      "sha256": "9d731085f6642538eda42d110fa90ed4c3bfe77faef3a98dd13794a69ff554f0"
     },
     {
       "path": "finnor-os/packages/orchestration/src/conversation-memory.ts",
@@ -6071,5 +6071,5 @@ export default {
       "sha256": "11dea46f9ca2d6c914d01df8683a1331ba51c144ed488904ad8ac251495f33d8"
     }
   ],
-  "sourceDigest": "09bd8e56f9fac9abe629e9bfe4f3683575ece000d30c822c2aa21a8c7367542a"
+  "sourceDigest": "b8c27ab756db9f326e972d01d12ab7e383c6d7528b5132efd38a791f8b57db05"
 } as const;
