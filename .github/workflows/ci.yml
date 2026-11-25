@@ -565,6 +565,8 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm ci --prefix finnor-os --no-audit --no-fund
       - run: npm run centropy:manifest:check
+      - name: Model-check the Work recovery claim against its past races
+        run: node finnor-os/verification/work-recovery/check.mjs
       - name: Verify atomic principal-scoped memory
         env:
           REDIS_URL: redis://127.0.0.1:6379

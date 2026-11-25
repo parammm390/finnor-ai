@@ -1698,6 +1698,9 @@ export async function beginWorkPlannerAttemptTx(db: Db, params: Parameters<typeo
       decisionContextSnapshot: existing.decisionContextSnapshot as DecisionContextSnapshot | null,
       decisionContextHash: existing.decisionContextHash,
     };
+    if (params.attemptKey.startsWith("retry:") && jsonObject(work.recovery).attemptKey !== params.attemptKey) {
+      throw new WorkTransitionConflictError(`Recovery ${params.attemptKey} no longer holds Work ${params.workId}`);
+    }
     const [input] = await db.select().from(schema.workInputs).where(and(eq(schema.workInputs.id, params.workInputId), eq(schema.workInputs.workId, params.workId))).limit(1);
     const snapshot = await decisionContextSnapshot(db, work, input, params.decisionContext);
     const [latest] = await db.select({ maxAttempt: sql<number>`coalesce(max(${schema.workPlannerAttempts.attempt}), 0)::int` }).from(schema.workPlannerAttempts).where(eq(schema.workPlannerAttempts.workId, params.workId));
