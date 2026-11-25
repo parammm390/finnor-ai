@@ -552,6 +552,12 @@ function icReviewCandidate(goal: GoalSpec, planningContext: unknown): CandidateP
   }, "grounded-ic-review-readiness");
 }
 
+function icRunMatchesPreparation(goal: GoalSpec, run: Record<string, unknown>): boolean {
+  const requireScenario = goal.criteria.some(({ criterion }) =>
+    criterion.kind === "private_equity_ic_preparation" && criterion.requireScenario);
+  return run.modelKey === CITED_ENTRY_MODEL ? !requireScenario : typeof run.scenarioId === "string";
+}
+
 function icExistingCaseRunCandidate(goal: GoalSpec, snapshot: PlanningWorldSnapshot, planningContext: unknown): CandidatePlan | null {
   if (!goal.criteria.some((item) => item.criterion.kind === "private_equity_ic_preparation")) return null;
   const inspection = record(planningContext);
@@ -560,7 +566,7 @@ function icExistingCaseRunCandidate(goal: GoalSpec, snapshot: PlanningWorldSnaps
   if (actions.some((item) => ["open_ic_case", "select_ic_underwriting_run"].includes(String(item.actionType)))) return null;
   const runs = Array.isArray(basis.recentRuns) ? basis.recentRuns.map(record) : [];
   const run = runs.find((item) => item.workId === snapshot.work.id && item.status === "SUCCEEDED"
-    && item.validity === "VALID" && typeof item.scenarioId === "string");
+    && item.validity === "VALID" && icRunMatchesPreparation(goal, item));
   if (!run || typeof run.id !== "string") return null;
   const cases = Array.isArray(basis.icCases) ? basis.icCases.map(record).filter((item) => item.investmentCaseId === run.investmentCaseId
     && !["DECIDED", "WITHDRAWN", "SUPERSEDED"].includes(String(item.state))) : [];
@@ -576,6 +582,7 @@ function icExistingCaseRunCandidate(goal: GoalSpec, snapshot: PlanningWorldSnaps
 function citedEntryUnderwritingCandidate(goal: GoalSpec, planningContext: unknown): CandidatePlan | null {
   const goalCriterion = goal.criteria.find(item => item.criterion.kind === "private_equity_ic_preparation");
   if (goalCriterion?.criterion.kind !== "private_equity_ic_preparation") return null;
+  if (goalCriterion.criterion.requireScenario || goal.criteria.some(({ criterion }) => criterion.kind === "private_equity_underwriting_scenario")) return null;
   const inspection = record(planningContext);
   const basis = record(inspection.privateEquityIcBasis);
   if (basis.dealId !== goalCriterion.criterion.dealId) return null;
@@ -603,7 +610,7 @@ function icCaseOpeningCandidate(goal: GoalSpec, snapshot: PlanningWorldSnapshot,
   if (priorActions.some((action) => action.actionType === "open_ic_case")) return null;
   const runs = Array.isArray(basis.recentRuns) ? basis.recentRuns.map(record) : [];
   const run = runs.find((item) => item.workId === snapshot.work.id && item.status === "SUCCEEDED"
-    && item.validity === "VALID" && typeof item.scenarioId === "string");
+    && item.validity === "VALID" && icRunMatchesPreparation(goal, item));
   if (!run || typeof run.id !== "string" || typeof run.investmentCaseId !== "string") return null;
   const investmentCases = Array.isArray(basis.investmentCases) ? basis.investmentCases.map(record) : [];
   if (!investmentCases.some((item) => item.id === run.investmentCaseId && item.state === "active")) return null;

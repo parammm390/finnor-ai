@@ -4,7 +4,7 @@ import { add, cmp, compileUnderwritingModel, decimal, div, FINANCIAL_CONVENTION_
 import { authorizeBeliefResources } from "./enterprise-beliefs";
 import { peTransaction } from "./repository";
 import { PeDomainError, type PeMutationContext } from "./types";
-import { createUnderwritingRun, createUnderwritingScenario, getUnderwritingRun, type ExplicitUnderwritingInput } from "./underwriting-repository";
+import { createUnderwritingRun, getUnderwritingRun, type ExplicitUnderwritingInput } from "./underwriting-repository";
 
 export interface EntrySourceRef {
   documentId: string;
@@ -298,11 +298,7 @@ export async function runCitedEntryUnderwriting(ctx: PeMutationContext, input: {
     || cmp(facts.qoeStartingEbitda.value, add(facts.unsupportedAddbacks.value, facts.nonrecurringIncome.value)) <= 0) {
     refuse("ENTRY_DEFINITION_UNSUPPORTED", "Entry multiples require positive limits and recurring EBITDA.");
   }
-  const scenario = await createUnderwritingScenario(ctx, {
-    investmentCaseId: input.investmentCaseId, modelVersionId: input.modelVersionId,
-    scenario: { schemaVersion: "underwriting-scenario.v1", name: "Cited entry underwriting", overrides: [] },
-  });
-  const run = await createUnderwritingRun(ctx, { ...input, scenarioId: String(scenario.id), explicitInputs });
+  const run = await createUnderwritingRun(ctx, { ...input, explicitInputs });
   if (run.result.status !== "SUCCEEDED" || run.result.validity !== "VALID") {
     refuse("ENTRY_UNDERWRITING_FAILED", "The underwriting engine did not produce a valid entry calculation.");
   }

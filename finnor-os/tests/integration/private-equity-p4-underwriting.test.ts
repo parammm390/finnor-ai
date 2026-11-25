@@ -574,6 +574,7 @@ describe.skipIf(!available)("P4 deterministic PE underwriting persistence and P3
       worldAt: new Date().toISOString(), idempotencyKey,
     });
     const sheet = await readCitedEntryCalculation(ctxA, run.id);
+    expect((await getUnderwritingRun(ctxA, run.id)).scenarioId).toBeNull();
     expect(sheet?.figures).toEqual(expect.arrayContaining([
       expect.objectContaining({ key: "recurringEbitda", value: "14", unit: "USD millions", citations: expect.stringContaining("Earnings p1") }),
       expect.objectContaining({ key: "enterpriseValueGap", value: "14", formula: "askingEnterpriseValue − enterpriseValueCap", citations: expect.stringContaining("Policy p1") }),

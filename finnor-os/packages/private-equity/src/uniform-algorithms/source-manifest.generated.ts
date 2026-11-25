@@ -1472,11 +1472,11 @@ export default {
     },
     {
       "path": "finnor-os/packages/orchestration/src/objective-loop.ts",
-      "sha256": "1dff6e5b40b03dcedfd599739613d899eed5e15abf15a5a7452f5e11a133da1e"
+      "sha256": "972c6e27d4cd9172d78d2cc6529c4cf1898536f40914f8f480acac80f45cc714"
     },
     {
       "path": "finnor-os/packages/orchestration/src/objective-success.ts",
-      "sha256": "3cd5ceb862d29e18288c3f5db37b2dad52d66313fdd0453d85a228afb313098c"
+      "sha256": "a4a79f2f9b20d37187cfa4982aaf8aedbeabe51a98dfa16c5dfc954887156432"
     },
     {
       "path": "finnor-os/packages/orchestration/src/operating-context.ts",
@@ -1516,7 +1516,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/orchestration/src/planner.ts",
-      "sha256": "62edc89878422cb24c2c9d85e705b0c86dd84101651e897e675e8bdd381326e0"
+      "sha256": "471134ff65a29b9c96d8fc0e05fa0dfa7da2ef0dcc77699bc09feea71dedaedc"
     },
     {
       "path": "finnor-os/packages/orchestration/src/planning-health.ts",
@@ -2360,7 +2360,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/evidence-execution/consumer.ts",
-      "sha256": "e32e5da7760f1cfd18ad1c4cacf1463d5cb36cde8e57cb361d9386cd7143d0df"
+      "sha256": "2853f6220332affc1f064ac571f423e06f523827086be97c58c307445e509771"
     },
     {
       "path": "finnor-os/packages/private-equity/src/evidence-execution/continuation.ts",
@@ -6068,8 +6068,8 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/cited-entry-underwriting.ts",
-      "sha256": "8ea6c9faef20429f861abe55373489530fbcbd4e3f7000f0b86c8040aa46cbc2"
+      "sha256": "11dea46f9ca2d6c914d01df8683a1331ba51c144ed488904ad8ac251495f33d8"
     }
   ],
-  "sourceDigest": "8a14429bdf2fadc85558606442cb97d3c11c32fd6db081efdf7de74bb08eabe0"
+  "sourceDigest": "865195ec60f55ea4024660c8c47fc035eb6122fe76bc9c4dadaeabd7b834b87d"
 } as const;
