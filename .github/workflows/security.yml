@@ -100,6 +100,7 @@ jobs:
           node --test scripts/guards/*.e2e.test.mjs
           node scripts/guards/machine-local-paths.mjs "$BASE_SHA" "$HEAD_SHA"
           node scripts/guards/keyset-cursors.mjs "$BASE_SHA" "$HEAD_SHA"
+          node scripts/guards/pinned-call-order.mjs "$BASE_SHA" "$HEAD_SHA"
       - name: Retain redacted complete-history findings
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a

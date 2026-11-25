@@ -168,30 +168,6 @@ describe("production-correctness intake boundary", () => {
 
   afterAll(() => consoleError.mockRestore());
 
-  it("claims Work/Input before context, conversation, classification, rate limiting, or orchestration on /api/actions", async () => {
-    const response = await actionsPOST(request("/api/actions", { instruction: "Create a work order", channel: "text" }));
-
-    expect(response.status).toBe(201);
-    const claimOrder = mocks.receiveWork.mock.invocationCallOrder[0]!;
-    expect(claimOrder).toBeLessThan(mocks.resolveOperatingInteractionContext.mock.invocationCallOrder[0]!);
-    expect(claimOrder).toBeLessThan(mocks.prepareEmployeeConversationTurn.mock.invocationCallOrder[0]!);
-    expect(claimOrder).toBeLessThan(mocks.interpretOperationalQuery.mock.invocationCallOrder[0]!);
-    expect(claimOrder).toBeLessThan(mocks.enforceRouteRateLimit.mock.invocationCallOrder[0]!);
-    expect(claimOrder).toBeLessThan(mocks.handleInstructionResult.mock.invocationCallOrder[0]!);
-    expect(mocks.prepareEmployeeConversationTurn).toHaveBeenCalledWith(expect.objectContaining({ instructionId: ids.instructionId }));
-  });
-
-  it("claims Work/Input before context, conversation, or objective orchestration on /api/objectives", async () => {
-    const response = await objectivesPOST(request("/api/objectives", { objective: "Own this outcome", channel: "text" }));
-
-    expect(response.status).toBe(202);
-    const claimOrder = mocks.receiveWork.mock.invocationCallOrder[0]!;
-    expect(claimOrder).toBeLessThan(mocks.resolveOperatingInteractionContext.mock.invocationCallOrder[0]!);
-    expect(claimOrder).toBeLessThan(mocks.prepareEmployeeConversationTurn.mock.invocationCallOrder[0]!);
-    expect(claimOrder).toBeLessThan(mocks.startObjective.mock.invocationCallOrder[0]!);
-    expect(mocks.prepareEmployeeConversationTurn).toHaveBeenCalledWith(expect.objectContaining({ instructionId: ids.instructionId }));
-  });
-
   it("keeps action core success when assistant projection persistence fails", async () => {
     mocks.persistEmployeeAssistantTurn.mockRejectedValueOnce(new Error("assistant projection unavailable"));
 
