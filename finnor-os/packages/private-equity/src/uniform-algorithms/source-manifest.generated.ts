@@ -160,7 +160,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/uniform-algorithms/source-paths.ts",
-      "sha256": "28ac4e449d07314d43f551aac84faf73fc7ec41152edd55f68f621a0e83e823a"
+      "sha256": "cc7831e12ae81956f136fea3603c92bb36a55d56e94d1c7d7e3389b7b1ae3e33"
     },
     {
       "path": "finnor-os/packages/private-equity/src/uniform-algorithms/source-cut.ts",
@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "3914b9673c4ba6f09f24abe0d83852ad069ecc381d07ac9c356212febf08f99f"
+      "sha256": "7bd2e1ef6d6ecd3d910c09f41c51686d73c8efb5ba070a07076b032937c97739"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -4572,7 +4572,7 @@ export default {
     },
     {
       "path": "package.json",
-      "sha256": "79e48593e692790fb583065c9a75557bf8de1e7b78ac973efc3e52ebb9190846"
+      "sha256": "c1ea2cfd24a9fa973d71caf9cb60bc14b74cd676137cbc88d282400b07371506"
     },
     {
       "path": "scope-frontier5/x1-institutional-programme-compiler/profile.json",
@@ -4664,15 +4664,15 @@ export default {
     },
     {
       "path": "src/components/centropy/shell/CentropyWorkspace.tsx",
-      "sha256": "5bdf7f0246d82386430f4d9c807bb132f678188612fa456eb9e0f5b06442c7c3"
+      "sha256": "e90868081e996a5d0a30f4cb690c042a22f09b545271e8564c3da865f2add710"
     },
     {
       "path": "src/components/centropy/shell/HomeCanvas.tsx",
-      "sha256": "4544cdc7c4ef8f10d0da64ffcfa217174b002e9e788cbfb138c8dd451d7da9cc"
+      "sha256": "f0af2c012b7b6ec1e8a7d21eacf31509c1efb4f088817e52398b7c78692a743a"
     },
     {
       "path": "src/components/centropy/shell/centropy.css",
-      "sha256": "7bdadaa371dd8802ae2c1b14d407dbb9ba639b33ddc50aa88267db0322f7ad1c"
+      "sha256": "fea2241ac35a287988788fd209293ea00249c95878b7591bc49f70221201c9a2"
     },
     {
       "path": "src/components/centropy/thread/Composer.tsx",
@@ -4700,11 +4700,11 @@ export default {
     },
     {
       "path": "src/components/centropy/thread/VerifiedIcOutcome.tsx",
-      "sha256": "387b09ba04f12bea013e1d87516fbae748ca935ad52035abe19eaaa9cfc860f7"
+      "sha256": "d9a34fd161592407bc2ce0718621c308b60db863ad28a562ab409abf03d48e7c"
     },
     {
       "path": "src/components/centropy/thread/VerifiedUnderwritingOutcome.tsx",
-      "sha256": "e03958fc9ebbf77d46adb23978c3f31223ae837ca11c5b31b9abc93c034a75ab"
+      "sha256": "283eb906962a45d8505012f3c4d40d4730b17ee6beeb1a543997ff410f04bd2f"
     },
     {
       "path": "src/components/centropy/thread/WorkRecovery.tsx",
@@ -6065,7 +6065,11 @@ export default {
     {
       "path": "finnor-os/packages/db/keyset.ts",
       "sha256": "7e60735b4765a156974769a5c22f84233249ceaa0817ee9ddc7e784de2394139"
+    },
+    {
+      "path": "src/components/centropy/thread/WorkBrief.tsx",
+      "sha256": "995901693c8a1f0f89ff98c6af0e699ae5a31816d7d42978101f6a94a3f5d6f6"
     }
   ],
-  "sourceDigest": "c3706f9e2185bbc280cbe7e54b300f3c3361be9085d7d451d75647bad483218c"
+  "sourceDigest": "84132bba0a2fbbd8c7fb217f8acf0e14bb3a6b0cef1f87543ca4679457a6b6ae"
 } as const;

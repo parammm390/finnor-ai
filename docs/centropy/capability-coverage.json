@@ -8,8 +8,8 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-24T23:33:58.705Z",
-  "sourceBaseCommit": "c95eea5b419b89e53e28cd9dad57f58cacba9a6c",
+  "generatedAt": "2026-11-25T06:31:14.385Z",
+  "sourceBaseCommit": "3c802ec57125953d2c17e7dcfedbd6496aa731b6",
   "manifestSha256": "e68051fd74494792ebb66d7156bae1b6ac5ef64e369d60057bc4c596fb0aebe3",
   "formsSha256": "35b57673d9d86e461f2b6056aaf326cb789901dfdd4481734aefef91da8052fd",
   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -152,21 +152,21 @@
       "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
       "route": "works/:ref/objective",
       "method": "POST",
-      "line": 325,
+      "line": 343,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
       "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
       "route": "instructions/:ref/cancel",
       "method": "POST",
-      "line": 459,
+      "line": 477,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
       "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
       "route": "works/:ref",
       "method": "GET",
-      "line": 590,
+      "line": 639,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
@@ -993,6 +993,7 @@
       "src/components/centropy/thread/RecordedValue.tsx",
       "src/components/centropy/thread/VerifiedIcOutcome.tsx",
       "src/components/centropy/thread/VerifiedUnderwritingOutcome.tsx",
+      "src/components/centropy/thread/WorkBrief.tsx",
       "src/components/centropy/thread/WorkRecovery.tsx",
       "src/components/centropy/thread/WorkforceAssignments.tsx",
       "src/components/centropy/thread/outcome-pack-model.ts",
@@ -1115,7 +1116,7 @@
       },
       {
         "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
-        "sha256": "5bdf7f0246d82386430f4d9c807bb132f678188612fa456eb9e0f5b06442c7c3"
+        "sha256": "e90868081e996a5d0a30f4cb690c042a22f09b545271e8564c3da865f2add710"
       },
       {
         "file": "src/components/centropy/lib/use-private-request-scope.ts",
@@ -1651,15 +1652,19 @@
       },
       {
         "file": "src/components/centropy/thread/VerifiedIcOutcome.tsx",
-        "sha256": "387b09ba04f12bea013e1d87516fbae748ca935ad52035abe19eaaa9cfc860f7"
+        "sha256": "d9a34fd161592407bc2ce0718621c308b60db863ad28a562ab409abf03d48e7c"
       },
       {
         "file": "src/components/centropy/thread/VerifiedUnderwritingOutcome.tsx",
-        "sha256": "e03958fc9ebbf77d46adb23978c3f31223ae837ca11c5b31b9abc93c034a75ab"
+        "sha256": "283eb906962a45d8505012f3c4d40d4730b17ee6beeb1a543997ff410f04bd2f"
+      },
+      {
+        "file": "src/components/centropy/thread/WorkBrief.tsx",
+        "sha256": "995901693c8a1f0f89ff98c6af0e699ae5a31816d7d42978101f6a94a3f5d6f6"
       },
       {
         "file": "src/components/centropy/shell/HomeCanvas.tsx",
-        "sha256": "4544cdc7c4ef8f10d0da64ffcfa217174b002e9e788cbfb138c8dd451d7da9cc"
+        "sha256": "f0af2c012b7b6ec1e8a7d21eacf31509c1efb4f088817e52398b7c78692a743a"
       },
       {
         "file": "src/components/centropy/controls/WorkflowRecoveryDesk.tsx",
@@ -6253,7 +6258,9 @@
       ],
       "invalidationTags": [],
       "timeoutClass": "READ",
-      "tests": [],
+      "tests": [
+        "e2e/centropy-conversation-outcomes.spec.ts"
+      ],
       "source": "finnor-os/apps/api/app/api/read-models/[view]/route.ts",
       "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
       "actualRouteOrTool": "GET /api/read-models/attention",
@@ -6262,7 +6269,7 @@
           "file": "src/components/centropy/shell/HomeCanvas.tsx",
           "route": "read-models/attention",
           "method": "GET",
-          "line": 64,
+          "line": 68,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -6894,6 +6901,7 @@
       "timeoutClass": "READ",
       "tests": [
         "e2e/centropy-browser-sweep.spec.ts",
+        "e2e/centropy-conversation-outcomes.spec.ts",
         "e2e/centropy-cross-session-active-objective.spec.ts",
         "e2e/centropy-growth-300bps.spec.ts",
         "e2e/centropy-growth-objective-terminal.spec.ts",
@@ -7026,6 +7034,7 @@
       "invalidationTags": [],
       "timeoutClass": "STREAM",
       "tests": [
+        "e2e/centropy-conversation-outcomes.spec.ts",
         "e2e/centropy-real-demo.spec.ts",
         "e2e/phase9-institutional-workstation.spec.ts",
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
@@ -7103,6 +7112,7 @@
       "tests": [
         "e2e/centropy-autonomous-atlas.spec.ts",
         "e2e/centropy-blocker-question.spec.ts",
+        "e2e/centropy-conversation-outcomes.spec.ts",
         "e2e/centropy-cross-session-active-objective.spec.ts",
         "e2e/centropy-cross-session-draft.spec.ts",
         "e2e/centropy-ic-deck-work-action.spec.ts",
@@ -7736,7 +7746,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "user-prefs",
           "method": "GET",
-          "line": 156,
+          "line": 162,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
@@ -8334,7 +8344,7 @@
           "file": "src/components/centropy/shell/HomeCanvas.tsx",
           "route": "works",
           "method": "GET",
-          "line": 57,
+          "line": 61,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -8404,7 +8414,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "works/:ref",
           "method": "GET",
-          "line": 590,
+          "line": 639,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
@@ -8753,6 +8763,7 @@
         "e2e/centropy-blocker-question.spec.ts",
         "e2e/centropy-browser-sweep.spec.ts",
         "e2e/centropy-controlled-recovery.spec.ts",
+        "e2e/centropy-conversation-outcomes.spec.ts",
         "e2e/centropy-cross-session-active-objective.spec.ts",
         "e2e/centropy-cross-session-draft.spec.ts",
         "e2e/centropy-governed-message.spec.ts",
@@ -8821,7 +8832,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "actions",
           "method": "POST",
-          "line": 344,
+          "line": 362,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -29562,7 +29573,9 @@
       ],
       "invalidationTags": [],
       "timeoutClass": "READ",
-      "tests": [],
+      "tests": [
+        "e2e/centropy-conversation-outcomes.spec.ts"
+      ],
       "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
       "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
       "actualRouteOrTool": "POST /api/company-brain/projection",
@@ -35976,7 +35989,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "instructions/:ref/cancel",
           "method": "POST",
-          "line": 459,
+          "line": 477,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -38705,7 +38718,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "outcome-packs",
           "method": "POST",
-          "line": 409,
+          "line": 427,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -43386,6 +43399,7 @@
       "tests": [
         "e2e/centropy-autonomous-atlas.spec.ts",
         "e2e/centropy-blocker-question.spec.ts",
+        "e2e/centropy-conversation-outcomes.spec.ts",
         "e2e/centropy-cross-session-active-objective.spec.ts",
         "e2e/centropy-cross-session-draft.spec.ts",
         "e2e/centropy-ic-deck-work-action.spec.ts",
@@ -43413,7 +43427,7 @@
           "file": "src/components/centropy/shell/HomeCanvas.tsx",
           "route": "threads",
           "method": "POST",
-          "line": 80,
+          "line": 84,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -46405,7 +46419,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "works/:ref/objective",
           "method": "POST",
-          "line": 325,
+          "line": 343,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {

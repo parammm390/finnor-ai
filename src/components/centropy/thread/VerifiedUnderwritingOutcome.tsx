@@ -4,11 +4,12 @@ function record(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : null
 }
 
-export function VerifiedUnderwritingOutcome({ work, underwriting, dealId, onOpenCanvas }: {
+export function VerifiedUnderwritingOutcome({ work, underwriting, dealId, onOpenCanvas, current = true }: {
   work: WorkAggregateView | null
   underwriting: UnderwritingWorkspace | null
   dealId: string | null
   onOpenCanvas: () => void
+  current?: boolean
 }) {
   if (!work || !underwriting || !dealId || work.work.status !== "completed" || underwriting.investmentCase.dealId !== dealId) return null
   const outcome = record(work.work.finalOutcome)
@@ -51,6 +52,7 @@ export function VerifiedUnderwritingOutcome({ work, underwriting, dealId, onOpen
   return <section className="ct-verified-outcome" aria-label="Verified underwriting result" data-work-id={work.work.id}>
     <div className="ct-verified-outcome__eyebrow">CENTROPY · VERIFIED WORK RESULT</div>
     <h2>Growth scenario completed</h2>
+    {!current ? <p role="status">Last recorded verification. Refreshing sources; this is not a fresh confirmation.</p> : null}
     <p>The Objective finished with a valid Work-linked Run. The persisted success check verified the requested {decreaseBps} basis-point growth decrease and {branchExit}x exit.</p>
     <div className="ct-verified-outcome__case">
       {growthPeriods.map((period) => <p key={period}>Growth rate · {period}: {String(baseGrowth?.[period])} → {String(branchGrowth[period])} (−{decreaseBps}bps)</p>)}
