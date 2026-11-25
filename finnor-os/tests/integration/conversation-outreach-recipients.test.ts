@@ -72,9 +72,10 @@ describe.skipIf(!await databaseAvailable())("persisted conversation outreach rec
     ["inline content", "Email Terry Morgan saying to call Bob Smith.", [contacts.terry]],
     ["inline topic", "Email Terry Morgan about whether to call Bob Smith.", [contacts.terry]],
     ["corrected addressee", "Email Terry Morgan — sorry, Terry Morgan from Birch", [contacts.birchTerry]],
+    ["corrected addressee with a repeated verb", "Email Terry Morgan — sorry, email Bob Smith", [contacts.bob]],
     ["channel switch with a result clause", "I can't call Terry Morgan from Birch, so email Terry Morgan", [], "Which active target do you mean for Terry Morgan?"],
     ["overlapping addressees", "Email Alice and Alice Chen", [contacts.shortAlice, contacts.alice]],
-  ])("persists only the addressees for %s", async (_scenario, instruction, recipients, clarificationQuestion) => {
+  ])("persists only the addressees for %s", async (_scenario, instruction, recipients, clarificationQuestion?: string) => {
     const response = await POST(new Request("http://localhost/api/actions", {
       method: "POST",
       headers: { "content-type": "application/json", "x-tenant-id": tenantId, "x-user-id": employeeId, "x-user-role": "owner" },

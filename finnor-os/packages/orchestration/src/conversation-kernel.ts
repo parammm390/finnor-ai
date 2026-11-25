@@ -139,7 +139,7 @@ function parseNamedExpressions(instruction: string) {
   const dash = "(?:\\s+-\\s+|\\s*[–—]\\s*)";
   const dashClause = `${dash}(?:please\\s+)?${partyCue}\\s+`;
   const joinedClause = "\\b(?:and(?:\\s+then)?|then|also|but|so)\\s+(?:please\\s+)?";
-  const correction = `(?:${dash}|\\s*,\\s*)(?:sorry\\s*,|I\\s+mean\\b\\s*,?)\\s*`;
+  const correction = `(?:${dash}|\\s*,\\s*)(?:sorry\\s*,|I\\s+mean\\b\\s*,?)\\s*(?:(?:please\\s+)?${partyCue}\\s+)?`;
   const boundary = `(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then|instead)\\b|\\s+${joinedClause}${partyCue}\\b|${dashClause}|${correction}|\\s*[\\x00,.!?;:]|\\s*$)`;
   const addressee = `(?:the\\s+)?${name}(?:\\s+from\\s+${organization})?${boundary}`;
   const nextAddressee = new RegExp(
