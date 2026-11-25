@@ -44,6 +44,7 @@ describe.skipIf(!await databaseAvailable())("persisted conversation outreach rec
   beforeAll(async () => {
     process.env.DATABASE_URL = databaseUrl;
     vi.stubEnv("AUTH_DEV_BYPASS", "1");
+    vi.stubEnv("RATE_LIMIT_INTAKE_PER_MINUTE", "100");
     await migrate(databaseUrl);
     await installVerticalFixtureSeam(databaseUrl);
     await withTenant(tenantId, async db => {
@@ -64,6 +65,7 @@ describe.skipIf(!await databaseAvailable())("persisted conversation outreach rec
     ["body name", "Email Terry Morgan. Body: Call Bob Smith about next steps.", [contacts.terry]],
     ["subject name", "Email Terry Morgan. Subject: Call Bob Smith.", [contacts.terry]],
     ["quoted text", "Email Terry Morgan: ‘Call Bob Smith.’", [contacts.terry]],
+    ["quoted correction marker", "Email Terry Morgan ‘Actually, call Bob Smith.’", [contacts.terry]],
     ["drafted text", "Email Terry Morgan. Draft: Call Bob Smith.", [contacts.terry]],
     ["body namesake", "Email Terry Morgan. Body: Call Terry Morgan from Birch.", [contacts.terry]],
     ["two addressees", "Email Terry Morgan and Alice Chen. Body: Call Bob Smith.", [contacts.terry, contacts.alice]],
@@ -80,6 +82,9 @@ describe.skipIf(!await databaseAvailable())("persisted conversation outreach rec
     ["no correction marker", "Email Terry Morgan. No, email Bob Smith.", [], "Who should receive this?"],
     ["channel switch with a result clause", "I can't call Terry Morgan from Birch, so email Terry Morgan", [], "Which active target do you mean for Terry Morgan?"],
     ["overlapping addressees", "Email Alice and Alice Chen", [contacts.shortAlice, contacts.alice]],
+    ["different addressees in separate clauses", "Email Terry Morgan and call Bob Smith.", [], "Who should receive this?"],
+    ["overlapping addressees in separate clauses", "Email Alice and call Alice Chen.", [], "Who should receive this?"],
+    ["artifact destination in a separate clause", "Email Terry Morgan. Email the report to Bob Smith.", [], "Who should receive this?"],
   ])("persists only the addressees for %s", async (_scenario, instruction, recipients, clarificationQuestion?: string) => {
     const response = await POST(new Request("http://localhost/api/actions", {
       method: "POST",

@@ -120,9 +120,13 @@ function parseNamedExpressions(instruction: string) {
   const results: NamedExpression[] = [];
   const negatedQualifiedNames = new Set<string>();
   const negated = (index: number) => NEGATED_PARTY_CUE.test(command.slice(0, index));
-  const add = (name: string | undefined, organization: string | undefined, cue: NamedExpressionCue, index: number) => {
+  const partyName = (name: string | undefined) => {
     const clean = name?.replace(/\s+/g, " ").trim().replace(/[.,!?]+$/, "");
-    if (!clean || clean.length < 2 || /^(?:the|this|that|him|her|them|it)$/i.test(clean)) return;
+    return clean && clean.length >= 2 && !/^(?:the|this|that|him|her|them|it)$/i.test(clean) ? clean : undefined;
+  };
+  const add = (name: string | undefined, organization: string | undefined, cue: NamedExpressionCue, index: number) => {
+    const clean = partyName(name);
+    if (!clean) return;
     const normalized = clean.toLocaleLowerCase();
     if (results.some((row) => row.name.toLocaleLowerCase() === normalized)) return;
     results.push({
@@ -142,6 +146,7 @@ function parseNamedExpressions(instruction: string) {
   const correctionMarker = "\\b(?:(?:sorry|I\\s+mean|actually|rather)\\b|no\\s*,)";
   const boundary = `(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then|instead)\\b|\\s+${joinedClause}${partyCue}\\b|${dashClause}|${dash}${correctionMarker}|\\s*[\\x00,.!?;:]|\\s*$)`;
   const addressee = `(?:the\\s+)?${name}(?:\\s+from\\s+${organization})?${boundary}`;
+  const destination = new RegExp(`\\s+to\\s+${addressee}`, "iyu");
   const nextAddressee = new RegExp(
     `(?:\\s*,\\s*(?:and\\s+)?|\\s+and\\s+)(?!(?:please|then|also|instead|${partyCue})\\b|${joinedClause}${partyCue}\\b|${correctionMarker})${addressee}`,
     "iyu",
@@ -149,6 +154,7 @@ function parseNamedExpressions(instruction: string) {
   const newClause = new RegExp(`(?:[.!?;:,\\r\\n–—]|\\s-\\s)\\s*(?:please\\s+)?$|${joinedClause}$`, "i");
   let previousAddresseeEnd = 0;
   let hasAffirmativeOutreach = false;
+  let namedOutreachClauses = 0;
   for (const match of command.matchAll(new RegExp(
     `\\b(?:${partyCue}|${excludedAlternative})\\s+${addressee}`,
     "giu",
@@ -161,22 +167,36 @@ function parseNamedExpressions(instruction: string) {
     const end = match.index + match[0].length;
     const artifactToRecipient = /^(?:calculation|analysis|findings|results|memo|report|summary|document|model|update|draft|note)$/i.test(recipient ?? "")
       && /^\s+to\b/i.test(command.slice(end));
-    if (artifactToRecipient) continue;
+    destination.lastIndex = end;
+    const artifactDestination = artifactToRecipient ? destination.exec(command) : null;
+    if (artifactToRecipient && !artifactDestination) continue;
 
+    let hasNamedAddressee = false;
     const recordAddressee = (name: string | undefined, organization: string | undefined, index: number) => {
+      const named = partyName(name);
+      if (!named) return;
       if (excluded) {
-        if (name && organization) negatedQualifiedNames.add(normalizePartyName(name));
-      } else add(name, organization, "party", index);
+        if (!artifactToRecipient && organization) negatedQualifiedNames.add(normalizePartyName(named));
+      } else {
+        hasNamedAddressee = true;
+        if (!artifactToRecipient) add(named, organization, "party", index);
+      }
     };
-    recordAddressee(recipient, qualifier, match.index);
-    nextAddressee.lastIndex = end;
-    previousAddresseeEnd = end;
+    if (artifactDestination) {
+      recordAddressee(artifactDestination[1], artifactDestination[2], match.index);
+      previousAddresseeEnd = destination.lastIndex;
+    } else {
+      recordAddressee(recipient, qualifier, match.index);
+      previousAddresseeEnd = end;
+    }
+    nextAddressee.lastIndex = previousAddresseeEnd;
     for (let next = nextAddressee.exec(command); next; next = nextAddressee.exec(command)) {
       const [, name, organization] = next;
       if (CONSEQUENTIAL.exec(name ?? "")?.index === 0) break;
       recordAddressee(name, organization, next.index);
       previousAddresseeEnd = nextAddressee.lastIndex;
     }
+    if (hasNamedAddressee) namedOutreachClauses++;
     if (!excluded && /^\s*:/.test(command.slice(previousAddresseeEnd))) {
       command = command.slice(0, previousAddresseeEnd);
       break;
@@ -189,7 +209,7 @@ function parseNamedExpressions(instruction: string) {
   return {
     expressions: results.sort((left, right) => left.index - right.index).slice(0, 5),
     negatedQualifiedNames,
-    recipientConflict: hasAffirmativeOutreach && new RegExp(correctionMarker, "i").test(command),
+    recipientConflict: namedOutreachClauses > 1 || (hasAffirmativeOutreach && new RegExp(correctionMarker, "i").test(command)),
     command,
   };
 }
