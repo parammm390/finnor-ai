@@ -37,6 +37,14 @@ const report = {
   },
   fixtureSha256: sha256(JSON.stringify({ mandate, exhibits })),
   control: mode === "participant" ? { name: participantControlName, expected: "denial", verdict: "UNPROVEN" } : null,
+  associateDealMemo: {
+    name: "associate-deal-memo-capability", verdict: "UNMET",
+    reason: "Current policy permits only owners to submit deal memo objectives. A participant standalone draft is not a deal memo.",
+  },
+  ownerControl: {
+    name: "owner-deal-memo-control", verdict: "UNPROVEN",
+    reason: mode === "owner-control" ? "The owner control has not finished." : "This run does not score the positive owner control.",
+  },
   qualification: "Signed loopback fixture auth, ordinary Postgres role, real API and worker handlers, local diagnostic model only, no external provider calls.",
   attempts: [] as Array<Record<string, unknown>>,
   status: "RUNNING", failure: null as { boundary: string; message: string } | null,
@@ -312,6 +320,10 @@ try {
       message: response.status !== 202 && typeof response.body.error === "string" ? response.body.error
         : loopReason ?? "No verified Birch memo and calculation sheet was established.",
     };
+    if (mode === "owner-control" && report.failure) {
+      report.ownerControl.verdict = "FAIL";
+      report.ownerControl.reason = report.failure.message;
+    }
   }
 } catch (error) {
   report.status = "FAILED";
