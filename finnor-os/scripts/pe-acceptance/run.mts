@@ -8,6 +8,7 @@ import { join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import EmbeddedPostgres from "embedded-postgres";
 import pg from "pg";
+import { assertDisposableDatabaseTarget } from "../../packages/db/production-target-guard";
 import { exhibits, mandate } from "./birch";
 import type { LLMProvider } from "@finnor/tools";
 
@@ -89,7 +90,6 @@ try {
   await postgres.createDatabase("birch_acceptance");
   const url = `postgres://birch_admin:local-fixture@127.0.0.1:${port}/birch_acceptance`;
   const { migrate } = await import("../../packages/db/migrate");
-  const { assertDisposableDatabaseTarget }: typeof import("../../packages/db/production-target-guard") = await import("../../packages/db/production-target-guard");
   assertDisposableDatabaseTarget(url, "Birch fixture");
   await migrate(url);
   admin = new pg.Client({ connectionString: url });
