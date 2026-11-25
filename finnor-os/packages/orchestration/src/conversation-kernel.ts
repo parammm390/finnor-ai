@@ -123,11 +123,14 @@ export function extractNamedExpressions(instruction: string): NamedExpression[] 
   };
   const name = "([\\p{L}][\\p{L}'-]+(?:\\s+[\\p{L}][\\p{L}'-]+){0,2}?)";
   const boundary = "(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then)\\b|[,.!?]|$)";
+  const priorPartyMentions: Array<{ name: string; organization: string; index: number }> = [];
+  const partyKey = (value: string) => value.trim().replace(/\s+/g, " ").toLocaleLowerCase();
   for (const match of instruction.matchAll(new RegExp(
     `\\b(?:email|call|text|contact|message|notify|ask|tell)\\s+(?:the\\s+)?${name}\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?)${boundary}`,
     "giu",
   ))) {
     if (!negated(match.index)) add(match[1], match[2], "party", match.index);
+    else if (match[1] && match[2]) priorPartyMentions.push({ name: partyKey(match[1]), organization: match[2], index: match.index });
   }
   for (const match of instruction.matchAll(new RegExp(
     `\\b(?:email|call|text|contact|message|notify|ask|tell)\\s+(?:the\\s+)?${name}${boundary}`,
@@ -135,7 +138,11 @@ export function extractNamedExpressions(instruction: string): NamedExpression[] 
   ))) {
     const artifactToRecipient = /^(?:calculation|analysis|findings|results|memo|report|summary|document|model|update|draft|note)$/i.test(match[1] ?? "")
       && /^\s+to\b/i.test(instruction.slice((match.index ?? 0) + match[0].length));
-    if (!artifactToRecipient && !negated(match.index)) add(match[1], undefined, "party", match.index);
+    if (!artifactToRecipient && !negated(match.index)) {
+      const mentions = priorPartyMentions.filter(mention => mention.index < match.index && mention.name === partyKey(match[1] ?? ""));
+      const organizations = new Map(mentions.map(mention => [partyKey(mention.organization), mention.organization]));
+      add(match[1], organizations.size === 1 ? organizations.values().next().value : undefined, "party", match.index);
+    }
   }
   for (const match of instruction.matchAll(new RegExp(
     `\\b(?:spoke|talked|met)\\s+(?:to|with)\\s+${name}(?:\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?))?${boundary}`,

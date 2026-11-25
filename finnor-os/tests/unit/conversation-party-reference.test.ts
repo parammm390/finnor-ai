@@ -11,4 +11,11 @@ describe("conversation party references", () => {
     expect(extractNamedExpressions("You must not contact Terry from Birch. Ask Morgan about the memo.")
       .map(reference => reference.name)).toEqual(["Morgan"]);
   });
+
+  it("uses a previously named organization only for a later affirmative reference to that party", () => {
+    const instruction = "I cannot contact Terry from Birch. Email Terry.";
+    expect(extractNamedExpressions(instruction)).toEqual([
+      { cue: "party", name: "Terry", organization: "Birch", index: instruction.indexOf("Email") },
+    ]);
+  });
 });
