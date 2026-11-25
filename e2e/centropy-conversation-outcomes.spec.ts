@@ -143,6 +143,34 @@ for (const rootEncoding of ["businessRoot", "none", "selectedEntities"] as const
   }
 })
 
+test("Regression: cleared context stays cleared when the selected Work is inspected again", async ({ page, context }) => {
+  const fixtures = await installOutcomeFixtures(context)
+  try {
+    await page.goto("/centropy")
+    await open(page, "Different-deal historical sources")
+    const historical = turns(page).filter({ hasText: "Project Alder historical answer." })
+    await historical.getByLabel("Message options", { exact: true }).click()
+    await historical.getByRole("button", { name: "Inspect linked Work" }).click()
+    await expect(page.locator(".ct-answer")).toContainText("Project Alder historical sources")
+    await nav(page, "Conversation").click()
+    await expect(page.locator(".ct-composer__context")).toContainText("Project Alder — historical deal")
+    await page.getByRole("button", { name: "Clear selected context" }).click()
+    await expect.poll(() => new URL(page.url()).searchParams.get("context")).toBe("none")
+    await expect(page.locator(".ct-composer__context")).toHaveCount(0)
+    await historical.getByLabel("Message options", { exact: true }).click()
+    await historical.getByRole("button", { name: "Inspect linked Work" }).click()
+    await expect.poll(() => new URL(page.url()).searchParams.get("context")).toBe("none")
+    expect(new URL(page.url()).searchParams.has("root")).toBe(false)
+    await expect(page.locator(".ct-answer")).toContainText("Project Alder historical sources")
+    await nav(page, "Conversation").click()
+    await expect(page.locator(".ct-composer__context")).toHaveCount(0)
+    await proof(page, "22-inspection-keeps-author-cleared-context")
+  } finally {
+    await test.info().attach("isolated-network-inputs-observations", { body: JSON.stringify({ requests: fixtures.requests, unexpected: fixtures.unexpected }, null, 2), contentType: "application/json" })
+    expect(fixtures.unexpected).toEqual([])
+  }
+})
+
 test("Regression: active instruction tracking and Stop survive evidence navigation without cancellation", async ({ page, context }) => {
   const fixtures = await installOutcomeFixtures(context)
   try {

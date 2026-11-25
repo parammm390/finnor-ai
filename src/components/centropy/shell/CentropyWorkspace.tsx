@@ -521,6 +521,8 @@ function CentropyWorkspaceContent() {
   function inspectWork(workId: string) {
     setResponseWork(threadId ? { threadId, workId } : null)
     setAnswerWorkDetails(null)
+    // Inspecting the current Work is not permission to undo a cleared context.
+    if (workId === activeWorkId) { openCanvas(); return }
     // Historical Work must restore its own saved root, never today's deal.
     setRootSelection({ key: selectionKey, value: null, explicit: false })
     setFocusedObject(null)
