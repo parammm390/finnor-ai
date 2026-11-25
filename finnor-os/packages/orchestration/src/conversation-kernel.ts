@@ -154,7 +154,7 @@ function parseNamedExpressions(instruction: string) {
   const newClause = new RegExp(`(?:[.!?;:,\\r\\n–—]|\\s-\\s)\\s*(?:please\\s+)?$|${joinedClause}$`, "i");
   let previousAddresseeEnd = 0;
   let hasAffirmativeOutreach = false;
-  let namedOutreachClauses = 0;
+  const namedOutreachClauses = new Set<string>();
   for (const match of command.matchAll(new RegExp(
     `\\b(?:${partyCue}|${excludedAlternative})\\s+${addressee}`,
     "giu",
@@ -171,14 +171,14 @@ function parseNamedExpressions(instruction: string) {
     const artifactDestination = artifactToRecipient ? destination.exec(command) : null;
     if (artifactToRecipient && !artifactDestination) continue;
 
-    let hasNamedAddressee = false;
+    const clauseAddressees = new Set<string>();
     const recordAddressee = (name: string | undefined, organization: string | undefined, index: number) => {
       const named = partyName(name);
       if (!named) return;
       if (excluded) {
         if (!artifactToRecipient && organization) negatedQualifiedNames.add(normalizePartyName(named));
       } else {
-        hasNamedAddressee = true;
+        clauseAddressees.add(JSON.stringify([normalizePartyName(named), normalizePartyName(organization ?? "")]));
         if (!artifactToRecipient) add(named, organization, "party", index);
       }
     };
@@ -196,7 +196,7 @@ function parseNamedExpressions(instruction: string) {
       recordAddressee(name, organization, next.index);
       previousAddresseeEnd = nextAddressee.lastIndex;
     }
-    if (hasNamedAddressee) namedOutreachClauses++;
+    if (clauseAddressees.size) namedOutreachClauses.add(JSON.stringify([...clauseAddressees].sort()));
     if (!excluded && /^\s*:/.test(command.slice(previousAddresseeEnd))) {
       command = command.slice(0, previousAddresseeEnd);
       break;
@@ -209,7 +209,7 @@ function parseNamedExpressions(instruction: string) {
   return {
     expressions: results.sort((left, right) => left.index - right.index).slice(0, 5),
     negatedQualifiedNames,
-    recipientConflict: namedOutreachClauses > 1 || (hasAffirmativeOutreach && new RegExp(correctionMarker, "i").test(command)),
+    recipientConflict: namedOutreachClauses.size > 1 || (hasAffirmativeOutreach && new RegExp(correctionMarker, "i").test(command)),
     command,
   };
 }
