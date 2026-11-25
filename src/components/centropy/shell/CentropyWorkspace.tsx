@@ -554,6 +554,13 @@ function CentropyWorkspaceContent() {
   if (!auth.session) return <div className="ct-auth-state"><LockKeyhole size={25} /><h1>Your investment context stays private.</h1><p>Sign in to open your Investigations and verified work.</p><Link href="/centropy/login">Sign in <ArrowRight size={16} /></Link></div>
   if (auth.role !== "owner") return <div className="ct-auth-state"><h1>Participant workspace</h1><p>The institutional workspace is owner-only. Your assignments require their own current authority.</p><Link href="/centropy/workforce">Open your workforce contracts</Link><button type="button" onClick={() => void auth.signOut()}>Sign out</button></div>
 
+  // A failed submission can persist Work without projecting an assistant turn.
+  // Keep its controls in the explicit Work view, never on an unrelated reply.
+  const workDecisions = canvasWork ? <div ref={decisionReview} tabIndex={-1} aria-label="Work decisions and recovery">
+    {["failed", "recovery"].includes(canvasWork.work.status) ? <Suspense fallback={<p className="ct-thread__notice">Reading Work recovery…</p>}><WorkRecovery key={activeWorkId} aggregate={canvasWork} current={canvasSources.work.status === "ready"} onChanged={() => { setRefreshToken(value => value + 1); setCanvasRefresh(value => value + 1) }} /></Suspense> : null}
+    {pendingActionSignature ? <Suspense fallback={<p className="ct-thread__notice">Reading governed effects…</p>}><PendingEffects key={activeWorkId} aggregate={canvasWork} current={canvasSources.work.status === "ready"} refreshKey={pendingActionSignature} onChanged={() => { setRefreshToken(value => value + 1); setCanvasRefresh(value => value + 1) }} /></Suspense> : null}
+  </div> : null
+
   return <div className="ct-app" data-mobile-pane={mobilePane} data-density={density}>
     <header className="ct-topbar">
       <Link className="ct-brand" href="/centropy" onClick={() => { invalidateSelection(); traceRuntime.current?.stop(); setTrace(null); setPending(null); setThreadId(null); setResponseWork(null); setReplayWorkId(null); setExplicitRoot(null); setFocusedObject(null); setMobilePane("thread") }} aria-label="CENTROPY new Investigation"><CentropyPresence state={presenceState} size={26} animated={false} /><strong>CENTROPY</strong></Link>
@@ -586,10 +593,7 @@ function CentropyWorkspaceContent() {
                 <VerifiedIcOutcome work={canvasWork} ic={canvasSources.ic.data} dealId={canvasRoot?.entityType === "pe_deal" ? canvasRoot.entityId : null} onOpenCanvas={() => setMobilePane("canvas")} />
                 <VerifiedUnderwritingOutcome work={canvasWork} underwriting={canvasSources.underwriting.data} dealId={canvasRoot?.entityType === "pe_deal" ? canvasRoot.entityId : null} onOpenCanvas={() => setMobilePane("canvas")} />
               </> : null}
-              <div ref={decisionReview} tabIndex={-1} aria-label="Work decisions and recovery">
-                {["failed", "recovery"].includes(canvasWork.work.status) ? <Suspense fallback={<p className="ct-thread__notice">Reading Work recovery…</p>}><WorkRecovery key={activeWorkId} aggregate={canvasWork} current={canvasSources.work.status === "ready"} onChanged={() => { setRefreshToken(value => value + 1); setCanvasRefresh(value => value + 1) }} /></Suspense> : null}
-                {pendingActionSignature ? <Suspense fallback={<p className="ct-thread__notice">Reading governed effects…</p>}><PendingEffects key={activeWorkId} aggregate={canvasWork} current={canvasSources.work.status === "ready"} refreshKey={pendingActionSignature} onChanged={() => { setRefreshToken(value => value + 1); setCanvasRefresh(value => value + 1) }} /></Suspense> : null}
-              </div>
+              {workDecisions}
             </> : null}
             {message.workId && message.role === "assistant" && hasWorkOutcome(message) && (message.id !== workTurnId || !canvasWork || answerResult?.analysis || answerResult?.documentReview) ? <button type="button" className="ct-turn__link" onClick={() => { invalidateSelection(); setResponseWork(threadId ? { threadId, workId: message.workId! } : null); setAnswerWorkDetails(null); setMobilePane("canvas") }}>Inspect linked Work <ArrowRight size={13} /></button> : null}
           </article>)}
@@ -604,6 +608,7 @@ function CentropyWorkspaceContent() {
 
       <main className="ct-canvas" aria-label={mobilePane === "desk" ? "Needs you and active Work" : worldMode ? "WORLD explorer" : "Work and evidence"}>
         {mobilePane === "desk" ? <HomeCanvas recent={recentVisible} recentError={recentError} recentLoading={recentLoading} onOpenInvestigation={openInvestigation} /> : mobilePane === "canvas" ? <>
+        {!workTurnId && canvasWork ? <section aria-label="Linked Work without a conversation result"><WorkBrief work={canvasWork} execution={canvasDocument?.blocks.find(block => block.type === "work_execution")} current={canvasSources.work.status === "ready"} onOpen={() => decisionReview.current?.scrollIntoView({ block: "start" })} onReview={() => { decisionReview.current?.scrollIntoView({ block: "start" }); decisionReview.current?.focus({ preventScroll: true }) }} />{workDecisions}</section> : null}
         {!answerResult && (canvasRoot?.entityType === "pe_deal" || canvasWork?.outcomePack) ? <Suspense fallback={<p role="status">Reading bounded missions…</p>}><OutcomePacks root={canvasRoot} run={canvasWork?.outcomePack ?? null} onStart={startOutcomePack} /></Suspense> : null}
         {activeWorkId && !answerResult ? <><button type="button" className="ct-workforce-toggle" aria-expanded={assignmentsOpen} onClick={() => setAssignmentsOpen((value) => !value)}>{assignmentsOpen ? "Close specialist assignments" : "Inspect specialist assignments"}</button>{assignmentsOpen ? <Suspense fallback={<p role="status">Opening specialist assignments…</p>}><WorkforceAssignments key={activeWorkId} workId={activeWorkId} aggregate={canvasWork} onChanged={() => { setRefreshToken(value => value + 1); setCanvasRefresh(value => value + 1) }} /></Suspense> : null}</> : null}
         {activeWorkId && activeObjectiveId ? <ObjectiveControl key={activeWorkId} workId={activeWorkId} source={canvasSources.work} redirecting={redirecting} onRedirectToggle={() => { setRedirecting(value => !value); setMobilePane("thread") }} onChanged={() => { setRefreshToken(value => value + 1); setCanvasRefresh(value => value + 1) }} /> : null}
