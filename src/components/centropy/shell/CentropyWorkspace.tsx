@@ -283,10 +283,10 @@ function CentropyWorkspaceContent() {
     if (!activeWorkId || work.status !== "ready" || work.data?.work.id !== activeWorkId || work.data.read?.complete === false) return
     const snapshot = work.data.inputs?.at(-1)?.contextSnapshot
     const candidate = snapshot && typeof snapshot === "object" && "businessRoot" in snapshot ? snapshot.businessRoot : null
-    const root = isPeWorldRootRef(candidate) ? candidate : selectedRootFromThread
+    const root = isPeWorldRootRef(candidate) ? candidate : investigation.loaded?.thread.activeWorkId === activeWorkId ? selectedRootFromThread : null
     setRestoredBusinessRoot(previous => previous?.key === workScopeKey && previous.root?.entityType === root?.entityType && previous.root?.entityId === root?.entityId
       ? previous : { key: workScopeKey, root })
-  }, [activeWorkId, canvasSources.work, selectedRootFromThread, workScopeKey])
+  }, [activeWorkId, canvasSources.work, selectedRootFromThread, workScopeKey, investigation.loaded?.thread.activeWorkId])
   const contextLabel = canvasRoot ? canvasSources.projection.data?.nodes.find((item) => item.ref.type === canvasRoot.entityType && item.ref.id === canvasRoot.entityId)?.label
     ?? `${({pe_strategy:"Strategy",pe_opportunity:"Opportunity",pe_deal:"Deal",pe_fund:"Fund",pe_vehicle:"Vehicle",external_organization:"Company",pe_portfolio_holding:"Holding"})[canvasRoot.entityType]} ${canvasRoot.entityId.slice(0, 8)}` : null
   const selectIcCase = (id: string) => {
@@ -497,22 +497,25 @@ function CentropyWorkspaceContent() {
     router.push(`/centropy/world${params.size ? `?${params.toString()}` : ""}`)
   }
 
-  function openCanvas() {
+  function openCanvas({ restoreWorkRoot = false }: { restoreWorkRoot?: boolean } = {}) {
     invalidateSelection()
     setMobilePane("canvas")
     setReplayWorkId(null)
     if (!threadId) { router.push("/centropy"); return }
     const params = new URLSearchParams()
-    if (canvasRoot) params.set("root", JSON.stringify({ entityType: canvasRoot.entityType, entityId: canvasRoot.entityId }))
-    if (focusedObject && canvasRoot) params.set("object", JSON.stringify(focusedObject))
-    if (!canvasRoot && routeClearsContext) params.set("context", "none")
+    if (!restoreWorkRoot && canvasRoot) params.set("root", JSON.stringify({ entityType: canvasRoot.entityType, entityId: canvasRoot.entityId }))
+    if (!restoreWorkRoot && focusedObject && canvasRoot) params.set("object", JSON.stringify(focusedObject))
+    if (!restoreWorkRoot && !canvasRoot && routeClearsContext) params.set("context", "none")
     router.push(`/centropy/investigations/${threadId}${params.size ? `?${params.toString()}` : ""}`)
   }
 
   function inspectWork(workId: string) {
     setResponseWork(threadId ? { threadId, workId } : null)
     setAnswerWorkDetails(null)
-    openCanvas()
+    // Historical Work must restore its own saved root, never today's deal.
+    setRootSelection({ key: selectionKey, value: null, explicit: false })
+    setFocusedObject(null)
+    openCanvas({ restoreWorkRoot: true })
   }
 
   function worldHref(root: PeWorldRootRef, object?: CompanyBrainObjectRef) {
