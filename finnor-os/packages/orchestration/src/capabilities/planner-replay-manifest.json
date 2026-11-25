@@ -1435,8 +1435,8 @@
     },
     {
       "file": "packages/orchestration/src/conversation.ts",
-      "bytes": 12615,
-      "sha256": "21ff2ac313729d93599f27eafdf63b31f175d51a26cc69a39c00d9e50d3857b7"
+      "bytes": 12954,
+      "sha256": "0283f7231972085c8ca08f4acfd9a2f3bce49e609c1404e25b65d7beaf676106"
     },
     {
       "file": "packages/orchestration/src/critic.ts",
@@ -3566,7 +3566,7 @@
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-manifest.generated.ts",
       "bytes": 265719,
-      "sha256": "1b89555e6ff068967cc787e9e9602742fed902b59f2c786ef592f0880fa48b6b"
+      "sha256": "4ae0e5d897050a7f019d993421e27a9dba86300f853eb10d4aa887dbaa858a6c"
     },
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-paths.ts",

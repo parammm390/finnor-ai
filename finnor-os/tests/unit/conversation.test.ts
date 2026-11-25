@@ -68,3 +68,15 @@ describe("safe empty-plan recovery", () => {
     expect(safeReadFallbackForInstruction("Create and send a diligence request", actions)).toBeNull();
   });
 });
+
+describe("greeting recognition", () => {
+  it.each(["hi", "Hello!", "hey", "heyyyaaa", "helloe", "hiii", "heyy there", "yooo", "hiya", "good morning"])(
+    "keeps the greeting %j conversational", (text) => {
+      expect(isConversationalTurn(text)).toBe(true);
+    });
+
+  it.each(["help me close the Acme deal", "hey send the diligence request to Acme", "his report is late", "hello and then email the vendor", "hire a vendor"])(
+    "does not swallow the business instruction %j", (text) => {
+      expect(isConversationalTurn(text)).toBe(false);
+    });
+});
