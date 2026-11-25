@@ -143,17 +143,23 @@ function parseNamedExpressions(instruction: string) {
   const dash = "(?:\\s+-\\s+|\\s*[–—]\\s*)";
   const dashClause = `${dash}(?:please\\s+)?${partyCue}\\s+`;
   const joinedClause = "\\b(?:and(?:\\s+then)?|then|also|but|so)\\s+(?:please\\s+)?";
-  const correctionMarker = "\\b(?:(?:sorry|I\\s+mean|actually|rather)\\b|no\\s*,)";
+  const correctionMarker = "(?:(?:sorry|I\\s+mean|actually|rather(?!\\s+than\\b))\\b\\s*,?\\s*|no\\s*,\\s*)";
   const boundary = `(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then|instead)\\b|\\s+${joinedClause}${partyCue}\\b|${dashClause}|${dash}${correctionMarker}|\\s*[\\x00,.!?;:]|\\s*$)`;
   const addressee = `(?:the\\s+)?${name}(?:\\s+from\\s+${organization})?${boundary}`;
   const destination = new RegExp(`\\s+to\\s+${addressee}`, "iyu");
+  const clauseSeparator = `(?:${dash}|\\s*[,.!?;:\\r\\n]\\s*)`;
+  const correctionBeforeVerb = new RegExp(`(?:^\\s*|${clauseSeparator})${correctionMarker}(?:please\\s+)?$`, "i");
+  const qualifiedCorrection = new RegExp(
+    `${clauseSeparator}${correctionMarker}(?!${partyCue}\\b)(?:the\\s+)?${name}\\s+from\\s+${organization}${boundary}`,
+    "iyu",
+  );
   const nextAddressee = new RegExp(
     `(?:\\s*,\\s*(?:and\\s+)?|\\s+and\\s+)(?!(?:please|then|also|instead|${partyCue})\\b|${joinedClause}${partyCue}\\b|${correctionMarker})${addressee}`,
     "iyu",
   );
   const newClause = new RegExp(`(?:[.!?;:,\\r\\n–—]|\\s-\\s)\\s*(?:please\\s+)?$|${joinedClause}$`, "i");
   let previousAddresseeEnd = 0;
-  let hasAffirmativeOutreach = false;
+  let hasRecipientCorrection = false;
   const namedOutreachClauses = new Set<string>();
   for (const match of command.matchAll(new RegExp(
     `\\b(?:${partyCue}|${excludedAlternative})\\s+${addressee}`,
@@ -162,8 +168,10 @@ function parseNamedExpressions(instruction: string) {
     const [, alternative, recipient, qualifier] = match;
     if (match.index < previousAddresseeEnd) continue;
     const excluded = Boolean(alternative) || negated(match.index);
-    if (!excluded) hasAffirmativeOutreach = true;
-    if (!excluded && previousAddresseeEnd && !newClause.test(command.slice(previousAddresseeEnd, match.index))) continue;
+    const gap = command.slice(previousAddresseeEnd, match.index);
+    const negation = excluded ? NEGATED_PARTY_CUE.exec(gap) : null;
+    const correctsPrevious = previousAddresseeEnd > 0 && correctionBeforeVerb.test(gap.slice(0, negation?.index ?? gap.length));
+    if (!excluded && previousAddresseeEnd && !correctsPrevious && !newClause.test(gap)) continue;
     const end = match.index + match[0].length;
     const artifactToRecipient = /^(?:calculation|analysis|findings|results|memo|report|summary|document|model|update|draft|note)$/i.test(recipient ?? "")
       && /^\s+to\b/i.test(command.slice(end));
@@ -175,10 +183,10 @@ function parseNamedExpressions(instruction: string) {
     const recordAddressee = (name: string | undefined, organization: string | undefined, index: number) => {
       const named = partyName(name);
       if (!named) return;
+      clauseAddressees.add(JSON.stringify([normalizePartyName(named), normalizePartyName(organization ?? "")]));
       if (excluded) {
         if (!artifactToRecipient && organization) negatedQualifiedNames.add(normalizePartyName(named));
       } else {
-        clauseAddressees.add(JSON.stringify([normalizePartyName(named), normalizePartyName(organization ?? "")]));
         if (!artifactToRecipient) add(named, organization, "party", index);
       }
     };
@@ -196,7 +204,11 @@ function parseNamedExpressions(instruction: string) {
       recordAddressee(name, organization, next.index);
       previousAddresseeEnd = nextAddressee.lastIndex;
     }
-    if (clauseAddressees.size) namedOutreachClauses.add(JSON.stringify([...clauseAddressees].sort()));
+    if (clauseAddressees.size) {
+      if (!excluded) namedOutreachClauses.add(JSON.stringify([...clauseAddressees].sort()));
+      qualifiedCorrection.lastIndex = previousAddresseeEnd;
+      if (correctsPrevious || qualifiedCorrection.test(command)) hasRecipientCorrection = true;
+    }
     if (!excluded && /^\s*:/.test(command.slice(previousAddresseeEnd))) {
       command = command.slice(0, previousAddresseeEnd);
       break;
@@ -209,7 +221,7 @@ function parseNamedExpressions(instruction: string) {
   return {
     expressions: results.sort((left, right) => left.index - right.index).slice(0, 5),
     negatedQualifiedNames,
-    recipientConflict: namedOutreachClauses.size > 1 || (hasAffirmativeOutreach && new RegExp(correctionMarker, "i").test(command)),
+    recipientConflict: namedOutreachClauses.size > 1 || hasRecipientCorrection,
     command,
   };
 }

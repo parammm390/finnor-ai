@@ -87,6 +87,10 @@ describe.skipIf(!await databaseAvailable())("persisted conversation outreach rec
     ["artifact destination in a separate clause", "Email Terry Morgan. Email the report to Bob Smith.", [], "Who should receive this?"],
     ["read-only voice recall", "What did we previously decide: email Terry Morgan, call Bob Smith?", [], undefined, "voice"],
     ["same normalized recipient in two clauses", "Email Terry Morgan from Birch. Call Térry Morgan from birch.", [contacts.birchTerry]],
+    ["leading apology is not a correction", "Sorry, email Terry Morgan.", [contacts.terry]],
+    ["rather than in the topic is not a correction", "Email Terry Morgan about equity rather than debt.", [contacts.terry]],
+    ["rather than in the body is not a correction", "Email Terry Morgan. Body: Discuss equity rather than debt; call Bob Smith about it.", [contacts.terry]],
+    ["trailing apology is not a correction", "Email Terry Morgan. Sorry, I was distracted.", [contacts.terry]],
   ])("persists only the addressees for %s", async (_scenario, instruction, recipients, clarificationQuestion?: string, channel = "text") => {
     const response = await POST(new Request("http://localhost/api/actions", {
       method: "POST",
