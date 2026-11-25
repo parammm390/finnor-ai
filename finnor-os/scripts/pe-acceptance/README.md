@@ -21,3 +21,15 @@ The current runner and grader deliberately exit nonzero: no release-qualified T0
 | Recovery and authority | **UNPROVEN** for replay, restart, supersession and business authority across the journey. The observed T0 runs recorded no domain actions or business effects. |
 
 The parser regression test proves the Birch mandate's “may not contact anyone” no longer becomes a recipient; it also distinguishes prohibited contact from a separate positive request. The post-fix authorized run reaches the deterministic IC planner. It queries the Deal graph and checks completion, then stops with `IC_PREPARATION_VERIFICATION_UNMET` before any model proposal. Do not relax that check or use the owner control to count participant intake. The next proof needs an exact participant read/draft authority path and a source-backed draft outcome that the independent grader can verify. These runs provide no production release verdict or 95% acceptance claim.
+
+## Participant authorization boundary
+
+The 403 is expected under the [participant identity contract](../../../scope-postz/w2-accountable-workforce/participant-identity-contract.md): institutional authority is owner-only. The associate already has a fixture role assignment and query grant; neither admits them to the ordinary authority snapshot. The world reader also requires a tenant-wide candidate cut, not just a deal grant. The permitted draft below is a standalone artifact, not a deal-room or IC draft and not a T0 acceptance result.
+
+From `finnor-os`, using the repository's Node.js version and installed dependencies:
+
+```sh
+FINNOR_BIRCH_EVIDENCE_DIR="$HOME/birch-evidence" npx vitest run tests/integration/birch-participant-boundary.test.ts
+```
+
+The test reuses this runner's isolated signed identities, Birch deal, and T0 exhibits. The associate submits the deal objective, reads their own Work, and compares the response for a custodian's Work with a missing Work. The custodian runs a real deal-world query as a positive control for the B2 document reference. The associate is denied both deal-world authorization and access to the custodian's evidence-bearing Work. The associate then creates a blank DOCX, edits their own draft version, and reads the edited text without advancing the current head. The JSON receipt in the printed directory records the fixture hash, inputs, signed route methods and statuses, and readbacks; the custodian's evidence contents are not copied into the receipt. The test requires no model calls.

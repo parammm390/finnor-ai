@@ -15,7 +15,8 @@ import type { LLMProvider } from "@finnor/tools";
 if (!process.argv[2]) throw new Error("Provide a durable output directory: npm run benchmark:pe:birch -- <directory>");
 const output = resolve(process.argv[2]);
 const mode = process.argv[3] ?? "participant";
-if (!["participant", "owner-control", "owner-denied-control"].includes(mode)) throw new Error("Unknown Birch run mode.");
+if (!["participant", "participant-boundary", "owner-control", "owner-denied-control"].includes(mode)) throw new Error("Unknown Birch run mode.");
+const boundaryProof = mode === "participant-boundary";
 const runId = randomUUID();
 const keep = new Set(["PATH", "HOME", "USER", "LANG", "LC_ALL", "TMPDIR", "TZ"]);
 for (const name of Object.keys(process.env)) if (!keep.has(name)) delete process.env[name];
@@ -115,7 +116,7 @@ try {
   const { PRODUCTION_JOB_CONTRACTS } = await import("../../apps/worker/src/job-contracts");
   const tenant = randomUUID(), actor = randomUUID(), custodian = randomUUID(), company = randomUUID(), role = randomUUID(), setupRole = randomUUID();
   const owner = { tenantId: tenant, userId: custodian, employeeId: custodian, role: "owner" as const };
-  const actorRole = mode === "participant" ? "participant" : "owner";
+  const actorRole = mode === "participant" || boundaryProof ? "participant" : "owner";
   const released: Array<{ id: string; access: string; documentId: string; versionId: string; byteSha256: string }> = [];
   const modelCalls: Array<Record<string, unknown>> = [];
   await admin.query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,'Synthetic Birch')", [tenant, runId]);
@@ -201,20 +202,21 @@ try {
   report.attempts.push(attempt);
   await save();
   boundary = "authenticated objective intake";
-  const response = await http.request("objectives", {
+  const objectiveRequest = {
     objective: mandate, channel: "text", idempotencyKey: `birch:${runId}:T0`,
     activeContext: {
       version: 1, capturedAt: new Date().toISOString(), source: "text", selectedEntities: [root],
       excludedEntities: [], businessRoot: root, surface: { id: "world", route: "/centropy", spatialState: "detail" }, filters: [],
     },
     budgets: { maxActions: 0, maxSteps: 8, maxQueries: 12, maxPlannerFailures: 1, deadlineAt: deadline.toISOString() },
-  });
+  };
+  const response = await http.request("objectives", objectiveRequest);
   attempt.intake = response;
   attempt.transport = http.observed;
   await save();
   const workId = response.body.objective?.workId ?? response.body.workId;
   if (typeof workId === "string") {
-    if (response.status === 202) {
+    if (response.status === 202 && !boundaryProof) {
       boundary = "worker/model";
       const signal = AbortSignal.timeout(Math.max(1, deadline.getTime() - Date.now()));
       process.env.DATABASE_URL = workerUrl;
@@ -240,13 +242,58 @@ try {
     attempt.effects = (await admin.query("SELECT operation_class, status FROM finnor_os.business_effects WHERE tenant_id=$1 ORDER BY created_at", [tenant])).rows;
     attempt.jobs = (await admin.query("SELECT type, status, last_error FROM finnor_os.jobs WHERE tenant_id=$1 AND type IN ('run_objective_iteration','run_workforce_assignment') ORDER BY run_at,id", [tenant])).rows;
   }
-  report.status = response.status !== 202 ? "T0_INTAKE_FAILED" : "T0_DELIVERABLE_UNVERIFIED";
-  const loopReason = (attempt.loop as { reason?: string } | undefined)?.reason;
-  report.failure = {
-    boundary: response.status !== 202 ? "authenticated objective intake" : "verified deliverable",
-    message: response.status !== 202 && typeof response.body.error === "string" ? response.body.error
-      : loopReason ?? "No verified Birch memo and calculation sheet was established.",
-  };
+  if (boundaryProof) {
+    boundary = "participant boundary observations";
+    const { receiveWork } = await import("@finnor/db");
+    const { authorizePrivateEquityWorldState } = await import("../../packages/private-equity/src/world-state");
+    const foreign = await receiveWork({ tenantId: tenant, userId: custodian, channel: "text", instruction: "Custodian's private Birch Work." });
+    const evidenceRequest = { intent: "pe_world_state", root };
+    const evidence = await http.request("queries", evidenceRequest, "other");
+    const participantEvidenceAuthorization = await authorizePrivateEquityWorldState({
+      auth: { tenantId: tenant, userId: actor, employeeId: actor, role: actorRole },
+    }, root).then(() => null, (error: { code?: string; message?: string }) => ({
+      code: error.code, message: error.message,
+    }));
+    const b2 = released.find(doc => doc.id === "B2")!;
+    const missingWorkId = randomUUID();
+    const draftRequest = { kind: "docx", title: "Birch standalone draft" };
+    const draftText = "Draft only: request authorized evidence before drawing a conclusion.";
+    const created = await http.request("artifacts", draftRequest);
+    const documentPath = `documents/${created.body.documentId}/artifact`;
+    const baseVersionId = created.body.version?.id;
+    const drafted = await http.request(`${documentPath}/drafts`, { baseVersionId });
+    const base = await http.read(`${documentPath}/ir/${baseVersionId}`);
+    const anchor = base.body.nodes?.find((node: { kind: string }) => node.kind === "paragraph");
+    const patchRequest = {
+      baseVersionId, draftKey: drafted.body.draftKey,
+      operations: [{ type: "replace_text", anchor: anchor?.id, expectedHash: anchor?.hash, text: draftText }],
+    };
+    const patched = await http.request(`${documentPath}/patches`, patchRequest);
+    const readback = await http.read(`${documentPath}/ir/${patched.body.version?.id}`);
+    const current = await http.read(documentPath);
+    attempt.boundaryProof = {
+      objectiveRequest, evidenceRequest, custodian, foreignWorkId: foreign.workId, missingWorkId,
+      domainActionCount: Array.isArray(attempt.actions) ? attempt.actions.length : null,
+      custodianWorkStatus: (await http.read(`works/${foreign.workId}`, "other")).status,
+      foreignWork: await http.read(`works/${foreign.workId}`),
+      missingWork: await http.read(`works/${missingWorkId}`),
+      custodianEvidence: { status: evidence.status, workId: evidence.body.workId,
+        includesB2: evidence.body.result?.documents?.some((doc: { id: string }) => doc.id === b2.documentId) ?? false },
+      participantEvidenceAuthorization,
+      foreignEvidence: await http.read(`works/${evidence.body.workId}`),
+      draft: { draftRequest, patchRequest, created, drafted, patched, readback,
+        currentVersionId: current.body.version?.id, currentStatus: current.status },
+    };
+    report.status = "PARTICIPANT_BOUNDARY_OBSERVED";
+  } else {
+    report.status = response.status !== 202 ? "T0_INTAKE_FAILED" : "T0_DELIVERABLE_UNVERIFIED";
+    const loopReason = (attempt.loop as { reason?: string } | undefined)?.reason;
+    report.failure = {
+      boundary: response.status !== 202 ? "authenticated objective intake" : "verified deliverable",
+      message: response.status !== 202 && typeof response.body.error === "string" ? response.body.error
+        : loopReason ?? "No verified Birch memo and calculation sheet was established.",
+    };
+  }
 } catch (error) {
   report.status = "FAILED";
   report.failure = { boundary, message: error instanceof Error ? error.message : String(error) };
@@ -257,4 +304,4 @@ try {
     try { await admin?.end(); } finally { if (started) await postgres?.stop(); }
   }
 }
-process.exit(1);
+process.exit(report.status === "PARTICIPANT_BOUNDARY_OBSERVED" ? 0 : 1);
