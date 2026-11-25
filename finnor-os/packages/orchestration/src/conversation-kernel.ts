@@ -13,7 +13,7 @@ import {
   withTenant,
 } from "@finnor/db";
 import { mirrorConversationMessageToZep, queryConsolidatedFacts } from "@finnor/memory";
-import { resolveParty } from "@finnor/read-models";
+import { normalizePartyName, resolveParty } from "@finnor/read-models";
 import {
   isRetiredWaterCanonicalEntity,
   partyRefToCanonicalEntityRef,
@@ -30,7 +30,7 @@ import { and, eq } from "drizzle-orm";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const CONSEQUENTIAL = /\b(?:email|call|text|contact|message|ask|tell|send|create|update|delete|remove|notify|handoff|delegate|assign|schedule|reschedule|share|approve|reject|close|waive|continue|finish|repeat|do\s+that)\b/i;
 const PRONOUN = /\b(?:him|her|them|it|that person|that contact|that work|do that|continue that)\b/i;
-const NEGATED_PARTY_CUE = /\b(?:(?:do|may|must|should|can|could|will|would)\s+not|don't|mustn't|shouldn't|can't|couldn't|won't|wouldn't|cannot|never)\s+(?:ever\s+)?$/i;
+const NEGATED_PARTY_CUE = /\b(?:(?:do|may|must|should|can|could|will|would)\s+not|(?:don|mustn|shouldn|can|couldn|won|wouldn)['’]t|cannot|never)\s+(?:ever\s+)?$/i;
 
 export type NamedExpressionCue = "party" | "history";
 export interface NamedExpression {
@@ -107,11 +107,26 @@ export async function resolveCanonicalHumanPrincipal(ctx: TenantContext): Promis
  * appointment, quote, proposal and household are deliberately not recognized.
  */
 export function extractNamedExpressions(instruction: string): NamedExpression[] {
+  return parseNamedExpressions(instruction).expressions;
+}
+
+function parseNamedExpressions(instruction: string) {
+  const quoted = /"(?:\\.|[^"\\])*(?:"|$)|“[^”]*(?:”|$)|‘[^’]*(?:’|$)|`[^`]*(?:`|$)|(?<![\p{L}\p{N}])'(?:\\.|[^'\\])*'(?![\p{L}\p{N}])/gu;
+  const contentStart = /\b(?:(?:with\s+(?:(?:the|this|following)\s+)*)?(?:(?:email|message|call|text)\s+)?(?:subject|body|draft|script|message(?:\s+(?:body|text))?)\s*:|(?:saying|(?:that|which)\s+(?:says|reads))\s+)/i;
+  let command = instruction.replace(quoted, (text) => "\0".repeat(text.length));
+  const content = contentStart.exec(command);
+  if (content) command = command.slice(0, content.index);
+
   const results: NamedExpression[] = [];
-  const negated = (index: number) => NEGATED_PARTY_CUE.test(instruction.slice(0, index));
-  const add = (name: string | undefined, organization: string | undefined, cue: NamedExpressionCue, index: number) => {
+  const negatedQualifiedNames = new Set<string>();
+  const negated = (index: number) => NEGATED_PARTY_CUE.test(command.slice(0, index));
+  const partyName = (name: string | undefined) => {
     const clean = name?.replace(/\s+/g, " ").trim().replace(/[.,!?]+$/, "");
-    if (!clean || clean.length < 2 || /^(?:the|this|that|him|her|them|it)$/i.test(clean)) return;
+    return clean && clean.length >= 2 && !/^(?:the|this|that|him|her|them|it)$/i.test(clean) ? clean : undefined;
+  };
+  const add = (name: string | undefined, organization: string | undefined, cue: NamedExpressionCue, index: number) => {
+    const clean = partyName(name);
+    if (!clean) return;
     const normalized = clean.toLocaleLowerCase();
     if (results.some((row) => row.name.toLocaleLowerCase() === normalized)) return;
     results.push({
@@ -121,27 +136,95 @@ export function extractNamedExpressions(instruction: string): NamedExpression[] 
       ...(organization?.trim() ? { organization: organization.trim().slice(0, 160) } : {}),
     });
   };
+  const partyCue = "(?:email|call|text|contact|message|notify|ask|tell)";
+  const excludedAlternative = "(instead\\s+of\\s+)(?:emailing|calling|texting|contacting|messaging|notifying|asking|telling)";
   const name = "([\\p{L}][\\p{L}'-]+(?:\\s+[\\p{L}][\\p{L}'-]+){0,2}?)";
-  const boundary = "(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then)\\b|[,.!?]|$)";
-  for (const match of instruction.matchAll(new RegExp(
-    `\\b(?:email|call|text|contact|message|notify|ask|tell)\\s+(?:the\\s+)?${name}\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?)${boundary}`,
+  const organization = "([\\p{L}][\\p{L}\\d&.' –—-]{1,80}?)";
+  const dash = "(?:\\s+-\\s+|\\s*[–—]\\s*)";
+  const dashClause = `${dash}(?:please\\s+)?${partyCue}\\s+`;
+  const joinedClause = "\\b(?:and(?:\\s+then)?|then|also|but|so)\\s+(?:please\\s+)?";
+  const correctionMarker = "(?:(?:sorry|I\\s+mean|actually|rather(?!\\s+than\\b))\\b\\s*,?\\s*|no\\s*,\\s*)";
+  const boundary = `(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then|instead)\\b|\\s+${joinedClause}${partyCue}\\b|${dashClause}|${dash}${correctionMarker}|\\s*[\\x00,.!?;:]|\\s*$)`;
+  const addressee = `(?:the\\s+)?${name}(?:\\s+from\\s+${organization})?${boundary}`;
+  const destination = new RegExp(`\\s+to\\s+${addressee}`, "iyu");
+  const clauseSeparator = `(?:${dash}|\\s*[,.!?;:\\r\\n]\\s*)`;
+  const correctionBeforeVerb = new RegExp(`(?:^\\s*|${clauseSeparator})${correctionMarker}(?:please\\s+)?$`, "i");
+  const implicitRecipientCorrection = new RegExp(
+    `[^\\x00.!?;:\\r\\n]*?${clauseSeparator}${correctionMarker}(?!(?:${partyCue}|I|we|you|he|she|it|they)\\b)${addressee}`,
+    "iyu",
+  );
+  const nextAddressee = new RegExp(
+    `(?:\\s*,\\s*(?:and\\s+)?|\\s+and\\s+)(?!(?:please|then|also|instead|${partyCue})\\b|${joinedClause}${partyCue}\\b|${correctionMarker})${addressee}`,
+    "iyu",
+  );
+  const newClause = new RegExp(`(?:[.!?;:,\\r\\n–—]|\\s-\\s)\\s*(?:please\\s+)?$|${joinedClause}$`, "i");
+  let previousAddresseeEnd = 0;
+  let hasRecipientCorrection = false;
+  const namedOutreachClauses = new Set<string>();
+  for (const match of command.matchAll(new RegExp(
+    `\\b(?:${partyCue}|${excludedAlternative})\\s+${addressee}`,
     "giu",
   ))) {
-    if (!negated(match.index)) add(match[1], match[2], "party", match.index);
+    const [, alternative, recipient, qualifier] = match;
+    if (match.index < previousAddresseeEnd) continue;
+    const excluded = Boolean(alternative) || negated(match.index);
+    const gap = command.slice(previousAddresseeEnd, match.index);
+    const negation = excluded ? NEGATED_PARTY_CUE.exec(gap) : null;
+    const correctsPrevious = previousAddresseeEnd > 0 && correctionBeforeVerb.test(gap.slice(0, negation?.index ?? gap.length));
+    if (!excluded && previousAddresseeEnd && !correctsPrevious && !newClause.test(gap)) continue;
+    const end = match.index + match[0].length;
+    const artifactToRecipient = /^(?:calculation|analysis|findings|results|memo|report|summary|document|model|update|draft|note)$/i.test(recipient ?? "")
+      && /^\s+to\b/i.test(command.slice(end));
+    destination.lastIndex = end;
+    const artifactDestination = artifactToRecipient ? destination.exec(command) : null;
+    if (artifactToRecipient && !artifactDestination) continue;
+
+    const clauseAddressees = new Set<string>();
+    const recordAddressee = (name: string | undefined, organization: string | undefined, index: number) => {
+      const named = partyName(name);
+      if (!named) return;
+      clauseAddressees.add(JSON.stringify([normalizePartyName(named), normalizePartyName(organization ?? "")]));
+      if (excluded) {
+        if (!artifactToRecipient && organization) negatedQualifiedNames.add(normalizePartyName(named));
+      } else {
+        if (!artifactToRecipient) add(named, organization, "party", index);
+      }
+    };
+    if (artifactDestination) {
+      recordAddressee(artifactDestination[1], artifactDestination[2], match.index);
+      previousAddresseeEnd = destination.lastIndex;
+    } else {
+      recordAddressee(recipient, qualifier, match.index);
+      previousAddresseeEnd = end;
+    }
+    nextAddressee.lastIndex = previousAddresseeEnd;
+    for (let next = nextAddressee.exec(command); next; next = nextAddressee.exec(command)) {
+      const [, name, organization] = next;
+      if (CONSEQUENTIAL.exec(name ?? "")?.index === 0) break;
+      recordAddressee(name, organization, next.index);
+      previousAddresseeEnd = nextAddressee.lastIndex;
+    }
+    const startsInlineContent = !excluded && /^\s*:/.test(command.slice(previousAddresseeEnd));
+    if (clauseAddressees.size) {
+      if (!excluded) namedOutreachClauses.add(JSON.stringify([...clauseAddressees].sort()));
+      implicitRecipientCorrection.lastIndex = previousAddresseeEnd;
+      if (correctsPrevious || (!startsInlineContent && partyName(implicitRecipientCorrection.exec(command)?.[1]))) hasRecipientCorrection = true;
+    }
+    if (startsInlineContent) {
+      command = command.slice(0, previousAddresseeEnd);
+      break;
+    }
   }
-  for (const match of instruction.matchAll(new RegExp(
-    `\\b(?:email|call|text|contact|message|notify|ask|tell)\\s+(?:the\\s+)?${name}${boundary}`,
-    "giu",
-  ))) {
-    const artifactToRecipient = /^(?:calculation|analysis|findings|results|memo|report|summary|document|model|update|draft|note)$/i.test(match[1] ?? "")
-      && /^\s+to\b/i.test(instruction.slice((match.index ?? 0) + match[0].length));
-    if (!artifactToRecipient && !negated(match.index)) add(match[1], undefined, "party", match.index);
-  }
-  for (const match of instruction.matchAll(new RegExp(
-    `\\b(?:spoke|talked|met)\\s+(?:to|with)\\s+${name}(?:\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?))?${boundary}`,
+  for (const match of command.matchAll(new RegExp(
+    `\\b(?:spoke|talked|met)\\s+(?:to|with)\\s+${name}(?:\\s+from\\s+${organization})?${boundary}`,
     "giu",
   ))) add(match[1], match[2], "history", match.index ?? 0);
-  return results.sort((left, right) => left.index - right.index).slice(0, 5);
+  return {
+    expressions: results.sort((left, right) => left.index - right.index).slice(0, 5),
+    negatedQualifiedNames,
+    recipientConflict: namedOutreachClauses.size > 1 || hasRecipientCorrection,
+    command,
+  };
 }
 
 export interface PreparedEmployeeConversationTurn {
@@ -218,7 +301,11 @@ export async function prepareEmployeeConversationTurn(params: {
   if (!loaded) throw new Error("conversation_thread_not_found");
 
   const history: EmployeeConversationMessage[] = [];
-  const named = extractNamedExpressions(params.instruction);
+  const { expressions, negatedQualifiedNames, recipientConflict, command } = parseNamedExpressions(params.instruction);
+  const consequential = CONSEQUENTIAL.test(command) && !isReadOnlyConversationQuestion(command.replaceAll("\0", " "));
+  const named = recipientConflict ? [] : expressions;
+  const needsRecipientClarification = (expression: NamedExpression) =>
+    expression.cue === "party" && !expression.organization && negatedQualifiedNames.has(normalizePartyName(expression.name));
   for (const expression of named.filter((row) => row.cue === "history")) {
     const rows = await searchEmployeeConversationMessages({
       tenantId: params.ctx.tenantId,
@@ -248,43 +335,42 @@ export async function prepareEmployeeConversationTurn(params: {
   });
 
   const partyCandidates: ConversationReference[] = [];
-  const unresolvedExpressions: string[] = [];
+  const resolvedParties: ConversationReference[] = [];
+  const unresolvedExpressions: string[] = consequential && recipientConflict ? ["outreach recipient"] : [];
   const trace: ConversationResolutionProvenance[] = [];
   for (const expression of named) {
+    if (needsRecipientClarification(expression)) {
+      unresolvedExpressions.push(expression.name);
+      continue;
+    }
     const resolution = await resolveParty(
       params.ctx.tenantId,
       { query: expression.organization ? `${expression.name} ${expression.organization}` : expression.name },
       { requesterEmployeeId: employeeId, workId: params.workId },
     );
-    const candidates = resolution.candidates.map((candidate): ConversationReference => {
+    const resolved = resolution.status === "resolved" ? resolution.party : null;
+    for (const candidate of resolution.candidates) {
       const ref = partyRefToCanonicalEntityRef(candidate.ref);
-      return {
+      const reference: ConversationReference = {
         ...ref,
         label: candidate.displayName,
         source: expression.cue === "history" ? "history_search" : "company_twin",
         currentTruthAsOf: new Date().toISOString(),
       };
-    });
-    for (const candidate of candidates) {
-      partyCandidates.push(candidate);
-      trace.push(provenance("company_twin", "active_party_directory", "candidate", key(candidate)));
+      partyCandidates.push(reference);
+      trace.push(provenance("company_twin", "active_party_directory", "candidate", key(reference)));
+      if (resolved?.ref.partyType === candidate.ref.partyType && resolved.ref.partyId === candidate.ref.partyId) {
+        resolvedParties.push(reference);
+      }
     }
     if (resolution.status !== "resolved") unresolvedExpressions.push(expression.name);
   }
 
-  const resolvedParties = named.flatMap((expression) => {
-    const matching = partyCandidates.filter((candidate) =>
-      candidate.label.toLocaleLowerCase().includes(expression.name.toLocaleLowerCase()),
-    );
-    return matching.length === 1 ? matching : [];
-  });
   const unique = <T extends ConversationReference>(rows: T[]) =>
     [...new Map(rows.map((row) => [key(row), row])).values()];
-  const selected = unique([...explicit, ...resolvedParties]);
+  const selected = recipientConflict ? [] : unique([...explicit, ...resolvedParties]);
   const candidates = unique([...explicit, ...partyCandidates, ...carried]);
-  const consequential = CONSEQUENTIAL.test(params.instruction) && !isReadOnlyConversationQuestion(params.instruction);
-
-  if (PRONOUN.test(params.instruction) && explicit.length === 0) {
+  if (!recipientConflict && PRONOUN.test(command) && explicit.length === 0) {
     if (carried.length === 1) selected.push(carried[0]!);
     else if (consequential) unresolvedExpressions.push("referenced target");
   }
@@ -297,7 +383,7 @@ export async function prepareEmployeeConversationTurn(params: {
     candidates,
     unresolvedExpressions: unresolved,
     clarificationQuestion: ambiguous
-      ? `Which active target do you mean for ${unresolved[0]}?`
+      ? recipientConflict ? "Who should receive this?" : `Which active target do you mean for ${unresolved[0]}?`
       : null,
     consequential,
     senderIdentityRef: null,

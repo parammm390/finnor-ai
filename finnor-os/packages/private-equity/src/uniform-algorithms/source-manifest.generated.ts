@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "b8048d5362c9198faa9df81ae0a2694941023afd141bcd77396faaf66e6dd116"
+      "sha256": "70b28f101420af5d9e9ac5e3b677e2e819405b6e2e308f8ce38f344046ca6d16"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -1368,11 +1368,11 @@ export default {
     },
     {
       "path": "finnor-os/packages/orchestration/src/conversation-intent.ts",
-      "sha256": "b8f0441b2fd4c68e2798c3ad4021a07aa0933bbb371867cfd8e50cbe3349cea8"
+      "sha256": "a32b9a0d626f43ef640c3c98c1c2d1c60f79f413d5f70030800fc48db03f9819"
     },
     {
       "path": "finnor-os/packages/orchestration/src/conversation-kernel.ts",
-      "sha256": "e567b4709454ff91da054d5c867e84dff2305c3b4ade049a26ba167ee24c6d37"
+      "sha256": "9d731085f6642538eda42d110fa90ed4c3bfe77faef3a98dd13794a69ff554f0"
     },
     {
       "path": "finnor-os/packages/orchestration/src/conversation-memory.ts",
@@ -3296,7 +3296,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/read-models/src/party-resolver.ts",
-      "sha256": "d1374cd67a34320a7b61fa2ca8d54fcdc9e76f99019ebb404b992a302f195e6c"
+      "sha256": "d81aeea6fd6e04207b67f4e12d76d7f59aeaedaf1e1a088600bf842c5cd8767d"
     },
     {
       "path": "finnor-os/packages/read-models/src/work-cases.ts",
@@ -6071,5 +6071,5 @@ export default {
       "sha256": "11dea46f9ca2d6c914d01df8683a1331ba51c144ed488904ad8ac251495f33d8"
     }
   ],
-  "sourceDigest": "865195ec60f55ea4024660c8c47fc035eb6122fe76bc9c4dadaeabd7b834b87d"
+  "sourceDigest": "b8c27ab756db9f326e972d01d12ab7e383c6d7528b5132efd38a791f8b57db05"
 } as const;
