@@ -18,12 +18,15 @@ import {
   withTenant,
 } from "@finnor/db";
 import {
+  createDefaultPluginRegistry,
   FinnorOrchestrator,
+  LLMPlanner,
   linkEmployeeConversationTurnToWork,
   persistEmployeeAssistantTurn,
   prepareEmployeeConversationTurn,
   resolveCanonicalHumanPrincipal,
 } from "@finnor/orchestration";
+import type { LLMProvider } from "@finnor/orchestration";
 import { and, eq } from "drizzle-orm";
 
 const SUPER_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
@@ -48,8 +51,6 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
   const otherTenantOwner = randomUUID();
   const pentair = randomUUID();
   const johnSmith = randomUUID();
-  const petersonHousehold = randomUUID();
-  const petersonAppointment = randomUUID();
   const salesIdentity = randomUUID();
   const ctx = { tenantId: tenantA, userId: sarah, employeeId: sarah, role: "owner" as const };
   let goldenThreadId = "";
@@ -69,8 +70,6 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
     );
     await admin.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES ($1,$2,'pentair-phase6','Pentair','partner')", [pentair, tenantA]);
     await admin.query("INSERT INTO finnor_os.external_contacts(id,tenant_id,contact_key,external_organization_id,name) VALUES ($1,$2,'john-smith-phase6',$3,'John Smith')", [johnSmith, tenantA, pentair]);
-    await admin.query("INSERT INTO finnor_os.households(id,tenant_id,address,contact_info) VALUES ($1,$2,'10 Peterson Way',$3::jsonb)", [petersonHousehold, tenantA, JSON.stringify({ name: "Peterson Family" })]);
-    await admin.query("INSERT INTO finnor_os.appointments(id,tenant_id,subject_type,subject_id,status,scheduled_at) VALUES ($1,$2,'household',$3,'confirmed',now()+interval '3 days')", [petersonAppointment, tenantA, petersonHousehold]);
     await admin.query("INSERT INTO finnor_os.communication_identities(id,tenant_id,identity_key,provider,channel,address,status,capabilities,credential_provider,credential_ref) VALUES ($1,$2,'sales_email_phase6','gmail','email','sales@example.test','active','[]','legacy-env','legacy-env:gmail')", [salesIdentity, tenantA]);
     await admin.query("INSERT INTO finnor_os.communication_identity_bindings(tenant_id,communication_identity_id,principal_type,principal_id,purpose,priority,status) VALUES ($1,$2,'employee',$3,'sales',100,'active')", [tenantA, salesIdentity, sarah]);
     await admin.end();
@@ -117,7 +116,10 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
     await serviceConnection.end();
   });
 
-  it("passes the Sarah/Pentair/Peterson golden sequence with current sender revalidation and supersession", async () => {
+  // Phase 5 retired the Water resolver: households and appointments are no
+  // longer tenant truth, sender preferences are no longer inferred from chat,
+  // and senderIdentityRef is always null. The party and memory checks remain.
+  it("resolves the Pentair contact, carries it into a pronoun follow-up and never resolves retired Water nouns", async () => {
     const day1 = await prepareEmployeeConversationTurn({
       ctx,
       instruction: "I spoke with John Smith from Pentair. Use my sales email when contacting him.",
@@ -127,28 +129,34 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
       transportSessionId: "browser-transport-only",
     });
     goldenThreadId = day1.threadId;
-    expect(day1.context.resolution.resolvedReferences).toEqual(expect.arrayContaining([expect.objectContaining({ entityType: "external_contact", entityId: johnSmith })]));
-    expect(day1.context.personalMemories).toEqual(expect.arrayContaining([expect.objectContaining({ subjectKey: "communication.sender.email:outbound_sales" })]));
+    expect(day1.context.resolution.resolvedReferences).toEqual([expect.objectContaining({ entityType: "external_contact", entityId: johnSmith })]);
+    expect(day1.context.personalMemories).toEqual([]);
 
     const day2 = await prepareEmployeeConversationTurn({ ctx, threadId: goldenThreadId, instruction: "Email him and tell him we're moving Peterson to Friday.", instructionId: randomUUID(), idempotencyKey: "golden-day-2", channel: "text" });
-    expect(day2.context.resolution).toMatchObject({ status: "resolved", senderIdentityRef: { communicationIdentityId: salesIdentity, channel: "email", purpose: "sales" } });
-    expect(day2.context.resolution.resolvedReferences).toEqual(expect.arrayContaining([
-      expect.objectContaining({ entityType: "external_contact", entityId: johnSmith }),
-      expect.objectContaining({ entityType: "appointment", entityId: petersonAppointment }),
-    ]));
+    expect(day2.context.resolution).toMatchObject({ status: "resolved", consequential: true, senderIdentityRef: null });
+    expect(day2.context.resolution.resolvedReferences).toEqual([expect.objectContaining({ entityType: "external_contact", entityId: johnSmith, source: "thread" })]);
 
     const day3 = await prepareEmployeeConversationTurn({ ctx, threadId: goldenThreadId, instruction: "Move the Peterson appointment to Friday.", instructionId: randomUUID(), idempotencyKey: "golden-day-3", channel: "voice", transportSessionId: "vapi:transport-only" });
-    expect(day3.context.resolution).toMatchObject({ status: "resolved" });
-    expect(day3.context.resolution.resolvedReferences[0]).toMatchObject({ entityType: "appointment", entityId: petersonAppointment });
-    const day3Followup = await prepareEmployeeConversationTurn({ ctx, threadId: goldenThreadId, instruction: "Move it to Saturday.", instructionId: randomUUID(), idempotencyKey: "golden-day-3-followup", channel: "text" });
-    expect(day3Followup.context.resolution).toMatchObject({ status: "resolved" });
-    expect(day3Followup.context.resolution.resolvedReferences).toEqual(expect.arrayContaining([expect.objectContaining({ entityType: "appointment", entityId: petersonAppointment })]));
+    expect(day3.context.resolution.resolvedReferences).toEqual([]);
+    const retired = ["household", "appointment"];
+    for (const turn of [day1, day2, day3]) {
+      expect(turn.context.resolution.candidates.filter((candidate) => retired.includes(candidate.entityType))).toEqual([]);
+    }
+  });
 
-    await prepareEmployeeConversationTurn({ ctx, threadId: goldenThreadId, instruction: "Use ops@example.com from now on.", instructionId: randomUUID(), idempotencyKey: "golden-day-4", channel: "text" });
-    const memories = await listEmployeePersonalMemories({ tenantId: tenantA, ownerEmployeeId: sarah, subjectKey: "communication.sender.email:outbound_sales", includeSuperseded: true });
+  it("supersedes an explicit personal memory with the newer user statement", async () => {
+    const loaded = await loadEmployeeConversationThread({ tenantId: tenantA, ownerEmployeeId: sarah, threadId: goldenThreadId, messageLimit: 10 });
+    const userMessages = loaded!.messages.filter((message) => message.role === "user");
+    const subjectKey = "communication.sender.email:outbound_sales";
+    const remember = (messageId: string, selector: string) => rememberExplicitEmployeeMemory({ tenantId: tenantA, ownerEmployeeId: sarah, sourceThreadId: goldenThreadId, sourceMessageId: messageId, role: "user", memoryType: "preference", subjectKey, proposition: `Use ${selector} for outbound sales email`, structuredValue: { selector }, provenance: { source: "user" } });
+    const first = await remember(userMessages[0]!.id, "sales");
+    await expect(remember(userMessages[0]!.id, "sales")).resolves.toMatchObject({ id: first!.id });
+    const second = await remember(userMessages.at(-1)!.id, "ops@example.com");
+    const memories = await listEmployeePersonalMemories({ tenantId: tenantA, ownerEmployeeId: sarah, subjectKey, includeSuperseded: true });
     expect(memories).toHaveLength(2);
-    expect(memories.filter((memory) => memory.supersededAt === null)).toEqual([expect.objectContaining({ structuredValue: expect.objectContaining({ selector: "ops@example.com" }) })]);
-    expect(memories.filter((memory) => memory.supersededAt !== null)[0]?.supersededById).toBe(memories.find((memory) => memory.supersededAt === null)?.id);
+    expect(memories.filter((memory) => memory.supersededAt === null)).toEqual([expect.objectContaining({ id: second!.id, structuredValue: expect.objectContaining({ selector: "ops@example.com" }) })]);
+    expect(memories.find((memory) => memory.id === first!.id)?.supersededById).toBe(second!.id);
+    await expect(listEmployeePersonalMemories({ tenantId: tenantA, ownerEmployeeId: peer, subjectKey })).resolves.toEqual([]);
   });
 
   it("never promotes assistant output into personal memory", async () => {
@@ -158,6 +166,8 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
     expect(await listEmployeePersonalMemories({ tenantId: tenantA, ownerEmployeeId: sarah, subjectKey: "poison" })).toEqual([]);
   });
 
+  // The Work-continuation resolver was removed with the Water resolver, so
+  // "Continue that." no longer resolves to the active Work; it must clarify.
   it("links canonical conversation continuity to existing Work and objective truth", async () => {
     const objectiveText = "Reconcile the open appointment schedule and report completion.";
     const prepared = await prepareEmployeeConversationTurn({ ctx, instruction: objectiveText, instructionId: randomUUID(), idempotencyKey: "objective-continuity", channel: "text" });
@@ -182,45 +192,37 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
       instructionId: started.instructionId,
       channel: "text",
       text: "Objective accepted; canonical inspection is next.",
+      referenceText: "Objective accepted.",
       workId: started.workId,
       workInputId: started.workInputId,
       outcomeRefs: [{ kind: "objective_loop", id: started.objectiveLoopId }],
     });
     const continued = await prepareEmployeeConversationTurn({ ctx, threadId: prepared.threadId, instruction: "Continue that.", instructionId: randomUUID(), idempotencyKey: "objective-continuity-followup", channel: "text" });
-    expect(continued.context.resolution).toMatchObject({ status: "resolved", resolvedReferences: [expect.objectContaining({ entityType: "work", entityId: started.workId })] });
+    expect(continued.context.resolution).toMatchObject({ status: "clarification_required", consequential: true, resolvedReferences: [] });
+    expect(continued.context.resolution.unresolvedExpressions).toContain("referenced target");
     const loaded = await loadEmployeeConversationThread({ tenantId: tenantA, ownerEmployeeId: sarah, threadId: prepared.threadId, messageLimit: 10 });
     expect(loaded?.thread).toMatchObject({ activeWorkId: started.workId, activeObjectiveLoopId: started.objectiveLoopId });
     expect(loaded?.messages).toEqual(expect.arrayContaining([
       expect.objectContaining({ id: prepared.userMessage.id, workId: started.workId, workInputId: started.workInputId }),
-      expect.objectContaining({ role: "assistant", originalText: "Objective accepted; canonical inspection is next.", workId: started.workId }),
+      expect.objectContaining({ role: "assistant", originalText: "Objective accepted.", workId: started.workId, outcomeRefs: [{ kind: "objective_loop", id: started.objectiveLoopId }] }),
     ]));
   });
 
-  it("clarifies an ambiguous Work continuation when no active Work is selected", async () => {
+  it("clarifies a Work continuation when no active Work or carried target is selected", async () => {
     const thread = await createEmployeeConversationThread({ tenantId: tenantA, ownerEmployeeId: sarah, title: "Ambiguous Work continuation" });
-    const firstWork = await receiveWork({ tenantId: tenantA, userId: sarah, instruction: "Review the Peterson schedule.", channel: "text", instructionId: randomUUID(), idempotencyKey: "ambiguous-continuation-a" });
-    const secondWork = await receiveWork({ tenantId: tenantA, userId: sarah, instruction: "Review the Pentair quote.", channel: "text", instructionId: randomUUID(), idempotencyKey: "ambiguous-continuation-b" });
-    await appendEmployeeConversationMessage({ tenantId: tenantA, ownerEmployeeId: sarah, threadId: thread.id, role: "user", channel: "text", originalText: "Started the Peterson schedule Work.", workId: firstWork.workId, workInputId: firstWork.workInputId, instructionId: firstWork.instructionId, idempotencyKey: "ambiguous-continuation-message-a" });
-    await appendEmployeeConversationMessage({ tenantId: tenantA, ownerEmployeeId: sarah, threadId: thread.id, role: "user", channel: "text", originalText: "Started the Pentair quote Work.", workId: secondWork.workId, workInputId: secondWork.workInputId, instructionId: secondWork.instructionId, idempotencyKey: "ambiguous-continuation-message-b" });
+    const works = [
+      await receiveWork({ tenantId: tenantA, userId: sarah, instruction: "Review the Peterson schedule.", channel: "text", instructionId: randomUUID(), idempotencyKey: "ambiguous-continuation-a" }),
+      await receiveWork({ tenantId: tenantA, userId: sarah, instruction: "Review the Pentair quote.", channel: "text", instructionId: randomUUID(), idempotencyKey: "ambiguous-continuation-b" }),
+    ];
+    await expect(appendEmployeeConversationMessage({ tenantId: tenantA, ownerEmployeeId: sarah, threadId: thread.id, role: "user", channel: "text", originalText: "Started the Peterson schedule Work.", workId: works[0]!.workId, workInputId: works[0]!.workInputId, instructionId: works[0]!.instructionId, idempotencyKey: "ambiguous-continuation-mismatch" })).rejects.toThrow();
+    for (const [index, work] of works.entries()) {
+      await appendEmployeeConversationMessage({ tenantId: tenantA, ownerEmployeeId: sarah, threadId: thread.id, role: "user", channel: "text", originalText: index === 0 ? "Review the Peterson schedule." : "Review the Pentair quote.", workId: work.workId, workInputId: work.workInputId, instructionId: work.instructionId, idempotencyKey: `ambiguous-continuation-message-${index}` });
+    }
     await updateEmployeeConversationThreadContext({ tenantId: tenantA, ownerEmployeeId: sarah, threadId: thread.id, activeWorkId: null });
-    const continued = await prepareEmployeeConversationTurn({ ctx, threadId: thread.id, instruction: "Continue what we started yesterday.", instructionId: randomUUID(), idempotencyKey: "ambiguous-continuation-followup", channel: "text" });
-    expect(continued.context.resolution).toMatchObject({ status: "clarification_required", consequential: true });
-    expect(continued.context.resolution.unresolvedExpressions).toContain("continuation");
-    expect(continued.context.resolution.candidates.filter((candidate) => candidate.entityType === "work")).toHaveLength(2);
-  });
-
-  it("fails closed after a sender is revoked and after current company truth supersedes an appointment", async () => {
-    await withTenant(tenantA, (db) => db.update(communicationIdentities).set({ status: "disabled" }).where(and(eq(communicationIdentities.tenantId, tenantA), eq(communicationIdentities.id, salesIdentity))));
-    const revoked = await prepareEmployeeConversationTurn({ ctx, threadId: goldenThreadId, instruction: "Email John Smith from Pentair the update.", instructionId: randomUUID(), idempotencyKey: "revoked-sender", channel: "text" });
-    expect(revoked.context.resolution).toMatchObject({ status: "clarification_required", senderIdentityRef: null });
-
-    const admin = new pg.Client({ connectionString: SUPER_URL });
-    await admin.connect();
-    await admin.query("UPDATE finnor_os.appointments SET status='canceled' WHERE id=$1", [petersonAppointment]);
-    await admin.end();
-    const stale = await prepareEmployeeConversationTurn({ ctx, threadId: goldenThreadId, instruction: "Move that appointment to Monday.", instructionId: randomUUID(), idempotencyKey: "stale-appointment", channel: "text" });
-    expect(stale.context.resolution).toMatchObject({ status: "clarification_required", resolvedReferences: [] });
-    expect(stale.context.resolution.provenance).toEqual(expect.arrayContaining([expect.objectContaining({ result: "rejected", reason: "no longer current" })]));
+    const continued = await prepareEmployeeConversationTurn({ ctx, threadId: thread.id, instruction: "Continue that work.", instructionId: randomUUID(), idempotencyKey: "ambiguous-continuation-followup", channel: "text" });
+    expect(continued.context.resolution).toMatchObject({ status: "clarification_required", consequential: true, resolvedReferences: [] });
+    expect(continued.context.resolution.unresolvedExpressions).toContain("referenced target");
+    expect(continued.context.resolution.clarificationQuestion).toBeTruthy();
   });
 
   it("retrieves an exact reference beyond 100 messages without loading unbounded history", async () => {
@@ -238,7 +240,10 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
     expect(bounded?.messages.some((message) => message.id === old.message.id)).toBe(false);
     const resolved = await prepareEmployeeConversationTurn({ ctx, threadId: historical.id, instruction: "Email the John we discussed.", instructionId: randomUUID(), idempotencyKey: "old-john-resolve", channel: "text" });
     expect(resolved.context.olderRelevantMessages.some((message) => message.id === old.message.id)).toBe(true);
-    expect(resolved.context.resolution.resolvedReferences[0]).toMatchObject({ entityType: "external_contact", entityId: johnSmith, source: "history_search" });
+    expect(resolved.context.resolution.resolvedReferences).toEqual([expect.objectContaining({ entityType: "external_contact", entityId: johnSmith, source: "company_twin" })]);
+    const recalled = await prepareEmployeeConversationTurn({ ctx, threadId: historical.id, instruction: "We talked with John Smith about the quarterly review.", instructionId: randomUUID(), idempotencyKey: "old-john-history", channel: "text" });
+    expect(recalled.context.olderRelevantMessages.some((message) => message.id === old.message.id)).toBe(true);
+    expect(recalled.context.resolution.resolvedReferences).toEqual([expect.objectContaining({ entityType: "external_contact", entityId: johnSmith, source: "history_search" })]);
   });
 
   it("clarifies duplicate current targets and creates zero Business Effects", async () => {
@@ -249,10 +254,29 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
     await admin.query("INSERT INTO finnor_os.external_organizations(id,tenant_id,organization_key,name,kind) VALUES ($1,$2,'second-org-phase6','Second Org','partner')", [secondOrganization, tenantA]);
     await admin.query("INSERT INTO finnor_os.external_contacts(id,tenant_id,contact_key,external_organization_id,name) VALUES ($1,$2,'john-other-phase6',$3,'John Peterson')", [secondJohn, tenantA, secondOrganization]);
     await admin.end();
-    const ambiguous = await prepareEmployeeConversationTurn({ ctx, instruction: "Email John the update.", instructionId: randomUUID(), idempotencyKey: "ambiguous-john", channel: "text" });
+    const ambiguous = await prepareEmployeeConversationTurn({ ctx, instruction: "Email John about the update.", instructionId: randomUUID(), idempotencyKey: "ambiguous-john", channel: "text" });
     expect(ambiguous.context.resolution).toMatchObject({ status: "clarification_required", consequential: true });
-    expect(ambiguous.context.resolution.candidates.length).toBeGreaterThanOrEqual(2);
-    const result = await new FinnorOrchestrator().handleInstructionResult("Email John the update.", ctx, { instructionId: ambiguous.userMessage.instructionId!, channel: "text", conversationContext: ambiguous.context, instructionRouteDecision: { version: 1, route: "ATOMIC_EFFECT", reasonCodes: ["phase6_reference_or_sender_ambiguous"] }, skipFastReadClassification: true });
+    expect(ambiguous.context.resolution.resolvedReferences).toEqual([]);
+    expect(ambiguous.context.resolution.candidates.map((candidate) => candidate.entityId)).toEqual(expect.arrayContaining([johnSmith, secondJohn]));
+    // Planning has no deterministic clarification lane, so a stub model stands
+    // in for the routed provider; the gate under test is the forced
+    // ATOMIC_EFFECT route and the absence of Business Effects.
+    const provider: LLMProvider = { name: "phase6-clarification-stub", async complete(options) {
+      const criteria = JSON.parse(options.system.split("Accepted completion criteria: ")[1]!.split("\n")[0]!) as Array<{ id: string }>;
+      return JSON.stringify({ candidates: [{
+        version: 1,
+        candidateKey: "clarification",
+        nodes: [
+          { key: "ask", kind: "action", actionType: "clarification_request", payload: { question: ambiguous.context.resolution.clarificationQuestion, missingFields: ["recipient"] }, supports: criteria.map((criterion) => criterion.id) },
+          ...criteria.map((criterion, index) => ({ key: `check_${index}`, kind: "check", criterionId: criterion.id, dependsOn: ["ask"] })),
+        ],
+      }] });
+    } };
+    const contextWindows = process.env.FINNOR_LLM_CONTEXT_WINDOWS;
+    process.env.FINNOR_LLM_CONTEXT_WINDOWS = JSON.stringify({ "custom:phase6-clarification-stub": 128_000 });
+    const result = await new FinnorOrchestrator({ planner: new LLMPlanner(createDefaultPluginRegistry(), provider) }).handleInstructionResult("Email John about the update.", ctx, { instructionId: ambiguous.userMessage.instructionId!, channel: "text", conversationContext: ambiguous.context, instructionRouteDecision: { version: 1, route: "ATOMIC_EFFECT", reasonCodes: ["phase6_reference_or_sender_ambiguous"] }, skipFastReadClassification: true });
+    if (contextWindows === undefined) delete process.env.FINNOR_LLM_CONTEXT_WINDOWS;
+    else process.env.FINNOR_LLM_CONTEXT_WINDOWS = contextWindows;
     expect(result.actions).toHaveLength(1);
     expect(result.actions[0]?.actionType).toBe("clarification_request");
     const effects = await withTenant(tenantA, (db) => db
@@ -261,5 +285,15 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
       .innerJoin(domainActions, eq(domainActions.id, businessEffects.domainActionId))
       .where(eq(domainActions.workId, result.workId!)));
     expect(effects).toEqual([]);
+  });
+
+  it("fails closed after current company truth deactivates the contact", async () => {
+    const admin = new pg.Client({ connectionString: SUPER_URL });
+    await admin.connect();
+    await admin.query("UPDATE finnor_os.external_contacts SET active=false WHERE id=$1", [johnSmith]);
+    await admin.end();
+    const stale = await prepareEmployeeConversationTurn({ ctx, instruction: "Email John Smith.", instructionId: randomUUID(), idempotencyKey: "inactive-john", channel: "text" });
+    expect(stale.context.resolution).toMatchObject({ status: "clarification_required", consequential: true });
+    expect(stale.context.resolution.unresolvedExpressions).toContain("John Smith");
   });
 });
