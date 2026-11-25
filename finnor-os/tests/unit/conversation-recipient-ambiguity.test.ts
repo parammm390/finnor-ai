@@ -9,6 +9,7 @@ const { employeeId, thread, message, contacts } = vi.hoisted(() => ({
   contacts: [
     { id: "22222222-2222-4222-8222-222222222222", name: "Terry Morgan (Birch)", active: true },
     { id: "33333333-3333-4333-8333-333333333333", name: "Terry Morgan", active: true },
+    { id: "44444444-4444-4444-8444-444444444444", name: "Terry Morgan (Birch - Capital)", active: true },
   ],
 }));
 
@@ -100,6 +101,16 @@ describe("conversation intake recipient ambiguity", () => {
     expect(turn.context.resolution).toMatchObject({
       status: "resolved",
       resolvedReferences: [{ entityType: "external_contact", entityId: contacts[0]!.id }],
+      clarificationQuestion: null,
+    });
+  });
+
+  it.each([" - ", "—"])("keeps %j within an organization name", async (dash) => {
+    const turn = await prepare(`Email Terry Morgan from Birch${dash}Capital.`);
+
+    expect(turn.context.resolution).toMatchObject({
+      status: "resolved",
+      resolvedReferences: [{ entityType: "external_contact", entityId: contacts[2]!.id }],
       clarificationQuestion: null,
     });
   });

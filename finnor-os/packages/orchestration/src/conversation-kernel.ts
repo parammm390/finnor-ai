@@ -129,9 +129,11 @@ function parseNamedExpressions(instruction: string) {
   const partyCue = "(?:email|call|text|contact|message|notify|ask|tell)";
   const excludedAlternative = "(instead\\s+of\\s+)(?:emailing|calling|texting|contacting|messaging|notifying|asking|telling)";
   const name = "([\\p{L}][\\p{L}'-]+(?:\\s+[\\p{L}][\\p{L}'-]+){0,2}?)";
-  const boundary = "(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then|instead)\\b|\\s+-\\s+|[,.!?;:–—]|$)";
+  const organization = "([\\p{L}][\\p{L}\\d&.' –—-]{1,80}?)";
+  const dashClause = `(?:\\s+-\\s+|\\s*[–—]\\s*)(?:please\\s+)?${partyCue}\\s+`;
+  const boundary = `(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then|instead)\\b|${dashClause}|[,.!?;:]|$)`;
   for (const match of instruction.matchAll(new RegExp(
-    `\\b(?:${partyCue}|${excludedAlternative})\\s+(?:the\\s+)?${name}\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?)${boundary}`,
+    `\\b(?:${partyCue}|${excludedAlternative})\\s+(?:the\\s+)?${name}\\s+from\\s+${organization}${boundary}`,
     "giu",
   ))) {
     const [, alternative, recipient, organization] = match;
@@ -147,7 +149,7 @@ function parseNamedExpressions(instruction: string) {
     if (!artifactToRecipient && !negated(match.index)) add(match[1], undefined, "party", match.index);
   }
   for (const match of instruction.matchAll(new RegExp(
-    `\\b(?:spoke|talked|met)\\s+(?:to|with)\\s+${name}(?:\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?))?${boundary}`,
+    `\\b(?:spoke|talked|met)\\s+(?:to|with)\\s+${name}(?:\\s+from\\s+${organization})?${boundary}`,
     "giu",
   ))) add(match[1], match[2], "history", match.index ?? 0);
   return {
