@@ -509,6 +509,12 @@ function CentropyWorkspaceContent() {
     router.push(`/centropy/investigations/${threadId}${params.size ? `?${params.toString()}` : ""}`)
   }
 
+  function inspectWork(workId: string) {
+    setResponseWork(threadId ? { threadId, workId } : null)
+    setAnswerWorkDetails(null)
+    openCanvas()
+  }
+
   function worldHref(root: PeWorldRootRef, object?: CompanyBrainObjectRef) {
     const params = new URLSearchParams()
     if (threadId) params.set("threadId", threadId)
@@ -586,17 +592,17 @@ function CentropyWorkspaceContent() {
           {messages.map((message) => <article className="ct-turn" data-role={message.role} data-work-id={message.workId ?? undefined} key={message.id}>
             <div className="ct-turn__identity"><span>{message.role === "user" ? "YOU" : "CENTROPY"}</span><time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time></div>
             <p>{message.originalText}</p>
-            {message.role === "assistant" && message.workId && !hasWorkOutcome(message) ? <details className="ct-turn__options"><summary aria-label="Message options"><MoreHorizontal size={16} aria-hidden /></summary><button type="button" onClick={() => { invalidateSelection(); setResponseWork(threadId ? { threadId, workId: message.workId! } : null); setAnswerWorkDetails(null); setMobilePane("canvas") }}>Inspect linked Work</button></details> : null}
+            {message.role === "assistant" && message.workId && !hasWorkOutcome(message) ? <details className="ct-turn__options"><summary aria-label="Message options"><MoreHorizontal size={16} aria-hidden /></summary><button type="button" onClick={() => inspectWork(message.workId!)}>Inspect linked Work</button></details> : null}
             {message.id === workTurnId && !canvasWork ? <p className="ct-thread__notice" role="status">{canvasSources.work.error ?? "Reading linked Work…"}{canvasSources.work.error ? <button type="button" onClick={() => setCanvasRefresh(value => value + 1)}>Retry Work</button> : null}</p> : null}
             {message.id === workTurnId && canvasWork ? <>
-              {showWorkBrief ? <WorkBrief work={canvasWork} execution={canvasDocument?.blocks.find(block => block.type === "work_execution")} current={canvasSources.work.status === "ready"} onOpen={() => setMobilePane("canvas")} onReview={() => { decisionReview.current?.scrollIntoView({ block: "start", behavior: "smooth" }); decisionReview.current?.focus({ preventScroll: true }) }} /> : null}
+              {showWorkBrief ? <WorkBrief work={canvasWork} execution={canvasDocument?.blocks.find(block => block.type === "work_execution")} current={canvasSources.work.status === "ready"} onOpen={openCanvas} onReview={() => { decisionReview.current?.scrollIntoView({ block: "start", behavior: "smooth" }); decisionReview.current?.focus({ preventScroll: true }) }} /> : null}
               {canvasSources.work.status === "ready" ? <>
-                <VerifiedIcOutcome work={canvasWork} ic={canvasSources.ic.data} dealId={canvasRoot?.entityType === "pe_deal" ? canvasRoot.entityId : null} onOpenCanvas={() => setMobilePane("canvas")} />
-                <VerifiedUnderwritingOutcome work={canvasWork} underwriting={canvasSources.underwriting.data} dealId={canvasRoot?.entityType === "pe_deal" ? canvasRoot.entityId : null} onOpenCanvas={() => setMobilePane("canvas")} />
+                <VerifiedIcOutcome work={canvasWork} ic={canvasSources.ic.data} dealId={canvasRoot?.entityType === "pe_deal" ? canvasRoot.entityId : null} onOpenCanvas={openCanvas} />
+                <VerifiedUnderwritingOutcome work={canvasWork} underwriting={canvasSources.underwriting.data} dealId={canvasRoot?.entityType === "pe_deal" ? canvasRoot.entityId : null} onOpenCanvas={openCanvas} />
               </> : null}
               {workDecisions}
             </> : null}
-            {message.workId && message.role === "assistant" && hasWorkOutcome(message) && (message.id !== workTurnId || !canvasWork || answerResult?.analysis || answerResult?.documentReview) ? <button type="button" className="ct-turn__link" onClick={() => { invalidateSelection(); setResponseWork(threadId ? { threadId, workId: message.workId! } : null); setAnswerWorkDetails(null); setMobilePane("canvas") }}>Inspect linked Work <ArrowRight size={13} /></button> : null}
+            {message.workId && message.role === "assistant" && hasWorkOutcome(message) && (message.id !== workTurnId || !canvasWork || answerResult?.analysis || answerResult?.documentReview) ? <button type="button" className="ct-turn__link" onClick={() => inspectWork(message.workId!)}>Inspect linked Work <ArrowRight size={13} /></button> : null}
           </article>)}
           {visiblePending && !messages.some((message) => message.instructionId === visiblePending.instructionId && message.role === "user") ? <article className="ct-turn" data-role="user" data-pending="true"><div className="ct-turn__identity"><span>YOU</span><span>{visiblePending.failed ? "Submission needs attention" : "Submitting"}</span></div><p>{visiblePending.text}</p></article> : null}
           {visibleTrace && (visiblePending || (latestInstructionMessage?.workId === activeWorkId && showWorkBrief)) ? <ExecutionObject trace={visibleTrace} stopping={stopping} onStop={() => void stopInstruction()} canonicalWorkStatus={traceCanonicalWorkStatus} restoringHistory={!visiblePending && visibleTrace.instructionId === latestInstructionId} /> : null}
