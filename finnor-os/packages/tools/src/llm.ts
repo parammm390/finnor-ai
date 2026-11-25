@@ -268,6 +268,20 @@ export function assertNativeBoundedLLMProvider(provider: LLMProvider): NativeBou
   throw new Error("LLM_BOUNDED_ADAPTER_UNSUPPORTED");
 }
 
+/** A host whose own AWS identity cannot invoke models (its account has no model
+ * access) may name one invoke-only key pair for the ordinary Bedrock client. Both
+ * values must be present; a half-configured pair fails closed instead of silently
+ * falling back to the host identity. The bounded specialist path never reads it. */
+export function dedicatedBedrockCredentials(env: Record<string, string | undefined> = process.env):
+  { credentials?: { accessKeyId: string; secretAccessKey: string } } {
+  const accessKeyId = env.FINNOR_BEDROCK_ACCESS_KEY_ID?.trim();
+  const secretAccessKey = env.FINNOR_BEDROCK_SECRET_ACCESS_KEY?.trim();
+  if (!accessKeyId && !secretAccessKey) return {};
+  if (!accessKeyId || !secretAccessKey)
+    throw new Error("FINNOR_BEDROCK_ACCESS_KEY_ID and FINNOR_BEDROCK_SECRET_ACCESS_KEY must be set together");
+  return { credentials: { accessKeyId, secretAccessKey } };
+}
+
 async function readBoundedNodeResponse(body: unknown, maximum: number, signal: AbortSignal): Promise<Buffer> {
   // Require the raw stream from the source-pinned installed transport, rather
   // than an already buffered body. Readable alone does not prove handler identity.
@@ -661,7 +675,8 @@ export class BedrockConverseProvider implements LLMProvider {
         const budgetMs = remainingMs(opts, providerCallCeiling(opts, planningCall ? 25_000 : 8_000));
         if (budgetMs <= 0) throw new LLMDeadlineExceededError(opts.deadlineAt!);
         // Routing owns retries and one shared deadline across every physical attempt.
-        this.client ??= new BedrockRuntimeClient({ region: this.region, maxAttempts: 1, authSchemePreference: ["aws.auth#sigv4"] });
+        this.client ??= new BedrockRuntimeClient({ region: this.region, maxAttempts: 1, authSchemePreference: ["aws.auth#sigv4"],
+          ...dedicatedBedrockCredentials() });
         const signal = AbortSignal.any([AbortSignal.timeout(budgetMs), ...(opts.signal ? [opts.signal] : [])]);
         try {
           data = await this.client.send(new ConverseCommand({ modelId: this.modelId, ...payload }), { abortSignal: signal });
