@@ -50,13 +50,24 @@ async function save() {
 await save();
 console.log(`BIRCH_OBSERVATION ${file}`);
 
+const exhibitText = (text: string) => text.trim().replace(/\s+/g, " ");
+
 function pdf(text: string) {
-  const escaped = text.replace(/[\\()]/g, "\\$&");
-  const data = `BT /F1 10 Tf 40 750 Td (${escaped}) Tj ET\n`;
+  const lines = [""];
+  for (const word of exhibitText(text).split(" ")) {
+    if (word.length > 80) throw new Error("Exhibit PDF contains an overlong word.");
+    const last = lines.at(-1) ?? "";
+    const next = last ? `${last} ${word}` : word;
+    if (next.length <= 80) lines[lines.length - 1] = next;
+    else lines.push(word);
+  }
+  if (lines.length > 51) throw new Error("Exhibit PDF exceeds the single-page layout.");
+  const rendered = lines.map(line => `(${line.replace(/[\\()]/g, "\\$&")}) Tj`).join(" T*\n");
+  const data = `BT /F1 10 Tf 14 TL 40 750 Td\n${rendered}\nET\n`;
   const objects = [
     "<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
     "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
-    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>",
     `<< /Length ${Buffer.byteLength(data)} >>\nstream\n${data}endstream`,
   ];
   let body = "%PDF-1.4\n";
@@ -118,7 +129,7 @@ try {
   const tenant = randomUUID(), actor = randomUUID(), custodian = randomUUID(), company = randomUUID(), role = randomUUID(), setupRole = randomUUID();
   const owner = { tenantId: tenant, userId: custodian, employeeId: custodian, role: "owner" as const };
   const actorRole = mode === "participant" ? "participant" : "owner";
-  const released: Array<{ id: string; access: string; documentId: string; versionId: string; byteSha256: string }> = [];
+  const released: Array<{ id: string; access: string; documentId: string; versionId: string; byteSha256: string; textVerified: boolean }> = [];
   const modelCalls: Array<Record<string, unknown>> = [];
   await admin.query("INSERT INTO finnor_os.tenants(id,client_key,name) VALUES($1,$2,'Synthetic Birch')", [tenant, runId]);
   await admin.query("INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name) VALUES($1,$3,$4,$6,'active','Birch Associate'),($2,$3,$5,'owner','active','Fixture Custodian')",
@@ -145,6 +156,9 @@ try {
     });
     const page = artifact.ir.nodes.find(node => node.kind === "page");
     if (!page) throw new Error(`${exhibit.id} missing page anchor`);
+    if (typeof page.data.text !== "string" || exhibitText(page.data.text) !== exhibitText(exhibit.text)) {
+      throw new Error(`${exhibit.id} PDF text does not match the exhibit.`);
+    }
     await bindArtifact(owner, artifact.documentId, {
       versionId: artifact.version.id, anchorId: page.id, anchorHash: page.hash,
       targetKind: "canonical_entity", targetEntityType: "pe_deal", targetId: deal,
@@ -152,7 +166,7 @@ try {
     await peTransaction({ auth: owner }, (_db, client) => attachDocumentTx(client, { auth: owner }, {
       dealId: deal, entity: root, documentId: artifact.documentId, linkRole: "source",
     }));
-    released.push({ id: exhibit.id, access: exhibit.access, documentId: artifact.documentId, versionId: artifact.version.id, byteSha256: artifact.version.byte_sha256 });
+    released.push({ id: exhibit.id, access: exhibit.access, documentId: artifact.documentId, versionId: artifact.version.id, byteSha256: artifact.version.byte_sha256, textVerified: true });
   }
   if (mode === "owner-denied-control") {
     const denyRole = randomUUID();
