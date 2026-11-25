@@ -332,7 +332,7 @@ export default {
     },
     {
       "path": "finnor-os/package.json",
-      "sha256": "44f2962dd433dbb33976691786be09c0797bf911eb90ecb6a5d3edc5091683f0"
+      "sha256": "abb6b78018f5532197d4ec377bc07100adaca0e7b171fec556e70feca066959e"
     },
     {
       "path": "src/components/centropy/canvas/UniformAlgorithmPanel.tsx",
@@ -1372,7 +1372,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/orchestration/src/conversation-kernel.ts",
-      "sha256": "5a22e527f217ece4d7f8fbc9941df4f0c213981bbeac6e29f1146cb82639ae35"
+      "sha256": "e567b4709454ff91da054d5c867e84dff2305c3b4ade049a26ba167ee24c6d37"
     },
     {
       "path": "finnor-os/packages/orchestration/src/conversation-memory.ts",
@@ -6067,5 +6067,5 @@ export default {
       "sha256": "7e60735b4765a156974769a5c22f84233249ceaa0817ee9ddc7e784de2394139"
     }
   ],
-  "sourceDigest": "c3706f9e2185bbc280cbe7e54b300f3c3361be9085d7d451d75647bad483218c"
+  "sourceDigest": "3a154e39620620acd074e906eada9234f20c7ca13a4f05e094eca249de83b96f"
 } as const;

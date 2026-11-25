@@ -70,8 +70,8 @@
     },
     {
       "file": "package.json",
-      "bytes": 6708,
-      "sha256": "44f2962dd433dbb33976691786be09c0797bf911eb90ecb6a5d3edc5091683f0"
+      "bytes": 6842,
+      "sha256": "abb6b78018f5532197d4ec377bc07100adaca0e7b171fec556e70feca066959e"
     },
     {
       "file": "packages/artifacts/package.json",
@@ -1420,8 +1420,8 @@
     },
     {
       "file": "packages/orchestration/src/conversation-kernel.ts",
-      "bytes": 18477,
-      "sha256": "5a22e527f217ece4d7f8fbc9941df4f0c213981bbeac6e29f1146cb82639ae35"
+      "bytes": 18788,
+      "sha256": "e567b4709454ff91da054d5c867e84dff2305c3b4ade049a26ba167ee24c6d37"
     },
     {
       "file": "packages/orchestration/src/conversation-memory.ts",
@@ -3566,7 +3566,7 @@
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-manifest.generated.ts",
       "bytes": 265719,
-      "sha256": "1b89555e6ff068967cc787e9e9602742fed902b59f2c786ef592f0880fa48b6b"
+      "sha256": "47ac9e2a09759765205694d56df68c8f569af04b976d949331dd6ff8982ed36d"
     },
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-paths.ts",
