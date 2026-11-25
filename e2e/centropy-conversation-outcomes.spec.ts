@@ -1,13 +1,13 @@
 import { expect, test, type Page } from "@playwright/test"
 import { FIXTURE_ORIGIN, followupReply, greetingReply, id, installOutcomeFixtures, objective, objectiveReply, plainReply } from "./fixtures/conversation-outcomes"
 
-// Reproduce (Node 22.22.3; no .env.local/real credentials):
-// NEXT_PUBLIC_SUPABASE_URL=https://outcomes-fixture.invalid NEXT_PUBLIC_SUPABASE_ANON_KEY=isolated-public-fixture NEXT_PUBLIC_FINNOR_AUTH_PROVIDER=supabase npm run dev -- --hostname 127.0.0.1 --port 3000
-// PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 npx playwright test e2e/centropy-conversation-outcomes.spec.ts --project=desktop-chromium --project=mobile-390 --workers=1 --trace=on
+// Reproduce with Node 22.22.3: npm run test:e2e:outcomes
+// The dedicated config starts/stops its own dummy-auth server; no real credentials.
 // Inputs/steps live in this spec/helper; each case attaches observed UI screenshots
 // and every intercepted request body. The trace records repeatable UI actions.
 // All API calls/mutations and external traffic are intercepted before navigation.
 test.use({ baseURL: FIXTURE_ORIGIN, serviceWorkers: "block" })
+test.skip(process.env.FINNOR_OUTCOMES_FIXTURE !== "1", "Use npm run test:e2e:outcomes for the isolated dummy-auth server")
 const turns = (page: Page) => page.locator('article.ct-turn[data-role="assistant"]')
 const nav = (page: Page, name: string) => page.getByRole("navigation", { name: "Workspace view" }).getByRole("button", { name, exact: true })
 async function send(page: Page, text: string, reply: string) {
