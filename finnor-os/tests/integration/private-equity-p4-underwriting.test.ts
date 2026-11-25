@@ -61,6 +61,7 @@ import {
 } from "../underwriting-corpus/golden-cases";
 import { driveDurableAction } from "./helpers/durable-action";
 import { browserHttpFixture } from "../../scripts/v2/browser-http-fixture.mts";
+import { canReadCitedEntryCalculationDocument, citedEntryModel, readCitedEntryCalculation, readCitedEntryInputs, runCitedEntryUnderwriting } from "../../packages/private-equity/src/cited-entry-underwriting";
 
 const SUPER_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const APP_URL = SUPER_URL.replace(/\/\/[^@]+@/, "//finnor_app:finnor_app@");
@@ -511,6 +512,82 @@ describe.skipIf(!available)("P4 deterministic PE underwriting persistence and P3
       explicitInputs,
     }) as PersistedRun;
   }, 120_000);
+
+  it("reads the current deal-bound exhibit pages and refuses an inconsistent EBITDA basis", async () => {
+    const sourceDealId = idOf((await createDeal(ctxA, {
+      name: "Cited entry integration", targetOrganizationId: targetA, dealLeadEmployeeId: ownerA,
+      signedLoiAt: new Date("2025-01-01"), targetClosingAt: new Date("2025-06-01"),
+    })).row);
+    const put = async (label: string, content: string) => {
+      const body = `BT /F1 8 Tf 20 740 Td (${content}) Tj ET\n`;
+      const objects = ["<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1800 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+        `<< /Length ${body.length} >>\nstream\n${body}endstream`, "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"];
+      let pdf = "%PDF-1.4\n";
+      const offsets = objects.map((value, i) => {
+        const offset = pdf.length;
+        pdf += `${i + 1} 0 obj\n${value}\nendobj\n`;
+        return offset;
+      });
+      const xref = pdf.length;
+      pdf += `xref\n0 6\n0000000000 65535 f \n${offsets.map(offset => `${String(offset).padStart(10, "0")} 00000 n \n`).join("")}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+      const artifact = await ingestArtifact(actorA, {
+        title: `${label}.pdf`, bytes: Buffer.from(pdf), origin: "manual_upload",
+        sourceSystem: "integration:entry-exhibit", sourceRef: `${label}:p1:deal`,
+      });
+      const page = artifact.ir.nodes.find(node => node.kind === "page")!;
+      await bindArtifact(actorA, artifact.documentId, {
+        versionId: artifact.version.id, anchorId: page.id, anchorHash: page.hash,
+        targetKind: "canonical_entity", targetEntityType: "pe_deal", targetId: sourceDealId,
+      });
+      await attachCanonicalDocument(ctxA, {
+        dealId: sourceDealId, entity: { entityType: "pe_deal", entityId: sourceDealId }, documentId: artifact.documentId, linkRole: "source",
+      });
+      return { documentId: artifact.documentId, versionId: artifact.version.id };
+    };
+    const seller = await put("Seller", "USD millions. LTM revenue: 85. Adjusted EBITDA: 17. Asking EV: 140.");
+    const qoe = await put("Earnings", "Starting from seller adjusted EBITDA of 17, remove 2 of unsupported add-backs and 1 of nonrecurring income. Both adjustments reduce recurring earnings and are independent.");
+    const debt = await put("Debt", "Proposed debt is 60. Illustrative entry covenant: debt divided by lender EBITDA must not exceed 5x. Lender EBITDA for this exercise equals signed quality of earnings EBITDA. This is a draft, not a commitment.");
+    const mandate = await put("Policy", "Do not approve entry at enterprise value above 9x verified recurring EBITDA. Enterprise value cap, not equity cheque cap. Investment committee alone can grant an exception.");
+    const input = { dealId: sourceDealId, sources: [seller, qoe, debt, mandate], monetaryUnit: { currency: "USD", scale: "millions" as const } };
+    const facts = await readCitedEntryInputs(ctxA, input);
+    expect(facts.sellerEbitda).toMatchObject({ value: "17", exhibitId: "Seller", location: "p1", versionId: seller.versionId });
+    expect(facts.proposedDebt).toMatchObject({ value: "60", exhibitId: "Debt" });
+    await expect(readCitedEntryInputs(ctxA, { ...input, monetaryUnit: { ...input.monetaryUnit, currency: "EUR" } }))
+      .rejects.toMatchObject({ code: "ENTRY_UNIT_UNSUPPORTED" });
+    const investmentCaseId = idOf((await createInvestmentCase(ctxA, { dealId: sourceDealId, title: "Cited entry" })).row);
+    await activateInvestmentCase(ctxA, { investmentCaseId, expectedVersion: 1 });
+    const definition = citedEntryModel("USD", "2025-01-01");
+    const model = await createUnderwritingModel(ctxA, { investmentCaseId, modelKey: definition.modelKey, name: "Cited entry" });
+    const version = await createUnderwritingModelVersion(ctxA, { modelId: idOf(model), definition });
+    const idempotencyKey = randomUUID();
+    const work = await receiveWork({ tenantId: tenantA, userId: ownerA, channel: "console", instruction: "Calculate cited entry economics", idempotencyKey });
+    await attachWorkToDealGraph(ctxA, {
+      dealId: sourceDealId, workId: work.workId,
+      entities: [{ entityType: "pe_deal", entityId: sourceDealId, relationship: "about" }],
+    });
+    const run = await runCitedEntryUnderwriting(ctxA, {
+      dealId: sourceDealId, investmentCaseId, modelVersionId: idOf(version), workId: work.workId,
+      worldAt: new Date().toISOString(), idempotencyKey,
+    });
+    const sheet = await readCitedEntryCalculation(ctxA, run.id);
+    expect(sheet?.figures).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: "recurringEbitda", value: "14", unit: "USD millions", citations: expect.stringContaining("Earnings p1") }),
+      expect.objectContaining({ key: "enterpriseValueGap", value: "14", formula: "askingEnterpriseValue − enterpriseValueCap", citations: expect.stringContaining("Policy p1") }),
+      expect.objectContaining({ key: "headroom", value: "10", citations: expect.stringContaining("Debt p1") }),
+    ]));
+    const participantId = randomUUID();
+    await admin.query(`INSERT INTO finnor_os.users(id,tenant_id,email,role,status,display_name)
+      VALUES($1,$2,$3,'participant','active','Source-denied participant')`,
+    [participantId, tenantA, `${participantId}@test.invalid`]);
+    const participant = { auth: { tenantId: tenantA, userId: participantId, employeeId: participantId, role: "participant" as const } };
+    await expect(getUnderwritingRun(participant, run.id)).rejects.toMatchObject({ code: "PE_ENTITY_NOT_FOUND" });
+    await expect(canReadCitedEntryCalculationDocument(ctxA, sheet!.documentId)).resolves.toBe(true);
+    await expect(canReadCitedEntryCalculationDocument(participant, sheet!.documentId)).resolves.toBe(false);
+    const conflict = await put("Conflict", "Starting from seller adjusted EBITDA of 18, remove 2 of unsupported add-backs and 1 of nonrecurring income. Both adjustments reduce recurring earnings and are independent.");
+    await expect(readCitedEntryInputs(ctxA, { ...input, sources: [seller, conflict, debt, mandate] })).rejects.toMatchObject({ code: "ENTRY_SOURCE_CONFLICT" });
+    await expect(readCitedEntryInputs(ctxA, { ...input, sources: [seller, qoe, debt] })).rejects.toMatchObject({ code: "ENTRY_SOURCE_MISSING" });
+  });
 
   afterAll(async () => {
     await closePool();

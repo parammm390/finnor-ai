@@ -296,7 +296,7 @@ async function inspectPrivateEquityIcBasis(tenantId: string, dealId: string, wor
         const definition = isRecord(row.model_definition) ? row.model_definition : {};
         const nodes = Array.isArray(definition.nodes) ? definition.nodes : [];
         return {
-          id: row.id, investmentCaseId: row.investment_case_id, versionKey: row.version_key,
+          id: row.id, investmentCaseId: row.investment_case_id, versionKey: row.version_key, modelKey: definition.modelKey,
           // The objective planner can only construct or validate these scenario
           // inputs. Carrying every model node for every historical version can
           // exceed the durable inspection bound and erase the entire IC basis.

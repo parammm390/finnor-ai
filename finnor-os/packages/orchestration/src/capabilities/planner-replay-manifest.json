@@ -570,8 +570,8 @@
     },
     {
       "file": "packages/domain-plugins/private-equity/index.ts",
-      "bytes": 101873,
-      "sha256": "c55e322b0092ad3a8c8619560ec57e8eba462a1b4a13a3901f7ce99a59872d5c"
+      "bytes": 102782,
+      "sha256": "6a40fd513c0f04f11f7a11b710265b7cfb977c6d8605dc077fa855d0504b7e14"
     },
     {
       "file": "packages/domain-plugins/private-equity/package.json",
@@ -1575,8 +1575,8 @@
     },
     {
       "file": "packages/orchestration/src/objective-loop.ts",
-      "bytes": 269046,
-      "sha256": "e37761de5621e7beecea6ad9b106a43619fcc8347081b68f9570f2de601ae90e"
+      "bytes": 269077,
+      "sha256": "1dff6e5b40b03dcedfd599739613d899eed5e15abf15a5a7452f5e11a133da1e"
     },
     {
       "file": "packages/orchestration/src/objective-success.ts",
@@ -1630,8 +1630,8 @@
     },
     {
       "file": "packages/orchestration/src/planner.ts",
-      "bytes": 94776,
-      "sha256": "4398d7fda3eed9744f9483a5c50bd2abef0e5858942bd6ff31d4d3426f5d524c"
+      "bytes": 96625,
+      "sha256": "62edc89878422cb24c2c9d85e705b0c86dd84101651e897e675e8bdd381326e0"
     },
     {
       "file": "packages/orchestration/src/planning-health.ts",
@@ -2017,6 +2017,11 @@
       "file": "packages/private-equity/src/capital-program/v2-store.ts",
       "bytes": 8314,
       "sha256": "803d965da91b4bc39c5fbbb55ed056ddf47ee2ab70a44a181a488134f4b7b449"
+    },
+    {
+      "file": "packages/private-equity/src/cited-entry-underwriting.ts",
+      "bytes": 21634,
+      "sha256": "8ea6c9faef20429f861abe55373489530fbcbd4e3f7000f0b86c8040aa46cbc2"
     },
     {
       "file": "packages/private-equity/src/closing/action.ts",
@@ -2570,8 +2575,8 @@
     },
     {
       "file": "packages/private-equity/src/evidence-execution/consumer.ts",
-      "bytes": 11749,
-      "sha256": "1b803818eb7b3e7f4c2bb0cd3dbe70174484cf88c279b038eaf6aad948af7893"
+      "bytes": 12130,
+      "sha256": "e32e5da7760f1cfd18ad1c4cacf1463d5cb36cde8e57cb361d9386cd7143d0df"
     },
     {
       "file": "packages/private-equity/src/evidence-execution/documents-parser.ts",
@@ -3565,13 +3570,13 @@
     },
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-manifest.generated.ts",
-      "bytes": 265719,
-      "sha256": "a39c69b175005199e3569eeddba03c8922ad8d9e5680aee70a7b21a518106088"
+      "bytes": 265898,
+      "sha256": "9c92124aa90a613cbe86ec43d586f13bca6916bfff47542a0545e6c2362718b3"
     },
     {
       "file": "packages/private-equity/src/uniform-algorithms/source-paths.ts",
-      "bytes": 101887,
-      "sha256": "28ac4e449d07314d43f551aac84faf73fc7ec41152edd55f68f621a0e83e823a"
+      "bytes": 101958,
+      "sha256": "7895ddce3175acd380301320392eedcec4981b2914a04a19db02524104d94268"
     },
     {
       "file": "packages/private-equity/src/uniform-algorithms/specification.ts",
@@ -4345,8 +4350,8 @@
     },
     {
       "file": "packages/underwriting/src/types.ts",
-      "bytes": 13046,
-      "sha256": "02b3cedc98a239bf3a3310edd84d2c50306f7ae3565a3716ab69072096b1a54e"
+      "bytes": 13070,
+      "sha256": "522707a5e3960a105337761b2983c93d0ab60713851fb65c6293eef56a4c7430"
     },
     {
       "file": "packages/workflow-runtime/package.json",
