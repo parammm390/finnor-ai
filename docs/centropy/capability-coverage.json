@@ -8,8 +8,8 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-25T05:33:39.165Z",
-  "sourceBaseCommit": "eea6529c0f222aca4bf1f1b423e92408b8aa7b9b",
+  "generatedAt": "2026-11-25T06:11:41.069Z",
+  "sourceBaseCommit": "060dffadfbb7ecc994e26c859d9aec858e90b4d1",
   "manifestSha256": "e68051fd74494792ebb66d7156bae1b6ac5ef64e369d60057bc4c596fb0aebe3",
   "formsSha256": "35b57673d9d86e461f2b6056aaf326cb789901dfdd4481734aefef91da8052fd",
   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -166,7 +166,7 @@
       "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
       "route": "works/:ref",
       "method": "GET",
-      "line": 625,
+      "line": 628,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
@@ -1116,7 +1116,7 @@
       },
       {
         "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
-        "sha256": "a18b7d56ea651c73e2f6533acf57c02dbd5e12bbf7505e387be462b2b20d2ed5"
+        "sha256": "360466e4dd41369cb2b6cb3347753e833a53c2aeb445cd7863b2511c1f1717cb"
       },
       {
         "file": "src/components/centropy/lib/use-private-request-scope.ts",
@@ -1652,11 +1652,11 @@
       },
       {
         "file": "src/components/centropy/thread/VerifiedIcOutcome.tsx",
-        "sha256": "387b09ba04f12bea013e1d87516fbae748ca935ad52035abe19eaaa9cfc860f7"
+        "sha256": "d9a34fd161592407bc2ce0718621c308b60db863ad28a562ab409abf03d48e7c"
       },
       {
         "file": "src/components/centropy/thread/VerifiedUnderwritingOutcome.tsx",
-        "sha256": "e03958fc9ebbf77d46adb23978c3f31223ae837ca11c5b31b9abc93c034a75ab"
+        "sha256": "283eb906962a45d8505012f3c4d40d4730b17ee6beeb1a543997ff410f04bd2f"
       },
       {
         "file": "src/components/centropy/thread/WorkBrief.tsx",
@@ -6901,6 +6901,7 @@
       "timeoutClass": "READ",
       "tests": [
         "e2e/centropy-browser-sweep.spec.ts",
+        "e2e/centropy-conversation-outcomes.spec.ts",
         "e2e/centropy-cross-session-active-objective.spec.ts",
         "e2e/centropy-growth-300bps.spec.ts",
         "e2e/centropy-growth-objective-terminal.spec.ts",
@@ -7033,6 +7034,7 @@
       "invalidationTags": [],
       "timeoutClass": "STREAM",
       "tests": [
+        "e2e/centropy-conversation-outcomes.spec.ts",
         "e2e/centropy-real-demo.spec.ts",
         "e2e/phase9-institutional-workstation.spec.ts",
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
@@ -8411,7 +8413,7 @@
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "works/:ref",
           "method": "GET",
-          "line": 625,
+          "line": 628,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
@@ -29570,7 +29572,9 @@
       ],
       "invalidationTags": [],
       "timeoutClass": "READ",
-      "tests": [],
+      "tests": [
+        "e2e/centropy-conversation-outcomes.spec.ts"
+      ],
       "source": "finnor-os/apps/api/app/api/company-brain/[operation]/route.ts",
       "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
       "actualRouteOrTool": "POST /api/company-brain/projection",

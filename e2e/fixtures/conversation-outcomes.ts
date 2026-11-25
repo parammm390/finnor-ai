@@ -3,7 +3,7 @@ import type { WorkAggregateView } from "../../src/components/centropy/product/co
 import type { LoadedConversationThread } from "../../src/components/centropy/thread/thread-contract"
 
 // Synthetic interaction evidence only. No real auth, tenant, worker, or economic result.
-export const FIXTURE_ORIGIN = "http://127.0.0.1:3000"
+export const FIXTURE_ORIGIN = "http://127.0.0.1:3013"
 export const at = "2026-11-25T05:00:00.000Z"
 export const id = (n: number) => `10000000-0000-4000-8000-${String(n).padStart(12, "0")}`
 export const objective = "Prepare the Project Cedar IC downside case, identify missing evidence, and draft a request to the deal lead. Do not send until I review."
@@ -55,7 +55,7 @@ function append(target: LoadedConversationThread, text: string, reply: string, w
 }
 
 export async function installOutcomeFixtures(context: BrowserContext) {
-  const requests: Array<{ method: string; path: string; disposition: string; body?: unknown }> = []
+  const requests: Array<{ method: string; path: string; disposition: string; query?: string; body?: unknown }> = []
   const unexpected: string[] = []
   const works = new Map<string, WorkAggregateView>()
   const primary = aggregate(20, "waiting_approval")
@@ -84,11 +84,12 @@ export async function installOutcomeFixtures(context: BrowserContext) {
   const sourceWork = aggregate(25)
   sourceWork.work.executionModel = "instruction"
   sourceWork.work.finalOutcome = { kind: "answer", answer: { kind: "answer", readOnly: true, spokenSummary: "Cedar FY25 EBITDA differs by USD 2 million between source documents.", display: { title: "Cedar historical document comparison" } } }
-  sourceWork.documentReview = {
+  const sourceReview = {
     status: "reviewed", coverage: "registered_sources", documentsReviewed: 2, comparableGroups: 1, gaps: [],
     findings: [{ metric: "EBITDA", periodStart: "2025-01-01T00:00:00.000Z", periodEnd: "2025-12-31T00:00:00.000Z", currency: "USD", unit: "million", frequency: "annual", calendar: "calendar_year", consolidation: "consolidated", instrument: "UNSPECIFIED", spread: "2",
       assertions: [20, 22].map((value, i) => ({ value: String(value), source: { documentId: id(400 + i), versionId: id(410 + i), sha256: hash, title: i ? "Cedar lender report" : "Cedar management accounts", anchor: { page: i + 4, quote: `FY25 EBITDA USD ${value} million` } } })) }],
   }
+  sourceWork.documentReview = sourceReview
   works.set(id(25), sourceWork)
   const historical = thread(16, "Historical document answer", id(20))
   append(historical, "Compare the Cedar FY25 documents", "Cedar FY25 EBITDA differs by USD 2 million between source documents.", id(25), false)
@@ -114,6 +115,36 @@ export async function installOutcomeFixtures(context: BrowserContext) {
   const icThread = thread(19, "Verified IC review", id(26))
   append(icThread, "Prepare the Cedar IC memo for review", "The exact IC memo review is recorded.", id(26), true)
   threads.set(id(19), icThread)
+  const laterDealWork = structuredClone(works.get(id(22))!)
+  laterDealWork.work.id = id(45)
+  laterDealWork.work.initialInstruction = "Assess Project Birch — later deal"
+  laterDealWork.inputs = [{ id: id(450), contextSnapshot: { businessRoot: { entityType: "pe_deal", entityId: id(281) } } }]
+  works.set(id(45), laterDealWork)
+  for (const [threadNumber, workNumber, savedRoot] of [[60, 46, true], [61, 47, false]] as const) {
+    const historicalWork = structuredClone(sourceWork)
+    historicalWork.work.id = id(workNumber)
+    historicalWork.work.initialInstruction = savedRoot ? "Compare Project Alder historical sources" : "Compare unscoped historical sources"
+    historicalWork.inputs = [{ id: id(workNumber * 10), contextSnapshot: savedRoot ? { businessRoot: { entityType: "pe_deal", entityId: id(280) } } : {} }]
+    historicalWork.work.finalOutcome = { kind: "answer", answer: { kind: "answer", readOnly: true, spokenSummary: "Historical source comparison.", display: { title: savedRoot ? "Project Alder historical sources" : "Unscoped historical sources" } } }
+    const historicalReview = structuredClone(sourceReview)
+    for (const finding of historicalReview.findings) for (const [index, assertion] of finding.assertions.entries()) assertion.source.title = `${savedRoot ? "Alder" : "Unscoped"} ${index ? "lender report" : "management accounts"}`
+    historicalWork.documentReview = historicalReview
+    works.set(id(workNumber), historicalWork)
+    const mixed = thread(threadNumber, savedRoot ? "Different-deal historical sources" : "Unknown-root historical sources", id(45))
+    mixed.thread.activeReferences = [{ entityType: "pe_deal", entityId: id(281) }]
+    append(mixed, "Compare earlier documents", savedRoot ? "Project Alder historical answer." : "Unscoped historical answer.", id(workNumber), false)
+    append(mixed, "Now assess Project Birch", "Project Birch later answer.", id(45), true)
+    threads.set(id(threadNumber), mixed)
+  }
+  const activeWork = aggregate(48, "executing")
+  activeWork.work.initialInstruction = "Track Cedar diligence progress"
+  activeWork.actions = [{ id: id(4800), actionType: "assess_documents", status: "executing", planRevisionId: null, planNodeId: null, groundedPayload: {}, predictedReceipt: {}, createdAt: at }]
+  works.set(id(48), activeWork)
+  const activeThread = thread(62, "Active instruction tracking", id(48))
+  append(activeThread, "Track Cedar diligence progress", "Cedar diligence Work has started.", id(48), true, id(480))
+  activeThread.messages.at(-1)!.outcomeRefs = [{ kind: "domain_action", id: id(4800) }]
+  threads.set(id(62), activeThread)
+  const workHolds = new Map<string, { promise: Promise<void>; release: () => void; pending: number }>()
   let created = 50
   let failPrimaryReads = false
   await context.addInitScript(({ origin, userId }) => {
@@ -128,7 +159,7 @@ export async function installOutcomeFixtures(context: BrowserContext) {
   }, { origin: FIXTURE_ORIGIN, userId: id(1) })
   await context.routeWebSocket(/.*/, ws => {
     const url = new URL(ws.url())
-    if (url.hostname === "127.0.0.1" && url.port === "3000" && url.pathname.includes("_next")) ws.connectToServer()
+    if (url.hostname === new URL(FIXTURE_ORIGIN).hostname && url.port === new URL(FIXTURE_ORIGIN).port && url.pathname.includes("_next")) ws.connectToServer()
     else { unexpected.push(`websocket ${url.origin}${url.pathname}`); ws.close() }
   })
   await context.route("**/*", async route => {
@@ -136,7 +167,7 @@ export async function installOutcomeFixtures(context: BrowserContext) {
     const url = new URL(request.url())
     const path = url.pathname.replace(/^\/api\/centropy\//, "")
     const method = request.method()
-    const log = { method, path: `${url.origin}${url.pathname}`, disposition: "intercepted", ...(request.postData() ? { body: request.postDataJSON() } : {}) }
+    const log = { method, path: `${url.origin}${url.pathname}`, disposition: "intercepted", ...(url.search ? { query: url.search } : {}), ...(request.postData() ? { body: request.postDataJSON() } : {}) }
     if (url.origin !== FIXTURE_ORIGIN) {
       if (url.origin === "https://outcomes-fixture.invalid" && url.pathname === "/auth/v1/user") {
         requests.push({ ...log, disposition: "intercepted-auth-probe" })
@@ -157,13 +188,15 @@ export async function installOutcomeFixtures(context: BrowserContext) {
       if (/^threads\/[^/]+\/canvas$/.test(path)) return json({ state: null })
       if (/^threads\/[^/]+$/.test(path)) return json(threads.get(path.split("/")[1]) ?? {}, threads.has(path.split("/")[1]) ? 200 : 404)
       if (/^works\/[^/]+$/.test(path)) {
+        const hold = workHolds.get(path.split("/")[1])
+        if (hold) { hold.pending += 1; await hold.promise }
         if (failPrimaryReads && path === `works/${id(20)}`) return json({ error: "Fixture Work source offline" }, 503)
         return json({ work: works.get(path.split("/")[1]) ?? aggregate(29) })
       }
       if (path === "works") return json({ works: [primary.work] })
       if (path === "read-models/attention") return json({ data: { items: [{ id: "cedar-review", workId: id(20), kind: "approval", reason: "Review Cedar evidence request", nextHumanBoundary: { description: "Review exact recipient and message before release" } }], sourceStatus: { status: "complete" } } })
       if (path === "actions/pending") return json({ actions: [pendingAction, { ...pendingAction, id: id(99), workId: id(999), summary: "FOREIGN WORK — MUST NOT APPEAR" }], page: { limit: 100, hasMore: false, complete: true, nextCursor: null } })
-      if (path === "stream") return route.fulfill({ contentType: "text/event-stream", body: `id: 1\ndata: ${JSON.stringify({ seq: 1, phase: "completed", payload: {}, createdAt: at })}\n\n` })
+      if (path === "stream") return route.fulfill({ contentType: "text/event-stream", body: `id: 1\ndata: ${JSON.stringify({ seq: 1, phase: url.searchParams.get("instructionId") === id(480) ? "executing" : "completed", payload: {}, createdAt: at })}\n\n` })
       if (path.endsWith("/events")) return json({ events: [], nextCursor: null })
       if (path === "organization/transformation-programs/read") return json({ error: "No fixture programme" }, 404)
       if (path === "organization/transformation-programs/offers") return json({ access: "PARTICIPANT", offers: [], parentPrivateDataDisclosed: false })
@@ -182,13 +215,19 @@ export async function installOutcomeFixtures(context: BrowserContext) {
       schema: "finnor.x2.work-projection.v1", tenantId: id(2), principalId: id(1),
       workId: request.postDataJSON().workId, root: request.postDataJSON().root, sessions: [],
     })
-    if (method === "POST" && path === "company-brain/projection") return json({
-      root: request.postDataJSON().root, asOf: at, nodes: [], edges: [],
+    if (method === "POST" && path === "company-brain/projection") {
+      const root = request.postDataJSON().root
+      const label = root.entityId === id(280) ? "Project Alder — historical deal" : root.entityId === id(281) ? "Project Birch — later deal" : "Project Cedar"
+      const ref = { namespace: "private_equity", owner: "@finnor/private-equity", type: root.entityType, id: root.entityId }
+      return json({
+      root, asOf: at, nodes: [{ ref, type: root.entityType, label, state: "ACTIVE", rootRefs: [root], version: 1, revision: 1, facts: [], asOf: at, temporal: { support: "current", completeness: "complete", baseline: null, reasons: [] }, epistemicState: "KNOWN", epistemicWarnings: [], provenanceRefs: [], workRefs: [], inspectionTarget: { kind: "brain_object", ref }, availableActions: [] }], edges: [],
       temporal: { support: "current", completeness: "complete", baseline: null, reasons: [] },
-      sourceStatus: [], bounds: { nodes: 0, edges: 0, truncated: false, maxNodes: 100, maxEdges: 100 },
+      sourceStatus: [], bounds: { nodes: 1, edges: 0, truncated: false, maxNodes: 100, maxEdges: 100 },
     })
+    }
     if (method === "POST" && path === "company-brain/institution-read") return json({ sources: { workId: request.postDataJSON().workId, workInputId: null, grants: [], request: null }, programme: null })
     if (method === "POST" && path === "company-brain/roots") return json({ results: [] })
+    if (method === "POST" && path === "closing/projection") return json({ programmes: [] })
     if (method === "POST" && path === "threads") {
       const body = request.postDataJSON()
       if (body.workId) return json({ thread: threads.get(id(10))!.thread })
@@ -212,5 +251,12 @@ export async function installOutcomeFixtures(context: BrowserContext) {
     log.disposition = "blocked-unhandled"
     return json({ error: `Unconfigured isolated fixture: ${method} ${path}` }, 501)
   })
-  return { requests, unexpected, works, threads, stalePrimary() { failPrimaryReads = true } }
+  return { requests, unexpected, works, threads, stalePrimary() { failPrimaryReads = true },
+    holdWorkReads(workId: string) {
+      let resolve!: () => void
+      const hold = { promise: new Promise<void>(r => { resolve = r }), release: () => resolve(), pending: 0 }
+      workHolds.set(workId, hold)
+      return { pending: () => hold.pending, release() { workHolds.delete(workId); hold.release() } }
+    },
+  }
 }

@@ -58,6 +58,11 @@ test("conversation owns exact Work turns; plain replies never inherit decisions"
     await expect(page.getByRole("button", { name: "Inspect specialist assignments" })).toBeVisible()
     await nav(page, "Conversation").click()
     await expect(objectiveTurn).toContainText(objectiveReply)
+    await expect(objectiveTurn.locator(".ct-execution")).toContainText("Instruction completed")
+    await objectiveTurn.locator(".ct-execution").getByText("Inspect 1 recorded event", { exact: true }).click()
+    await expect(objectiveTurn.locator(".ct-execution li")).toHaveCount(1)
+    await expect(objectiveTurn.locator(".ct-execution li")).toContainText("Instruction completed")
+    await proof(page, "14-objective-history-restored-after-evidence")
     await send(page, "Thanks, same work", followupReply)
     await expect(turns(page).last()).toHaveAttribute("data-work-id", id(20))
     await expect(turns(page).last().locator(".ct-work-brief,.ct-effects,button:visible")).toHaveCount(0)
@@ -94,6 +99,116 @@ test("conversation owns exact Work turns; plain replies never inherit decisions"
     await expect(page.locator(".ct-thread")).not.toContainText("retention evidence")
   } finally {
     await test.info().attach("isolated-network-inputs-observations", { body: JSON.stringify({ boundary: "Only local GET page/static assets may pass; every API and mutation intercepted; external blocked", requests: fixtures.requests, unexpected: fixtures.unexpected }, null, 2), contentType: "application/json" })
+    expect(fixtures.unexpected).toEqual([])
+  }
+})
+
+for (const savedRoot of [true, false]) test(`Regression: earlier Work ${savedRoot ? "restores its own deal" : "with unknown root never borrows later deal"}`, async ({ page, context }) => {
+  const fixtures = await installOutcomeFixtures(context)
+  try {
+    await page.goto("/centropy")
+    await expect(page.getByRole("heading", { name: "From a question to a decision." })).toBeVisible()
+    await open(page, savedRoot ? "Different-deal historical sources" : "Unknown-root historical sources")
+    await expect(page.locator(".ct-composer__context")).toContainText("Project Birch — later deal")
+    await page.getByRole("button", { name: "Open WORLD", exact: true }).click()
+    await expect(page.getByRole("heading", { name: "Project Birch — later deal", exact: true }).first()).toBeVisible()
+    await page.getByRole("complementary", { name: "WORLD objects" }).getByRole("button", { name: /Project Birch — later deal/ }).click()
+    await expect.poll(() => new URL(page.url()).searchParams.has("object")).toBe(true)
+    await nav(page, "Conversation").click()
+    const historical = turns(page).filter({ hasText: savedRoot ? "Project Alder historical answer." : "Unscoped historical answer." })
+    await historical.getByLabel("Message options", { exact: true }).click()
+    const before = fixtures.requests.length
+    await historical.getByRole("button", { name: "Inspect linked Work" }).click()
+    await expect(page).toHaveURL(new RegExp(`/centropy/investigations/${id(savedRoot ? 60 : 61)}$`))
+    for (const key of ["root", "object"]) expect(new URL(page.url()).searchParams.has(key)).toBe(false)
+    await expect(page.locator(".ct-answer")).toContainText(savedRoot ? "Project Alder historical sources" : "Unscoped historical sources")
+    await expect(page.locator(".ct-answer")).toContainText(`${savedRoot ? "Alder" : "Unscoped"} management accounts · page 4`)
+    if (savedRoot) {
+      await expect.poll(() => fixtures.requests.slice(before).filter(r => r.path.endsWith("/company-brain/projection")).length).toBeGreaterThan(0)
+      for (const request of fixtures.requests.slice(before).filter(r => /\/company-brain\/(application-)?projection$/.test(r.path))) expect((request.body as { root: unknown }).root).toEqual({ entityType: "pe_deal", entityId: id(280) })
+    }
+    await nav(page, "Conversation").click()
+    if (savedRoot) await expect(page.locator(".ct-composer__context")).toHaveText("Context: Project Alder — historical deal×")
+    else {
+      await expect(page.locator(".ct-composer__context")).toHaveCount(0)
+      expect(fixtures.requests.slice(before).filter(r => /\/company-brain\/(application-)?projection$/.test(r.path))).toHaveLength(0)
+    }
+    await proof(page, savedRoot ? "15-historical-deal-context-not-later-deal" : "16-unknown-historical-context-remains-empty")
+  } finally {
+    await test.info().attach("isolated-network-inputs-observations", { body: JSON.stringify({ requests: fixtures.requests, unexpected: fixtures.unexpected }, null, 2), contentType: "application/json" })
+    expect(fixtures.unexpected).toEqual([])
+  }
+})
+
+test("Regression: active instruction tracking and Stop survive evidence navigation without cancellation", async ({ page, context }) => {
+  const fixtures = await installOutcomeFixtures(context)
+  try {
+    await page.goto("/centropy")
+    await expect(page.getByRole("heading", { name: "From a question to a decision." })).toBeVisible()
+    await open(page, "Active instruction tracking")
+    const execution = page.getByRole("region", { name: "Persisted instruction execution" })
+    await expect(execution).toContainText("Executing")
+    await expect(execution.getByRole("button", { name: "Stop this instruction" })).toBeEnabled()
+    const before = fixtures.requests.filter(r => r.path.endsWith("/stream") && r.query?.includes(id(480))).length
+    await page.locator(".ct-work-brief").getByRole("button", { name: "Work & evidence", exact: true }).click()
+    await expect(page.getByRole("heading", { name: "Work and verification", exact: true })).toBeVisible()
+    await nav(page, "Conversation").click()
+    await expect(execution).toContainText("Executing")
+    await expect(execution.getByRole("button", { name: "Stop this instruction" })).toBeEnabled()
+    await execution.getByText("Inspect 1 recorded event", { exact: true }).click()
+    await expect(execution.locator("li")).toContainText("Executing")
+    await expect.poll(() => fixtures.requests.filter(r => r.path.endsWith("/stream") && r.query?.includes(id(480))).length).toBeGreaterThan(before)
+    expect(fixtures.requests.filter(r => r.path.endsWith("/cancel"))).toHaveLength(0)
+    await proof(page, "17-active-instruction-stop-remains-available-not-submitted")
+  } finally {
+    await test.info().attach("isolated-network-inputs-observations", { body: JSON.stringify({ requests: fixtures.requests, unexpected: fixtures.unexpected }, null, 2), contentType: "application/json" })
+    expect(fixtures.unexpected).toEqual([])
+  }
+})
+
+test("Regression: recorded IC verification survives a held refresh without granting fresh approval", async ({ page, context }) => {
+  const fixtures = await installOutcomeFixtures(context)
+  let held: ReturnType<typeof fixtures.holdWorkReads> | null = null
+  try {
+    await page.goto("/centropy")
+    await expect(page.getByRole("heading", { name: "From a question to a decision." })).toBeVisible()
+    await open(page, "Verified IC review")
+    const card = page.getByRole("region", { name: "Verified Objective result" })
+    await expect(card).toContainText("IC case · READY FOR REVIEW")
+    await expect(card.getByRole("status")).toHaveCount(0)
+    const originalCard = await card.elementHandle()
+    await nav(page, "Work & evidence").click()
+    held = fixtures.holdWorkReads(id(26))
+    await page.getByRole("button", { name: "Refresh Canvas sources" }).click()
+    await expect.poll(() => held!.pending()).toBeGreaterThan(0)
+    await nav(page, "Conversation").click()
+    await expect(card).toHaveCount(1)
+    await expect(card.getByRole("heading", { name: "IC preparation completed" })).toBeVisible()
+    await expect(card.getByRole("status")).toHaveText("Last recorded verification. Refreshing sources; this is not a fresh confirmation.")
+    expect(await originalCard!.evaluate(el => el.isConnected)).toBe(true)
+    await proof(page, "18-held-refresh-preserves-recorded-verification")
+    held.release(); held = null
+    await expect(card.getByRole("status")).toHaveCount(0)
+    await expect(card).toContainText("IC case · READY FOR REVIEW")
+    expect(await originalCard!.evaluate(el => el.isConnected)).toBe(true)
+    await proof(page, "19-fresh-verification-label-restored")
+    await open(page, "Cedar decision")
+    await page.getByRole("button", { name: "Review exact effect" }).click()
+    await expect(page.getByRole("button", { name: "Confirm", exact: true })).toBeEnabled()
+    await nav(page, "Work & evidence").click()
+    held = fixtures.holdWorkReads(id(20))
+    await page.getByRole("button", { name: "Refresh Canvas sources" }).click()
+    await expect.poll(() => held!.pending()).toBeGreaterThan(0)
+    await nav(page, "Conversation").click()
+    await expect(page.getByRole("button", { name: "Confirm", exact: true })).toBeDisabled()
+    await expect(page.locator(".ct-work-brief")).toContainText("Last recorded state")
+    await proof(page, "20-held-refresh-disables-mutation-authority")
+    held.release(); held = null
+    await expect(page.getByRole("button", { name: "Confirm", exact: true })).toBeEnabled()
+    expect(fixtures.requests.filter(r => /\/(confirm|reject|escalate|retry|cancel)$/.test(r.path))).toHaveLength(0)
+  } finally {
+    held?.release()
+    await test.info().attach("isolated-network-inputs-observations", { body: JSON.stringify({ requests: fixtures.requests, unexpected: fixtures.unexpected }, null, 2), contentType: "application/json" })
     expect(fixtures.unexpected).toEqual([])
   }
 })
