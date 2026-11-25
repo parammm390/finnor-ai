@@ -602,10 +602,11 @@ function CentropyWorkspaceContent() {
               </> : null}
               {workDecisions}
             </> : null}
+            {visibleTrace && message.role === "assistant" && message.instructionId === visibleTrace.instructionId && hasWorkOutcome(message) ? <ExecutionObject trace={visibleTrace} stopping={stopping} onStop={() => void stopInstruction()} canonicalWorkStatus={traceCanonicalWorkStatus} restoringHistory={!visiblePending && visibleTrace.instructionId === latestInstructionId} /> : null}
             {message.workId && message.role === "assistant" && hasWorkOutcome(message) && (message.id !== workTurnId || !canvasWork || answerResult?.analysis || answerResult?.documentReview) ? <button type="button" className="ct-turn__link" onClick={() => inspectWork(message.workId!)}>Inspect linked Work <ArrowRight size={13} /></button> : null}
           </article>)}
           {visiblePending && !messages.some((message) => message.instructionId === visiblePending.instructionId && message.role === "user") ? <article className="ct-turn" data-role="user" data-pending="true"><div className="ct-turn__identity"><span>YOU</span><span>{visiblePending.failed ? "Submission needs attention" : "Submitting"}</span></div><p>{visiblePending.text}</p></article> : null}
-          {visibleTrace && (visiblePending || (latestInstructionMessage?.workId === activeWorkId && showWorkBrief)) ? <ExecutionObject trace={visibleTrace} stopping={stopping} onStop={() => void stopInstruction()} canonicalWorkStatus={traceCanonicalWorkStatus} restoringHistory={!visiblePending && visibleTrace.instructionId === latestInstructionId} /> : null}
+          {visibleTrace && (visiblePending || latestInstructionMessage?.role === "user") ? <ExecutionObject trace={visibleTrace} stopping={stopping} onStop={() => void stopInstruction()} canonicalWorkStatus={traceCanonicalWorkStatus} restoringHistory={!visiblePending && visibleTrace.instructionId === latestInstructionId} /> : null}
           {controlNotice?.scope === noticeScope ? <p className="ct-thread__notice" role="status">{controlNotice.message}</p> : null}
           {submissionError?.scope === noticeScope ? <p className="ct-thread__notice ct-thread__notice--error" role="alert">{submissionError.message}</p> : null}
           <div ref={messagesEnd} />
