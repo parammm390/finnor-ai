@@ -104,12 +104,14 @@ test("conversation owns exact Work turns; plain replies never inherit decisions"
   }
 })
 
-for (const savedRoot of [true, false]) test(`Regression: earlier Work ${savedRoot ? "restores its own deal" : "with unknown root never borrows later deal"}`, async ({ page, context }) => {
+for (const rootEncoding of ["businessRoot", "none", "selectedEntities"] as const) test(`Regression: earlier Work (${rootEncoding}) uses only its persisted context`, async ({ page, context }) => {
+  const savedRoot = rootEncoding !== "none"
+  const threadNumber = rootEncoding === "selectedEntities" ? 63 : savedRoot ? 60 : 61
   const fixtures = await installOutcomeFixtures(context)
   try {
     await page.goto("/centropy")
     await expect(page.getByRole("heading", { name: "From a question to a decision." })).toBeVisible()
-    await open(page, savedRoot ? "Different-deal historical sources" : "Unknown-root historical sources")
+    await open(page, rootEncoding === "selectedEntities" ? "Mission historical sources" : savedRoot ? "Different-deal historical sources" : "Unknown-root historical sources")
     await expect(page.locator(".ct-composer__context")).toContainText("Project Birch — later deal")
     await page.getByRole("button", { name: "Open WORLD", exact: true }).click()
     await expect(page.getByRole("heading", { name: "Project Birch — later deal", exact: true }).first()).toBeVisible()
@@ -120,7 +122,7 @@ for (const savedRoot of [true, false]) test(`Regression: earlier Work ${savedRoo
     await historical.getByLabel("Message options", { exact: true }).click()
     const before = fixtures.requests.length
     await historical.getByRole("button", { name: "Inspect linked Work" }).click()
-    await expect(page).toHaveURL(new RegExp(`/centropy/investigations/${id(savedRoot ? 60 : 61)}$`))
+    await expect(page).toHaveURL(new RegExp(`/centropy/investigations/${id(threadNumber)}$`))
     for (const key of ["root", "object"]) expect(new URL(page.url()).searchParams.has(key)).toBe(false)
     await expect(page.locator(".ct-answer")).toContainText(savedRoot ? "Project Alder historical sources" : "Unscoped historical sources")
     await expect(page.locator(".ct-answer")).toContainText(`${savedRoot ? "Alder" : "Unscoped"} management accounts · page 4`)

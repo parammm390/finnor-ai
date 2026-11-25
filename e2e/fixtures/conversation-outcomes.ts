@@ -136,6 +136,15 @@ export async function installOutcomeFixtures(context: BrowserContext) {
     append(mixed, "Now assess Project Birch", "Project Birch later answer.", id(45), true)
     threads.set(id(threadNumber), mixed)
   }
+  const missionHistory = structuredClone(works.get(id(46))!)
+  missionHistory.work.id = id(49)
+  missionHistory.inputs = [{ id: id(490), contextSnapshot: { selectedEntities: [{ entityType: "pe_deal", entityId: id(280) }] } }]
+  works.set(id(49), missionHistory)
+  const missionThread = thread(63, "Mission historical sources", id(45))
+  missionThread.thread.activeReferences = [{ entityType: "pe_deal", entityId: id(281) }]
+  append(missionThread, "Compare earlier documents", "Project Alder historical answer.", id(49), false)
+  append(missionThread, "Now assess Project Birch", "Project Birch later answer.", id(45), true)
+  threads.set(id(63), missionThread)
   const activeWork = aggregate(48, "executing")
   activeWork.work.initialInstruction = "Track Cedar diligence progress"
   activeWork.actions = [{ id: id(4800), actionType: "assess_documents", status: "executing", planRevisionId: null, planNodeId: null, groundedPayload: {}, predictedReceipt: {}, createdAt: at }]

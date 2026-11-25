@@ -287,7 +287,12 @@ function CentropyWorkspaceContent() {
     if (!activeWorkId || work.status !== "ready" || work.data?.work.id !== activeWorkId || work.data.read?.complete === false) return
     const snapshot = work.data.inputs?.at(-1)?.contextSnapshot
     const candidate = snapshot && typeof snapshot === "object" && "businessRoot" in snapshot ? snapshot.businessRoot : null
-    const root = isPeWorldRootRef(candidate) ? candidate : investigation.loaded?.thread.activeWorkId === activeWorkId ? selectedRootFromThread : null
+    // Mission intake persists selectedEntities rather than businessRoot. Only
+    // restore an unambiguous saved root, never another Work's thread context.
+    const selected = snapshot && typeof snapshot === "object" && !("businessRoot" in snapshot) && "selectedEntities" in snapshot && Array.isArray(snapshot.selectedEntities)
+      ? snapshot.selectedEntities.filter(isPeWorldRootRef) : []
+    const savedRoot = isPeWorldRootRef(candidate) ? candidate : selected.length === 1 ? selected[0] : null
+    const root = savedRoot ?? (investigation.loaded?.thread.activeWorkId === activeWorkId ? selectedRootFromThread : null)
     setRestoredBusinessRoot(previous => previous?.key === workScopeKey && previous.root?.entityType === root?.entityType && previous.root?.entityId === root?.entityId
       ? previous : { key: workScopeKey, root })
   }, [activeWorkId, canvasSources.work, selectedRootFromThread, workScopeKey, investigation.loaded?.thread.activeWorkId])
