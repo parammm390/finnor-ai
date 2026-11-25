@@ -157,7 +157,9 @@ test("Regression: cleared context stays cleared when the selected Work is inspec
     await page.getByRole("button", { name: "Clear selected context" }).click()
     await expect.poll(() => new URL(page.url()).searchParams.get("context")).toBe("none")
     await expect(page.locator(".ct-composer__context")).toHaveCount(0)
-    await historical.getByLabel("Message options", { exact: true }).click()
+    // Conversation stays mounted in Work view, so this menu may still be open.
+    if (!(await historical.getByRole("button", { name: "Inspect linked Work" }).isVisible()))
+      await historical.getByLabel("Message options", { exact: true }).click()
     await historical.getByRole("button", { name: "Inspect linked Work" }).click()
     await expect.poll(() => new URL(page.url()).searchParams.get("context")).toBe("none")
     expect(new URL(page.url()).searchParams.has("root")).toBe(false)
