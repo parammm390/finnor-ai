@@ -298,6 +298,7 @@ export async function prepareEmployeeConversationTurn(params: {
   });
 
   const partyCandidates: ConversationReference[] = [];
+  const resolvedParties: ConversationReference[] = [];
   const unresolvedExpressions: string[] = [];
   const trace: ConversationResolutionProvenance[] = [];
   for (const expression of named) {
@@ -310,29 +311,24 @@ export async function prepareEmployeeConversationTurn(params: {
       { query: expression.organization ? `${expression.name} ${expression.organization}` : expression.name },
       { requesterEmployeeId: employeeId, workId: params.workId },
     );
-    const candidates = resolution.candidates.map((candidate): ConversationReference => {
+    const resolved = resolution.status === "resolved" ? resolution.party : null;
+    for (const candidate of resolution.candidates) {
       const ref = partyRefToCanonicalEntityRef(candidate.ref);
-      return {
+      const reference: ConversationReference = {
         ...ref,
         label: candidate.displayName,
         source: expression.cue === "history" ? "history_search" : "company_twin",
         currentTruthAsOf: new Date().toISOString(),
       };
-    });
-    for (const candidate of candidates) {
-      partyCandidates.push(candidate);
-      trace.push(provenance("company_twin", "active_party_directory", "candidate", key(candidate)));
+      partyCandidates.push(reference);
+      trace.push(provenance("company_twin", "active_party_directory", "candidate", key(reference)));
+      if (resolved?.ref.partyType === candidate.ref.partyType && resolved.ref.partyId === candidate.ref.partyId) {
+        resolvedParties.push(reference);
+      }
     }
     if (resolution.status !== "resolved") unresolvedExpressions.push(expression.name);
   }
 
-  const resolvedParties = named.flatMap((expression) => {
-    if (needsRecipientClarification(expression)) return [];
-    const matching = partyCandidates.filter((candidate) =>
-      candidate.label.toLocaleLowerCase().includes(expression.name.toLocaleLowerCase()),
-    );
-    return matching.length === 1 ? matching : [];
-  });
   const unique = <T extends ConversationReference>(rows: T[]) =>
     [...new Map(rows.map((row) => [key(row), row])).values()];
   const selected = unique([...explicit, ...resolvedParties]);
