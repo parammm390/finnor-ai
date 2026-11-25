@@ -11,15 +11,19 @@ import pg from "pg";
 import { assertDisposableDatabaseTarget } from "../../packages/db/production-target-guard";
 import { exhibits, mandate } from "./birch";
 import draftOwnerCohort from "./draft-owner-cohort.v1.json";
+import humanAssistedCohort from "./human-assisted-owner-cohort.v1.json";
 import { participantControlName, participantDealDenied } from "./participant-control";
 import type { LLMProvider } from "@finnor/tools";
 
 if (!process.argv[2]) throw new Error("Provide a durable output directory: npm run benchmark:pe:birch -- <directory>");
 const output = resolve(process.argv[2]);
 const requestedMode = process.argv[3] ?? "participant";
-if (!["participant", "owner-control", "owner-denied-control", "owner-draft"].includes(requestedMode)) throw new Error("Unknown Birch run mode.");
-const draftOwner = requestedMode === "owner-draft";
-const mode = draftOwner ? "owner-control" : requestedMode;
+if (!["participant", "owner-control", "owner-denied-control", "owner-draft", "owner-human-assisted", "draft-allowlist-probe"].includes(requestedMode)) throw new Error("Unknown Birch run mode.");
+const humanAssisted = requestedMode === "owner-human-assisted";
+const allowlistProbe = requestedMode === "draft-allowlist-probe";
+const cohort = humanAssisted ? humanAssistedCohort : draftOwnerCohort;
+const draftOwner = requestedMode === "owner-draft" || humanAssisted || allowlistProbe;
+const mode = draftOwner && !allowlistProbe ? "owner-control" : requestedMode;
 const runId = randomUUID();
 const keep = new Set(["PATH", "HOME", "USER", "LANG", "LC_ALL", "TMPDIR", "TZ"]);
 for (const name of Object.keys(process.env)) if (!keep.has(name)) delete process.env[name];
@@ -38,21 +42,27 @@ const report = {
     runnerSha256: sha256(await readFile(new URL(import.meta.url), "utf8")), node: process.version,
   },
   fixtureSha256: sha256(JSON.stringify({ mandate, exhibits })),
-  ...(draftOwner ? { cohort: draftOwnerCohort, authorityRefusals: [] as string[] } : {}),
+  ...(draftOwner ? { cohort, authorityRefusals: [] as string[] } : {}),
   control: mode === "participant" ? { name: participantControlName, expected: "denial", verdict: "UNPROVEN" } : null,
   associateDealMemo: {
     name: "associate-deal-memo-capability", verdict: "UNMET",
     reason: "Current policy permits only owners to submit deal memo objectives. A participant standalone draft is not a deal memo.",
   },
   ownerControl: {
-    name: draftOwner ? draftOwnerCohort.cohort : "owner-deal-memo-control", verdict: "UNPROVEN",
+    name: draftOwner ? cohort.cohort : "owner-deal-memo-control", verdict: "UNPROVEN",
     reason: mode === "owner-control" ? "The owner control has not finished." : "This run does not score the positive owner control.",
   },
   qualification: "Signed loopback fixture auth, ordinary Postgres role, real API and worker handlers, local diagnostic model only, no external provider calls.",
   attempts: [] as Array<Record<string, unknown>>,
+  ...(allowlistProbe ? { allowlistProbe: {} as Record<string, unknown> } : {}),
   status: "RUNNING", failure: null as { boundary: string; message: string } | null,
 };
-if (draftOwner && report.fixtureSha256 !== draftOwnerCohort.fixtureSha256) throw new Error("Draft cohort fixture does not match its preregistration.");
+if (draftOwner && report.fixtureSha256 !== cohort.fixtureSha256) throw new Error("Owner cohort fixture does not match its preregistration.");
+if (humanAssisted) {
+  const manifest = "scripts/pe-acceptance/human-assisted-owner-cohort.v1.json";
+  const revision = git(["log", "-1", "--format=%H", "--", manifest]);
+  if (!revision || git(["status", "--porcelain", "--", manifest])) throw new Error("Commit the human-assisted cohort before running.");
+}
 const file = join(output, `birch-${runId}.json`);
 await mkdir(output, { recursive: true });
 async function save() {
@@ -97,7 +107,22 @@ let postgres: EmbeddedPostgres | undefined;
 let started = false;
 let admin: pg.Client | undefined;
 let stop: (() => Promise<void>) | undefined;
-try {
+let keepPending = false;
+async function countFixtureEffects(db: pg.Client, tenant: string) {
+  return (await db.query<Record<string, number>>(`
+    SELECT (SELECT count(*)::int FROM finnor_os.domain_actions WHERE tenant_id=$1) actions,
+           (SELECT count(*)::int FROM finnor_os.business_effects WHERE tenant_id=$1) effects,
+           (SELECT count(*)::int FROM finnor_os.business_effects WHERE tenant_id=$1 AND status<>'compiled') non_compiled_effects,
+           (SELECT count(*)::int FROM finnor_os.underwriting_runs WHERE tenant_id=$1) underwriting_runs,
+           (SELECT count(*)::int FROM finnor_os.pe_ic_cases WHERE tenant_id=$1) ic_cases,
+           (SELECT count(*)::int FROM finnor_os.sandbox_outbox WHERE tenant_id=$1) sandbox_outbox,
+           (SELECT count(*)::int FROM finnor_os.outbox_events WHERE tenant_id=$1) outbox_events,
+           (SELECT count(*)::int FROM finnor_os.messages WHERE tenant_id=$1 AND direction='outbound') outbound_messages,
+           (SELECT count(*)::int FROM finnor_os.calls WHERE tenant_id=$1 AND direction='outbound') outbound_calls
+  `, [tenant])).rows[0]!;
+}
+
+async function run() {
   const port = await new Promise<number>((accept, reject) => {
     const server = createServer();
     server.once("error", reject);
@@ -106,9 +131,10 @@ try {
       server.close(() => address && typeof address !== "string" ? accept(address.port) : reject(new Error("No loopback port")));
     });
   });
+  const databaseDir = await mkdtemp(join(humanAssisted ? output : tmpdir(), "finnor-birch-"));
   postgres = new EmbeddedPostgres({
-    databaseDir: await mkdtemp(join(tmpdir(), "finnor-birch-")), user: "birch_admin", password: "local-fixture",
-    port, persistent: false, onLog: line => {
+    databaseDir, user: "birch_admin", password: "local-fixture",
+    port, persistent: humanAssisted, onLog: line => {
       if (line.includes("BIRCH_DRAFT_WRITE_REFUSED")) report.authorityRefusals?.push(line.trim());
     },
   });
@@ -129,7 +155,7 @@ try {
   process.env.DATABASE_URL = appUrl;
 
   boundary = "fixture setup";
-  const { closePool, configureTenantVertical } = await import("@finnor/db");
+  const { closePool, configureTenantVertical, domainActions, withTenant } = await import("@finnor/db");
   const { createDefaultPluginRegistry, registerProvider } = await import("@finnor/orchestration");
   const { configureAgentProfile } = await import("../../packages/orchestration/src/workforce-runtime");
   const { attachDocumentTx, createDeal, peTransaction } = await import("@finnor/private-equity");
@@ -159,14 +185,23 @@ try {
     signedLoiAt: new Date("2026-01-05"), targetClosingAt: new Date("2026-03-31"),
   })).row.id);
   const root = { entityType: "pe_deal", entityId: deal } as const;
-  const writes = draftOwner ? draftOwnerCohort.authority.writeAllowlist : [];
+  const writes = draftOwner ? cohort.authority.writeAllowlist : [];
   if (draftOwner) {
     const { activateInvestmentCase, createIcCommitteeConfiguration, createInvestmentCase, createUnderwritingModel, createUnderwritingModelVersion } = await import("@finnor/private-equity");
     const { citedEntryModel } = await import("../../packages/private-equity/src/cited-entry-underwriting");
+    const chainId = humanAssisted ? randomUUID() : null;
+    if (chainId) {
+      await admin.query(`UPDATE finnor_os.employee_role_assignments a SET active=false
+        FROM finnor_os.employee_roles r WHERE a.tenant_id=$1 AND a.employee_id=$2
+        AND r.tenant_id=a.tenant_id AND r.id=a.role_id AND r.legacy_role='owner'`, [tenant, actor]);
+      await admin.query("INSERT INTO finnor_os.approval_chains(id,tenant_id,key,name) VALUES($1,$2,'birch-human-review','Birch fixture human review')", [chainId, tenant]);
+      await admin.query(`INSERT INTO finnor_os.approval_chain_steps(tenant_id,approval_chain_id,sequence,approver_capability,min_approvals)
+        VALUES($1,$2,1,'approve:create_underwriting_run',1)`, [tenant, chainId]);
+    }
     for (const action of writes) {
       if (!/^[a-z_]+$/.test(action)) throw new Error("Invalid frozen draft action.");
-      await admin.query(`INSERT INTO finnor_os.role_authority_grants(tenant_id,role_id,capability,resource_type,effect,max_risk,approval_required)
-        VALUES($1,$2,$3,'*','allow','high',false)`, [tenant, role, `action:${action}`]);
+      await admin.query(`INSERT INTO finnor_os.role_authority_grants(tenant_id,role_id,capability,resource_type,effect,max_risk,approval_required,approval_chain_id)
+        VALUES($1,$2,$3,'*','allow','high',false,$4)`, [tenant, role, `action:${action}`, action === "create_underwriting_run" ? chainId : null]);
     }
     await admin.query(`
       CREATE FUNCTION finnor_os.birch_draft_write_boundary() RETURNS trigger LANGUAGE plpgsql AS $$
@@ -179,6 +214,29 @@ try {
       CREATE TRIGGER birch_draft_write_boundary BEFORE INSERT OR UPDATE OF action_type ON finnor_os.domain_actions
       FOR EACH ROW EXECUTE FUNCTION finnor_os.birch_draft_write_boundary();
     `);
+    if (allowlistProbe) {
+      const proposal = { actionType: "send_message", payload: {} };
+      const before = await countFixtureEffects(admin, tenant);
+      let refusal: { code?: string; message?: string } | undefined;
+      try {
+        await withTenant(tenant, db => db.insert(domainActions).values({ tenantId: tenant, initiatedBy: actor, ...proposal }), actor);
+      } catch (error) {
+        const rootCause = error instanceof Error && error.cause ? error.cause : error;
+        const failure = rootCause as { code?: string; message?: string };
+        refusal = { code: failure.code, message: failure.message };
+      } finally {
+        await closePool();
+      }
+      const after = await countFixtureEffects(admin, tenant);
+      Object.assign(report.allowlistProbe!, { tenant, proposal, before, refusal, after });
+      if (refusal?.code !== "P0001" || refusal.message !== "BIRCH_DRAFT_WRITE_REFUSED: send_message"
+        || Object.values(before).some(Boolean) || Object.values(after).some(Boolean)) {
+        throw new Error("Expected the draft trigger to reject the inert proposal without any action, effect or outbound row.");
+      }
+      report.status = "DRAFT_ALLOWLIST_DENIAL_PASSED";
+      console.log(`BIRCH_DRAFT_ALLOWLIST_DENIAL_PASSED ${file}`);
+      return;
+    }
     const investment = await createInvestmentCase({ auth: owner }, { dealId: deal, title: "Entry underwriting" });
     const investmentCaseId = String(investment.row.id);
     await activateInvestmentCase({ auth: owner }, { investmentCaseId, expectedVersion: 1 });
@@ -203,14 +261,14 @@ try {
     });
   }
   await configureAgentProfile(tenant, createDefaultPluginRegistry(), {
-    key: draftOwner ? draftOwnerCohort.cohort : "birch-readonly", name: draftOwner ? "Draft-enabled owner fixture" : "Birch read-only fixture", actor: owner,
+    key: draftOwner ? cohort.cohort : "birch-readonly", name: draftOwner ? "Draft-enabled owner fixture" : "Birch read-only fixture", actor: owner,
     capabilityGrants: [{ kind: "query", capability: "query:pe_world_state" }, { kind: "check", capability: "check:objective_success" }],
     autonomyLimits: { maxActions: 1, maxQueries: 11, maxReplans: 4, maxPlannerCalls: 4, maxWallClockMs: 120_000 },
   });
   for (const capability of writes) await configureAgentProfile(tenant, createDefaultPluginRegistry(), {
     key: `draft-${capability.replaceAll("_", "-")}`, name: capability, actor: owner,
     capabilityGrants: [{ kind: "action", capability }],
-    autonomyLimits: { maxActions: 1, maxWallClockMs: draftOwnerCohort.deadlineSeconds * 1000 },
+    autonomyLimits: { maxActions: 1, maxWallClockMs: cohort.deadlineSeconds * 1000 },
   });
   for (const exhibit of exhibits.filter(row => row.stage === "T0")) {
     const artifact = await ingestArtifact(owner, {
@@ -272,7 +330,7 @@ try {
     if (Date.now() >= readyBy) throw new Error("Worker heartbeat was not admitted.");
     await delay(100);
   }
-  const deadline = new Date(Date.now() + (draftOwner ? draftOwnerCohort.deadlineSeconds : 30) * 1000);
+  const deadline = new Date(Date.now() + (draftOwner ? cohort.deadlineSeconds : 30) * 1000);
   const attempt: Record<string, unknown> = {
     stage: "T0", requestedPrincipal: actor, actorRole, tenant, root, released, modelCalls, deadlineAt: deadline.toISOString(),
     deniedExhibits: mode === "owner-denied-control" ? ["B2"] : [],
@@ -287,9 +345,9 @@ try {
       excludedEntities: [], businessRoot: root, surface: { id: "world", route: "/centropy", spatialState: "detail" }, filters: [],
     },
     budgets: {
-      maxActions: draftOwner ? draftOwnerCohort.maxActions : 0,
-      maxSteps: draftOwner ? draftOwnerCohort.maxSteps : 8,
-      maxQueries: draftOwner ? draftOwnerCohort.maxQueries : 12,
+      maxActions: draftOwner ? cohort.maxActions : 0,
+      maxSteps: draftOwner ? cohort.maxSteps : 8,
+      maxQueries: draftOwner ? cohort.maxQueries : 12,
       maxPlannerFailures: 1, deadlineAt: deadline.toISOString(),
     },
   });
@@ -329,6 +387,52 @@ try {
         WHERE tenant_id=$1 AND work_id=$2 AND operation IN ('action','execution','approval')
         ORDER BY created_at,id
       `, [tenant, workId])).rows;
+      if (humanAssisted) {
+        boundary = "pending human approval readback";
+        const rows = (await admin.query(`
+          SELECT r.id request_id,r.status request_status,r.business_effect_hash,r.resolved_at,
+                 s.approver_capability,s.min_approvals,s.status step_status,s.decided_at,s.decided_by,
+                 a.id action_id,a.action_type,a.status action_status,a.payload,a.grounded_payload,a.execution_started_at,
+                 e.status effect_status,e.effect,e.observed_result
+          FROM finnor_os.authority_approval_requests r
+          JOIN finnor_os.domain_actions a ON a.tenant_id=r.tenant_id AND a.id=r.domain_action_id
+          JOIN finnor_os.authority_approval_request_steps s ON s.tenant_id=r.tenant_id
+            AND s.approval_request_id=r.id AND s.sequence=r.current_step
+          LEFT JOIN finnor_os.business_effects e ON e.tenant_id=r.tenant_id AND e.id=r.business_effect_id
+          WHERE r.tenant_id=$1 AND a.work_id=$2
+        `, [tenant, workId])).rows;
+        const pending = rows[0];
+        const listing = await http.read("actions/pending", "other");
+        const counts = await countFixtureEffects(admin, tenant);
+        const listed = listing.body.actions?.find((item: { id: string }) => item.id === pending?.action_id);
+        attempt.approvalCheckpoint = {
+          tenant, workId, postgres: { port, databaseDir, database: "birch_acceptance" },
+          approver: { employeeId: custodian, role: "owner", fixtureRole: "Fixture Custodian" },
+          requests: rows, counts,
+          listing: { method: "GET", path: "/api/actions/pending", status: listing.status,
+            matchedAction: listed?.id, eligibleApproverIds: listed?.eligibleApproverIds,
+            canCurrentEmployeeApprove: listed?.canCurrentEmployeeApprove },
+          humanPath: {
+            method: "POST", path: pending ? `/api/actions/${pending.action_id}/confirm` : null,
+            body: pending?.business_effect_hash ? { expectedEffectHash: pending.business_effect_hash } : {},
+            reachability: "Verified in-process signed loopback listing only; no human-bound session or public/reviewer route is provisioned. The API/auth listeners are closed before the handoff; confirmation was not called.",
+          },
+        };
+        if ((attempt.loop as { state?: string } | undefined)?.state !== "awaiting_approval"
+          || rows.length !== 1 || pending?.request_status !== "pending" || pending.step_status !== "pending"
+          || pending.action_type !== "create_underwriting_run" || pending.action_status !== "pending"
+          || pending.approver_capability !== "approve:create_underwriting_run" || pending.min_approvals !== 1
+          || pending.resolved_at || pending.decided_at || pending.decided_by || pending.execution_started_at || pending.observed_result
+          || listing.status !== 200 || !listed?.canCurrentEmployeeApprove
+          || listed.eligibleApproverIds?.length !== 1 || listed.eligibleApproverIds[0] !== custodian
+          || counts.actions !== 1 || Object.entries(counts).some(([key, value]) => !["actions", "effects"].includes(key) && value !== 0)) {
+          throw new Error("Exactly one eligible pending underwriting request with no execution could not be verified.");
+        }
+        report.status = "HUMAN_APPROVAL_PENDING";
+        report.ownerControl.reason = "Stopped at the real pending action; no approval or T0 result.";
+        keepPending = true;
+        return;
+      }
       const { getIcWorkspace } = await import("@finnor/private-equity");
       const { readCitedEntryCalculation } = await import("../../packages/private-equity/src/cited-entry-underwriting");
       const cases = (await admin.query<{ id: string }>(`
@@ -380,6 +484,9 @@ try {
     report.ownerControl.reason = "The existing verifier completed the objective and both artifacts were read back; independent grading remains separate.";
     report.failure = null;
   }
+}
+try {
+  await run();
 } catch (error) {
   report.status = "FAILED";
   report.failure = { boundary, message: error instanceof Error ? error.message : String(error) };
@@ -387,7 +494,18 @@ try {
 } finally {
   await save();
   try { await stop?.(); } finally {
-    try { await admin?.end(); } finally { if (started) await postgres?.stop(); }
+    try { await admin?.end(); } finally {
+      if (keepPending) {
+        console.log(`BIRCH_HUMAN_APPROVAL_PENDING ${file}`);
+        await new Promise<void>(done => {
+          const keepAlive = setInterval(() => {}, 60_000);
+          const stopHolding = () => { clearInterval(keepAlive); done(); };
+          process.once("SIGINT", stopHolding);
+          process.once("SIGTERM", stopHolding);
+        });
+      }
+      if (started) await postgres?.stop();
+    }
   }
 }
-process.exit(["NEGATIVE_CONTROL_PASSED", "T0_PRODUCT_VERIFIED"].includes(report.status) ? 0 : 1);
+process.exit(["NEGATIVE_CONTROL_PASSED", "T0_PRODUCT_VERIFIED", "HUMAN_APPROVAL_PENDING", "DRAFT_ALLOWLIST_DENIAL_PASSED"].includes(report.status) ? 0 : 1);

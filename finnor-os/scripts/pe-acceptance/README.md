@@ -7,6 +7,8 @@ npm run benchmark:pe:birch -- "$HOME/birch-evidence/participant" participant
 npm run benchmark:pe:birch -- "$HOME/birch-evidence/owner" owner-control
 npm run benchmark:pe:birch -- "$HOME/birch-evidence/owner-draft" owner-draft
 npm run benchmark:pe:birch -- "$HOME/birch-evidence/denied" owner-denied-control
+npm run benchmark:pe:birch -- "$HOME/birch-evidence/human-assisted-v1" owner-human-assisted
+npm run benchmark:pe:birch -- "$HOME/birch-evidence/allowlist-probe" draft-allowlist-probe
 npm run benchmark:pe:birch:grade -- <path-to-one-observation-json>
 ```
 
@@ -15,6 +17,10 @@ Each invocation creates a new embedded Postgres instance and fixture tenant, ing
 The observation JSON separates the participant safety control (`control`), the unmet associate requirement (`associateDealMemo`), and the owner outcome (`ownerControl`). Grade each observation independently. The draft cohort retains the frozen grader's `owner-control` mode and carries its own versioned `cohort` field. The grader's numeric checks alone cannot establish source lineage, reviewer acceptance or authority.
 
 The original owner control uses the unchanged query/check profile and zero-action objective budget. `owner-draft` uses the preregistered `draft-owner-cohort.v1.json` authority and budgets in a separate fixture. Only the manifest's named actions are granted to the submitting owner and workforce profiles; an isolated database trigger also refuses other domain action types and records refusals. The fixture sets up the case, committee configuration and model definition, not a run, recommendation or verification result. It does not grant approval or waive existing confirmation gates.
+
+`owner-human-assisted` is a separate preregistered checkpoint, not a replacement for either failed autonomous result. It uses the existing confirmation gate, one fixture-only approval chain for the underwriting action, and a custodian distinct from the submitting owner. It reads the real pending-action listing as that custodian, records the exact request, payload and effect hash alongside the no-execution checks, then stops worker and HTTP/auth activity. On `BIRCH_HUMAN_APPROVAL_PENDING`, the foreground process intentionally keeps the loopback database alive in the output directory; interrupting the process stops the database without deleting its files. No credentials or mutation surface are handed off. The observation identifies the existing product confirmation route, which would require a separately provisioned human session bound to the eligible fixture identity. The runner does not confirm the action, and the checkpoint is not a T0 grade.
+
+`draft-allowlist-probe` creates a separate fixture and attempts to persist an inert `send_message` proposal with no recipient or body under the ordinary application role. It exercises the same frozen draft trigger without starting an objective or worker. It must record the trigger's refusal and zero action, effect and outbound rows before and after the probe. Do not grade either diagnostic as an autonomous run.
 
 | Acceptance pack gate | Observed outcome |
 | --- | --- |
