@@ -85,11 +85,12 @@ describe.skipIf(!await databaseAvailable())("persisted conversation outreach rec
     ["different addressees in separate clauses", "Email Terry Morgan and call Bob Smith.", [], "Who should receive this?"],
     ["overlapping addressees in separate clauses", "Email Alice and call Alice Chen.", [], "Who should receive this?"],
     ["artifact destination in a separate clause", "Email Terry Morgan. Email the report to Bob Smith.", [], "Who should receive this?"],
-  ])("persists only the addressees for %s", async (_scenario, instruction, recipients, clarificationQuestion?: string) => {
+    ["read-only voice recall", "What did we previously decide: email Terry Morgan, call Bob Smith?", [], undefined, "voice"],
+  ])("persists only the addressees for %s", async (_scenario, instruction, recipients, clarificationQuestion?: string, channel = "text") => {
     const response = await POST(new Request("http://localhost/api/actions", {
       method: "POST",
       headers: { "content-type": "application/json", "x-tenant-id": tenantId, "x-user-id": employeeId, "x-user-role": "owner" },
-      body: JSON.stringify({ instruction, channel: "text" }),
+      body: JSON.stringify({ instruction, channel }),
     }));
     const body = await response.json() as { workId: string; workInputId: string; threadId: string; instructionId: string };
     expect(response.ok, JSON.stringify(body)).toBe(true);

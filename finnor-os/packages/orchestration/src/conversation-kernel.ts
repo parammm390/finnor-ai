@@ -289,6 +289,7 @@ export async function prepareEmployeeConversationTurn(params: {
 
   const history: EmployeeConversationMessage[] = [];
   const { expressions, negatedQualifiedNames, recipientConflict, command } = parseNamedExpressions(params.instruction);
+  const consequential = CONSEQUENTIAL.test(command) && !isReadOnlyConversationQuestion(command.replaceAll("\0", " "));
   const named = recipientConflict ? [] : expressions;
   const needsRecipientClarification = (expression: NamedExpression) =>
     expression.cue === "party" && !expression.organization && negatedQualifiedNames.has(normalizePartyName(expression.name));
@@ -322,7 +323,7 @@ export async function prepareEmployeeConversationTurn(params: {
 
   const partyCandidates: ConversationReference[] = [];
   const resolvedParties: ConversationReference[] = [];
-  const unresolvedExpressions: string[] = recipientConflict ? ["outreach recipient"] : [];
+  const unresolvedExpressions: string[] = consequential && recipientConflict ? ["outreach recipient"] : [];
   const trace: ConversationResolutionProvenance[] = [];
   for (const expression of named) {
     if (needsRecipientClarification(expression)) {
@@ -356,22 +357,20 @@ export async function prepareEmployeeConversationTurn(params: {
     [...new Map(rows.map((row) => [key(row), row])).values()];
   const selected = recipientConflict ? [] : unique([...explicit, ...resolvedParties]);
   const candidates = unique([...explicit, ...partyCandidates, ...carried]);
-  const consequential = CONSEQUENTIAL.test(command) && !isReadOnlyConversationQuestion(command.replaceAll("\0", " "));
-
   if (!recipientConflict && PRONOUN.test(command) && explicit.length === 0) {
     if (carried.length === 1) selected.push(carried[0]!);
     else if (consequential) unresolvedExpressions.push("referenced target");
   }
   const unresolved = [...new Set(unresolvedExpressions)];
-  const ambiguous = recipientConflict || (consequential && unresolved.length > 0);
+  const ambiguous = consequential && unresolved.length > 0;
   const resolution: ConversationReferenceResolution = {
     status: ambiguous ? "clarification_required" : selected.length ? "resolved" : "none",
     originalInstruction: params.instruction,
     resolvedReferences: unique(selected),
     candidates,
     unresolvedExpressions: unresolved,
-    clarificationQuestion: recipientConflict ? "Who should receive this?" : ambiguous
-      ? `Which active target do you mean for ${unresolved[0]}?`
+    clarificationQuestion: ambiguous
+      ? recipientConflict ? "Who should receive this?" : `Which active target do you mean for ${unresolved[0]}?`
       : null,
     consequential,
     senderIdentityRef: null,
