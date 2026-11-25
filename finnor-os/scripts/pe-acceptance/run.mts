@@ -10,6 +10,7 @@ import EmbeddedPostgres from "embedded-postgres";
 import pg from "pg";
 import { assertDisposableDatabaseTarget } from "../../packages/db/production-target-guard";
 import { exhibits, mandate } from "./birch";
+import { participantControlName, participantDealDenied } from "./participant-control";
 import type { LLMProvider } from "@finnor/tools";
 
 if (!process.argv[2]) throw new Error("Provide a durable output directory: npm run benchmark:pe:birch -- <directory>");
@@ -35,6 +36,7 @@ const report = {
     runnerSha256: sha256(await readFile(new URL(import.meta.url), "utf8")), node: process.version,
   },
   fixtureSha256: sha256(JSON.stringify({ mandate, exhibits })),
+  control: mode === "participant" ? { name: participantControlName, expected: "denial", verdict: "UNPROVEN" } : null,
   qualification: "Signed loopback fixture auth, ordinary Postgres role, real API and worker handlers, local diagnostic model only, no external provider calls.",
   attempts: [] as Array<Record<string, unknown>>,
   status: "RUNNING", failure: null as { boundary: string; message: string } | null,
@@ -216,7 +218,7 @@ try {
   await save();
   const workId = response.body.objective?.workId ?? response.body.workId;
   if (typeof workId === "string") {
-    if (response.status === 202 && !boundaryProof) {
+    if (response.status === 202 && !report.control && !boundaryProof) {
       boundary = "worker/model";
       const signal = AbortSignal.timeout(Math.max(1, deadline.getTime() - Date.now()));
       process.env.DATABASE_URL = workerUrl;
@@ -281,14 +283,17 @@ try {
         includesB2: evidence.body.result?.documents?.some((doc: { id: string }) => doc.id === b2.documentId) ?? false },
       participantEvidenceAuthorization,
       foreignEvidence: await http.read(`works/${evidence.body.workId}`),
-      draft: { draftRequest, patchRequest, created, drafted, patched, readback,
+      standaloneArtifactDraft: { draftRequest, patchRequest, created, drafted, patched, readback,
         currentVersionId: current.body.version?.id, currentStatus: current.status },
     };
     report.status = "PARTICIPANT_BOUNDARY_OBSERVED";
   } else {
-    report.status = response.status !== 202 ? "T0_INTAKE_FAILED" : "T0_DELIVERABLE_UNVERIFIED";
+    const denialObserved = report.control !== null && participantDealDenied(attempt);
+    if (report.control) report.control.verdict = denialObserved ? "PASS" : "FAIL";
+    report.status = report.control ? (denialObserved ? "NEGATIVE_CONTROL_PASSED" : "NEGATIVE_CONTROL_FAILED")
+      : response.status !== 202 ? "T0_INTAKE_FAILED" : "T0_DELIVERABLE_UNVERIFIED";
     const loopReason = (attempt.loop as { reason?: string } | undefined)?.reason;
-    report.failure = {
+    report.failure = denialObserved ? null : {
       boundary: response.status !== 202 ? "authenticated objective intake" : "verified deliverable",
       message: response.status !== 202 && typeof response.body.error === "string" ? response.body.error
         : loopReason ?? "No verified Birch memo and calculation sheet was established.",
@@ -304,4 +309,4 @@ try {
     try { await admin?.end(); } finally { if (started) await postgres?.stop(); }
   }
 }
-process.exit(report.status === "PARTICIPANT_BOUNDARY_OBSERVED" ? 0 : 1);
+process.exit(report.status === "PARTICIPANT_BOUNDARY_OBSERVED" || report.status === "NEGATIVE_CONTROL_PASSED" ? 0 : 1);

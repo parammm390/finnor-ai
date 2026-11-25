@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { expect, it } from "vitest";
 
-it("preserves Birch participant Work and standalone drafting without granting deal access", async () => {
+it("allows Birch participant Work and standalone artifact editing, but denies deal-memo intake", async () => {
   const root = process.env.FINNOR_BIRCH_EVIDENCE_DIR ?? join(homedir(), "birch-evidence");
   await mkdir(root, { recursive: true });
   const directory = await mkdtemp(join(root, "participant-boundary-"));
@@ -42,6 +42,7 @@ it("preserves Birch participant Work and standalone drafting without granting de
     createdBy: attempt.requestedPrincipal,
   });
   expect(attempt.loop).toBeUndefined();
+  expect(attempt.jobs).toStrictEqual([]);
   expect(proof.domainActionCount).toBe(0);
   expect(attempt.effects).toStrictEqual([]);
 
@@ -56,7 +57,7 @@ it("preserves Birch participant Work and standalone drafting without granting de
   });
   expect(proof.foreignEvidence).toStrictEqual(hidden);
 
-  const { created, drafted, patched, patchRequest, readback, currentStatus, currentVersionId } = proof.draft;
+  const { created, drafted, patched, patchRequest, readback, currentStatus, currentVersionId } = proof.standaloneArtifactDraft;
   expect(created.status).toBe(201);
   expect(drafted.status).toBe(201);
   expect(drafted.body.draftKey).toMatch(new RegExp(`^${attempt.requestedPrincipal}:`));
