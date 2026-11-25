@@ -92,16 +92,38 @@ async function assertCommitteeFinancialInputsCurrent(
   else await tx(ctx, verify, !lock);
 }
 
+async function assertCitedEntryExhibitsCurrent(ctx:PeMutationContext,snapshot:UnderwritingInputSnapshot,client?:PoolClient,lock=false){
+ const refs=[...new Map(Object.values(snapshot.values).flatMap(input=>input.provenance
+  .filter(ref=>ref.kind==='cited_entry_exhibit')
+  .map(ref=>[JSON.stringify([ref.id,ref.versionId,ref.anchorId,ref.semanticHash]),ref] as const))).values()];
+ if(!refs.length)return;
+ const verify=async(scoped:PoolClient)=>{
+  await authorizeBeliefResources(ctx,[
+   {type:'pe_investment_case',id:snapshot.investmentCaseId},
+   ...refs.map(ref=>({type:'document',id:ref.id})),
+  ],scoped);
+  for(const ref of refs){
+   const current=await scoped.query(`SELECT 1 FROM finnor_os.pe_investment_cases i
+    JOIN finnor_os.pe_document_links l ON l.tenant_id=i.tenant_id AND l.deal_id=i.deal_id
+      AND l.entity_type='pe_deal' AND l.entity_id=i.deal_id AND l.link_role='source' AND l.archived_at IS NULL
+    JOIN finnor_os.documents d ON d.tenant_id=l.tenant_id AND d.id=l.document_id AND d.archived_at IS NULL
+    JOIN finnor_os.document_version_heads h ON h.tenant_id=d.tenant_id AND h.document_id=d.id
+      AND h.kind='current' AND h.head_key='default'
+    JOIN finnor_os.artifact_bindings b ON b.tenant_id=h.tenant_id AND b.version_id=h.version_id
+      AND b.target_kind='canonical_entity' AND b.target_entity_type='pe_deal' AND b.target_id=i.deal_id
+    WHERE i.tenant_id=$1 AND i.id=$2 AND d.id=$3 AND h.version_id=$4 AND b.anchor_id=$5 AND b.anchor_hash=$6
+    ${lock?'FOR SHARE OF l,d,h':''}`,[ctx.auth.tenantId,snapshot.investmentCaseId,ref.id,ref.versionId,ref.anchorId,ref.semanticHash]);
+   if(current.rowCount!==1)throw new PeDomainError('ENTRY_SOURCE_SUPERSEDED','A cited entry exhibit is no longer current at its exact Deal citation.');
+  }
+ };
+ if(client)await verify(client);else await tx(ctx,verify,!lock);
+}
+
 export async function assertEvidenceSnapshotCurrent(ctx:PeMutationContext,snapshot:UnderwritingInputSnapshot,client?:PoolClient,lock=false){
  await assertCommitteeFinancialInputsCurrent(ctx,snapshot,client,lock);
  await assertConfidentialSnapshotCurrent(ctx,snapshot,client,lock);
  await assertPrimarySnapshotCurrent(ctx,snapshot,client,lock);
- const entrySources=[...new Set(Object.values(snapshot.values).flatMap(input=>input.provenance
-  .filter(ref=>ref.kind==='cited_entry_exhibit').map(ref=>ref.id)))];
- if(entrySources.length)await authorizeBeliefResources(ctx,[
-  {type:'pe_investment_case',id:snapshot.investmentCaseId},
-  ...entrySources.map(id=>({type:'document',id})),
- ],client);
+ await assertCitedEntryExhibitsCurrent(ctx,snapshot,client,lock);
  for(const input of Object.values(snapshot.values))for(const ref of input.provenance.filter(r=>r.kind==='evidence_derivation')){
   const derivation=await currentDerivation(ctx,ref.id,client),output=derivation.result?.outputs[ref.anchorId??''];if(!output||output.kind!=='scalar'||output.value!==input.value||input.truthClass!=='DERIVED_VALUE'||input.status!=='KNOWN'||ref.semanticHash!==derivation.result?.digest)throw Error('DERIVATION_CONSUMER_PROVENANCE_OR_CURRENTNESS_FAILED');
   if(client)await assertDependencies(ctx,derivation.invalidationKeys,client,lock);

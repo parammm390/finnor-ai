@@ -62,6 +62,8 @@ import {
 import { driveDurableAction } from "./helpers/durable-action";
 import { browserHttpFixture } from "../../scripts/v2/browser-http-fixture.mts";
 import { canReadCitedEntryCalculationDocument, citedEntryModel, readCitedEntryCalculation, readCitedEntryInputs, runCitedEntryUnderwriting } from "../../packages/private-equity/src/cited-entry-underwriting";
+import { assertEvidenceRunTransactionCurrent } from "../../packages/private-equity/src/evidence-execution/consumer";
+import { peTransaction } from "../../packages/private-equity/src/repository";
 
 const SUPER_URL = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const APP_URL = SUPER_URL.replace(/\/\/[^@]+@/, "//finnor_app:finnor_app@");
@@ -518,7 +520,7 @@ describe.skipIf(!available)("P4 deterministic PE underwriting persistence and P3
       name: "Cited entry integration", targetOrganizationId: targetA, dealLeadEmployeeId: ownerA,
       signedLoiAt: new Date("2025-01-01"), targetClosingAt: new Date("2025-06-01"),
     })).row);
-    const put = async (label: string, content: string) => {
+    const put = async (label: string, content: string, previous?: { documentId: string; versionId: string }) => {
       const body = `BT /F1 8 Tf 20 740 Td (${content}) Tj ET\n`;
       const objects = ["<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
         "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1800 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
@@ -534,13 +536,14 @@ describe.skipIf(!available)("P4 deterministic PE underwriting persistence and P3
       const artifact = await ingestArtifact(actorA, {
         title: `${label}.pdf`, bytes: Buffer.from(pdf), origin: "manual_upload",
         sourceSystem: "integration:entry-exhibit", sourceRef: `${label}:p1:deal`,
+        ...(previous ? { documentId: previous.documentId, parentVersionId: previous.versionId, expectedHead: previous.versionId } : {}),
       });
       const page = artifact.ir.nodes.find(node => node.kind === "page")!;
       await bindArtifact(actorA, artifact.documentId, {
         versionId: artifact.version.id, anchorId: page.id, anchorHash: page.hash,
         targetKind: "canonical_entity", targetEntityType: "pe_deal", targetId: sourceDealId,
       });
-      await attachCanonicalDocument(ctxA, {
+      if (!previous) await attachCanonicalDocument(ctxA, {
         dealId: sourceDealId, entity: { entityType: "pe_deal", entityId: sourceDealId }, documentId: artifact.documentId, linkRole: "source",
       });
       return { documentId: artifact.documentId, versionId: artifact.version.id };
@@ -571,6 +574,7 @@ describe.skipIf(!available)("P4 deterministic PE underwriting persistence and P3
       worldAt: new Date().toISOString(), idempotencyKey,
     });
     const sheet = await readCitedEntryCalculation(ctxA, run.id);
+    expect((await getUnderwritingRun(ctxA, run.id)).scenarioId).toBeNull();
     expect(sheet?.figures).toEqual(expect.arrayContaining([
       expect.objectContaining({ key: "recurringEbitda", value: "14", unit: "USD millions", citations: expect.stringContaining("Earnings p1") }),
       expect.objectContaining({ key: "enterpriseValueGap", value: "14", formula: "askingEnterpriseValue − enterpriseValueCap", citations: expect.stringContaining("Policy p1") }),
@@ -587,6 +591,10 @@ describe.skipIf(!available)("P4 deterministic PE underwriting persistence and P3
     const conflict = await put("Conflict", "Starting from seller adjusted EBITDA of 18, remove 2 of unsupported add-backs and 1 of nonrecurring income. Both adjustments reduce recurring earnings and are independent.");
     await expect(readCitedEntryInputs(ctxA, { ...input, sources: [seller, conflict, debt, mandate] })).rejects.toMatchObject({ code: "ENTRY_SOURCE_CONFLICT" });
     await expect(readCitedEntryInputs(ctxA, { ...input, sources: [seller, qoe, debt] })).rejects.toMatchObject({ code: "ENTRY_SOURCE_MISSING" });
+    const checkIcBasis = () => peTransaction(ctxA, (_db, client) => assertEvidenceRunTransactionCurrent(client, tenantA, run.id));
+    await expect(checkIcBasis()).resolves.toBe(true);
+    await put("Earnings", "Starting from seller adjusted EBITDA of 17, remove 3 of unsupported add-backs and 1 of nonrecurring income. Both adjustments reduce recurring earnings and are independent.", qoe);
+    await expect(checkIcBasis()).rejects.toMatchObject({ code: "ENTRY_SOURCE_SUPERSEDED" });
   });
 
   afterAll(async () => {

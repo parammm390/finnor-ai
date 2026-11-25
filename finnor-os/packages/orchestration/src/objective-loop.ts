@@ -230,10 +230,13 @@ async function inspectPrivateEquityIcBasis(tenantId: string, dealId: string, wor
     `);
     const runs = await db.execute(sql`
       SELECT run.id::text,run.investment_case_id::text,run.model_version_id::text,run.work_id::text,
-             run.scenario_id::text,run.status,run.validity,run.computed_at,run.input_snapshot
+             run.scenario_id::text,run.status,run.validity,run.computed_at,run.input_snapshot,
+             version.model_definition->>'modelKey' model_key
       FROM finnor_os.underwriting_runs run
       JOIN finnor_os.pe_investment_cases investment
         ON investment.tenant_id=run.tenant_id AND investment.id=run.investment_case_id
+      JOIN finnor_os.underwriting_model_versions version
+        ON version.tenant_id=run.tenant_id AND version.id=run.model_version_id
       WHERE run.tenant_id=${tenantId}::uuid AND investment.deal_id=${dealId}::uuid
         AND NOT EXISTS (
           SELECT 1 FROM finnor_os.underwriting_scenarios scenario
@@ -313,7 +316,7 @@ async function inspectPrivateEquityIcBasis(tenantId: string, dealId: string, wor
         const growth = isRecord(values["operating.revenue_growth"]) ? values["operating.revenue_growth"] : null;
         const exitMultiple = isRecord(values["exit.multiple"]) ? values["exit.multiple"] : null;
         return {
-          id: row.id, investmentCaseId: row.investment_case_id, modelVersionId: row.model_version_id,
+          id: row.id, investmentCaseId: row.investment_case_id, modelVersionId: row.model_version_id, modelKey: row.model_key,
           workId: row.work_id, scenarioId: row.scenario_id, status: row.status, validity: row.validity, computedAt: row.computed_at,
           revenueInput: revenue ? { nodeId: revenue.nodeId, status: revenue.status, value: revenue.value } : null,
           growthInput: growth ? { nodeId: growth.nodeId, status: growth.status, value: growth.value } : null,
