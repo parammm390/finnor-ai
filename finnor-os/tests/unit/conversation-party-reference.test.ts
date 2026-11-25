@@ -12,10 +12,17 @@ describe("conversation party references", () => {
       .map(reference => reference.name)).toEqual(["Morgan"]);
   });
 
-  it("uses a previously named organization only for a later affirmative reference to that party", () => {
-    const instruction = "I cannot contact Terry from Birch. Email Terry.";
+  it("does not qualify an affirmative reference with the organization of a prohibited recipient", () => {
+    const instruction = "Do not email Terry from Birch. Email Terry.";
     expect(extractNamedExpressions(instruction)).toEqual([
-      { cue: "party", name: "Terry", organization: "Birch", index: instruction.indexOf("Email") },
+      { cue: "party", name: "Terry", index: instruction.indexOf("Email") },
+    ]);
+  });
+
+  it("preserves the full name for an exact lookup after a negated clause", () => {
+    const instruction = "I cannot contact Terry Morgan from Birch. Email Terry Morgan.";
+    expect(extractNamedExpressions(instruction)).toEqual([
+      { cue: "party", name: "Terry Morgan", index: instruction.indexOf("Email") },
     ]);
   });
 });
