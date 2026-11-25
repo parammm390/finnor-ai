@@ -152,7 +152,7 @@ function CentropyWorkspaceContent() {
 
   useEffect(() => {
     setBusy(false); setStopping(false); setPending(null); setSubmissionError(null); setControlNotice(null)
-    traceRuntime.current?.stop(); setTrace(null)
+    traceRuntime.current?.stop(); traceRuntime.current = null; setTrace(null)
   }, [mutationScopeKey])
 
   useEffect(() => { if (worldMode || draftArtifactInUrl || requestedReplayWorkId) setMobilePane("canvas") }, [worldMode, draftArtifactInUrl, requestedReplayWorkId])
@@ -248,7 +248,7 @@ function CentropyWorkspaceContent() {
   const visibleTrace = trace && (trace.instructionId === latestInstructionId || trace.instructionId === visiblePending?.instructionId) ? trace : null
   useEffect(() => {
     if (latestInstructionId && !visiblePending) startTrace(latestInstructionId)
-  }, [latestInstructionId, visiblePending, startTrace])
+  }, [latestInstructionId, visiblePending, startTrace, mutationScopeKey])
   useEffect(() => {
     if (visiblePending && messages.some((message) => message.instructionId === visiblePending.instructionId && message.role === "user")) setPending(null)
   }, [messages, visiblePending])
