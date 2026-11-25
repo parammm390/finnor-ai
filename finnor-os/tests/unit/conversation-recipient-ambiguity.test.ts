@@ -62,6 +62,10 @@ describe("conversation intake recipient ambiguity", () => {
     ["channel switch", "I cannot call Terry Morgan from Birch. Email Terry Morgan about the memo."],
     ["contact exclusion", "Don't email Terry Morgan from Birch, email Terry Morgan about the memo."],
     ["channel switch with punctuation", "I can’t call Terry Morgan from Birch; email Terry Morgan instead."],
+    ["channel switch with a dash", "I can't call Terry Morgan from Birch - email Terry Morgan instead."],
+    ["channel switch with an em dash", "I can't call Terry Morgan from Birch—email Terry Morgan instead."],
+    ["channel switch with a colon", "I can't call Terry Morgan from Birch: email Terry Morgan instead."],
+    ["channel switch with the alternative last", "Email Terry Morgan instead of calling Terry Morgan from Birch."],
   ])("asks before binding a namesake after a %s", async (_case, instruction) => {
     const turn = await prepare(instruction);
 

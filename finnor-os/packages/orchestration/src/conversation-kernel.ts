@@ -130,17 +130,20 @@ function parseNamedExpressions(instruction: string) {
       ...(organization?.trim() ? { organization: organization.trim().slice(0, 160) } : {}),
     });
   };
+  const partyCue = "(?:email|call|text|contact|message|notify|ask|tell)";
+  const excludedAlternative = "(instead\\s+of\\s+)(?:emailing|calling|texting|contacting|messaging|notifying|asking|telling)";
   const name = "([\\p{L}][\\p{L}'-]+(?:\\s+[\\p{L}][\\p{L}'-]+){0,2}?)";
-  const boundary = "(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then|instead)\\b|[,.!?;]|$)";
+  const boundary = "(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then|instead)\\b|\\s+-\\s+|[,.!?;:–—]|$)";
   for (const match of instruction.matchAll(new RegExp(
-    `\\b(?:email|call|text|contact|message|notify|ask|tell)\\s+(?:the\\s+)?${name}\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?)${boundary}`,
+    `\\b(?:${partyCue}|${excludedAlternative})\\s+(?:the\\s+)?${name}\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?)${boundary}`,
     "giu",
   ))) {
-    if (negated(match.index)) negatedQualifiedNames.add(normalizePartyName(match[1]!));
-    else add(match[1], match[2], "party", match.index);
+    const [, alternative, recipient, organization] = match;
+    if (alternative || negated(match.index)) negatedQualifiedNames.add(normalizePartyName(recipient!));
+    else add(recipient, organization, "party", match.index);
   }
   for (const match of instruction.matchAll(new RegExp(
-    `\\b(?:email|call|text|contact|message|notify|ask|tell)\\s+(?:the\\s+)?${name}${boundary}`,
+    `\\b${partyCue}\\s+(?:the\\s+)?${name}${boundary}`,
     "giu",
   ))) {
     const artifactToRecipient = /^(?:calculation|analysis|findings|results|memo|report|summary|document|model|update|draft|note)$/i.test(match[1] ?? "")
