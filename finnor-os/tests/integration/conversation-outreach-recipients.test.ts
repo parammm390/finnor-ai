@@ -74,6 +74,8 @@ describe.skipIf(!await databaseAvailable())("persisted conversation outreach rec
     ["inline content", "Email Terry Morgan saying to call Bob Smith.", [contacts.terry]],
     ["inline topic", "Email Terry Morgan about whether to call Bob Smith.", [contacts.terry]],
     ["corrected addressee", "Email Terry Morgan — sorry, Terry Morgan from Birch", [], "Who should receive this?"],
+    ["corrected addressee with a bare replacement", "Email Terry Morgan — sorry, Bob Smith", [], "Who should receive this?"],
+    ["corrected addressee after a topic", "Email Terry Morgan about the memo, sorry, Terry Morgan from Birch", [], "Who should receive this?"],
     ["corrected addressee with a repeated verb", "Email Terry Morgan — sorry, email Bob Smith", [], "Who should receive this?"],
     ["corrected channel switch", "I can't call Terry Morgan from Birch — sorry, email Terry Morgan", [], "Who should receive this?"],
     ["corrected artifact request", "Email Terry Morgan — I mean, email the report to Terry Morgan", [], "Who should receive this?"],

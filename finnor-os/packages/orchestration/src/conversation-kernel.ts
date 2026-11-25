@@ -149,8 +149,8 @@ function parseNamedExpressions(instruction: string) {
   const destination = new RegExp(`\\s+to\\s+${addressee}`, "iyu");
   const clauseSeparator = `(?:${dash}|\\s*[,.!?;:\\r\\n]\\s*)`;
   const correctionBeforeVerb = new RegExp(`(?:^\\s*|${clauseSeparator})${correctionMarker}(?:please\\s+)?$`, "i");
-  const qualifiedCorrection = new RegExp(
-    `${clauseSeparator}${correctionMarker}(?!${partyCue}\\b)(?:the\\s+)?${name}\\s+from\\s+${organization}${boundary}`,
+  const implicitRecipientCorrection = new RegExp(
+    `[^\\x00.!?;:\\r\\n]*?${clauseSeparator}${correctionMarker}(?!(?:${partyCue}|I|we|you|he|she|it|they)\\b)${addressee}`,
     "iyu",
   );
   const nextAddressee = new RegExp(
@@ -204,12 +204,13 @@ function parseNamedExpressions(instruction: string) {
       recordAddressee(name, organization, next.index);
       previousAddresseeEnd = nextAddressee.lastIndex;
     }
+    const startsInlineContent = !excluded && /^\s*:/.test(command.slice(previousAddresseeEnd));
     if (clauseAddressees.size) {
       if (!excluded) namedOutreachClauses.add(JSON.stringify([...clauseAddressees].sort()));
-      qualifiedCorrection.lastIndex = previousAddresseeEnd;
-      if (correctsPrevious || qualifiedCorrection.test(command)) hasRecipientCorrection = true;
+      implicitRecipientCorrection.lastIndex = previousAddresseeEnd;
+      if (correctsPrevious || (!startsInlineContent && partyName(implicitRecipientCorrection.exec(command)?.[1]))) hasRecipientCorrection = true;
     }
-    if (!excluded && /^\s*:/.test(command.slice(previousAddresseeEnd))) {
+    if (startsInlineContent) {
       command = command.slice(0, previousAddresseeEnd);
       break;
     }
