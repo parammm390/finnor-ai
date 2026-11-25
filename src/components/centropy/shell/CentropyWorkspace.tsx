@@ -599,9 +599,9 @@ function CentropyWorkspaceContent() {
             {message.id === workTurnId && !canvasWork ? <p className="ct-thread__notice" role="status">{canvasSources.work.error ?? "Reading linked Work…"}{canvasSources.work.error ? <button type="button" onClick={() => setCanvasRefresh(value => value + 1)}>Retry Work</button> : null}</p> : null}
             {message.id === workTurnId && canvasWork ? <>
               {showWorkBrief ? <WorkBrief work={canvasWork} execution={canvasDocument?.blocks.find(block => block.type === "work_execution")} current={canvasSources.work.status === "ready"} onOpen={openCanvas} onReview={() => { decisionReview.current?.scrollIntoView({ block: "start", behavior: "smooth" }); decisionReview.current?.focus({ preventScroll: true }) }} /> : null}
-              {canvasSources.work.status === "ready" ? <>
-                <VerifiedIcOutcome work={canvasWork} ic={canvasSources.ic.data} dealId={canvasRoot?.entityType === "pe_deal" ? canvasRoot.entityId : null} onOpenCanvas={openCanvas} />
-                <VerifiedUnderwritingOutcome work={canvasWork} underwriting={canvasSources.underwriting.data} dealId={canvasRoot?.entityType === "pe_deal" ? canvasRoot.entityId : null} onOpenCanvas={openCanvas} />
+              {canvasSources.work.status !== "error" ? <>
+                <VerifiedIcOutcome work={canvasWork} ic={canvasSources.ic.data} dealId={canvasRoot?.entityType === "pe_deal" ? canvasRoot.entityId : null} onOpenCanvas={openCanvas} current={canvasSources.work.status === "ready" && canvasSources.ic.status === "ready"} />
+                <VerifiedUnderwritingOutcome work={canvasWork} underwriting={canvasSources.underwriting.data} dealId={canvasRoot?.entityType === "pe_deal" ? canvasRoot.entityId : null} onOpenCanvas={openCanvas} current={canvasSources.work.status === "ready" && canvasSources.underwriting.status === "ready"} />
               </> : null}
               {workDecisions}
             </> : null}

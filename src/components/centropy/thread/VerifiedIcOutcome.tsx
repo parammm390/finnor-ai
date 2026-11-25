@@ -33,11 +33,12 @@ function verifiedReview(work: WorkAggregateView | null, dealId: string | null) {
   return provenPlan ? { caseId, effectId: effect.id, objectiveLoopId: String(outcome.objectiveLoopId) } : null
 }
 
-export function VerifiedIcOutcome({ work, ic, dealId, onOpenCanvas }: {
+export function VerifiedIcOutcome({ work, ic, dealId, onOpenCanvas, current = true }: {
   work: WorkAggregateView | null
   ic: IcWorkspace | null
   dealId: string | null
   onOpenCanvas: () => void
+  current?: boolean
 }) {
   const result = verifiedReview(work, dealId)
   if (!result) return null
@@ -47,6 +48,7 @@ export function VerifiedIcOutcome({ work, ic, dealId, onOpenCanvas }: {
   return <section className="ct-verified-outcome" aria-label="Verified Objective result" data-work-id={work?.work.id}>
     <div className="ct-verified-outcome__eyebrow">CENTROPY · VERIFIED WORK RESULT</div>
     <h2>IC preparation completed</h2>
+    {!current ? <p role="status">Last recorded verification. Refreshing sources; this is not a fresh confirmation.</p> : null}
     <p>The Objective reached its verified completion condition. Its exact review effect and completed Plan are recorded on this Work.</p>
     {exactCase ? <div className="ct-verified-outcome__case">
       <strong>IC case · {exactCase.case.state.replaceAll("_", " ")}</strong>
