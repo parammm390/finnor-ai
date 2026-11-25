@@ -70,6 +70,7 @@ describe.skipIf(!await databaseAvailable())("persisted conversation outreach rec
     ["subject only", "Subject: Bob Smith intro", []],
     ["inline content", "Email Terry Morgan saying to call Bob Smith.", [contacts.terry]],
     ["inline topic", "Email Terry Morgan about whether to call Bob Smith.", [contacts.terry]],
+    ["corrected addressee", "Email Terry Morgan — sorry, Terry Morgan from Birch", [contacts.birchTerry]],
   ])("persists only the addressees for %s", async (_scenario, instruction, recipients) => {
     const response = await POST(new Request("http://localhost/api/actions", {
       method: "POST",

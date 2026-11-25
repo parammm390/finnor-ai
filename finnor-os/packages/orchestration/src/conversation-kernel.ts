@@ -136,11 +136,13 @@ function parseNamedExpressions(instruction: string) {
   const excludedAlternative = "(instead\\s+of\\s+)(?:emailing|calling|texting|contacting|messaging|notifying|asking|telling)";
   const name = "([\\p{L}][\\p{L}'-]+(?:\\s+[\\p{L}][\\p{L}'-]+){0,2}?)";
   const organization = "([\\p{L}][\\p{L}\\d&.' –—-]{1,80}?)";
-  const dashClause = `(?:\\s+-\\s+|\\s*[–—]\\s*)(?:please\\s+)?${partyCue}\\s+`;
-  const boundary = `(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then|instead)\\b|${dashClause}|\\s*[\\x00,.!?;:]|\\s*$)`;
+  const dash = "(?:\\s+-\\s+|\\s*[–—]\\s*)";
+  const dashClause = `${dash}(?:please\\s+)?${partyCue}\\s+`;
+  const correction = `(?:${dash}|\\s*,\\s*)(?:sorry\\s*,|I\\s+mean\\b\\s*,?)\\s*`;
+  const boundary = `(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then|instead)\\b|${dashClause}|${correction}|\\s*[\\x00,.!?;:]|\\s*$)`;
   const addressee = `(?:the\\s+)?${name}(?:\\s+from\\s+${organization})?${boundary}`;
   const nextAddressee = new RegExp(
-    `(?:\\s*,\\s*(?:and\\s+)?|\\s+and\\s+)(?!(?:please|then|also|instead|${partyCue})\\b)${addressee}`,
+    `(?:(${correction})|\\s*,\\s*(?:and\\s+)?|\\s+and\\s+)(?!(?:please|then|also|instead|${partyCue})\\b)${addressee}`,
     "iyu",
   );
   const newClause = /(?:[.!?;:,\r\n–—]|\s-\s|\b(?:and(?:\s+then)?|then|also|but)\b)\s*(?:please\s+)?$/i;
@@ -158,18 +160,20 @@ function parseNamedExpressions(instruction: string) {
       && /^\s+to\b/i.test(command.slice(end));
     if (artifactToRecipient) continue;
 
-    const recordAddressee = (name: string | undefined, organization: string | undefined, index: number) => {
-      if (excluded) {
-        if (name && organization) negatedQualifiedNames.add(normalizePartyName(name));
-      } else add(name, organization, "party", index);
-    };
-    recordAddressee(recipient, qualifier, match.index);
+    const addressees = [{ name: recipient, organization: qualifier, index: match.index }];
     nextAddressee.lastIndex = end;
     previousAddresseeEnd = end;
     for (let next = nextAddressee.exec(command); next; next = nextAddressee.exec(command)) {
-      if (CONSEQUENTIAL.exec(next[1] ?? "")?.index === 0) break;
-      recordAddressee(next[1], next[2], next.index);
+      const [, corrected, name, organization] = next;
+      if (CONSEQUENTIAL.exec(name ?? "")?.index === 0) break;
+      const index = corrected ? addressees.pop()!.index : next.index;
+      addressees.push({ name, organization, index });
       previousAddresseeEnd = nextAddressee.lastIndex;
+    }
+    for (const { name, organization, index } of addressees) {
+      if (excluded) {
+        if (name && organization) negatedQualifiedNames.add(normalizePartyName(name));
+      } else add(name, organization, "party", index);
     }
     if (!excluded && /^\s*:/.test(command.slice(previousAddresseeEnd))) {
       command = command.slice(0, previousAddresseeEnd);
