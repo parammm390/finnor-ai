@@ -71,7 +71,8 @@ describe.skipIf(!await databaseAvailable())("persisted conversation outreach rec
     ["inline content", "Email Terry Morgan saying to call Bob Smith.", [contacts.terry]],
     ["inline topic", "Email Terry Morgan about whether to call Bob Smith.", [contacts.terry]],
     ["corrected addressee", "Email Terry Morgan — sorry, Terry Morgan from Birch", [contacts.birchTerry]],
-  ])("persists only the addressees for %s", async (_scenario, instruction, recipients) => {
+    ["channel switch with a result clause", "I can't call Terry Morgan from Birch, so email Terry Morgan", [], "Which active target do you mean for Terry Morgan?"],
+  ])("persists only the addressees for %s", async (_scenario, instruction, recipients, clarificationQuestion = null) => {
     const response = await POST(new Request("http://localhost/api/actions", {
       method: "POST",
       headers: { "content-type": "application/json", "x-tenant-id": tenantId, "x-user-id": employeeId, "x-user-role": "owner" },
@@ -87,7 +88,11 @@ describe.skipIf(!await databaseAvailable())("persisted conversation outreach rec
     expect(persisted?.messages.find(message => message.role === "user")).toMatchObject({
       instructionId: body.instructionId,
       originalText: instruction,
-      resolutionSnapshot: { status: expected.length ? "resolved" : "none", resolvedReferences: expected },
+      resolutionSnapshot: {
+        status: clarificationQuestion ? "clarification_required" : expected.length ? "resolved" : "none",
+        resolvedReferences: expected,
+        clarificationQuestion,
+      },
     });
     expect(persisted?.thread.activeReferences.map(({ entityType, entityId, label }) => ({ entityType, entityId, label })))
       .toEqual(expected);

@@ -138,14 +138,15 @@ function parseNamedExpressions(instruction: string) {
   const organization = "([\\p{L}][\\p{L}\\d&.' –—-]{1,80}?)";
   const dash = "(?:\\s+-\\s+|\\s*[–—]\\s*)";
   const dashClause = `${dash}(?:please\\s+)?${partyCue}\\s+`;
+  const joinedClause = "\\b(?:and(?:\\s+then)?|then|also|but|so)\\s+(?:please\\s+)?";
   const correction = `(?:${dash}|\\s*,\\s*)(?:sorry\\s*,|I\\s+mean\\b\\s*,?)\\s*`;
-  const boundary = `(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then|instead)\\b|${dashClause}|${correction}|\\s*[\\x00,.!?;:]|\\s*$)`;
+  const boundary = `(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then|instead)\\b|\\s+${joinedClause}${partyCue}\\b|${dashClause}|${correction}|\\s*[\\x00,.!?;:]|\\s*$)`;
   const addressee = `(?:the\\s+)?${name}(?:\\s+from\\s+${organization})?${boundary}`;
   const nextAddressee = new RegExp(
-    `(?:(${correction})|\\s*,\\s*(?:and\\s+)?|\\s+and\\s+)(?!(?:please|then|also|instead|${partyCue})\\b)${addressee}`,
+    `(?:(${correction})|\\s*,\\s*(?:and\\s+)?|\\s+and\\s+)(?!(?:please|then|also|instead|${partyCue})\\b|${joinedClause}${partyCue}\\b)${addressee}`,
     "iyu",
   );
-  const newClause = /(?:[.!?;:,\r\n–—]|\s-\s|\b(?:and(?:\s+then)?|then|also|but)\b)\s*(?:please\s+)?$/i;
+  const newClause = new RegExp(`(?:[.!?;:,\\r\\n–—]|\\s-\\s)\\s*(?:please\\s+)?$|${joinedClause}$`, "i");
   let previousAddresseeEnd = 0;
   for (const match of command.matchAll(new RegExp(
     `\\b(?:${partyCue}|${excludedAlternative})\\s+${addressee}`,
