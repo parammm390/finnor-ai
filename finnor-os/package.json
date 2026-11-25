@@ -17,6 +17,8 @@
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
+    "benchmark:pe:birch": "tsx scripts/pe-acceptance/run.mts",
+    "benchmark:pe:birch:grade": "tsx scripts/pe-acceptance/grade.mts",
     "test:live:steel": "vitest run tests/live/steel-provider.live.test.ts",
     "test:staging": "tsx scripts/guard-staging.ts",
     "dev:api": "npm run dev --workspace @finnor/api",

@@ -30,6 +30,7 @@ import { and, eq } from "drizzle-orm";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const CONSEQUENTIAL = /\b(?:email|call|text|contact|message|ask|tell|send|create|update|delete|remove|notify|handoff|delegate|assign|schedule|reschedule|share|approve|reject|close|waive|continue|finish|repeat|do\s+that)\b/i;
 const PRONOUN = /\b(?:him|her|them|it|that person|that contact|that work|do that|continue that)\b/i;
+const NEGATED_PARTY_CUE = /\b(?:(?:do|may|must|should|can|could|will|would)\s+not|don't|mustn't|shouldn't|can't|couldn't|won't|wouldn't|cannot|never)\s+(?:ever\s+)?$/i;
 
 export type NamedExpressionCue = "party" | "history";
 export interface NamedExpression {
@@ -107,6 +108,7 @@ export async function resolveCanonicalHumanPrincipal(ctx: TenantContext): Promis
  */
 export function extractNamedExpressions(instruction: string): NamedExpression[] {
   const results: NamedExpression[] = [];
+  const negated = (index: number) => NEGATED_PARTY_CUE.test(instruction.slice(0, index));
   const add = (name: string | undefined, organization: string | undefined, cue: NamedExpressionCue, index: number) => {
     const clean = name?.replace(/\s+/g, " ").trim().replace(/[.,!?]+$/, "");
     if (!clean || clean.length < 2 || /^(?:the|this|that|him|her|them|it)$/i.test(clean)) return;
@@ -124,14 +126,16 @@ export function extractNamedExpressions(instruction: string): NamedExpression[] 
   for (const match of instruction.matchAll(new RegExp(
     `\\b(?:email|call|text|contact|message|notify|ask|tell)\\s+(?:the\\s+)?${name}\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?)${boundary}`,
     "giu",
-  ))) add(match[1], match[2], "party", match.index ?? 0);
+  ))) {
+    if (!negated(match.index)) add(match[1], match[2], "party", match.index);
+  }
   for (const match of instruction.matchAll(new RegExp(
     `\\b(?:email|call|text|contact|message|notify|ask|tell)\\s+(?:the\\s+)?${name}${boundary}`,
     "giu",
   ))) {
     const artifactToRecipient = /^(?:calculation|analysis|findings|results|memo|report|summary|document|model|update|draft|note)$/i.test(match[1] ?? "")
       && /^\s+to\b/i.test(instruction.slice((match.index ?? 0) + match[0].length));
-    if (!artifactToRecipient) add(match[1], undefined, "party", match.index ?? 0);
+    if (!artifactToRecipient && !negated(match.index)) add(match[1], undefined, "party", match.index);
   }
   for (const match of instruction.matchAll(new RegExp(
     `\\b(?:spoke|talked|met)\\s+(?:to|with)\\s+${name}(?:\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?))?${boundary}`,

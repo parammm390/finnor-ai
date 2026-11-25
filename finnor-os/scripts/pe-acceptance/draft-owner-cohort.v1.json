@@ -1,0 +1,25 @@
+{
+  "schema": "finnor.pe.cohort.v1",
+  "cohort": "draft-enabled-owner-v1",
+  "objective": "Run the unmodified Birch T0 mandate and prepare an internal IC draft without voting, approving, or communicating externally.",
+  "fixtureSha256": "33bf800024a1383cc16849e568005e0648e71900eeb942249ac59d3c6c238b77",
+  "stage": "T0",
+  "deadlineSeconds": 180,
+  "maxSteps": 30,
+  "maxActions": 7,
+  "maxQueries": 24,
+  "success": ["Existing IC preparation and decision-evidence verification", "Read back the persisted memo and sourced calculation sheet", "Run the frozen grader without treating arithmetic alone as acceptance"],
+  "authority": {
+    "principal": "isolated fixture owner",
+    "writeAllowlist": [
+      "create_underwriting_run",
+      "open_ic_case",
+      "begin_ic_preparation",
+      "create_ic_memo_draft",
+      "select_ic_memo_version",
+      "prepare_ic_recommendation",
+      "request_ic_memo_review"
+    ],
+    "prohibitions": ["approvals", "commitments", "outreach", "external effects", "access widening", "pre-seeded results", "paid models", "synthetic completion evidence"]
+  }
+}
