@@ -1384,7 +1384,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/orchestration/src/conversation.ts",
-      "sha256": "0283f7231972085c8ca08f4acfd9a2f3bce49e609c1404e25b65d7beaf676106"
+      "sha256": "36df472893761288577ff25a252b98fb6a20da32c72645abed1112c00dfaca94"
     },
     {
       "path": "finnor-os/packages/orchestration/src/critic.ts",
@@ -6067,5 +6067,5 @@ export default {
       "sha256": "7e60735b4765a156974769a5c22f84233249ceaa0817ee9ddc7e784de2394139"
     }
   ],
-  "sourceDigest": "e6753ca92d0475bf53fa4364181adb6eba931224dc8b7d5efb867429e4381d86"
+  "sourceDigest": "f53bae2231d65793ac96b2cba4276c71091781787940ad86b5f29c337c8a911f"
 } as const;

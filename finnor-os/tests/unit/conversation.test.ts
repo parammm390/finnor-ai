@@ -70,7 +70,7 @@ describe("safe empty-plan recovery", () => {
 });
 
 describe("greeting recognition", () => {
-  it.each(["hi", "Hello!", "hey", "heyyyaaa", "helloe", "hiii", "heyy there", "yooo", "hiya", "good morning"])(
+  it.each(["hi", "Hello!", "hey", "heyyyaaa", "helloe", "hiii", "heyy there", "Hello, team!", "yooo", "hiya", "good morning"])(
     "keeps the greeting %j conversational", (text) => {
       expect(isConversationalTurn(text)).toBe(true);
     });

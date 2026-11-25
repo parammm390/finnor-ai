@@ -12,7 +12,7 @@ import { answerSuppliedFinancialQuestion } from "./financial-explanation";
 // People stretch and misspell greetings ("heyyyaaa", "helloe", "hiii there"). A turn
 // that is only a greeting must stay conversational; anything after the optional
 // "there/team/all/everyone" address falls through to the business classifier.
-const GREETING = /^(?:h+i+y*|h+e+l+o+[a-z]?|h+e+y+[ay]*|h+i+y+a+|y+o+|howdy|hola|sup|good\s+(?:morning|afternoon|evening))(?:\s+(?:there|team|all|everyone|centropy|finnor))?[!.?,\s]*$/i;
+const GREETING = /^(?:h+i+y*|h+e+l+o+[a-z]?|h+e+y+[ay]*|h+i+y+a+|y+o+|howdy|hola|sup|good\s+(?:morning|afternoon|evening))(?:[,\s]+(?:there|team|all|everyone|centropy|finnor))?[!.?,\s]*$/i;
 const SOCIAL_TURN = /^(?:thanks?|thank\s+you|how\s+are\s+you|who\s+are\s+you|are\s+you\s+there|help)[!.?,\s]*$/i;
 const CAPABILITY_TURN = /^(?:what(?: all)? can you (?:do|handle)(?: for me)?|what(?: all)? can you help me accomplish|what(?: all)? do you (?:do|handle|support)|how can you help(?: me)?|what can i ask(?: you)?|what are you able to do|help me accomplish)(?: across my business| for private equity| in detail)?$/i;
 const CAPABILITY_LIST = /^(?:(?:list|show|explain)(?: me)? (?:all (?:of )?)?(?:your|finnor'?s|centropy'?s) (?:capabilities|features)|what are your (?:capabilities|features)|(?:tell|show) me everything you can do)$/i;
