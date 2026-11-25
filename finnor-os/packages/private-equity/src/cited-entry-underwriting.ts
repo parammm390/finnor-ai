@@ -252,7 +252,7 @@ export async function canReadCitedEntryCalculationDocument(ctx: PeMutationContex
   try {
     return (await readCitedEntryCalculation(ctx, versions[0]!.runId))?.documentId === documentId;
   } catch (error) {
-    if (error instanceof PeDomainError && ["PE_ENTITY_NOT_FOUND", "ENTRY_SOURCE_MISSING", "ENTRY_CALCULATION_CONFLICT"].includes(error.code)) return false;
+    if (error instanceof PeDomainError && ["PE_ENTITY_NOT_FOUND", "ENTRY_SOURCE_MISSING", "ENTRY_SOURCE_SUPERSEDED", "ENTRY_CALCULATION_CONFLICT"].includes(error.code)) return false;
     throw error;
   }
 }
