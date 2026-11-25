@@ -1,4 +1,5 @@
 import { ArtifactError, type ArtifactActor } from "@finnor/artifacts";
+import { canReadCitedEntryCalculationDocument } from "../../../packages/private-equity/src/cited-entry-underwriting";
 import { canReadGeneratedCommitteeMemo } from "../../../packages/private-equity/src/ic-memo-access";
 import { MicrosoftGraphError } from "@finnor/provider-microsoft365";
 import { ProviderAuthError } from "@finnor/security";
@@ -18,11 +19,12 @@ export function artifactActor(ctx: TenantContext): ArtifactActor {
 }
 
 export async function requireReadableArtifact(ctx: TenantContext, documentId: string): Promise<void> {
-  const allowed = await canReadGeneratedCommitteeMemo({
+  const readContext = {
     auth: ctx,
     provenance: { sourceSystem: "api:document-read", createdBy: ctx.userId },
-  }, documentId);
-  if (!allowed) throw new ArtifactError("DOCUMENT_NOT_FOUND");
+  };
+  if (!await canReadGeneratedCommitteeMemo(readContext, documentId)
+    || !await canReadCitedEntryCalculationDocument(readContext, documentId)) throw new ArtifactError("DOCUMENT_NOT_FOUND");
 }
 
 export async function boundedJson(req: Request, maxBytes = 1_048_576): Promise<Record<string, unknown>> {

@@ -656,6 +656,7 @@ export function assessPrivateEquityIcPreparation(input: {
   workCreatedAt: Date | string;
   memoContentVerified: boolean;
   requireScenario?: boolean;
+  scenarioHasOverrides?: boolean;
 }): { satisfied: boolean; gaps: string[] } {
   const { workspace } = input;
   const preparedStates = new Set(["READY_FOR_REVIEW", "QUESTIONS_OPEN", "READY_FOR_VOTE", "VOTING", "CONDITIONS_PENDING"]);
@@ -667,7 +668,7 @@ export function assessPrivateEquityIcPreparation(input: {
     ...(!workspace.underwriting?.eligibleUnderPinnedPolicy ? ["UNDERWRITING_BASIS_NOT_ELIGIBLE"] : []),
     ...(workspace.underwriting?.run.workId !== input.workId ? ["UNDERWRITING_NOT_LINKED_TO_WORK"] : []),
     ...(!Number.isFinite(workTime) || !Number.isFinite(runTime) || runTime < workTime ? ["NO_FRESH_UNDERWRITING_RUN"] : []),
-    ...(input.requireScenario && !workspace.underwriting?.run.scenarioId ? ["NO_UNDERWRITING_SCENARIO"] : []),
+    ...(input.requireScenario && !input.scenarioHasOverrides ? ["NO_UNDERWRITING_SCENARIO"] : []),
     ...(!workspace.memo || !workspace.artifacts.memo ? ["MEMO_VERSION_MISSING"] : []),
     ...(!Number.isFinite(workTime) || !Number.isFinite(memoTime) || memoTime < workTime ? ["NO_FRESH_MEMO_VERSION"] : []),
     ...(!input.memoContentVerified || workspace.artifacts.memo?.parseStatus !== "parsed" ? ["MEMO_CONTENT_NOT_VERIFIED"] : []),
@@ -734,12 +735,23 @@ async function privateEquityIcPreparationCriterion(params: {
       );
       return result.rows[0]?.valid === true;
     }, { readOnly: true });
+    const scenarioId = workspace.underwriting?.run.scenarioId;
+    const scenarioHasOverrides = params.requireScenario && typeof scenarioId === "string" && await peTransaction(ctx, async (_db, client) => {
+      const result = await client.query<{ overrides: unknown }>(
+        `SELECT definition->'overrides' overrides FROM finnor_os.underwriting_scenarios
+         WHERE tenant_id=$1 AND id=$2`,
+        [params.tenantId, scenarioId],
+      );
+      const overrides = result.rows[0]?.overrides;
+      return Array.isArray(overrides) && overrides.length > 0;
+    }, { readOnly: true });
     const assessment = assessPrivateEquityIcPreparation({
       workspace,
       workId: params.workId,
       workCreatedAt: work.createdAt,
       memoContentVerified,
       requireScenario: params.requireScenario,
+      scenarioHasOverrides,
     });
     if (assessment.satisfied) return {
       satisfied: true,
