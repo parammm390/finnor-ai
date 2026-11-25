@@ -7,6 +7,7 @@ import { and, desc, eq, inArray, lte } from "drizzle-orm";
 import { z } from "zod";
 import { EconomicReadRequestSchema, economicReadAcceptanceRequests, isEconomicReadIntent, redactEconomicReadPayload } from "@finnor/shared-types";
 import { canReadEconomicQuery } from "@finnor/private-equity/src/economic-reads/reader";
+import { CITED_ENTRY_MODEL } from "@finnor/private-equity/src/cited-entry-underwriting";
 import { economicObjectiveRequestsPositiveEffect } from "./objective-economic-reads";
 import {
   CANONICAL_ENTITY_TYPES,
@@ -570,6 +571,28 @@ function icExistingCaseRunCandidate(goal: GoalSpec, snapshot: PlanningWorldSnaps
   return boundedIcActionCandidate(goal, "select_ic_underwriting_run", {
     dealId: basis.dealId, icCaseId: current.id, expectedCaseVersion: current.version, underwritingRunId: run.id,
   }, "grounded-existing-ic-run-selection");
+}
+
+function citedEntryUnderwritingCandidate(goal: GoalSpec, planningContext: unknown): CandidatePlan | null {
+  const goalCriterion = goal.criteria.find(item => item.criterion.kind === "private_equity_ic_preparation");
+  if (goalCriterion?.criterion.kind !== "private_equity_ic_preparation") return null;
+  const inspection = record(planningContext);
+  const basis = record(inspection.privateEquityIcBasis);
+  if (basis.dealId !== goalCriterion.criterion.dealId) return null;
+  const queries = Array.isArray(inspection.queryExecutions) ? inspection.queryExecutions.map(record) : [];
+  const iterations = Array.isArray(inspection.priorIterations) ? inspection.priorIterations.map(record) : [];
+  if (!queries.some(query => query.intent === "pe_world_state" && query.status === "succeeded")
+    && !iterations.some(step => step.decisionKind === "query")) return null;
+  const actions = Array.isArray(inspection.actions) ? inspection.actions.map(record) : [];
+  if (actions.some(action => action.actionType === "create_underwriting_run")) return null;
+  const cases = Array.isArray(basis.investmentCases) ? basis.investmentCases.map(record) : [];
+  const models = Array.isArray(basis.modelVersions) ? basis.modelVersions.map(record) : [];
+  const candidates = models.filter(model => model.modelKey === CITED_ENTRY_MODEL
+    && cases.some(candidate => candidate.id === model.investmentCaseId && candidate.state === "active"));
+  if (candidates.length !== 1) return null;
+  return boundedIcActionCandidate(goal, "create_underwriting_run", {
+    dealId: basis.dealId, investmentCaseId: candidates[0]!.investmentCaseId, modelVersionId: candidates[0]!.id,
+  }, "grounded-cited-entry-underwriting");
 }
 
 function icCaseOpeningCandidate(goal: GoalSpec, snapshot: PlanningWorldSnapshot, planningContext: unknown): CandidatePlan | null {
@@ -1410,6 +1433,7 @@ export class LLMPlanner implements Planner {
       ?? icCurrentStateVerificationCandidate(goal, opts.planningContext)
       ?? icExistingCaseRunCandidate(goal, snapshot, opts.planningContext)
       ?? icCaseOpeningCandidate(goal, snapshot, opts.planningContext)
+      ?? citedEntryUnderwritingCandidate(goal, opts.planningContext)
       ?? icRevenueSensitivityCandidate(goal, opts.planningContext)
       ?? icGroundingReadCandidate(goal, snapshot, opts.planningContext)
       ?? this.deterministicCandidate(instruction, planningInstruction, memory, allowedActionTypes, goal, opts);

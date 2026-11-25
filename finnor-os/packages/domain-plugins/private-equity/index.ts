@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { CITED_ENTRY_MODEL, runCitedEntryUnderwriting } from "../../private-equity/src/cited-entry-underwriting";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { createGroundedMemoArtifact, getArtifact, instantiateArtifactTemplate, type GroundedMemoSection, type GroundedTemplateField } from "@finnor/artifacts";
 import {
@@ -1096,6 +1097,14 @@ async function executeMutation(actionType: PrivateEquityActionType, payload: Pay
   switch (actionType) {
     case "execute_closing_operation": throw new PeDomainError("CLOSING_NATIVE_TRANSPORT_REQUIRED", "Closing provider execution is not a canonical PE row mutation");
     case "create_underwriting_run": {
+      const modelKey = await peTransaction(ctx, async (_db, client) => (await client.query<{ key: string }>(
+        "SELECT model_definition->>'modelKey' AS key FROM finnor_os.underwriting_model_versions WHERE tenant_id=$1 AND id=$2",
+        [ctx.auth.tenantId, payload.modelVersionId],
+      )).rows[0]?.key, { readOnly: true });
+      const citedEntry = modelKey === CITED_ENTRY_MODEL;
+      if (citedEntry && (payload.scenario || payload.scenarioId || payload.committeeEbitda || payload.baseRunId)) {
+        throw new PeDomainError("ENTRY_SCENARIO_CONFLICT", "Cited entry underwriting does not accept alternate input overrides.");
+      }
       let scenario = payload.scenario as Pick<UnderwritingScenario, "name" | "overrides" | "committeeEbitdaBasis"> | undefined;
       if (payload.committeeEbitda) {
         const resolved = await resolveCommitteeEbitdaScenario(ctx, {
@@ -1113,12 +1122,15 @@ async function executeMutation(actionType: PrivateEquityActionType, payload: Pay
         scenario: { schemaVersion: "underwriting-scenario.v1", ...scenario },
       }) : null;
       const scenarioId = createdScenario ? String(createdScenario.id) : payload.scenarioId as string | undefined;
-      const persisted = await createUnderwritingRun(ctx, {
+      const runInput = {
         investmentCaseId: String(payload.investmentCaseId), modelVersionId: String(payload.modelVersionId),
         worldAt: String(payload.worldAt), idempotencyKey: String(draft.domainActionId),
         scenarioId, baseRunId: payload.baseRunId as string | undefined,
         workId: String(payload.workId),
-      });
+      };
+      const persisted = citedEntry
+        ? await runCitedEntryUnderwriting(ctx, { ...runInput, dealId: String(payload.dealId) })
+        : await createUnderwritingRun(ctx, runInput);
       const observed = await getUnderwritingRun(ctx, persisted.id);
       if (observed.workId !== payload.workId || observed.investmentCaseId !== payload.investmentCaseId
           || observed.modelVersionId !== payload.modelVersionId || (scenarioId && observed.scenarioId !== scenarioId)) {

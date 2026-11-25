@@ -96,6 +96,12 @@ export async function assertEvidenceSnapshotCurrent(ctx:PeMutationContext,snapsh
  await assertCommitteeFinancialInputsCurrent(ctx,snapshot,client,lock);
  await assertConfidentialSnapshotCurrent(ctx,snapshot,client,lock);
  await assertPrimarySnapshotCurrent(ctx,snapshot,client,lock);
+ const entrySources=[...new Set(Object.values(snapshot.values).flatMap(input=>input.provenance
+  .filter(ref=>ref.kind==='cited_entry_exhibit').map(ref=>ref.id)))];
+ if(entrySources.length)await authorizeBeliefResources(ctx,[
+  {type:'pe_investment_case',id:snapshot.investmentCaseId},
+  ...entrySources.map(id=>({type:'document',id})),
+ ],client);
  for(const input of Object.values(snapshot.values))for(const ref of input.provenance.filter(r=>r.kind==='evidence_derivation')){
   const derivation=await currentDerivation(ctx,ref.id,client),output=derivation.result?.outputs[ref.anchorId??''];if(!output||output.kind!=='scalar'||output.value!==input.value||input.truthClass!=='DERIVED_VALUE'||input.status!=='KNOWN'||ref.semanticHash!==derivation.result?.digest)throw Error('DERIVATION_CONSUMER_PROVENANCE_OR_CURRENTNESS_FAILED');
   if(client)await assertDependencies(ctx,derivation.invalidationKeys,client,lock);
@@ -108,7 +114,7 @@ export async function assertEvidenceRunTransactionCurrent(client:PoolClient,tena
  const row=(await client.query<{input_snapshot:UnderwritingInputSnapshot}>('SELECT input_snapshot FROM finnor_os.underwriting_runs WHERE tenant_id=$1 AND id=$2',[tenantId,runId])).rows[0];
  if(!row)throw Error('CURRENT_UNDERWRITING_RUN_UNAVAILABLE');
  refuseUnadmittedConfidentialSink(row.input_snapshot);
- if(!Object.values(row.input_snapshot.values).some(v=>v.provenance.some(p=>p.kind==='evidence_derivation'||p.kind==='primary_finding'||p.kind==='committee_financial_assertion')))return false;
+ if(!Object.values(row.input_snapshot.values).some(v=>v.provenance.some(p=>p.kind==='evidence_derivation'||p.kind==='primary_finding'||p.kind==='committee_financial_assertion'||p.kind==='cited_entry_exhibit')))return false;
  const identity=(await client.query<{id:string;role:string;status:string;transaction_read_only:string}>("SELECT id::text,role,status,current_setting('transaction_read_only') transaction_read_only FROM finnor_os.users WHERE tenant_id=$1 AND id=NULLIF(current_setting('app.user_id',true),'')::uuid",[tenantId])).rows[0];
  if(!identity||identity.status!=='active'||identity.role!=='owner')throw Error('CURRENT_AUTHENTICATED_PRINCIPAL_UNAVAILABLE');
  if(!['on','off'].includes(identity.transaction_read_only))throw Error('CURRENT_TRANSACTION_MODE_UNAVAILABLE');
