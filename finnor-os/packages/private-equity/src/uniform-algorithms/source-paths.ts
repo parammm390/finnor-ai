@@ -1514,5 +1514,6 @@ export const UNIFORM_SOURCE_PATHS=[
   "src/lib/api/request.ts",
   "src/lib/centropy/oauth-transport.ts",
   "src/lib/centropy/proxy-auth.ts",
-  "src/components/centropy/lib/user-message.ts"
+  "src/components/centropy/lib/user-message.ts",
+  "finnor-os/packages/db/keyset.ts"
 ] as const;

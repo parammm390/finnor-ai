@@ -12,6 +12,7 @@ import {connectWithExecutionDeadline,queryWithExecutionDeadline} from "./executi
 import { CURRENT_MIGRATION_HEAD } from "./migration-head";
 import { PRODUCTION_JOB_CONTRACTS, classifyTrustedJobInstance, isProductionJobType } from "./compute-contract";
 import { pgConnectionConfig } from "./postgres-connection.mjs";
+import { decodeKeysetCursor, encodeKeysetCursor, exactInstant, olderThan } from "./keyset";
 export { MAX_BACKGROUND_SCAN_BATCH, MAX_HIGH_EGRESS_ROWS, MAX_INSTRUCTION_EVENT_PAGE, MAX_WORK_AGGREGATE_ROWS } from "./read-limits";
 import { MAX_HIGH_EGRESS_ROWS, MAX_WORK_AGGREGATE_ROWS } from "./read-limits";
 import {
@@ -54,6 +55,7 @@ export { pgConnectionConfig } from "./postgres-connection.mjs";
 export * from "./execution-deadline";
 export * from "./governed-egress";
 export * from "./conversation-memory";
+export * from "./keyset";
 export { schema };
 
 export type Db = NodePgDatabase<typeof schema>;
@@ -2944,26 +2946,6 @@ export interface EmployeeConversationThreadsPage {
   nextCursor: string | null;
 }
 
-function parseEmployeeThreadCursor(cursor: string | undefined): { at: string; id: string } | null {
-  if (cursor === undefined) return null;
-  if (cursor.length === 0 || cursor.length > 512 || !/^[A-Za-z0-9_-]+$/.test(cursor))
-    throw new Error("INVALID_CONVERSATION_PAGE_CURSOR");
-  try {
-    const encoded = Buffer.from(cursor, "base64url");
-    if (encoded.toString("base64url") !== cursor) throw new Error("invalid encoding");
-    const parsed: unknown = JSON.parse(encoded.toString("utf8"));
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid cursor");
-    const value = parsed as { v?: unknown; at?: unknown; id?: unknown };
-    if (value.v !== 1 || typeof value.at !== "string" ||
-        !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$/.test(value.at) ||
-        !Number.isFinite(Date.parse(value.at)) || new Date(value.at).toISOString() !== value.at.slice(0, 23) + "Z" ||
-        typeof value.id !== "string" || !isUuid(value.id)) throw new Error("invalid cursor");
-    return { at: value.at, id: value.id };
-  } catch {
-    throw new Error("INVALID_CONVERSATION_PAGE_CURSOR");
-  }
-}
-
 export async function pageEmployeeConversationThreads(params: {
   tenantId: string;
   ownerEmployeeId: string;
@@ -2972,28 +2954,19 @@ export async function pageEmployeeConversationThreads(params: {
 }): Promise<EmployeeConversationThreadsPage> {
   requireEmployeeOwner(params.ownerEmployeeId);
   const limit = Math.max(1, Math.min(params.limit ?? 30, 100));
-  const cursor = parseEmployeeThreadCursor(params.cursor);
+  const cursor = params.cursor === undefined ? null : decodeKeysetCursor(params.cursor);
+  const threads = schema.employeeConversationThreads;
   return withTenant(params.tenantId, async db => {
-    // Preserve PostgreSQL microseconds; JS Date would lose records during pagination.
-    const rows = await db.select({ thread: schema.employeeConversationThreads,
-      instant: sql<string>`to_char(${schema.employeeConversationThreads.lastActivityAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`,
-    }).from(schema.employeeConversationThreads).where(and(
-      eq(schema.employeeConversationThreads.tenantId, params.tenantId),
-      eq(schema.employeeConversationThreads.ownerEmployeeId, params.ownerEmployeeId),
-      ...(cursor ? [or(
-        lt(schema.employeeConversationThreads.lastActivityAt, sql`${cursor.at}::timestamptz`),
-        and(eq(schema.employeeConversationThreads.lastActivityAt, sql`${cursor.at}::timestamptz`),
-          lt(schema.employeeConversationThreads.id, cursor.id)),
-      )] : []),
-    )).orderBy(desc(schema.employeeConversationThreads.lastActivityAt),
-      desc(schema.employeeConversationThreads.id)).limit(limit + 1);
+    const rows = await db.select({ thread: threads, at: exactInstant(threads.lastActivityAt) }).from(threads).where(and(
+      eq(threads.tenantId, params.tenantId),
+      eq(threads.ownerEmployeeId, params.ownerEmployeeId),
+      cursor ? olderThan(threads.lastActivityAt, threads.id, cursor) : undefined,
+    )).orderBy(desc(threads.lastActivityAt), desc(threads.id)).limit(limit + 1);
     const page = rows.slice(0, limit);
     const last = page.at(-1);
     return {
       threads: page.map(({ thread }) => conversationThread(thread)),
-      nextCursor: rows.length > limit && last
-        ? Buffer.from(JSON.stringify({ v: 1, at: last.instant, id: last.thread.id })).toString("base64url")
-        : null,
+      nextCursor: rows.length > limit && last ? encodeKeysetCursor({ at: last.at, id: last.thread.id }) : null,
     };
   }, params.ownerEmployeeId);
 }

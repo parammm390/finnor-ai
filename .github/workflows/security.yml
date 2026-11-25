@@ -91,14 +91,15 @@ jobs:
           GIT_COMMITTER_NAME: FINNOR scanner fixture
           GIT_COMMITTER_EMAIL: fixture@example.invalid
         run: node scripts/centropy/verify-secret-scan-policy.mjs "$GITLEAKS_BIN" "$RUNNER_TEMP/finnor-secret-policy-proof.json"
-      - name: Reject machine-local paths added by this change
+      - name: Reject recurring mistakes added by this change
         if: ${{ always() }}
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          node --test scripts/guards/machine-local-paths.e2e.test.mjs
+          node --test scripts/guards/*.e2e.test.mjs
           node scripts/guards/machine-local-paths.mjs "$BASE_SHA" "$HEAD_SHA"
+          node scripts/guards/keyset-cursors.mjs "$BASE_SHA" "$HEAD_SHA"
       - name: Retain redacted complete-history findings
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a

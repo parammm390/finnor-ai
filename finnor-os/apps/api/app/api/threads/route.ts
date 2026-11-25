@@ -1,4 +1,4 @@
-import { createEmployeeConversationThread, pageEmployeeConversationThreads } from "@finnor/db";
+import { createEmployeeConversationThread, InvalidKeysetCursorError, pageEmployeeConversationThreads } from "@finnor/db";
 import { resolveCanonicalHumanPrincipal } from "@finnor/orchestration";
 import { errorResponse, requireContext } from "../../../lib/auth";
 import { CreateThreadSchema } from "../../../lib/product-control-schemas";
@@ -20,7 +20,7 @@ export async function GET(req: Request): Promise<Response> {
     });
     return Response.json(page, { headers: { "cache-control": "private, no-store" } });
   } catch (error) {
-    if (error instanceof Error && error.message === "INVALID_CONVERSATION_PAGE_CURSOR") return Response.json({ error: "Invalid Investigations page cursor" }, { status: 400 });
+    if (error instanceof InvalidKeysetCursorError) return Response.json({ error: "Invalid Investigations page cursor" }, { status: 400 });
     if (error instanceof Error && error.message.startsWith("canonical_human_principal")) return Response.json({ error: error.message }, { status: 403 });
     return errorResponse(error);
   }

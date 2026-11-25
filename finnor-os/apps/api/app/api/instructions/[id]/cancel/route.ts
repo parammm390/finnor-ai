@@ -1,6 +1,6 @@
-import { MAX_BACKGROUND_SCAN_BATCH, canReadEmployeeInstruction, assertCurrentEmployeeWorkOwner, WorkControlAuthorizationError, actionLog, domainActions, instructionSessions, workflowRuns, workflowSteps, workObjectiveLoops, works, withTenant, transitionWork } from "@finnor/db";
+import { MAX_BACKGROUND_SCAN_BATCH, exactInstant, newerThan, type KeysetPosition, canReadEmployeeInstruction, assertCurrentEmployeeWorkOwner, WorkControlAuthorizationError, actionLog, domainActions, instructionSessions, workflowRuns, workflowSteps, workObjectiveLoops, works, withTenant, transitionWork } from "@finnor/db";
 import { cancelRun } from "@finnor/workflow-runtime";
-import { and, asc, eq, gt, inArray, or } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { emitInstructionEvent, recordInstructionCancellationFence } from "@finnor/orchestration";
 import { canApprove, errorResponse, requireContext } from "../../../../../lib/auth";
 import { getOrchestrator } from "../../../../../lib/orchestrator";
@@ -53,27 +53,24 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       // Cancellation is a rare write path, but an instruction may have a long
       // history. Walk it with SQL-side keyset pages so one request never asks
       // PostgreSQL/Supavisor to materialize an unbounded DomainAction result.
-      const actions: Array<{ id: string; status: string; createdAt: Date }> = [];
-      let cursor: { createdAt: Date; id: string } | null = null;
+      const actions: Array<{ id: string; status: string }> = [];
+      let cursor: KeysetPosition | null = null;
       while (true) {
-        const pagePlus: Array<{ id: string; status: string; createdAt: Date }> = await db
-          .select({ id: domainActions.id, status: domainActions.status, createdAt: domainActions.createdAt })
+        const pagePlus = await db
+          .select({ id: domainActions.id, status: domainActions.status, at: exactInstant(domainActions.createdAt) })
           .from(domainActions)
           .where(and(
             eq(domainActions.tenantId, ctx.tenantId),
             instruction.workId ? eq(domainActions.workId, instruction.workId) : eq(domainActions.instructionId, id),
-            cursor ? or(
-              gt(domainActions.createdAt, cursor.createdAt),
-              and(eq(domainActions.createdAt, cursor.createdAt), gt(domainActions.id, cursor.id)),
-            ) : undefined,
+            cursor ? newerThan(domainActions.createdAt, domainActions.id, cursor) : undefined,
           ))
           .orderBy(asc(domainActions.createdAt), asc(domainActions.id))
           .limit(MAX_BACKGROUND_SCAN_BATCH + 1);
-        const page: Array<{ id: string; status: string; createdAt: Date }> = pagePlus.slice(0, MAX_BACKGROUND_SCAN_BATCH);
+        const page = pagePlus.slice(0, MAX_BACKGROUND_SCAN_BATCH);
         actions.push(...page);
-        if (pagePlus.length <= MAX_BACKGROUND_SCAN_BATCH || page.length === 0) break;
-        const last: { id: string; status: string; createdAt: Date } = page[page.length - 1]!;
-        cursor = { createdAt: last.createdAt, id: last.id };
+        const last = page.at(-1);
+        if (pagePlus.length <= MAX_BACKGROUND_SCAN_BATCH || !last) break;
+        cursor = { at: last.at, id: last.id };
       }
       return { instruction, actions };
     });
