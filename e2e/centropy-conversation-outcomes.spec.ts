@@ -28,6 +28,7 @@ test("conversation owns exact Work turns; plain replies never inherit decisions"
   try {
     await page.goto("/centropy")
     await expect(page.getByRole("heading", { name: "From a question to a decision." })).toBeVisible()
+    expect(fixtures.requests.filter(request => request.method === "GET" && new URL(request.path).pathname === "/api/centropy/threads")).toHaveLength(0)
     await expect(nav(page, "Conversation")).toHaveAttribute("aria-pressed", "true")
     await expect(page.locator(".ct-canvas > *")).toHaveCount(0)
     await page.getByRole("button", { name: "Which assumptions drive the downside case?" }).click()

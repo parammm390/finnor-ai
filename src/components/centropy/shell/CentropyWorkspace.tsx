@@ -230,7 +230,11 @@ function CentropyWorkspaceContent() {
     }
   }, [ready, auth.session?.user.id, recentLoading, recentOlderLoading, recentNextCursor, recentOwnerId, mutationScopeKey, mutationIsCurrent])
 
-  useEffect(() => { void refreshRecent() }, [refreshRecent])
+  // A closed history drawer must not compete with identity restoration.
+  useEffect(() => {
+    if (mobilePane === "desk" || (mobilePane === "canvas" && !threadId && !worldMode && !draftArtifactInUrl))
+      void refreshRecent()
+  }, [refreshRecent, mobilePane, threadId, worldMode, draftArtifactInUrl])
   useEffect(() => () => traceRuntime.current?.stop(), [])
 
   const startTrace = useCallback((instructionId: string) => {
@@ -574,7 +578,7 @@ function CentropyWorkspaceContent() {
     <header className="ct-topbar">
       <Link className="ct-brand" href="/centropy" onClick={() => { invalidateSelection(); traceRuntime.current?.stop(); setTrace(null); setPending(null); setThreadId(null); setResponseWork(null); setReplayWorkId(null); setExplicitRoot(null); setFocusedObject(null); setMobilePane("thread") }} aria-label="CENTROPY new Investigation"><CentropyPresence state={presenceState} size={26} animated={false} /><strong>CENTROPY</strong></Link>
       <div className="ct-topbar__actions">
-        <button type="button" aria-label="Investigations" onClick={() => drawer.current?.showModal()}><History size={16} aria-hidden /><span>Investigations</span></button>
+        <button type="button" aria-label="Investigations" onClick={() => { drawer.current?.showModal(); void refreshRecent() }}><History size={16} aria-hidden /><span>Investigations</span></button>
         {worldMode ? <button type="button" aria-label="Open Canvas" onClick={() => openCanvas()}><PanelsTopLeft size={16} aria-hidden /><span>Canvas</span></button>
           : <button type="button" aria-label="Open WORLD" onClick={openWorld}><Globe2 size={16} aria-hidden /><span>WORLD</span></button>}
         <details className="ct-account"><summary aria-label="Account menu">{auth.session.user.email?.slice(0, 1).toUpperCase() ?? "•"}</summary><div><span>{auth.session.user.email}</span><button type="button" onClick={() => setSettingsOpen(true)}><Settings size={15} aria-hidden /> Settings</button><button type="button" onClick={() => void auth.signOut()}><LogOut size={15} aria-hidden /> Sign out</button></div></details>
