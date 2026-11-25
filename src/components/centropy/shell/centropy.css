@@ -84,7 +84,13 @@
 .ct-thread__notice button { border: 0; color: var(--ct-accent); background: transparent; text-decoration: underline; }
 .ct-thread__older { display: block; margin: 0 auto 25px; border: 1px solid var(--ct-line); color: var(--ct-muted); background: transparent; border-radius: 8px; padding: 7px 12px; }
 
-.ct-turn { margin-bottom: 30px; max-width: 100%; }
+.ct-turn { position: relative; margin-bottom: 30px; max-width: 100%; }
+.ct-turn__options { position: absolute; top: -4px; right: 0; z-index: 1; }
+.ct-turn__options summary { display: grid; place-items: center; min-width: 30px; min-height: 28px; color: var(--ct-muted); cursor: pointer; list-style: none; border-radius: 6px; }
+.ct-turn__options summary::-webkit-details-marker { display: none; }
+.ct-turn__options[open] { padding: 0 6px 6px; border: 1px solid var(--ct-line); border-radius: 8px; background: var(--ct-raised); }
+.ct-turn__options[open] summary { margin-left: auto; width: 30px; }
+.ct-turn__options button { border: 0; padding: 8px; background: transparent; color: var(--ct-accent); font-size: 12px; }
 .ct-turn__identity { display: flex; align-items: center; gap: 10px; color: var(--ct-faint); font-size: 11px; font-weight: 700; letter-spacing: .09em; margin-bottom: 9px; }
 .ct-turn[data-role="assistant"] .ct-turn__identity > span:first-child { color: var(--ct-accent); }
 .ct-turn__identity time { letter-spacing: 0; font-weight: 400; }

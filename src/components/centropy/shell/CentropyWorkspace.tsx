@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { ArrowRight, Globe2, History, LockKeyhole, LogOut, PanelsTopLeft, Plus, Settings } from "lucide-react"
+import { ArrowRight, Globe2, History, LockKeyhole, LogOut, MoreHorizontal, PanelsTopLeft, Plus, Settings } from "lucide-react"
 import { useCentropyAuth } from "@/components/centropy/lib/centropy-auth"
 import { usePrivateRequestScope } from "@/components/centropy/lib/use-private-request-scope"
 import { centropyDownload, centropyGet, centropyPost, CentropyApiError } from "@/components/centropy/lib/api"
@@ -586,6 +586,7 @@ function CentropyWorkspaceContent() {
           {messages.map((message) => <article className="ct-turn" data-role={message.role} data-work-id={message.workId ?? undefined} key={message.id}>
             <div className="ct-turn__identity"><span>{message.role === "user" ? "YOU" : "CENTROPY"}</span><time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time></div>
             <p>{message.originalText}</p>
+            {message.role === "assistant" && message.workId && !hasWorkOutcome(message) ? <details className="ct-turn__options"><summary aria-label="Message options"><MoreHorizontal size={16} aria-hidden /></summary><button type="button" onClick={() => { invalidateSelection(); setResponseWork(threadId ? { threadId, workId: message.workId! } : null); setAnswerWorkDetails(null); setMobilePane("canvas") }}>Inspect linked Work</button></details> : null}
             {message.id === workTurnId && !canvasWork ? <p className="ct-thread__notice" role="status">{canvasSources.work.error ?? "Reading linked Work…"}{canvasSources.work.error ? <button type="button" onClick={() => setCanvasRefresh(value => value + 1)}>Retry Work</button> : null}</p> : null}
             {message.id === workTurnId && canvasWork ? <>
               {showWorkBrief ? <WorkBrief work={canvasWork} execution={canvasDocument?.blocks.find(block => block.type === "work_execution")} current={canvasSources.work.status === "ready"} onOpen={() => setMobilePane("canvas")} onReview={() => { decisionReview.current?.scrollIntoView({ block: "start", behavior: "smooth" }); decisionReview.current?.focus({ preventScroll: true }) }} /> : null}
