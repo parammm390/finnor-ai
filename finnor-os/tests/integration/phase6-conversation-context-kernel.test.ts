@@ -116,9 +116,10 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
     await serviceConnection.end();
   });
 
-  // Phase 5 retired the Water resolver: households and appointments are no
-  // longer tenant truth, sender preferences are no longer inferred from chat,
-  // and senderIdentityRef is always null. The party and memory checks remain.
+  // Phase 5 retired the Water-only conversation resolver and its resource
+  // nouns (households, appointments). Sender-preference inference and sender
+  // revalidation are currently absent but not documented as retired, so this
+  // test does not pin their absence.
   it("resolves the Pentair contact, carries it into a pronoun follow-up and never resolves retired Water nouns", async () => {
     const day1 = await prepareEmployeeConversationTurn({
       ctx,
@@ -130,10 +131,9 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
     });
     goldenThreadId = day1.threadId;
     expect(day1.context.resolution.resolvedReferences).toEqual([expect.objectContaining({ entityType: "external_contact", entityId: johnSmith })]);
-    expect(day1.context.personalMemories).toEqual([]);
 
     const day2 = await prepareEmployeeConversationTurn({ ctx, threadId: goldenThreadId, instruction: "Email him and tell him we're moving Peterson to Friday.", instructionId: randomUUID(), idempotencyKey: "golden-day-2", channel: "text" });
-    expect(day2.context.resolution).toMatchObject({ status: "resolved", consequential: true, senderIdentityRef: null });
+    expect(day2.context.resolution).toMatchObject({ status: "resolved", consequential: true });
     expect(day2.context.resolution.resolvedReferences).toEqual([expect.objectContaining({ entityType: "external_contact", entityId: johnSmith, source: "thread" })]);
 
     const day3 = await prepareEmployeeConversationTurn({ ctx, threadId: goldenThreadId, instruction: "Move the Peterson appointment to Friday.", instructionId: randomUUID(), idempotencyKey: "golden-day-3", channel: "voice", transportSessionId: "vapi:transport-only" });
@@ -166,8 +166,9 @@ describe.skipIf(!available)("Phase 6 authenticated-employee conversation context
     expect(await listEmployeePersonalMemories({ tenantId: tenantA, ownerEmployeeId: sarah, subjectKey: "poison" })).toEqual([]);
   });
 
-  // The Work-continuation resolver was removed with the Water resolver, so
-  // "Continue that." no longer resolves to the active Work; it must clarify.
+  // Resolving "Continue that." to the active Work is currently unmet (the
+  // resolver was removed, not documented as retired); until it returns, the
+  // turn must fail closed with a clarification.
   it("links canonical conversation continuity to existing Work and objective truth", async () => {
     const objectiveText = "Reconcile the open appointment schedule and report completion.";
     const prepared = await prepareEmployeeConversationTurn({ ctx, instruction: objectiveText, instructionId: randomUUID(), idempotencyKey: "objective-continuity", channel: "text" });
