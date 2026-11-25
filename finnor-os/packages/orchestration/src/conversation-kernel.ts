@@ -30,7 +30,7 @@ import { and, eq } from "drizzle-orm";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const CONSEQUENTIAL = /\b(?:email|call|text|contact|message|ask|tell|send|create|update|delete|remove|notify|handoff|delegate|assign|schedule|reschedule|share|approve|reject|close|waive|continue|finish|repeat|do\s+that)\b/i;
 const PRONOUN = /\b(?:him|her|them|it|that person|that contact|that work|do that|continue that)\b/i;
-const NEGATED_PARTY_CUE = /\b(?:(?:do|may|must|should|can|could|will|would)\s+not|don't|mustn't|shouldn't|can't|couldn't|won't|wouldn't|cannot|never)\s+(?:ever\s+)?$/i;
+const NEGATED_PARTY_CUE = /\b(?:(?:do|may|must|should|can|could|will|would)\s+not|(?:don|mustn|shouldn|can|couldn|won|wouldn)['’]t|cannot|never)\s+(?:ever\s+)?$/i;
 
 export type NamedExpressionCue = "party" | "history";
 export interface NamedExpression {
@@ -107,7 +107,16 @@ export async function resolveCanonicalHumanPrincipal(ctx: TenantContext): Promis
  * appointment, quote, proposal and household are deliberately not recognized.
  */
 export function extractNamedExpressions(instruction: string): NamedExpression[] {
+  return parseNamedExpressions(instruction).expressions;
+}
+
+function normalizePartyName(name: string): string {
+  return name.replace(/\s+/g, " ").trim().toLocaleLowerCase();
+}
+
+function parseNamedExpressions(instruction: string) {
   const results: NamedExpression[] = [];
+  const negatedQualifiedNames = new Set<string>();
   const negated = (index: number) => NEGATED_PARTY_CUE.test(instruction.slice(0, index));
   const add = (name: string | undefined, organization: string | undefined, cue: NamedExpressionCue, index: number) => {
     const clean = name?.replace(/\s+/g, " ").trim().replace(/[.,!?]+$/, "");
@@ -122,12 +131,13 @@ export function extractNamedExpressions(instruction: string): NamedExpression[] 
     });
   };
   const name = "([\\p{L}][\\p{L}'-]+(?:\\s+[\\p{L}][\\p{L}'-]+){0,2}?)";
-  const boundary = "(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then)\\b|[,.!?]|$)";
+  const boundary = "(?=\\s+(?:from|at|about|regarding|and|to|on|for|we|then|instead)\\b|[,.!?;]|$)";
   for (const match of instruction.matchAll(new RegExp(
     `\\b(?:email|call|text|contact|message|notify|ask|tell)\\s+(?:the\\s+)?${name}\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?)${boundary}`,
     "giu",
   ))) {
-    if (!negated(match.index)) add(match[1], match[2], "party", match.index);
+    if (negated(match.index)) negatedQualifiedNames.add(normalizePartyName(match[1]!));
+    else add(match[1], match[2], "party", match.index);
   }
   for (const match of instruction.matchAll(new RegExp(
     `\\b(?:email|call|text|contact|message|notify|ask|tell)\\s+(?:the\\s+)?${name}${boundary}`,
@@ -141,7 +151,10 @@ export function extractNamedExpressions(instruction: string): NamedExpression[] 
     `\\b(?:spoke|talked|met)\\s+(?:to|with)\\s+${name}(?:\\s+from\\s+([\\p{L}][\\p{L}\\d&.' -]{1,80}?))?${boundary}`,
     "giu",
   ))) add(match[1], match[2], "history", match.index ?? 0);
-  return results.sort((left, right) => left.index - right.index).slice(0, 5);
+  return {
+    expressions: results.sort((left, right) => left.index - right.index).slice(0, 5),
+    negatedQualifiedNames,
+  };
 }
 
 export interface PreparedEmployeeConversationTurn {
@@ -218,7 +231,9 @@ export async function prepareEmployeeConversationTurn(params: {
   if (!loaded) throw new Error("conversation_thread_not_found");
 
   const history: EmployeeConversationMessage[] = [];
-  const named = extractNamedExpressions(params.instruction);
+  const { expressions: named, negatedQualifiedNames } = parseNamedExpressions(params.instruction);
+  const needsRecipientClarification = (expression: NamedExpression) =>
+    expression.cue === "party" && !expression.organization && negatedQualifiedNames.has(normalizePartyName(expression.name));
   for (const expression of named.filter((row) => row.cue === "history")) {
     const rows = await searchEmployeeConversationMessages({
       tenantId: params.ctx.tenantId,
@@ -251,6 +266,10 @@ export async function prepareEmployeeConversationTurn(params: {
   const unresolvedExpressions: string[] = [];
   const trace: ConversationResolutionProvenance[] = [];
   for (const expression of named) {
+    if (needsRecipientClarification(expression)) {
+      unresolvedExpressions.push(expression.name);
+      continue;
+    }
     const resolution = await resolveParty(
       params.ctx.tenantId,
       { query: expression.organization ? `${expression.name} ${expression.organization}` : expression.name },
@@ -273,6 +292,7 @@ export async function prepareEmployeeConversationTurn(params: {
   }
 
   const resolvedParties = named.flatMap((expression) => {
+    if (needsRecipientClarification(expression)) return [];
     const matching = partyCandidates.filter((candidate) =>
       candidate.label.toLocaleLowerCase().includes(expression.name.toLocaleLowerCase()),
     );
