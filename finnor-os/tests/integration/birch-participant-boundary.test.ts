@@ -12,7 +12,7 @@ it("allows Birch participant Work and standalone artifact editing, but denies de
   const directory = await mkdtemp(join(root, "participant-boundary-"));
   console.log(`Birch participant boundary receipt: ${directory}`);
   await promisify(execFile)(process.execPath, [
-    "--import=tsx", "scripts/pe-acceptance/run.mts", directory, "participant-boundary",
+    "--import=tsx", "scripts/pe-acceptance/participant-boundary.mts", directory,
   ], { cwd: fileURLToPath(new URL("../../", import.meta.url)), timeout: 90_000 });
   const files = await readdir(directory);
   expect(files).toHaveLength(1);

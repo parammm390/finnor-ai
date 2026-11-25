@@ -1,0 +1,30 @@
+{
+  "schema": "finnor.pe.cohort.v1",
+  "cohort": "human-assisted-owner-v1",
+  "objective": "Run the unchanged Birch mandate through the existing T0 gate; stop with one pending cited underwriting request before any approval.",
+  "fixtureSha256": "33bf800024a1383cc16849e568005e0648e71900eeb942249ac59d3c6c238b77",
+  "stage": "T0",
+  "deadlineSeconds": 180,
+  "maxSteps": 30,
+  "maxActions": 7,
+  "maxQueries": 24,
+  "success": [
+    "Persist one pending request for create_underwriting_run under the unchanged policy",
+    "Read the pending action through the product listing as the eligible fixture human and verify no execution",
+    "Stop the worker with the isolated request still pending; do not grade this checkpoint as T0 acceptance"
+  ],
+  "authority": {
+    "principal": "isolated fixture submitting owner",
+    "writeAllowlist": [
+      "create_underwriting_run",
+      "open_ic_case",
+      "begin_ic_preparation",
+      "create_ic_memo_draft",
+      "select_ic_memo_version",
+      "prepare_ic_recommendation",
+      "request_ic_memo_review"
+    ],
+    "humanApprover": "Separate fixture human reviewer; one approval for create_underwriting_run only through the unchanged product gate. The runner never approves.",
+    "prohibitions": ["runner approvals", "simulated approvals", "commitments", "outreach", "external effects", "access widening", "pre-seeded results", "paid models", "synthetic completion evidence", "later stages"]
+  }
+}
