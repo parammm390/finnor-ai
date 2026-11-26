@@ -304,7 +304,7 @@ export default {
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "a8ca92466fc0c040c9c2bb2ce3821de990586fcb38046b9d480ca88c174aef30"
+      "sha256": "22d9dedba31266bcb6455553105bbed5f2dfd0baad7096c8d31d0385b87b2977"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -6071,5 +6071,5 @@ export default {
       "sha256": "11dea46f9ca2d6c914d01df8683a1331ba51c144ed488904ad8ac251495f33d8"
     }
   ],
-  "sourceDigest": "bdb5f176a42f2601f47506e93a5220ebe7a0f40e3856304fd40fd0fa21924227"
+  "sourceDigest": "0aa77bdf24cccf229ea59e469f8a7221b1bf88fde4c2e0ed5f2a61269d812c07"
 } as const;

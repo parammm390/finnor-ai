@@ -1,10 +1,10 @@
 import { canExerciseAuthorityBatch } from "@finnor/authority";
 import {
-  authorityApprovalRequests, authorityApprovalRequestSteps, businessEffects, domainActions, employeeVisibleWork,
+  actionLog, authorityApprovalRequests, authorityApprovalRequestSteps, businessEffects, domainActions, employeeVisibleWork,
   withTenantTransaction, workEvents, works,
 } from "@finnor/db";
 import type { AuthorityRequest, AuthorityResource, TenantContext } from "@finnor/shared-types";
-import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, exists, inArray, isNull, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { requestEmployee } from "./work-access";
 
@@ -71,30 +71,41 @@ export async function readEmployeeDesk(ctx: TenantContext, workId?: string) {
         .from(works).innerJoinLateral(evidenceEvents, sql`true`).where(and(visibility, selected))
         .orderBy(asc(evidenceEvents.sequence));
 
+      const directReview = and(isNull(authorityApprovalRequests.id), eq(domainActions.status, "pending"),
+        exists(db.select({ id: actionLog.id }).from(actionLog).where(and(
+          eq(actionLog.tenantId, tenantId), eq(actionLog.domainActionId, domainActions.id),
+          inArray(actionLog.step, ["gate", "review_required"]),
+        ))));
       const nextApproval = db.select({
         actionId: domainActions.id, actionType: domainActions.actionType, summary: domainActions.summary,
         sequence: authorityApprovalRequestSteps.sequence,
-        approverCapability: authorityApprovalRequestSteps.approverCapability,
+        approverCapability: sql<string>`coalesce(${authorityApprovalRequestSteps.approverCapability},
+          'approve:' || ${domainActions.actionType})`.as("review_capability"),
         authorityContext: domainActions.authorityContext,
         businessEffectId: domainActions.businessEffectId,
         effectHash: businessEffects.semanticHash,
         effectBound: sql<boolean>`(${domainActions.businessEffectId} IS NULL OR (
           ${businessEffects.semanticHash} IS NOT NULL
-          AND ${authorityApprovalRequests.businessEffectId} IS NOT DISTINCT FROM ${domainActions.businessEffectId}
-          AND ${authorityApprovalRequests.businessEffectHash} IS NOT DISTINCT FROM ${businessEffects.semanticHash}
+          AND (${authorityApprovalRequests.id} IS NULL OR (
+            ${authorityApprovalRequests.businessEffectId} IS NOT DISTINCT FROM ${domainActions.businessEffectId}
+            AND ${authorityApprovalRequests.businessEffectHash} IS NOT DISTINCT FROM ${businessEffects.semanticHash}
+          ))
         ))`.as("effect_bound"),
       }).from(domainActions)
-        .innerJoin(authorityApprovalRequests, and(eq(authorityApprovalRequests.tenantId, tenantId),
-          eq(authorityApprovalRequests.domainActionId, domainActions.id), eq(authorityApprovalRequests.status, "pending")))
-        .innerJoin(authorityApprovalRequestSteps, and(eq(authorityApprovalRequestSteps.tenantId, tenantId),
+        .leftJoin(authorityApprovalRequests, and(eq(authorityApprovalRequests.tenantId, tenantId),
+          eq(authorityApprovalRequests.domainActionId, domainActions.id)))
+        .leftJoin(authorityApprovalRequestSteps, and(eq(authorityApprovalRequestSteps.tenantId, tenantId),
           eq(authorityApprovalRequestSteps.approvalRequestId, authorityApprovalRequests.id),
           eq(authorityApprovalRequestSteps.sequence, authorityApprovalRequests.currentStep),
           eq(authorityApprovalRequestSteps.status, "pending")))
         .leftJoin(businessEffects, and(eq(businessEffects.id, domainActions.businessEffectId),
           eq(businessEffects.tenantId, tenantId)))
-        .where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.workId, works.id),
-          inArray(domainActions.status, ["pending", "needs_human_review"])))
-        .orderBy(desc(authorityApprovalRequests.createdAt), desc(authorityApprovalRequests.id))
+        .where(and(eq(domainActions.tenantId, tenantId), eq(domainActions.workId, works.id), or(
+          and(inArray(domainActions.status, ["pending", "needs_human_review"]),
+            eq(authorityApprovalRequests.status, "pending"), eq(authorityApprovalRequestSteps.status, "pending")),
+          directReview,
+        )))
+        .orderBy(desc(sql`coalesce(${authorityApprovalRequests.createdAt}, ${domainActions.createdAt})`), desc(domainActions.id))
         .limit(5).as("next_approval");
       const approvalRows = await db.select({ workId: works.id, approval: {
         actionId: nextApproval.actionId, actionType: nextApproval.actionType, summary: nextApproval.summary,

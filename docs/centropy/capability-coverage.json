@@ -8,8 +8,8 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-26T02:57:55.962Z",
-  "sourceBaseCommit": "6dc0d4ce084f9707f183d648347c06ed708fbf1c",
+  "generatedAt": "2026-11-26T03:05:58.447Z",
+  "sourceBaseCommit": "26785d9ccf670597bb8caf572c6abd946bac211e",
   "manifestSha256": "ee148f4ad302d5fc4c48e0bd2c418afc3a8af570fb026306181dd2e5d70f99b8",
   "formsSha256": "35b57673d9d86e461f2b6056aaf326cb789901dfdd4481734aefef91da8052fd",
   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -1079,7 +1079,7 @@
       },
       {
         "file": "src/components/centropy/canvas/EmployeeDesk.tsx",
-        "sha256": "f6e8680818a14b11468d29b9fa66845e08ca850d66ce1a6683a1bf60680d1363"
+        "sha256": "7d3bf91818435b533ac50467746d00fbfe54db39ccca92388869f450641ce93b"
       },
       {
         "file": "src/components/centropy/lib/api.ts",

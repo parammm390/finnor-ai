@@ -7,6 +7,7 @@ import {
   closePool, domainActions, evidenceSources, evidenceSourceVersions, tenants, transitionWorkTx, users, withTenant, works,
   employeeRoles, employeeRoleAssignments, roleAuthorityGrants,
 } from "@finnor/db";
+import { appendEpisode } from "@finnor/memory/episodic";
 import { migrate } from "../../packages/db/migrate";
 import { GET } from "../../apps/api/app/api/me/desk/route";
 import { GET as getWork } from "../../apps/api/app/api/works/[id]/route";
@@ -48,6 +49,7 @@ async function counts() {
            (SELECT count(*)::int FROM evidence_sources WHERE tenant_id=${tenantId}) AS sources,
            (SELECT count(*)::int FROM evidence_source_versions WHERE tenant_id=${tenantId}) AS versions,
            (SELECT count(*)::int FROM domain_actions WHERE tenant_id=${tenantId}) AS actions,
+           (SELECT count(*)::int FROM action_log WHERE tenant_id=${tenantId}) AS action_log,
            (SELECT count(*)::int FROM authority_decisions WHERE tenant_id=${tenantId}) AS decisions,
            (SELECT count(*)::int FROM authority_approval_requests WHERE tenant_id=${tenantId}) AS approvals,
            (SELECT count(*)::int FROM authority_approval_request_steps WHERE tenant_id=${tenantId}) AS approval_steps
@@ -131,6 +133,48 @@ describe("read-only employee desk pilot", () => {
 
   afterAll(async () => { await closePool(); vi.unstubAllEnvs(); });
 
+  async function verifyDirectApproval() {
+    const direct = randomUUID(), unmarked = randomUUID(), draft = randomUUID();
+    const workId = randomUUID();
+    const summary = "Confirm the amended diligence checklist";
+    await withTenant(tenantId, async db => {
+      await db.insert(works).values({ id: workId, tenantId, initialChannel: "text", initialInstruction: summary,
+        assignedTo: associate, currentOwnerId: approver, status: "awaiting_approval" });
+      await db.insert(domainActions).values(([
+        { id: direct, status: "pending" }, { id: unmarked, status: "pending" }, { id: draft, status: "draft" },
+      ] as const).map(({ id, status }) => ({
+        id, tenantId, workId, summary, status, actionType: "pe_diligence_review",
+        authorityContext: { resources: [{ type: "pe_deal", id: dealId }], amountUsd: 50, risk: "medium" },
+      })));
+    });
+    await appendEpisode(tenantId, direct, "gate", {}, { gated: true, summary });
+    await appendEpisode(tenantId, draft, "review_required", {}, {});
+    const before = await counts();
+    const appUrl = new URL(databaseUrl);
+    appUrl.searchParams.set("options", "-c role=finnor_app");
+    process.env.DATABASE_URL = appUrl.href;
+    try {
+      for (const employee of [associate, approver]) {
+        const projection = { actionId: direct, actionType: "pe_diligence_review",
+          summary, sequence: null, approverCapability: reviewer, actorCanReview: employee === approver };
+        const brief = await exactWork(employee, workId);
+        expect(brief.status).toBe(200);
+        expect((await brief.json()).work.approvals).toEqual([projection]);
+        const overview = await desk(employee);
+        expect(overview.status).toBe(200);
+        expect((await overview.json()).works.find((work: { id: string }) => work.id === workId)?.approvals).toEqual([projection]);
+      }
+      const foreign = await exactWork(peer, workId);
+      const missing = await exactWork(peer, randomUUID());
+      expect(foreign.status).toBe(404);
+      expect(missing.status).toBe(404);
+      expect(await foreign.json()).toEqual(await missing.json());
+    } finally {
+      process.env.DATABASE_URL = databaseUrl;
+    }
+    expect(await counts()).toEqual(before);
+  }
+
   it("shows the amended exhibit, affected decision and next step without exposing or changing other Work", async () => {
     const before = await counts();
     const appUrl = new URL(databaseUrl);
@@ -212,4 +256,6 @@ describe("read-only employee desk pilot", () => {
     if (artifactPath) writeFileSync(artifactPath, artifact + "\n");
     else console.info(artifact);
   });
+
+  it("shows direct approval without a chain step only when the Work has a recorded pending review gate", verifyDirectApproval);
 });

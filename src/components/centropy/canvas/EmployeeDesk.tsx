@@ -20,7 +20,7 @@ const workRecord = z.object({
   events: z.array(z.object({ sequence: z.number(), type: z.string(), status: z.string(), createdAt: z.string().datetime() })),
   approvals: z.array(z.object({
     actionId: z.string().uuid(), actionType: z.string(), summary: z.string().nullable(),
-    sequence: z.number(), approverCapability: z.string(), actorCanReview: z.boolean(),
+    sequence: z.number().nullable(), approverCapability: z.string(), actorCanReview: z.boolean(),
   })),
 })
 const desk = z.object({ works: z.array(workRecord) })
@@ -157,7 +157,7 @@ function AffectedReview({ reviews, brief = false }: { reviews: Review[]; brief?:
         <div><h3>Affected review</h3>
           {reviews.length ? <ul>{reviews.map(review => <li key={review.actionId}>
             <strong>{reviewTitle(review)}</strong>
-            <p>Step {review.sequence} · Awaiting review</p>
+            <p>{review.sequence === null ? "Direct approval · Awaiting review" : `Step ${review.sequence} · Awaiting review`}</p>
             {!brief && <p className={review.actorCanReview ? "ed-can-review" : undefined}>
               {review.actorCanReview ? "You can review this in the approval flow." : waitingOn(review)}
             </p>}
