@@ -6,7 +6,7 @@ import { CentropyWorkspace } from "./CentropyWorkspace"
 
 export function CentropyHost({ children }: { children: ReactNode }) {
   const pathname = usePathname()
-  if (pathname === "/centropy/login" || pathname === "/centropy/reset-password" || pathname === "/centropy/workforce" || pathname === "/centropy/desk") return children
+  if (pathname === "/centropy/login" || pathname === "/centropy/reset-password" || pathname === "/centropy/workforce" || pathname === "/centropy/desk" || pathname === "/centropy/desk/work") return children
   // Consume the server page so compatibility redirects and notFound execute.
   // CENTROPY pages contain route logic only; the workspace owns presentation.
   return <>{children}<CentropyWorkspace /></>

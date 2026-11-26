@@ -8,6 +8,7 @@ import {
 } from "@finnor/db";
 import { migrate } from "../../packages/db/migrate";
 import { GET } from "../../apps/api/app/api/me/desk/route";
+import { GET as getWork } from "../../apps/api/app/api/works/[id]/route";
 
 const databaseUrl = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const tenantId = randomUUID(), dealId = randomUUID(), targetId = randomUUID();
@@ -29,6 +30,12 @@ function desk(employee: string, query = "") {
   return GET(new Request(`http://localhost/api/me/desk${query}`, {
     headers: { "x-tenant-id": tenantId, "x-user-id": employee, "x-user-role": "participant" },
   }));
+}
+
+function exactWork(employee: string, id: string) {
+  return getWork(new Request(`http://localhost/api/works/${id}?view=desk`, {
+    headers: { "x-tenant-id": tenantId, "x-user-id": employee, "x-user-role": "participant" },
+  }), { params: Promise.resolve({ id }) });
 }
 
 async function counts() {
@@ -130,7 +137,7 @@ describe("read-only employee desk pilot", () => {
       const associateDesk = await associateResponse.json();
       expect(associateDesk.works).toHaveLength(1);
       expect(associateDesk.works[0]).toMatchObject({
-        id: diligence, href: `/centropy/workforce?workId=${diligence}`, instruction: "Check Q3 diligence exhibit",
+        id: diligence, href: `/centropy/desk/work?workId=${diligence}`, instruction: "Check Q3 diligence exhibit",
         status: "awaiting_approval", updatedAt: expect.any(String),
         approvals: [{ actionId, summary: affectedDecision, sequence: 2, approverCapability: reviewer }],
       });
@@ -144,7 +151,10 @@ describe("read-only employee desk pilot", () => {
       expect(controllerResponse.status).toBe(200);
       const controllerDesk = await controllerResponse.json();
       expect(controllerDesk.works).toHaveLength(1);
-      expect(controllerDesk.works[0]).toMatchObject({ id: treasury, instruction: "Check closing funds", evidence: [], approvals: [] });
+      expect(controllerDesk.works[0]).toMatchObject({
+        id: treasury, href: `/centropy/desk/work?workId=${treasury}`,
+        instruction: "Check closing funds", evidence: [], approvals: [],
+      });
       const peerResponse = await desk(peer);
       expect(peerResponse.status).toBe(200);
       const peerDesk = await peerResponse.json();
@@ -152,7 +162,29 @@ describe("read-only employee desk pilot", () => {
       expect((await desk("not-an-employee")).status).toBe(403);
       const requestedById = await desk(associate, `?workId=${diligence}&versionId=${cited.id}`);
       expect(await requestedById.json()).toEqual(associateDesk);
-      observations = { associate: associateDesk, controller: controllerDesk, peer: peerDesk };
+      const assignedResponse = await exactWork(associate, diligence);
+      const ownedResponse = await exactWork(controller, treasury);
+      const foreignResponse = await exactWork(peer, diligence);
+      const missingResponse = await exactWork(peer, randomUUID());
+      expect(assignedResponse.status).toBe(200);
+      expect(assignedResponse.headers.get("cache-control")).toBe("private, no-store");
+      expect(ownedResponse.status).toBe(200);
+      const assigned = await assignedResponse.json();
+      const owned = await ownedResponse.json();
+      expect(assigned).toEqual({ work: {
+        id: diligence, instruction: "Check Q3 diligence exhibit", status: "awaiting_approval",
+        updatedAt: associateDesk.works[0].updatedAt,
+      } });
+      expect(owned).toEqual({ work: {
+        id: treasury, instruction: "Check closing funds", status: "ready", updatedAt: controllerDesk.works[0].updatedAt,
+      } });
+      expect(foreignResponse.status).toBe(404);
+      expect(missingResponse.status).toBe(404);
+      expect(foreignResponse.headers.get("cache-control")).toBe("private, no-store");
+      expect(missingResponse.headers.get("cache-control")).toBe("private, no-store");
+      const foreign = await foreignResponse.json();
+      expect(foreign).toEqual(await missingResponse.json());
+      observations = { associate: associateDesk, controller: controllerDesk, peer: peerDesk, destination: { assigned, owned, foreign } };
     } finally {
       process.env.DATABASE_URL = databaseUrl;
     }
@@ -162,7 +194,8 @@ describe("read-only employee desk pilot", () => {
       pilot: "employee-desk", tenantId, dealId, associate, controller, peer, diligence, treasury,
       fixture: "Synthetic setup inserts deal, Work, exhibit and approval rows. It records evidence metadata via the existing transitionWorkTx writer; no live exhibit-to-Work publisher is part of this pilot.",
       inputs: { sourceId, cited: version(cited), latestRecorded: version(amended), unrecorded: unrecorded.id, reviewer },
-      steps: ["cite exhibit v1 on Work", "record v2 on Work", "leave v3 outside Work", "read as each participant", "compare row counts"],
+      steps: ["cite exhibit v1 on Work", "record v2 on Work", "leave v3 outside Work", "read as each participant",
+        "verify exact Work destinations", "compare row counts"],
       observations: { ...observations, before, after },
     });
     const artifactPath = process.env.EMPLOYEE_DESK_ARTIFACT_PATH;

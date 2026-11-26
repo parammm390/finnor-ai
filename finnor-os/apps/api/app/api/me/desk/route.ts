@@ -98,7 +98,7 @@ export async function GET(req: Request): Promise<Response> {
         .orderBy(nextApproval.actionId);
 
       return Response.json({ works: rows.map(row => ({
-        ...row, href: `/centropy/workforce?workId=${row.id}`,
+        ...row, href: `/centropy/desk/work?workId=${row.id}`,
         events: eventRows.filter(item => item.workId === row.id).map(item => item.event),
         evidence: evidenceFromWorkEvents(evidenceRows.filter(item => item.workId === row.id)),
         approvals: approvalRows.filter(item => item.workId === row.id).map(({ approval }) => ({

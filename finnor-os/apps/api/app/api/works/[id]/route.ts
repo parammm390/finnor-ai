@@ -1,11 +1,11 @@
-import { autonomyEvaluations, outcomePackRuns, reconcileWorkStatus, withTenant, workAggregate } from "@finnor/db";
+import { autonomyEvaluations, employeeVisibleWork, outcomePackRuns, reconcileWorkStatus, withTenant, withTenantTransaction, workAggregate, works } from "@finnor/db";
 import { FinancialDocumentReviewReceiptSchema, type FinancialDocumentReview } from "@finnor/shared-types";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { assertPrivateAnswerReadAccess } from "../../../../../../packages/orchestration/src/conversation-answer-read";
 import { PeDomainError } from "@finnor/private-equity/src/types";
 import { errorResponse, requireContext } from "../../../../lib/auth";
-import { requireVisibleWork } from "../../../../lib/work-access";
+import { requestEmployee, requireVisibleWork } from "../../../../lib/work-access";
 
 const ReviewWork = z.object({
   status: z.literal("completed"),
@@ -19,10 +19,21 @@ const ReviewWork = z.object({
 
 /** Canonical Work read: one tenant-scoped aggregate with every durable causal edge. */
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const searchParams = new URL(req.url).searchParams;
+  const deskView = searchParams.get("view") === "desk";
+  const privateHeaders = { "cache-control": "private, no-store" };
   try {
     const { id } = await params;
     const ctx = await requireContext(req);
     await requireVisibleWork(ctx, id);
+    if (deskView) {
+      const employeeId = requestEmployee(ctx);
+      const [work] = await withTenantTransaction(ctx.tenantId, { userId: employeeId, readOnly: true }, db =>
+        db.select({ id: works.id, instruction: works.initialInstruction, status: works.status, updatedAt: works.updatedAt })
+          .from(works).where(and(eq(works.tenantId, ctx.tenantId), eq(works.id, id), employeeVisibleWork(employeeId))).limit(1));
+      return work ? Response.json({ work }, { headers: privateHeaders })
+        : Response.json({ error: "Work not found" }, { status: 404, headers: privateHeaders });
+    }
     await reconcileWorkStatus(ctx.tenantId, id);
     const work = await workAggregate(ctx.tenantId, id);
     if (!work) return Response.json({ error: "Work not found" }, { status: 404 });
@@ -31,8 +42,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     await assertPrivateAnswerReadAccess(ctx,
       outcome && typeof outcome === "object" && !Array.isArray(outcome) ? (outcome as Record<string, unknown>).answer : undefined,
       { workId: id });
-    const exportBrief = new URL(req.url).searchParams.get("export") === "valuation-brief";
-    const privateHeaders = { "cache-control": "private, no-store" };
+    const exportBrief = searchParams.get("export") === "valuation-brief";
     let documentReview: FinancialDocumentReview | undefined;
     const saved = ReviewWork.safeParse(work.work);
     if (saved.success && saved.data.createdBy === (ctx.employeeId ?? ctx.userId)) {
@@ -98,6 +108,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   } catch (err) {
     if (err instanceof PeDomainError && err.code === "PE_ENTITY_NOT_FOUND")
       return Response.json({ error: "Work not found" }, { status: 404, headers: { "cache-control": "private, no-store" } });
-    return errorResponse(err);
+    const response = errorResponse(err);
+    if (deskView) response.headers.set("cache-control", privateHeaders["cache-control"]);
+    return response;
   }
 }
