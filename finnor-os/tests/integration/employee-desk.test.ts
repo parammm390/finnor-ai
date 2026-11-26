@@ -5,6 +5,7 @@ import { sql } from "drizzle-orm";
 import {
   approvalChains, attachWorkEntityTx, authorityApprovalRequests, authorityApprovalRequestSteps, authorityDecisions,
   closePool, domainActions, evidenceSources, evidenceSourceVersions, tenants, transitionWorkTx, users, withTenant, works,
+  employeeRoles, employeeRoleAssignments, roleAuthorityGrants,
 } from "@finnor/db";
 import { migrate } from "../../packages/db/migrate";
 import { GET } from "../../apps/api/app/api/me/desk/route";
@@ -13,6 +14,7 @@ import { GET as getWork } from "../../apps/api/app/api/works/[id]/route";
 const databaseUrl = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
 const tenantId = randomUUID(), dealId = randomUUID(), targetId = randomUUID();
 const associate = randomUUID(), controller = randomUUID(), peer = randomUUID();
+const approver = randomUUID(), reviewerRole = randomUUID();
 const diligence = randomUUID(), treasury = randomUUID(), sourceId = randomUUID();
 const actionId = randomUUID(), chainId = randomUUID(), decisionId = randomUUID(), requestId = randomUUID();
 const exhibit = (versionNumber: number, content: string, asOf: string) => ({
@@ -28,13 +30,13 @@ const version = ({ id, versionNumber, contentHash, asOf }: typeof cited) => ({ i
 
 function desk(employee: string, query = "") {
   return GET(new Request(`http://localhost/api/me/desk${query}`, {
-    headers: { "x-tenant-id": tenantId, "x-user-id": employee, "x-user-role": "participant" },
+    headers: { "x-tenant-id": tenantId, "x-user-id": employee, "x-user-role": employee === approver ? "owner" : "participant" },
   }));
 }
 
 function exactWork(employee: string, id: string) {
   return getWork(new Request(`http://localhost/api/works/${id}?view=desk`, {
-    headers: { "x-tenant-id": tenantId, "x-user-id": employee, "x-user-role": "participant" },
+    headers: { "x-tenant-id": tenantId, "x-user-id": employee, "x-user-role": employee === approver ? "owner" : "participant" },
   }), { params: Promise.resolve({ id }) });
 }
 
@@ -60,9 +62,13 @@ describe("read-only employee desk pilot", () => {
     await withTenant(tenantId, async db => {
       await db.execute(sql`SET LOCAL app.test_vertical_mode = 'explicit'`);
       await db.insert(tenants).values({ id: tenantId, name: "Synthetic employee desk" });
-      await db.insert(users).values([associate, controller, peer].map(id => ({
-        id, tenantId, role: "participant" as const, email: `${id}@example.test`,
+      await db.insert(users).values([associate, controller, peer, approver].map(id => ({
+        id, tenantId, role: id === approver ? "owner" as const : "participant" as const, email: `${id}@example.test`,
       })));
+      await db.insert(employeeRoles).values({ id: reviewerRole, tenantId, key: "diligence_reviewer", name: "Diligence reviewer" });
+      await db.insert(employeeRoleAssignments).values({ tenantId, employeeId: approver, roleId: reviewerRole });
+      await db.insert(roleAuthorityGrants).values({ tenantId, roleId: reviewerRole, capability: reviewer,
+        resourceType: "pe_deal", maxAmountUsd: "100" });
       await db.execute(sql`
         INSERT INTO tenant_vertical_assignments(tenant_id,vertical_key,source_system,created_by)
         VALUES (${tenantId},'private_equity','integration:employee-desk','synthetic-fixture')
@@ -79,7 +85,7 @@ describe("read-only employee desk pilot", () => {
       `);
       await db.insert(works).values([
         { id: diligence, tenantId, initialChannel: "text", initialInstruction: "Check Q3 diligence exhibit",
-          assignedTo: associate, status: "awaiting_approval" },
+          assignedTo: associate, currentOwnerId: approver, status: "awaiting_approval" },
         { id: treasury, tenantId, initialChannel: "text", initialInstruction: "Check closing funds",
           currentOwnerId: controller, status: "ready" },
         { tenantId, initialChannel: "text", initialInstruction: "An unassigned Work originated by the peer", createdBy: peer },
@@ -103,6 +109,7 @@ describe("read-only employee desk pilot", () => {
       });
       await db.insert(domainActions).values({
         id: actionId, tenantId, workId: diligence, actionType: "pe_diligence_review", summary: affectedDecision, status: "pending",
+        authorityContext: { resources: [{ type: "pe_deal", id: dealId }], amountUsd: 50, risk: "medium" },
       });
       await db.insert(approvalChains).values({ id: chainId, tenantId, name: "Diligence review", key: "diligence" });
       await db.insert(authorityDecisions).values({
@@ -139,7 +146,7 @@ describe("read-only employee desk pilot", () => {
       expect(associateDesk.works[0]).toMatchObject({
         id: diligence, href: `/centropy/desk/work?workId=${diligence}`, instruction: "Check Q3 diligence exhibit",
         status: "awaiting_approval", updatedAt: expect.any(String),
-        approvals: [{ actionId, summary: affectedDecision, sequence: 2, approverCapability: reviewer }],
+        approvals: [{ actionId, summary: affectedDecision, sequence: 2, approverCapability: reviewer, actorCanReview: false }],
       });
       expect(associateDesk.works[0].evidence).toEqual([{ sourceId, cited: version(cited), current: version(amended), changed: true }]);
       expect(associateDesk.works[0].events).toEqual([
@@ -163,6 +170,14 @@ describe("read-only employee desk pilot", () => {
       const requestedById = await desk(associate, `?workId=${diligence}&versionId=${cited.id}`);
       expect(await requestedById.json()).toEqual(associateDesk);
       const assignedResponse = await exactWork(associate, diligence);
+      const reviewerResponse = await desk(approver);
+      expect(reviewerResponse.status).toBe(200);
+      const reviewerDesk = await reviewerResponse.json();
+      expect(reviewerDesk.works).toHaveLength(1);
+      expect(reviewerDesk.works[0].approvals).toEqual([{ ...associateDesk.works[0].approvals[0], actorCanReview: true }]);
+      const reviewerWork = await exactWork(approver, diligence);
+      expect(reviewerWork.status).toBe(200);
+      expect(await reviewerWork.json()).toEqual({ work: reviewerDesk.works[0] });
       const ownedResponse = await exactWork(controller, treasury);
       const foreignResponse = await exactWork(peer, diligence);
       const missingResponse = await exactWork(peer, randomUUID());
@@ -171,27 +186,22 @@ describe("read-only employee desk pilot", () => {
       expect(ownedResponse.status).toBe(200);
       const assigned = await assignedResponse.json();
       const owned = await ownedResponse.json();
-      expect(assigned).toEqual({ work: {
-        id: diligence, instruction: "Check Q3 diligence exhibit", status: "awaiting_approval",
-        updatedAt: associateDesk.works[0].updatedAt,
-      } });
-      expect(owned).toEqual({ work: {
-        id: treasury, instruction: "Check closing funds", status: "ready", updatedAt: controllerDesk.works[0].updatedAt,
-      } });
+      expect(assigned).toEqual({ work: associateDesk.works[0] });
+      expect(owned).toEqual({ work: controllerDesk.works[0] });
       expect(foreignResponse.status).toBe(404);
       expect(missingResponse.status).toBe(404);
       expect(foreignResponse.headers.get("cache-control")).toBe("private, no-store");
       expect(missingResponse.headers.get("cache-control")).toBe("private, no-store");
       const foreign = await foreignResponse.json();
       expect(foreign).toEqual(await missingResponse.json());
-      observations = { associate: associateDesk, controller: controllerDesk, peer: peerDesk, destination: { assigned, owned, foreign } };
+      observations = { associate: associateDesk, reviewer: reviewerDesk, controller: controllerDesk, peer: peerDesk, destination: { assigned, owned, foreign } };
     } finally {
       process.env.DATABASE_URL = databaseUrl;
     }
     const after = await counts();
     expect(after).toEqual(before);
     const artifact = JSON.stringify({
-      pilot: "employee-desk", tenantId, dealId, associate, controller, peer, diligence, treasury,
+      pilot: "employee-desk", tenantId, dealId, associate, controller, peer, approver, diligence, treasury,
       fixture: "Synthetic setup inserts deal, Work, exhibit and approval rows. It records evidence metadata via the existing transitionWorkTx writer; no live exhibit-to-Work publisher is part of this pilot.",
       inputs: { sourceId, cited: version(cited), latestRecorded: version(amended), unrecorded: unrecorded.id, reviewer },
       steps: ["cite exhibit v1 on Work", "record v2 on Work", "leave v3 outside Work", "read as each participant",

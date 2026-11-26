@@ -1,11 +1,12 @@
-import { autonomyEvaluations, employeeVisibleWork, outcomePackRuns, reconcileWorkStatus, withTenant, withTenantTransaction, workAggregate, works } from "@finnor/db";
+import { autonomyEvaluations, outcomePackRuns, reconcileWorkStatus, withTenant, workAggregate } from "@finnor/db";
 import { FinancialDocumentReviewReceiptSchema, type FinancialDocumentReview } from "@finnor/shared-types";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { assertPrivateAnswerReadAccess } from "../../../../../../packages/orchestration/src/conversation-answer-read";
 import { PeDomainError } from "@finnor/private-equity/src/types";
 import { errorResponse, requireContext } from "../../../../lib/auth";
-import { requestEmployee, requireVisibleWork } from "../../../../lib/work-access";
+import { readEmployeeDesk } from "../../../../lib/employee-desk";
+import { requireVisibleWork } from "../../../../lib/work-access";
 
 const ReviewWork = z.object({
   status: z.literal("completed"),
@@ -27,10 +28,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const ctx = await requireContext(req);
     await requireVisibleWork(ctx, id);
     if (deskView) {
-      const employeeId = requestEmployee(ctx);
-      const [work] = await withTenantTransaction(ctx.tenantId, { userId: employeeId, readOnly: true }, db =>
-        db.select({ id: works.id, instruction: works.initialInstruction, status: works.status, updatedAt: works.updatedAt })
-          .from(works).where(and(eq(works.tenantId, ctx.tenantId), eq(works.id, id), employeeVisibleWork(employeeId))).limit(1));
+      const [work] = await readEmployeeDesk(ctx, id);
       return work ? Response.json({ work }, { headers: privateHeaders })
         : Response.json({ error: "Work not found" }, { status: 404, headers: privateHeaders });
     }
