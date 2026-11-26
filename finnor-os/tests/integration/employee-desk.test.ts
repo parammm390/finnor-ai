@@ -1,0 +1,261 @@
+import { createHash, randomUUID } from "node:crypto";
+import { writeFileSync } from "node:fs";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { sql } from "drizzle-orm";
+import {
+  approvalChains, attachWorkEntityTx, authorityApprovalRequests, authorityApprovalRequestSteps, authorityDecisions,
+  closePool, domainActions, evidenceSources, evidenceSourceVersions, tenants, transitionWorkTx, users, withTenant, works,
+  employeeRoles, employeeRoleAssignments, roleAuthorityGrants,
+} from "@finnor/db";
+import { appendEpisode } from "@finnor/memory/episodic";
+import { migrate } from "../../packages/db/migrate";
+import { GET } from "../../apps/api/app/api/me/desk/route";
+import { GET as getWork } from "../../apps/api/app/api/works/[id]/route";
+
+const databaseUrl = process.env.DATABASE_URL ?? "postgres://finnor:finnor@localhost:5432/finnor";
+const tenantId = randomUUID(), dealId = randomUUID(), targetId = randomUUID();
+const associate = randomUUID(), controller = randomUUID(), peer = randomUUID();
+const approver = randomUUID(), reviewerRole = randomUUID();
+const diligence = randomUUID(), treasury = randomUUID(), sourceId = randomUUID();
+const actionId = randomUUID(), chainId = randomUUID(), decisionId = randomUUID(), requestId = randomUUID();
+const exhibit = (versionNumber: number, content: string, asOf: string) => ({
+  id: randomUUID(), sourceId, scope: "tenant" as const, tenantId, versionNumber, content,
+  contentHash: createHash("sha256").update(content).digest("hex"), asOf: new Date(asOf),
+});
+const cited = exhibit(1, "Synthetic exhibit: $10m recurring revenue.", "2026-11-01T12:00:00Z");
+const amended = exhibit(2, "Synthetic exhibit: $9m recurring revenue.", "2026-11-02T12:00:00Z");
+const unrecorded = exhibit(3, "Synthetic exhibit not recorded on Work.", "2026-11-03T12:00:00Z");
+const reviewer = "approve:pe_diligence_review";
+const affectedDecision = "Review Q3 recurring revenue";
+const version = ({ id, versionNumber, contentHash, asOf }: typeof cited) => ({ id, versionNumber, contentHash, asOf: asOf.toISOString() });
+
+function desk(employee: string, query = "") {
+  return GET(new Request(`http://localhost/api/me/desk${query}`, {
+    headers: { "x-tenant-id": tenantId, "x-user-id": employee, "x-user-role": employee === approver ? "owner" : "participant" },
+  }));
+}
+
+function exactWork(employee: string, id: string) {
+  return getWork(new Request(`http://localhost/api/works/${id}?view=desk`, {
+    headers: { "x-tenant-id": tenantId, "x-user-id": employee, "x-user-role": employee === approver ? "owner" : "participant" },
+  }), { params: Promise.resolve({ id }) });
+}
+
+async function counts() {
+  return withTenant(tenantId, async db => (await db.execute(sql`
+    SELECT (SELECT count(*)::int FROM works WHERE tenant_id=${tenantId}) AS works,
+           (SELECT count(*)::int FROM work_events WHERE tenant_id=${tenantId}) AS events,
+           (SELECT count(*)::int FROM work_entity_links WHERE tenant_id=${tenantId}) AS links,
+           (SELECT count(*)::int FROM evidence_sources WHERE tenant_id=${tenantId}) AS sources,
+           (SELECT count(*)::int FROM evidence_source_versions WHERE tenant_id=${tenantId}) AS versions,
+           (SELECT count(*)::int FROM domain_actions WHERE tenant_id=${tenantId}) AS actions,
+           (SELECT count(*)::int FROM action_log WHERE tenant_id=${tenantId}) AS action_log,
+           (SELECT count(*)::int FROM authority_decisions WHERE tenant_id=${tenantId}) AS decisions,
+           (SELECT count(*)::int FROM authority_approval_requests WHERE tenant_id=${tenantId}) AS approvals,
+           (SELECT count(*)::int FROM authority_approval_request_steps WHERE tenant_id=${tenantId}) AS approval_steps
+  `)).rows[0]);
+}
+
+describe("read-only employee desk pilot", () => {
+  beforeAll(async () => {
+    vi.stubEnv("DATABASE_URL", databaseUrl);
+    vi.stubEnv("AUTH_DEV_BYPASS", "1");
+    await migrate(databaseUrl);
+    await withTenant(tenantId, async db => {
+      await db.execute(sql`SET LOCAL app.test_vertical_mode = 'explicit'`);
+      await db.insert(tenants).values({ id: tenantId, name: "Synthetic employee desk" });
+      await db.insert(users).values([associate, controller, peer, approver].map(id => ({
+        id, tenantId, role: id === approver ? "owner" as const : "participant" as const, email: `${id}@example.test`,
+      })));
+      await db.insert(employeeRoles).values({ id: reviewerRole, tenantId, key: "diligence_reviewer", name: "Diligence reviewer" });
+      await db.insert(employeeRoleAssignments).values({ tenantId, employeeId: approver, roleId: reviewerRole });
+      await db.insert(roleAuthorityGrants).values({ tenantId, roleId: reviewerRole, capability: reviewer,
+        resourceType: "pe_deal", maxAmountUsd: "100" });
+      await db.execute(sql`
+        INSERT INTO tenant_vertical_assignments(tenant_id,vertical_key,source_system,created_by)
+        VALUES (${tenantId},'private_equity','integration:employee-desk','synthetic-fixture')
+      `);
+      await db.execute(sql`
+        INSERT INTO external_organizations(id,tenant_id,organization_key,name,kind)
+        VALUES (${targetId},${tenantId},'synthetic-target','Synthetic target','other')
+      `);
+      await db.execute(sql`
+        INSERT INTO pe_deals(id,tenant_id,target_organization_id,name,deal_lead_employee_id,
+          signed_loi_at,target_closing_at,source_system,created_by)
+        VALUES (${dealId},${tenantId},${targetId},'Synthetic deal',${controller},
+          '2026-11-01','2026-12-01','integration:employee-desk','synthetic-fixture')
+      `);
+      await db.insert(works).values([
+        { id: diligence, tenantId, initialChannel: "text", initialInstruction: "Check Q3 diligence exhibit",
+          assignedTo: associate, currentOwnerId: approver, status: "awaiting_approval" },
+        { id: treasury, tenantId, initialChannel: "text", initialInstruction: "Check closing funds",
+          currentOwnerId: controller, status: "ready" },
+        { tenantId, initialChannel: "text", initialInstruction: "An unassigned Work originated by the peer", createdBy: peer },
+      ]);
+      await db.insert(evidenceSources).values({ id: sourceId, tenantId, sourceKey: "diligence-exhibit",
+        sourceType: "exhibit", title: "Q3 diligence exhibit" });
+      await db.insert(evidenceSourceVersions).values(cited);
+      for (const workId of [diligence, treasury]) {
+        await attachWorkEntityTx(db, { tenantId, workId, entity: { entityType: "pe_deal", entityId: dealId } });
+      }
+      await transitionWorkTx(db, tenantId, diligence, "awaiting_approval", "evidence_version_cited", {
+        sourceId, ...version(cited),
+      });
+      await db.insert(evidenceSourceVersions).values(amended);
+      await transitionWorkTx(db, tenantId, diligence, "awaiting_approval", "evidence_version_observed", {
+        sourceId, ...version(amended),
+      });
+      await db.insert(evidenceSourceVersions).values(unrecorded);
+      await transitionWorkTx(db, tenantId, diligence, "awaiting_approval", "approval_requested", {
+        privateContext: "Not desk data",
+      });
+      await db.insert(domainActions).values({
+        id: actionId, tenantId, workId: diligence, actionType: "pe_diligence_review", summary: affectedDecision, status: "pending",
+        authorityContext: { resources: [{ type: "pe_deal", id: dealId }], amountUsd: 50, risk: "medium" },
+      });
+      await db.insert(approvalChains).values({ id: chainId, tenantId, name: "Diligence review", key: "diligence" });
+      await db.insert(authorityDecisions).values({
+        id: decisionId, tenantId, employeeId: associate, workId: diligence, domainActionId: actionId,
+        authorityRevision: 1, operation: "action", capability: "action:pe_diligence_review",
+        risk: "medium", outcome: "approval_required", reasonCode: "REVIEW", approvalChainId: chainId,
+      });
+      await db.insert(authorityApprovalRequests).values({
+        id: requestId, tenantId, requesterId: associate, domainActionId: actionId,
+        authorityDecisionId: decisionId, approvalChainId: chainId, currentStep: 2,
+      });
+      await db.insert(authorityApprovalRequestSteps).values([
+        { tenantId, approvalRequestId: requestId, sequence: 1, approverCapability: "approve:triage", status: "approved" },
+        { tenantId, approvalRequestId: requestId, sequence: 2, approverCapability: reviewer },
+        { tenantId, approvalRequestId: requestId, sequence: 3, approverCapability: "approve:final" },
+      ]);
+    });
+  }, 120_000);
+
+  afterAll(async () => { await closePool(); vi.unstubAllEnvs(); });
+
+  async function verifyDirectApproval() {
+    const direct = randomUUID(), unmarked = randomUUID(), draft = randomUUID();
+    const workId = randomUUID();
+    const summary = "Confirm the amended diligence checklist";
+    await withTenant(tenantId, async db => {
+      await db.insert(works).values({ id: workId, tenantId, initialChannel: "text", initialInstruction: summary,
+        assignedTo: associate, currentOwnerId: approver, status: "awaiting_approval" });
+      await db.insert(domainActions).values(([
+        { id: direct, status: "pending" }, { id: unmarked, status: "pending" }, { id: draft, status: "draft" },
+      ] as const).map(({ id, status }) => ({
+        id, tenantId, workId, summary, status, actionType: "pe_diligence_review",
+        authorityContext: { resources: [{ type: "pe_deal", id: dealId }], amountUsd: 50, risk: "medium" },
+      })));
+    });
+    await appendEpisode(tenantId, direct, "gate", {}, { gated: true, summary });
+    await appendEpisode(tenantId, draft, "review_required", {}, {});
+    const before = await counts();
+    const appUrl = new URL(databaseUrl);
+    appUrl.searchParams.set("options", "-c role=finnor_app");
+    process.env.DATABASE_URL = appUrl.href;
+    try {
+      for (const employee of [associate, approver]) {
+        const projection = { actionId: direct, actionType: "pe_diligence_review",
+          summary, sequence: null, approverCapability: reviewer, actorCanReview: employee === approver };
+        const brief = await exactWork(employee, workId);
+        expect(brief.status).toBe(200);
+        expect((await brief.json()).work.approvals).toEqual([projection]);
+        const overview = await desk(employee);
+        expect(overview.status).toBe(200);
+        expect((await overview.json()).works.find((work: { id: string }) => work.id === workId)?.approvals).toEqual([projection]);
+      }
+      const foreign = await exactWork(peer, workId);
+      const missing = await exactWork(peer, randomUUID());
+      expect(foreign.status).toBe(404);
+      expect(missing.status).toBe(404);
+      expect(await foreign.json()).toEqual(await missing.json());
+    } finally {
+      process.env.DATABASE_URL = databaseUrl;
+    }
+    expect(await counts()).toEqual(before);
+  }
+
+  it("shows the amended exhibit, affected decision and next step without exposing or changing other Work", async () => {
+    const before = await counts();
+    const appUrl = new URL(databaseUrl);
+    appUrl.searchParams.set("options", "-c role=finnor_app");
+    let observations: Record<string, unknown>;
+    process.env.DATABASE_URL = appUrl.href;
+    try {
+      const associateResponse = await desk(associate);
+      expect(associateResponse.status).toBe(200);
+      expect(associateResponse.headers.get("cache-control")).toBe("private, no-store");
+      const associateDesk = await associateResponse.json();
+      expect(associateDesk.works).toHaveLength(1);
+      expect(associateDesk.works[0]).toMatchObject({
+        id: diligence, href: `/centropy/desk/work?workId=${diligence}`, instruction: "Check Q3 diligence exhibit",
+        status: "awaiting_approval", updatedAt: expect.any(String),
+        approvals: [{ actionId, summary: affectedDecision, sequence: 2, approverCapability: reviewer, actorCanReview: false }],
+      });
+      expect(associateDesk.works[0].evidence).toEqual([{ sourceId, cited: version(cited), current: version(amended), changed: true }]);
+      expect(associateDesk.works[0].events).toEqual([
+        { sequence: 3, type: "approval_requested", status: "awaiting_approval", createdAt: expect.any(String) },
+        { sequence: 2, type: "evidence_version_observed", status: "awaiting_approval", createdAt: expect.any(String) },
+        { sequence: 1, type: "evidence_version_cited", status: "awaiting_approval", createdAt: expect.any(String) },
+      ]);
+      const controllerResponse = await desk(controller);
+      expect(controllerResponse.status).toBe(200);
+      const controllerDesk = await controllerResponse.json();
+      expect(controllerDesk.works).toHaveLength(1);
+      expect(controllerDesk.works[0]).toMatchObject({
+        id: treasury, href: `/centropy/desk/work?workId=${treasury}`,
+        instruction: "Check closing funds", evidence: [], approvals: [],
+      });
+      const peerResponse = await desk(peer);
+      expect(peerResponse.status).toBe(200);
+      const peerDesk = await peerResponse.json();
+      expect(peerDesk).toEqual({ works: [] });
+      expect((await desk("not-an-employee")).status).toBe(403);
+      const requestedById = await desk(associate, `?workId=${diligence}&versionId=${cited.id}`);
+      expect(await requestedById.json()).toEqual(associateDesk);
+      const assignedResponse = await exactWork(associate, diligence);
+      const reviewerResponse = await desk(approver);
+      expect(reviewerResponse.status).toBe(200);
+      const reviewerDesk = await reviewerResponse.json();
+      expect(reviewerDesk.works).toHaveLength(1);
+      expect(reviewerDesk.works[0].approvals).toEqual([{ ...associateDesk.works[0].approvals[0], actorCanReview: true }]);
+      const reviewerWork = await exactWork(approver, diligence);
+      expect(reviewerWork.status).toBe(200);
+      expect(await reviewerWork.json()).toEqual({ work: reviewerDesk.works[0] });
+      const ownedResponse = await exactWork(controller, treasury);
+      const foreignResponse = await exactWork(peer, diligence);
+      const missingResponse = await exactWork(peer, randomUUID());
+      expect(assignedResponse.status).toBe(200);
+      expect(assignedResponse.headers.get("cache-control")).toBe("private, no-store");
+      expect(ownedResponse.status).toBe(200);
+      const assigned = await assignedResponse.json();
+      const owned = await ownedResponse.json();
+      expect(assigned).toEqual({ work: associateDesk.works[0] });
+      expect(owned).toEqual({ work: controllerDesk.works[0] });
+      expect(foreignResponse.status).toBe(404);
+      expect(missingResponse.status).toBe(404);
+      expect(foreignResponse.headers.get("cache-control")).toBe("private, no-store");
+      expect(missingResponse.headers.get("cache-control")).toBe("private, no-store");
+      const foreign = await foreignResponse.json();
+      expect(foreign).toEqual(await missingResponse.json());
+      observations = { associate: associateDesk, reviewer: reviewerDesk, controller: controllerDesk, peer: peerDesk, destination: { assigned, owned, foreign } };
+    } finally {
+      process.env.DATABASE_URL = databaseUrl;
+    }
+    const after = await counts();
+    expect(after).toEqual(before);
+    const artifact = JSON.stringify({
+      pilot: "employee-desk", tenantId, dealId, associate, controller, peer, approver, diligence, treasury,
+      fixture: "Synthetic setup inserts deal, Work, exhibit and approval rows. It records evidence metadata via the existing transitionWorkTx writer; no live exhibit-to-Work publisher is part of this pilot.",
+      inputs: { sourceId, cited: version(cited), latestRecorded: version(amended), unrecorded: unrecorded.id, reviewer },
+      steps: ["cite exhibit v1 on Work", "record v2 on Work", "leave v3 outside Work", "read as each participant",
+        "verify exact Work destinations", "compare row counts"],
+      observations: { ...observations, before, after },
+    });
+    const artifactPath = process.env.EMPLOYEE_DESK_ARTIFACT_PATH;
+    if (artifactPath) writeFileSync(artifactPath, artifact + "\n");
+    else console.info(artifact);
+  });
+
+  it("shows direct approval without a chain step only when the Work has a recorded pending review gate", verifyDirectApproval);
+});

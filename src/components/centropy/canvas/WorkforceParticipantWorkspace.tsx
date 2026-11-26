@@ -57,6 +57,7 @@ export function WorkforceParticipantWorkspace() {
   return <main className="ct-auth-state" aria-label="Your accountable workforce contracts">
     <h1>Your workforce contracts</h1>
     <p>This participant workspace does not open the institutional owner shell or grant new authority.</p>
+    <p><Link href="/centropy/desk">Open your read-only employee desk</Link></p>
     {auth.session ? <button type="button" onClick={() => void auth.signOut()}>Sign out</button> : <Link href="/centropy/login">Sign in</Link>}
     {!scope.allowed ? <p role="status">{auth.roleError ?? auth.authError ?? "Verify your authenticated role to read your contracts."}</p> : <>
       <GrowthBusinessInvitations key={scope.key} contextKey={scope.key} workId={workId ?? undefined} />

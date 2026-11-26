@@ -8,25 +8,25 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-25T06:56:22.496Z",
-  "sourceBaseCommit": "decdc543f667a74be1d465a819d4f646a21fdc22",
-  "manifestSha256": "e68051fd74494792ebb66d7156bae1b6ac5ef64e369d60057bc4c596fb0aebe3",
+  "generatedAt": "2026-11-26T03:05:58.447Z",
+  "sourceBaseCommit": "26785d9ccf670597bb8caf572c6abd946bac211e",
+  "manifestSha256": "ee148f4ad302d5fc4c48e0bd2c418afc3a8af570fb026306181dd2e5d70f99b8",
   "formsSha256": "35b57673d9d86e461f2b6056aaf326cb789901dfdd4481734aefef91da8052fd",
   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
   "counts": {
-    "total": 773,
-    "http": 692,
+    "total": 774,
+    "http": 693,
     "planner": 81,
-    "classified": 773,
+    "classified": 774,
     "classificationCoveragePercent": 100,
     "unclassified": 0,
     "backendApiWithoutMountedFrontend": 107,
-    "dynamicFrontendCalls": 85,
+    "dynamicFrontendCalls": 86,
     "unresolvedDynamicCalls": 0,
     "disposition": {
       "ACTIVE_TYPED_HUMAN_CONTROL": 69,
       "INTENTIONAL_COMPATIBILITY": 25,
-      "ACTIVE_DIRECT_FRONTEND_PATH": 427,
+      "ACTIVE_DIRECT_FRONTEND_PATH": 428,
       "RESTRICTED_SYSTEM_OR_ADMIN": 59,
       "PROVIDER_PROTOCOL_CALLBACK": 2,
       "BACKEND_API_NO_MOUNTED_FRONTEND": 107,
@@ -148,6 +148,13 @@
     "http.post.workforce.execution-programs.intake"
   ],
   "dynamicFrontendCalls": [
+    {
+      "file": "src/components/centropy/canvas/EmployeeDesk.tsx",
+      "route": "works/:ref",
+      "method": "GET",
+      "line": 291,
+      "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+    },
     {
       "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
       "route": "works/:ref/objective",
@@ -818,6 +825,8 @@
       "src/app/centropy/deals/[dealId]/[section]/page.tsx",
       "src/app/centropy/deals/[dealId]/page.tsx",
       "src/app/centropy/deals/page.tsx",
+      "src/app/centropy/desk/page.tsx",
+      "src/app/centropy/desk/work/page.tsx",
       "src/app/centropy/investigations/[threadId]/page.tsx",
       "src/app/centropy/layout.tsx",
       "src/app/centropy/login/page.tsx",
@@ -854,6 +863,8 @@
       "src/app/centropy/deals/[dealId]/[section]/page.tsx",
       "src/app/centropy/deals/[dealId]/page.tsx",
       "src/app/centropy/deals/page.tsx",
+      "src/app/centropy/desk/page.tsx",
+      "src/app/centropy/desk/work/page.tsx",
       "src/app/centropy/investigations/[threadId]/page.tsx",
       "src/app/centropy/layout.tsx",
       "src/app/centropy/login/page.tsx",
@@ -896,6 +907,7 @@
       "src/components/centropy/canvas/DocumentCapabilityDesk.tsx",
       "src/components/centropy/canvas/EconomicActionTheoryPanel.tsx",
       "src/components/centropy/canvas/ElicitationProtocolReview.tsx",
+      "src/components/centropy/canvas/EmployeeDesk.tsx",
       "src/components/centropy/canvas/EnterpriseApplicationPanel.tsx",
       "src/components/centropy/canvas/EvidenceWorkbench.tsx",
       "src/components/centropy/canvas/ExactControlReview.tsx",
@@ -1062,12 +1074,16 @@
         "sha256": "58aedc5d16ea45f6cebdeb9fabbeeb99ad28b646379c2ecc95a2ee89218e7e8e"
       },
       {
-        "file": "src/app/centropy/investigations/[threadId]/page.tsx",
-        "sha256": "80e53ee001174f89097e47d5bbad19c2ea38ef5569d00394a0ba8957050cf557"
+        "file": "src/app/centropy/desk/page.tsx",
+        "sha256": "2cbc370e063b2620ca52a4f209609778cdee24ff4e14adbe7cfdf1dc391e9c58"
       },
       {
-        "file": "src/app/centropy/layout.tsx",
-        "sha256": "d14e19ea7af13407ee3673a60e17b440bc6438630c386037e906e138991745e4"
+        "file": "src/components/centropy/canvas/EmployeeDesk.tsx",
+        "sha256": "7d3bf91818435b533ac50467746d00fbfe54db39ccca92388869f450641ce93b"
+      },
+      {
+        "file": "src/components/centropy/lib/api.ts",
+        "sha256": "16ad55d6d81a46df1daf23242c92cf63de65e6938412b7b19606d4316cd224f9"
       },
       {
         "file": "src/components/centropy/lib/centropy-auth.tsx",
@@ -1082,8 +1098,8 @@
         "sha256": "a679cf1d40132a1b708f242c59163c3f1edf93af7bfeaba8fcdfcc2f6ec12c7b"
       },
       {
-        "file": "src/components/centropy/lib/api.ts",
-        "sha256": "16ad55d6d81a46df1daf23242c92cf63de65e6938412b7b19606d4316cd224f9"
+        "file": "src/components/centropy/lib/user-message.ts",
+        "sha256": "afdd55a749ac3e3800f46a4f23711a55cecd90b9b054a4cad1ddbcb607576b94"
       },
       {
         "file": "src/components/centropy/lib/business-invalidation.ts",
@@ -1095,7 +1111,7 @@
       },
       {
         "file": "src/lib/centropy/capability-manifest.generated.json",
-        "sha256": "e68051fd74494792ebb66d7156bae1b6ac5ef64e369d60057bc4c596fb0aebe3"
+        "sha256": "ee148f4ad302d5fc4c48e0bd2c418afc3a8af570fb026306181dd2e5d70f99b8"
       },
       {
         "file": "finnor-os/packages/planning/src/contracts.ts",
@@ -1106,24 +1122,32 @@
         "sha256": "9137a91257226c3b9cce39ad5aca33742d1d6ef0ec81aff2f6812dd4a44657e3"
       },
       {
-        "file": "src/components/centropy/lib/user-message.ts",
-        "sha256": "afdd55a749ac3e3800f46a4f23711a55cecd90b9b054a4cad1ddbcb607576b94"
-      },
-      {
-        "file": "src/components/centropy/shell/CentropyHost.tsx",
-        "sha256": "28a81ffccde5ef07c2b5dccf56ce9ca8589543bbdf7ab7768e0102f341c1fa71"
-      },
-      {
-        "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
-        "sha256": "5bdf7f0246d82386430f4d9c807bb132f678188612fa456eb9e0f5b06442c7c3"
-      },
-      {
         "file": "src/components/centropy/lib/use-private-request-scope.ts",
         "sha256": "c02efccd03caea60e8417d8716e72e12eb80bae36842258113d8929af1fbd881"
       },
       {
         "file": "src/components/centropy/lib/private-workspace-availability.ts",
         "sha256": "e3f7c3e9a90f0d1a8a01b4447582575d808d0a728e93bd1e2933afc525387db8"
+      },
+      {
+        "file": "src/app/centropy/desk/work/page.tsx",
+        "sha256": "039ed425821f62d8f78b3c8e2dd0caea23cc6595e5a3a58c8e69857f25974291"
+      },
+      {
+        "file": "src/app/centropy/investigations/[threadId]/page.tsx",
+        "sha256": "80e53ee001174f89097e47d5bbad19c2ea38ef5569d00394a0ba8957050cf557"
+      },
+      {
+        "file": "src/app/centropy/layout.tsx",
+        "sha256": "d14e19ea7af13407ee3673a60e17b440bc6438630c386037e906e138991745e4"
+      },
+      {
+        "file": "src/components/centropy/shell/CentropyHost.tsx",
+        "sha256": "0029e44443fea2d36736f87a0e9ae1f6766309c3e3580fcc1d6a149ab68e9810"
+      },
+      {
+        "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
+        "sha256": "5bdf7f0246d82386430f4d9c807bb132f678188612fa456eb9e0f5b06442c7c3"
       },
       {
         "file": "src/components/centropy/runtime/instruction-events.ts",
@@ -1759,7 +1783,7 @@
       },
       {
         "file": "src/components/centropy/canvas/WorkforceParticipantWorkspace.tsx",
-        "sha256": "205311697052f7dd5c4c3dacb2ec8da03c1466bf881a6254a4491b2ae58433d0"
+        "sha256": "4e45f6d033c197c74c52b12dd1794248cb7a4d0bc6fb5c1f7df6e7d0ebb68626"
       },
       {
         "file": "src/app/centropy/world/page.tsx",
@@ -4191,6 +4215,7 @@
         "finnor-os/tests/integration/artifact-os.test.ts",
         "finnor-os/tests/integration/audit-immutability.test.ts",
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
+        "finnor-os/tests/integration/employee-desk.test.ts",
         "finnor-os/tests/integration/employee-work-visibility.test.ts",
         "finnor-os/tests/integration/external-effect-observation.test.ts",
         "finnor-os/tests/integration/inbox-dedup.test.ts",
@@ -4926,7 +4951,9 @@
       ],
       "invalidationTags": [],
       "timeoutClass": "READ",
-      "tests": [],
+      "tests": [
+        "finnor-os/tests/integration/employee-desk.test.ts"
+      ],
       "source": "finnor-os/apps/api/app/api/me/route.ts",
       "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
       "actualRouteOrTool": "GET /api/me",
@@ -5021,6 +5048,71 @@
           "src/components/centropy/canvas/EconomicActionTheoryPanel.tsx",
           "src/components/centropy/canvas/StrategicResponsePanel.tsx",
           "src/components/centropy/canvas/InteractionProtocolPanel.tsx"
+        ],
+        "directRuntimeExecutionProvenByThisReport": false
+      },
+      "testEvidenceState": "SOURCE_REFERENCES_ONLY; executed proofs are indexed separately",
+      "compatibilityReason": null,
+      "externalConfiguration": null
+    },
+    {
+      "capabilityId": "http.get.me.desk",
+      "family": "me",
+      "owner": "@finnor/api",
+      "transport": "http",
+      "method": "GET",
+      "routePattern": "me/desk",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [
+        "finnor-os/tests/integration/employee-desk.test.ts"
+      ],
+      "source": "finnor-os/apps/api/app/api/me/desk/route.ts",
+      "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
+      "actualRouteOrTool": "GET /api/me/desk",
+      "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/EmployeeDesk.tsx",
+          "route": "me/desk",
+          "method": "GET",
+          "line": 261,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        }
+      ],
+      "humanForms": [],
+      "humanRoute": null,
+      "agentPath": null,
+      "authorityPath": {
+        "class": "query",
+        "backendSource": "finnor-os/apps/api/app/api/me/desk/route.ts",
+        "frontendNeverAuthorizes": true
+      },
+      "verificationPath": {
+        "class": "canonical_read",
+        "backendSource": "finnor-os/apps/api/app/api/me/desk/route.ts"
+      },
+      "presentation": {
+        "targets": [
+          "CANVAS"
+        ],
+        "familyRendererSources": [
+          "src/components/centropy/canvas/EmployeeDesk.tsx"
         ],
         "directRuntimeExecutionProvenByThisReport": false
       },
@@ -6646,6 +6738,7 @@
         "finnor-os/tests/integration/backup-restore.test.ts",
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/decision-receipts.test.ts",
+        "finnor-os/tests/integration/employee-desk.test.ts",
         "finnor-os/tests/integration/external-effect-observation.test.ts",
         "finnor-os/tests/integration/external-operations-idempotency.test.ts",
         "finnor-os/tests/integration/instruction-trace.test.ts",
@@ -8293,6 +8386,7 @@
         "finnor-os/tests/integration/artifact-os.test.ts",
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/economic-constructor-process.test.ts",
+        "finnor-os/tests/integration/employee-desk.test.ts",
         "finnor-os/tests/integration/employee-work-visibility.test.ts",
         "finnor-os/tests/integration/instructions-routes.test.ts",
         "finnor-os/tests/integration/keyset-pagination.test.ts",
@@ -8395,12 +8489,20 @@
       "invalidationTags": [],
       "timeoutClass": "READ",
       "tests": [
+        "finnor-os/tests/integration/employee-desk.test.ts",
         "finnor-os/tests/integration/work-routes.test.ts"
       ],
       "source": "finnor-os/apps/api/app/api/works/[id]/route.ts",
       "disposition": "ACTIVE_DIRECT_FRONTEND_PATH",
       "actualRouteOrTool": "GET /api/works/:id",
       "frontendSourceBindings": [
+        {
+          "file": "src/components/centropy/canvas/EmployeeDesk.tsx",
+          "route": "works/:ref",
+          "method": "GET",
+          "line": 291,
+          "binding": "Canonical API import and finite TypeScript expression; source evidence only"
+        },
         {
           "file": "src/components/centropy/shell/CentropyWorkspace.tsx",
           "route": "works/:ref",
@@ -8780,6 +8882,7 @@
         "finnor-os/tests/integration/capability-discovery-http.test.ts",
         "finnor-os/tests/integration/clarification-request.test.ts",
         "finnor-os/tests/integration/computer-execution-fabric.test.ts",
+        "finnor-os/tests/integration/employee-desk.test.ts",
         "finnor-os/tests/integration/employee-work-visibility.test.ts",
         "finnor-os/tests/integration/intake-durability.test.ts",
         "finnor-os/tests/integration/intake-idempotency.test.ts",
