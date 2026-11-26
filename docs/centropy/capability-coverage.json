@@ -8,8 +8,8 @@
     "scope": "Credential-free registration metadata; not tenant authority, executed owner coverage or public HTTP admission"
   },
   "schema": "centropy.capability-coverage-audit/v1",
-  "generatedAt": "2026-11-26T02:32:26.106Z",
-  "sourceBaseCommit": "e6ec701b8eef0e790006a9813f37572da6ce28e8",
+  "generatedAt": "2026-11-26T02:41:32.161Z",
+  "sourceBaseCommit": "a48dbbe7282ec873827a06d09ad72ccf1ec1f254",
   "manifestSha256": "ee148f4ad302d5fc4c48e0bd2c418afc3a8af570fb026306181dd2e5d70f99b8",
   "formsSha256": "35b57673d9d86e461f2b6056aaf326cb789901dfdd4481734aefef91da8052fd",
   "method": "Actual API catalogue and independently re-enumerated canonical planner metadata; import graph from active CENTROPY route entries; literal API call bindings; typed human form registrations; explicit restricted/compatibility/protocol classifications. Source presence is not execution evidence.",
@@ -152,7 +152,7 @@
       "file": "src/components/centropy/canvas/EmployeeDesk.tsx",
       "route": "works/:ref",
       "method": "GET",
-      "line": 103,
+      "line": 217,
       "binding": "Canonical API import and finite TypeScript expression; source evidence only"
     },
     {
@@ -1079,7 +1079,7 @@
       },
       {
         "file": "src/components/centropy/canvas/EmployeeDesk.tsx",
-        "sha256": "0ad02e05e72d9c2042f6ace8cb72015611e2f8f9e56273bf19a12e159f74cdc8"
+        "sha256": "8f5ec235ef8a447454523898b7cfd92996f219d75068ca284ef6a7806ff0cc23"
       },
       {
         "file": "src/components/centropy/lib/api.ts",
@@ -5091,7 +5091,7 @@
           "file": "src/components/centropy/canvas/EmployeeDesk.tsx",
           "route": "me/desk",
           "method": "GET",
-          "line": 55,
+          "line": 187,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         }
       ],
@@ -8500,7 +8500,7 @@
           "file": "src/components/centropy/canvas/EmployeeDesk.tsx",
           "route": "works/:ref",
           "method": "GET",
-          "line": 103,
+          "line": 217,
           "binding": "Canonical API import and finite TypeScript expression; source evidence only"
         },
         {
