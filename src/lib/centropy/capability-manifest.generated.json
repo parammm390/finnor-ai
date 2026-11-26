@@ -1374,6 +1374,34 @@
       "source": "finnor-os/apps/api/app/api/me/route.ts"
     },
     {
+      "capabilityId": "http.get.me.desk",
+      "family": "me",
+      "owner": "@finnor/api",
+      "transport": "http",
+      "method": "GET",
+      "routePattern": "me/desk",
+      "routeDepth": 2,
+      "classification": "READ",
+      "kind": "read",
+      "userProduct": true,
+      "agentProduct": false,
+      "modelCallable": false,
+      "humanOnly": false,
+      "adminOnly": false,
+      "systemOnly": false,
+      "requiredContext": [],
+      "authorityClass": "query",
+      "effectClass": null,
+      "verificationClass": "canonical_read",
+      "presentationTargets": [
+        "CANVAS"
+      ],
+      "invalidationTags": [],
+      "timeoutClass": "READ",
+      "tests": [],
+      "source": "finnor-os/apps/api/app/api/me/desk/route.ts"
+    },
+    {
       "capabilityId": "http.get.operating-profile",
       "family": "operating-profile",
       "owner": "@finnor/db",

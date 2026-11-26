@@ -276,7 +276,7 @@ export default {
     },
     {
       "path": "finnor-os/docs/authz-matrix.md",
-      "sha256": "ff343d1416af2f7d97537c10ac0f9598d1727d41dcdae506ae5b464b5c233b16"
+      "sha256": "51546b09fb656123f87965c75c062c0b099515207eb691289412ae68d919cedd"
     },
     {
       "path": "scripts/centropy/generate-capability-manifest.mjs",
@@ -300,11 +300,11 @@ export default {
     },
     {
       "path": "src/lib/centropy/capability-manifest.generated.json",
-      "sha256": "e68051fd74494792ebb66d7156bae1b6ac5ef64e369d60057bc4c596fb0aebe3"
+      "sha256": "ee148f4ad302d5fc4c48e0bd2c418afc3a8af570fb026306181dd2e5d70f99b8"
     },
     {
       "path": "docs/centropy/capability-coverage.json",
-      "sha256": "b8048d5362c9198faa9df81ae0a2694941023afd141bcd77396faaf66e6dd116"
+      "sha256": "60dad1cdb246f36671f67782278c1d8d78417c203a9890c449b2da3b78d290dd"
     },
     {
       "path": "finnor-os/scripts/postx/y5/build-installed.mjs",
@@ -2304,7 +2304,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-manifest.generated.ts",
-      "sha256": "a2d93e55d9acf29864f9ea16a2862bf986d89ddd60374cb1d033a64d6e271451"
+      "sha256": "acf3a4fecb73d7a1aa14edf03874ff6d76a881c8be223763ec4185ac3413e934"
     },
     {
       "path": "finnor-os/packages/private-equity/src/enterprise-applications/source-paths.ts",
@@ -2748,7 +2748,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-manifest.generated.ts",
-      "sha256": "a046e6a73055cb297c9d9163f13de133595b66e202c7159e4c060457722cd570"
+      "sha256": "55e6ce94c2d6662de3e8b1ab03f15897f98109ce937d79748dbe6679223b0de8"
     },
     {
       "path": "finnor-os/packages/private-equity/src/policy-learning/source-paths.ts",
@@ -3164,7 +3164,7 @@ export default {
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-manifest.generated.ts",
-      "sha256": "ad5a6347e32efb15832ce1608f48fe57874cc3217d627663c957b41875b546de"
+      "sha256": "c89afbffdf4b982d19513b08203f86a4f7321905e33b34d53efed8dc550c647d"
     },
     {
       "path": "finnor-os/packages/private-equity/src/system-identification/source-paths.ts",
@@ -6071,5 +6071,5 @@ export default {
       "sha256": "11dea46f9ca2d6c914d01df8683a1331ba51c144ed488904ad8ac251495f33d8"
     }
   ],
-  "sourceDigest": "d8876206f3049659e908e909b0a671d3e3c121dc1351730aacae76c5e024a54b"
+  "sourceDigest": "4791351af7e9e67d3c2f2fb3cb241801fbd02979f8de576306f93886bfdbf2f0"
 } as const;
