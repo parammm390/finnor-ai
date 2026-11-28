@@ -18,7 +18,7 @@ jobs:
           persist-credentials: false
       - name: Verify exact forward and baseline owner source before setup
         run: python3 -B finnor-os/scripts/postz-w2/run-compensation-pair.py --check-preimages
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: 22.22.3
           cache: npm
@@ -50,7 +50,7 @@ jobs:
         run: node --import=tsx scripts/audits/verify-workforce-completion.mjs "$RUNNER_TEMP/w2-work-completion.json"
       - name: Retain canonical Work completion proof
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: w2-work-completion-${{ inputs.episode }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/w2-work-completion.json
@@ -58,7 +58,7 @@ jobs:
           retention-days: 7
       - name: Retain rolled-back reader-policy proof
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: w2-reader-policies-${{ inputs.episode }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/w2-reader-policies/result.json
@@ -78,7 +78,7 @@ jobs:
         run: node --import=tsx scripts/v3/closing-read-contention.e2e.mts "$RUNNER_TEMP/w2-compensation/owner" "$RUNNER_TEMP/w2-controller-lease" lease
       - name: Retain finite lease-boundary receipt
         if: ${{ always() && inputs.episode == 'after-exact' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: w2-controller-lease-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/w2-controller-lease/result.json
@@ -86,7 +86,7 @@ jobs:
           retention-days: 7
       - name: Retain controlled owner comparison without private runtime files
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: w2-compensation-${{ inputs.episode }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/w2-compensation/report/

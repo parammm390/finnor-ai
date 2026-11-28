@@ -40,7 +40,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: 22.22.3
           cache: npm
@@ -53,7 +53,7 @@ jobs:
         run: node scripts/project-z/native-lifecycle.e2e.mjs "$RUNNER_TEMP/native-lifecycle.json"
       - name: Retain finite process lifecycle receipt
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: native-lifecycle-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/native-lifecycle.json
@@ -107,7 +107,7 @@ jobs:
           node scripts/centropy/verify-workspace-refresh.mjs "$RUNNER_TEMP/workspace-after"
       - name: Retain Canvas comparison receipts
         if: ${{ always() && github.ref_name == 'codex/zw-integration-quality-20261115' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: canvas-activation-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -590,7 +590,7 @@ jobs:
           JS
       - name: Retain stack and case receipts
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: project-z0-native-${{ github.run_id }}-${{ github.run_attempt }}${{ matrix.mode != 'default' && format('-{0}', matrix.mode) || '' }}
           path: |

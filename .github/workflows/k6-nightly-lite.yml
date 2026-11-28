@@ -27,7 +27,7 @@ jobs:
           bash scripts/audits/check-live-ci-inputs.sh "$RUNNER_TEMP/staging-preflight.json"
           K6_STAGING_BASE_URL K6_STAGING_TENANT_ID K6_STAGING_AUTH_BEARER_TOKEN
           K6_STAGING_FIXTURE_DEAL_ID K6_STAGING_FIXTURE_WORKSTREAM_ID
-      - uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065
+      - uses: grafana/setup-k6-action@c47136d33d365efbeb9ae7266908b5dcf98cdece
       - name: Run the configured staging load probe
         env:
           BASE_URL: ${{ secrets.K6_STAGING_BASE_URL }}
@@ -43,7 +43,7 @@ jobs:
           APPROVAL_RATE: "5"
           LOAD_DURATION: "60s"
         run: k6 run --summary-export k6-nightly-lite-summary.json scripts/k6-load-test.js
-      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: k6-nightly-lite-summary

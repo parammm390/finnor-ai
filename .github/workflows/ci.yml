@@ -38,7 +38,7 @@ jobs:
       - name: Name the successful producer artifact for failed-job reruns
         id: identity
         run: echo "artifact_name=project-z-native-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: ${{ steps.identity.outputs.artifact_name }}
           path: ${{ runner.temp }}/z4-assets/
@@ -60,7 +60,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: 22.22.3
           cache: npm
@@ -72,7 +72,7 @@ jobs:
       - run: npx --no-install playwright install --with-deps chromium
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/project-z-browsers
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           name: ${{ needs.project-z-native-assets.outputs.artifact_name }}
           path: ${{ runner.temp }}/z4-assets
@@ -89,7 +89,7 @@ jobs:
         run: taskset -c 0,1 node scripts/project-z/run-native-ci.mjs --name="$PROJECT_Z_NATIVE_NAME" --evidence="$RUNNER_TEMP/project-z-owner" --browsers="$PLAYWRIGHT_BROWSERS_PATH"
       - name: Retain sanitized transport result only
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: project-z-owner-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -113,7 +113,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: 22.22.3
           cache: npm
@@ -128,7 +128,7 @@ jobs:
         run: taskset -c 0,1 node scripts/project-z/run-ci.mjs --phase="$PROJECT_Z_PHASE" --evidence="$RUNNER_TEMP/project-z-$PROJECT_Z_PHASE"
       - name: Retain original inputs, actual outputs and process failures
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: project-z-public-${{ matrix.phase }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/project-z-${{ matrix.phase }}/**
@@ -150,7 +150,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: 22.22.3
           cache: npm
@@ -159,7 +159,7 @@ jobs:
             finnor-os/package-lock.json
       - run: npm ci --no-audit --no-fund
       - run: npm ci --prefix finnor-os --no-audit --no-fund
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
           name: ${{ needs.project-z-native-assets.outputs.artifact_name }}
           path: ${{ runner.temp }}/z4-assets
@@ -173,7 +173,7 @@ jobs:
         run: taskset -c 0,1 node scripts/project-z/run-ci.mjs --phase=z4 --evidence="$RUNNER_TEMP/project-z-z4"
       - name: Retain original inputs, native identity and observed process results
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: project-z-public-z4-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -196,7 +196,7 @@ jobs:
         working-directory: .
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: 22.22.3
           cache: npm
@@ -212,7 +212,7 @@ jobs:
           FINNOR_ARTIFACT_EVIDENCE_DIR: ${{ runner.temp }}/finnor-production-artifact-evidence
       - name: Retain actual artifact and runtime evidence
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: production-artifacts-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/finnor-production-artifact-evidence/*
@@ -242,7 +242,7 @@ jobs:
           --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: 22.22.3
           cache: npm
@@ -277,16 +277,16 @@ jobs:
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/share/swift
           df -h /
       - name: Set up pinned QEMU for ARM64 image stages
-        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1
         with:
           platforms: arm64
       - name: Set up pinned cached image builder
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
       - name: Check Docker build definition before compiling
         run: docker buildx build --check --file finnor-os/Dockerfile.worker .
       - name: Build exact application-worker image
         id: worker_image
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc
         with:
           context: .
           file: finnor-os/Dockerfile.worker
@@ -305,7 +305,7 @@ jobs:
           FINNOR_WORKER_PREBUILT_IMAGE_ID: ${{ steps.worker_image.outputs.imageid }}
       - name: Retain exact Linux worker smoke evidence
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: worker-image-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -346,7 +346,7 @@ jobs:
       FINNOR_TEST_MANAGED_EXTENSIONS: omit
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: 22.22.3
           cache: npm
@@ -397,7 +397,7 @@ jobs:
           FINNOR_PE_OBJECTIVE_EVIDENCE_DIR: ${{ runner.temp }}/finnor-pe-objective-evidence
       - name: Retain S7 native owner proof diagnostics
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: s7-native-owner-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.shard }}
           path: |
@@ -418,7 +418,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: 22.22.3
           cache: npm
@@ -449,7 +449,7 @@ jobs:
           FINNOR_S4_CI_EVIDENCE_DIR: ${{ runner.temp }}/finnor-s4-evidence
       - name: Retain inputs, source snapshot, API results and replay evidence
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: s4-operating-profit-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/finnor-s4-evidence/**
@@ -481,7 +481,7 @@ jobs:
       FINNOR_TEST_MANAGED_EXTENSIONS: omit
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: 22.22.3
           cache: npm
@@ -533,7 +533,7 @@ jobs:
           NODE
       - name: Retain P7 certification diagnostics
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: p7-certification-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/p7-certification.log
@@ -555,7 +555,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: 22.22.3
           cache: npm
@@ -578,9 +578,9 @@ jobs:
       - run: node scripts/audits/verify-capability-proxy.mjs --out "$RUNNER_TEMP"
       - run: npx --no-install playwright install --with-deps chromium
       - run: npm --prefix finnor-os run verify:oauth-proxy -- --out "$RUNNER_TEMP/correctness/oauth"
-      - uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065
+      - uses: grafana/setup-k6-action@c47136d33d365efbeb9ae7266908b5dcf98cdece
       - run: node scripts/audits/verify-k6-probe.mjs --k6 "$(command -v k6)" --out "$RUNNER_TEMP/correctness/load"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: ${{ always() }}
         with:
           name: correctness-regressions-${{ github.run_id }}-${{ github.run_attempt }}
