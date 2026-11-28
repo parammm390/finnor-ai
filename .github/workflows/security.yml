@@ -103,7 +103,7 @@ jobs:
           node scripts/guards/pinned-call-order.mjs "$BASE_SHA" "$HEAD_SHA"
       - name: Retain redacted complete-history findings
         if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: secret-history-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
@@ -159,7 +159,7 @@ jobs:
       - name: Render complete findings for GitHub Code Scanning
         id: sarif
         if: ${{ !cancelled() && steps.scan.outcome == 'success' }}
-        uses: google/osv-scanner-action/osv-reporter-action@8dc09193bb540e09b23da07ad7e30bd33bf87018
+        uses: google/osv-scanner-action/osv-reporter-action@d3c1414ded37de590f207572e37a7d180f1d0ef7
         with:
           scan-args: |-
             --output=osv-results.sarif
@@ -172,12 +172,12 @@ jobs:
         # retained artifact below do not depend on it.
         continue-on-error: true
         if: ${{ !cancelled() && steps.sarif.outcome == 'success' }}
-        uses: github/codeql-action/upload-sarif@cdefb33c0f6224e58673d9004f47f7cb3e328b89
+        uses: github/codeql-action/upload-sarif@915412ff23e8b7659517e607487dbeae018f2934
         with:
           sarif_file: osv-results.sarif
       - name: Retain full OSV evidence
         if: ${{ !cancelled() && steps.scan.outcome == 'success' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: dependency-scan-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
