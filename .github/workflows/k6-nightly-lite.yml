@@ -15,14 +15,26 @@ jobs:
         working-directory: finnor-os
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Check staging configuration
+        working-directory: .
+        env:
+          K6_STAGING_BASE_URL: ${{ secrets.K6_STAGING_BASE_URL != '' }}
+          K6_STAGING_TENANT_ID: ${{ secrets.K6_STAGING_TENANT_ID != '' }}
+          K6_STAGING_AUTH_BEARER_TOKEN: ${{ secrets.K6_STAGING_AUTH_BEARER_TOKEN != '' }}
+          K6_STAGING_FIXTURE_DEAL_ID: ${{ (secrets.K6_STAGING_FIXTURE_DEAL_ID || vars.K6_STAGING_FIXTURE_DEAL_ID) != '' }}
+          K6_STAGING_FIXTURE_WORKSTREAM_ID: ${{ (secrets.K6_STAGING_FIXTURE_WORKSTREAM_ID || vars.K6_STAGING_FIXTURE_WORKSTREAM_ID) != '' }}
+        run: >-
+          bash scripts/audits/check-live-ci-inputs.sh "$RUNNER_TEMP/staging-preflight.json"
+          K6_STAGING_BASE_URL K6_STAGING_TENANT_ID K6_STAGING_AUTH_BEARER_TOKEN
+          K6_STAGING_FIXTURE_DEAL_ID K6_STAGING_FIXTURE_WORKSTREAM_ID
       - uses: grafana/setup-k6-action@db07bd9765aac508ef18982e52ab937fe633a065
       - name: Run the configured staging load probe
         env:
           BASE_URL: ${{ secrets.K6_STAGING_BASE_URL }}
           TENANT_ID: ${{ secrets.K6_STAGING_TENANT_ID }}
           AUTH_BEARER_TOKEN: ${{ secrets.K6_STAGING_AUTH_BEARER_TOKEN }}
-          K6_FIXTURE_DEAL_ID: ${{ secrets.K6_STAGING_FIXTURE_DEAL_ID }}
-          K6_FIXTURE_WORKSTREAM_ID: ${{ secrets.K6_STAGING_FIXTURE_WORKSTREAM_ID }}
+          K6_FIXTURE_DEAL_ID: ${{ secrets.K6_STAGING_FIXTURE_DEAL_ID || vars.K6_STAGING_FIXTURE_DEAL_ID }}
+          K6_FIXTURE_WORKSTREAM_ID: ${{ secrets.K6_STAGING_FIXTURE_WORKSTREAM_ID || vars.K6_STAGING_FIXTURE_WORKSTREAM_ID }}
           VERCEL_BYPASS_SECRET: ${{ secrets.K6_STAGING_VERCEL_BYPASS_SECRET }}
           K6_RUN_ID: nightly-${{ github.run_id }}-${{ github.run_attempt }}
           K6_EVIDENCE_FILE: k6-load-evidence.json
@@ -30,13 +42,12 @@ jobs:
           READ_VUS: "20"
           APPROVAL_RATE: "5"
           LOAD_DURATION: "60s"
-        run: |
-          test -n "$BASE_URL" -a -n "$TENANT_ID" -a -n "$AUTH_BEARER_TOKEN" -a -n "$K6_FIXTURE_DEAL_ID" -a -n "$K6_FIXTURE_WORKSTREAM_ID"
-          k6 run --summary-export k6-nightly-lite-summary.json scripts/k6-load-test.js
+        run: k6 run --summary-export k6-nightly-lite-summary.json scripts/k6-load-test.js
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         if: always()
         with:
           name: k6-nightly-lite-summary
           path: |
+            ${{ runner.temp }}/staging-preflight.json
             finnor-os/k6-nightly-lite-summary.json
             finnor-os/k6-load-evidence.json
