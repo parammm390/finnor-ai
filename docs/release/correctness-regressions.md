@@ -14,7 +14,7 @@ Run disposable checks with a minimal environment. Do not pass production connect
 
 ## Scheduled jobs
 
-`planner-live-evals.yml` now invokes the present `eval:planner:live` script. It evaluates current Core/Private Equity candidate plans through the actual planner and compiler, requiring all 41 labeled cases and a provider call per case. It performs no business execution or database seeding. The scheduled job supplies the explicit Groq route, credential and pacing. A local fixture pass establishes that the evaluator detects wrong/rejected output; it is not a passing live Groq score.
+`planner-live-evals.yml` invokes `eval:planner:live` with an explicit Groq route, pacing, and the `GROQ_API_KEY` Actions secret. It evaluates current Core/Private Equity candidate plans through the actual planner and compiler, requiring all 41 labeled cases and a provider call per case. It performs no business execution or database seeding. A local fixture pass establishes that the evaluator detects wrong or rejected output. The provider-backed score comes from the configured live job.
 
 `tenant-isolation-nightly.yml` calls the current read-only PE root probe. Configure distinct tenant JWTs and these **current** marker secrets:
 
@@ -28,7 +28,9 @@ Each is JSON such as `{"entityType":"external_organization","entityId":"<UUID>"}
 - `K6_STAGING_FIXTURE_DEAL_ID`
 - `K6_STAGING_FIXTURE_WORKSTREAM_ID`
 
-The corresponding Deal and Workstream must belong to that staging tenant. The caller must be its owner. The script refuses canonical production origins and a target whose release metadata does not identify staging. It creates only synthetic run-labeled Findings for approval, checks that the effect belongs to the Work it created, and confirms its exact reviewed hash. It never picks an unrelated pending action. The retired marketing webhook secret is no longer used.
+Set both fixture UUIDs as Actions variables or secrets. A configured secret takes precedence. The corresponding Deal and Workstream must belong to the disposable staging tenant. Configure `K6_STAGING_BASE_URL`, `K6_STAGING_TENANT_ID`, and `K6_STAGING_AUTH_BEARER_TOKEN` as Actions secrets. The caller must be that tenant's owner. The script refuses canonical production origins and a target whose release metadata does not identify staging. It creates only synthetic run-labeled Findings for approval, checks that the effect belongs to the Work it created, and confirms its exact reviewed hash.
+
+Both jobs report empty required settings by name in the run summary and retain a `BLOCKED` preflight artifact. The live commands only run after preflight succeeds.
 
 Provider live quality, real tenant JWT visibility and actual staging load results require those configured scheduled jobs to run on the final committed source. Local fixture proofs do not replace them. No scheduled live run, deployment, new secret provisioning or production mutation is performed by the regression commands above.
 
